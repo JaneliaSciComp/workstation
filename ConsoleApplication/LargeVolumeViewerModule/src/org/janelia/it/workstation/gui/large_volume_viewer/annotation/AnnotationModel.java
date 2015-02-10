@@ -30,6 +30,7 @@ import java.util.Map;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 
 
 public class AnnotationModel
@@ -68,6 +69,8 @@ SimpleWorker thread.
 
     private TmWorkspace currentWorkspace;
     private TmNeuron currentNeuron;
+    
+    private ViewStateListener viewStateListener;
 
     private Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
     private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
@@ -86,7 +89,7 @@ SimpleWorker thread.
 //    public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<>();
 //    public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<>();
 
-    public Signal1<Long> pathTraceRequestedSignal = new Signal1<>();
+//    public Signal1<Long> pathTraceRequestedSignal = new Signal1<>();
 
 //    public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<>();
 
@@ -138,6 +141,10 @@ SimpleWorker thread.
     
     public void removeGlobalAnnotationListener(GlobalAnnotationListener listener) {
         globalAnnotationListeners.remove(listener);
+    }
+    
+    public void setViewStateListener(ViewStateListener listener) {
+        this.viewStateListener = listener;
     }
     
     // current workspace methods
@@ -497,7 +504,9 @@ SimpleWorker thread.
         }
 
         if (automatedTracingEnabled()) {
-            pathTraceRequestedSignal.emit(annotation.getId());
+            if (viewStateListener != null)
+                viewStateListener.pathTraceRequested(annotation.getId());
+//            pathTraceRequestedSignal.emit(annotation.getId());
         }
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -560,9 +569,11 @@ SimpleWorker thread.
 
         if (automatedTracingEnabled()) {
             // trace to parent, and each child to this parent:
-            pathTraceRequestedSignal.emit(annotation.getId());
+            viewStateListener.pathTraceRequested(annotation.getId());
+//            pathTraceRequestedSignal.emit(annotation.getId());
             for (TmGeoAnnotation child : neuron.getChildrenOf(annotation)) {
-                pathTraceRequestedSignal.emit(child.getId());
+                viewStateListener.pathTraceRequested(child.getId());
+//                pathTraceRequestedSignal.emit(child.getId());
             }
         }
 
@@ -666,7 +677,8 @@ SimpleWorker thread.
         final TmGeoAnnotation targetAnnotation = getGeoAnnotationFromID(targetAnnotationID);
         for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
             if (automatedTracingEnabled()) {
-                pathTraceRequestedSignal.emit(child.getId());
+                viewStateListener.pathTraceRequested(child.getId());
+//                pathTraceRequestedSignal.emit(child.getId());
             }
         }
 
@@ -749,7 +761,8 @@ SimpleWorker thread.
 
         // if we're tracing, retrace if there's a new connection
         if (automatedTracingEnabled() && child != null) {
-            pathTraceRequestedSignal.emit(child.getId());
+            viewStateListener.pathTraceRequested(child.getId());
+//            pathTraceRequestedSignal.emit(child.getId());
         }
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -911,8 +924,12 @@ SimpleWorker thread.
 
         // retrace
         if (automatedTracingEnabled()) {
-            pathTraceRequestedSignal.emit(newAnnotation.getId());
-            pathTraceRequestedSignal.emit(annotation1.getId());
+            if (viewStateListener != null) {
+                viewStateListener.pathTraceRequested(newAnnotation.getId());
+//            pathTraceRequestedSignal.emit(newAnnotation.getId());
+                viewStateListener.pathTraceRequested(annotation1.getId());
+//            pathTraceRequestedSignal.emit(annotation1.getId());
+            }
         }
 
         final TmGeoAnnotation updateAnnotation = neuron.getGeoAnnotationMap().get(annotation1.getId());

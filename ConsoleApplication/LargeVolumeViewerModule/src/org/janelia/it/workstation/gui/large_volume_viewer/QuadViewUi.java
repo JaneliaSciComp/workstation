@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrivenSWCExchanger;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.SWCDataConverter;
@@ -236,7 +237,20 @@ public class QuadViewUi extends JPanel
 		}
 	};
 	
-	public Slot1<Vec3> setCameraFocusSlot = new Slot1<Vec3>() {
+    public void setCameraFocus( Vec3 focus ) {
+        camera.setFocus(focus);
+    }
+    
+    public void centerNextParentMicron() {
+        Anchor anchor = getSkeletonActor().getNextParent();
+        if (anchor != null) {
+            setCameraFocusSlot.execute(
+                    anchor.getLocation()
+            );
+        }
+    }
+
+    public Slot1<Vec3> setCameraFocusSlot = new Slot1<Vec3>() {
 		@Override
 		public void execute(Vec3 focus) {
 			camera.setFocus(focus);
@@ -392,10 +406,16 @@ public class QuadViewUi extends JPanel
         
         skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
         // Nb: skeleton.anchorMovedSilentSignal intentially does *not* connect to annotationMgr!
-        skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
-        annotationModel.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
+//        skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
+//        annotationModel.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
         addAnchoredPathRequestSignal.connect(annotationMgr.addPathRequestedSlot);
 
+        QuadViewController quadViewController = new QuadViewController(this);
+        largeVolumeViewerTranslator.setViewStateListener(quadViewController);
+        skeleton.setViewStateListener(quadViewController);
+        annotationPanel.setViewStateListener(quadViewController);
+        annotationModel.setViewStateListener(quadViewController);
+        
         // Toggle skeleton actor with v key
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, 0, false), "vKeyPressed");
@@ -417,9 +437,8 @@ public class QuadViewUi extends JPanel
         });
 
         largeVolumeViewerTranslator.connectSkeletonSignals(skeleton);
-        largeVolumeViewerTranslator.cameraPanToSignal.connect(setCameraFocusSlot);
-        largeVolumeViewerTranslator.loadColorModelSignal.connect(loadColorModelSlot);
-
+//        largeVolumeViewerTranslator.cameraPanToSignal.connect(setCameraFocusSlot);
+//        largeVolumeViewerTranslator.loadColorModelSignal.connect(loadColorModelSlot);
 
 		// must come after setupUi() (etc), since it triggers UI changes:
 		annotationMgr.setInitialEntity(initialEntity);
@@ -464,7 +483,7 @@ public class QuadViewUi extends JPanel
         wheelModeChangedSignal.connect(largeVolumeViewer.setWheelModeSlot);
         // annotation-related actions:
         centerNextParentAction.centerNextParentSignal.connect(centerNextParentVoxelSlot);
-        annotationPanel.centerAnnotationSignal.connect(centerNextParentMicronSlot);
+//        annotationPanel.centerAnnotationSignal.connect(centerNextParentMicronSlot);
         // go to location action
         goToLocationAction.gotoLocationSignal.connect(setCameraFocusSlot);
         // TODO other orthogonal viewers
@@ -504,6 +523,21 @@ public class QuadViewUi extends JPanel
         panModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
         zoomScrollModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
 	}
+    
+    public void pathTraceRequested(Long annotationID) {
+        // this needs to happen before you draw anchored paths; should
+        //  go somewhere else so it only happens once, but not clear where;
+        //  not clear we have a trigger for when the image is loaded enough for
+        //  this info to be available (it loads asynchronously)
+        getSkeletonActor().setTileFormat(
+                tileServer.getLoadAdapter().getTileFormat());
+
+        // construct new request; add image data to anchor and pass it on
+        PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
+        request.setImageVolume(volumeImage);
+        request.setTextureCache(tileServer.getTextureCache());
+        tracePathRequestedSignal.emit(request);
+    }
     
 	public void clearCache() {
 		tileServer.clearCache();

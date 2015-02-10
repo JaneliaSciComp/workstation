@@ -7,7 +7,6 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.signal.Signal;
-import org.janelia.it.workstation.signal.Slot1;
 
 import javax.swing.*;
 
@@ -23,6 +22,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 
 
 /**
@@ -50,6 +50,7 @@ public class AnnotationPanel extends JPanel
     private JCheckBoxMenuItem automaticTracingMenuItem;
     private JCheckBoxMenuItem automaticRefinementMenuItem;
     private NoteListPanel noteListPanel;
+    private ViewStateListener viewStateListener;
     private LVVDevPanel lvvDevPanel;
 
     // other UI stuff
@@ -57,7 +58,6 @@ public class AnnotationPanel extends JPanel
 
     private static final boolean defaultAutomaticTracing = false;
     private static final boolean defaultAutomaticRefinement = false;
-
 
     // ----- actions
     private final Action createNeuronAction = new AbstractAction() {
@@ -83,11 +83,12 @@ public class AnnotationPanel extends JPanel
         };
 
     // ----- signals & slots
-    public Signal centerAnnotationSignal = new Signal();
+//    public Signal centerAnnotationSignal = new Signal();
     private final Action centerAnnotationAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            centerAnnotationSignal.emit();
+            viewStateListener.centerNextParent();
+//            centerAnnotationSignal.emit();
         }
     };
 
@@ -128,6 +129,10 @@ public class AnnotationPanel extends JPanel
 
     }
 
+    public void setViewStateListener(ViewStateListener listener) {
+        this.viewStateListener = listener;        
+    }
+    
     public void loadWorkspace(TmWorkspace workspace) {
         if (workspace != null) {
             boolean state;

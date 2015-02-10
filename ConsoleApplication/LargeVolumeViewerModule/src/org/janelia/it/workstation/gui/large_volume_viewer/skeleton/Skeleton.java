@@ -15,12 +15,16 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchoredVoxelPathListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Skeleton implements AnchoredVoxelPathListener {
 	@SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(Skeleton.class);
+
+    private TileFormat tileFormat;
+    private ViewStateListener viewStateListener;
 
     //---------------------------------IMPLEMENTS AnchoredVoxelPathListener
     @Override
@@ -38,8 +42,6 @@ public class Skeleton implements AnchoredVoxelPathListener {
         removeTracedSegment(path);
     }
 	
-    private TileFormat tileFormat;
-
 	/**
 	 * AnchorSeed holds enough data to nucleate a new Anchor.
 	 * So I can send multiple values in a single argument for Signal1/Slot1.
@@ -89,7 +91,7 @@ public class Skeleton implements AnchoredVoxelPathListener {
 	private HistoryStack<Anchor> anchorHistory = new HistoryStack<Anchor>();
 
 	public Signal skeletonChangedSignal = new Signal();
-	public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
+//	public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
 
     public void addAnchorListener(AnchorListener listener) {
         anchorListeners.add(listener);
@@ -97,6 +99,10 @@ public class Skeleton implements AnchoredVoxelPathListener {
     
     public void removeAnchorListener(AnchorListener listener) {
         anchorListeners.remove(listener);
+    }
+    
+    public void setViewStateListener(ViewStateListener listener) {
+        this.viewStateListener = listener;
     }
     
 	// API for synchronizing with back end database
@@ -430,7 +436,8 @@ public class Skeleton implements AnchoredVoxelPathListener {
             // no parent
             return;
 
-        pathTraceRequestedSignal.emit(anchor.getGuid());
+        viewStateListener.pathTraceRequested(anchor.getGuid());
+//        pathTraceRequestedSignal.emit(anchor.getGuid());
     }
 
 	public void addTracedSegment(AnchoredVoxelPath path)

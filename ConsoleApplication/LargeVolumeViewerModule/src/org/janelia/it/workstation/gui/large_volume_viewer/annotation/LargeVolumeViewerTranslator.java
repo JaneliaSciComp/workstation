@@ -25,6 +25,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 
 
@@ -48,7 +49,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     private AnnotationModel annModel;
     private LargeVolumeViewer largeVolumeViewer;
-    private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<AnchoredVoxelPathListener>();
+    private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<>();
+    private ViewStateListener viewStateListener;
     
     public void addAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
         avpListeners.add(l);
@@ -126,9 +128,12 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         @Override
         public void execute(Vec3 location) {
             TileFormat tileFormat = getTileFormat();
-            cameraPanToSignal.emit(
+            viewStateListener.setCameraFocus(
                     tileFormat.micronVec3ForVoxelVec3Centered(location)
             );
+//            cameraPanToSignal.emit(
+//                    tileFormat.micronVec3ForVoxelVec3Centered(location)
+//            );
         }
     };
 
@@ -141,7 +146,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     };
 
     // ----- signals
-    public Signal1<Vec3> cameraPanToSignal = new Signal1<>();
+//    public Signal1<Vec3> cameraPanToSignal = new Signal1<>();
 
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<>();
     public Signal1<List<TmGeoAnnotation>> anchorsAddedSignal = new Signal1<List<TmGeoAnnotation>>();
@@ -165,6 +170,10 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         setupSignals();
     }
 
+    public void setViewStateListener( ViewStateListener viewStateListener ) {
+        this.viewStateListener = viewStateListener;
+    }
+    
     public void connectSkeletonSignals(Skeleton skeleton) {
         anchorAddedSignal.connect(skeleton.addAnchorSlot);
         anchorsAddedSignal.connect(skeleton.addAnchorsSlot);
@@ -350,8 +359,9 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
             // check for saved image color model
             String colorModelString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_COLOR_MODEL);
-            if (colorModelString != null) {
-                loadColorModelSignal.emit(colorModelString);
+            if (colorModelString != null  &&  viewStateListener != null) {
+                viewStateListener.loadColorModel(colorModelString);
+//                loadColorModelSignal.emit(colorModelString);
             }
 
             // note that we must add annotations in parent-child sequence

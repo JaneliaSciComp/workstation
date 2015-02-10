@@ -35,7 +35,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.shader.PathShader;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
-import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 import org.janelia.it.workstation.signal.Signal;
