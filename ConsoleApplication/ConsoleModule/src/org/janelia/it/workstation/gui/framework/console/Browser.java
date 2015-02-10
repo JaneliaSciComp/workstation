@@ -69,6 +69,7 @@ public class Browser implements Cloneable {
 
     private static String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
     public static String SEARCH_HISTORY = "SEARCH_HISTORY";
+    public static String ADD_TO_ROOT_HISTORY = "ADD_TO_ROOT_HISTORY";
     private static String VIEWERS_LINKED = "Browser.ViewersLinked";
 
     // Used by printing mechanism to ensure capacity.

@@ -28,7 +28,6 @@ import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.workstation.gui.framework.viewer.Hud;
-import org.janelia.it.workstation.gui.util.JScrollMenu;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.nb_action.EntityAcceptor;
@@ -57,6 +56,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
+import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 
 /**
  * Context pop up menu for entities.
@@ -908,11 +909,30 @@ public class EntityContextMenu extends JPopupMenu {
         return movieItem;
     }
     
+    private static final int MAX_ADD_TO_ROOT_HISTORY = 5;
+    
+    private void updateAddToRootFolderHistory(Entity commonRoot) {
+        List<Long> addHistory = (List<Long>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_ROOT_HISTORY);
+        if (addHistory==null) {
+            addHistory = new ArrayList<>();
+        }
+        if (addHistory.contains(commonRoot.getId())) {
+            return;
+        }
+        if (addHistory.size()>=MAX_ADD_TO_ROOT_HISTORY) {
+            addHistory.remove(addHistory.size()-1);
+        }
+        addHistory.add(0, commonRoot.getId());
+        SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_ROOT_HISTORY, addHistory);
+    }
+    
     protected JMenu getAddToRootFolderItem() {
 
-        JMenu newFolderMenu = new JScrollMenu("  Add To Top-Level Folder");
+        final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
+                
+        JMenu newFolderMenu = new JMenu("  Add To Folder");
 
-        JMenuItem createNewItem = new JMenuItem("Create New...");
+        JMenuItem createNewItem = new JMenuItem("Create New Top-Level Folder...");
 
         createNewItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -925,21 +945,67 @@ public class EntityContextMenu extends JPopupMenu {
                 }
 
                 SimpleWorker worker = new SimpleWorker() {
+                    private Entity commonRoot;
+
                     @Override
                     protected void doStuff() throws Exception {
                         // Update database
-                        Entity newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
-
+                        commonRoot = ModelMgr.getModelMgr().createCommonRoot(folderName);
                         List<Long> ids = new ArrayList<>();
                         for (RootedEntity rootedEntity : rootedEntityList) {
                             ids.add(rootedEntity.getEntity().getId());
                         }
-                        ModelMgr.getModelMgr().addChildren(newFolder.getId(), ids, EntityConstants.ATTRIBUTE_ENTITY);
+                        ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids, EntityConstants.ATTRIBUTE_ENTITY);
+                        // Update history
+                        updateAddToRootFolderHistory(commonRoot);
                     }
 
                     @Override
                     protected void hadSuccess() {
                         // No need to update the UI, the event bus will get it done
+                        log.debug("Added to common root {}",commonRoot.getName());
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating folder...", ""));
+                worker.execute();
+            }
+        });
+
+        newFolderMenu.add(createNewItem);
+        
+        JMenuItem chooseItem = new JMenuItem("Choose Folder...");
+        
+        chooseItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+
+                final EntityChooser entityChooser = new EntityChooser("Choose folder to add to", entityOutline);
+                int returnVal = entityChooser.showDialog(entityOutline);
+                if (returnVal != EntityChooser.CHOOSE_OPTION) return;
+                if (entityChooser.getChosenElements().isEmpty()) return;
+                final Entity commonRoot = entityChooser.getChosenElements().get(0).getChildEntity();
+                
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        // Update database
+                        List<Long> ids = new ArrayList<>();
+                        for (RootedEntity rootedEntity : rootedEntityList) {
+                            ids.add(rootedEntity.getEntity().getId());
+                        }
+                        ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids, EntityConstants.ATTRIBUTE_ENTITY);
+                        // Update history
+                        updateAddToRootFolderHistory(commonRoot);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        // No need to update the UI, the event bus will get it done
+                        log.debug("Added to common root {}",commonRoot.getName());
                     }
 
                     @Override
@@ -951,46 +1017,67 @@ public class EntityContextMenu extends JPopupMenu {
             }
         });
 
-        newFolderMenu.add(createNewItem);
+        newFolderMenu.add(chooseItem);
         newFolderMenu.addSeparator();
         
-        List<EntityData> rootEds = ModelMgrUtils.getAccessibleEntityDatasWithChildren(browser.getEntityOutline().getRootEntity());
+        List<Long> addHistory = (List<Long>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_ROOT_HISTORY);
+        if (addHistory!=null && !addHistory.isEmpty()) {
+            
+            JMenuItem item = new JMenuItem("Recent:");
+            item.setEnabled(false);
+            newFolderMenu.add(item);
+            
+            for (Long rootId : addHistory) {
 
-        for (EntityData rootEd : rootEds) {
-            final Entity commonRoot = rootEd.getChildEntity();
-            if (!ModelMgrUtils.hasWriteAccess(commonRoot)) continue;
+                Set<Entity> entities = entityOutline.getEntitiesById(rootId);
 
-            JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
-            commonRootItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    SimpleWorker worker = new SimpleWorker() {
-                        @Override
-                        protected void doStuff() throws Exception {
-                            List<Long> ids = new ArrayList<>();
-                            for (RootedEntity rootedEntity : rootedEntityList) {
-                                ids.add(rootedEntity.getEntity().getId());
-                            }
-                            ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids,
-                                    EntityConstants.ATTRIBUTE_ENTITY);
-                        }
-
-                        @Override
-                        protected void hadSuccess() {
-                            // No need to update the UI, the event bus will get it done
-                        }
-
-                        @Override
-                        protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
-                        }
-                    };
-                    worker.execute();
+                if (entities.isEmpty()) {
+                    continue;
                 }
-            });
+                if (entities.size()>1) {
+                    log.warn("More than one entity in the entity outline for id={}",rootId);
+                }
 
-            newFolderMenu.add(commonRootItem);
+                final Entity commonRoot = entities.iterator().next();
+                if (!ModelMgrUtils.hasWriteAccess(commonRoot)) continue;
+
+                JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
+                commonRootItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                
+                        SimpleWorker worker = new SimpleWorker() {
+                            @Override
+                            protected void doStuff() throws Exception {
+                                // Update database
+                                List<Long> ids = new ArrayList<>();
+                                for (RootedEntity rootedEntity : rootedEntityList) {
+                                    ids.add(rootedEntity.getEntity().getId());
+                                }
+                                ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids,
+                                        EntityConstants.ATTRIBUTE_ENTITY);
+                                // Update history
+                                updateAddToRootFolderHistory(commonRoot);
+                            }
+
+                            @Override
+                            protected void hadSuccess() {
+                                // No need to update the UI, the event bus will get it done
+                                log.debug("Added to common root {}",commonRoot.getName());
+                            }
+
+                            @Override
+                            protected void hadError(Throwable error) {
+                                SessionMgr.getSessionMgr().handleException(error);
+                            }
+                        };
+                        worker.execute();
+                    }
+                });
+
+                newFolderMenu.add(commonRootItem);
+            }
         }
-
+        
         return newFolderMenu;
     }
 
