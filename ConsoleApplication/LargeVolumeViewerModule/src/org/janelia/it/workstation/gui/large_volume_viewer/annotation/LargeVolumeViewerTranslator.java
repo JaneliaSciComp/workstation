@@ -22,6 +22,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 
@@ -42,7 +43,7 @@ import org.janelia.it.workstation.tracing.VoxelPosition;
  * unfortunately, this class's comments and methods tends to use "anchor" and "annotation"
  * somewhat interchangeably, which can be confusing
  */
-public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener {
+public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener {
 
     private AnnotationModel annModel;
     private LargeVolumeViewer largeVolumeViewer;
@@ -99,19 +100,19 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener {
 //        }
 //    };
 
-    public Slot1<TmAnchoredPath> addAnchoredPathSlot = new Slot1<TmAnchoredPath>() {
-        @Override
-        public void execute(TmAnchoredPath path) {
-            addAnchoredPath(path);
-        }
-    };
+//    public Slot1<TmAnchoredPath> addAnchoredPathSlot = new Slot1<TmAnchoredPath>() {
+//        @Override
+//        public void execute(TmAnchoredPath path) {
+//            addAnchoredPath(path);
+//        }
+//    };
 
-    public Slot1<List<TmAnchoredPath>> removeAnchoredPathsSlot = new Slot1<List<TmAnchoredPath>>() {
-        @Override
-        public void execute(List<TmAnchoredPath> pathList) {
-            removeAnchoredPaths(pathList);
-        }
-    };
+//    public Slot1<List<TmAnchoredPath>> removeAnchoredPathsSlot = new Slot1<List<TmAnchoredPath>>() {
+//        @Override
+//        public void execute(List<TmAnchoredPath> pathList) {
+//            removeAnchoredPaths(pathList);
+//        }
+//    };
 
     public Slot1<TmGeoAnnotation> annotationClickedSlot = new Slot1<TmGeoAnnotation>() {
         @Override
@@ -190,9 +191,9 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener {
 //        annModel.annotationReparentedSignal.connect(reparentAnnotationSlot);
 //        annModel.annotationNotMovedSignal.connect(unmoveAnnotationSlot);
         annModel.addTmGeoAnnotationModListener(this);
-        
-        annModel.anchoredPathAddedSignal.connect(addAnchoredPathSlot);
-        annModel.anchoredPathsRemovedSignal.connect(removeAnchoredPathsSlot);
+        annModel.addTmAnchoredPathListener(this);
+//        annModel.anchoredPathAddedSignal.connect(addAnchoredPathSlot);
+//        annModel.anchoredPathsRemovedSignal.connect(removeAnchoredPathsSlot);
 
         annModel.globalAnnotationColorChangedSignal.connect(globalAnnotationColorChangedSlot);
     }
@@ -264,33 +265,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener {
      */
     public void unmoveAnnotation(TmGeoAnnotation annotation) {
         anchorMovedBackSignal.emit(annotation);
-    }
-
-    public void addAnchoredPath(TmAnchoredPath path) {
-        for (AnchoredVoxelPathListener l: avpListeners) {
-            l.addAnchoredVoxelPath(TAP2AVP(path));
-        }
-//        anchoredPathAddedSignal.emit(TAP2AVP(path));
-    }
-
-    public void addAnchoredPaths(List<TmAnchoredPath> pathList) {
-        List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
-        for (TmAnchoredPath path: pathList) {
-            voxelPathList.add(TAP2AVP(path));
-        }
-        for (AnchoredVoxelPathListener l: avpListeners) {
-            l.addAnchoredVoxelPaths(voxelPathList);
-        }
-//        anchoredPathsAddedSignal.emit(voxelPathList);
-    }
-
-    public void removeAnchoredPaths(List<TmAnchoredPath> pathList) {
-        for (TmAnchoredPath path: pathList) {
-            for (AnchoredVoxelPathListener l: avpListeners) {
-                l.removeAnchoredVoxelPath(TAP2AVP(path));
-            }
-//        anchoredPathRemovedSignal.emit(TAP2AVP(path));
-        }
     }
 
     /**
@@ -369,6 +343,37 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener {
             }
             addAnchoredPaths(annList);
         }
+    }
+
+    //-----------------------------IMPLEMENTS TmAnchoredPathListener
+    //  This listener functions as a value-remarshalling relay to next listener.
+    @Override
+    public void addAnchoredPath(TmAnchoredPath path) {
+        for (AnchoredVoxelPathListener l: avpListeners) {
+            l.addAnchoredVoxelPath(TAP2AVP(path));
+        }
+//        anchoredPathAddedSignal.emit(TAP2AVP(path));
+    }
+
+    @Override
+    public void removeAnchoredPaths(List<TmAnchoredPath> pathList) {
+        for (TmAnchoredPath path: pathList) {
+            for (AnchoredVoxelPathListener l: avpListeners) {
+                l.removeAnchoredVoxelPath(TAP2AVP(path));
+            }
+//        anchoredPathRemovedSignal.emit(TAP2AVP(path));
+        }
+    }
+
+    public void addAnchoredPaths(List<TmAnchoredPath> pathList) {
+        List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
+        for (TmAnchoredPath path: pathList) {
+            voxelPathList.add(TAP2AVP(path));
+        }
+        for (AnchoredVoxelPathListener l: avpListeners) {
+            l.addAnchoredVoxelPaths(voxelPathList);
+        }
+//        anchoredPathsAddedSignal.emit(voxelPathList);
     }
 
     //--------------------------IMPLEMENTS TmGeoAnnotationModListener

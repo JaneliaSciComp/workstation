@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 
 
@@ -68,6 +69,7 @@ SimpleWorker thread.
     private TmNeuron currentNeuron;
 
     private Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
+    private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
     
     // ----- signals
     public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<>();
@@ -79,8 +81,8 @@ SimpleWorker thread.
 //    public Signal1<TmGeoAnnotation> annotationReparentedSignal = new Signal1<>();
 //    public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<>();
     
-    public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<>();
-    public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<>();
+//    public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<>();
+//    public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<>();
 
     public Signal1<Long> pathTraceRequestedSignal = new Signal1<>();
 
@@ -117,6 +119,14 @@ SimpleWorker thread.
     
     public void removeTmGeoAnnotationModListener(TmGeoAnnotationModListener listener) {
         tmGeoAnnoModListeners.remove(listener);
+    }
+    
+    public void addTmAnchoredPathListener(TmAnchoredPathListener listener) {
+        tmAnchoredPathListeners.add(listener);
+    }
+    
+    public void removeTmAnchoredPathListener(TmAnchoredPathListener listener) {
+        tmAnchoredPathListeners.remove(listener);
     }
     
     // current workspace methods
@@ -382,7 +392,8 @@ SimpleWorker thread.
                 neuronSelectedSignal.emit(null);
                 fireAnnotationsDeleted(tempAnnotationList);
 //                annotationsDeletedSignal.emit(tempAnnotationList);
-                anchoredPathsRemovedSignal.emit(tempPathList);
+                fireAnchoredPathsRemoved(tempPathList);
+//                anchoredPathsRemovedSignal.emit(tempPathList);
                 workspaceLoadedSignal.emit(workspace);
             }
         });
@@ -997,7 +1008,8 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                anchoredPathAddedSignal.emit(path);
+                fireAnchoredPathAdded(path);
+//                anchoredPathAddedSignal.emit(path);
             }
         });
 
@@ -1027,7 +1039,8 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                anchoredPathsRemovedSignal.emit(pathList);
+                fireAnchoredPathsRemoved(pathList);
+//                anchoredPathsRemovedSignal.emit(pathList);
             }
         });
     }
@@ -1283,6 +1296,19 @@ SimpleWorker thread.
     private void fireAnnotationReparented(TmGeoAnnotation annotation) {
         for (TmGeoAnnotationModListener l : tmGeoAnnoModListeners) {
             l.annotationReparented(annotation);
+        }
+    }
+    
+    private void fireAnchoredPathsRemoved(List<TmAnchoredPath> deleteList) {
+        // undraw deleted annotation
+        for (TmAnchoredPathListener l : tmAnchoredPathListeners) {
+            l.removeAnchoredPaths(deleteList);
+        }
+    }
+    
+    private void fireAnchoredPathAdded(TmAnchoredPath path) {
+        for (TmAnchoredPathListener l : tmAnchoredPathListeners) {
+            l.addAnchoredPath(path);
         }
     }
 }
