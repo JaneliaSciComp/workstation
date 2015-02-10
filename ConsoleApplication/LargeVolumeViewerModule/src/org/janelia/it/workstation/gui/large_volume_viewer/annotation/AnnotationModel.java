@@ -564,7 +564,7 @@ SimpleWorker thread.
         sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
 
-        // if source neurite not in same neuron as dest neruite: move it
+        // if source neurite not in same neuron as dest neurite: move it
         TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
             modelMgr.moveNeurite(sourceAnnotation, targetNeuron);
@@ -642,7 +642,7 @@ SimpleWorker thread.
                 notesUpdatedSignal.emit(workspace);
                 neuronSelectedSignal.emit(updateTargetNeuron);
                 for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
-                    fireAnnotationNotMoved(child);
+                    fireAnnotationReparented(child);
 //                    annotationReparentedSignal.emit(child);
                 }
                 fireAnnotationsDeleted(deleteList);

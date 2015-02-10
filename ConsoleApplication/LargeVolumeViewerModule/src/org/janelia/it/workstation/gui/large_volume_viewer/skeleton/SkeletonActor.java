@@ -483,16 +483,21 @@ implements GLActor
 				List<VoxelPosition> p0 = oldSegment.getPath();
 				List<VoxelPosition> p1 = segment.getPath();
 				boolean looksTheSame = true;
-				if (p0.size() != p1.size()) // same size?
+				if (p0.size() != p1.size()) { // same size?
 					looksTheSame = false;
-				else if (p0.get(0) != p1.get(0)) // same first voxel?
+                }
+				else if (p0.get(0) != p1.get(0)) { // same first voxel?
 					looksTheSame = false;
-				else if (p0.get(p0.size()-1) != p1.get(p1.size()-1)) // same final voxel?
+                }
+				else if (p0.get(p0.size()-1) != p1.get(p1.size()-1)) { // same final voxel?
 					looksTheSame = false;
-				if (looksTheSame)
+                }
+				if (looksTheSame) {
 					continue; // already have this segment, no need to recompute!
-				else
+                }
+                else {
 					tracedSegments.remove(ix); // obsolete. remove it.
+                }
 			}
 			TracedPathActor actor = new TracedPathActor(segment, getTileFormat());
 			addTracedSegment(actor);

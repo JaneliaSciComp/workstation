@@ -126,7 +126,9 @@ public class AnnotationManager implements AnchorListener
 
             // find closest to new anchor location that isn't the annotation already
             //  associated with anchor
-            TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchor.getLocation(),
+            TileFormat tf = getTileFormat();
+            Vec3 anchorVoxLoc = tf.voxelVec3ForMicronVec3(anchor.getLocation());
+            TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchorVoxLoc,
                 annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
 
 
@@ -484,9 +486,12 @@ public class AnnotationManager implements AnchorListener
         }
 
         // distance: close enough?
-        double dx = closest.getX() - anchor.getLocation().getX();
-        double dy = closest.getY() - anchor.getLocation().getY();
-        double dz = closest.getZ() - anchor.getLocation().getZ();
+        Vec3 anchorLocMicron = anchor.getLocation();
+        TileFormat tileFormat = getTileFormat();
+        Vec3 anchorLocVox = tileFormat.voxelVec3ForMicronVec3(anchorLocMicron);
+        double dx = closest.getX() - anchorLocVox.getX();
+        double dy = closest.getY() - anchorLocVox.getY();
+        double dz = closest.getZ() - anchorLocVox.getZ();
         if (dx * dx + dy * dy + dz * dz > DRAG_MERGE_THRESHOLD_SQUARED) {
             return false;
         }
@@ -526,8 +531,10 @@ public class AnnotationManager implements AnchorListener
             return;
         }
 
-        // are you sure dialog
-        // message before title, why???
+        // Message goes before title. Why?  
+        // Because there are several overrides, all of which use the message as 
+        // the first string param. The title is optional. Confusing if not used
+        // often, however.
         int ans =  JOptionPane.showConfirmDialog(
                 ComponentUtil.getLVVMainWindow(),
                 String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
