@@ -14,34 +14,17 @@ import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchoredVoxelPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Skeleton implements AnchoredVoxelPathListener {
+public class Skeleton {
 	@SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(Skeleton.class);
 
     private TileFormat tileFormat;
     private ViewStateListener viewStateListener;
 
-    //---------------------------------IMPLEMENTS AnchoredVoxelPathListener
-    @Override
-    public void addAnchoredVoxelPath(AnchoredVoxelPath path) {
-        addTracedSegment(path);
-    }
-
-    @Override
-    public void addAnchoredVoxelPaths(List<AnchoredVoxelPath> paths) {
-        addTracedSegments(paths);
-    }
-
-    @Override
-    public void removeAnchoredVoxelPath(AnchoredVoxelPath path) {
-        removeTracedSegment(path);
-    }
-	
 	/**
 	 * AnchorSeed holds enough data to nucleate a new Anchor.
 	 * So I can send multiple values in a single argument for Signal1/Slot1.

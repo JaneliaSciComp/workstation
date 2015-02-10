@@ -23,6 +23,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
@@ -184,7 +185,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
         setNextParentSignal.connect(largeVolumeViewer.getSkeletonActor().setNextParentSlot);
 
-        addAnchoredVoxelPathListener(skeleton);
+        addAnchoredVoxelPathListener(new SkeletonController(skeleton));
 //        anchoredPathAddedSignal.connect(skeleton.addAnchoredPathSlot);
 //        anchoredPathsAddedSignal.connect(skeleton.addAnchoredPathsSlot);
 //        anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
