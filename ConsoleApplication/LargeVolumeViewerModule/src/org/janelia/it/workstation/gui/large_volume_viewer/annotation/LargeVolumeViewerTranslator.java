@@ -25,6 +25,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.tracing.VoxelPosition;
@@ -51,6 +52,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private AnnotationModel annModel;
     private LargeVolumeViewer largeVolumeViewer;
     private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<>();
+    private Collection<TmGeoAnnotationAnchorListener> anchorListeners = new ArrayList<>();
     private ViewStateListener viewStateListener;
     
     public void addAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
@@ -59,6 +61,14 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     
     public void removeAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
         avpListeners.remove(l);
+    }
+    
+    public void addTmGeoAnchorListener(TmGeoAnnotationAnchorListener l) {
+        anchorListeners.add(l);
+    }
+    
+    public void removeTmGeoAnchorListener(TmGeoAnnotationAnchorListener l) {
+        anchorListeners.remove(l);
     }
     
     // ----- slots
@@ -149,12 +159,12 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     // ----- signals
 //    public Signal1<Vec3> cameraPanToSignal = new Signal1<>();
 
-    public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<>();
-    public Signal1<List<TmGeoAnnotation>> anchorsAddedSignal = new Signal1<List<TmGeoAnnotation>>();
-    public Signal1<TmGeoAnnotation> anchorDeletedSignal = new Signal1<>();
-    public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<>();
-    public Signal1<TmGeoAnnotation> anchorMovedBackSignal = new Signal1<>();
-    public Signal clearSkeletonSignal = new Signal();
+//    public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<>();
+//    public Signal1<List<TmGeoAnnotation>> anchorsAddedSignal = new Signal1<>();
+//    public Signal1<TmGeoAnnotation> anchorDeletedSignal = new Signal1<>();
+//    public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<>();
+//    public Signal1<TmGeoAnnotation> anchorMovedBackSignal = new Signal1<>();
+//    public Signal clearSkeletonSignal = new Signal();
     public Signal1<Long> setNextParentSignal = new Signal1<>();
 
 //    public Signal1<AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<AnchoredVoxelPath>();
@@ -162,7 +172,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 //    public Signal1<AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<AnchoredVoxelPath>();
 
     public Signal1<Color> changeGlobalColorSignal = new Signal1<>();
-    public Signal1<String> loadColorModelSignal = new Signal1<>();
+//    public Signal1<String> loadColorModelSignal = new Signal1<>();
 
     public LargeVolumeViewerTranslator(AnnotationModel annModel, LargeVolumeViewer largeVolumeViewer) {
         this.annModel = annModel;
@@ -176,16 +186,17 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
     
     public void connectSkeletonSignals(Skeleton skeleton) {
-        anchorAddedSignal.connect(skeleton.addAnchorSlot);
-        anchorsAddedSignal.connect(skeleton.addAnchorsSlot);
-        anchorDeletedSignal.connect(skeleton.deleteAnchorSlot);
-        anchorReparentedSignal.connect(skeleton.reparentAnchorSlot);
-        anchorMovedBackSignal.connect(skeleton.moveAnchorBackSlot);
-        clearSkeletonSignal.connect(skeleton.clearSlot);
+//        anchorAddedSignal.connect(skeleton.addAnchorSlot);
+//        anchorsAddedSignal.connect(skeleton.addAnchorsSlot);
+//        anchorDeletedSignal.connect(skeleton.deleteAnchorSlot);
+//        anchorReparentedSignal.connect(skeleton.reparentAnchorSlot);
+//        anchorMovedBackSignal.connect(skeleton.moveAnchorBackSlot);
+//        clearSkeletonSignal.connect(skeleton.clearSlot);
 
         setNextParentSignal.connect(largeVolumeViewer.getSkeletonActor().setNextParentSlot);
-
-        addAnchoredVoxelPathListener(new SkeletonController(skeleton));
+        final SkeletonController skeletonController = new SkeletonController(skeleton);
+        addAnchoredVoxelPathListener(skeletonController);
+        addTmGeoAnchorListener(skeletonController);
 //        anchoredPathAddedSignal.connect(skeleton.addAnchoredPathSlot);
 //        anchoredPathsAddedSignal.connect(skeleton.addAnchoredPathsSlot);
 //        anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
@@ -215,7 +226,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
      */
     public void addAnnotation(TmGeoAnnotation annotation) {
         if (annotation != null) {
-            anchorAddedSignal.emit(annotation);
+            fireAnchorAdded(annotation);
         }
     }
 
@@ -226,7 +237,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         // remove all the individual annotations from 2D view
 
         for (TmGeoAnnotation ann: annotationList) {
-            anchorDeletedSignal.emit(ann);
+            fireAnchorDeleted(ann);
+//            anchorDeletedSignal.emit(ann);
         }
     }
 
@@ -235,7 +247,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
      */
     public void reparentAnnotation(TmGeoAnnotation annotation) {
         // pretty much a pass-through to the skeleton
-        anchorReparentedSignal.emit(annotation);
+        fireAnchorReparented(annotation);
+//        anchorReparentedSignal.emit(annotation);
     }
 
     /**
@@ -244,7 +257,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
      * and we want it moved back
      */
     public void unmoveAnnotation(TmGeoAnnotation annotation) {
-        anchorMovedBackSignal.emit(annotation);
+        fireAnchorMovedBack(annotation);
+//        anchorMovedBackSignal.emit(annotation);
     }
 
     //-----------------------------IMPLEMENTS TmAnchoredPathListener
@@ -277,7 +291,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         }
 //        anchoredPathsAddedSignal.emit(voxelPathList);
     }
-
+    
     //--------------------------IMPLEMENTS TmGeoAnnotationModListener
     @Override
     public void annotationAdded(TmGeoAnnotation annotation) {
@@ -312,7 +326,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     @Override
     public void workspaceLoaded(TmWorkspace workspace) {
         // clear existing
-        clearSkeletonSignal.emit();        
+        fireClearAnchors();
+//        clearSkeletonSignal.emit();        
 
         if (workspace != null) {
             // See about things to add to the Tile Format.
@@ -371,7 +386,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                     // first step in optimization; could conceivably aggregate these
                     //  lists into one big list and send signal once:
-                    anchorsAddedSignal.emit(neuron.getSubTreeList(root));
+                    fireAnchorsAdded(neuron.getSubTreeList(root));
+//                    anchorsAddedSignal.emit(neuron.getSubTreeList(root));
                 }
             }
 
@@ -419,6 +435,38 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     }
 
+    //------------------------------FIRING EVENTS.
+    private void fireAnchorsAdded(List<TmGeoAnnotation> anchors) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.anchorsAdded(anchors);
+        }
+    }
+    private void fireAnchorAdded(TmGeoAnnotation anchor) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.anchorAdded(anchor);
+        }
+    }
+    private void fireAnchorDeleted(TmGeoAnnotation anchor) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.anchorDeleted(anchor);
+        }
+    }
+    private void fireAnchorReparented(TmGeoAnnotation anchor) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.anchorReparented(anchor);
+        }
+    }
+    private void fireAnchorMovedBack(TmGeoAnnotation anchor) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.anchorMovedBack(anchor);
+        }
+    }
+    private void fireClearAnchors() {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.clearAnchors();
+        }
+    }
+    
     /**
      * convert between path formats
      *
