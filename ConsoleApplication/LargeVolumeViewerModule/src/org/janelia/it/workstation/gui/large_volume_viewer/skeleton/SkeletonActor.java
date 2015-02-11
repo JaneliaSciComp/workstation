@@ -122,16 +122,12 @@ implements GLActor
 //        }
 //    };
 
-    public Slot1<Color> changeGlobalColorSlot = new Slot1<Color>() {
-        @Override
-        public void execute(Color color) {
-            neuronColor[0] = color.getRed() / 255.0f;
-            neuronColor[1] = color.getGreen() / 255.0f;
-            neuronColor[2] = color.getBlue() / 255.0f;
-            // skeletonActorChangedSignal.emit();
-            updateAnchorsSlot.execute();
-        }
-    };
+//    public Slot1<Color> changeGlobalColorSlot = new Slot1<Color>() {
+//        @Override
+//        public void execute(Color color) {
+//            changeNeuronColor(color);
+//        }
+//    };
 
 	private TileFormat tileFormat;
 
@@ -433,6 +429,14 @@ implements GLActor
 	public void setZThicknessInPixels(float zThicknessInPixels) {
 		this.zThicknessInPixels = zThicknessInPixels;
 	}
+
+    public void changeNeuronColor(Color color) {
+        neuronColor[0] = color.getRed() / 255.0f;
+        neuronColor[1] = color.getGreen() / 255.0f;
+        neuronColor[2] = color.getBlue() / 255.0f;
+        // skeletonActorChangedSignal.emit();
+        updateAnchorsSlot.execute();
+    }
 
 	protected synchronized void updateAnchors() {
 		if (skeleton == null)

@@ -6,6 +6,7 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
+import java.awt.Color;
 import java.util.List;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
@@ -16,7 +17,7 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
  * This hands off interesting driving info to skeleton.
  * @author fosterl
  */
-public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener, NextParentListener {
+public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener, NextParentListener, GlobalColorChangeListener {
     private Skeleton skeleton;
     private SkeletonActor actor;
     
@@ -76,6 +77,12 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void setNextParent(Long id) {
         actor.setNextParentByID(id);
+    }
+
+    //--------------------------------IMPLEMENTS GlobalColorChangeListener    
+    @Override
+    public void globalAnnotationColorChanged(Color color) {
+        actor.changeNeuronColor(color);
     }
 	
 }
