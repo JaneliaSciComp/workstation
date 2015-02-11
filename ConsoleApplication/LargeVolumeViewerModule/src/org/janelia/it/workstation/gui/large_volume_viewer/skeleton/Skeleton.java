@@ -14,6 +14,7 @@ import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonChangeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ public class Skeleton {
 
     private TileFormat tileFormat;
     private ViewStateListener viewStateListener;
+    private AnnotationSelectionListener annotationSelectionListener;
 
 	/**
 	 * AnchorSeed holds enough data to nucleate a new Anchor.
@@ -88,6 +90,10 @@ public class Skeleton {
     
     public void setViewStateListener(ViewStateListener listener) {
         this.viewStateListener = listener;
+    }
+    
+    public void setAnnotationSelectionListener(AnnotationSelectionListener l) {
+        annotationSelectionListener = l;
     }
     
     public void addSkeletonChangeListener(SkeletonChangeListener l) {
@@ -263,6 +269,9 @@ public class Skeleton {
 		anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
 		anchor.anchorMovedSilentSignal.connect(this.anchorMovedSilentSignal);
 		anchorHistory.push(anchor);
+        if (annotationSelectionListener != null) {
+            annotationSelectionListener.annotationSelected(guid);
+        }
         fireSkeletonChangeEvent();
 //		anchorAddedSignal.emit(anchor);
 		return anchor;
@@ -317,7 +326,7 @@ public class Skeleton {
         }
     }
 
-    public void deleteSubtreeRequest(Anchor anchor){
+    public void deleteSubtreeRequest(Anchor anchor){        
         for (AnchorListener l: anchorListeners) {
             l.deleteSubtreeRequested(anchor);
         }

@@ -111,10 +111,10 @@ implements GLActor, SkeletonChangeListener
 
     public Signal1<Anchor> nextParentChangedSignal = new Signal1<Anchor>();
 	
-	private Slot updateAnchorsSlot = new Slot() {
-		@Override
-		public void execute() {updateAnchors();}
-	};
+//	private Slot updateAnchorsSlot = new Slot() {
+//		@Override
+//		public void execute() {updateAnchors();}
+//	};
 
 //    public Slot1<Long> setNextParentSlot = new Slot1<Long>() {
 //        @Override
@@ -436,7 +436,8 @@ implements GLActor, SkeletonChangeListener
         neuronColor[1] = color.getGreen() / 255.0f;
         neuronColor[2] = color.getBlue() / 255.0f;
         // skeletonActorChangedSignal.emit();
-        updateAnchorsSlot.execute();
+        updateAnchors();
+//        updateAnchorsSlot.execute();
     }
 
 	public synchronized void updateAnchors() {

@@ -22,6 +22,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalColorChangeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NextParentListener;
@@ -49,7 +50,7 @@ import org.janelia.it.workstation.tracing.VoxelPosition;
  * unfortunately, this class's comments and methods tends to use "anchor" and "annotation"
  * somewhat interchangeably, which can be confusing
  */
-public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener, GlobalAnnotationListener {
+public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener, GlobalAnnotationListener, AnnotationSelectionListener {
 
     private AnnotationModel annModel;
     private LargeVolumeViewer largeVolumeViewer;
@@ -221,6 +222,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         addTmGeoAnchorListener(skeletonController);
         addNextParentListener(skeletonController);
         addColorChangeListener(skeletonController);
+        skeleton.setAnnotationSelectionListener(this);
 //        anchoredPathAddedSignal.connect(skeleton.addAnchoredPathSlot);
 //        anchoredPathsAddedSignal.connect(skeleton.addAnchoredPathsSlot);
 //        anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
@@ -344,6 +346,12 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 //        changeGlobalColorSignal.emit(color);
     }
 
+    //-----------------------IMPLEMENTS AnnotationSelectionListener
+    @Override
+    public void annotationSelected(Long id) {
+        fireNextParentEvent(id);
+    }
+    
     /**
      * called by the model when it loads a new workspace
      */

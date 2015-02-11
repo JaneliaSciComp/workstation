@@ -75,7 +75,12 @@ public class AnnotationManager implements AnchorListener
     //-----------------------------------IMPLEMENT AnchorListener
     @Override
     public void deleteSubtreeRequested(Anchor anchor) {
-        deleteSubTree(anchor.getGuid());
+        if (anchor != null) {
+            deleteSubTree(anchor.getGuid());
+        }
+        else {
+            int x =0;
+        }
     }
 
     @Override
@@ -407,7 +412,7 @@ public class AnnotationManager implements AnchorListener
      * delete the annotation with the input ID, and delete all of its descendants
      */
     public void deleteSubTree(final Long annotationID) {
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (annotationModel.getCurrentWorkspace() == null  ||  annotationID == null) {
             // dialog?
             return;
         } else {
