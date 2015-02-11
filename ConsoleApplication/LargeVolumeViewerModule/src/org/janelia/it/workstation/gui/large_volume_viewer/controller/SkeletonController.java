@@ -9,17 +9,20 @@ package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 import java.util.List;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 
 /**
  * This hands off interesting driving info to skeleton.
  * @author fosterl
  */
-public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener {
+public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener, NextParentListener {
     private Skeleton skeleton;
+    private SkeletonActor actor;
     
-    public SkeletonController(Skeleton skeleton) {
+    public SkeletonController(Skeleton skeleton, SkeletonActor actor) {
         this.skeleton = skeleton;
+        this.actor = actor;
     }
     
     //---------------------------------IMPLEMENTS AnchoredVoxelPathListener
@@ -67,6 +70,12 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void clearAnchors() {
         skeleton.clear();
+    }
+
+    //--------------------------------IMPLEMENTS NextParentListener    
+    @Override
+    public void setNextParent(Long id) {
+        actor.setNextParentByID(id);
     }
 	
 }

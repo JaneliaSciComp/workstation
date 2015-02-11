@@ -23,6 +23,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.NextParentListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationAnchorListener;
@@ -53,6 +54,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private LargeVolumeViewer largeVolumeViewer;
     private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<>();
     private Collection<TmGeoAnnotationAnchorListener> anchorListeners = new ArrayList<>();
+    private Collection<NextParentListener> nextParentListeners = new ArrayList<>();
     private ViewStateListener viewStateListener;
     
     public void addAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
@@ -69,6 +71,14 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     
     public void removeTmGeoAnchorListener(TmGeoAnnotationAnchorListener l) {
         anchorListeners.remove(l);
+    }
+    
+    public void addNextParentListener(NextParentListener l) {
+        nextParentListeners.add(l);
+    }
+    
+    public void removeNextParentListener(NextParentListener l) {
+        nextParentListeners.remove(l);
     }
     
     // ----- slots
@@ -131,7 +141,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     public Slot1<TmGeoAnnotation> annotationClickedSlot = new Slot1<TmGeoAnnotation>() {
         @Override
         public void execute(TmGeoAnnotation annotation) {
-            setNextParentSignal.emit(annotation.getId());
+            fireNextParent(annotation.getId());
+//            setNextParentSignal.emit(annotation.getId());
         }
     };
 
@@ -165,7 +176,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 //    public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<>();
 //    public Signal1<TmGeoAnnotation> anchorMovedBackSignal = new Signal1<>();
 //    public Signal clearSkeletonSignal = new Signal();
-    public Signal1<Long> setNextParentSignal = new Signal1<>();
+//    public Signal1<Long> setNextParentSignal = new Signal1<>();
 
 //    public Signal1<AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<AnchoredVoxelPath>();
 //    public Signal1<List<AnchoredVoxelPath>> anchoredPathsAddedSignal = new Signal1<List<AnchoredVoxelPath>>();
@@ -193,10 +204,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 //        anchorMovedBackSignal.connect(skeleton.moveAnchorBackSlot);
 //        clearSkeletonSignal.connect(skeleton.clearSlot);
 
-        setNextParentSignal.connect(largeVolumeViewer.getSkeletonActor().setNextParentSlot);
-        final SkeletonController skeletonController = new SkeletonController(skeleton);
+//        setNextParentSignal.connect(largeVolumeViewer.getSkeletonActor().setNextParentSlot);
+        final SkeletonController skeletonController = new SkeletonController(skeleton, largeVolumeViewer.getSkeletonActor());
         addAnchoredVoxelPathListener(skeletonController);
         addTmGeoAnchorListener(skeletonController);
+        addNextParentListener(skeletonController);
 //        anchoredPathAddedSignal.connect(skeleton.addAnchoredPathSlot);
 //        anchoredPathsAddedSignal.connect(skeleton.addAnchoredPathsSlot);
 //        anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
@@ -419,7 +431,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
         // if neuron has no annotations, clear old one anyway
         if (neuron.getGeoAnnotationMap().size() == 0) {
-            setNextParentSignal.emit(null);
+            fireNextParent(null);
+//            setNextParentSignal.emit(null);
             return;
         }
 
@@ -428,7 +441,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         TmGeoAnnotation firstRoot = neuron.getRootAnnotations().get(0);
         for (TmGeoAnnotation link: neuron.getSubTreeList(firstRoot)) {
             if (link.getChildIds().size() == 0) {
-                setNextParentSignal.emit(link.getId());
+                fireNextParent(link.getId());
+//                setNextParentSignal.emit(link.getId());
                 return;
             }
         }
@@ -464,6 +478,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private void fireClearAnchors() {
         for (TmGeoAnnotationAnchorListener l: anchorListeners) {
             l.clearAnchors();
+        }
+    }
+    private void fireNextParent(Long id) {
+        for (NextParentListener l: nextParentListeners) {
+            l.setNextParent(id);
         }
     }
     

@@ -115,12 +115,12 @@ implements GLActor
 		public void execute() {updateAnchors();}
 	};
 
-    public Slot1<Long> setNextParentSlot = new Slot1<Long>() {
-        @Override
-        public void execute(Long annotationID) {
-            setNextParentByID(annotationID);
-        }
-    };
+//    public Slot1<Long> setNextParentSlot = new Slot1<Long>() {
+//        @Override
+//        public void execute(Long annotationID) {
+//            setNextParentByID(annotationID);
+//        }
+//    };
 
     public Slot1<Color> changeGlobalColorSlot = new Slot1<Color>() {
         @Override
