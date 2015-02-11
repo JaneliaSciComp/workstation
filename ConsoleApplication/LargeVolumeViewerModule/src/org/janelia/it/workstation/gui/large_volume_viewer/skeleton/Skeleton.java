@@ -7,13 +7,14 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.HistoryStack;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot;
+//import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonChangeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,17 +64,18 @@ public class Skeleton {
 		}
 	};
 	
-	private Set<Anchor> anchors = new LinkedHashSet<Anchor>();
+	private Set<Anchor> anchors = new LinkedHashSet<>();
     private Collection<AnchorListener> anchorListeners = new ArrayList<>();
+    private Collection<SkeletonChangeListener> skeletonChangedListeners = new ArrayList<>();
 	
 	private Map<SegmentIndex, AnchoredVoxelPath> tracedSegments =
-			new ConcurrentHashMap<SegmentIndex, AnchoredVoxelPath>();
+			new ConcurrentHashMap<>();
 	
-	private Map<Long, Anchor> anchorsByGuid = new HashMap<Long, Anchor>();
+	private Map<Long, Anchor> anchorsByGuid = new HashMap<>();
 	// TODO - anchor browsing history should maybe move farther back
-	private HistoryStack<Anchor> anchorHistory = new HistoryStack<Anchor>();
+	private HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
 
-	public Signal skeletonChangedSignal = new Signal();
+//	public Signal skeletonChangedSignal = new Signal();
 //	public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
 
     public void addAnchorListener(AnchorListener listener) {
@@ -86,6 +88,14 @@ public class Skeleton {
     
     public void setViewStateListener(ViewStateListener listener) {
         this.viewStateListener = listener;
+    }
+    
+    public void addSkeletonChangeListener(SkeletonChangeListener l) {
+        skeletonChangedListeners.add(l);
+    }
+    
+    public void removeSkeletonChangeListener(SkeletonChangeListener l) {
+        skeletonChangedListeners.remove(l);
     }
     
 	// API for synchronizing with back end database
@@ -138,7 +148,7 @@ public class Skeleton {
 //        }
 //    };
 	// AFTER anchor has already been added (not simply requested)
-	public Signal1<Anchor> anchorAddedSignal = new Signal1<Anchor>();
+//	public Signal1<Anchor> anchorAddedSignal = new Signal1<Anchor>();
 
 	///// DELETE
 	// Anchor deletion
@@ -171,9 +181,16 @@ public class Skeleton {
 		@Override
 		public void execute(Anchor anchor) {delete(anchor);}
 	};
-	public Signal1<Anchor> anchorDeletedSignal = new Signal1<Anchor>();
-    public Signal1<Anchor> anchorReparentedSignal = new Signal1<Anchor>();
-    public Signal1<Anchor> anchorNeighborsUpdatedSignal = new Signal1<Anchor>();
+    // This is a relay slot from external to internal refresh.
+    private Slot1 skeletonChangedSlot = new Slot1() {
+        @Override
+        public void execute(Object o) {
+            Skeleton.this.fireSkeletonChangeEvent();
+        }
+    };    
+//	public Signal1<Anchor> anchorDeletedSignal = new Signal1<Anchor>();
+//    public Signal1<Anchor> anchorReparentedSignal = new Signal1<Anchor>();
+//    public Signal1<Anchor> anchorNeighborsUpdatedSignal = new Signal1<Anchor>();
 
 	///// CLEAR
 //	public Slot clearSlot = new Slot() {
@@ -225,12 +242,12 @@ public class Skeleton {
 		// subtreeDeleteRequestedSignal.connect(deleteAnchorShortCircuitSlot); // TODO remove
 		//
 		// once anchor changes are persisted in db, we get signals:
-		anchorAddedSignal.connect(skeletonChangedSignal);
-		anchorDeletedSignal.connect(skeletonChangedSignal);
-        anchorReparentedSignal.connect(skeletonChangedSignal);
-        anchorNeighborsUpdatedSignal.connect(skeletonChangedSignal);
-		anchorMovedSignal.connect(skeletonChangedSignal);
-		anchorMovedSilentSignal.connect(skeletonChangedSignal);
+//		anchorAddedSignal.connect(skeletonChangedSignal);
+//		anchorDeletedSignal.connect(skeletonChangedSignal);
+//        anchorReparentedSignal.connect(skeletonChangedSignal);
+//        anchorNeighborsUpdatedSignal.connect(skeletonChangedSignal);
+		anchorMovedSignal.connect(skeletonChangedSlot);
+		anchorMovedSilentSignal.connect(skeletonChangedSlot);
 		// log.info("Skeleton constructor");
 	}
 	
@@ -246,7 +263,8 @@ public class Skeleton {
 		anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
 		anchor.anchorMovedSilentSignal.connect(this.anchorMovedSilentSignal);
 		anchorHistory.push(anchor);
-		anchorAddedSignal.emit(anchor);
+        fireSkeletonChangeEvent();
+//		anchorAddedSignal.emit(anchor);
 		return anchor;
 	}
 
@@ -271,10 +289,11 @@ public class Skeleton {
             anchor.anchorMovedSilentSignal.connect(this.anchorMovedSilentSignal);
             anchorHistory.push(anchor);
         }
+        fireSkeletonChangeEvent();
         // this is a bit of a cheat; I send one anchor knowing that it's
         //  never used--the whole skeleton gets updated, and that's what
         //  I want since I've potentially added many anchors
-        anchorAddedSignal.emit(anchorList.get(0));
+//        anchorAddedSignal.emit(anchorList.get(0));
 	}
 
 	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {        
@@ -288,7 +307,7 @@ public class Skeleton {
 			return false;
 		if (! anchor1.addNeighbor(anchor2))
 			return false;
-		skeletonChangedSignal.emit();
+		fireSkeletonChangeEvent();
 		return true;
 	}
 
@@ -346,7 +365,8 @@ public class Skeleton {
 		//
 		anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
 		anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
-		anchorDeletedSignal.emit(anchor);
+        fireSkeletonChangeEvent();
+//		anchorDeletedSignal.emit(anchor);
 		return true;
 	}
 
@@ -423,7 +443,7 @@ public class Skeleton {
 		anchorsByGuid.clear();
 		anchorHistory.clear();
 		clearedSignal.emit();
-		skeletonChangedSignal.emit();
+		fireSkeletonChangeEvent();
 	}
 	
     /** given an anchor, update its neighbors to match the input set of
@@ -461,8 +481,8 @@ public class Skeleton {
             anchor.getNeighbors().remove(removeAnchor);
             removeAnchor.getNeighbors().remove(anchor);
         }
-
-        anchorNeighborsUpdatedSignal.emit(anchor);
+        fireSkeletonChangeEvent();
+//        anchorNeighborsUpdatedSignal.emit(anchor);
 
     }
 
@@ -493,7 +513,8 @@ public class Skeleton {
 	    SegmentIndex ix = path.getSegmentIndex();
 		tracedSegments.put(ix, path);
 		// log.info("tracedSegments.size() [300] = "+tracedSegments.size());
-		skeletonChangedSignal.emit();
+        fireSkeletonChangeEvent();
+//		skeletonChangedSignal.emit();
 	}
 
     public void addTracedSegments(List<AnchoredVoxelPath> pathList) {
@@ -501,13 +522,14 @@ public class Skeleton {
             SegmentIndex ix = path.getSegmentIndex();
             tracedSegments.put(ix, path);
         }
-        skeletonChangedSignal.emit();
+        fireSkeletonChangeEvent();
+//        skeletonChangedSignal.emit();
     }
 
     public void removeTracedSegment(AnchoredVoxelPath path) {
         SegmentIndex ix = path.getSegmentIndex();
         tracedSegments.remove(ix);
-        skeletonChangedSignal.emit();
+        fireSkeletonChangeEvent();
     }
 
 	public Collection<AnchoredVoxelPath> getTracedSegments() {
@@ -517,4 +539,9 @@ public class Skeleton {
 		return result;
 	}
 
+    public void fireSkeletonChangeEvent() {
+        for (SkeletonChangeListener l: skeletonChangedListeners) {
+            l.skeletonChanged();
+        }
+    }
 }

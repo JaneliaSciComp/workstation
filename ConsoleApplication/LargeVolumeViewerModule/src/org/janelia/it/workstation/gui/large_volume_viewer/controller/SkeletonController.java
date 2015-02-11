@@ -17,7 +17,7 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
  * This hands off interesting driving info to skeleton.
  * @author fosterl
  */
-public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener, NextParentListener, GlobalColorChangeListener {
+public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener, NextParentListener, GlobalColorChangeListener, SkeletonChangeListener {
     private Skeleton skeleton;
     private SkeletonActor actor;
     
@@ -83,6 +83,12 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void globalAnnotationColorChanged(Color color) {
         actor.changeNeuronColor(color);
+    }
+
+    //--------------------------------IMPLEMENTS SkeletonChangeListener    
+    @Override
+    public void skeletonChanged() {
+        actor.updateAnchors();
     }
 	
 }

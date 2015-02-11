@@ -28,6 +28,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonChangeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 // import TracedPathShader;
@@ -53,7 +54,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class SkeletonActor 
-implements GLActor
+implements GLActor, SkeletonChangeListener
 {
 	private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
 	
@@ -404,11 +405,11 @@ implements GLActor
 			return;
 		if (this.skeleton != null) { 
 			// disconnect previous skeleton, if any
-			this.skeleton.skeletonChangedSignal.deleteObserver(updateAnchorsSlot);
+            this.skeleton.removeSkeletonChangeListener(this);
 		}
 		this.skeleton = skeleton;
 		updateAnchors();
-		skeleton.skeletonChangedSignal.connect(updateAnchorsSlot);
+        skeleton.addSkeletonChangeListener(this);
 	}
 	
 	public float getZThicknessInPixels() {
@@ -438,7 +439,7 @@ implements GLActor
         updateAnchorsSlot.execute();
     }
 
-	protected synchronized void updateAnchors() {
+	public synchronized void updateAnchors() {
 		if (skeleton == null)
 			return;
 		vertexCount = skeleton.getAnchors().size();
@@ -782,5 +783,10 @@ implements GLActor
         tracedSegments.put(actor.getSegmentIndex(), actor);
     	// log.info("tracedSegments.size() [694] = "+tracedSegments.size());
         skeletonActorChangedSignal.emit();
+    }
+    
+    @Override
+    public void skeletonChanged() {
+        updateAnchors();
     }
 }

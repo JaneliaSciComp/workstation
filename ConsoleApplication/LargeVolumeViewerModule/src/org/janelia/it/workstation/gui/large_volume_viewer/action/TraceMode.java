@@ -66,7 +66,8 @@ implements MouseMode, KeyListener
 		setHoverCursor(penCursor);
 		setDragCursor(crossCursor);
 		// Center on new anchors, and mark them with a "P"
-		skeleton.anchorAddedSignal.connect(focusOnAnchorSlot);
+		skeleton.fireSkeletonChangeEvent();
+//                .anchorAddedSignal.connect(focusOnAnchorSlot);
 	}
 
 	@Override 
