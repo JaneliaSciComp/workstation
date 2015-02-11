@@ -10,13 +10,13 @@ import java.util.Properties;
 
 /**
  * Adapted from IDEA code base.
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class SystemInfo {
 
     private static final Logger log = LoggerFactory.getLogger(SystemInfo.class);
-    
+
     private static final String NETBEANS_IDE_SETTING_NAME_PREFIX = "netbeans_";
     public static final String MEMORY_SETTING_PREFIX = "-J-Xmx";
     public static final String DEFAULT_OPTIONS_PROP = "default_options";
@@ -33,7 +33,7 @@ public class SystemInfo {
     public static final String JAVA_RUNTIME_VERSION = System.getProperty("java.runtime.version", "unknown");
     public static final String ARCH_DATA_MODEL = System.getProperty("sun.arch.data.model");
     public static final String SUN_DESKTOP = System.getProperty("sun.desktop");
-    
+
     public static final String DOWNLOADS_FINAL_PATH_DIR = "Downloads/";
     public static final String USERHOME_SYSPROP_NAME = "user.home";
 
@@ -118,18 +118,16 @@ public class SystemInfo {
     private static boolean isSnowLeopard() {
         return isMac && isLeopard() && !OS_VERSION_LC.startsWith("10.5");
     }
-    
+
     public static void setDownloadsDir(String downloadsDir) {
         SessionMgr.getSessionMgr().setModelProperty(SessionMgr.DOWNLOADS_DIR, downloadsDir);
     }
-    
+
     public static File getDownloadsDir() {
         String downloadsDir = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DOWNLOADS_DIR);
-        if (downloadsDir.startsWith("/tmp")) {
-            downloadsDir = null;
-        }
         File downloadsDirFile;
-        if (downloadsDir==null) {
+        // Check for existence and clear out references to tmp
+        if (null==downloadsDir || downloadsDir.startsWith("/tmp")) {
             downloadsDirFile = new File(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
         }
         else {
@@ -154,7 +152,7 @@ public class SystemInfo {
         com.sun.management.OperatingSystemMXBean sunmxbean = (com.sun.management.OperatingSystemMXBean) mxbean;
         return sunmxbean;
     }
-    
+
     public static Long getTotalSystemMemory() {
         try {
             return getOSMXBean().getTotalPhysicalMemorySize();
@@ -164,7 +162,7 @@ public class SystemInfo {
             return null;
         }
     }
-    
+
     public static Long getFreeSystemMemory() {
         try {
             return getOSMXBean().getFreePhysicalMemorySize();
@@ -174,7 +172,7 @@ public class SystemInfo {
             return null;
         }
     }
-    
+
     /**
      * Gets the -Xmx setting in current use.
      * @return gigs being requested at launch.
@@ -186,7 +184,7 @@ public class SystemInfo {
         if ( javaMemoryOption == null ) {
             return -1;
         }
-        
+
         final int numberEndPt = javaMemoryOption.length() - 1;
         char rangeIndicator = javaMemoryOption.charAt( numberEndPt );
         final int numberStartPt = MEMORY_SETTING_PREFIX.length();
@@ -197,11 +195,11 @@ public class SystemInfo {
         }
         else {
             // Stored as megabytes. Presented to user as gigabytes.
-            rtnVal = Integer.parseInt( javaMemoryOption.substring( numberStartPt, numberEndPt ) ) / 1024;        
+            rtnVal = Integer.parseInt( javaMemoryOption.substring( numberStartPt, numberEndPt ) ) / 1024;
         }
         return rtnVal;
     }
-    
+
     /**
      * Sets the ultimate -Xmx allocation setting.
      * @param memoryInGb how many gigs to use.
@@ -217,17 +215,17 @@ public class SystemInfo {
         }
         int optStart = value.indexOf(MEMORY_SETTING_PREFIX) + MEMORY_SETTING_PREFIX.length();
         int optEnd = value.indexOf( " ", optStart );
-        
+
         String newDefaultOpts = value.substring( 0, optStart ) + memoryInGb * 1024 + "m" + value.substring( optEnd );
         reWriteProperty( brandingConfig, DEFAULT_OPTIONS_PROP, newDefaultOpts );
     }
-    
+
     /**
      * Returns the user's copy of the branding configuration file,
      * but creates one by copying it from the main one, if it does
      * not yet exist.
-     * 
-     * @return 
+     *
+     * @return
      */
     private static File getOrCreateBrandingConfigFile() throws IOException {
         String appnameToken ="JaneliaWorkstation";  //todo This needs to be programmatically set and retrieved
@@ -267,28 +265,28 @@ public class SystemInfo {
                                 String inline = null;
                                 while ( null != ( inline = infileReader.readLine() ) ) {
                                     if ( inline.startsWith( NETBEANS_IDE_SETTING_NAME_PREFIX ) ) {
-                                        inline = inline.substring( NETBEANS_IDE_SETTING_NAME_PREFIX.length() );                                        
+                                        inline = inline.substring( NETBEANS_IDE_SETTING_NAME_PREFIX.length() );
                                     }
                                     outfileWriter.println( inline );
                                 }
                             }
                         }
-                        
+
                     }
                     else {
                         log.error("Failed to save config file changes.  Config file used was {}.", sysWideConfig);
                     }
                 }
             }
-            
+
         }
         else {
             log.info("Found the {} file. No need to copy new one.", fqBrandingConfig);
         }
-        
+
         return fqBrandingConfig;
     }
-    
+
     private static String getJavaMemOption( String[] defaultOptions ) {
         String rtnVal = null;
         for ( String defaultOption: defaultOptions ) {
@@ -299,7 +297,7 @@ public class SystemInfo {
         }
         return rtnVal;
     }
-    
+
     private static String[] getDefaultOptions( File infile ) throws IOException {
         Properties props = loadNbConfig( infile );
         String value = (String)props.get( DEFAULT_OPTIONS_PROP );
@@ -310,7 +308,7 @@ public class SystemInfo {
             return new String[0];
         }
     }
-    
+
     private static Properties loadNbConfig( File infile ) throws IOException {
         Properties props = new Properties();
         if ( infile.exists() ) {
@@ -318,7 +316,7 @@ public class SystemInfo {
         }
         return props;
     }
-    
+
     private synchronized static void reWriteProperty( File outFile, String propName, String propValue ) throws IOException {
         Properties oldProps = loadNbConfig( outFile );
         oldProps.setProperty( propName, propValue );
@@ -330,13 +328,13 @@ public class SystemInfo {
             throw ioe;
         }
     }
-        
+
     public static String getOSInfo() {
         StringBuilder sb = new StringBuilder();
         sb.append(OS_NAME).append(" ").append(OS_VERSION).append(" (").append(OS_ARCH).append(")");
         return sb.toString();
     }
-    
+
     public static String getJavaInfo() {
         StringBuilder sb = new StringBuilder();
         sb.append(JAVA_NAME).append(" ").append(JAVA_VERSION);
