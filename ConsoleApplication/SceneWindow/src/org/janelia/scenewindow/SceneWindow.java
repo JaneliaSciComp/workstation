@@ -36,6 +36,7 @@ import java.util.Observable;
 import java.util.Observer;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLCapabilitiesImmutable;
 import javax.media.opengl.GLProfile;
 import javax.swing.JComponent;
 import org.janelia.geometry3d.AbstractCamera;
@@ -45,6 +46,7 @@ import org.janelia.geometry3d.Object3d;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.scenewindow.SceneRenderer.CameraType;
+import org.janelia.scenewindow.stereo.HardwareRenderer;
 
 /**
  *
@@ -64,9 +66,14 @@ public class SceneWindow implements GLJComponent, Scene {
     public SceneWindow(Vantage vantage, CameraType cameraType) {
         scene = new BasicScene(vantage);
         GLProfile profile = GLProfile.get(GLProfile.GL3);
-        GLCapabilities caps = new GLCapabilities(profile);
-        caps.setStereo(true);
-        glCanvas = GLJComponentFactory.createGLJComponent(caps);
+        GLCapabilities requestedCapabilities = new GLCapabilities(profile);
+        
+        // Problem: On Linux, asking for stereo and failing, causes double buffering
+        // to fail too.
+        requestedCapabilities.setDoubleBuffered(true);
+        // requestedCapabilities.setStereo(true); // Causes double buffering to fail on Linux
+        glCanvas = GLJComponentFactory.createGLJComponent(requestedCapabilities);
+        
         renderer = new SceneRenderer(vantage, viewport, cameraType);
         glCanvas.getGLAutoDrawable().addGLEventListener(renderer);
         //

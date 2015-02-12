@@ -119,6 +119,8 @@ implements GLEventListener
             gl.glEnable(GL3.GL_FRAMEBUFFER_SRGB);
         for(GL3Resource actor : resources)
             actor.init(gl);
+        for(MultipassRenderer renderer : multipassRenderers)
+            renderer.init(gl);
     }
 
     @Override
@@ -156,6 +158,8 @@ implements GLEventListener
         
         // Background
         gl.glClear(GL3.GL_COLOR_BUFFER_BIT | GL3.GL_DEPTH_BUFFER_BIT);
+        // Clearing color buffer causes tearing on Linux - but only if double buffering has not been correctly enabled
+        // gl.glClear(GL3.GL_DEPTH_BUFFER_BIT);
 
         stereoRenderer.renderScene(glad, this, true);
         
