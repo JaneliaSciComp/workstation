@@ -198,6 +198,21 @@ public class RenderTarget extends Texture2d
         hostTextureBuffer = null;
     }
     
+    public void clear(GL3 gl) {
+        int totalBytes = width*height*bytesPerIntensity*numberOfComponents + height*widthPadInBytes;
+        ByteBuffer clearBuffer = Buffers.newDirectByteBuffer(totalBytes);
+        clearBuffer.order(ByteOrder.nativeOrder());
+        clearBuffer.clear();
+        gl.glTexSubImage2D(
+                textureTarget, 
+                0, // mipmap level
+                0, 0, // xy offset
+                width, height,
+                format, 
+                type, 
+                clearBuffer);
+    }
+    
     // RenderTargets have nothing to upload.
     @Override
     protected void uploadTexture(GL3 gl) 
