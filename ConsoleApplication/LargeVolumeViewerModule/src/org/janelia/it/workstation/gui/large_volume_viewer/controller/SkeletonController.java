@@ -23,6 +23,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     
     public SkeletonController(Skeleton skeleton, SkeletonActor actor) {
         this.skeleton = skeleton;
+        skeleton.addSkeletonChangeListener(this);
         this.actor = actor;
     }
     

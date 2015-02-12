@@ -28,7 +28,6 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonChangeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 // import TracedPathShader;
@@ -40,8 +39,8 @@ import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreat
 // import org.slf4j.LoggerFactory;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot;
-import org.janelia.it.workstation.signal.Slot1;
+//import org.janelia.it.workstation.signal.Slot;
+//import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
@@ -54,8 +53,12 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class SkeletonActor 
-implements GLActor, SkeletonChangeListener
+implements GLActor
 {
+    // NOTE: for future ref-I had caused this actor to be a skeleton change
+    //  listener. However, I realized that the SkeletonController filled the
+    //  same function, and undid this. I have tried to test to ensure no ill
+    //  effects, but leaving this note just in case. LLF
 	private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
 	
 	// semantic constants for allocating byte arrays
@@ -403,13 +406,8 @@ implements GLActor, SkeletonChangeListener
 	public void setSkeleton(Skeleton skeleton) {
 		if (skeleton == this.skeleton)
 			return;
-		if (this.skeleton != null) { 
-			// disconnect previous skeleton, if any
-            this.skeleton.removeSkeletonChangeListener(this);
-		}
 		this.skeleton = skeleton;
 		updateAnchors();
-        skeleton.addSkeletonChangeListener(this);
 	}
 	
 	public float getZThicknessInPixels() {
@@ -786,8 +784,4 @@ implements GLActor, SkeletonChangeListener
         skeletonActorChangedSignal.emit();
     }
     
-    @Override
-    public void skeletonChanged() {
-        updateAnchors();
-    }
 }
