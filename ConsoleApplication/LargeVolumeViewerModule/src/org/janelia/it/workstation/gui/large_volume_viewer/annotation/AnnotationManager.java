@@ -32,19 +32,20 @@ import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
+import org.janelia.it.workstation.gui.large_volume_viewer.UpdateAnchorListener;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 
-public class AnnotationManager implements AnchorListener
-/**
- * this class is the middleman between the UI and the model.  first, the UI makes naive requests 
- * (eg, add annotation).  then this class determines if the request is valid (eg, can't add
- * if no neuron), popping dialogs if needed.  lastly, this class gathers and/or reformats info as
- * needed to actually make the call to the back end, usually spinning off a worker thread to
- * do so.  
- * 
- * this class's slots are usually connected to various UI signals, and its signals typically 
- * hook up to AnnotationModel slots.  this class has no responsibilities in notifying UI 
- * elements of what's been done; that's handled by signals emitted from AnnotationModel.
+public class AnnotationManager implements AnchorListener, UpdateAnchorListener /**
+ * this class is the middleman between the UI and the model. first, the UI makes
+ * naive requests (eg, add annotation). then this class determines if the
+ * request is valid (eg, can't add if no neuron), popping dialogs if needed.
+ * lastly, this class gathers and/or reformats info as needed to actually make
+ * the call to the back end, usually spinning off a worker thread to do so.
+ *
+ * this class's slots are usually connected to various UI signals, and its
+ * signals typically hook up to AnnotationModel slots. this class has no
+ * responsibilities in notifying UI elements of what's been done; that's handled
+ * by signals emitted from AnnotationModel.
  */
 {
 
@@ -57,7 +58,7 @@ public class AnnotationManager implements AnchorListener
     private QuadViewUi quadViewUi;
 
     private Entity initialEntity;
-    
+
     private TileServer tileServer;
 
     // ----- constants
@@ -71,15 +72,13 @@ public class AnnotationManager implements AnchorListener
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
-
     //-----------------------------------IMPLEMENT AnchorListener
     @Override
     public void deleteSubtreeRequested(Anchor anchor) {
         if (anchor != null) {
             deleteSubTree(anchor.getGuid());
-        }
-        else {
-            int x =0;
+        } else {
+            int x = 0;
         }
     }
 
@@ -108,9 +107,15 @@ public class AnnotationManager implements AnchorListener
         addEditNote(anchor.getGuid());
     }
 
-    
-    // ----- slots
+    //-----------------------------IMPLEMENT UpdateAnchorListener
+    @Override
+    public void update(Anchor anchor) {
+        if (anchor != null) {
+            selectNeuronFromAnnotation(anchor.getGuid());
+        }
+    }
 
+    // ----- slots
     public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
         @Override
         public void execute(URL url) {
@@ -134,8 +139,7 @@ public class AnnotationManager implements AnchorListener
             TileFormat tf = getTileFormat();
             Vec3 anchorVoxLoc = tf.voxelVec3ForMicronVec3(anchor.getLocation());
             TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchorVoxLoc,
-                annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
-
+                    annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
 
             // check distance and other restrictions
             if (closest != null && canMergeNeurite(anchor, closest)) {
@@ -148,14 +152,14 @@ public class AnnotationManager implements AnchorListener
         }
     };
 
-    public Slot1<Anchor> selectAnnotationSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-            if (anchor != null) {
-                selectNeuronFromAnnotation(anchor.getGuid());
-            }
-        }
-    };
+//    public Slot1<Anchor> selectAnnotationSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            if (anchor != null) {
+//                selectNeuronFromAnnotation(anchor.getGuid());
+//            }
+//        }
+//    };
 
     public Slot1<PathTraceToParentRequest> tracePathRequestedSlot = new Slot1<PathTraceToParentRequest>() {
         @Override
@@ -172,7 +176,7 @@ public class AnnotationManager implements AnchorListener
                         voxelPath.getSegmentIndex().getAnchor1Guid(),
                         voxelPath.getSegmentIndex().getAnchor2Guid());
                 List<List<Integer>> pointList = new ArrayList<>();
-                for (VoxelPosition vp: voxelPath.getPath()) {
+                for (VoxelPosition vp : voxelPath.getPath()) {
                     List<Integer> tempList = new ArrayList<>();
                     tempList.add(vp.getX());
                     tempList.add(vp.getY());
@@ -215,21 +219,22 @@ public class AnnotationManager implements AnchorListener
     public TileFormat getTileFormat() {
         return tileServer.getLoadAdapter().getTileFormat();
     }
-    
+
     public Entity getInitialEntity() {
         return initialEntity;
     }
 
     /**
-     * @param initialEntity = entity the user right-clicked on to start the large volume viewer
+     * @param initialEntity = entity the user right-clicked on to start the
+     * large volume viewer
      */
     public void setInitialEntity(final Entity initialEntity) {
         this.initialEntity = initialEntity;
     }
 
     /**
-     * called when volume is *finished* loading (so as to avoid race conditions);
-     * relies on initial entity being properly set already
+     * called when volume is *finished* loading (so as to avoid race
+     * conditions); relies on initial entity being properly set already
      */
     public void onVolumeLoaded() {
 
@@ -266,7 +271,7 @@ public class AnnotationManager implements AnchorListener
                 }
 
                 @Override
-                protected  void hadSuccess() {
+                protected void hadSuccess() {
                     // no hadSuccess(); signals will be emitted in the loadWorkspace() call
                 }
 
@@ -281,31 +286,29 @@ public class AnnotationManager implements AnchorListener
         // (eventually) update state to saved state (selection, visibility, etc);
         //  actually, although it should happen at about the time this method is called,
         //  it may be better to make it a different method
-
     }
 
     // ----- methods called from UI
     // these methods are called by actions from the 2d view; should be not
     //  much more than what tool is active and where the click was;
     //  we are responsible for everything else
-
     /**
-     * add an annotation at the given location with the given parent ID;
-     * if no parent, pass in null
+     * add an annotation at the given location with the given parent ID; if no
+     * parent, pass in null
      */
     public void addAnnotation(final Vec3 xyz, final Long parentID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             presentError(
-                "You must load a workspace before beginning annotation!",
-                "No workspace!");
+                    "You must load a workspace before beginning annotation!",
+                    "No workspace!");
             return;
         }
 
         final TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
         if (currentNeuron == null) {
             presentError(
-                "You must select a neuron before beginning annotation!",
-                "No neuron!");
+                    "You must select a neuron before beginning annotation!",
+                    "No neuron!");
             return;
         }
 
@@ -364,10 +367,10 @@ public class AnnotationManager implements AnchorListener
     }
 
     /**
-     * delete the annotation with the input ID; the annotation must be a "link", which
-     * is an annotation that is not a root (no parent) or branch point (many children);
-     * in other words, it's an end point, or an annotation with a parent and single child
-     * that can be connected up unambiguously
+     * delete the annotation with the input ID; the annotation must be a "link",
+     * which is an annotation that is not a root (no parent) or branch point
+     * (many children); in other words, it's an end point, or an annotation with
+     * a parent and single child that can be connected up unambiguously
      */
     public void deleteLink(final Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
@@ -409,10 +412,11 @@ public class AnnotationManager implements AnchorListener
     }
 
     /**
-     * delete the annotation with the input ID, and delete all of its descendants
+     * delete the annotation with the input ID, and delete all of its
+     * descendants
      */
     public void deleteSubTree(final Long annotationID) {
-        if (annotationModel.getCurrentWorkspace() == null  ||  annotationID == null) {
+        if (annotationModel.getCurrentWorkspace() == null || annotationID == null) {
             // dialog?
             return;
         } else {
@@ -422,7 +426,7 @@ public class AnnotationManager implements AnchorListener
             final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
             int nAnnotations = annotationModel.getNeuronFromAnnotationID(annotationID).getSubTreeList(annotation).size();
             if (nAnnotations >= 5) {
-                int ans =  JOptionPane.showConfirmDialog(
+                int ans = JOptionPane.showConfirmDialog(
                         ComponentUtil.getLVVMainWindow(),
                         String.format("Selected subtree has %d children; delete?", nAnnotations),
                         "Delete subtree?",
@@ -482,7 +486,6 @@ public class AnnotationManager implements AnchorListener
         }
     }
 
-
     public boolean canMergeNeurite(Anchor anchor, TmGeoAnnotation closest) {
 
         // can't merge with itself
@@ -540,11 +543,11 @@ public class AnnotationManager implements AnchorListener
         // Because there are several overrides, all of which use the message as 
         // the first string param. The title is optional. Confusing if not used
         // often, however.
-        int ans =  JOptionPane.showConfirmDialog(
+        int ans = JOptionPane.showConfirmDialog(
                 ComponentUtil.getLVVMainWindow(),
                 String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
-                    annotationModel.getNeuronFromAnnotationID(sourceAnnotationID),
-                    annotationModel.getNeuronFromAnnotationID(targetAnnotationID)),
+                        annotationModel.getNeuronFromAnnotationID(sourceAnnotationID),
+                        annotationModel.getNeuronFromAnnotationID(targetAnnotationID)),
                 "Merge neurites?",
                 JOptionPane.OK_CANCEL_OPTION);
         if (ans != JOptionPane.OK_OPTION) {
@@ -552,7 +555,6 @@ public class AnnotationManager implements AnchorListener
 //            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
             return;
         }
-
 
         // then call ann model
         SimpleWorker merger = new SimpleWorker() {
@@ -578,9 +580,9 @@ public class AnnotationManager implements AnchorListener
     /**
      * place a new annotation near the annotation with the input ID; place it
      * "nearby" in the direction of its parent if it has one; if it's a root
-     * annotation with one child, place it in the direction of the child instead;
-     * if it's a root with many children, it's an error, since there is no
-     * unambiguous location to place the new anchor
+     * annotation with one child, place it in the direction of the child
+     * instead; if it's a root with many children, it's an error, since there is
+     * no unambiguous location to place the new anchor
      */
     public void splitAnchor(Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
@@ -681,8 +683,8 @@ public class AnnotationManager implements AnchorListener
     }
 
     /**
-     * add an anchored path; not much to check, as the UI needs to check it even before
-     * the request gets here
+     * add an anchored path; not much to check, as the UI needs to check it even
+     * before the request gets here
      */
     public void addAnchoredPath(final TmAnchoredPathEndpoints endpoints, final List<List<Integer>> points) {
         if (annotationModel.getCurrentWorkspace() == null) {
@@ -730,8 +732,8 @@ public class AnnotationManager implements AnchorListener
 
         // pop dialog, with (possibly) pre-existing text
         Object[] options = {"Set note",
-                "Delete note",
-                "Cancel"};
+            "Delete note",
+            "Cancel"};
         JPanel panel = new JPanel();
         panel.add(new JLabel("Enter note text:"));
         JTextField textField = new JTextField(40);
@@ -823,7 +825,7 @@ public class AnnotationManager implements AnchorListener
             protected void doStuff() throws Exception {
                 annotationModel.createNeuron(neuronName);
                 // Renaming neuron here, after selection is done.
-                renameNeuron();                
+                renameNeuron();
             }
 
             @Override
@@ -848,7 +850,7 @@ public class AnnotationManager implements AnchorListener
         }
 
         int nAnnotations = neuron.getGeoAnnotationMap().size();
-        int ans =  JOptionPane.showConfirmDialog(
+        int ans = JOptionPane.showConfirmDialog(
                 ComponentUtil.getLVVMainWindow(),
                 String.format("%s has %d nodes; delete?", neuron.getName(), nAnnotations),
                 "Delete neuron?",
@@ -889,20 +891,19 @@ public class AnnotationManager implements AnchorListener
             return;
         }
 
-        final String neuronName = (String)JOptionPane.showInputDialog(
+        final String neuronName = (String) JOptionPane.showInputDialog(
                 ComponentUtil.getLVVMainWindow(),
                 "Neuron name:",
                 "Rename neuron",
                 JOptionPane.PLAIN_MESSAGE,
-                null,                           // icon
-                null,                           // choice list; absent = freeform
+                null, // icon
+                null, // choice list; absent = freeform
                 neuron.getName());
         if (neuronName == null || neuronName.length() == 0) {
             return;
         }
 
         // validate neuron name?  are there any rules for entity names?
-
         SimpleWorker renamer = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
@@ -935,7 +936,7 @@ public class AnnotationManager implements AnchorListener
         //  standard template; create list of integers found
         ArrayList<Long> intList = new ArrayList<Long>();
         Pattern pattern = Pattern.compile("New[ _]neuron[ _]([0-9]+)");
-        for (TmNeuron neuron: workspace.getNeuronList()) {
+        for (TmNeuron neuron : workspace.getNeuronList()) {
             Matcher matcher = pattern.matcher(neuron.getName());
             if (matcher.matches()) {
                 intList.add(Long.parseLong(matcher.group(1)));
@@ -947,7 +948,7 @@ public class AnnotationManager implements AnchorListener
         //  at at least 1, if anyone has named their neurons with negative numbers
         Long maximum = 0L;
         if (intList.size() > 0) {
-            for (Long l: intList) {
+            for (Long l : intList) {
                 if (l > maximum) {
                     maximum = l;
                 }
@@ -955,7 +956,6 @@ public class AnnotationManager implements AnchorListener
         }
         return String.format("New_neuron_%d", maximum + 1);
     }
-
 
     /**
      * given an annotation ID, select (make current) the neuron it belongs to
@@ -1008,13 +1008,13 @@ public class AnnotationManager implements AnchorListener
         }
 
         // get a name for the new workspace and validate (are there any rules for entity names?)
-        String workspaceName = (String)JOptionPane.showInputDialog(
+        String workspaceName = (String) JOptionPane.showInputDialog(
                 ComponentUtil.getLVVMainWindow(),
                 "Workspace name:",
                 "Create workspace",
                 JOptionPane.PLAIN_MESSAGE,
-                null,                           // icon
-                null,                           // choice list; absent = freeform
+                null, // icon
+                null, // choice list; absent = freeform
                 "new workspace");
         // this is all the validation we have right now...
         if ((workspaceName == null) || (workspaceName.length() == 0)) {
@@ -1091,11 +1091,11 @@ public class AnnotationManager implements AnchorListener
         savePreference(AnnotationsConstants.PREF_AUTOMATIC_TRACING, String.valueOf(state));
     }
 
-    public void savePreference( final String name, final String value ) {
+    public void savePreference(final String name, final String value) {
         SimpleWorker saver = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.setPreference( name, value );
+                annotationModel.setPreference(name, value);
             }
 
             @Override
@@ -1110,14 +1110,14 @@ public class AnnotationManager implements AnchorListener
         };
         saver.execute();
     }
-    
-    public String retreivePreference( final String name ) {
+
+    public String retreivePreference(final String name) {
         return annotationModel.getPreference(name);
     }
 
     private void tracePathToParent(PathTraceToParentRequest request) {
         TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(request.getAnchorGuid1());
-        if (annotation.isRoot())  {
+        if (annotation.isRoot()) {
             // no parent, no tracing
             return;
         }
@@ -1137,13 +1137,12 @@ public class AnnotationManager implements AnchorListener
         //  Jan. 2014, that monitor's window repositions itself and comes to front on every
         //  new task, so it's far too intrusive to be used for our purpose; see FW-2191
         // worker.executeWithEvents();
-
     }
 
     public void exportAllNeuronsAsSWC(final File swcFile, final int downsampleModulo) {
         final List<Long> neuronIDList = new ArrayList<>();
         int nannotations = 0;
-        for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+        for (TmNeuron neuron : annotationModel.getCurrentWorkspace().getNeuronList()) {
             nannotations += neuron.getGeoAnnotationMap().size();
             neuronIDList.add(neuron.getId());
         }
@@ -1213,7 +1212,6 @@ public class AnnotationManager implements AnchorListener
             //  (c) option to include/exclude automatically traced paths, if we can
             //      store that info in the file
             //  (d) option to shift position (add constant x, y, z offset)
-
             BackgroundWorker importer = new BackgroundWorker() {
                 @Override
                 protected void doStuff() throws Exception {
@@ -1221,7 +1219,9 @@ public class AnnotationManager implements AnchorListener
                 }
 
                 @Override
-                public String getName() {return "import " + swcFile.getName();}
+                public String getName() {
+                    return "import " + swcFile.getName();
+                }
 
                 @Override
                 protected void hadSuccess() {
@@ -1239,7 +1239,7 @@ public class AnnotationManager implements AnchorListener
 
     /**
      * Convenience method, to cut down on redundant code.
-     * 
+     *
      * @param message passed as message param
      * @param title passed as title param.
      * @throws HeadlessException by called methods.
@@ -1253,4 +1253,3 @@ public class AnnotationManager implements AnchorListener
     }
 
 }
-

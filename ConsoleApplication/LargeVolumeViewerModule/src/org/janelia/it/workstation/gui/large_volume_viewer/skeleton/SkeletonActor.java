@@ -28,6 +28,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 // import TracedPathShader;
@@ -114,7 +115,7 @@ implements GLActor
 	
 //	public Signal skeletonActorChangedSignal = new Signal();
 
-    public Signal1<Anchor> nextParentChangedSignal = new Signal1<>();
+//    public Signal1<Anchor> nextParentChangedSignal = new Signal1<>();
 	
 //	private Slot updateAnchorsSlot = new Slot() {
 //		@Override
@@ -744,10 +745,15 @@ implements GLActor
         //  components that want to, eg, select the enclosing neuron
         updater.update();
 //		skeletonActorChangedSignal.emit();
-        nextParentChangedSignal.emit(nextParent);
+//        nextParentChangedSignal.emit(nextParent);
+        updater.update(nextParent);
 		return true;
 	}
 
+    public void addAnchorUpdateListener(UpdateAnchorListener l) {
+        getUpdater().addListener(l);
+    }
+    
 	/*
 	 * Change visual anchor position without actually changing the Skeleton model
 	 */

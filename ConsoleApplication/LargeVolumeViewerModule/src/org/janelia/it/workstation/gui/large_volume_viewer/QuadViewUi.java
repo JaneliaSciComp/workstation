@@ -399,8 +399,8 @@ public class QuadViewUi extends JPanel
         skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
         tracePathRequestedSignal.connect(annotationMgr.tracePathRequestedSlot);
         closeWorkspaceRequestSignal.connect(annotationMgr.closeWorkspaceRequestedSlot);
-
-        getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
+        getSkeletonActor().addAnchorUpdateListener(annotationMgr);
+//        getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
                 
         skeleton.addAnchorListener(annotationMgr);
         
