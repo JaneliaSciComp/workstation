@@ -14,6 +14,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 
 
 /**
@@ -25,6 +26,7 @@ public class WorkspaceNeuronList extends JPanel {
 
     private JList neuronListBox;
     private DefaultListModel neuronListModel;
+    private CameraPanToListener panListener;
 
     private int width;
     private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
@@ -51,11 +53,18 @@ public class WorkspaceNeuronList extends JPanel {
 
     // ----- signals
     public Signal1<TmNeuron> neuronClickedSignal = new Signal1<TmNeuron>();
-    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
+//    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
 
     public WorkspaceNeuronList(int width) {
         this.width = width;
         setupUI();
+    }
+
+    /**
+     * @param panListener the panListener to set
+     */
+    public void setPanListener(CameraPanToListener panListener) {
+        this.panListener = panListener;
     }
 
     @Override
@@ -227,7 +236,10 @@ public class WorkspaceNeuronList extends JPanel {
             for (TmGeoAnnotation ann: neuron.getGeoAnnotationMap().values()) {
                 bounds.include(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
             }
-            cameraPanToSignal.emit(bounds.getCenter());
+            if (panListener != null) {
+                panListener.cameraPanTo(bounds.getCenter());
+            }
+//            cameraPanToSignal.emit(bounds.getCenter());
         }
     }
 

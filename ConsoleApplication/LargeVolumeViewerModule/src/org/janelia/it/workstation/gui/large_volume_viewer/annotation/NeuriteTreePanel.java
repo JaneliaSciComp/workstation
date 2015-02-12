@@ -14,12 +14,13 @@ import javax.swing.tree.*;
 
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot1;
+//import org.janelia.it.workstation.signal.Slot1;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import com.google.common.collect.HashBiMap;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 
 
 /**
@@ -37,6 +38,7 @@ public class NeuriteTreePanel extends JPanel
 
     private int width;
     private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
+    private CameraPanToListener panListener;
 
     // ----- slots
 //    public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
@@ -47,13 +49,20 @@ public class NeuriteTreePanel extends JPanel
 //    };
 
     // ----- signals
-    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
+//    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
     public Signal1<TmGeoAnnotation> annotationClickedSignal = new Signal1<TmGeoAnnotation>();
 
 
     public NeuriteTreePanel(int width) {
         this.width = width;
         setupUI();
+    }
+
+    /**
+     * @param panListener the panListener to set
+     */
+    public void setPanListener(CameraPanToListener panListener) {
+        this.panListener = panListener;
     }
 
     public void setAnnotationManager( AnnotationManager annotationMgr ) {
@@ -275,7 +284,10 @@ public class NeuriteTreePanel extends JPanel
         TmGeoAnnotation annotation = getAnnotationAtPath(path);
 
         // emit signal
-        cameraPanToSignal.emit(new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
+        if (this.panListener != null) {
+            panListener.cameraPanTo(new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
+        }
+//        cameraPanToSignal.emit(new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
     }
 
     private void sortGeoAnnotationList(List<TmGeoAnnotation> annotationList) {
@@ -286,4 +298,5 @@ public class NeuriteTreePanel extends JPanel
             }
         });
     }
+
 }

@@ -6,7 +6,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.signal.Signal;
+//import org.janelia.it.workstation.signal.Signal;
 
 import javax.swing.*;
 
@@ -160,7 +160,7 @@ public class AnnotationPanel extends JPanel
 
     private void setupSignals() {
         // outgoing from the model:
-        PanelController panelController = new PanelController(this, noteListPanel, neuriteTreePanel, workspaceNeuronList);
+        PanelController panelController = new PanelController(this, noteListPanel, neuriteTreePanel, workspaceNeuronList, largeVolumeViewerTranslator);
         panelController.registerForEvents(annotationModel);
 //        annotationModel.neuronSelectedSignal.connect(neuriteTreePanel.neuronSelectedSlot);
 //        annotationModel.neuronSelectedSignal.connect(workspaceNeuronList.neuronSelectedSlot);
@@ -175,10 +175,10 @@ public class AnnotationPanel extends JPanel
         workspaceNeuronList.neuronClickedSignal.connect(annotationModel.neuronClickedSlot);
 
         // us to graphics UI
-        neuriteTreePanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
+//        neuriteTreePanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
         neuriteTreePanel.annotationClickedSignal.connect(largeVolumeViewerTranslator.annotationClickedSlot);
-        workspaceNeuronList.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
-        noteListPanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
+//        workspaceNeuronList.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
+//        noteListPanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
         noteListPanel.editNoteRequestedSignal.connect(annotationMgr.editNoteRequestedSlot);
 
     }

@@ -8,8 +8,10 @@ package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuriteTreePanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NoteListPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceNeuronList;
@@ -25,17 +27,25 @@ public class PanelController {
     private NoteListPanel noteListPanel;
     private NeuriteTreePanel neuriteTreePanel;
     private WorkspaceNeuronList wsNeuronList;
+    private LargeVolumeViewerTranslator lvvTranslator;
     
     public PanelController(
             AnnotationPanel annoPanel,
             NoteListPanel noteListPanel,
             NeuriteTreePanel neuriteTreePanel,
-            WorkspaceNeuronList wsNeuronList
+            WorkspaceNeuronList wsNeuronList,
+            LargeVolumeViewerTranslator lvvTranslator
     ) {
         this.annotationPanel = annoPanel;
         this.noteListPanel = noteListPanel;
         this.neuriteTreePanel = neuriteTreePanel;
         this.wsNeuronList = wsNeuronList;
+        this.lvvTranslator = lvvTranslator;
+
+        PanelPanListener ppl = new PanelPanListener();
+        this.neuriteTreePanel.setPanListener(ppl);
+        this.noteListPanel.setPanListener(ppl);
+        this.wsNeuronList.setPanListener(ppl);
     }
     
     public void registerForEvents(AnnotationModel annotationModel) {
@@ -61,5 +71,14 @@ public class PanelController {
             neuriteTreePanel.loadNeuron(neuron);
             wsNeuronList.selectNeuron(neuron);
         }
+    }
+    
+    private class PanelPanListener implements CameraPanToListener {
+
+        @Override
+        public void cameraPanTo(Vec3 location) {
+            lvvTranslator.cameraPanTo(location);
+        }
+        
     }
 }

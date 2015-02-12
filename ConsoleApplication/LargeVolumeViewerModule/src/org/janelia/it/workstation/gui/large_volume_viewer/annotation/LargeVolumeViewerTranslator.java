@@ -157,19 +157,20 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         }
     };
 
-    public Slot1<Vec3> cameraPanToSlot = new Slot1<Vec3>() {
-        @Override
-        public void execute(Vec3 location) {
-            TileFormat tileFormat = getTileFormat();
-            viewStateListener.setCameraFocus(
-                    tileFormat.micronVec3ForVoxelVec3Centered(location)
-            );
+//    public Slot1<Vec3> cameraPanToSlot = new Slot1<Vec3>() {
+//        @Override
+//        public void execute(Vec3 location) {
+//            cameraPanTo(location);
+//            TileFormat tileFormat = getTileFormat();
+//            viewStateListener.setCameraFocus(
+//                    tileFormat.micronVec3ForVoxelVec3Centered(location)
+//            );
 //            cameraPanToSignal.emit(
 //                    tileFormat.micronVec3ForVoxelVec3Centered(location)
 //            );
-        }
-    };
-
+//        }
+//    };
+    
     public Slot1<Color> globalAnnotationColorChangedSlot = new Slot1<Color>() {
         @Override
         public void execute(Color color) {
@@ -227,6 +228,13 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 //        anchoredPathsAddedSignal.connect(skeleton.addAnchoredPathsSlot);
 //        anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
 //        changeGlobalColorSignal.connect(largeVolumeViewer.getSkeletonActor().changeGlobalColorSlot);
+    }
+
+    public void cameraPanTo(Vec3 location) {
+        TileFormat tileFormat = getTileFormat();
+        viewStateListener.setCameraFocus(
+                tileFormat.micronVec3ForVoxelVec3Centered(location)
+        );
     }
 
     private void setupSignals() {
