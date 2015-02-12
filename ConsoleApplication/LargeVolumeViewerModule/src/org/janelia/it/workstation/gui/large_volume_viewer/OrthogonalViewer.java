@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  */
 public class OrthogonalViewer
 extends GLJPanel
-implements MouseModalWidget, TileConsumer
+implements MouseModalWidget, TileConsumer, RepaintListener
 {
     private static final Logger log = LoggerFactory.getLogger(OrthogonalViewer.class);
 
@@ -372,7 +372,8 @@ implements MouseModalWidget, TileConsumer
 		this.skeletonActor = skeletonActor;
 		skeletonActor.setZThicknessInPixels(getViewport().getDepth());
 		skeletonActor.setCamera(camera);
-		skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
+        skeletonActor.getUpdater().addListener(this);
+//		skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
         renderer.addActor(skeletonActor);
 	}
 
