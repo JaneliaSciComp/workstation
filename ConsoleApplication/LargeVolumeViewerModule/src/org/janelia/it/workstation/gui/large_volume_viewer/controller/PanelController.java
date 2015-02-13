@@ -6,7 +6,6 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.geom.Vec3;
@@ -86,11 +85,11 @@ public class PanelController {
         
     }
     
-    private class PanelTmGeoSelectListener implements TmGeoAnnotationSelectionListener {
+    private class PanelTmGeoSelectListener implements AnnotationSelectionListener {
 
         @Override
-        public void select(TmGeoAnnotation annotation) {
-            lvvTranslator.fireNextParentEvent(annotation.getId());
+        public void annotationSelected(Long annotationID) {
+            lvvTranslator.fireNextParentEvent(annotationID);
         }
         
     }

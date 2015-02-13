@@ -20,9 +20,8 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import com.google.common.collect.HashBiMap;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationSelectionListener;
-
 
 /**
  * this panel shows info on the selected neuron: name, type, etc.
@@ -40,7 +39,7 @@ public class NeuriteTreePanel extends JPanel
     private int width;
     private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
     private CameraPanToListener panListener;
-    private TmGeoAnnotationSelectionListener annoSelectListener;
+    private AnnotationSelectionListener annoSelectListener;
 
     // ----- slots
 //    public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
@@ -219,7 +218,7 @@ public class NeuriteTreePanel extends JPanel
     /**
      * @param annoSelectListener the annoSelectListener to set
      */
-    public void setAnnoSelectListener(TmGeoAnnotationSelectionListener annoSelectListener) {
+    public void setAnnoSelectListener(AnnotationSelectionListener annoSelectListener) {
         this.annoSelectListener = annoSelectListener;
     }
 
@@ -286,7 +285,7 @@ public class NeuriteTreePanel extends JPanel
     private void onAnnotationSingleClicked(TreePath path) {
         // select annotation at path
         if (annoSelectListener != null) {
-            annoSelectListener.select(getAnnotationAtPath(path));
+            annoSelectListener.annotationSelected(getAnnotationAtPath(path).getId());
         }
 //        annotationClickedSignal.emit(getAnnotationAtPath(path));
     }
