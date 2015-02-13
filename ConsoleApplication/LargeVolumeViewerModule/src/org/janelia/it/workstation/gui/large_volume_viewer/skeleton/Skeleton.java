@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.HistoryStack;
-import org.janelia.it.workstation.signal.Signal;
+//import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Signal1;
 //import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
@@ -192,10 +192,10 @@ public class Skeleton {
 //            updateNeighbors(anchor, annotationNeighbors);
 //        }
 //    };
-	public Slot1<Anchor> deleteAnchorShortCircuitSlot = new Slot1<Anchor>() {
-		@Override
-		public void execute(Anchor anchor) {delete(anchor);}
-	};
+//	public Slot1<Anchor> deleteAnchorShortCircuitSlot = new Slot1<Anchor>() {
+//		@Override
+//		public void execute(Anchor anchor) {delete(anchor);}
+//	};
     // This is a relay slot from external to internal refresh.
     private Slot1 skeletonChangedSlot = new Slot1() {
         @Override
@@ -214,7 +214,7 @@ public class Skeleton {
 //			clear();
 //		}
 //	};
-	public Signal clearedSignal = new Signal();
+//	public Signal clearedSignal = new Signal();
 
 	///// MOVE
 	public Signal1<Anchor> anchorMovedSignal = new Signal1<>();
@@ -463,7 +463,7 @@ public class Skeleton {
 		anchors.clear();
 		anchorsByGuid.clear();
 		anchorHistory.clear();
-		clearedSignal.emit();
+//		clearedSignal.emit();   // This had no listeners; no connected slots.
 		fireSkeletonChangeEvent();
 	}
 	
