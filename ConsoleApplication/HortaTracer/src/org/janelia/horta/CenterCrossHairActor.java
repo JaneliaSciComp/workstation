@@ -173,6 +173,7 @@ class CenterCrossHairActor extends MeshActor {
             // crossHairTexture.bind(gl, crossHairTextureUnit);
             gl.glUniform1i(crossHairTextureIndex, crossHairTextureUnit);
             gl.glEnable(GL3.GL_BLEND);
+            gl.glBlendFunc (GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
         }
         
         @Override

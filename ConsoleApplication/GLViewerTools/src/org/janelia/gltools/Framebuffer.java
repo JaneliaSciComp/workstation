@@ -135,6 +135,7 @@ public class Framebuffer implements GL3Resource, GLEventListener {
             rt.reshape(gl, width, height);
             rt.init(gl);
             rt.bind(gl);
+            rt.clear(gl);
             gl.glFramebufferTexture(GL3.GL_FRAMEBUFFER, rt.getAttachment(), 
                     rt.getHandle(), 0);
         }
@@ -192,6 +193,7 @@ public class Framebuffer implements GL3Resource, GLEventListener {
         for (RenderTarget rt : renderTargets) {
             rt.reshape(gl, w, h);
             rt.bind(gl);
+            rt.clear(gl);
             gl.glFramebufferTexture(GL3.GL_FRAMEBUFFER, rt.getAttachment(), 
                     rt.getHandle(), 0);
             rt.unbind(gl);

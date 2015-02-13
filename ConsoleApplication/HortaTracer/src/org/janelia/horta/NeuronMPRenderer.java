@@ -130,6 +130,7 @@ extends MultipassRenderer
                 gl.glDrawBuffers(1, targetAttachments, 0);
             }
         };
+
         add(hdrPass);
         
         // 3) Colormap volume onto screen

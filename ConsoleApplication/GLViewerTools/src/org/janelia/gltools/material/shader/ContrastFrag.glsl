@@ -53,6 +53,9 @@ vec3 hslToRgb(vec3 hsl)
 void main() {
     vec4 c = texture(upstreamImage, screenCoord);
     float intensity = c.r;
+    float opacityIn = c.a;
+
+    if (opacityIn <= 0) discard;
 
     // Discard required on Mac laptop
     if (intensity <= opacityFunction.x) discard;
@@ -61,11 +64,13 @@ void main() {
     intensity *= 1.0/(opacityFunction.y - opacityFunction.x);
     intensity = pow(intensity, opacityFunction.z);
 
+    float opacity = intensity * opacityIn;
+
     // HSL approach
     if (false) {
         vec3 hsl = vec3(hue.x, saturation.x, intensity);
         vec3 rgb = hslToRgb(hsl);
-        fragColor = vec4(rgb, intensity);
+        fragColor = vec4(rgb, opacity);
         return;
     }
 
@@ -86,5 +91,5 @@ void main() {
     // TODO sRGB should be last thing ever
     // color = pow(color, vec3(0.5, 0.5, 0.5));
 
-    fragColor = vec4(color, intensity);
+    fragColor = vec4(color, opacity);
 }
