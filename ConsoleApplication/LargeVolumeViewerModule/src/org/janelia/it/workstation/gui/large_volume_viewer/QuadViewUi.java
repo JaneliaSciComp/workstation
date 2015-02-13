@@ -15,12 +15,14 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolume
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrivenSWCExchanger;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
-import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +46,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrivenSWCExchanger;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.SWCDataConverter;
@@ -59,7 +58,7 @@ import org.janelia.it.workstation.shared.util.SWCDataConverter;
  *
  */
 @SuppressWarnings("serial")
-public class QuadViewUi extends JPanel
+public class QuadViewUi extends JPanel implements VolumeLoadListener
 {
 	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
@@ -258,55 +257,14 @@ public class QuadViewUi extends JPanel
 		}
 	};
 	
-	protected Slot updateRangesSlot = new Slot() {
-		@Override
-		public void execute() 
-		{
-			// Z range
-			double zMin = volumeImage.getBoundingBox3d().getMin().getZ();
-			double zMax = volumeImage.getBoundingBox3d().getMax().getZ();
-			int z0 = (int)Math.round(zMin / volumeImage.getZResolution());
-			int z1 = (int)Math.round(zMax / volumeImage.getZResolution()) - 1;
-			if (z0 > z1)
-				z1 = z0;
-			// Z-scan is only relevant if there is more than one slice.
-			boolean useZScan = ((z1 - z0) > 1);
-			if (useZScan) {
-				zScanPanel.setVisible(true);
-				largeVolumeViewer.setWheelMode(WheelMode.Mode.SCAN);
-				zScanScrollModeAction.setEnabled(true);
-				zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
-				int z = (int)Math.round((camera.getFocus().getZ()-0.5) / volumeImage.getZResolution());
-				if (z < z0)
-					z = z0;
-				if (z > z1)
-					z = z1;
-				zScanSlider.setMinimum(z0);
-				zScanSlider.setMaximum(z1);
-				zScanSlider.setValue(z);
-				zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
-				// Allow octree zsteps to depend on zoom
-				tileFormat = tileServer.getLoadAdapter().getTileFormat();
-                updateSWCDataConverter();
-                
-				zScanMode.setTileFormat(tileFormat);
-				nextZSliceAction.setTileFormat(tileFormat);
-				previousZSliceAction.setTileFormat(tileFormat);
-				advanceZSlicesAction.setTileFormat(tileFormat);
-				goBackZSlicesAction.setTileFormat(tileFormat);
-                skeleton.setTileFormat(tileFormat);
-			}
-			else { // no Z scan
-				zScanPanel.setVisible(false);
-				zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
-				zScanScrollModeAction.setEnabled(false);
-			}
-            
-            snapshot3dLauncher.setMaxIntensity(volumeImage.getMaximumIntensity());
-            snapshot3dLauncher.setNumberOfChannels(volumeImage.getNumberOfChannels());
-		}
-		// TODO update zoom range too?
-	};
+//	protected Slot updateRangesSlot = new Slot() {
+//		@Override
+//		public void execute() 
+//		{
+//            updateRanges();
+//		}
+//
+//	};
 
 	public Slot1<String> setStatusMessageSlot = new Slot1<String>() {
 		@Override
@@ -384,8 +342,10 @@ public class QuadViewUi extends JPanel
 	 */
 	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
 	{
-		volumeImage.volumeInitializedSignal.connect(onVolumeLoadedSlot);
-        volumeImage.volumeInitializedSignal.connect(annotationMgr.onVolumeLoadedSlot);
+        volumeImage.addVolumeLoadListener(this);
+//		volumeImage.volumeInitializedSignal.connect(onVolumeLoadedSlot);
+        volumeImage.addVolumeLoadListener(annotationMgr);
+//        volumeImage.volumeInitializedSignal.connect(annotationMgr.onVolumeLoadedSlot);
 		largeVolumeViewer.setImageColorModel(imageColorModel);
 		camera.getViewChangedSignal().connect(tileServer.refreshCurrentTileSetSlot);
 		tileServer.loadStatusChangedSignal.connect(onLoadStatusChangedSlot);
@@ -545,6 +505,54 @@ public class QuadViewUi extends JPanel
 		tileServer.clearCache();
 	}
 	
+    // TODO update zoom range too?
+    private void updateRanges() {
+        // Z range
+        double zMin = volumeImage.getBoundingBox3d().getMin().getZ();
+        double zMax = volumeImage.getBoundingBox3d().getMax().getZ();
+        int z0 = (int) Math.round(zMin / volumeImage.getZResolution());
+        int z1 = (int) Math.round(zMax / volumeImage.getZResolution()) - 1;
+        if (z0 > z1) {
+            z1 = z0;
+        }
+        // Z-scan is only relevant if there is more than one slice.
+        boolean useZScan = ((z1 - z0) > 1);
+        if (useZScan) {
+            zScanPanel.setVisible(true);
+            largeVolumeViewer.setWheelMode(WheelMode.Mode.SCAN);
+            zScanScrollModeAction.setEnabled(true);
+            zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+            int z = (int) Math.round((camera.getFocus().getZ() - 0.5) / volumeImage.getZResolution());
+            if (z < z0) {
+                z = z0;
+            }
+            if (z > z1) {
+                z = z1;
+            }
+            zScanSlider.setMinimum(z0);
+            zScanSlider.setMaximum(z1);
+            zScanSlider.setValue(z);
+            zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
+            // Allow octree zsteps to depend on zoom
+            tileFormat = tileServer.getLoadAdapter().getTileFormat();
+            updateSWCDataConverter();
+
+            zScanMode.setTileFormat(tileFormat);
+            nextZSliceAction.setTileFormat(tileFormat);
+            previousZSliceAction.setTileFormat(tileFormat);
+            advanceZSlicesAction.setTileFormat(tileFormat);
+            goBackZSlicesAction.setTileFormat(tileFormat);
+            skeleton.setTileFormat(tileFormat);
+        } else { // no Z scan
+            zScanPanel.setVisible(false);
+            zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+            zScanScrollModeAction.setEnabled(false);
+        }
+
+        snapshot3dLauncher.setMaxIntensity(volumeImage.getMaximumIntensity());
+        snapshot3dLauncher.setNumberOfChannels(volumeImage.getNumberOfChannels());
+    }
+    
 	private double getMaxZoom() {
 		double maxRes = Math.min(volumeImage.getXResolution(), Math.min(
 				volumeImage.getYResolution(),
@@ -674,7 +682,7 @@ public class QuadViewUi extends JPanel
 		largeVolumeViewer.setBackground(Color.DARK_GRAY);
 		zViewerPanel.setLayout(new BoxLayout(zViewerPanel, BoxLayout.Y_AXIS));
 		zViewerPanel.add(largeVolumeViewer);
-		volumeImage.volumeInitializedSignal.connect(updateRangesSlot);
+//		volumeImage.volumeInitializedSignal.connect(updateRangesSlot);
 		camera.getZoomChangedSignal().connect(changeZoom);
         camera.getFocusChangedSignal().connect(changeZ);
 		
@@ -1261,18 +1269,12 @@ public class QuadViewUi extends JPanel
         imageColorModel.fromString(modelString);
     }
 
-    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
-		@Override
-		public void execute(URL url) {
-			recentFileList.add(url);
-			imageColorModel.reset(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
-			resetViewAction.actionPerformed(null);
-
-            getSkeletonActor().setTileFormat(
-                    tileServer.getLoadAdapter().getTileFormat());
-
-		}
-    };
+//    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
+//		@Override
+//		public void execute(URL url) {
+//            volumeLoaded(url);
+//		}
+//    };
 
     /**
      * this method returns a provider of read-only subvolume of data (maximum zoom,
@@ -1280,6 +1282,19 @@ public class QuadViewUi extends JPanel
      */
     public SubvolumeProvider getSubvolumeProvider(){
         return new SubvolumeProvider(volumeImage, tileServer);
+    }
+
+    //---------------------------IMPLEMENTS VolumeLoadListener
+    @Override
+    public void volumeLoaded(URL url) {
+        updateRanges();
+        
+        recentFileList.add(url);
+        imageColorModel.reset(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
+        resetViewAction.actionPerformed(null);
+        
+        getSkeletonActor().setTileFormat(
+                tileServer.getLoadAdapter().getTileFormat());
     }
 
     static class LoadStatusLabel extends JLabel {

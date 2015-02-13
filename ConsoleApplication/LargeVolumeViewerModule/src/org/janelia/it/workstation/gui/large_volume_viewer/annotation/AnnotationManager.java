@@ -25,6 +25,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorAddedListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 
@@ -38,7 +39,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AnnotationManager implements AnchorListener, UpdateAnchorListener, AnchorAddedListener, PathTraceListener
+public class AnnotationManager implements AnchorListener, UpdateAnchorListener, AnchorAddedListener, PathTraceListener, VolumeLoadListener
 /**
  * this class is the middleman between the UI and the model. first, the UI makes
  * naive requests (eg, add annotation). then this class determines if the
@@ -126,12 +127,12 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
     }
     
     // ----- slots
-    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
-        @Override
-        public void execute(URL url) {
-            onVolumeLoaded();
-        }
-    };
+//    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
+//        @Override
+//        public void execute(URL url) {
+//            onVolumeLoaded();
+//        }
+//    };
 
 //    public Slot1<Skeleton.AnchorSeed> addAnchorRequestedSlot = new Slot1<Skeleton.AnchorSeed>() {
 //        @Override
@@ -186,6 +187,7 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
 //    };
 
     //-----------------------------IMPLEMENTS PathTraceListener
+    @Override
     public void pathTraced(AnchoredVoxelPath voxelPath) {
         if (voxelPath != null) {
             TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(
@@ -203,6 +205,12 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
         }
     }
 
+    //-------------------------------IMPLEMENTS VolumeLoadListener
+    @Override
+    public void volumeLoaded(URL url) {
+        onVolumeLoaded();
+    }
+    
     public Slot1<Anchor> addEditNoteRequestedSlot = new Slot1<Anchor>() {
         @Override
         public void execute(Anchor anchor) {
