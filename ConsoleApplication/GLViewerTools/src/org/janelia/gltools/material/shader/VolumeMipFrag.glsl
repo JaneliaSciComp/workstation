@@ -402,9 +402,10 @@ void main() {
         // for occluding projection, incorporation path length into opacity exponent
         #if PROJECTION_MODE == PROJECTION_OCCLUDING
             // Convert segmentLength to micrometers
-            segmentLength = micrometersPerRay * segmentLength;
-            float opacityExponent = canonicalOccludingPathLengthUm / segmentLength;
-            localOpacity = pow(localOpacity, opacityExponent); // TODO - is this exponential slow?
+            // segmentLength = micrometersPerRay * segmentLength;
+            // float opacityExponent = canonicalOccludingPathLengthUm / segmentLength;
+            // opacityExponent = 2.0;
+            // localOpacity = pow(localOpacity, 2.0); // TODO - is this exponential slow?
         #endif
 
         // Compute change in intensity

@@ -32,13 +32,13 @@ package org.janelia.horta.volume;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.janelia.horta.BrainTileInfo;
 import org.janelia.geometry3d.Box3;
+import org.janelia.horta.OsFilePathRemapper;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -58,16 +58,8 @@ implements StaticVolumeBrickSource
 
         // Correct base path for OS network access, before populating tiles.
         String parentPath = (String) tilebase.get("path");
-        // Only munge the path if the stated path does not exist
-        if (! new File(parentPath).exists()) {
-            String os = System.getProperty("os.name").toLowerCase();
-            if (os.contains("win")) {
-                // parentPath = parentPath.replace("/tier2/mousebrainmicro/mousebrainmicro/", "X:/");
-                parentPath = parentPath.replace("/nobackup/mousebrainmicro/", "\\\\fxt\\nobackup\\mousebrainmicro\\");
-                parentPath = parentPath.replace("/groups/mousebrainmicro/mousebrainmicro/", "\\\\dm11\\mousebrainmicro\\");
-                parentPath = parentPath.replace("/tier2/mousebrainmicro/mousebrainmicro/", "\\\\tier2\\mousebrainmicro\\mousebrainmicro\\");
-            }
-        }
+        parentPath = OsFilePathRemapper.remapLinuxPath(parentPath); // Convert to OS-specific file path
+
         // Error if folder STILL does not exist
         if (! new File(parentPath).exists()) {
             throw new RuntimeException("No such folder " + parentPath);

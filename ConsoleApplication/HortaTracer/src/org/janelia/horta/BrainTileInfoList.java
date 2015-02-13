@@ -65,6 +65,7 @@ implements Map<String, BrainTileInfo>, Iterable<BrainTileInfo>
         Map<String, Object> tilebase = (Map<String, Object>)yaml.load(is);
         // System.out.println(tilebase.getClass().getName());
         tilebasePath = (String) tilebase.get("path");
+        tilebasePath = OsFilePathRemapper.remapLinuxPath(tilebasePath); // Convert to OS-specific file path
         List<Map<String, Object>> tiles = (List<Map<String, Object>>) tilebase.get("tiles");
         // Index tiles for easy retrieval
         for (Map<String, Object> tile : tiles) {

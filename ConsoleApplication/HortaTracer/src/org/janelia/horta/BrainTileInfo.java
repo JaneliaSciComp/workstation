@@ -235,12 +235,20 @@ implements BrickInfo
         return result;
     }
 
+    public boolean folderExists() {
+        // OS specific path should have already been translated in MouseLightYamlBrickSource
+        File folderPath = new File(parentPath, localPath);
+        return folderPath.exists();
+    }
+    
     @Override
     public Texture3d loadBrick(double maxEdgePadWidth) throws IOException
     {
         // OS specific path should have already been translated in MouseLightYamlBrickSource
         File folderPath = new File(parentPath, localPath);
         System.out.println(folderPath.getAbsolutePath());
+        if (! folderExists())
+            throw new IOException("no such tile folder "+folderPath.getAbsolutePath());
         
         // That path is just a folder. Now find the actual files.
         // TODO - this just loads the first channel.

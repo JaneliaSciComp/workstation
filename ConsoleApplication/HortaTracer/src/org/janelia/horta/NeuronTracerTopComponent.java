@@ -696,6 +696,53 @@ public final class NeuronTracerTopComponent extends TopComponent
         }));
     }
 
+    /**
+     * Helper method toward automatic tile loading
+     */
+    private BrickInfo loadTileAtCurrentFocus() throws IOException {
+        PerformanceTimer timer = new PerformanceTimer();
+
+        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+
+        // 2 - Load the brick at the center...
+        // TODO - should happen automatically
+        // Find the best resolution available
+        double screenPixelResolution = pCam.getVantage().getSceneUnitsPerViewportHeight()
+                / pCam.getViewport().getHeightPixels();
+        double minDist = Double.MAX_VALUE;
+        Double bestRes = null;
+        for (Double res : volumeSource.getAvailableResolutions()) {
+            double dist = Math.abs(Math.log(res) - Math.log(screenPixelResolution));
+            if (dist < minDist) {
+                bestRes = res;
+                minDist = dist;
+            }
+        }
+        Double brickResolution = bestRes;
+        BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution);
+        BrickInfo brickInfo = brickInfoSet.getBestContainingBrick(pCam.getVantage().getFocusPosition());
+
+        ProgressHandle progress
+                = ProgressHandleFactory.createHandle(
+                "Loading Tiff Volume...");
+        progress.start();
+
+        GL3Actor boxMesh = createBrickActor((BrainTileInfo) brickInfo);
+
+        progress.finish();
+
+        StatusDisplayer.getDefault().setStatusText(
+                "One TIFF file loaded and processed in "
+                + String.format("%1$,.2f", timer.reportMsAndRestart() / 1000.0)
+                + " seconds."
+        );
+
+        // mprActor.addChild(boxMesh);
+        neuronMPRenderer.addVolumeActor(boxMesh);
+        
+        return brickInfo;
+    }
+    
     private void setupContextMenu(Component innerComponent) {
         // Context menu for window - at first just to see if it works with OpenGL
         // (A: YES, if applied to the inner component)
@@ -803,6 +850,25 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
+                menu.add(new AbstractAction("Load tile at current location")
+                {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        Runnable task = new Runnable() {
+                            public void run() {
+                                try {
+                                    BrickInfo centerBrickInfo = loadTileAtCurrentFocus();
+                                    sceneWindow.getGLAutoDrawable().display();
+                                } catch (IOException ex) {
+                                    Exceptions.printStackTrace(ex);
+                                }
+                            }
+                        };
+                        RequestProcessor.getDefault().post(task);
+                    }
+
+                });
+                
                 // TODO - remove this temporary menu item I used to debug more general volume loading
                 menu.add(new AbstractAction("Load Mouse Light YAML file and recenter...") {
                     @Override
@@ -863,40 +929,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                     PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
                                     animateToFocusXyz(centerFocus, pCam.getVantage(), 150);
 
-                                    // 2 - Load the brick at the center...
-                                    // TODO - should happen automatically
-                                    // Find the best resolution available
-                                    double screenPixelResolution = pCam.getVantage().getSceneUnitsPerViewportHeight()
-                                            / pCam.getViewport().getHeightPixels();
-                                    double minDist = Double.MAX_VALUE;
-                                    Double bestRes = null;
-                                    for (Double res : volumeSource.getAvailableResolutions()) {
-                                        double dist = Math.abs(Math.log(res) - Math.log(screenPixelResolution));
-                                        if (dist < minDist) {
-                                            bestRes = res;
-                                            minDist = dist;
-                                        }
-                                    }
-                                    Double brickResolution = bestRes;
-                                    BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution);
-                                    BrickInfo centerBrickInfo = brickInfoSet.getBestContainingBrick(centerFocus);
-
-                                    progress = ProgressHandleFactory.createHandle(
-                                            "Loading Tiff Volume...");
-                                    progress.start();
-
-                                    GL3Actor boxMesh = createBrickActor((BrainTileInfo)centerBrickInfo);
-                                    
-                                    progress.finish();
-                                    
-                                    StatusDisplayer.getDefault().setStatusText(
-                                            "One TIFF file loaded and processed in "
-                                            + String.format("%1$,.2f", timer.reportMsAndRestart() / 1000.0)
-                                            + " seconds."
-                                    );
-
-                                    // mprActor.addChild(boxMesh);
-                                    neuronMPRenderer.addVolumeActor(boxMesh);
+                                    BrickInfo centerBrickInfo = loadTileAtCurrentFocus();
                                     
                                     Vantage v = pCam.getVantage();
                                     v.centerOn(centerBrickInfo.getBoundingBox());
@@ -1201,7 +1234,18 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     public boolean loadExampleTile(BrainTileInfoList tileList, ProgressHandle progress) {
 
-        BrainTileInfo exampleTile = tileList.iterator().next();
+        BrainTileInfo exampleTile = null;
+        // Find first existing tile
+        for (BrainTileInfo tile : tileList) {
+            if (tile.folderExists()) {
+                exampleTile = tile;
+                break;
+            }
+        }
+        
+        if (exampleTile == null) {
+            return false;
+        }
 
         File tileFile = new File(exampleTile.getParentPath(), exampleTile.getLocalPath());
         System.out.println(tileFile);
