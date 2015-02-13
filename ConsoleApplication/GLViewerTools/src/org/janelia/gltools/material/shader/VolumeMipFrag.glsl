@@ -437,16 +437,17 @@ void main() {
         #if PROJECTION_MODE == PROJECTION_MAXIMUM
             // Should maximum intensity be per-channel, or per color?
             // Well, per-color allows a distinct XYZ maximum position...
-            vecLocalIntensity = mix(opacityFunctionMin, vecLocalIntensity, fade);
+            // vecLocalIntensity = mix(opacityFunctionMin, vecLocalIntensity, fade);
             // Blend per-channel...
-            vecIntegratedIntensity = max(vecIntegratedIntensity, vecLocalIntensity);
             // ...but store XYZ peak per voxel.
             if  (localOpacity > integratedOpacity) {
+                vecIntegratedIntensity = vecLocalIntensity;
                 integratedOpacity = localOpacity;
                 tMaxAbs = t;
             }
         #elif PROJECTION_MODE == PROJECTION_OCCLUDING
-            vec4 c_src = mix(opacityFunctionMin, vecLocalIntensity, fade);
+            // vec4 c_src = mix(opacityFunctionMin, vecLocalIntensity, fade);
+            vec4 c_src = vecLocalIntensity;
             float a_src = localOpacity;
 
             // Previous integrated values are in FRONT of new values
@@ -491,7 +492,7 @@ void main() {
         #endif
 
         if ( maxElement(vecIntegratedIntensity - opacityFunctionMax) > 0 ) {
-            hasHitThreshold = true;
+            // hasHitThreshold = true;
             // break; // early termination - moved to local maximum extension, above
         }
         if (integratedOpacity > 0.99) {
@@ -521,7 +522,7 @@ void main() {
     normal = 0.5 * (normal + vec3(1, 1, 1)); // restrict to range 0-1
     colorOut = vec4(normal.xyz, 1.0);
     #else
-    colorOut = vecIntegratedIntensity;
+    colorOut = vec4(vecIntegratedIntensity.xyz, integratedOpacity);
     #endif
 
     // pick value to alternate render target
