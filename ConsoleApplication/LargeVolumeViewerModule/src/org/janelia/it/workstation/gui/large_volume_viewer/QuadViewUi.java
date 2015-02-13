@@ -396,7 +396,8 @@ public class QuadViewUi extends JPanel
         setupAnnotationGestures();
 
         // connect up text UI and model with graphic UI(s):
-        skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
+        skeleton.setAnchorAddedListener(annotationMgr);
+//        skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
         tracePathRequestedSignal.connect(annotationMgr.tracePathRequestedSlot);
         closeWorkspaceRequestSignal.connect(annotationMgr.closeWorkspaceRequestedSlot);
         getSkeletonActor().addAnchorUpdateListener(annotationMgr);

@@ -13,6 +13,7 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorAddedListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonChangeListener;
@@ -27,6 +28,7 @@ public class Skeleton {
     private TileFormat tileFormat;
     private ViewStateListener viewStateListener;
     private AnnotationSelectionListener annotationSelectionListener;
+    private AnchorAddedListener anchorAddedListener;
 
 	/**
 	 * AnchorSeed holds enough data to nucleate a new Anchor.
@@ -104,12 +106,19 @@ public class Skeleton {
         skeletonChangedListeners.remove(l);
     }
     
+    /**
+     * @param anchorAddedListener the anchorAddedListener to set
+     */
+    public void setAnchorAddedListener(AnchorAddedListener anchorAddedListener) {
+        this.anchorAddedListener = anchorAddedListener;
+    }
+
 	// API for synchronizing with back end database
 	// after discussion with Don Olbris July 8, 2013
 	// 
 	///// ADD
-	public Signal1<AnchorSeed> addAnchorRequestedSignal = 
-			new Signal1<AnchorSeed>();
+//	public Signal1<AnchorSeed> addAnchorRequestedSignal = 
+//			new Signal1<AnchorSeed>();
 	// Response from database
 //	public Slot1<TmGeoAnnotation> addAnchorSlot = new Slot1<TmGeoAnnotation>() {
 //		@Override
@@ -305,8 +314,11 @@ public class Skeleton {
 //        anchorAddedSignal.emit(anchorList.get(0));
 	}
 
-	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {        
-		addAnchorRequestedSignal.emit(new AnchorSeed(xyz, parent));
+	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) { 
+        if (anchorAddedListener != null) {
+            anchorAddedListener.anchorAdded(new AnchorSeed(xyz, parent));
+        }
+//		addAnchorRequestedSignal.emit(new AnchorSeed(xyz, parent));
 	}
 
 	public boolean connect(Anchor anchor1, Anchor anchor2) {

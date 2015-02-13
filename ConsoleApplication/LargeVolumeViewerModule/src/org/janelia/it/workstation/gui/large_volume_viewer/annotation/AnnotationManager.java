@@ -6,7 +6,6 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -19,6 +18,14 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
+import org.janelia.it.workstation.gui.large_volume_viewer.UpdateAnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorAddedListener;
+import org.janelia.it.workstation.tracing.VoxelPosition;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -28,14 +35,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
-import org.janelia.it.workstation.gui.large_volume_viewer.UpdateAnchorListener;
-import org.janelia.it.workstation.tracing.VoxelPosition;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 
-public class AnnotationManager implements AnchorListener, UpdateAnchorListener /**
+public class AnnotationManager implements AnchorListener, UpdateAnchorListener, AnchorAddedListener
+/**
  * this class is the middleman between the UI and the model. first, the UI makes
  * naive requests (eg, add annotation). then this class determines if the
  * request is valid (eg, can't add if no neuron), popping dialogs if needed.
@@ -115,6 +118,12 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener /
         }
     }
 
+    //-----------------------------IMPLEMENT AnchorAddedListener
+    @Override
+    public void anchorAdded(AnchorSeed seed) {
+        addAnnotation(seed.getLocation(), seed.getParentGuid());
+    }
+    
     // ----- slots
     public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
         @Override
@@ -123,12 +132,12 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener /
         }
     };
 
-    public Slot1<Skeleton.AnchorSeed> addAnchorRequestedSlot = new Slot1<Skeleton.AnchorSeed>() {
-        @Override
-        public void execute(Skeleton.AnchorSeed seed) {
-            addAnnotation(seed.getLocation(), seed.getParentGuid());
-        }
-    };
+//    public Slot1<Skeleton.AnchorSeed> addAnchorRequestedSlot = new Slot1<Skeleton.AnchorSeed>() {
+//        @Override
+//        public void execute(Skeleton.AnchorSeed seed) {
+//            addAnnotation(seed.getLocation(), seed.getParentGuid());
+//        }
+//    };
 
     public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
         @Override
