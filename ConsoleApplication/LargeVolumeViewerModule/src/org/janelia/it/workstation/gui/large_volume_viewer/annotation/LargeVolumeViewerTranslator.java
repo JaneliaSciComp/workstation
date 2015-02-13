@@ -8,7 +8,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchoredVoxelPathListener;
 //import org.janelia.it.workstation.signal.Signal;
 //import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot1;
+//import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
@@ -149,13 +149,13 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 //        }
 //    };
 
-    public Slot1<TmGeoAnnotation> annotationClickedSlot = new Slot1<TmGeoAnnotation>() {
-        @Override
-        public void execute(TmGeoAnnotation annotation) {
-            fireNextParentEvent(annotation.getId());
-//            setNextParentSignal.emit(annotation.getId());
-        }
-    };
+//    public Slot1<TmGeoAnnotation> annotationClickedSlot = new Slot1<TmGeoAnnotation>() {
+//        @Override
+//        public void execute(TmGeoAnnotation annotation) {
+//            fireNextParentEvent(annotation.getId());
+////            setNextParentSignal.emit(annotation.getId());
+//        }
+//    };
 
 //    public Slot1<Vec3> cameraPanToSlot = new Slot1<Vec3>() {
 //        @Override
@@ -171,14 +171,14 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 //        }
 //    };
     
-    public Slot1<Color> globalAnnotationColorChangedSlot = new Slot1<Color>() {
-        @Override
-        public void execute(Color color) {
-            // just pass through right now
-            fireColorChangeEvent(color);
-//            changeGlobalColorSignal.emit(color);
-        }
-    };
+//    public Slot1<Color> globalAnnotationColorChangedSlot = new Slot1<Color>() {
+//        @Override
+//        public void execute(Color color) {
+//            // just pass through right now
+//            fireColorChangeEvent(color);
+////            changeGlobalColorSignal.emit(color);
+//        }
+//    };
 
     // ----- signals
 //    public Signal1<Vec3> cameraPanToSignal = new Signal1<>();
