@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrivenSWCExchanger;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -187,13 +188,13 @@ public class QuadViewUi extends JPanel
 	};
 
 	public Signal1<MouseMode.Mode> mouseModeChangedSignal = 
-		    new Signal1<MouseMode.Mode>();
+		    new Signal1<>();
 	    public Signal1<WheelMode.Mode> wheelModeChangedSignal = 
-	        new Signal1<WheelMode.Mode>();
+	        new Signal1<>();
 
-    public Signal1<AnchoredVoxelPath> addAnchoredPathRequestSignal = new Signal1<AnchoredVoxelPath>();
+// Never emitted.    public Signal1<AnchoredVoxelPath> addAnchoredPathRequestSignal = new Signal1<>();
 
-    public Signal1<PathTraceToParentRequest> tracePathRequestedSignal = new Signal1<PathTraceToParentRequest>();
+    public Signal1<PathTraceToParentRequest> tracePathRequestedSignal = new Signal1<>();
 
     public Signal closeWorkspaceRequestSignal = new Signal();
 
@@ -409,7 +410,7 @@ public class QuadViewUi extends JPanel
         // Nb: skeleton.anchorMovedSilentSignal intentially does *not* connect to annotationMgr!
 //        skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
 //        annotationModel.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
-        addAnchoredPathRequestSignal.connect(annotationMgr.addPathRequestedSlot);
+//        addAnchoredPathRequestSignal.connect(annotationMgr.addPathRequestedSlot);
 
         QuadViewController quadViewController = new QuadViewController(this);
         largeVolumeViewerTranslator.setViewStateListener(quadViewController);

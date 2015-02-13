@@ -24,6 +24,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorAddedListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 
 import javax.swing.*;
@@ -35,9 +37,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 
-public class AnnotationManager implements AnchorListener, UpdateAnchorListener, AnchorAddedListener
+public class AnnotationManager implements AnchorListener, UpdateAnchorListener, AnchorAddedListener, PathTraceListener
 /**
  * this class is the middleman between the UI and the model. first, the UI makes
  * naive requests (eg, add annotation). then this class determines if the
@@ -177,25 +178,30 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
         }
     };
 
-    public Slot1<AnchoredVoxelPath> addPathRequestedSlot = new Slot1<AnchoredVoxelPath>() {
-        @Override
-        public void execute(AnchoredVoxelPath voxelPath) {
-            if (voxelPath != null) {
-                TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(
-                        voxelPath.getSegmentIndex().getAnchor1Guid(),
-                        voxelPath.getSegmentIndex().getAnchor2Guid());
-                List<List<Integer>> pointList = new ArrayList<>();
-                for (VoxelPosition vp : voxelPath.getPath()) {
-                    List<Integer> tempList = new ArrayList<>();
-                    tempList.add(vp.getX());
-                    tempList.add(vp.getY());
-                    tempList.add(vp.getZ());
-                    pointList.add(tempList);
-                }
-                addAnchoredPath(endpoints, pointList);
+//    public Slot1<AnchoredVoxelPath> addPathRequestedSlot = new Slot1<AnchoredVoxelPath>() {
+//        @Override
+//        public void execute(AnchoredVoxelPath voxelPath) {
+//            pathTraced(voxelPath);
+//        }
+//    };
+
+    //-----------------------------IMPLEMENTS PathTraceListener
+    public void pathTraced(AnchoredVoxelPath voxelPath) {
+        if (voxelPath != null) {
+            TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(
+                    voxelPath.getSegmentIndex().getAnchor1Guid(),
+                    voxelPath.getSegmentIndex().getAnchor2Guid());
+            List<List<Integer>> pointList = new ArrayList<>();
+            for (VoxelPosition vp : voxelPath.getPath()) {
+                List<Integer> tempList = new ArrayList<>();
+                tempList.add(vp.getX());
+                tempList.add(vp.getY());
+                tempList.add(vp.getZ());
+                pointList.add(tempList);
             }
+            addAnchoredPath(endpoints, pointList);
         }
-    };
+    }
 
     public Slot1<Anchor> addEditNoteRequestedSlot = new Slot1<Anchor>() {
         @Override
@@ -1139,7 +1145,8 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
 
         // tracing:
         PathTraceToParentWorker worker = new PathTraceToParentWorker(request, AUTOMATIC_TRACING_TIMEOUT);
-        worker.pathTracedSignal.connect(addPathRequestedSlot);
+        worker.setPathTraceListener(this);
+//        worker.pathTracedSignal.connect(addPathRequestedSlot);
         worker.execute();
 
         // we'd really prefer to see this worker's status in the Progress Monitor, but as of
