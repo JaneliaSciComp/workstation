@@ -479,6 +479,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
 
     //------------------------------FIRING EVENTS.
+    public void fireNextParentEvent(Long id) {
+        for (NextParentListener l: nextParentListeners) {
+            l.setNextParent(id);
+        }
+    }
     private void fireAnchorsAdded(List<TmGeoAnnotation> anchors) {
         for (TmGeoAnnotationAnchorListener l: anchorListeners) {
             l.anchorsAdded(anchors);
@@ -507,11 +512,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private void fireClearAnchors() {
         for (TmGeoAnnotationAnchorListener l: anchorListeners) {
             l.clearAnchors();
-        }
-    }
-    private void fireNextParentEvent(Long id) {
-        for (NextParentListener l: nextParentListeners) {
-            l.setNextParent(id);
         }
     }
     private void fireColorChangeEvent(Color color) {
