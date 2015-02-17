@@ -56,6 +56,8 @@ public class PanelController {
         annotationModel.addGlobalAnnotationListener(globalListener);
         PanelNotesUpdateListener pnul = new PanelNotesUpdateListener();
         annotationModel.setNotesUpdateListener(pnul);
+        PanelNeuronSelectedListener pnsl = new PanelNeuronSelectedListener(annotationModel);
+        wsNeuronList.setNeuronSelectedListener(pnsl);
     }
     
     public void unregisterForEvents(AnnotationModel annotationModel) {
@@ -102,6 +104,21 @@ public class PanelController {
         @Override
         public void notesUpdated(TmWorkspace workspace) {
             noteListPanel.loadWorkspace(workspace);
+        }
+        
+    }
+    
+    private class PanelNeuronSelectedListener implements NeuronSelectedListener {
+
+        private AnnotationModel model;
+        
+        public PanelNeuronSelectedListener(AnnotationModel model) {
+            this.model = model;
+        }
+        
+        @Override
+        public void selectNeuron(TmNeuron neuron) {
+            model.selectNeuron(neuron);
         }
         
     }

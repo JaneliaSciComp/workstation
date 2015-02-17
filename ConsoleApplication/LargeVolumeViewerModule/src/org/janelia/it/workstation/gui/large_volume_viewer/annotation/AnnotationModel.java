@@ -97,14 +97,18 @@ SimpleWorker thread.
 //    public Signal1<TmWorkspace> notesUpdatedSignal = new Signal1<>();
 
     // ----- slots
-    public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
-        @Override
-        public void execute(TmNeuron neuron) {
-            setCurrentNeuron(neuron);
-            fireNeuronSelected(neuron);
-//            neuronSelectedSignal.emit(neuron);
-        }
-    };
+//    public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
+//        @Override
+//        public void execute(TmNeuron neuron) {
+//            selectNeuron(neuron);
+////            neuronSelectedSignal.emit(neuron);
+//        }
+//    };
+
+//    public void neuronClicked(TmNeuron neuron) {
+//        setCurrentNeuron(neuron);
+//        fireNeuronSelected(neuron);
+//    }
 
     // ----- constants
     // name of entity that holds our workspaces

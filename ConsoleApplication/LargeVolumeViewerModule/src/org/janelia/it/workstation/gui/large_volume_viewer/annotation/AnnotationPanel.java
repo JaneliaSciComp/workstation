@@ -172,7 +172,7 @@ public class AnnotationPanel extends JPanel
 //        annotationModel.notesUpdatedSignal.connect(noteListPanel.notesUpdatedSlot);
 
         // us to model:
-        workspaceNeuronList.neuronClickedSignal.connect(annotationModel.neuronClickedSlot);
+//        workspaceNeuronList.neuronClickedSignal.connect(annotationModel.neuronClickedSlot);
 
         // us to graphics UI
 //        neuriteTreePanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);

@@ -12,9 +12,10 @@ import java.util.*;
 
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronSelectedListener;
 
 
 /**
@@ -27,9 +28,17 @@ public class WorkspaceNeuronList extends JPanel {
     private JList neuronListBox;
     private DefaultListModel neuronListModel;
     private CameraPanToListener panListener;
+    private NeuronSelectedListener neuronSelectedListener;
 
     private int width;
     private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
+
+    /**
+     * @param neuronSelectedListener the neuronSelectedListener to set
+     */
+    public void setNeuronSelectedListener(NeuronSelectedListener neuronSelectedListener) {
+        this.neuronSelectedListener = neuronSelectedListener;
+    }
 
     // to add new sort order: add to enum here, add menu in AnnotationPanel.java,
     //  and implement the sort in sortNeuronList below
@@ -52,7 +61,7 @@ public class WorkspaceNeuronList extends JPanel {
 //    };
 
     // ----- signals
-    public Signal1<TmNeuron> neuronClickedSignal = new Signal1<TmNeuron>();
+//    public Signal1<TmNeuron> neuronClickedSignal = new Signal1<TmNeuron>();
 //    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
 
     public WorkspaceNeuronList(int width) {
@@ -107,7 +116,9 @@ public class WorkspaceNeuronList extends JPanel {
                             } else {
                                 selectedNeuron = null;
                             }
-                            neuronClickedSignal.emit(selectedNeuron);
+                            if (neuronSelectedListener != null)
+                                neuronSelectedListener.selectNeuron(selectedNeuron);
+//                            neuronClickedSignal.emit(selectedNeuron);
                         }
                     }
                 }
