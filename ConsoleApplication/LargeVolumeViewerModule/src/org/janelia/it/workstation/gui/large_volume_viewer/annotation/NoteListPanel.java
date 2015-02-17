@@ -16,6 +16,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 
 /**
  * this class displays notes placed on annotations in a clickable list
@@ -28,17 +29,18 @@ public class NoteListPanel extends JPanel {
 
     private JList noteListBox;
     private DefaultListModel noteListModel;
+    private CameraPanToListener panListener;
 
     private int width;
     private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
 
     // ----- slots
-    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
-        @Override
-        public void execute(TmWorkspace workspace) {
-            loadWorkspace(workspace);
-        }
-    };
+//    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
+//        @Override
+//        public void execute(TmWorkspace workspace) {
+//            loadWorkspace(workspace);
+//        }
+//    };
 
     public Slot1<TmWorkspace> notesUpdatedSlot = new Slot1<TmWorkspace>() {
         @Override
@@ -48,7 +50,7 @@ public class NoteListPanel extends JPanel {
     };
 
     // ----- signals
-    public Signal1<Vec3> cameraPanToSignal = new Signal1<>();
+//    public Signal1<Vec3> cameraPanToSignal = new Signal1<>();
     public Signal1<TmGeoAnnotation> editNoteRequestedSignal = new Signal1<>();
 
 
@@ -65,6 +67,13 @@ public class NoteListPanel extends JPanel {
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(width, height);
+    }
+
+    /**
+     * @return the panListener
+     */
+    public void setPanListener(CameraPanToListener panListener) {
+        this.panListener = panListener;
     }
 
     private void setupUI() {
@@ -110,7 +119,10 @@ public class NoteListPanel extends JPanel {
                     }
                     if (evt.getClickCount() == 1) {
                         if (ann != null) {
-                            cameraPanToSignal.emit(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                            if (panListener != null) {
+                                panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                            }
+//                            cameraPanToSignal.emit(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
                         }
                     } else if (evt.getClickCount() == 2) {
                         if (ann != null) {

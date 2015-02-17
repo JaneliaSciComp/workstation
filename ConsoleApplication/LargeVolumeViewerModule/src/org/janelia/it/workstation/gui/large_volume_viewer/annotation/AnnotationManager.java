@@ -6,7 +6,6 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -19,6 +18,17 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
+import org.janelia.it.workstation.gui.large_volume_viewer.UpdateAnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorAddedListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
+import org.janelia.it.workstation.tracing.VoxelPosition;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -28,24 +38,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
-import org.janelia.it.workstation.shared.util.ImportExportSWCExchanger;
-import org.janelia.it.workstation.tracing.VoxelPosition;
 
-
-public class AnnotationManager
+public class AnnotationManager implements AnchorListener, UpdateAnchorListener, AnchorAddedListener, PathTraceListener, VolumeLoadListener
 /**
- * this class is the middleman between the UI and the model.  first, the UI makes naive requests 
- * (eg, add annotation).  then this class determines if the request is valid (eg, can't add
- * if no neuron), popping dialogs if needed.  lastly, this class gathers and/or reformats info as
- * needed to actually make the call to the back end, usually spinning off a worker thread to
- * do so.  
- * 
- * this class's slots are usually connected to various UI signals, and its signals typically 
- * hook up to AnnotationModel slots.  this class has no responsibilities in notifying UI 
- * elements of what's been done; that's handled by signals emitted from AnnotationModel.
+ * this class is the middleman between the UI and the model. first, the UI makes
+ * naive requests (eg, add annotation). then this class determines if the
+ * request is valid (eg, can't add if no neuron), popping dialogs if needed.
+ * lastly, this class gathers and/or reformats info as needed to actually make
+ * the call to the back end, usually spinning off a worker thread to do so.
+ *
+ * this class's slots are usually connected to various UI signals, and its
+ * signals typically hook up to AnnotationModel slots. this class has no
+ * responsibilities in notifying UI elements of what's been done; that's handled
+ * by signals emitted from AnnotationModel.
  */
 {
 
@@ -58,7 +63,7 @@ public class AnnotationManager
     private QuadViewUi quadViewUi;
 
     private Entity initialEntity;
-    
+
     private TileServer tileServer;
 
     // ----- constants
@@ -72,57 +77,69 @@ public class AnnotationManager
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
-
-    // ----- slots
-
-    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
-        @Override
-        public void execute(URL url) {
-            onVolumeLoaded();
-        }
-    };
-
-    public Slot1<Skeleton.AnchorSeed> addAnchorRequestedSlot = new Slot1<Skeleton.AnchorSeed>() {
-        @Override
-        public void execute(Skeleton.AnchorSeed seed) {
-            addAnnotation(seed.getLocation(), seed.getParentGuid());
-        }
-    };
-
-    public Slot1<Anchor> deleteLinkRequestedSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-            deleteLink(anchor.getGuid());
-        }
-    };
-
-    public Slot1<Anchor> deleteSubtreeRequestedSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
+    //-----------------------------------IMPLEMENT AnchorListener
+    @Override
+    public void deleteSubtreeRequested(Anchor anchor) {
+        if (anchor != null) {
             deleteSubTree(anchor.getGuid());
+        } else {
+            int x = 0;
         }
-    };
+    }
 
-    public Slot1<Anchor> splitAnchorRequestedSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-            splitAnchor(anchor.getGuid());
-        }
-    };
+    @Override
+    public void splitAnchorRequested(Anchor anchor) {
+        splitAnchor(anchor.getGuid());
+    }
 
-    public Slot1<Anchor> rerootNeuriteRequestedSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-            rerootNeurite(anchor.getGuid());
-        }
-    };
+    @Override
+    public void rerootNeuriteRequested(Anchor anchor) {
+        rerootNeurite(anchor.getGuid());
+    }
 
-    public Slot1<Anchor> splitNeuriteRequestedSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-            splitNeurite(anchor.getGuid());
+    @Override
+    public void splitNeuriteRequested(Anchor anchor) {
+        splitNeurite(anchor.getGuid());
+    }
+
+    @Override
+    public void deleteLinkRequested(Anchor anchor) {
+        deleteLink(anchor.getGuid());
+    }
+
+    @Override
+    public void addEditNoteRequested(Anchor anchor) {
+        addEditNote(anchor.getGuid());
+    }
+
+    //-----------------------------IMPLEMENT UpdateAnchorListener
+    @Override
+    public void update(Anchor anchor) {
+        if (anchor != null) {
+            selectNeuronFromAnnotation(anchor.getGuid());
         }
-    };
+    }
+
+    //-----------------------------IMPLEMENT AnchorAddedListener
+    @Override
+    public void anchorAdded(AnchorSeed seed) {
+        addAnnotation(seed.getLocation(), seed.getParentGuid());
+    }
+    
+    // ----- slots
+//    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
+//        @Override
+//        public void execute(URL url) {
+//            onVolumeLoaded();
+//        }
+//    };
+
+//    public Slot1<Skeleton.AnchorSeed> addAnchorRequestedSlot = new Slot1<Skeleton.AnchorSeed>() {
+//        @Override
+//        public void execute(Skeleton.AnchorSeed seed) {
+//            addAnnotation(seed.getLocation(), seed.getParentGuid());
+//        }
+//    };
 
     public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
         @Override
@@ -130,9 +147,10 @@ public class AnnotationManager
 
             // find closest to new anchor location that isn't the annotation already
             //  associated with anchor
-            TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchor.getLocation(),
-                annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
-
+            TileFormat tf = getTileFormat();
+            Vec3 anchorVoxLoc = tf.voxelVec3ForMicronVec3(anchor.getLocation());
+            TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchorVoxLoc,
+                    annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
 
             // check distance and other restrictions
             if (closest != null && canMergeNeurite(anchor, closest)) {
@@ -145,14 +163,14 @@ public class AnnotationManager
         }
     };
 
-    public Slot1<Anchor> selectAnnotationSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-            if (anchor != null) {
-                selectNeuronFromAnnotation(anchor.getGuid());
-            }
-        }
-    };
+//    public Slot1<Anchor> selectAnnotationSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            if (anchor != null) {
+//                selectNeuronFromAnnotation(anchor.getGuid());
+//            }
+//        }
+//    };
 
     public Slot1<PathTraceToParentRequest> tracePathRequestedSlot = new Slot1<PathTraceToParentRequest>() {
         @Override
@@ -161,26 +179,38 @@ public class AnnotationManager
         }
     };
 
-    public Slot1<AnchoredVoxelPath> addPathRequestedSlot = new Slot1<AnchoredVoxelPath>() {
-        @Override
-        public void execute(AnchoredVoxelPath voxelPath) {
-            if (voxelPath != null) {
-                TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(
-                        voxelPath.getSegmentIndex().getAnchor1Guid(),
-                        voxelPath.getSegmentIndex().getAnchor2Guid());
-                List<List<Integer>> pointList = new ArrayList<>();
-                for (VoxelPosition vp: voxelPath.getPath()) {
-                    List<Integer> tempList = new ArrayList<>();
-                    tempList.add(vp.getX());
-                    tempList.add(vp.getY());
-                    tempList.add(vp.getZ());
-                    pointList.add(tempList);
-                }
-                addAnchoredPath(endpoints, pointList);
-            }
-        }
-    };
+//    public Slot1<AnchoredVoxelPath> addPathRequestedSlot = new Slot1<AnchoredVoxelPath>() {
+//        @Override
+//        public void execute(AnchoredVoxelPath voxelPath) {
+//            pathTraced(voxelPath);
+//        }
+//    };
 
+    //-----------------------------IMPLEMENTS PathTraceListener
+    @Override
+    public void pathTraced(AnchoredVoxelPath voxelPath) {
+        if (voxelPath != null) {
+            TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(
+                    voxelPath.getSegmentIndex().getAnchor1Guid(),
+                    voxelPath.getSegmentIndex().getAnchor2Guid());
+            List<List<Integer>> pointList = new ArrayList<>();
+            for (VoxelPosition vp : voxelPath.getPath()) {
+                List<Integer> tempList = new ArrayList<>();
+                tempList.add(vp.getX());
+                tempList.add(vp.getY());
+                tempList.add(vp.getZ());
+                pointList.add(tempList);
+            }
+            addAnchoredPath(endpoints, pointList);
+        }
+    }
+
+    //-------------------------------IMPLEMENTS VolumeLoadListener
+    @Override
+    public void volumeLoaded(URL url) {
+        onVolumeLoaded();
+    }
+    
     public Slot1<Anchor> addEditNoteRequestedSlot = new Slot1<Anchor>() {
         @Override
         public void execute(Anchor anchor) {
@@ -212,21 +242,22 @@ public class AnnotationManager
     public TileFormat getTileFormat() {
         return tileServer.getLoadAdapter().getTileFormat();
     }
-    
+
     public Entity getInitialEntity() {
         return initialEntity;
     }
 
     /**
-     * @param initialEntity = entity the user right-clicked on to start the large volume viewer
+     * @param initialEntity = entity the user right-clicked on to start the
+     * large volume viewer
      */
     public void setInitialEntity(final Entity initialEntity) {
         this.initialEntity = initialEntity;
     }
 
     /**
-     * called when volume is *finished* loading (so as to avoid race conditions);
-     * relies on initial entity being properly set already
+     * called when volume is *finished* loading (so as to avoid race
+     * conditions); relies on initial entity being properly set already
      */
     public void onVolumeLoaded() {
 
@@ -263,7 +294,7 @@ public class AnnotationManager
                 }
 
                 @Override
-                protected  void hadSuccess() {
+                protected void hadSuccess() {
                     // no hadSuccess(); signals will be emitted in the loadWorkspace() call
                 }
 
@@ -278,31 +309,29 @@ public class AnnotationManager
         // (eventually) update state to saved state (selection, visibility, etc);
         //  actually, although it should happen at about the time this method is called,
         //  it may be better to make it a different method
-
     }
 
     // ----- methods called from UI
     // these methods are called by actions from the 2d view; should be not
     //  much more than what tool is active and where the click was;
     //  we are responsible for everything else
-
     /**
-     * add an annotation at the given location with the given parent ID;
-     * if no parent, pass in null
+     * add an annotation at the given location with the given parent ID; if no
+     * parent, pass in null
      */
     public void addAnnotation(final Vec3 xyz, final Long parentID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             presentError(
-                "You must load a workspace before beginning annotation!",
-                "No workspace!");
+                    "You must load a workspace before beginning annotation!",
+                    "No workspace!");
             return;
         }
 
         final TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
         if (currentNeuron == null) {
             presentError(
-                "You must select a neuron before beginning annotation!",
-                "No neuron!");
+                    "You must select a neuron before beginning annotation!",
+                    "No neuron!");
             return;
         }
 
@@ -361,10 +390,10 @@ public class AnnotationManager
     }
 
     /**
-     * delete the annotation with the input ID; the annotation must be a "link", which
-     * is an annotation that is not a root (no parent) or branch point (many children);
-     * in other words, it's an end point, or an annotation with a parent and single child
-     * that can be connected up unambiguously
+     * delete the annotation with the input ID; the annotation must be a "link",
+     * which is an annotation that is not a root (no parent) or branch point
+     * (many children); in other words, it's an end point, or an annotation with
+     * a parent and single child that can be connected up unambiguously
      */
     public void deleteLink(final Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
@@ -406,10 +435,11 @@ public class AnnotationManager
     }
 
     /**
-     * delete the annotation with the input ID, and delete all of its descendants
+     * delete the annotation with the input ID, and delete all of its
+     * descendants
      */
     public void deleteSubTree(final Long annotationID) {
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (annotationModel.getCurrentWorkspace() == null || annotationID == null) {
             // dialog?
             return;
         } else {
@@ -419,7 +449,7 @@ public class AnnotationManager
             final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
             int nAnnotations = annotationModel.getNeuronFromAnnotationID(annotationID).getSubTreeList(annotation).size();
             if (nAnnotations >= 5) {
-                int ans =  JOptionPane.showConfirmDialog(
+                int ans = JOptionPane.showConfirmDialog(
                         ComponentUtil.getLVVMainWindow(),
                         String.format("Selected subtree has %d children; delete?", nAnnotations),
                         "Delete subtree?",
@@ -452,7 +482,7 @@ public class AnnotationManager
     /**
      * move the annotation with the input ID to the input location
      */
-    public void moveAnnotation(final Long annotationID, final Vec3 location) {
+    public void moveAnnotation(final Long annotationID, final Vec3 micronLocation) {
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
             return;
@@ -460,7 +490,9 @@ public class AnnotationManager
             SimpleWorker mover = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.moveAnnotation(annotationID, location);
+                    TileFormat tileFormat = getTileFormat();
+                    Vec3 voxelLocation = tileFormat.voxelVec3ForMicronVec3(micronLocation);
+                    annotationModel.moveAnnotation(annotationID, voxelLocation);
                 }
 
                 @Override
@@ -477,7 +509,6 @@ public class AnnotationManager
         }
     }
 
-
     public boolean canMergeNeurite(Anchor anchor, TmGeoAnnotation closest) {
 
         // can't merge with itself
@@ -486,9 +517,12 @@ public class AnnotationManager
         }
 
         // distance: close enough?
-        double dx = closest.getX() - anchor.getLocation().getX();
-        double dy = closest.getY() - anchor.getLocation().getY();
-        double dz = closest.getZ() - anchor.getLocation().getZ();
+        Vec3 anchorLocMicron = anchor.getLocation();
+        TileFormat tileFormat = getTileFormat();
+        Vec3 anchorLocVox = tileFormat.voxelVec3ForMicronVec3(anchorLocMicron);
+        double dx = closest.getX() - anchorLocVox.getX();
+        double dy = closest.getY() - anchorLocVox.getY();
+        double dz = closest.getZ() - anchorLocVox.getZ();
         if (dx * dx + dy * dy + dz * dz > DRAG_MERGE_THRESHOLD_SQUARED) {
             return false;
         }
@@ -523,24 +557,27 @@ public class AnnotationManager
             presentError(
                     "You can't merge a neurite with itself!",
                     "Can't merge!!");
-            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
+            annotationModel.fireAnnotationNotMoved(sourceAnnotation);
+//            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
             return;
         }
 
-        // are you sure dialog
-        // message before title, why???
-        int ans =  JOptionPane.showConfirmDialog(
+        // Message goes before title. Why?  
+        // Because there are several overrides, all of which use the message as 
+        // the first string param. The title is optional. Confusing if not used
+        // often, however.
+        int ans = JOptionPane.showConfirmDialog(
                 ComponentUtil.getLVVMainWindow(),
                 String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
-                    annotationModel.getNeuronFromAnnotationID(sourceAnnotationID),
-                    annotationModel.getNeuronFromAnnotationID(targetAnnotationID)),
+                        annotationModel.getNeuronFromAnnotationID(sourceAnnotationID),
+                        annotationModel.getNeuronFromAnnotationID(targetAnnotationID)),
                 "Merge neurites?",
                 JOptionPane.OK_CANCEL_OPTION);
         if (ans != JOptionPane.OK_OPTION) {
-            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
+            annotationModel.fireAnnotationNotMoved(sourceAnnotation);
+//            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
             return;
         }
-
 
         // then call ann model
         SimpleWorker merger = new SimpleWorker() {
@@ -566,9 +603,9 @@ public class AnnotationManager
     /**
      * place a new annotation near the annotation with the input ID; place it
      * "nearby" in the direction of its parent if it has one; if it's a root
-     * annotation with one child, place it in the direction of the child instead;
-     * if it's a root with many children, it's an error, since there is no
-     * unambiguous location to place the new anchor
+     * annotation with one child, place it in the direction of the child
+     * instead; if it's a root with many children, it's an error, since there is
+     * no unambiguous location to place the new anchor
      */
     public void splitAnchor(Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
@@ -669,8 +706,8 @@ public class AnnotationManager
     }
 
     /**
-     * add an anchored path; not much to check, as the UI needs to check it even before
-     * the request gets here
+     * add an anchored path; not much to check, as the UI needs to check it even
+     * before the request gets here
      */
     public void addAnchoredPath(final TmAnchoredPathEndpoints endpoints, final List<List<Integer>> points) {
         if (annotationModel.getCurrentWorkspace() == null) {
@@ -718,8 +755,8 @@ public class AnnotationManager
 
         // pop dialog, with (possibly) pre-existing text
         Object[] options = {"Set note",
-                "Delete note",
-                "Cancel"};
+            "Delete note",
+            "Cancel"};
         JPanel panel = new JPanel();
         panel.add(new JLabel("Enter note text:"));
         JTextField textField = new JTextField(40);
@@ -811,7 +848,7 @@ public class AnnotationManager
             protected void doStuff() throws Exception {
                 annotationModel.createNeuron(neuronName);
                 // Renaming neuron here, after selection is done.
-                renameNeuron();                
+                renameNeuron();
             }
 
             @Override
@@ -836,7 +873,7 @@ public class AnnotationManager
         }
 
         int nAnnotations = neuron.getGeoAnnotationMap().size();
-        int ans =  JOptionPane.showConfirmDialog(
+        int ans = JOptionPane.showConfirmDialog(
                 ComponentUtil.getLVVMainWindow(),
                 String.format("%s has %d nodes; delete?", neuron.getName(), nAnnotations),
                 "Delete neuron?",
@@ -877,20 +914,19 @@ public class AnnotationManager
             return;
         }
 
-        final String neuronName = (String)JOptionPane.showInputDialog(
+        final String neuronName = (String) JOptionPane.showInputDialog(
                 ComponentUtil.getLVVMainWindow(),
                 "Neuron name:",
                 "Rename neuron",
                 JOptionPane.PLAIN_MESSAGE,
-                null,                           // icon
-                null,                           // choice list; absent = freeform
+                null, // icon
+                null, // choice list; absent = freeform
                 neuron.getName());
         if (neuronName == null || neuronName.length() == 0) {
             return;
         }
 
         // validate neuron name?  are there any rules for entity names?
-
         SimpleWorker renamer = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
@@ -923,7 +959,7 @@ public class AnnotationManager
         //  standard template; create list of integers found
         ArrayList<Long> intList = new ArrayList<Long>();
         Pattern pattern = Pattern.compile("New[ _]neuron[ _]([0-9]+)");
-        for (TmNeuron neuron: workspace.getNeuronList()) {
+        for (TmNeuron neuron : workspace.getNeuronList()) {
             Matcher matcher = pattern.matcher(neuron.getName());
             if (matcher.matches()) {
                 intList.add(Long.parseLong(matcher.group(1)));
@@ -935,7 +971,7 @@ public class AnnotationManager
         //  at at least 1, if anyone has named their neurons with negative numbers
         Long maximum = 0L;
         if (intList.size() > 0) {
-            for (Long l: intList) {
+            for (Long l : intList) {
                 if (l > maximum) {
                     maximum = l;
                 }
@@ -943,7 +979,6 @@ public class AnnotationManager
         }
         return String.format("New_neuron_%d", maximum + 1);
     }
-
 
     /**
      * given an annotation ID, select (make current) the neuron it belongs to
@@ -996,13 +1031,13 @@ public class AnnotationManager
         }
 
         // get a name for the new workspace and validate (are there any rules for entity names?)
-        String workspaceName = (String)JOptionPane.showInputDialog(
+        String workspaceName = (String) JOptionPane.showInputDialog(
                 ComponentUtil.getLVVMainWindow(),
                 "Workspace name:",
                 "Create workspace",
                 JOptionPane.PLAIN_MESSAGE,
-                null,                           // icon
-                null,                           // choice list; absent = freeform
+                null, // icon
+                null, // choice list; absent = freeform
                 "new workspace");
         // this is all the validation we have right now...
         if ((workspaceName == null) || (workspaceName.length() == 0)) {
@@ -1079,11 +1114,11 @@ public class AnnotationManager
         savePreference(AnnotationsConstants.PREF_AUTOMATIC_TRACING, String.valueOf(state));
     }
 
-    public void savePreference( final String name, final String value ) {
+    public void savePreference(final String name, final String value) {
         SimpleWorker saver = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.setPreference( name, value );
+                annotationModel.setPreference(name, value);
             }
 
             @Override
@@ -1098,14 +1133,14 @@ public class AnnotationManager
         };
         saver.execute();
     }
-    
-    public String retreivePreference( final String name ) {
+
+    public String retreivePreference(final String name) {
         return annotationModel.getPreference(name);
     }
 
     private void tracePathToParent(PathTraceToParentRequest request) {
         TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(request.getAnchorGuid1());
-        if (annotation.isRoot())  {
+        if (annotation.isRoot()) {
             // no parent, no tracing
             return;
         }
@@ -1118,20 +1153,20 @@ public class AnnotationManager
 
         // tracing:
         PathTraceToParentWorker worker = new PathTraceToParentWorker(request, AUTOMATIC_TRACING_TIMEOUT);
-        worker.pathTracedSignal.connect(addPathRequestedSlot);
+        worker.setPathTraceListener(this);
+//        worker.pathTracedSignal.connect(addPathRequestedSlot);
         worker.execute();
 
         // we'd really prefer to see this worker's status in the Progress Monitor, but as of
         //  Jan. 2014, that monitor's window repositions itself and comes to front on every
         //  new task, so it's far too intrusive to be used for our purpose; see FW-2191
         // worker.executeWithEvents();
-
     }
 
     public void exportAllNeuronsAsSWC(final File swcFile, final int downsampleModulo) {
         final List<Long> neuronIDList = new ArrayList<>();
         int nannotations = 0;
-        for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+        for (TmNeuron neuron : annotationModel.getCurrentWorkspace().getNeuronList()) {
             nannotations += neuron.getGeoAnnotationMap().size();
             neuronIDList.add(neuron.getId());
         }
@@ -1201,7 +1236,6 @@ public class AnnotationManager
             //  (c) option to include/exclude automatically traced paths, if we can
             //      store that info in the file
             //  (d) option to shift position (add constant x, y, z offset)
-
             BackgroundWorker importer = new BackgroundWorker() {
                 @Override
                 protected void doStuff() throws Exception {
@@ -1209,7 +1243,9 @@ public class AnnotationManager
                 }
 
                 @Override
-                public String getName() {return "import " + swcFile.getName();}
+                public String getName() {
+                    return "import " + swcFile.getName();
+                }
 
                 @Override
                 protected void hadSuccess() {
@@ -1227,7 +1263,7 @@ public class AnnotationManager
 
     /**
      * Convenience method, to cut down on redundant code.
-     * 
+     *
      * @param message passed as message param
      * @param title passed as title param.
      * @throws HeadlessException by called methods.
@@ -1241,4 +1277,3 @@ public class AnnotationManager
     }
 
 }
-

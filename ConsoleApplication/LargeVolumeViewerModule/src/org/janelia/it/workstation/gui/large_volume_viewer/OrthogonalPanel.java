@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import java.awt.Dimension;
+import java.net.URL;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -15,6 +16,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
@@ -24,7 +26,7 @@ import org.janelia.it.workstation.signal.Slot1;
  * Intended for use as one of a series of X/Y/Z orthogonal slice views.
  */
 public class OrthogonalPanel 
-extends JPanel
+extends JPanel implements VolumeLoadListener
 {
     private JPanel scanPanel = new JPanel();
 	private JSlider slider = new JSlider();
@@ -111,50 +113,7 @@ extends JPanel
 	public Slot setSliceSlot = new Slot() {
 		@Override
 		public void execute() {
-			if (volume == null)
-				return;
-			if (camera == null)
-				return;
-			// Update ranges of slider and spinner
-			BoundingBox3d bb = volume.getBoundingBox3d();
-			int ix = axis.index(); // X, Y, or Z
-            double res = volume.getResolution(ix);
-            double halfVoxel = 0.5 * res;
-			double sMin = bb.getMin().get(ix) + halfVoxel;
-			double sMax = bb.getMax().get(ix) - halfVoxel;
-			int s0 = (int)Math.round(sMin / res - 0.5);
-			int s1 = (int)Math.round(sMax / res - 0.5);
-			if (s0 > s1)
-				s1 = s0;
-			// Need at least 2 slices for slice scanning to be relevant
-			boolean bShowScan = ((s1 - s0) > 1);
-			if (! bShowScan)
-				return;
-			boolean bRangeChanged = false;
-			if (s0 != slider.getMinimum())
-				bRangeChanged = true;
-			if (s1 != slider.getMaximum())
-				bRangeChanged = true;
-			if (bRangeChanged) {
-				scanPanel.setVisible(bShowScan);
-				int range = s1 - s0;
-				int tickSpacing = 10;
-				if (range > 1000)
-					tickSpacing = 100;
-				if (range > 10000)
-					tickSpacing = 1000;
-				slider.setMajorTickSpacing(tickSpacing);
-			}
-			slider.setMinimum(s0);
-			slider.setMaximum(s1);
-			spinnerNumberModel.setMinimum(s0);
-			spinnerNumberModel.setMaximum(s1);
-			// Update slice value
-			int s = (int)Math.round(camera.getFocus().get(ix) / res - 0.5);
-			if (s < s0) s = s0;
-			if (s > s1) s = s1;
-			slider.setValue(s);
-			spinner.setValue(s);
+            volumeLoaded(null);
 		}
 	};
 
@@ -170,7 +129,8 @@ extends JPanel
 			return; // no change
 		this.volume = volumeImage3d;
 		viewer.setVolumeImage3d(volumeImage3d);
-		volume.volumeInitializedSignal.connect(setSliceSlot);
+        volume.addVolumeLoadListener(this);
+//		volume.volumeInitializedSignal.connect(setSliceSlot);
 		viewTileManager.setVolumeImage(volumeImage3d);
 	}
 	
@@ -225,6 +185,66 @@ extends JPanel
 
     public OrthogonalViewer getViewer() {
         return viewer;
+    }
+
+    @Override
+    public void volumeLoaded(URL vol) {        
+        if (volume == null) {
+            return;
+        }
+        if (camera == null) {
+            return;
+        }
+        // Update ranges of slider and spinner
+        BoundingBox3d bb = volume.getBoundingBox3d();
+        int ix = axis.index(); // X, Y, or Z
+        double res = volume.getResolution(ix);
+        double halfVoxel = 0.5 * res;
+        double sMin = bb.getMin().get(ix) + halfVoxel;
+        double sMax = bb.getMax().get(ix) - halfVoxel;
+        int s0 = (int) Math.round(sMin / res - 0.5);
+        int s1 = (int) Math.round(sMax / res - 0.5);
+        if (s0 > s1) {
+            s1 = s0;
+        }
+        // Need at least 2 slices for slice scanning to be relevant
+        boolean bShowScan = ((s1 - s0) > 1);
+        if (!bShowScan) {
+            return;
+        }
+        boolean bRangeChanged = false;
+        if (s0 != slider.getMinimum()) {
+            bRangeChanged = true;
+        }
+        if (s1 != slider.getMaximum()) {
+            bRangeChanged = true;
+        }
+        if (bRangeChanged) {
+            scanPanel.setVisible(bShowScan);
+            int range = s1 - s0;
+            int tickSpacing = 10;
+            if (range > 1000) {
+                tickSpacing = 100;
+            }
+            if (range > 10000) {
+                tickSpacing = 1000;
+            }
+            slider.setMajorTickSpacing(tickSpacing);
+        }
+        slider.setMinimum(s0);
+        slider.setMaximum(s1);
+        spinnerNumberModel.setMinimum(s0);
+        spinnerNumberModel.setMaximum(s1);
+        // Update slice value
+        int s = (int) Math.round(camera.getFocus().get(ix) / res - 0.5);
+        if (s < s0) {
+            s = s0;
+        }
+        if (s > s1) {
+            s = s1;
+        }
+        slider.setValue(s);
+        spinner.setValue(s);
     }
 
 }

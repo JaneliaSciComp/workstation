@@ -38,13 +38,14 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
 import java.util.List;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorStateUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class LargeVolumeViewer
 extends GLJPanel
-implements MouseModalWidget, TileConsumer
+implements MouseModalWidget, TileConsumer, RepaintListener
 {
 	private static final Logger log = LoggerFactory.getLogger(LargeVolumeViewer.class);
 
@@ -137,7 +138,9 @@ implements MouseModalWidget, TileConsumer
 		pointComputer.setWidget(this, false);
 		//
         renderer.addActor(skeletonActor);
-        skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
+        SkeletonActorStateUpdater sasUpdater = skeletonActor.getUpdater();
+        sasUpdater.addListener(this);
+//        skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
         skeletonActor.setZThicknessInPixels(viewport.getDepth());
 		//
         // PopupMenu

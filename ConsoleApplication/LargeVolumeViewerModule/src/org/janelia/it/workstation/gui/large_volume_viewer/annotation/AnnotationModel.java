@@ -23,9 +23,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 
 
 public class AnnotationModel
@@ -64,23 +69,29 @@ SimpleWorker thread.
 
     private TmWorkspace currentWorkspace;
     private TmNeuron currentNeuron;
+    
+    private ViewStateListener viewStateListener;
 
+    private Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
+    private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
+    private Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
+    
     // ----- signals
-    public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<>();
+//    public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<>();
 
-    public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<>();
+//    public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<>();
 
-    public Signal1<TmGeoAnnotation> annotationAddedSignal = new Signal1<>();
-    public Signal1<List<TmGeoAnnotation>> annotationsDeletedSignal = new Signal1<>();
-    public Signal1<TmGeoAnnotation> annotationReparentedSignal = new Signal1<>();
-    public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<>();
+//    public Signal1<TmGeoAnnotation> annotationAddedSignal = new Signal1<>();
+//    public Signal1<List<TmGeoAnnotation>> annotationsDeletedSignal = new Signal1<>();
+//    public Signal1<TmGeoAnnotation> annotationReparentedSignal = new Signal1<>();
+//    public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<>();
+    
+//    public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<>();
+//    public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<>();
 
-    public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<>();
-    public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<>();
+//    public Signal1<Long> pathTraceRequestedSignal = new Signal1<>();
 
-    public Signal1<Long> pathTraceRequestedSignal = new Signal1<>();
-
-    public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<>();
+//    public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<>();
 
     public Signal1<TmWorkspace> notesUpdatedSignal = new Signal1<>();
 
@@ -89,7 +100,8 @@ SimpleWorker thread.
         @Override
         public void execute(TmNeuron neuron) {
             setCurrentNeuron(neuron);
-            neuronSelectedSignal.emit(neuron);
+            fireNeuronSelected(neuron);
+//            neuronSelectedSignal.emit(neuron);
         }
     };
 
@@ -107,6 +119,34 @@ SimpleWorker thread.
 
     }
 
+    public void addTmGeoAnnotationModListener(TmGeoAnnotationModListener listener) {
+        tmGeoAnnoModListeners.add(listener);
+    }
+    
+    public void removeTmGeoAnnotationModListener(TmGeoAnnotationModListener listener) {
+        tmGeoAnnoModListeners.remove(listener);
+    }
+    
+    public void addTmAnchoredPathListener(TmAnchoredPathListener listener) {
+        tmAnchoredPathListeners.add(listener);
+    }
+    
+    public void removeTmAnchoredPathListener(TmAnchoredPathListener listener) {
+        tmAnchoredPathListeners.remove(listener);
+    }
+    
+    public void addGlobalAnnotationListener(GlobalAnnotationListener listener) {
+        globalAnnotationListeners.add(listener);
+    }
+    
+    public void removeGlobalAnnotationListener(GlobalAnnotationListener listener) {
+        globalAnnotationListeners.remove(listener);
+    }
+    
+    public void setViewStateListener(ViewStateListener listener) {
+        this.viewStateListener = listener;
+    }
+    
     // current workspace methods
     public TmWorkspace getCurrentWorkspace() {
         return currentWorkspace;
@@ -132,8 +172,10 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                workspaceLoadedSignal.emit(updateWorkspace);
-                neuronSelectedSignal.emit(null);
+                fireWorkspaceLoaded(updateWorkspace);
+//                workspaceLoadedSignal.emit(updateWorkspace);
+                fireNeuronSelected(null);
+//                neuronSelectedSignal.emit(null);
             }
         });
 
@@ -186,7 +228,8 @@ SimpleWorker thread.
     //  updates the UI
     public void selectNeuron(TmNeuron neuron) {
         setCurrentNeuron(neuron);
-        neuronSelectedSignal.emit(neuron);
+        fireNeuronSelected(neuron);
+//        neuronSelectedSignal.emit(neuron);
     }
 
     private void updateCurrentNeuron() {
@@ -314,8 +357,10 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                workspaceLoadedSignal.emit(workspace);
-                neuronSelectedSignal.emit(neuron);
+                fireWorkspaceLoaded(workspace);
+//                workspaceLoadedSignal.emit(workspace);
+                fireNeuronSelected(neuron);
+//                neuronSelectedSignal.emit(neuron);
             }
         });
 
@@ -340,8 +385,10 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                workspaceLoadedSignal.emit(workspace);
-                neuronSelectedSignal.emit(neuron);
+                fireWorkspaceLoaded(workspace);
+//                workspaceLoadedSignal.emit(workspace);
+                fireNeuronSelected(neuron);
+//                neuronSelectedSignal.emit(neuron);
             }
         });
     }
@@ -367,10 +414,14 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                neuronSelectedSignal.emit(null);
-                annotationsDeletedSignal.emit(tempAnnotationList);
-                anchoredPathsRemovedSignal.emit(tempPathList);
-                workspaceLoadedSignal.emit(workspace);
+                fireNeuronSelected(null);
+//                neuronSelectedSignal.emit(null);
+                fireAnnotationsDeleted(tempAnnotationList);
+//                annotationsDeletedSignal.emit(tempAnnotationList);
+                fireAnchoredPathsRemoved(tempPathList);
+//                anchoredPathsRemovedSignal.emit(tempPathList);
+                fireWorkspaceLoaded(workspace);
+//                workspaceLoadedSignal.emit(workspace);
             }
         });
     }
@@ -423,8 +474,10 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                neuronSelectedSignal.emit(currNeuron);
-                annotationAddedSignal.emit(annotation);
+                fireNeuronSelected(currNeuron);
+//                neuronSelectedSignal.emit(currNeuron);
+                fireAnnotationAdded(annotation);
+//                annotationAddedSignal.emit(annotation);
             }
         });
     }
@@ -451,14 +504,18 @@ SimpleWorker thread.
         }
 
         if (automatedTracingEnabled()) {
-            pathTraceRequestedSignal.emit(annotation.getId());
+            if (viewStateListener != null)
+                viewStateListener.pathTraceRequested(annotation.getId());
+//            pathTraceRequestedSignal.emit(annotation.getId());
         }
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                neuronSelectedSignal.emit(neuron);
-                annotationAddedSignal.emit(annotation);
+                fireNeuronSelected(neuron);
+//                neuronSelectedSignal.emit(neuron);
+                fireAnnotationAdded(annotation);
+//                annotationAddedSignal.emit(annotation);
             }
         });
 
@@ -487,7 +544,8 @@ SimpleWorker thread.
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    annotationNotMovedSignal.emit(getGeoAnnotationFromID(annotationID));
+                    fireAnnotationNotMoved(annotationID);
+//                    annotationNotMovedSignal.emit(getGeoAnnotationFromID(annotationID));
                 }
             });
             throw e;
@@ -511,9 +569,11 @@ SimpleWorker thread.
 
         if (automatedTracingEnabled()) {
             // trace to parent, and each child to this parent:
-            pathTraceRequestedSignal.emit(annotation.getId());
+            viewStateListener.pathTraceRequested(annotation.getId());
+//            pathTraceRequestedSignal.emit(annotation.getId());
             for (TmGeoAnnotation child : neuron.getChildrenOf(annotation)) {
-                pathTraceRequestedSignal.emit(child.getId());
+                viewStateListener.pathTraceRequested(child.getId());
+//                pathTraceRequestedSignal.emit(child.getId());
             }
         }
 
@@ -524,7 +584,8 @@ SimpleWorker thread.
 
                 if (getCurrentNeuron() != null) {
                     if (neuron.getId().equals(getCurrentNeuron().getId())) {
-                        neuronSelectedSignal.emit(getCurrentNeuron());
+                        fireNeuronSelected(getCurrentNeuron());
+//                        neuronSelectedSignal.emit(getCurrentNeuron());
                     }
                 }
             }
@@ -548,7 +609,7 @@ SimpleWorker thread.
         sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
 
-        // if source neurite not in same neuron as dest neruite: move it
+        // if source neurite not in same neuron as dest neurite: move it
         TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
             modelMgr.moveNeurite(sourceAnnotation, targetNeuron);
@@ -616,7 +677,8 @@ SimpleWorker thread.
         final TmGeoAnnotation targetAnnotation = getGeoAnnotationFromID(targetAnnotationID);
         for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
             if (automatedTracingEnabled()) {
-                pathTraceRequestedSignal.emit(child.getId());
+                viewStateListener.pathTraceRequested(child.getId());
+//                pathTraceRequestedSignal.emit(child.getId());
             }
         }
 
@@ -624,13 +686,14 @@ SimpleWorker thread.
             @Override
             public void run() {
                 notesUpdatedSignal.emit(workspace);
-                neuronSelectedSignal.emit(updateTargetNeuron);
+                fireNeuronSelected(updateTargetNeuron);
+//                neuronSelectedSignal.emit(updateTargetNeuron);
                 for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
-                    annotationReparentedSignal.emit(child);
+                    fireAnnotationReparented(child);
+//                    annotationReparentedSignal.emit(child);
                 }
-
-                // undraw deleted annotation
-                annotationsDeletedSignal.emit(deleteList);
+                fireAnnotationsDeleted(deleteList);
+//                annotationsDeletedSignal.emit(deleteList);
             }
         });
 
@@ -698,7 +761,8 @@ SimpleWorker thread.
 
         // if we're tracing, retrace if there's a new connection
         if (automatedTracingEnabled() && child != null) {
-            pathTraceRequestedSignal.emit(child.getId());
+            viewStateListener.pathTraceRequested(child.getId());
+//            pathTraceRequestedSignal.emit(child.getId());
         }
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -711,10 +775,12 @@ SimpleWorker thread.
                 //  from the reparenting to appear
                 List<TmGeoAnnotation> deleteList = new ArrayList<>(1);
                 deleteList.add(link);
-                annotationsDeletedSignal.emit(deleteList);
+                fireAnnotationsDeleted(deleteList);
+//                annotationsDeletedSignal.emit(deleteList);
 
                 if (updateChild != null) {
-                    annotationReparentedSignal.emit(updateChild);
+                    fireAnnotationReparented(updateChild);
+//                    annotationReparentedSignal.emit(updateChild);
                 }
 
             }
@@ -774,8 +840,10 @@ SimpleWorker thread.
             @Override
             public void run() {
                 notesUpdatedSignal.emit(workspace);
-                neuronSelectedSignal.emit(updateNeuron);
-                annotationsDeletedSignal.emit(deleteList);
+                fireNeuronSelected(updateNeuron);
+//                neuronSelectedSignal.emit(updateNeuron);
+                fireAnnotationsDeleted(deleteList);
+//                annotationsDeletedSignal.emit(deleteList);
             }
         });
 
@@ -856,16 +924,22 @@ SimpleWorker thread.
 
         // retrace
         if (automatedTracingEnabled()) {
-            pathTraceRequestedSignal.emit(newAnnotation.getId());
-            pathTraceRequestedSignal.emit(annotation1.getId());
+            if (viewStateListener != null) {
+                viewStateListener.pathTraceRequested(newAnnotation.getId());
+//            pathTraceRequestedSignal.emit(newAnnotation.getId());
+                viewStateListener.pathTraceRequested(annotation1.getId());
+//            pathTraceRequestedSignal.emit(annotation1.getId());
+            }
         }
 
         final TmGeoAnnotation updateAnnotation = neuron.getGeoAnnotationMap().get(annotation1.getId());
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                annotationAddedSignal.emit(newAnnotation);
-                annotationReparentedSignal.emit(updateAnnotation);
+                fireAnnotationAdded(newAnnotation);
+//                annotationAddedSignal.emit(newAnnotation);
+                fireAnnotationReparented(updateAnnotation);
+//                annotationReparentedSignal.emit(updateAnnotation);
             }
         });
     }
@@ -891,7 +965,8 @@ SimpleWorker thread.
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    neuronSelectedSignal.emit(updateNeuron);
+                    fireNeuronSelected(updateNeuron);
+//                    neuronSelectedSignal.emit(updateNeuron);
                 }
             });
         }
@@ -919,8 +994,10 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                annotationReparentedSignal.emit(updateNeuron.getGeoAnnotationMap().get(newRootID));
-                neuronSelectedSignal.emit(updateNeuron);
+                fireAnnotationReparented(updateNeuron.getGeoAnnotationMap().get(newRootID));
+//                annotationReparentedSignal.emit(updateNeuron.getGeoAnnotationMap().get(newRootID));
+                fireNeuronSelected(updateNeuron);
+//                neuronSelectedSignal.emit(updateNeuron);
             }
         });
     }
@@ -975,7 +1052,8 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                anchoredPathAddedSignal.emit(path);
+                fireAnchoredPathAdded(path);
+//                anchoredPathAddedSignal.emit(path);
             }
         });
 
@@ -1005,7 +1083,8 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                anchoredPathsRemovedSignal.emit(pathList);
+                fireAnchoredPathsRemoved(pathList);
+//                anchoredPathsRemovedSignal.emit(pathList);
             }
         });
     }
@@ -1094,7 +1173,8 @@ SimpleWorker thread.
                 color.getBlue(), color.getAlpha()));
 
         // persisted, so go ahead and change it
-        globalAnnotationColorChangedSignal.emit(color);
+        fireGlobalAnnotationColorChanged(color);
+//        globalAnnotationColorChangedSignal.emit(color);
     }
 
     public boolean automatedRefinementEnabled() {
@@ -1223,8 +1303,10 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                workspaceLoadedSignal.emit(workspace);
-                neuronSelectedSignal.emit(neuron);
+//                workspaceLoadedSignal.emit(workspace);
+                fireWorkspaceLoaded(workspace);
+                fireNeuronSelected(neuron);
+//                neuronSelectedSignal.emit(neuron);
             }
         });
 
@@ -1234,4 +1316,65 @@ SimpleWorker thread.
         //  as we have no mechanism for managing the jobs
 
     }
+
+    public void fireAnnotationNotMoved(TmGeoAnnotation annotation) {
+        for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {
+            l.annotationNotMoved(annotation);
+        }
+    }
+
+    private void fireAnnotationNotMoved(Long annotationID) {
+        fireAnnotationNotMoved(getGeoAnnotationFromID(annotationID));
+    }
+
+    private void fireAnnotationAdded(TmGeoAnnotation annotation) {
+        for (TmGeoAnnotationModListener l : tmGeoAnnoModListeners) {
+            l.annotationAdded(annotation);
+        }
+    }
+
+    private void fireAnnotationsDeleted(List<TmGeoAnnotation> deleteList) {
+        // undraw deleted annotation
+        for (TmGeoAnnotationModListener l : tmGeoAnnoModListeners) {
+            l.annotationsDeleted(deleteList);
+        }
+    }
+    
+    private void fireAnnotationReparented(TmGeoAnnotation annotation) {
+        for (TmGeoAnnotationModListener l : tmGeoAnnoModListeners) {
+            l.annotationReparented(annotation);
+        }
+    }
+    
+    private void fireAnchoredPathsRemoved(List<TmAnchoredPath> deleteList) {
+        // undraw deleted annotation
+        for (TmAnchoredPathListener l : tmAnchoredPathListeners) {
+            l.removeAnchoredPaths(deleteList);
+        }
+    }
+    
+    private void fireAnchoredPathAdded(TmAnchoredPath path) {
+        for (TmAnchoredPathListener l : tmAnchoredPathListeners) {
+            l.addAnchoredPath(path);
+        }
+    }
+    
+    private void fireWorkspaceLoaded(TmWorkspace workspace) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.workspaceLoaded(workspace);
+        }
+    }
+
+    private void fireNeuronSelected(TmNeuron neuron) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.neuronSelected(neuron);
+        }
+    }
+
+    private void fireGlobalAnnotationColorChanged(Color color) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.globalAnnotationColorChanged(color);
+        }
+    }
+    
 }

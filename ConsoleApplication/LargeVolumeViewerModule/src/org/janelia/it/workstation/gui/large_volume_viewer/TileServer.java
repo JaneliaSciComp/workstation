@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.Vector;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.InterleavedIterator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.MinResSliceGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.SliceGenerator;
@@ -22,7 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TileServer 
-implements ComponentListener // so changes in viewer size/visibility can be tracked
+implements ComponentListener, // so changes in viewer size/visibility can be tracked
+           VolumeLoadListener
 // implements VolumeImage3d
 {
 	private static final Logger log = LoggerFactory.getLogger(TileServer.class);
@@ -50,10 +52,10 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 	
 	// One for each orthogonal viewer
 	// private Set<TileConsumer> tileConsumers = new HashSet<TileConsumer>();
-	private Set<ViewTileManager> viewTileManagers = new HashSet<ViewTileManager>();
+	private Set<ViewTileManager> viewTileManagers = new HashSet<>();
 	
 	// New path for handling tile updates July 9, 2013 cmb
-	private Set<TileIndex> currentDisplayTiles = new HashSet<TileIndex>();
+	private Set<TileIndex> currentDisplayTiles = new HashSet<>();
 	public Slot refreshCurrentTileSetSlot = new Slot() {
 		@Override
 		public void execute() {refreshCurrentTileSet();}
@@ -102,20 +104,15 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
 	public Signal1<LoadStatus> loadStatusChangedSignal = new Signal1<LoadStatus>();
 
-	public Slot onVolumeInitializedSlot = new Slot() {
-		@Override
-		public void execute() {
-            if (sharedVolumeImage == null)
-                return;
-			// Initialize pre-fetchers
-			minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
-			futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
-            clearCache();
-			setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
-			refreshCurrentTileSet();
-		}
-	};
-	
+//	public Slot onVolumeInitializedSlot = new Slot() {
+//		@Override
+//		public void execute() {
+//            if (volumeLoaded(null)) {
+//                return;
+//            }
+//		}
+//	};
+
 	private Slot updateLoadStatusSlot = new Slot() {
 		@Override
 		public void execute() {
@@ -198,17 +195,14 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 		if (this.sharedVolumeImage == sharedVolumeImage)
 			return;
 		this.sharedVolumeImage = sharedVolumeImage;
-		sharedVolumeImage.volumeInitializedSignal.connect(onVolumeInitializedSlot);
+        this.sharedVolumeImage.addVolumeLoadListener(this);
+//		sharedVolumeImage.volumeInitializedSignal.connect(onVolumeInitializedSlot);
 	}
 
 	public TextureCache getTextureCache() {
 		return textureCache;
 	}
 	
-	public Signal1<URL> getVolumeInitializedSignal() {
-		return sharedVolumeImage.volumeInitializedSignal;
-	}
-
 	private void updateLoadStatus() {
 		LoadStatus result;
 		if (sharedVolumeImage == null) {
@@ -459,4 +453,18 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 		refreshCurrentTileSet();
 	}
 
+    //-------------------------------------------IMPLEMENTS VolumeLoadListener
+    @Override
+    public void volumeLoaded(URL url) {
+        if (sharedVolumeImage == null) {
+            return;
+        }
+        // Initialize pre-fetchers
+        minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
+        futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
+        clearCache();
+        setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
+        refreshCurrentTileSet();
+    }
+	
 }

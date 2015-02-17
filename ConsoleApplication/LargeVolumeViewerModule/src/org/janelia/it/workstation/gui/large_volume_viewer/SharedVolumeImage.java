@@ -3,7 +3,10 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
-import org.janelia.it.workstation.signal.Signal1;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
+//import org.janelia.it.workstation.signal.Signal1;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,18 +14,27 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class SharedVolumeImage 
 implements VolumeImage3d
 {
 	private AbstractTextureLoadAdapter loadAdapter;
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
+    private Collection<VolumeLoadListener> volumeLoadListeners = new ArrayList<>();
     private String remoteBasePath;
 
-	public Signal1<URL> volumeInitializedSignal = new Signal1<URL>();
+//	public Signal1<URL> volumeInitializedSignal = new Signal1<>();
 
+    public void addVolumeLoadListener( VolumeLoadListener l ) {
+        volumeLoadListeners.add(l);
+    }
+    
+    public void removeVolumeLoadListener( VolumeLoadListener l ) {
+        volumeLoadListeners.remove(l);
+    }
+    
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
 		return boundingBox3d;
@@ -169,8 +181,8 @@ implements VolumeImage3d
 		BoundingBox3d newBox = tf.calcBoundingBox();
 		boundingBox3d.setMin(newBox.getMin());
 		boundingBox3d.setMax(newBox.getMax());
-		
-		volumeInitializedSignal.emit(folderUrl);
+		fireVolumeLoaded(folderUrl);
+//		volumeInitializedSignal.emit(folderUrl);
 		
 		return true;
 	}
@@ -186,4 +198,9 @@ implements VolumeImage3d
 		return loadAdapter;
 	}
 
+    private void fireVolumeLoaded(URL volume) {
+        for ( VolumeLoadListener l: volumeLoadListeners ) {
+            l.volumeLoaded(volume);
+        }
+    }
 }

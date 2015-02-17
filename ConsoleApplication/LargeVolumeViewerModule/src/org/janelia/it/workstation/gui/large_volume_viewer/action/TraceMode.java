@@ -7,9 +7,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.KeyListener;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
@@ -66,7 +64,8 @@ implements MouseMode, KeyListener
 		setHoverCursor(penCursor);
 		setDragCursor(crossCursor);
 		// Center on new anchors, and mark them with a "P"
-		skeleton.anchorAddedSignal.connect(focusOnAnchorSlot);
+		skeleton.fireSkeletonChangeEvent();
+//                .anchorAddedSignal.connect(focusOnAnchorSlot);
 	}
 
 	@Override 
