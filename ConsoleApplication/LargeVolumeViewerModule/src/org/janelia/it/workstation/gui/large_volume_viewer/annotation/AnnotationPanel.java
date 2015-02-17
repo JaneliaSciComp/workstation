@@ -169,7 +169,7 @@ public class AnnotationPanel extends JPanel
 //        annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.workspaceLoadedSlot);
 //        annotationModel.workspaceLoadedSignal.connect(workspaceNeuronList.workspaceLoadedSlot);
 //        annotationModel.workspaceLoadedSignal.connect(noteListPanel.workspaceLoadedSlot);
-        annotationModel.notesUpdatedSignal.connect(noteListPanel.notesUpdatedSlot);
+//        annotationModel.notesUpdatedSignal.connect(noteListPanel.notesUpdatedSlot);
 
         // us to model:
         workspaceNeuronList.neuronClickedSignal.connect(annotationModel.neuronClickedSlot);

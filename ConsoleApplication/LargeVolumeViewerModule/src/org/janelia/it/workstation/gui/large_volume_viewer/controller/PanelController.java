@@ -54,10 +54,13 @@ public class PanelController {
     public void registerForEvents(AnnotationModel annotationModel) {
         globalListener = new PanelGlobalListener();
         annotationModel.addGlobalAnnotationListener(globalListener);
+        PanelNotesUpdateListener pnul = new PanelNotesUpdateListener();
+        annotationModel.setNotesUpdateListener(pnul);
     }
     
     public void unregisterForEvents(AnnotationModel annotationModel) {
         annotationModel.removeGlobalAnnotationListener(globalListener);
+        annotationModel.setNotesUpdateListener(null);
         globalListener = null;
     }
     
@@ -90,6 +93,15 @@ public class PanelController {
         @Override
         public void annotationSelected(Long annotationID) {
             lvvTranslator.fireNextParentEvent(annotationID);
+        }
+        
+    }
+    
+    private class PanelNotesUpdateListener implements NotesUpdateListener {
+
+        @Override
+        public void notesUpdated(TmWorkspace workspace) {
+            noteListPanel.loadWorkspace(workspace);
         }
         
     }

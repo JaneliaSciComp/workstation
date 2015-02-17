@@ -42,12 +42,12 @@ public class NoteListPanel extends JPanel {
 //        }
 //    };
 
-    public Slot1<TmWorkspace> notesUpdatedSlot = new Slot1<TmWorkspace>() {
-        @Override
-        public void execute(TmWorkspace workspace) {
-            loadWorkspace(workspace);
-        }
-    };
+//    public Slot1<TmWorkspace> notesUpdatedSlot = new Slot1<TmWorkspace>() {
+//        @Override
+//        public void execute(TmWorkspace workspace) {
+//            loadWorkspace(workspace);
+//        }
+//    };
 
     // ----- signals
 //    public Signal1<Vec3> cameraPanToSignal = new Signal1<>();
