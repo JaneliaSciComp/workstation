@@ -1,45 +1,11 @@
 package org.janelia.it.workstation.gui.framework.console;
 
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.image.BufferedImage;
-import java.awt.print.PageFormat;
-import java.awt.print.PrinterJob;
-import java.util.Collections;
-import java.util.List;
-
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.dialogs.AnnotationSessionPropertyDialog;
-import org.janelia.it.workstation.gui.dialogs.DataSetListDialog;
-import org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog;
-import org.janelia.it.workstation.gui.dialogs.ImportDialog;
-import org.janelia.it.workstation.gui.dialogs.MAASearchDialog;
-import org.janelia.it.workstation.gui.dialogs.MaskSearchDialog;
-import org.janelia.it.workstation.gui.dialogs.PatternSearchDialog;
-import org.janelia.it.workstation.gui.dialogs.RunNeuronSeparationDialog;
-import org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog;
+import org.janelia.it.workstation.gui.dialogs.*;
 import org.janelia.it.workstation.gui.dialogs.search.GeneralSearchDialog;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
-import org.janelia.it.workstation.gui.framework.outline.EntityDetailsOutline;
-import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
-import org.janelia.it.workstation.gui.framework.outline.EntityRootComparator;
-import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
-import org.janelia.it.workstation.gui.framework.outline.SessionOutline;
-import org.janelia.it.workstation.gui.framework.outline.VerticalPanelPicker;
+import org.janelia.it.workstation.gui.framework.outline.*;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -57,6 +23,14 @@ import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.print.PageFormat;
+import java.awt.print.PrinterJob;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Created by IntelliJ IDEA.
  * User: saffordt
@@ -69,6 +43,7 @@ public class Browser implements Cloneable {
 
     private static String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
     public static String SEARCH_HISTORY = "SEARCH_HISTORY";
+    public static String ADD_TO_ROOT_HISTORY = "ADD_TO_ROOT_HISTORY";
     private static String VIEWERS_LINKED = "Browser.ViewersLinked";
 
     // Used by printing mechanism to ensure capacity.
@@ -103,7 +78,6 @@ public class Browser implements Cloneable {
 
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
     private ImportDialog importDialog;
-    private RunNeuronSeparationDialog runNeuronSeparationDialog;
     private SearchConfiguration generalSearchConfig;
     private GeneralSearchDialog generalSearchDialog;
     private PatternSearchDialog patternSearchDialog;
@@ -191,7 +165,6 @@ public class Browser implements Cloneable {
 
         annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
         importDialog = new ImportDialog("Import Files");
-        runNeuronSeparationDialog = new RunNeuronSeparationDialog();
 
         generalSearchConfig = new SearchConfiguration();
         generalSearchConfig.load();
@@ -418,10 +391,6 @@ public class Browser implements Cloneable {
 
     public AnnotationSessionPropertyDialog getAnnotationSessionPropertyDialog() {
         return annotationSessionPropertyPanel;
-    }
-
-    public RunNeuronSeparationDialog getRunNeuronSeparationDialog() {
-        return runNeuronSeparationDialog;
     }
 
     public ImportDialog getImportDialog() {

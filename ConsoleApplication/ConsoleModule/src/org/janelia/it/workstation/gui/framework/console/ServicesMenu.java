@@ -21,14 +21,6 @@ public class ServicesMenu extends JMenu {
         super("Services");
         currentBrowser = browser;
 
-        JMenuItem neuronSeparationMenuItem = new JMenuItem("Neuron Separation Service");
-        neuronSeparationMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                currentBrowser.getRunNeuronSeparationDialog().showDialog();
-            }
-        });
-        add(neuronSeparationMenuItem);
-
         final ScreenEvaluationDialog screenEvaluationDialog = browser.getScreenEvaluationDialog();
         if (screenEvaluationDialog.isAccessible()) {
         	JMenuItem menuItem = new JMenuItem("Screen Evaluation");

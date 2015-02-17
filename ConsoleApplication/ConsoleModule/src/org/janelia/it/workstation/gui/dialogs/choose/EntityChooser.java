@@ -39,6 +39,7 @@ public class EntityChooser extends AbstractChooser<EntityData> {
             }
         };
         entityTree.initializeTree(entityOutline.getCurrentRootEntity());
+        entityTree.getDynamicTree().expand(entityTree.getDynamicTree().getRootNode(), true);
         entityTree.getTree().getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
         addChooser(entityTree);
     }

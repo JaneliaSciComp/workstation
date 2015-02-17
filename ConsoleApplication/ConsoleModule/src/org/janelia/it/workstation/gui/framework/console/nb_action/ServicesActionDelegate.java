@@ -17,11 +17,6 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
  */
 public class ServicesActionDelegate {
 
-    public void presentNeuronSeparationDialog() {
-        final Browser browser = SessionMgr.getBrowser();
-        browser.getRunNeuronSeparationDialog().showDialog();
-    }
-
     /**
      * @todo make this one dynamic, like the Tools menu items. 
      */
