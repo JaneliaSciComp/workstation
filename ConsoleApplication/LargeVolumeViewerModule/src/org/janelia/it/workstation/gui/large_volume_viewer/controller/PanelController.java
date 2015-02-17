@@ -6,9 +6,11 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
@@ -58,6 +60,10 @@ public class PanelController {
         annotationModel.setNotesUpdateListener(pnul);
         PanelNeuronSelectedListener pnsl = new PanelNeuronSelectedListener(annotationModel);
         wsNeuronList.setNeuronSelectedListener(pnsl);
+    }
+    
+    public void registerForEvents(AnnotationManager annotationManager) {
+        
     }
     
     public void unregisterForEvents(AnnotationModel annotationModel) {
@@ -119,6 +125,21 @@ public class PanelController {
         @Override
         public void selectNeuron(TmNeuron neuron) {
             model.selectNeuron(neuron);
+        }
+        
+    }
+    
+    private class PanelEditNoteRequestedListener implements EditNoteRequestedListener {
+
+        private AnnotationManager mgr;
+        
+        public PanelEditNoteRequestedListener(AnnotationManager mgr) {
+            this.mgr = mgr;
+        }
+        
+        @Override
+        public void editNote(TmGeoAnnotation annotation) {
+            mgr.addEditNote(annotation.getId());
         }
         
     }

@@ -109,7 +109,9 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
 
     @Override
     public void addEditNoteRequested(Anchor anchor) {
-        addEditNote(anchor.getGuid());
+        if (anchor != null) {
+            addEditNote(anchor.getGuid());
+        }
     }
 
     //-----------------------------IMPLEMENT UpdateAnchorListener
@@ -211,19 +213,19 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
         onVolumeLoaded();
     }
     
-    public Slot1<Anchor> addEditNoteRequestedSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-            addEditNote(anchor.getGuid());
-        }
-    };
-
-    public Slot1<TmGeoAnnotation> editNoteRequestedSlot = new Slot1<TmGeoAnnotation>() {
-        @Override
-        public void execute(TmGeoAnnotation ann) {
-            addEditNote(ann.getId());
-        }
-    };
+//    public Slot1<Anchor> addEditNoteRequestedSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            addEditNote(anchor.getGuid());
+//        }
+//    };
+//
+//    public Slot1<TmGeoAnnotation> editNoteRequestedSlot = new Slot1<TmGeoAnnotation>() {
+//        @Override
+//        public void execute(TmGeoAnnotation ann) {
+//            addEditNote(ann.getId());
+//        }
+//    };
 
     public Slot closeWorkspaceRequestedSlot = new Slot() {
         @Override

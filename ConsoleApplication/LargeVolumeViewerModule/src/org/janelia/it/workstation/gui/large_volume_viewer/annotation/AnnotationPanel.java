@@ -162,6 +162,7 @@ public class AnnotationPanel extends JPanel
         // outgoing from the model:
         PanelController panelController = new PanelController(this, noteListPanel, neuriteTreePanel, workspaceNeuronList, largeVolumeViewerTranslator);
         panelController.registerForEvents(annotationModel);
+        panelController.registerForEvents(annotationMgr);
 //        annotationModel.neuronSelectedSignal.connect(neuriteTreePanel.neuronSelectedSlot);
 //        annotationModel.neuronSelectedSignal.connect(workspaceNeuronList.neuronSelectedSlot);
 //
@@ -179,7 +180,7 @@ public class AnnotationPanel extends JPanel
 //        neuriteTreePanel.annotationClickedSignal.connect(largeVolumeViewerTranslator.annotationClickedSlot);
 //        workspaceNeuronList.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
 //        noteListPanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
-        noteListPanel.editNoteRequestedSignal.connect(annotationMgr.editNoteRequestedSlot);
+//        noteListPanel.editNoteRequestedSignal.connect(annotationMgr.editNoteRequestedSlot);
 
     }
 

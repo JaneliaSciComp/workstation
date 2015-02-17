@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteRequestedListener;
 
 /**
  * this class displays notes placed on annotations in a clickable list
@@ -30,6 +31,7 @@ public class NoteListPanel extends JPanel {
     private JList noteListBox;
     private DefaultListModel noteListModel;
     private CameraPanToListener panListener;
+    private EditNoteRequestedListener editNoteRequestListener;
 
     private int width;
     private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
@@ -51,7 +53,7 @@ public class NoteListPanel extends JPanel {
 
     // ----- signals
 //    public Signal1<Vec3> cameraPanToSignal = new Signal1<>();
-    public Signal1<TmGeoAnnotation> editNoteRequestedSignal = new Signal1<>();
+//    public Signal1<TmGeoAnnotation> editNoteRequestedSignal = new Signal1<>();
 
 
     public NoteListPanel(int width) {
@@ -126,7 +128,10 @@ public class NoteListPanel extends JPanel {
                         }
                     } else if (evt.getClickCount() == 2) {
                         if (ann != null) {
-                            editNoteRequestedSignal.emit(ann);
+                            if (editNoteRequestListener != null) {
+                                editNoteRequestListener.editNote(ann);
+                            }
+//                            editNoteRequestedSignal.emit(ann);
                         }
                     }
                 }
@@ -174,6 +179,13 @@ public class NoteListPanel extends JPanel {
                 noteListModel.addElement(np);
             }
         }
+    }
+
+    /**
+     * @param editNoteRequestListener the editNoteRequestListener to set
+     */
+    public void setEditNoteRequestListener(EditNoteRequestedListener editNoteRequestListener) {
+        this.editNoteRequestListener = editNoteRequestListener;
     }
 
 }
