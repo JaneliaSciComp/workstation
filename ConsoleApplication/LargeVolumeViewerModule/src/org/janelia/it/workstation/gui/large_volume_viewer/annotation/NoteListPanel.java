@@ -7,7 +7,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmStructuredTextAnnot
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot1;
+//import org.janelia.it.workstation.signal.Slot1;
 
 import javax.swing.*;
 import java.awt.*;
