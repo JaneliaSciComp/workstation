@@ -236,7 +236,16 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 			zoomSlider.setValue(sliderValue);
 		}
 	};
-	
+
+    public void setMouseMode(MouseMode.Mode mode) {
+        // Only display anchors in Trace mode
+        if (mode == MouseMode.Mode.TRACE) {
+            getSkeletonActor().setAnchorsVisible(true);
+        } else {
+            getSkeletonActor().setAnchorsVisible(false);
+        }
+    }
+    
     public void setCameraFocus( Vec3 focus ) {
         camera.setFocus(focus);
     }
@@ -444,9 +453,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //        traceMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
 //        zoomScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
 //        zScanScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
-//UNCOMMENT BELOW FOR EASE-OF-DEBUG
 //        mouseModeChangedSignal.connect(onMouseModeChangedSlot);
-//        // Next connect that signal to various widgets
+        // Next connect that signal to various widgets
 //        mouseModeChangedSignal.connect(largeVolumeViewer.setMouseModeSlot);
 //        wheelModeChangedSignal.connect(largeVolumeViewer.setWheelModeSlot);
         // annotation-related actions:
@@ -459,7 +467,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
         sharedSkeletonActor.setSkeleton(largeVolumeViewer.getSkeleton());
         for (OrthogonalPanel v : viewPanels) {
-//UNCOMMENT BELOW FOR EASE-OF-DEBUG
+            quadViewController.registerForEvents(v);
 //            mouseModeChangedSignal.connect(v.setMouseModeSlot);
 //            wheelModeChangedSignal.connect(v.setWheelModeSlot);
             v.setCamera(camera);

@@ -6,8 +6,11 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
+import org.janelia.it.workstation.gui.large_volume_viewer.OrthogonalPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.PanModeAction;
@@ -31,6 +34,7 @@ public class QuadViewController implements ViewStateListener {
     private final LargeVolumeViewer lvv;
     private final RecentFileList recentFileList;
     private final QuadViewController.QvucMouseWheelModeListener qvucmwListener = new QuadViewController.QvucMouseWheelModeListener();
+    private final Collection<MouseWheelModeListener> relayListeners = new ArrayList<MouseWheelModeListener>();
            
     public QuadViewController(QuadViewUi ui, AnnotationManager annoMgr, LargeVolumeViewer lvv, RecentFileList recentFileList) {
         this.ui = ui;
@@ -79,12 +83,23 @@ public class QuadViewController implements ViewStateListener {
         zssma.setMwmListener(qvucmwListener);
     }
     
+    public void registerForEvents(OrthogonalPanel op) {
+        relayListeners.add(op);
+    }
+    
     public void mouseModeChanged(MouseMode.Mode mode) {
         lvv.setMouseMode(mode);
+        ui.setMouseMode(mode);
+        for (MouseWheelModeListener l: relayListeners) {
+            l.setMode(mode);
+        }
     }
     
     public void wheelModeChanged(WheelMode.Mode mode) {
         lvv.setWheelMode(mode);
+        for (MouseWheelModeListener l: relayListeners) {
+            l.setMode(mode);
+        }
     }
     
     private class QvucMouseWheelModeListener implements MouseWheelModeListener {

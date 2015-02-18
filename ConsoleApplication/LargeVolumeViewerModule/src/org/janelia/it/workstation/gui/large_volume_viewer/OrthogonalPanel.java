@@ -16,6 +16,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.signal.Slot;
@@ -26,7 +27,7 @@ import org.janelia.it.workstation.signal.Slot1;
  * Intended for use as one of a series of X/Y/Z orthogonal slice views.
  */
 public class OrthogonalPanel 
-extends JPanel implements VolumeLoadListener
+extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 {
     private JPanel scanPanel = new JPanel();
 	private JSlider slider = new JSlider();
@@ -40,21 +41,21 @@ extends JPanel implements VolumeLoadListener
 	private ViewTileManager viewTileManager;
 	private TileServer tileServer;
 	
-	public Slot1<MouseMode.Mode> setMouseModeSlot = new Slot1<MouseMode.Mode>() 
-	{
-        @Override
-        public void execute(MouseMode.Mode modeId) {
-            viewer.setMouseMode(modeId);
-        }
-	};
-	
-    public Slot1<WheelMode.Mode> setWheelModeSlot = new Slot1<WheelMode.Mode>() 
-    {
-        @Override
-        public void execute(WheelMode.Mode modeId) {
-            viewer.setWheelMode(modeId);
-        }
-    };
+//	public Slot1<MouseMode.Mode> setMouseModeSlot = new Slot1<MouseMode.Mode>() 
+//	{
+//        @Override
+//        public void execute(MouseMode.Mode modeId) {
+//            viewer.setMouseMode(modeId);
+//        }
+//	};
+//	
+//    public Slot1<WheelMode.Mode> setWheelModeSlot = new Slot1<WheelMode.Mode>() 
+//    {
+//        @Override
+//        public void execute(WheelMode.Mode modeId) {
+//            viewer.setWheelMode(modeId);
+//        }
+//    };
     
     public OrthogonalPanel(CoordinateAxis axis) {
 		this.axis = axis;
@@ -71,6 +72,16 @@ extends JPanel implements VolumeLoadListener
 		init();
 	}
 
+    @Override
+    public void setMode(MouseMode.Mode modeId) {
+        viewer.setMouseMode(modeId);
+    }
+    
+    @Override
+    public void setMode(WheelMode.Mode modeId) {
+        viewer.setWheelMode(modeId);
+    }
+    
 	private void init() {
 		viewTileManager = new ViewTileManager(viewer);
 		viewer.setSliceActor(new SliceActor(viewTileManager));
