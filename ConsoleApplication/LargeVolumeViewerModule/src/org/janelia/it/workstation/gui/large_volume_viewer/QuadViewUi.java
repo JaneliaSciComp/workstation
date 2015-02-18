@@ -186,10 +186,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		}
 	};
 
-	public Signal1<MouseMode.Mode> mouseModeChangedSignal = 
-		    new Signal1<>();
-	    public Signal1<WheelMode.Mode> wheelModeChangedSignal = 
-	        new Signal1<>();
+//	public Signal1<MouseMode.Mode> mouseModeChangedSignal = 
+//		    new Signal1<>();
+//	    public Signal1<WheelMode.Mode> wheelModeChangedSignal = 
+//	        new Signal1<>();
 
 // Never emitted.    public Signal1<AnchoredVoxelPath> addAnchoredPathRequestSignal = new Signal1<>();
 
@@ -197,16 +197,16 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
     public Signal closeWorkspaceRequestSignal = new Signal();
 
-	private Slot1<MouseMode.Mode> onMouseModeChangedSlot = new Slot1<MouseMode.Mode>() {
-		@Override
-		public void execute(Mode mode) {
-			// Only display anchors in Trace mode
-			if (mode == MouseMode.Mode.TRACE)
-				getSkeletonActor().setAnchorsVisible(true);
-			else
-				getSkeletonActor().setAnchorsVisible(false);
-		}
-	};
+//	private Slot1<MouseMode.Mode> onMouseModeChangedSlot = new Slot1<MouseMode.Mode>() {
+//		@Override
+//		public void execute(Mode mode) {
+//			// Only display anchors in Trace mode
+//			if (mode == MouseMode.Mode.TRACE)
+//				getSkeletonActor().setAnchorsVisible(true);
+//			else
+//				getSkeletonActor().setAnchorsVisible(false);
+//		}
+//	};
 	    
 	// Slots
 	private Slot1<URL> loadUrlSlot = new Slot1<URL>() {
@@ -372,7 +372,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //        annotationModel.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
 //        addAnchoredPathRequestSignal.connect(annotationMgr.addPathRequestedSlot);
 
-        QuadViewController quadViewController = new QuadViewController(this);
+        QuadViewController quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer, recentFileList);
         largeVolumeViewerTranslator.setViewStateListener(quadViewController);
         skeleton.setViewStateListener(quadViewController);
         annotationPanel.setViewStateListener(quadViewController);
@@ -434,15 +434,21 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         setZViewMode();
         // Connect mode changes to widgets
         // First connect mode actions to one signal
-        panModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
-        zoomMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
-        traceMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
-        zoomScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
-        zScanScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
-        mouseModeChangedSignal.connect(onMouseModeChangedSlot);
-        // Next connect that signal to various widgets
-        mouseModeChangedSignal.connect(largeVolumeViewer.setMouseModeSlot);
-        wheelModeChangedSignal.connect(largeVolumeViewer.setWheelModeSlot);
+        quadViewController.registerForEvents(panModeAction);
+        quadViewController.registerForEvents(zoomMouseModeAction);
+        quadViewController.registerForEvents(traceMouseModeAction);
+        quadViewController.registerForEvents(zoomScrollModeAction);
+        quadViewController.registerForEvents(zScanScrollModeAction);
+//        panModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
+//        zoomMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
+//        traceMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
+//        zoomScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
+//        zScanScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
+//UNCOMMENT BELOW FOR EASE-OF-DEBUG
+//        mouseModeChangedSignal.connect(onMouseModeChangedSlot);
+//        // Next connect that signal to various widgets
+//        mouseModeChangedSignal.connect(largeVolumeViewer.setMouseModeSlot);
+//        wheelModeChangedSignal.connect(largeVolumeViewer.setWheelModeSlot);
         // annotation-related actions:
         centerNextParentAction.centerNextParentSignal.connect(centerNextParentVoxelSlot);
 //        annotationPanel.centerAnnotationSignal.connect(centerNextParentMicronSlot);
@@ -453,8 +459,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
         sharedSkeletonActor.setSkeleton(largeVolumeViewer.getSkeleton());
         for (OrthogonalPanel v : viewPanels) {
-            mouseModeChangedSignal.connect(v.setMouseModeSlot);
-            wheelModeChangedSignal.connect(v.setWheelModeSlot);
+//UNCOMMENT BELOW FOR EASE-OF-DEBUG
+//            mouseModeChangedSignal.connect(v.setMouseModeSlot);
+//            wheelModeChangedSignal.connect(v.setWheelModeSlot);
             v.setCamera(camera);
             // TODO - move most of this setup into OrthogonalViewer class.
             v.getViewer().statusMessageChanged.connect(setStatusMessageSlot);

@@ -13,7 +13,7 @@ import org.janelia.it.workstation.shared.util.SWCNode;
 import org.janelia.it.workstation.shared.util.SWCData;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 //import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot1;
+//import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;

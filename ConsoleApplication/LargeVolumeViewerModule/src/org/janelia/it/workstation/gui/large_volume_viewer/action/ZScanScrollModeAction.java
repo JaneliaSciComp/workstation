@@ -2,16 +2,18 @@ package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Signal1;
 
 public class ZScanScrollModeAction extends AbstractAction
 {
 	private static final long serialVersionUID = 1L;
 	WheelMode zScanMode;
+    private MouseWheelModeListener mwmListener;
 
-    public Signal1<WheelMode.Mode> setWheelModeSignal = new Signal1<WheelMode.Mode>();
+//    public Signal1<WheelMode.Mode> setWheelModeSignal = new Signal1<WheelMode.Mode>();
 
 	public ZScanScrollModeAction() {
 		putValue(NAME, "Z-Scan");
@@ -22,7 +24,15 @@ public class ZScanScrollModeAction extends AbstractAction
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		setWheelModeSignal.emit(WheelMode.Mode.SCAN);
+        mwmListener.setMode(WheelMode.Mode.SCAN);
+//		setWheelModeSignal.emit(WheelMode.Mode.SCAN);
 		putValue(SELECTED_KEY, true);
 	}
+
+    /**
+     * @param mwmListener the mwmListener to set
+     */
+    public void setMwmListener(MouseWheelModeListener mwmListener) {
+        this.mwmListener = mwmListener;
+    }
 }
