@@ -6,6 +6,7 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.janelia.it.workstation.geom.Vec3;
@@ -32,15 +33,13 @@ public class QuadViewController implements ViewStateListener {
     private QuadViewUi ui;
     private final AnnotationManager annoMgr;
     private final LargeVolumeViewer lvv;
-    private final RecentFileList recentFileList;
     private final QuadViewController.QvucMouseWheelModeListener qvucmwListener = new QuadViewController.QvucMouseWheelModeListener();
     private final Collection<MouseWheelModeListener> relayListeners = new ArrayList<>();
            
-    public QuadViewController(QuadViewUi ui, AnnotationManager annoMgr, LargeVolumeViewer lvv, RecentFileList recentFileList) {
+    public QuadViewController(QuadViewUi ui, AnnotationManager annoMgr, LargeVolumeViewer lvv) {
         this.ui = ui;
         this.annoMgr = annoMgr;
         this.lvv = lvv;
-        this.recentFileList = recentFileList;
     }
     
     @Override
@@ -87,6 +86,10 @@ public class QuadViewController implements ViewStateListener {
         relayListeners.add(op);
     }
     
+    public void registerForEvents(RecentFileList rfl) {
+        rfl.setUrlLoadListener(new QvucUrlLoadListener());
+    }
+    
     public void mouseModeChanged(MouseMode.Mode mode) {
         lvv.setMouseMode(mode);
         ui.setMouseMode(mode);
@@ -112,6 +115,15 @@ public class QuadViewController implements ViewStateListener {
         @Override
         public void setMode(WheelMode.Mode modeId) {
             wheelModeChanged(modeId);
+        }
+        
+    }
+    
+    private class QvucUrlLoadListener implements UrlLoadListener {
+
+        @Override
+        public void loadUrl(URL url) {
+            ui.loadRender(url);
         }
         
     }

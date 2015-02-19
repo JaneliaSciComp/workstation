@@ -5,7 +5,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer.LoadStatus;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
+//import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.OrthogonalModeAction.OrthogonalMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
@@ -157,6 +157,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(volumeImage, camera, -10);
     // go to actions
     private final GoToLocationAction goToLocationAction = new GoToLocationAction(camera);
+    
+    private QuadViewController quadViewController;
 
 	// annotation-related
     private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction();
@@ -209,12 +211,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //	};
 	    
 	// Slots
-	private Slot1<URL> loadUrlSlot = new Slot1<URL>() {
-		@Override
-		public void execute(URL url) {
-			loadRender(url);
-		}
-	};
+//	private Slot1<URL> loadUrlSlot = new Slot1<URL>() {
+//		@Override
+//		public void execute(URL url) {
+//			loadRender(url);
+//		}
+//	};
 	    
 	protected Slot1<Vec3> changeZ = new Slot1<Vec3>() {
 		@Override
@@ -381,7 +383,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //        annotationModel.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
 //        addAnchoredPathRequestSignal.connect(annotationMgr.addPathRequestedSlot);
 
-        QuadViewController quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer, recentFileList);
+        quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer);
         largeVolumeViewerTranslator.setViewStateListener(quadViewController);
         skeleton.setViewStateListener(quadViewController);
         annotationPanel.setViewStateListener(quadViewController);
@@ -1154,7 +1156,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         recentFileMenu.setVisible(false);
         mnFile.add(recentFileMenu);
         recentFileList = new RecentFileList(recentFileMenu);
-        recentFileList.getOpenUrlRequestedSignal().connect(loadUrlSlot);
+        quadViewController.registerForEvents(recentFileList);
+//        recentFileList.getOpenUrlRequestedSignal().connect(loadUrlSlot);
 
         return mnFile;
     }

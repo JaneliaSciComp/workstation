@@ -7,8 +7,9 @@ import java.util.Vector;
 import java.util.prefs.Preferences;
 
 import javax.swing.JMenu;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.UrlLoadListener;
 
-import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Signal1;
 
 /**
  *  Memorized list of recently opened files for display in a menu.
@@ -23,19 +24,31 @@ public class RecentFileList
 	
 	private Preferences prefs;
 	private JMenu menu;
-	private LinkedList<RecentFileAction> actions =
-		new LinkedList<RecentFileAction>();
+    private UrlLoadListener urlLoadListener;
+	private LinkedList<RecentFileAction> actions = new LinkedList<>();
 
-	private Signal1<URL> openUrlRequestedSignal = new Signal1<URL>();
+//	private Signal1<URL> openUrlRequestedSignal = new Signal1<URL>();
 	
 	public RecentFileList(JMenu menu)
 	{
 		this.menu = menu;
 		prefs = Preferences.userNodeForPackage(this.getClass());
 		loadRecentFiles();
-		updateMenu();
+        updateMenu();
 	}
 
+    /**
+     * @param urlLoadListener the urlLoadListener to set
+     */
+    public void setUrlLoadListener(UrlLoadListener urlLoadListener) {
+        this.urlLoadListener = urlLoadListener;
+        for (RecentFileAction action: actions) {
+        	// Propagate signal
+            action.setUrlLoadListener(urlLoadListener);
+//		action.getOpenFileRequestedSignal().connect(getOpenUrlRequestedSignal());
+        }
+    }
+	
 	public void add(URL url) {
 		// log.info("Adding recent file" + url);
 		RecentFileAction action = new RecentFileAction(url);
@@ -45,8 +58,6 @@ public class RecentFileList
 			actions.remove(action); // it appears later in the list. remove it.
 		// Latest url is first in the list
 		actions.addFirst(action);
-		// Propagate signal
-		action.getOpenFileRequestedSignal().connect(getOpenUrlRequestedSignal());
 		// Restrict maximum list size
 		while (actions.size() > maxItems)
 			actions.removeLast();
@@ -55,9 +66,9 @@ public class RecentFileList
 		updateMenu();
 	}
 	
-	public Signal1<URL> getOpenUrlRequestedSignal() {
-		return openUrlRequestedSignal;
-	}
+//	public Signal1<URL> getOpenUrlRequestedSignal() {
+//		return openUrlRequestedSignal;
+//	}
 
 	private void loadRecentFiles() {
 		int index = 1;
@@ -70,7 +81,8 @@ public class RecentFileList
 			try {
 				URL url = new URL(value);
 				RecentFileAction action = new RecentFileAction(url);
-				action.getOpenFileRequestedSignal().connect(getOpenUrlRequestedSignal());
+                action.setUrlLoadListener(urlLoadListener);
+//				action.getOpenFileRequestedSignal().connect(getOpenUrlRequestedSignal());
 				a.add(action);
 			} catch (MalformedURLException e) {
 				// ignore bad URLs
@@ -110,5 +122,5 @@ public class RecentFileList
 		for (RecentFileAction a : actions)
 			menu.add(a);		
 	}
-	
+
 }
