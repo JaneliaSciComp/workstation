@@ -304,6 +304,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		rubberBand.paint(g2);
 	}
 	
+    //------------------------IMPLEMENTS MouseWheelModeListener
     @Override
     public void setMouseMode(MouseMode.Mode modeId) {
         if (modeId == this.mouseModeId)
@@ -331,6 +332,21 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
     
+    @Override
+	public void setWheelMode(WheelMode.Mode wheelModeId) {
+	    if (this.wheelModeId == wheelModeId)
+	        return;
+	    this.wheelModeId = wheelModeId;
+	    if (wheelModeId == WheelMode.Mode.ZOOM) {
+	        this.wheelMode = new ZoomMode();
+	    }
+	    else if (wheelModeId == WheelMode.Mode.SCAN) {
+	        this.wheelMode = new ZScanMode(volumeImage);
+	    }
+		this.wheelMode.setWidget(this, false);
+		this.wheelMode.setCamera(camera);
+	}
+
 	public void setCamera(ObservableCamera3d camera) {
 		if (camera == null)
 			return;
@@ -346,20 +362,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		skeletonActor.setCamera(camera);
 	}
 	
-	public void setWheelMode(WheelMode.Mode wheelModeId) {
-	    if (this.wheelModeId == wheelModeId)
-	        return;
-	    this.wheelModeId = wheelModeId;
-	    if (wheelModeId == WheelMode.Mode.ZOOM) {
-	        this.wheelMode = new ZoomMode();
-	    }
-	    else if (wheelModeId == WheelMode.Mode.SCAN) {
-	        this.wheelMode = new ZScanMode(volumeImage);
-	    }
-		this.wheelMode.setWidget(this, false);
-		this.wheelMode.setCamera(camera);
-	}
-
 	public TileServer getTileServer() {
 		return tileServer;
 	}

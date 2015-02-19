@@ -34,7 +34,7 @@ public class QuadViewController implements ViewStateListener {
     private final LargeVolumeViewer lvv;
     private final RecentFileList recentFileList;
     private final QuadViewController.QvucMouseWheelModeListener qvucmwListener = new QuadViewController.QvucMouseWheelModeListener();
-    private final Collection<MouseWheelModeListener> relayListeners = new ArrayList<MouseWheelModeListener>();
+    private final Collection<MouseWheelModeListener> relayListeners = new ArrayList<>();
            
     public QuadViewController(QuadViewUi ui, AnnotationManager annoMgr, LargeVolumeViewer lvv, RecentFileList recentFileList) {
         this.ui = ui;
