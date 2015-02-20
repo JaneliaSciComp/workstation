@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.util.Icons;
 
 /**
@@ -34,7 +35,8 @@ public class SliderPanel extends JPanel {
     private JToggleButton lockWhiteButton;
 	private JPanel colorLockPanel = new JPanel();
     private ImageColorModel imageColorModel;
-    private org.janelia.it.workstation.signal.Slot visibilityListenerSlot;
+    private ColorModelListener visibilityListener;
+//    private org.janelia.it.workstation.signal.Slot visibilityListenerSlot;
 
     public SliderPanel( ImageColorModel imageColorModel ) {
         setImageColorModel( imageColorModel );
@@ -56,9 +58,12 @@ public class SliderPanel extends JPanel {
             colorChannelWidget_2, 
             colorChannelWidget_3
         };
-        if ( visibilityListenerSlot != null && imageColorModel != null ) {
-            imageColorModel.getColorModelChangedSignal().deleteObserver(visibilityListenerSlot);
+        if ( visibilityListener != null && imageColorModel != null ) {
+            imageColorModel.removeColorModelListener(visibilityListener);
         }
+//        if ( visibilityListenerSlot != null && imageColorModel != null ) {
+//            imageColorModel.getColorModelChangedSignal().deleteObserver(visibilityListenerSlot);
+//        }
         this.imageColorModel = imageColorModel;
         guiInit();
         updateLockButtons();
@@ -175,16 +180,17 @@ public class SliderPanel extends JPanel {
 		});
 		
 		colorLockPanel.add(Box.createHorizontalStrut(30));
-        if ( visibilityListenerSlot == null ) {
-            visibilityListenerSlot = new org.janelia.it.workstation.signal.Slot() {
+        if ( visibilityListener == null ) {
+            visibilityListener = new ColorModelListener() {
                 @Override
-                public void execute() {
+                public void colorModelChanged() {
                     setVisible(imageColorModel.getChannelCount() > 0);
                 }
             };
         }
+        imageColorModel.addColorModelListener(visibilityListener);
 
-		imageColorModel.getColorModelInitializedSignal().connect(visibilityListenerSlot);
+//		imageColorModel.getColorModelInitializedSignal().connect(visibilityListenerSlot);
 		
     }
 

@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import java.awt.Color;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
 
 import org.janelia.it.workstation.signal.Signal1;
 
@@ -24,6 +25,8 @@ public class ChannelColorModel
 	private Signal1<Boolean> visibilityChangedSignal = new Signal1<Boolean>();
     
     private final int NUM_SERIALIZED_ITEMS = 9;
+    
+    private ColorModelListener colorModelListener;
 	
 	public ChannelColorModel(int index, Color color, int bitDepth) {
 		this.index = index;
@@ -33,6 +36,13 @@ public class ChannelColorModel
 		gamma = 1.0;
 		whiteLevel = dataMax = (int)(Math.pow(2.0, bitDepth) - 0.9);
 	}
+
+    /**
+     * @param colorModelListener the colorModelListener to set
+     */
+    public void setColorModelListener(ColorModelListener colorModelListener) {
+        this.colorModelListener = colorModelListener;
+    }
 
     /**
      * return a string containing the interesting parts of the color model
@@ -166,6 +176,7 @@ public class ChannelColorModel
 		this.blackLevel = blackLevel;
 		// System.out.println("black level = "+blackLevel);
 		blackLevelChangedSignal.emit(this.blackLevel);
+        fireColorModelChanged();
 	}
 
 	public void setColor(Color color) {
@@ -173,6 +184,8 @@ public class ChannelColorModel
 			return;
 		this.color = color;
 		colorChangedSignal.emit(this.color);
+        fireColorModelChanged();
+
 	}
 
 	public void setDataMax(int dataMax) {
@@ -180,6 +193,7 @@ public class ChannelColorModel
 			return;
 		this.dataMax = dataMax;
 		dataMaxChangedSignal.emit(this.dataMax);
+        fireColorModelChanged();
 	}
 
 	public void setGamma(double gamma) {
@@ -195,6 +209,7 @@ public class ChannelColorModel
 			return;
 		this.visible = visibility;
 		visibilityChangedSignal.emit(this.visible);
+        fireColorModelChanged();
 	}
 
 	public void setWhiteLevel(int whiteLevel) {
@@ -231,4 +246,9 @@ public class ChannelColorModel
         return NUM_SERIALIZED_ITEMS;
     }
 
+    private void fireColorModelChanged() {
+        if (colorModelListener != null) {
+            colorModelListener.colorModelChanged();
+        }
+    }
 }

@@ -24,6 +24,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationsConstants;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.signal.Slot;
@@ -265,12 +266,18 @@ public class Snapshot3DLauncher {
         snapshotViewer.setIndependentImageColorModel( independentCM ); 
         snapshotViewer.setSharedImageColorModel( sharedImageColorModel );
         setIndependentColorFromPrefs();
-        independentCM.getColorModelChangedSignal().connect(new Slot() {
+        independentCM.addColorModelListener(new ColorModelListener() {
             @Override
-            public void execute() {
+            public void colorModelChanged() {
                 saveColorPreference();
-            }
+            }            
         });
+//        independentCM.getColorModelChangedSignal().connect(new Slot() {
+//            @Override
+//            public void execute() {
+//                saveColorPreference();
+//            }
+//        });
     }
 
     private void saveColorPreference() {

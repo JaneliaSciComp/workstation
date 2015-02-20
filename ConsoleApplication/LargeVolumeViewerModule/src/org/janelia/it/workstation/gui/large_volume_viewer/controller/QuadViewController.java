@@ -9,7 +9,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import javax.swing.JComponent;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.OrthogonalPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
@@ -34,7 +36,9 @@ public class QuadViewController implements ViewStateListener {
     private final AnnotationManager annoMgr;
     private final LargeVolumeViewer lvv;
     private final QuadViewController.QvucMouseWheelModeListener qvucmwListener = new QuadViewController.QvucMouseWheelModeListener();
-    private final Collection<MouseWheelModeListener> relayListeners = new ArrayList<>();
+    private final QvucColorModelListener qvucColorModelListener = new QvucColorModelListener();
+    private final Collection<MouseWheelModeListener> relayMwmListeners = new ArrayList<>();
+    private final Collection<ColorModelListener> relayCMListeners = new ArrayList<>();
            
     public QuadViewController(QuadViewUi ui, AnnotationManager annoMgr, LargeVolumeViewer lvv) {
         this.ui = ui;
@@ -85,24 +89,29 @@ public class QuadViewController implements ViewStateListener {
     
     public void registerForEvents(OrthogonalPanel op) {
         op.setMessageListener(new QvucMessageListener());
-        relayListeners.add(op);
+        relayMwmListeners.add(op);
+        relayCMListeners.add(new QvucRepaintColorModelListener(op));
     }
     
     public void registerForEvents(RecentFileList rfl) {
         rfl.setUrlLoadListener(new QvucUrlLoadListener());
     }
     
+    public void registerForEvents(ImageColorModel icm) {
+        icm.addColorModelListener(qvucColorModelListener);
+    }
+    
     public void mouseModeChanged(MouseMode.Mode mode) {
         lvv.setMouseMode(mode);
         ui.setMouseMode(mode);
-        for (MouseWheelModeListener l: relayListeners) {
+        for (MouseWheelModeListener l: relayMwmListeners) {
             l.setMode(mode);
         }
     }
     
     public void wheelModeChanged(WheelMode.Mode mode) {
         lvv.setWheelMode(mode);
-        for (MouseWheelModeListener l: relayListeners) {
+        for (MouseWheelModeListener l: relayMwmListeners) {
             l.setMode(mode);
         }
     }
@@ -138,4 +147,32 @@ public class QuadViewController implements ViewStateListener {
         }
         
     }
+    
+    private class QvucColorModelListener implements ColorModelListener {
+
+        @Override
+        public void colorModelChanged() {
+            for (ColorModelListener l: relayCMListeners) {
+                l.colorModelChanged();
+            }
+            ui.updateSliderLockButtons();
+        }
+        
+    }
+    
+    private class QvucRepaintColorModelListener implements ColorModelListener {
+        private JComponent component;
+        
+        public QvucRepaintColorModelListener(JComponent component) {
+            this.component = component;
+        }
+        
+        @Override
+        public void colorModelChanged() {
+            if (component != null)
+                component.repaint();
+        }
+        
+    }
+    
 }

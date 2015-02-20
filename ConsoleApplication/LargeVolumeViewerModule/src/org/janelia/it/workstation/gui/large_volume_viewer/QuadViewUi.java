@@ -341,12 +341,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //        }
 //    };
 
-    public Slot colorModelUpdatedSlot = new Slot() {
-        @Override
-        public void execute() {
-            sliderPanel.updateLockButtons();
-        }
-    };
+//    public Slot colorModelUpdatedSlot = new Slot() {
+//        @Override
+//        public void execute() {
+//            sliderPanel.updateLockButtons();
+//        }
+//    };
 
 	/**
 	 * Create the frame.
@@ -468,6 +468,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
         sharedSkeletonActor.setSkeleton(largeVolumeViewer.getSkeleton());
+        quadViewController.registerForEvents(imageColorModel);
         for (OrthogonalPanel v : viewPanels) {
             quadViewController.registerForEvents(v);
 //            mouseModeChangedSignal.connect(v.setMouseModeSlot);
@@ -488,8 +489,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             });
             v.setTileServer(tileServer);
             v.getViewer().getSliceActor().setImageColorModel(imageColorModel);
-            imageColorModel.getColorModelChangedSignal().connect(v.getViewer().repaintSlot);
-            imageColorModel.getColorModelChangedSignal().connect(colorModelUpdatedSlot);
+//            imageColorModel.getColorModelChangedSignal().connect(v.getViewer().repaintSlot);
+//            imageColorModel.getColorModelChangedSignal().connect(colorModelUpdatedSlot);
 
             final boolean bShowTileOutlines = false; // Debugging aid
             if (bShowTileOutlines) {
@@ -502,7 +503,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         panModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
         zoomScrollModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
 	}
-    
+
+    public void updateSliderLockButtons() {
+        sliderPanel.updateLockButtons();
+    }
+
     public void pathTraceRequested(Long annotationID) {
         // this needs to happen before you draw anchored paths; should
         //  go somewhere else so it only happens once, but not clear where;

@@ -9,7 +9,8 @@ import javax.swing.event.ChangeListener;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.ChannelColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
-import org.janelia.it.workstation.signal.Slot;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
+//import org.janelia.it.workstation.signal.Slot;
 
 public class UglyColorSlider extends JSlider 
 {
@@ -23,20 +24,19 @@ public class UglyColorSlider extends JSlider
 
 	private boolean updatingFromModel = false; // flag to prevent recursion
 
-	private Slot updateSliderSlot = new Slot() {
-		@Override
-		public void execute() {
-			updateSliderValuesFromColorModel();
-		}
-	};
-
 	public UglyColorSlider(int channelIndex, ImageColorModel imageColorModel) 
 	{
-		setModel(rangeModel);
+		setModel(rangeModel);        
 		this.channelIndex = channelIndex;
 		this.imageColorModel = imageColorModel;
 		updateSliderValuesFromColorModel();
-		imageColorModel.getColorModelChangedSignal().connect(updateSliderSlot);
+//		imageColorModel.getColorModelChangedSignal().connect(updateSliderSlot);
+		imageColorModel.addColorModelListener(new ColorModelListener() {
+            @Override
+            public void colorModelChanged() {
+                updateSliderValuesFromColorModel();
+            }            
+        });
 		rangeModel.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent arg0) {

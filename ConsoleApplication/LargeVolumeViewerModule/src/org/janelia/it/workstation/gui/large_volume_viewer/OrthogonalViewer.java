@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;

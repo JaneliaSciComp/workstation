@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package org.janelia.it.workstation.gui.large_volume_viewer;
+package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
 /**
  * Implement this to be repainted in response to some event.

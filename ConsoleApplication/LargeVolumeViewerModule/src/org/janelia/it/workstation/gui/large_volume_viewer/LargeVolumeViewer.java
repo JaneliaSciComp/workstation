@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
@@ -383,7 +384,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		if (this.imageColorModel == imageColorModel)
 			return;
 		this.imageColorModel = imageColorModel;
-        imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
+//        imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
 		sliceActor.setImageColorModel(imageColorModel);
 	}
 	

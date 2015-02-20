@@ -141,7 +141,8 @@ public class ColorButtonPanel extends JPanel {
             ccm.setCombiningConstant( btn.isSelected() ? 1.0f : -1.0f );
             ccm.getColorChangedSignal().emit( ccm.getColor() );
             // Signal time to change stuff on screen.
-            icm.getColorModelChangedSignal().emit();
+            icm.fireColorModelChanged();
+//            icm.getColorModelChangedSignal().emit();
         }
         
     }
