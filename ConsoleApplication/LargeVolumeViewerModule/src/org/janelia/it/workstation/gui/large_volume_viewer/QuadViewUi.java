@@ -19,8 +19,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrive
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.signal.Signal;
-import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Signal;
+//import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
@@ -46,6 +46,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.SWCDataConverter;
@@ -165,6 +167,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private TileFormat tileFormat;
     
     private Snapshot3DLauncher snapshot3dLauncher;
+    private PathTraceRequestListener pathTraceListener;
+    private WorkspaceClosureListener wsCloseListener;
 
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
@@ -195,9 +199,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
 // Never emitted.    public Signal1<AnchoredVoxelPath> addAnchoredPathRequestSignal = new Signal1<>();
 
-    public Signal1<PathTraceToParentRequest> tracePathRequestedSignal = new Signal1<>();
-
-    public Signal closeWorkspaceRequestSignal = new Signal();
+//    public Signal1<PathTraceToParentRequest> tracePathRequestedSignal = new Signal1<>();
+//
+//    public Signal closeWorkspaceRequestSignal = new Signal();
 
 //	private Slot1<MouseMode.Mode> onMouseModeChangedSlot = new Slot1<MouseMode.Mode>() {
 //		@Override
@@ -284,13 +288,13 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //		}
 //	};
 	
-	private Slot1<LoadStatus> onLoadStatusChangedSlot = new Slot1<LoadStatus>() {
-		@Override
-		public void execute(LoadStatus status) {
-			// log.info("load status ordinal "+status.ordinal());
-			loadStatusLabel.setLoadStatus(status);
-		}
-	};
+//	private Slot1<LoadStatus> onLoadStatusChangedSlot = new Slot1<LoadStatus>() {
+//		@Override
+//		public void execute(LoadStatus status) {
+//			// log.info("load status ordinal "+status.ordinal());
+//			loadStatusLabel.setLoadStatus(status);
+//		}
+//	};
 
     public Slot centerNextParentVoxelSlot = new Slot() {
         @Override
@@ -370,8 +374,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         // connect up text UI and model with graphic UI(s):
         skeleton.setAnchorAddedListener(annotationMgr);
 //        skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
-        tracePathRequestedSignal.connect(annotationMgr.tracePathRequestedSlot);
-        closeWorkspaceRequestSignal.connect(annotationMgr.closeWorkspaceRequestedSlot);
+//        tracePathRequestedSignal.connect(annotationMgr.tracePathRequestedSlot);
+//        closeWorkspaceRequestSignal.connect(annotationMgr.closeWorkspaceRequestedSlot);
         getSkeletonActor().addAnchorUpdateListener(annotationMgr);
 //        getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
                 
@@ -525,7 +529,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
         request.setImageVolume(volumeImage);
         request.setTextureCache(tileServer.getTextureCache());
-        tracePathRequestedSignal.emit(request);
+        if (pathTraceListener != null) {
+            pathTraceListener.pathTrace(request);
+        }
+//        tracePathRequestedSignal.emit(request);
     }
     
 	public void clearCache() {
@@ -1266,7 +1273,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
      */
     public boolean loadRender(URL url) {
         // need to close/clear workspace and sample here:
-        closeWorkspaceRequestSignal.emit();
+        if (wsCloseListener != null) {
+            wsCloseListener.closeWorkspace();
+        }
+//        closeWorkspaceRequestSignal.emit();
 
         // then just go ahead and load the file
         boolean rtnVal = loadURL(url);
@@ -1327,6 +1337,20 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         
         getSkeletonActor().setTileFormat(
                 tileServer.getLoadAdapter().getTileFormat());
+    }
+
+    /**
+     * @param pathTraceListener the pathTraceListener to set
+     */
+    public void setPathTraceListener(PathTraceRequestListener pathTraceListener) {
+        this.pathTraceListener = pathTraceListener;
+    }
+
+    /**
+     * @param wsCloseListener the wsCloseListener to set
+     */
+    public void setWsCloseListener(WorkspaceClosureListener wsCloseListener) {
+        this.wsCloseListener = wsCloseListener;
     }
 
     static class LoadStatusLabel extends JLabel {

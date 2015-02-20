@@ -25,6 +25,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.ZScanScrollMode
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomMouseModeAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomScrollModeAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 
 /**
  * External controller of the Quad View UI.  Distances it from incoming
@@ -46,6 +47,8 @@ public class QuadViewController implements ViewStateListener {
         this.annoMgr = annoMgr;
         this.lvv = lvv;
         lvv.setMessageListener(new QvucMessageListener());
+        this.ui.setPathTraceListener(new QvucPathRequestListener());
+        this.ui.setWsCloseListener(new QvucWsClosureListener());
     }
     
     @Override
@@ -185,6 +188,24 @@ public class QuadViewController implements ViewStateListener {
         @Override
         public void updateLoadStatus(TileServer.LoadStatus loadStatus) {
             ui.setLoadStatus(loadStatus);
+        }
+        
+    }
+    
+    private class QvucPathRequestListener implements PathTraceRequestListener {
+
+        @Override
+        public void pathTrace(PathTraceToParentRequest request) {
+            annoMgr.tracePathToParent(request);
+        }
+        
+    }
+    
+    private class QvucWsClosureListener implements WorkspaceClosureListener {
+
+        @Override
+        public void closeWorkspace() {
+            annoMgr.setInitialEntity(null);
         }
         
     }

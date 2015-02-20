@@ -174,12 +174,12 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
 //        }
 //    };
 
-    public Slot1<PathTraceToParentRequest> tracePathRequestedSlot = new Slot1<PathTraceToParentRequest>() {
-        @Override
-        public void execute(PathTraceToParentRequest request) {
-            tracePathToParent(request);
-        }
-    };
+//    public Slot1<PathTraceToParentRequest> tracePathRequestedSlot = new Slot1<PathTraceToParentRequest>() {
+//        @Override
+//        public void execute(PathTraceToParentRequest request) {
+//            tracePathToParent(request);
+//        }
+//    };
 
 //    public Slot1<AnchoredVoxelPath> addPathRequestedSlot = new Slot1<AnchoredVoxelPath>() {
 //        @Override
@@ -227,12 +227,12 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
 //        }
 //    };
 
-    public Slot closeWorkspaceRequestedSlot = new Slot() {
-        @Override
-        public void execute() {
-            setInitialEntity(null);
-        }
-    };
+//    public Slot closeWorkspaceRequestedSlot = new Slot() {
+//        @Override
+//        public void execute() {
+//            setInitialEntity(null);
+//        }
+//    };
 
     public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi, TileServer tileServer) {
         this.annotationModel = annotationModel;
@@ -1140,7 +1140,7 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
         return annotationModel.getPreference(name);
     }
 
-    private void tracePathToParent(PathTraceToParentRequest request) {
+    public void tracePathToParent(PathTraceToParentRequest request) {
         TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(request.getAnchorGuid1());
         if (annotation.isRoot()) {
             // no parent, no tracing
