@@ -16,6 +16,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -71,6 +72,13 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 				contextSharer.getContext());
 		init();
 	}
+
+    /**
+     * @param messageListener the messageListener to set
+     */
+    public void setMessageListener(MessageListener messageListener) {
+        getViewer().setMessageListener(messageListener);
+    }
 
     @Override
     public void setMode(MouseMode.Mode modeId) {

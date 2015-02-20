@@ -40,6 +40,7 @@ public class QuadViewController implements ViewStateListener {
         this.ui = ui;
         this.annoMgr = annoMgr;
         this.lvv = lvv;
+        lvv.setMessageListener(new QvucMessageListener());
     }
     
     @Override
@@ -83,6 +84,7 @@ public class QuadViewController implements ViewStateListener {
     }
     
     public void registerForEvents(OrthogonalPanel op) {
+        op.setMessageListener(new QvucMessageListener());
         relayListeners.add(op);
     }
     
@@ -124,6 +126,15 @@ public class QuadViewController implements ViewStateListener {
         @Override
         public void loadUrl(URL url) {
             ui.loadRender(url);
+        }
+        
+    }
+    
+    private class QvucMessageListener implements MessageListener {
+
+        @Override
+        public void message(String msg) {
+            ui.setStatusLabelText(msg);
         }
         
     }

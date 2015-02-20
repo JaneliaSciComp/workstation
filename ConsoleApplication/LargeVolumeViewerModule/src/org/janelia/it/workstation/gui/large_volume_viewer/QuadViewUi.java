@@ -277,12 +277,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //
 //	};
 
-	public Slot1<String> setStatusMessageSlot = new Slot1<String>() {
-		@Override
-		public void execute(String message) {
-			statusLabel.setText(message);
-		}
-	};
+//	public Slot1<String> setStatusMessageSlot = new Slot1<String>() {
+//		@Override
+//		public void execute(String message) {
+//			statusLabel.setText(message);
+//		}
+//	};
 	
 	private Slot1<LoadStatus> onLoadStatusChangedSlot = new Slot1<LoadStatus>() {
 		@Override
@@ -427,7 +427,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         // 
         collectGarbageAction.putValue(Action.NAME, "Collect Garbage");
         //
-        largeVolumeViewer.statusMessageChanged.connect(setStatusMessageSlot);
+//        largeVolumeViewer.statusMessageChanged.connect(setStatusMessageSlot);
         largeVolumeViewer.setSkeleton(skeleton);
         //
         largeVolumeViewer.setWheelMode(WheelMode.Mode.SCAN);
@@ -474,7 +474,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //            wheelModeChangedSignal.connect(v.setWheelModeSlot);
             v.setCamera(camera);
             // TODO - move most of this setup into OrthogonalViewer class.
-            v.getViewer().statusMessageChanged.connect(setStatusMessageSlot);
+//            v.getViewer().statusMessageChanged.connect(setStatusMessageSlot);
             v.setSharedVolumeImage(volumeImage);
             v.setSystemMenuItemGenerator(new MenuItemGenerator() {
                 @Override
@@ -1277,6 +1277,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     JOptionPane.ERROR_MESSAGE);
             return false;
     	}
+    }
+    
+    public void setStatusLabelText(String text) {
+        statusLabel.setText(text);
     }
 
     public String imageColorModelAsString() {

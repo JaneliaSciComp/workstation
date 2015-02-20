@@ -38,6 +38,7 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
 import java.util.List;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorStateUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,11 +69,13 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	private ImageColorModel imageColorModel;
 	private BasicMouseMode pointComputer = new BasicMouseMode();
 	
+    private MessageListener messageListener;
+    
 	// Popup menu
 	MenuItemGenerator systemMenuItemGenerator;
-	MenuItemGenerator modeMenuItemGenerator;
+	MenuItemGenerator modeMenuItemGenerator;    
 	
-	public Signal1<String> statusMessageChanged = new Signal1<String>();
+//	public Signal1<String> statusMessageChanged = new Signal1<String>();
 	
 	protected Slot repaintSlot = new Slot() {
 		@Override
@@ -107,6 +110,13 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		init(camera);
 	}
 	
+    /**
+     * @param messageListener the messageListener to set
+     */
+    public void setMessageListener(MessageListener messageListener) {
+        this.messageListener = messageListener;
+    }
+
 	private void init(ObservableCamera3d camera) {
         addMouseListener(this);
         addMouseMotionListener(this);
@@ -276,7 +286,10 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 				+ ", " + fmt.format(xyz.getY())
 				+ ", " + fmt.format(xyz.getZ())
 				+ "] \u00B5m"; // micrometers. Maybe I should use pixels (also?)?
-		statusMessageChanged.emit(msg);
+        if (messageListener != null) {
+            messageListener.message(msg);
+        }
+//		statusMessageChanged.emit(msg);
 		// System.out.println(xyz);
 	}
 

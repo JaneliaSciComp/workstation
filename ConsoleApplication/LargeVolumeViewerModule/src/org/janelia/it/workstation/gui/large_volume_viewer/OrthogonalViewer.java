@@ -36,13 +36,14 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZScanMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
-import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +81,8 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     // 
     private List<AwtActor> hudActors = new Vector<AwtActor>();
 
-    public Signal1<String> statusMessageChanged = new Signal1<String>();
+    private MessageListener messageListener;
+//    public Signal1<String> statusMessageChanged = new Signal1<String>();
     public Slot repaintSlot = new Slot() {
         @Override
         public void execute() {
@@ -103,6 +105,13 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		init(axis);
 	}
 	
+    /**
+     * @param messageListener the messageListener to set
+     */
+    public void setMessageListener(MessageListener messageListener) {
+        this.messageListener = messageListener;
+    }
+
 	public void addActor(GLActor actor) {
 		renderer.addActor(actor);
 	}
@@ -263,7 +272,10 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                 + ", " + fmt.format(xyz.getY())
                 + ", " + fmt.format(xyz.getZ())
                 + "] \u00B5m"; // micrometers. Maybe I should use pixels (also?)?
-        statusMessageChanged.emit(msg);
+        if (messageListener != null) {
+            messageListener.message(msg);
+        }
+//        statusMessageChanged.emit(msg);
     }
 
     @Override
