@@ -689,7 +689,9 @@ public class EntityContextMenu extends JPopupMenu {
         for (RootedEntity rootedEntity : rootedEntityList) {
             Entity sample = rootedEntity.getEntity();
             if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
-                samples.add(sample);
+                if (!sample.getName().contains("~")) {
+                    samples.add(sample);
+                }
             }
         }
         
@@ -762,7 +764,9 @@ public class EntityContextMenu extends JPopupMenu {
         for (RootedEntity rootedEntity : rootedEntityList) {
             Entity sample = rootedEntity.getEntity();
             if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
-                samples.add(sample);
+                if (!sample.getName().contains("~")) {
+                    samples.add(sample);
+                }
             }
         }
         
