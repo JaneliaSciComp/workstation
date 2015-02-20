@@ -125,6 +125,10 @@ implements GL3Resource
     {
         actors.add(actor);
     }
+    
+    public void clearActors() {
+        actors.clear();
+    }
 
     @Override
     public void dispose(GL3 gl)

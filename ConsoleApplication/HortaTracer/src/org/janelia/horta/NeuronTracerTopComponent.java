@@ -738,6 +738,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         );
 
         // mprActor.addChild(boxMesh);
+        neuronMPRenderer.clearVolumeActors();
         neuronMPRenderer.addVolumeActor(boxMesh);
         
         return brickInfo;

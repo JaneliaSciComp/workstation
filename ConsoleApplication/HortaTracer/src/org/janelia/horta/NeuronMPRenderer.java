@@ -153,14 +153,20 @@ extends MultipassRenderer
         hdrPass.addActor(boxMesh);
     }
     
+    public void clearVolumeActors() {
+        hdrPass.clearActors();
+    }
+    
     @Override
     public void init(GL3 gl) {
         super.init(gl);
         gBuffer.init(gl);
+        hdrPass.init(gl);
     }
     
     @Override
     public void dispose(GL3 gl) {
+        hdrPass.dispose(gl);
         gBuffer.dispose(gl);
         super.dispose(gl);
     }
