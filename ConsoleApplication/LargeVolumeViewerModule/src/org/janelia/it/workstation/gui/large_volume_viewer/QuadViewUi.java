@@ -1162,7 +1162,11 @@ public class QuadViewUi extends JPanel
             String [] mountNames = {"", "mousebrainmicro",
                     "nobackup/mousebrainmicro", "mousebrainmicro/mousebrainmicro"};
 
+            boolean found = false;
             for (Path prefix: prefixesToTry) {
+                if (found) {
+                    break;
+                }
                 for (String mount: mountNames) {
                     if (mount.length() > 0) {
                         testFile = prefix.resolve(new File(mount).toPath()).resolve(partialPath).toFile();
@@ -1172,6 +1176,7 @@ public class QuadViewUi extends JPanel
                     System.out.println("trying " + testFile);
                     if (testFile.exists()) {
                         System.out.println("file exists: " + testFile);
+                        found = true;
                         break;
                     }
                 }
