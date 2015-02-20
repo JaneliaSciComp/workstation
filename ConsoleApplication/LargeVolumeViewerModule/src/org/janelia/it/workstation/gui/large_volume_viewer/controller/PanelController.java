@@ -16,6 +16,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationP
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuriteTreePanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NoteListPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceInfoPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceNeuronList;
 
 /**
@@ -29,6 +30,7 @@ public class PanelController {
     private NoteListPanel noteListPanel;
     private NeuriteTreePanel neuriteTreePanel;
     private WorkspaceNeuronList wsNeuronList;
+    private WorkspaceInfoPanel wsInfoPanel;
     private LargeVolumeViewerTranslator lvvTranslator;
     
     public PanelController(
@@ -63,7 +65,12 @@ public class PanelController {
     }
     
     public void registerForEvents(AnnotationManager annotationManager) {
-        
+        PanelEditNoteRequestedListener penrl = new PanelEditNoteRequestedListener(annotationManager);
+        noteListPanel.setEditNoteRequestListener(penrl);
+    }
+    
+    public void registerForEvents(WorkspaceInfoPanel wsip) {
+        this.wsInfoPanel = wsip;
     }
     
     public void unregisterForEvents(AnnotationModel annotationModel) {
@@ -78,6 +85,7 @@ public class PanelController {
             annotationPanel.loadWorkspace(workspace);
             noteListPanel.loadWorkspace(workspace);
             wsNeuronList.loadWorkspace(workspace);
+            wsInfoPanel.loadWorkspace(workspace);
         }
         
         @Override

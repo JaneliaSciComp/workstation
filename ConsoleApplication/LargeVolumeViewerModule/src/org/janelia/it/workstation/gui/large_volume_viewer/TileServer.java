@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.Vector;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.LoadStatusListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.InterleavedIterator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.MinResSliceGenerator;
@@ -49,6 +50,8 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	// Refactoring 6/12/2013
 	private SharedVolumeImage sharedVolumeImage;
 	private TextureCache textureCache = new TextureCache();
+    
+    private LoadStatusListener loadStatusListener;
 	
 	// One for each orthogonal viewer
 	// private Set<TileConsumer> tileConsumers = new HashSet<TileConsumer>();
@@ -102,7 +105,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	};
 
 	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
-	public Signal1<LoadStatus> loadStatusChangedSignal = new Signal1<LoadStatus>();
+//	public Signal1<LoadStatus> loadStatusChangedSignal = new Signal1<LoadStatus>();
 
 //	public Slot onVolumeInitializedSlot = new Slot() {
 //		@Override
@@ -127,6 +130,13 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 		textureCache.textureLoadedSignal.connect(textureLoadedSignal);
 		getTextureCache().queueDrainedSignal.connect(updateLoadStatusSlot);
 	}
+
+    /**
+     * @param loadStatusListener the loadStatusListener to set
+     */
+    public void setLoadStatusListener(LoadStatusListener loadStatusListener) {
+        this.loadStatusListener = loadStatusListener;
+    }
 
 	public void addViewTileManager(ViewTileManager viewTileManager) {
 		if (viewTileManagers.contains(viewTileManager))
@@ -182,9 +192,12 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	public void setLoadStatus(LoadStatus loadStatus) {
 		if (this.loadStatus == loadStatus)
 			return; // no change
-		// log.info("Load status changed to "+loadStatus);
+		log.info("Load status changed to "+loadStatus);
 		this.loadStatus = loadStatus;
-		loadStatusChangedSignal.emit(loadStatus);
+        if (loadStatusListener != null) {
+            loadStatusListener.updateLoadStatus(loadStatus);
+        }
+//		loadStatusChangedSignal.emit(loadStatus);
 	}
 
 	public SharedVolumeImage getSharedVolumeImage() {

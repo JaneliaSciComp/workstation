@@ -163,6 +163,7 @@ public class AnnotationPanel extends JPanel
         PanelController panelController = new PanelController(this, noteListPanel, neuriteTreePanel, workspaceNeuronList, largeVolumeViewerTranslator);
         panelController.registerForEvents(annotationModel);
         panelController.registerForEvents(annotationMgr);
+        panelController.registerForEvents(workspaceInfoPanel);
 //        annotationModel.neuronSelectedSignal.connect(neuriteTreePanel.neuronSelectedSlot);
 //        annotationModel.neuronSelectedSignal.connect(workspaceNeuronList.neuronSelectedSlot);
 //

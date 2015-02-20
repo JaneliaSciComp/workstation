@@ -15,6 +15,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.OrthogonalPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.PanModeAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.RecentFileList;
@@ -101,6 +102,10 @@ public class QuadViewController implements ViewStateListener {
         icm.addColorModelListener(qvucColorModelListener);
     }
     
+    public void registerForEvents(TileServer tileServer) {
+        tileServer.setLoadStatusListener(new QvucLoadStatusListener());
+    }
+    
     public void mouseModeChanged(MouseMode.Mode mode) {
         lvv.setMouseMode(mode);
         ui.setMouseMode(mode);
@@ -171,6 +176,15 @@ public class QuadViewController implements ViewStateListener {
         public void colorModelChanged() {
             if (component != null)
                 component.repaint();
+        }
+        
+    }
+    
+    private class QvucLoadStatusListener implements LoadStatusListener {
+
+        @Override
+        public void updateLoadStatus(TileServer.LoadStatus loadStatus) {
+            ui.setLoadStatus(loadStatus);
         }
         
     }

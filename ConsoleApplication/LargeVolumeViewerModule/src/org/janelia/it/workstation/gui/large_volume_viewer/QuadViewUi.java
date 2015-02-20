@@ -359,7 +359,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //        volumeImage.volumeInitializedSignal.connect(annotationMgr.onVolumeLoadedSlot);
 		largeVolumeViewer.setImageColorModel(imageColorModel);
 		camera.getViewChangedSignal().connect(tileServer.refreshCurrentTileSetSlot);
-		tileServer.loadStatusChangedSignal.connect(onLoadStatusChangedSlot);
+//		tileServer.loadStatusChangedSignal.connect(onLoadStatusChangedSlot);
 		sliderPanel.setVisible(false);
         
 		setupUi(parentFrame, overrideFrameMenuBar);
@@ -450,6 +450,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         quadViewController.registerForEvents(traceMouseModeAction);
         quadViewController.registerForEvents(zoomScrollModeAction);
         quadViewController.registerForEvents(zScanScrollModeAction);
+        quadViewController.registerForEvents(tileServer);
 //        panModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
 //        zoomMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
 //        traceMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
@@ -506,6 +507,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
     public void updateSliderLockButtons() {
         sliderPanel.updateLockButtons();
+    }
+    
+    public void setLoadStatus(LoadStatus loadStatus) {
+        loadStatusLabel.setLoadStatus(loadStatus);
     }
 
     public void pathTraceRequested(Long annotationID) {
