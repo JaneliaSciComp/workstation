@@ -163,7 +163,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private QuadViewController quadViewController;
 
 	// annotation-related
-    private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction();
+    private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction(this);
     private TileFormat tileFormat;
     
     private Snapshot3DLauncher snapshot3dLauncher;
@@ -259,9 +259,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public void centerNextParentMicron() {
         Anchor anchor = getSkeletonActor().getNextParent();
         if (anchor != null) {
-            setCameraFocusSlot.execute(
-                    anchor.getLocation()
-            );
+            setCameraFocus(anchor.getLocation());
+//            setCameraFocusSlot.execute(
+//                    anchor.getLocation()
+//            );
         }
     }
 
@@ -301,24 +302,28 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         public void execute() {
             Anchor anchor = getSkeletonActor().getNextParent();
             if (anchor != null) {
-                setCameraFocusSlot.execute(
+                setCameraFocus(
                         tileFormat.micronVec3ForVoxelVec3Cornered(anchor.getLocation())
                 );
+//                setCameraFocusSlot.execute(
+//                        tileFormat.micronVec3ForVoxelVec3Cornered(anchor.getLocation())
+//                );
             }
         }
     };
 	
-    public Slot centerNextParentMicronSlot = new Slot() {
-        @Override
-        public void execute() {
-            Anchor anchor = getSkeletonActor().getNextParent();
-            if (anchor != null) {
-                setCameraFocusSlot.execute(
-                        anchor.getLocation()
-                );
-            }
-        }
-    };
+//    public Slot centerNextParentMicronSlot = new Slot() {
+//        @Override
+//        public void execute() {
+//            Anchor anchor = getSkeletonActor().getNextParent();
+//            if (anchor != null) {
+//                setCameraFocus(anchor.getLocation());
+////                setCameraFocusSlot.execute(
+////                        anchor.getLocation()
+////                );
+//            }
+//        }
+//    };
 	
 //    public Slot1<Long> tracePathSegmentSlot = new Slot1<Long>() {
 //        @Override
@@ -465,7 +470,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //        mouseModeChangedSignal.connect(largeVolumeViewer.setMouseModeSlot);
 //        wheelModeChangedSignal.connect(largeVolumeViewer.setWheelModeSlot);
         // annotation-related actions:
-        centerNextParentAction.centerNextParentSignal.connect(centerNextParentVoxelSlot);
+//        centerNextParentAction.centerNextParentSignal.connect(centerNextParentVoxelSlot);
 //        annotationPanel.centerAnnotationSignal.connect(centerNextParentMicronSlot);
         // go to location action
         goToLocationAction.gotoLocationSignal.connect(setCameraFocusSlot);

@@ -3,16 +3,19 @@ package org.janelia.it.workstation.gui.large_volume_viewer.action;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
+import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 
-import org.janelia.it.workstation.signal.Signal;
+//import org.janelia.it.workstation.signal.Signal;
 
 // this action centers the 2d view on the annotation that is "selected"
 public class CenterNextParentAction extends AbstractAction 
 {
 
-    public Signal centerNextParentSignal = new Signal();
-
-    public CenterNextParentAction() {
+//    public Signal centerNextParentSignal = new Signal();
+    private QuadViewUi ui;
+    
+    public CenterNextParentAction(QuadViewUi ui) {
+        this.ui = ui;
         putValue(NAME, "Center next parent");
         String acc = "C";
         KeyStroke accelerator = KeyStroke.getKeyStroke(acc);
@@ -26,6 +29,7 @@ public class CenterNextParentAction extends AbstractAction
     @Override
     public void actionPerformed(ActionEvent e) 
     {
-        centerNextParentSignal.emit();
+        ui.centerNextParentMicron();
+//        centerNextParentSignal.emit();
     }
 }
