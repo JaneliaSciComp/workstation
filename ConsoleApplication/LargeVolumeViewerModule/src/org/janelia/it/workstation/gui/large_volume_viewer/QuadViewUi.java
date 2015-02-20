@@ -146,7 +146,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	private final ZScanScrollModeAction zScanScrollModeAction = new ZScanScrollModeAction();
 	private final ZoomScrollModeAction zoomScrollModeAction = new ZoomScrollModeAction();
 	private final ButtonGroup scrollModeGroup = new ButtonGroup();
-	private final OrthogonalModeAction orthogonalModeAction = new OrthogonalModeAction();
+	private final OrthogonalModeAction orthogonalModeAction = new OrthogonalModeAction(this);
 	// zoom actions
 	private final Action zoomInAction = new ZoomInAction(camera);
 	private final Action zoomOutAction = new ZoomOutAction(camera);
@@ -441,16 +441,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         //
         largeVolumeViewer.setWheelMode(WheelMode.Mode.SCAN);
         // Respond to orthogonal mode changes
-        orthogonalModeAction.orthogonalModeChanged.connect(new Slot1<OrthogonalMode>() {
-            @Override
-            public void execute(OrthogonalMode mode) {
-                if (mode == OrthogonalMode.ORTHOGONAL)
-                    setOrthogonalMode();
-                else if (mode == OrthogonalMode.Z_VIEW)
-                    setZViewMode();
-                // repaint(); // not necessary.
-            }
-        });
+//        orthogonalModeAction.orthogonalModeChanged.connect(new Slot1<OrthogonalMode>() {
+//            @Override
+//            public void execute(OrthogonalMode mode) {
+//                setOrthogonalMode(mode);
+//            }
+//        });
         setZViewMode();
         // Connect mode changes to widgets
         // First connect mode actions to one signal
@@ -513,6 +509,13 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         panModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
         zoomScrollModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
 	}
+
+    public void setOrthogonalMode(OrthogonalMode mode) {
+        if (mode == OrthogonalMode.ORTHOGONAL)
+            setOrthogonalMode();
+        else if (mode == OrthogonalMode.Z_VIEW)
+            setZViewMode();
+    }
 
     public void updateSliderLockButtons() {
         sliderPanel.updateLockButtons();

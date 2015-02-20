@@ -6,6 +6,7 @@ import org.janelia.it.workstation.signal.Signal1;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 
 /**
  * Change between separate X/Y/Z views and a single Z view.
@@ -14,16 +15,19 @@ import javax.swing.AbstractAction;
  */
 public class OrthogonalModeAction extends AbstractAction 
 {
+    private QuadViewUi ui;
+    
 	public enum OrthogonalMode {
 		ORTHOGONAL, Z_VIEW
 	}
-
-	public Signal1<OrthogonalMode> orthogonalModeChanged =
-			new Signal1<OrthogonalMode>();
+    
+//	public Signal1<OrthogonalMode> orthogonalModeChanged =
+//			new Signal1<OrthogonalMode>();
 	
 	private OrthogonalMode mode;
 	
-	public OrthogonalModeAction() {
+	public OrthogonalModeAction(QuadViewUi ui) {
+        this.ui = ui;
 		setZViewMode();
 	}
 	
@@ -32,12 +36,13 @@ public class OrthogonalModeAction extends AbstractAction
 		// System.out.println("Orthogonal Mode action performed");
 		if (mode == OrthogonalMode.Z_VIEW) {
 			setOrthogonalMode();
-			orthogonalModeChanged.emit(mode);
+//			orthogonalModeChanged.emit(mode);
 		}
 		else if (mode == OrthogonalMode.ORTHOGONAL) {
 			setZViewMode();
-			orthogonalModeChanged.emit(mode);
+//			orthogonalModeChanged.emit(mode);
 		}
+        ui.setOrthogonalMode(mode);
 	}
 	
 	private void setZViewMode() {
