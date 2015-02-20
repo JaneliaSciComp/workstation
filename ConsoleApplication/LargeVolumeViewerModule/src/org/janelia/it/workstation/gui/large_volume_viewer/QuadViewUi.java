@@ -316,30 +316,30 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         }
     };
 	
-    public Slot1<Long> tracePathSegmentSlot = new Slot1<Long>() {
-        @Override
-        public void execute(Long annotationID) {
-            // this needs to happen before you draw anchored paths; should
-            //  go somewhere else so it only happens once, but not clear where;
-            //  not clear we have a trigger for when the image is loaded enough for
-            //  this info to be available (it loads asynchronously)
-            getSkeletonActor().setTileFormat(
-                    tileServer.getLoadAdapter().getTileFormat());
+//    public Slot1<Long> tracePathSegmentSlot = new Slot1<Long>() {
+//        @Override
+//        public void execute(Long annotationID) {
+//            // this needs to happen before you draw anchored paths; should
+//            //  go somewhere else so it only happens once, but not clear where;
+//            //  not clear we have a trigger for when the image is loaded enough for
+//            //  this info to be available (it loads asynchronously)
+//            getSkeletonActor().setTileFormat(
+//                    tileServer.getLoadAdapter().getTileFormat());
+//
+//            // construct new request; add image data to anchor and pass it on
+//            PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
+//            request.setImageVolume(volumeImage);
+//            request.setTextureCache(tileServer.getTextureCache());
+//            tracePathRequestedSignal.emit(request);
+//        }
+//    };
 
-            // construct new request; add image data to anchor and pass it on
-            PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
-            request.setImageVolume(volumeImage);
-            request.setTextureCache(tileServer.getTextureCache());
-            tracePathRequestedSignal.emit(request);
-        }
-    };
-
-    public Slot1<String> loadColorModelSlot = new Slot1<String>() {
-        @Override
-        public void execute(String modelString) {
-            imageColorModelFromString(modelString);
-        }
-    };
+//    public Slot1<String> loadColorModelSlot = new Slot1<String>() {
+//        @Override
+//        public void execute(String modelString) {
+//            imageColorModelFromString(modelString);
+//        }
+//    };
 
     public Slot colorModelUpdatedSlot = new Slot() {
         @Override

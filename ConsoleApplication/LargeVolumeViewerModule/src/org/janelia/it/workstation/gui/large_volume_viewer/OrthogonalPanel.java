@@ -19,8 +19,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.signal.Slot;
-import org.janelia.it.workstation.signal.Slot1;
+//import org.janelia.it.workstation.signal.Slot;
+//import org.janelia.it.workstation.signal.Slot1;
 
 /*
  * GUI widget combining a large volume viewer with a slice slider.
