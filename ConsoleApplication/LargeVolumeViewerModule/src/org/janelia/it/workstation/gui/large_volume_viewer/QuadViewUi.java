@@ -21,7 +21,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadL
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 //import org.janelia.it.workstation.signal.Signal;
 //import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot;
+//import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
@@ -297,20 +297,20 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //		}
 //	};
 
-    public Slot centerNextParentVoxelSlot = new Slot() {
-        @Override
-        public void execute() {
-            Anchor anchor = getSkeletonActor().getNextParent();
-            if (anchor != null) {
-                setCameraFocus(
-                        tileFormat.micronVec3ForVoxelVec3Cornered(anchor.getLocation())
-                );
-//                setCameraFocusSlot.execute(
+//    public Slot centerNextParentVoxelSlot = new Slot() {
+//        @Override
+//        public void execute() {
+//            Anchor anchor = getSkeletonActor().getNextParent();
+//            if (anchor != null) {
+//                setCameraFocus(
 //                        tileFormat.micronVec3ForVoxelVec3Cornered(anchor.getLocation())
 //                );
-            }
-        }
-    };
+////                setCameraFocusSlot.execute(
+////                        tileFormat.micronVec3ForVoxelVec3Cornered(anchor.getLocation())
+////                );
+//            }
+//        }
+//    };
 	
 //    public Slot centerNextParentMicronSlot = new Slot() {
 //        @Override
