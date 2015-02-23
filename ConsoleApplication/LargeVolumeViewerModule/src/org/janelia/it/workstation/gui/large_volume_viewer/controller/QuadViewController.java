@@ -41,6 +41,7 @@ public class QuadViewController implements ViewStateListener {
     private final QvucColorModelListener qvucColorModelListener = new QvucColorModelListener();
     private final Collection<MouseWheelModeListener> relayMwmListeners = new ArrayList<>();
     private final Collection<ColorModelListener> relayCMListeners = new ArrayList<>();
+    private final Collection<JComponent> orthPanels = new ArrayList<>();
            
     public QuadViewController(QuadViewUi ui, AnnotationManager annoMgr, LargeVolumeViewer lvv) {
         this.ui = ui;
@@ -91,10 +92,45 @@ public class QuadViewController implements ViewStateListener {
         zssma.setMwmListener(qvucmwListener);
     }
     
+    /** Repaint events on any component. */
+    public void registerAsOrthPanelForRepaint(JComponent component) {
+        orthPanels.add(component);
+        relayCMListeners.add(new QvucRepaintColorModelListener(component));
+    }
+    
     public void registerForEvents(OrthogonalPanel op) {
+        orthPanels.add(op);
         op.setMessageListener(new QvucMessageListener());
         relayMwmListeners.add(op);
         relayCMListeners.add(new QvucRepaintColorModelListener(op));
+    }
+    
+    /** Since orthogonal panels are created on demand, they should all be unregistered before registering new ones. */
+    public void unregisterOrthPanels() {
+        for (JComponent op: orthPanels) {
+            Collection<MouseWheelModeListener> tempListeners = new ArrayList<>(relayMwmListeners);
+            for (MouseWheelModeListener l: relayMwmListeners) {
+                if (l == op) {
+                    tempListeners.remove(l);
+                }
+            }
+            relayMwmListeners.clear();
+            relayMwmListeners.addAll(tempListeners);
+            tempListeners = null;
+            Collection<ColorModelListener> tempListeners2 = new ArrayList<>(relayCMListeners);
+            for (ColorModelListener l: relayCMListeners) {
+                if (l instanceof QvucRepaintColorModelListener) {
+                    QvucRepaintColorModelListener rl = (QvucRepaintColorModelListener)l;
+                    if (rl.getComponent() == op) {
+                        tempListeners2.remove(l);
+                    }
+                }
+            }
+            relayCMListeners.clear();
+            relayCMListeners.addAll(tempListeners2);
+            tempListeners2 = null;
+        }
+        orthPanels.clear();
     }
     
     public void registerForEvents(RecentFileList rfl) {
@@ -179,6 +215,10 @@ public class QuadViewController implements ViewStateListener {
         public void colorModelChanged() {
             if (component != null)
                 component.repaint();
+        }
+        
+        public JComponent getComponent() {
+            return component;
         }
         
     }

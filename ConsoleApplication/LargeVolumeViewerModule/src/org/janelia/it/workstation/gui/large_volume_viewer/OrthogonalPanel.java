@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.net.URL;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
@@ -72,6 +73,11 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 				contextSharer.getContext());
 		init();
 	}
+    
+    public void repaint() {
+        super.repaint();
+        System.out.println("Repaint was called.");
+    }
 
     /**
      * @param messageListener the messageListener to set

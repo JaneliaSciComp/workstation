@@ -475,6 +475,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
         sharedSkeletonActor.setSkeleton(largeVolumeViewer.getSkeleton());
         quadViewController.registerForEvents(imageColorModel);
+        quadViewController.unregisterOrthPanels();        
+        quadViewController.registerAsOrthPanelForRepaint(seViewer); // Must do separately.
         for (OrthogonalPanel v : viewPanels) {
             quadViewController.registerForEvents(v);
 //            mouseModeChangedSignal.connect(v.setMouseModeSlot);
