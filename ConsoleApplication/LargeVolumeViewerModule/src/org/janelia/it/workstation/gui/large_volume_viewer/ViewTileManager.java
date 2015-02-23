@@ -11,8 +11,8 @@ import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.StatusUpdateListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
-import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot1;
+//import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Slot1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,7 +101,7 @@ public class ViewTileManager {
 	private SharedVolumeImage volumeImage;
     private StatusUpdateListener loadStatusChangedListener;
     
-	public Signal1<LoadStatus> loadStatusChanged = new Signal1<LoadStatus>();
+//	public Signal1<LoadStatus> loadStatusChanged = new Signal1<LoadStatus>();
 	
 //	public Slot1<TileIndex> onTextureLoadedSlot = new Slot1<TileIndex>() {
 //		@Override
@@ -218,7 +218,7 @@ public class ViewTileManager {
         if (loadStatusChangedListener != null) {
             loadStatusChangedListener.update();
         }
-		loadStatusChanged.emit(loadStatus);
+//		loadStatusChanged.emit(loadStatus);
 	}
 
 	public void setTextureCache(TextureCache textureCache) {

@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
-import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Signal1;
 
 import java.awt.event.ActionEvent;
 import java.net.URL;
