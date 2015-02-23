@@ -65,42 +65,13 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	};
 	
 	// Initiate loading of low resolution textures
-	private Slot startMinResPreFetchSlot = new Slot() {
-		@Override
-		public void execute() {
-			// log.info("starting pre fetch of lowest resolution tiles");
-			// Load X and Y slices too (in addition to Z), if available
-			if (sharedVolumeImage.getLoadAdapter() == null)
-				return;
-			// queue load of all low resolution textures
-			minResPreFetcher.clear();
-			TileFormat format = sharedVolumeImage.getLoadAdapter().getTileFormat();
-			List<MinResSliceGenerator> generators = new Vector<MinResSliceGenerator>();
-			if (format.isHasXSlices())
-				generators.add(new MinResSliceGenerator(format, CoordinateAxis.X));
-			if (format.isHasYSlices())
-				generators.add(new MinResSliceGenerator(format, CoordinateAxis.Y));
-			if (format.isHasZSlices())
-				generators.add(new MinResSliceGenerator(format, CoordinateAxis.Z));
-
-			Iterable<TileIndex> tileGenerator;
-			if (generators.size() < 1)
-				return;
-			else if (generators.size() == 1)
-				tileGenerator = generators.get(0);
-			else {
-				Iterator<MinResSliceGenerator> i = generators.iterator();
-				tileGenerator = new InterleavedIterator<TileIndex>(i.next(), i.next());
-				while (i.hasNext()) {
-					tileGenerator = new InterleavedIterator<TileIndex>(tileGenerator, i.next());
-				}
-			}
-			for (TileIndex i : tileGenerator) {
-				minResPreFetcher.loadDisplayedTexture(i, TileServer.this);
-			}
-			// log.info(tileCount+" min resolution tiles queued");
-		}
-	};
+//	private Slot startMinResPreFetchSlot = new Slot() {
+//		@Override
+//		public void execute() {
+//            startMinResPreFetch();
+//		}
+//
+//	};
 
 //	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
 //	public Signal1<LoadStatus> loadStatusChangedSignal = new Signal1<LoadStatus>();
@@ -135,6 +106,44 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
         }
     }
     
+    public void startMinResPreFetch() {
+            // log.info("starting pre fetch of lowest resolution tiles");
+        // Load X and Y slices too (in addition to Z), if available
+        if (sharedVolumeImage.getLoadAdapter() == null) {
+            return;
+        }
+        // queue load of all low resolution textures
+        minResPreFetcher.clear();
+        TileFormat format = sharedVolumeImage.getLoadAdapter().getTileFormat();
+        List<MinResSliceGenerator> generators = new Vector<MinResSliceGenerator>();
+        if (format.isHasXSlices()) {
+            generators.add(new MinResSliceGenerator(format, CoordinateAxis.X));
+        }
+        if (format.isHasYSlices()) {
+            generators.add(new MinResSliceGenerator(format, CoordinateAxis.Y));
+        }
+        if (format.isHasZSlices()) {
+            generators.add(new MinResSliceGenerator(format, CoordinateAxis.Z));
+        }
+        Iterable<TileIndex> tileGenerator;
+        if (generators.size() < 1) {
+            return;
+        } else if (generators.size() == 1) {
+            tileGenerator = generators.get(0);
+        } else {
+            Iterator<MinResSliceGenerator> i = generators.iterator();
+            tileGenerator = new InterleavedIterator<TileIndex>(i.next(), i.next());
+            while (i.hasNext()) {
+                tileGenerator = new InterleavedIterator<TileIndex>(tileGenerator, i.next());
+            }
+        }
+        for (TileIndex i : tileGenerator) {
+            minResPreFetcher.loadDisplayedTexture(i, TileServer.this);
+        }
+        // log.info(tileCount+" min resolution tiles queued");
+        return;
+    }
+
     /**
      * @param loadStatusListener the loadStatusListener to set
      */
@@ -173,7 +182,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
             vtm.clear();
             vtm.setTextureCache(textureCache);
         }
-		startMinResPreFetchSlot.execute(); // start loading low-res volume
+        startMinResPreFetch();
 	};
 	
 	public TileSet createLatestTiles() {

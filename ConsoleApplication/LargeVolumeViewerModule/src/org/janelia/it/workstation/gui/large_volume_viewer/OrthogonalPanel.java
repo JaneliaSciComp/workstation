@@ -74,11 +74,6 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 		init();
 	}
     
-    public void repaint() {
-        super.repaint();
-        System.out.println("Repaint was called.");
-    }
-
     /**
      * @param messageListener the messageListener to set
      */

@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.janelia.it.workstation.signal.Signal;
-import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Signal1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
