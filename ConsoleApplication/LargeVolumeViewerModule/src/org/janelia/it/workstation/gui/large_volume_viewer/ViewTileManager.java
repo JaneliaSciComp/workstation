@@ -94,20 +94,24 @@ public class ViewTileManager {
 
 	public Signal1<LoadStatus> loadStatusChanged = new Signal1<LoadStatus>();
 	
-	public Slot1<TileIndex> onTextureLoadedSlot = new Slot1<TileIndex>() {
-		@Override
-		public void execute(TileIndex index) {
-			if (! displayableTextures.contains(index))
-				return;
-			// log.info("Needed texture loaded! "+index);
-			tileConsumer.getRepaintSlot().execute();
-		}
-	};
-	
+//	public Slot1<TileIndex> onTextureLoadedSlot = new Slot1<TileIndex>() {
+//		@Override
+//		public void execute(TileIndex index) {
+//            textureLoaded(index);
+//		}
+//	};
+
 	public ViewTileManager(TileConsumer tileConsumer)
 	{
 		this.tileConsumer = tileConsumer;
 	}
+
+    public void textureLoaded(TileIndex index) {
+        if (displayableTextures.contains(index)) {
+            // log.info("Needed texture loaded! "+index);
+            tileConsumer.getRepaintSlot().execute();
+        }
+    }
 
 	public void clear() {
 		emergencyTiles = null;

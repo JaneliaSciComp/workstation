@@ -18,7 +18,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.generator.InterleavedI
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.MinResSliceGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.SliceGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.UmbrellaSliceGenerator;
-import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,16 +95,14 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 					tileGenerator = new InterleavedIterator<TileIndex>(tileGenerator, i.next());
 				}
 			}
-			int tileCount = 0;
 			for (TileIndex i : tileGenerator) {
 				minResPreFetcher.loadDisplayedTexture(i, TileServer.this);
-				tileCount += 1;
 			}
 			// log.info(tileCount+" min resolution tiles queued");
 		}
 	};
 
-	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
+//	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
 //	public Signal1<LoadStatus> loadStatusChangedSignal = new Signal1<LoadStatus>();
 
 //	public Slot onVolumeInitializedSlot = new Slot() {
@@ -131,6 +129,12 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 		getTextureCache().queueDrainedSignal.connect(updateLoadStatusSlot);
 	}
 
+    public void textureLoaded(TileIndex tileIndex) {
+        for (ViewTileManager vtm: viewTileManagers) {
+            vtm.textureLoaded(tileIndex);
+        }
+    }
+    
     /**
      * @param loadStatusListener the loadStatusListener to set
      */
@@ -142,7 +146,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 		if (viewTileManagers.contains(viewTileManager))
 			return; // already there
 		viewTileManagers.add(viewTileManager);
-		textureLoadedSignal.connect(viewTileManager.onTextureLoadedSlot);
+//		textureLoadedSignal.connect(viewTileManager.onTextureLoadedSlot);
 		viewTileManager.loadStatusChanged.connect(updateLoadStatusSlot);
 		// viewTileManager.tileSetChangedSignal.connect(updateFuturePreFetchSlot);
 		viewTileManager.setTextureCache(getTextureCache());
@@ -217,7 +221,6 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	}
 	
 	private void updateLoadStatus() {
-		LoadStatus result;
 		if (sharedVolumeImage == null) {
 			setLoadStatus(LoadStatus.UNINITIALIZED);
 			return;
