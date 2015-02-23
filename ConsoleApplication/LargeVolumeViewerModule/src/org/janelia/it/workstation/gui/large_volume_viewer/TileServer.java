@@ -127,7 +127,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 		setSharedVolumeImage(sharedVolumeImage);
 		minResPreFetcher.setTextureCache(getTextureCache());
 		futurePreFetcher.setTextureCache(getTextureCache());
-		textureCache.textureLoadedSignal.connect(textureLoadedSignal);
+//		textureCache.textureLoadedSignal.connect(textureLoadedSignal);
 		getTextureCache().queueDrainedSignal.connect(updateLoadStatusSlot);
 	}
 
@@ -155,11 +155,11 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
         if (textureCache != null) {
             textureCache.clear();
             textureIds = textureCache.popObsoleteTextureIds();
-            textureCache.textureLoadedSignal.disconnect(textureLoadedSignal);
+//            textureCache.textureLoadedSignal.disconnect(textureLoadedSignal);
             textureCache.queueDrainedSignal.disconnect(updateLoadStatusSlot);
         }
         textureCache = new TextureCache();
-        textureCache.textureLoadedSignal.connect(textureLoadedSignal);
+//        textureCache.textureLoadedSignal.connect(textureLoadedSignal);
         textureCache.queueDrainedSignal.connect(updateLoadStatusSlot);
         if (textureIds != null)
             textureCache.getHistoryCache().storeObsoleteTextureIds(textureIds); // so old texture ids can get deleted next draw

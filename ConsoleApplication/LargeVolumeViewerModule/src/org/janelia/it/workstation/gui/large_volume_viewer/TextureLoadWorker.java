@@ -16,13 +16,15 @@ public class TextureLoadWorker implements Runnable
 	
 	private TileTexture texture;
 	private TextureCache textureCache;
+    private TileServer tileServer;
 
-	public TextureLoadWorker(TileTexture texture, TextureCache textureCache)
+	public TextureLoadWorker(TileTexture texture, TextureCache textureCache, TileServer tileServer)
 	{
 		if (texture.getLoadStatus().ordinal() < TileTexture.LoadStatus.LOAD_QUEUED.ordinal())
 			texture.setLoadStatus(TileTexture.LoadStatus.LOAD_QUEUED);
 		this.texture = texture;
 		this.textureCache = textureCache;
+        this.tileServer = tileServer;
 	}
 
 	public TileTexture getTexture() {
@@ -58,7 +60,8 @@ public class TextureLoadWorker implements Runnable
 		// log.info("Loading texture "+texture.getIndex());
 		else if (texture.loadImageToRam()) {
 			textureCache.add(texture);
-			textureCache.textureLoadedSignal.emit(texture.getIndex()); // inform consumers (RavelerTileServer?)
+            tileServer.textureLoadedSignal.emit(texture.getIndex()); // inform consumers (RavelerTileServer?)
+//			textureCache.textureLoadedSignal.emit(texture.getIndex()); // inform consumers (RavelerTileServer?)
 			// log.info("Loaded texture "+texture.getIndex());
 		}
 		else {

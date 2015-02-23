@@ -23,7 +23,7 @@ public class TextureCache
 	private HistoryCache futureCache = new HistoryCache(3000); // textures we predict will be displayed
 	private PersistentCache persistentCache = new PersistentCache(); // lowest resolution textures for everything
 	// private Set<TileIndex> queuedRequests = new HashSet<TileIndex>();
-	private Map<TileIndex, Long> queuedTextureTime = new HashMap<TileIndex, Long>();
+	private Map<TileIndex, Long> queuedTextureTime = new HashMap<>();
 
 	public Signal getCacheClearedSignal() {
 		return cacheClearedSignal;
@@ -32,7 +32,7 @@ public class TextureCache
 	
 	public Signal queueDrainedSignal = new Signal();
 
-	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
+//	public Signal1<TileIndex> textureLoadedSignal = new Signal1<>();
 
 	public synchronized void add(TileTexture texture) {
 		TileIndex index = texture.getIndex();
