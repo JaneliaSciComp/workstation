@@ -8,6 +8,7 @@ import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.StatusUpdateListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.signal.Signal1;
@@ -24,6 +25,13 @@ import org.slf4j.LoggerFactory;
 public class ViewTileManager {
 	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(ViewTileManager.class);
+
+    /**
+     * @param loadStatusChangedListener the loadStatusChangedListener to set
+     */
+    public void setLoadStatusChangedListener(StatusUpdateListener loadStatusChangedListener) {
+        this.loadStatusChangedListener = loadStatusChangedListener;
+    }
 
 	/*
 	 * A TileSet is a group of rectangles that complete the LargeVolumeViewer image
@@ -91,7 +99,8 @@ public class ViewTileManager {
 	private TileConsumer tileConsumer;
 	private TextureCache textureCache;
 	private SharedVolumeImage volumeImage;
-
+    private StatusUpdateListener loadStatusChangedListener;
+    
 	public Signal1<LoadStatus> loadStatusChanged = new Signal1<LoadStatus>();
 	
 //	public Slot1<TileIndex> onTextureLoadedSlot = new Slot1<TileIndex>() {
@@ -206,6 +215,9 @@ public class ViewTileManager {
 		if (loadStatus == this.loadStatus)
 			return;
 		this.loadStatus = loadStatus;
+        if (loadStatusChangedListener != null) {
+            loadStatusChangedListener.update();
+        }
 		loadStatusChanged.emit(loadStatus);
 	}
 

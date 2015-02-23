@@ -13,6 +13,7 @@ import java.util.Vector;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.LoadStatusListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.StatusUpdateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.InterleavedIterator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.MinResSliceGenerator;
@@ -52,6 +53,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	private TextureCache textureCache = new TextureCache();
     
     private LoadStatusListener loadStatusListener;
+    private StatusUpdateListener queueDrainedListener;
 	
 	// One for each orthogonal viewer
 	// private Set<TileConsumer> tileConsumers = new HashSet<TileConsumer>();
@@ -85,19 +87,26 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 //		}
 //	};
 
-	private Slot updateLoadStatusSlot = new Slot() {
-		@Override
-		public void execute() {
-			updateLoadStatus();
-		}
-	};
+//	private Slot updateLoadStatusSlot = new Slot() {
+//		@Override
+//		public void execute() {
+//			updateLoadStatus();
+//		}
+//	};
 	
 	public TileServer(SharedVolumeImage sharedVolumeImage) {
 		setSharedVolumeImage(sharedVolumeImage);
 		minResPreFetcher.setTextureCache(getTextureCache());
 		futurePreFetcher.setTextureCache(getTextureCache());
 //		textureCache.textureLoadedSignal.connect(textureLoadedSignal);
-		getTextureCache().queueDrainedSignal.connect(updateLoadStatusSlot);
+//		getTextureCache().queueDrainedSignal.connect(updateLoadStatusSlot);
+        queueDrainedListener = new StatusUpdateListener() {
+            @Override
+            public void update() {
+                updateLoadStatus();
+            }            
+        };
+        getTextureCache().setQueueDrainedListener(queueDrainedListener);
 	}
 
     public void textureLoaded(TileIndex tileIndex) {
@@ -156,8 +165,9 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 			return; // already there
 		viewTileManagers.add(viewTileManager);
 //		textureLoadedSignal.connect(viewTileManager.onTextureLoadedSlot);
-		viewTileManager.loadStatusChanged.connect(updateLoadStatusSlot);
+//		viewTileManager.loadStatusChanged.connect(updateLoadStatusSlot);
 		// viewTileManager.tileSetChangedSignal.connect(updateFuturePreFetchSlot);
+        viewTileManager.setLoadStatusChangedListener(queueDrainedListener);
 		viewTileManager.setTextureCache(getTextureCache());
 	}
 	
@@ -168,12 +178,14 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
         if (textureCache != null) {
             textureCache.clear();
             textureIds = textureCache.popObsoleteTextureIds();
+            textureCache.setQueueDrainedListener(null);
 //            textureCache.textureLoadedSignal.disconnect(textureLoadedSignal);
-            textureCache.queueDrainedSignal.disconnect(updateLoadStatusSlot);
+//            textureCache.queueDrainedSignal.disconnect(updateLoadStatusSlot);
         }
         textureCache = new TextureCache();
 //        textureCache.textureLoadedSignal.connect(textureLoadedSignal);
-        textureCache.queueDrainedSignal.connect(updateLoadStatusSlot);
+//        textureCache.queueDrainedSignal.connect(updateLoadStatusSlot);
+        textureCache.setQueueDrainedListener(queueDrainedListener);
         if (textureIds != null)
             textureCache.getHistoryCache().storeObsoleteTextureIds(textureIds); // so old texture ids can get deleted next draw
         minResPreFetcher.setTextureCache(textureCache);
