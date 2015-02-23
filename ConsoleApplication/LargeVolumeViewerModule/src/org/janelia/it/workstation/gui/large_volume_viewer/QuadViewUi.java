@@ -266,12 +266,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         }
     }
 
-    public Slot1<Vec3> setCameraFocusSlot = new Slot1<Vec3>() {
-		@Override
-		public void execute(Vec3 focus) {
-			camera.setFocus(focus);
-		}
-	};
+//    public Slot1<Vec3> setCameraFocusSlot = new Slot1<Vec3>() {
+//		@Override
+//		public void execute(Vec3 focus) {
+//			camera.setFocus(focus);
+//		}
+//	};
 	
 //	protected Slot updateRangesSlot = new Slot() {
 //		@Override
@@ -456,6 +456,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         quadViewController.registerForEvents(zoomScrollModeAction);
         quadViewController.registerForEvents(zScanScrollModeAction);
         quadViewController.registerForEvents(tileServer);
+        quadViewController.registerForEvents(goToLocationAction);
 //        panModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
 //        zoomMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
 //        traceMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
@@ -469,7 +470,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //        centerNextParentAction.centerNextParentSignal.connect(centerNextParentVoxelSlot);
 //        annotationPanel.centerAnnotationSignal.connect(centerNextParentMicronSlot);
         // go to location action
-        goToLocationAction.gotoLocationSignal.connect(setCameraFocusSlot);
+//        goToLocationAction.gotoLocationSignal.connect(setCameraFocusSlot);
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();

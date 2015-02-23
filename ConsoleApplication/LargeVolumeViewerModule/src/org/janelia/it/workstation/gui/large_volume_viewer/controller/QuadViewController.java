@@ -16,6 +16,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.OrthogonalPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.GoToLocationAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.PanModeAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.RecentFileList;
@@ -145,6 +146,10 @@ public class QuadViewController implements ViewStateListener {
         tileServer.setLoadStatusListener(new QvucLoadStatusListener());
     }
     
+    public void registerForEvents(GoToLocationAction action) {
+        action.setListener(new QvucGotoListener());
+    }
+    
     public void mouseModeChanged(MouseMode.Mode mode) {
         lvv.setMouseMode(mode);
         ui.setMouseMode(mode);
@@ -158,6 +163,15 @@ public class QuadViewController implements ViewStateListener {
         for (MouseWheelModeListener l: relayMwmListeners) {
             l.setMode(mode);
         }
+    }
+    
+    private class QvucGotoListener implements CameraPanToListener {
+
+        @Override
+        public void cameraPanTo(Vec3 location) {
+            ui.setCameraFocus( location );
+        }
+        
     }
     
     private class QvucMouseWheelModeListener implements MouseWheelModeListener {
