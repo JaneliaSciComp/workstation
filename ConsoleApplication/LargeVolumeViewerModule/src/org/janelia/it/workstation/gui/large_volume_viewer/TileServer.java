@@ -418,7 +418,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	}
 	
 	// Part of new way July 9, 2013
-	private void refreshCurrentTileSet() {
+	public void refreshCurrentTileSet() {
 		TileSet tiles = createLatestTiles();
 		Set<TileIndex> indices = new HashSet<TileIndex>();
 		for (Tile2d t : tiles)

@@ -641,7 +641,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		neViewer.setVisible(true);
 		swViewer.setVisible(true);
 		seViewer.setVisible(true);
-		tileServer.refreshCurrentTileSetSlot.execute();
+		tileServer.refreshCurrentTileSet();
 	}
 	
 	private SkeletonActor getSkeletonActor() {
@@ -653,7 +653,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		neViewer.setVisible(false);
 		swViewer.setVisible(false);
 		seViewer.setVisible(false);
-		tileServer.refreshCurrentTileSetSlot.execute();
+		tileServer.refreshCurrentTileSet();
 	}
 	
 	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
