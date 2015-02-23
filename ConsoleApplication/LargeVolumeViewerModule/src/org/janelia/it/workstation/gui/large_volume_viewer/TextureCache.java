@@ -25,10 +25,7 @@ public class TextureCache
 	// private Set<TileIndex> queuedRequests = new HashSet<TileIndex>();
 	private Map<TileIndex, Long> queuedTextureTime = new HashMap<>();
 
-	public Signal getCacheClearedSignal() {
-		return cacheClearedSignal;
-	}
-	private Signal cacheClearedSignal = new Signal();
+//	private Signal cacheClearedSignal = new Signal();
 	
 	public Signal queueDrainedSignal = new Signal();
 
@@ -56,7 +53,7 @@ public class TextureCache
 		historyCache.clear();
 		persistentCache.clear();
 		queuedTextureTime.clear();
-		cacheClearedSignal.emit();
+//		cacheClearedSignal.emit();
 	}
 
 	boolean containsKey(TileIndex index) {
