@@ -7,7 +7,7 @@ import org.janelia.it.workstation.geom.CoordinateAxis;
 
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Signal1;
 
 public class Anchor {
 

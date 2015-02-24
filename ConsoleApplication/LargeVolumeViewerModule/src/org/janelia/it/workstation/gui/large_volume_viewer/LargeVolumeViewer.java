@@ -140,7 +140,8 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		// black background for production
 		renderer.setBackgroundColor(Color.black);
         setPreferredSize( new Dimension( 600, 600 ) );
-        rubberBand.changed.connect(repaintSlot);
+        rubberBand.setRepaintListener(this);
+//        rubberBand.changed.connect(repaintSlot);
         // setToolTipText("Double click to center on a point.");
         renderer.addActor(sliceActor);
         // renderer.addActor(new TileOutlineActor(viewTileManager));

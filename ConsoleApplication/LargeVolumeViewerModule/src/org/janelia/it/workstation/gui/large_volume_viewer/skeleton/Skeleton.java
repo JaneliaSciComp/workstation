@@ -6,9 +6,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.HistoryStack;
 //import org.janelia.it.workstation.signal.Signal;
-import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Signal1;
 //import org.janelia.it.workstation.signal.Slot;
-import org.janelia.it.workstation.signal.Slot1;
+//import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
@@ -251,7 +251,7 @@ public class Skeleton {
 //        }
 //    };
 
-	public Skeleton() {
+//	public Skeleton() {
 		// Don't make this connection when using workstation database
 		// addAnchorRequestedSignal.connect(addShortCircuitAnchorSlot);
 		// subtreeDeleteRequestedSignal.connect(deleteAnchorShortCircuitSlot); // TODO remove
@@ -264,7 +264,7 @@ public class Skeleton {
 //		anchorMovedSignal.connect(skeletonChangedSlot);
 //		anchorMovedSilentSignal.connect(skeletonChangedSlot);
 		// log.info("Skeleton constructor");
-	}
+//	}
 	
 	public Anchor addAnchor(Anchor anchor) {
 		if (anchors.contains(anchor))

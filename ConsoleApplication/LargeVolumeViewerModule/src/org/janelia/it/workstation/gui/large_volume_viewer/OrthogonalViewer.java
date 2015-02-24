@@ -83,6 +83,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     private List<AwtActor> hudActors = new Vector<AwtActor>();
 
     private MessageListener messageListener;
+    
 //    public Signal1<String> statusMessageChanged = new Signal1<String>();
     public Slot repaintSlot = new Slot() {
         @Override
@@ -134,7 +135,8 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		addGLEventListener(renderer);
         setMouseMode(MouseMode.Mode.PAN);
         setWheelMode(WheelMode.Mode.ZOOM);
-        rubberBand.changed.connect(repaintSlot);
+        rubberBand.setRepaintListener(this);
+//        rubberBand.changed.connect(repaintSlot);
         addMouseListener(this);
         addMouseMotionListener(this);
         addMouseWheelListener(this);
