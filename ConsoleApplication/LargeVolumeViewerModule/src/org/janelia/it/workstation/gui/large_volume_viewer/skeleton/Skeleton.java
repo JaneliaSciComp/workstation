@@ -197,12 +197,12 @@ public class Skeleton {
 //		public void execute(Anchor anchor) {delete(anchor);}
 //	};
     // This is a relay slot from external to internal refresh.
-    private Slot1 skeletonChangedSlot = new Slot1() {
-        @Override
-        public void execute(Object o) {
-            Skeleton.this.fireSkeletonChangeEvent();
-        }
-    };    
+//    private Slot1 skeletonChangedSlot = new Slot1() {
+//        @Override
+//        public void execute(Object o) {
+//            Skeleton.this.fireSkeletonChangeEvent();
+//        }
+//    };    
 //	public Signal1<Anchor> anchorDeletedSignal = new Signal1<Anchor>();
 //    public Signal1<Anchor> anchorReparentedSignal = new Signal1<Anchor>();
 //    public Signal1<Anchor> anchorNeighborsUpdatedSignal = new Signal1<Anchor>();
@@ -217,8 +217,8 @@ public class Skeleton {
 //	public Signal clearedSignal = new Signal();
 
 	///// MOVE
-	public Signal1<Anchor> anchorMovedSignal = new Signal1<>();
-	public Signal1<Anchor> anchorMovedSilentSignal = new Signal1<>();
+//	public Signal1<Anchor> anchorMovedSignal = new Signal1<>();
+//	public Signal1<Anchor> anchorMovedSilentSignal = new Signal1<>();
 //	public Slot1<TmGeoAnnotation> moveAnchorBackSlot = new Slot1<TmGeoAnnotation>() {
 //		@Override
 //		public void execute(TmGeoAnnotation tga) {
@@ -261,8 +261,8 @@ public class Skeleton {
 //		anchorDeletedSignal.connect(skeletonChangedSignal);
 //        anchorReparentedSignal.connect(skeletonChangedSignal);
 //        anchorNeighborsUpdatedSignal.connect(skeletonChangedSignal);
-		anchorMovedSignal.connect(skeletonChangedSlot);
-		anchorMovedSilentSignal.connect(skeletonChangedSlot);
+//		anchorMovedSignal.connect(skeletonChangedSlot);
+//		anchorMovedSilentSignal.connect(skeletonChangedSlot);
 		// log.info("Skeleton constructor");
 	}
 	
@@ -273,15 +273,15 @@ public class Skeleton {
 		Long guid = anchor.getGuid();
 		if (guid != null)
 			anchorsByGuid.put(guid, anchor);
-		anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
-		anchor.anchorMovedSignal.connect(this.anchorMovedSignal);
-		anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
-		anchor.anchorMovedSilentSignal.connect(this.anchorMovedSilentSignal);
 		anchorHistory.push(anchor);
         if (annotationSelectionListener != null) {
             annotationSelectionListener.annotationSelected(guid);
         }
-        fireSkeletonChangeEvent();
+
+//        anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
+//		anchor.anchorMovedSignal.connect(this.anchorMovedSignal);
+//		anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
+//		anchor.anchorMovedSilentSignal.connect(this.anchorMovedSilentSignal);
 //		anchorAddedSignal.emit(anchor);
 		return anchor;
 	}
@@ -301,13 +301,13 @@ public class Skeleton {
             Long guid = anchor.getGuid();
             if (guid != null)
                 anchorsByGuid.put(guid, anchor);
-            anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
-            anchor.anchorMovedSignal.connect(this.anchorMovedSignal);
-            anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
-            anchor.anchorMovedSilentSignal.connect(this.anchorMovedSilentSignal);
             anchorHistory.push(anchor);
+
+//            anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
+//            anchor.anchorMovedSignal.connect(this.anchorMovedSignal);
+//            anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
+//            anchor.anchorMovedSilentSignal.connect(this.anchorMovedSilentSignal);
         }
-        fireSkeletonChangeEvent();
         // this is a bit of a cheat; I send one anchor knowing that it's
         //  never used--the whole skeleton gets updated, and that's what
         //  I want since I've potentially added many anchors
@@ -384,23 +384,23 @@ public class Skeleton {
 		//
 		anchorHistory.remove(anchor);
 		//
-		anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
-		anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
-        fireSkeletonChangeEvent();
+//		anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
+//		anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
 //		anchorDeletedSignal.emit(anchor);
 		return true;
 	}
 
     //---------------------Servicing TmGeoAnnotation anchor changes
-    public void addTmGeoAnchor(TmGeoAnnotation tga) {
+    public Anchor addTmGeoAnchor(TmGeoAnnotation tga) {
         Vec3 location = new Vec3(tga.getX(), tga.getY(), tga.getZ());
         Anchor parentAnchor = anchorsByGuid.get(tga.getParentId());
         Anchor anchor = new Anchor(location, parentAnchor, tileFormat);
         anchor.setGuid(tga.getId());
         addAnchor(anchor);
+        return anchor;
     }
     
-    public void addTmGeoAnchors(List<TmGeoAnnotation> annotationList) {
+    public List<Anchor> addTmGeoAnchors(List<TmGeoAnnotation> annotationList) {
         List<Anchor> anchorList = new ArrayList<Anchor>();
         Map<Long, Anchor> tempAnchorsByGuid = new HashMap<Long, Anchor>();
         for (TmGeoAnnotation ann : annotationList) {
@@ -423,6 +423,7 @@ public class Skeleton {
             anchorList.add(anchor);
         }
         addAnchors(anchorList);
+        return anchorList;
     }
     
     public void deleteTmGeoAnchor(TmGeoAnnotation tga) {
@@ -464,7 +465,6 @@ public class Skeleton {
 		anchorsByGuid.clear();
 		anchorHistory.clear();
 //		clearedSignal.emit();   // This had no listeners; no connected slots.
-		fireSkeletonChangeEvent();
 	}
 	
     /** given an anchor, update its neighbors to match the input set of
@@ -502,7 +502,6 @@ public class Skeleton {
             anchor.getNeighbors().remove(removeAnchor);
             removeAnchor.getNeighbors().remove(anchor);
         }
-        fireSkeletonChangeEvent();
 //        anchorNeighborsUpdatedSignal.emit(anchor);
 
     }
@@ -534,7 +533,6 @@ public class Skeleton {
 	    SegmentIndex ix = path.getSegmentIndex();
 		tracedSegments.put(ix, path);
 		// log.info("tracedSegments.size() [300] = "+tracedSegments.size());
-        fireSkeletonChangeEvent();
 //		skeletonChangedSignal.emit();
 	}
 
@@ -543,14 +541,12 @@ public class Skeleton {
             SegmentIndex ix = path.getSegmentIndex();
             tracedSegments.put(ix, path);
         }
-        fireSkeletonChangeEvent();
 //        skeletonChangedSignal.emit();
     }
 
     public void removeTracedSegment(AnchoredVoxelPath path) {
         SegmentIndex ix = path.getSegmentIndex();
         tracedSegments.remove(ix);
-        fireSkeletonChangeEvent();
     }
 
 	public Collection<AnchoredVoxelPath> getTracedSegments() {

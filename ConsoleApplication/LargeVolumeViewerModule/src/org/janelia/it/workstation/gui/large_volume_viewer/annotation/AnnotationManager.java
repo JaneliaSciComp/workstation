@@ -143,27 +143,12 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
 //        }
 //    };
 
-    public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-
-            // find closest to new anchor location that isn't the annotation already
-            //  associated with anchor
-            TileFormat tf = getTileFormat();
-            Vec3 anchorVoxLoc = tf.voxelVec3ForMicronVec3(anchor.getLocation());
-            TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchorVoxLoc,
-                    annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
-
-            // check distance and other restrictions
-            if (closest != null && canMergeNeurite(anchor, closest)) {
-                // System.out.println("merging " + anchor.getGuid() + " to " + anchor.getLocation());
-                mergeNeurite(anchor.getGuid(), closest.getId());
-            } else {
-                // System.out.println("moving " + anchor.getGuid() + " to " + anchor.getLocation());
-                moveAnnotation(anchor.getGuid(), anchor.getLocation());
-            }
-        }
-    };
+//    public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            moveAnchor(anchor);
+//        }
+//    };
 
 //    public Slot1<Anchor> selectAnnotationSlot = new Slot1<Anchor>() {
 //        @Override
@@ -188,31 +173,6 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
 //        }
 //    };
 
-    //-----------------------------IMPLEMENTS PathTraceListener
-    @Override
-    public void pathTraced(AnchoredVoxelPath voxelPath) {
-        if (voxelPath != null) {
-            TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(
-                    voxelPath.getSegmentIndex().getAnchor1Guid(),
-                    voxelPath.getSegmentIndex().getAnchor2Guid());
-            List<List<Integer>> pointList = new ArrayList<>();
-            for (VoxelPosition vp : voxelPath.getPath()) {
-                List<Integer> tempList = new ArrayList<>();
-                tempList.add(vp.getX());
-                tempList.add(vp.getY());
-                tempList.add(vp.getZ());
-                pointList.add(tempList);
-            }
-            addAnchoredPath(endpoints, pointList);
-        }
-    }
-
-    //-------------------------------IMPLEMENTS VolumeLoadListener
-    @Override
-    public void volumeLoaded(URL url) {
-        onVolumeLoaded();
-    }
-    
 //    public Slot1<Anchor> addEditNoteRequestedSlot = new Slot1<Anchor>() {
 //        @Override
 //        public void execute(Anchor anchor) {
@@ -241,6 +201,49 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
         modelMgr = ModelMgr.getModelMgr();
     }
 
+    public void moveAnchor(Anchor anchor) {
+        // find closest to new anchor location that isn't the annotation already
+        //  associated with anchor
+        TileFormat tf = getTileFormat();
+        Vec3 anchorVoxLoc = tf.voxelVec3ForMicronVec3(anchor.getLocation());
+        TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchorVoxLoc,
+                annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
+        
+        // check distance and other restrictions
+        if (closest != null && canMergeNeurite(anchor, closest)) {
+            // System.out.println("merging " + anchor.getGuid() + " to " + anchor.getLocation());
+            mergeNeurite(anchor.getGuid(), closest.getId());
+        } else {
+            // System.out.println("moving " + anchor.getGuid() + " to " + anchor.getLocation());
+            moveAnnotation(anchor.getGuid(), anchor.getLocation());
+        }
+    }
+
+    //-----------------------------IMPLEMENTS PathTraceListener
+    @Override
+    public void pathTraced(AnchoredVoxelPath voxelPath) {
+        if (voxelPath != null) {
+            TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(
+                    voxelPath.getSegmentIndex().getAnchor1Guid(),
+                    voxelPath.getSegmentIndex().getAnchor2Guid());
+            List<List<Integer>> pointList = new ArrayList<>();
+            for (VoxelPosition vp : voxelPath.getPath()) {
+                List<Integer> tempList = new ArrayList<>();
+                tempList.add(vp.getX());
+                tempList.add(vp.getY());
+                tempList.add(vp.getZ());
+                pointList.add(tempList);
+            }
+            addAnchoredPath(endpoints, pointList);
+        }
+    }
+
+    //-------------------------------IMPLEMENTS VolumeLoadListener
+    @Override
+    public void volumeLoaded(URL url) {
+        onVolumeLoaded();
+    }
+    
     public TileFormat getTileFormat() {
         return tileServer.getLoadAdapter().getTileFormat();
     }

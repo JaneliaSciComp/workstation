@@ -618,6 +618,10 @@ SimpleWorker thread.
         updateCurrentWorkspace();
         sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
+        // Remove traced paths.
+        for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
+            removeAnchoredPath(child, sourceAnnotation);
+        }
 
         // if source neurite not in same neuron as dest neurite: move it
         TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
@@ -625,17 +629,15 @@ SimpleWorker thread.
             modelMgr.moveNeurite(sourceAnnotation, targetNeuron);
         }
 
-        // refresh domain objects that we've changed and will use again:
+        // Refresh domain objects that we've changed and will use again.
         updateCurrentWorkspace();
         sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
 
 
-        // reparent all source annotation's children to dest ann; remove
-        //  traced paths while we're here
+        // Reparent all source annotation's children to dest ann
         for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
             modelMgr.reparentGeometricAnnotation(child, targetAnnotationID, targetNeuron);
-            removeAnchoredPath(child, sourceAnnotation);
         }
 
         // if the source ann has a note, move it to or append it to the target ann:
@@ -1120,7 +1122,7 @@ SimpleWorker thread.
                 annotation2.getId());
         if (neuron1.getAnchoredPathMap().containsKey(endpoints)) {
             removeAnchoredPath(neuron1.getAnchoredPathMap().get(endpoints));
-        }
+        }        
     }
 
     /**

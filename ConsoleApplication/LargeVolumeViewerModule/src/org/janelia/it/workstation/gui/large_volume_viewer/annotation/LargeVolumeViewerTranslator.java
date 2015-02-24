@@ -209,7 +209,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         this.viewStateListener = viewStateListener;
     }
     
-    public void connectSkeletonSignals(Skeleton skeleton) {
+    public void connectSkeletonSignals(Skeleton skeleton, SkeletonController skeletonController) {
 //        anchorAddedSignal.connect(skeleton.addAnchorSlot);
 //        anchorsAddedSignal.connect(skeleton.addAnchorsSlot);
 //        anchorDeletedSignal.connect(skeleton.deleteAnchorSlot);
@@ -218,7 +218,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 //        clearSkeletonSignal.connect(skeleton.clearSlot);
 
 //        setNextParentSignal.connect(largeVolumeViewer.getSkeletonActor().setNextParentSlot);
-        final SkeletonController skeletonController = new SkeletonController(skeleton, largeVolumeViewer.getSkeletonActor());
         addAnchoredVoxelPathListener(skeletonController);
         addTmGeoAnchorListener(skeletonController);
         addNextParentListener(skeletonController);

@@ -47,6 +47,7 @@ import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -384,9 +385,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         getSkeletonActor().addAnchorUpdateListener(annotationMgr);
 //        getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
                 
-        skeleton.addAnchorListener(annotationMgr);
-        
-        skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
+        skeleton.addAnchorListener(annotationMgr);        
+//        skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
         // Nb: skeleton.anchorMovedSilentSignal intentially does *not* connect to annotationMgr!
 //        skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
 //        annotationModel.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
@@ -418,7 +418,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }
         });
 
-        largeVolumeViewerTranslator.connectSkeletonSignals(skeleton);
+        SkeletonController skeletonController = new SkeletonController(
+                skeleton, largeVolumeViewer.getSkeletonActor(), annotationMgr
+        );
+        largeVolumeViewerTranslator.connectSkeletonSignals(skeleton, skeletonController);
 //        largeVolumeViewerTranslator.cameraPanToSignal.connect(setCameraFocusSlot);
 //        largeVolumeViewerTranslator.loadColorModelSignal.connect(loadColorModelSlot);
 
