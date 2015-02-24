@@ -15,11 +15,13 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 
 
@@ -290,27 +292,10 @@ public class LargeVolumeViewerTranslator {
                     tileFormat.setVoxToMicronMatrix(voxToMicronMatrix);
                 }
                 else {
-                    // If null, the tile format can be used to construct its
-                    // own versions of these matrices, and saved.
-                    try {
-                        Entity sample = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID());
-                        micronToVoxMatrix = tileFormat.getMicronToVoxMatrix();
-                        voxToMicronMatrix = tileFormat.getVoxToMicronMatrix();
-                        String micronToVoxString = workspace.serializeMatrix(micronToVoxMatrix, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX);
-                        String voxToMicronString = workspace.serializeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX);
-                        ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX, micronToVoxString);
-                        ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX, voxToMicronString);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
+                    addMatrices(workspace, tileFormat);
                 }
             }
             
-            /*
-                    storeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX);
-            storeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX);
-
-            */
             // retrieve global color if present; if not, revert to default
             String globalColorString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_COLOR_GLOBAL);
             Color newColor;
@@ -345,6 +330,45 @@ public class LargeVolumeViewerTranslator {
                 }
             }
             addAnchoredPaths(annList);
+        }
+    }
+
+    /**
+     * This is a lazy-add of matrices. These matrices support translation
+     * between coordinate systems.
+     */
+    private void addMatrices(TmWorkspace workspace, TileFormat tileFormat) {
+        Matrix micronToVoxMatrix;
+        Matrix voxToMicronMatrix;
+        // If null, the tile format can be used to construct its
+        // own versions of these matrices, and saved.
+        try {
+            final Entity sample = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID());
+            micronToVoxMatrix = tileFormat.getMicronToVoxMatrix();
+            voxToMicronMatrix = tileFormat.getVoxToMicronMatrix();
+            final String micronToVoxString = workspace.serializeMatrix(micronToVoxMatrix, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX);
+            final String voxToMicronString = workspace.serializeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX);
+            SimpleWorker sw = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX, micronToVoxString);
+                    ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX, voxToMicronString);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    ModelMgr.getModelMgr().handleException(error);
+                }
+                
+            };
+            sw.execute();
+            
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
