@@ -1140,8 +1140,8 @@ public class QuadViewUi extends JPanel
                 }
             }
             Path partialPath = testFile.toPath().subpath(linuxPrefix.getNameCount(), testFile.toPath().getNameCount());
-            System.out.println("linuxPrefix = " + linuxPrefix);
-            System.out.println("partialPath = " + partialPath);
+            // System.out.println("linuxPrefix = " + linuxPrefix);
+            // System.out.println("partialPath = " + partialPath);
 
             // now we just need to assemble pieces: a root plus a mount name
             //  plus the partial path we just extracted; the root is OS dependent:
@@ -1155,7 +1155,7 @@ public class QuadViewUi extends JPanel
                 // for Mac, it's a lot simpler:
                 prefixesToTry.add(new File("/Volumes").toPath());
             }
-            System.out.println("prefixes to try: " + prefixesToTry);
+            // System.out.println("prefixes to try: " + prefixesToTry);
 
             // the last, middle piece can be nothing or one of these
             //  mounts names (nothing = enclosing dir is mounted directly
@@ -1173,9 +1173,9 @@ public class QuadViewUi extends JPanel
                     } else {
                         testFile = prefix.resolve(partialPath).toFile();
                     }
-                    System.out.println("trying " + testFile);
+                    // System.out.println("trying " + testFile);
                     if (testFile.exists()) {
-                        System.out.println("file exists: " + testFile);
+                        // System.out.println("file exists: " + testFile);
                         found = true;
                         break;
                     }
