@@ -14,7 +14,6 @@ import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonChangeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.slf4j.Logger;
