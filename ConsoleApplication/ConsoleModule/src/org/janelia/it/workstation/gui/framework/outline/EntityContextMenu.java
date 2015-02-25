@@ -1,5 +1,35 @@
 package org.janelia.it.workstation.gui.framework.outline;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.awt.Component;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import javax.swing.JComponent;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
+import javax.swing.KeyStroke;
+
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -10,8 +40,8 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.jacs.shared.utils.entity.DataReporter;
 import org.janelia.it.jacs.shared.utils.entity.EntityVisitor;
 import org.janelia.it.jacs.shared.utils.entity.EntityVistationBuilder;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
@@ -22,8 +52,12 @@ import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.workstation.gui.dialogs.SetSortCriteriaDialog;
 import org.janelia.it.workstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.workstation.gui.dialogs.TaskDetailsDialog;
+import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
 import org.janelia.it.workstation.gui.framework.actions.Action;
-import org.janelia.it.workstation.gui.framework.actions.*;
+import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
+import org.janelia.it.workstation.gui.framework.actions.OpenInFinderAction;
+import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
+import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
@@ -32,32 +66,14 @@ import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.nb_action.EntityAcceptor;
 import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
-import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 
 /**
  * Context pop up menu for entities.
@@ -170,77 +186,42 @@ public class EntityContextMenu extends JPopupMenu {
                     @Override
                     public void actionPerformed(ActionEvent e) {
 
-                        Callable<Void> doSuccess = new Callable<Void>() {
+                        final AnnotateAction action = new AnnotateAction();
+                        action.init(element);
+                        final String value = (String)JOptionPane.showInputDialog(mainFrame,
+                                "Please provide details:\n", element.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+                        if (value==null || value.equals("")) return;
+                        
+                        SimpleWorker simpleWorker = new SimpleWorker() {
                             @Override
-                            public Void call() throws Exception {
-                                SimpleWorker simpleWorker = new SimpleWorker() {
-                                    @Override
-                                    protected void doStuff() throws Exception {
-                                        String annotationValue = "";
-                                        List<Entity> annotationEntities = ModelMgr.getModelMgr()
-                                                .getAnnotationsForEntity(rootedEntity.getEntity().getId());
-                                        for (Entity annotation : annotationEntities) {
-                                            if (annotation.getValueByAttributeName(
-                                                    EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_KEY_TERM).contains(
-                                                    element.getName())) {
-                                                annotationValue = annotation.getName();
-                                            }
-                                        }
-
-                                        String tempsubject = "Reported Data: " + rootedEntity.getEntity().getName();
-                                        StringBuilder sBuf = new StringBuilder();
-                                        sBuf.append("Name: ").append(rootedEntity.getEntity().getName()).append("\n");
-                                        sBuf.append("Type: ")
-                                                .append(rootedEntity.getEntity().getEntityTypeName())
-                                                .append("\n");
-                                        sBuf.append("ID: ").append(rootedEntity.getEntity().getId().toString())
-                                                .append("\n");
-                                        sBuf.append("Annotation: ").append(annotationValue).append("\n\n");
-                                        MailHelper helper = new MailHelper();
-                                        helper.sendEmail(
-                                                (String) SessionMgr.getSessionMgr().getModelProperty(
-                                                        SessionMgr.USER_EMAIL),
-                                                ConsoleProperties.getString("console.HelpEmail"), tempsubject,
-                                                sBuf.toString());
+                            protected void doStuff() throws Exception {
+                                action.doAnnotation(rootedEntity.getEntity(), element, value);
+                                String annotationValue = "";
+                                List<Entity> annotationEntities = ModelMgr.getModelMgr().getAnnotationsForEntity(rootedEntity.getEntity().getId());
+                                for (Entity annotation : annotationEntities) {
+                                    if (annotation.getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_KEY_TERM).contains(element.getName())) {
+                                        annotationValue = annotation.getName();
                                     }
+                                }
+                                DataReporter reporter = new DataReporter((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL), ConsoleProperties.getString("console.HelpEmail"));
+                                reporter.reportData(rootedEntity.getEntity(), annotationValue);
+                            }
 
-                                    @Override
-                                    protected void hadSuccess() {
-                                    }
+                            @Override
+                            protected void hadSuccess() {
+                            }
 
-                                    @Override
-                                    protected void hadError(Throwable error) {
-                                        SessionMgr.getSessionMgr().handleException(error);
-                                    }
-                                };
-                                simpleWorker.execute();
-                                return null;
+                            @Override
+                            protected void hadError(Throwable error) {
+                                SessionMgr.getSessionMgr().handleException(error);
                             }
                         };
-
-                        AnnotateAction action = new AnnotateAction(doSuccess);
-                        action.init(element);
-                        String value = (String)JOptionPane.showInputDialog(mainFrame,
-                          		"Please provide details:\n", element.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-                        if (value==null || value.equals("")) return;
-                        try {
-                            action.doAnnotation(rootedEntity.getEntity(), element, value);
-                            ConcurrentUtils.invokeAndHandleExceptions(doSuccess);
-                        }
-                        catch (Exception e1) {
-                            SessionMgr.getSessionMgr().handleException(e1);
-                        }
+                        
+                        simpleWorker.execute();
                     }
                 });
 
             }
-            // OntologyElementChooser flagType = new
-            // OntologyElementChooser("Please choose a bad data flag from the list",
-            // ModelMgr.getModelMgr().getOntology(tmpErrorOntology.getId()));
-            // flagType.setSize(400,400);
-            // flagType.setIconImage(browser.getIconImage());
-            // flagType.setCanAnnotate(true);
-            // flagType.showDialog(browser);
 
         }
     }
