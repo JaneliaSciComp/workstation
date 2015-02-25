@@ -392,7 +392,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer);
         largeVolumeViewerTranslator.setViewStateListener(quadViewController);
-        skeleton.setViewStateListener(quadViewController);
         annotationPanel.setViewStateListener(quadViewController);
         annotationModel.setViewStateListener(quadViewController);
         
@@ -479,6 +478,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         quadViewController.registerForEvents(imageColorModel);
         quadViewController.unregisterOrthPanels();        
         quadViewController.registerAsOrthPanelForRepaint(seViewer); // Must do separately.
+        skeletonController.registerForEvents(quadViewController);  // Pass-through
         for (OrthogonalPanel v : viewPanels) {
             quadViewController.registerForEvents(v);
 //            mouseModeChangedSignal.connect(v.setMouseModeSlot);

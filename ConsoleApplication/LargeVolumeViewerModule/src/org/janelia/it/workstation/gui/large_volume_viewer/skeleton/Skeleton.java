@@ -13,9 +13,7 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +61,6 @@ public class Skeleton {
 	
     private SkeletonController controller;
     private TileFormat tileFormat;
-    private ViewStateListener viewStateListener;
 
 	private Set<Anchor> anchors = new LinkedHashSet<>();
 	
@@ -79,10 +76,6 @@ public class Skeleton {
 
     public void setController(SkeletonController controller) {
         this.controller = controller;
-    }
-    
-    public void setViewStateListener(ViewStateListener listener) {
-        this.viewStateListener = listener;
     }
     
 	// API for synchronizing with back end database
@@ -485,7 +478,7 @@ public class Skeleton {
             // no parent
             return;
 
-        viewStateListener.pathTraceRequested(anchor.getGuid());
+        controller.pathTraceRequested(anchor.getGuid());
 //        pathTraceRequestedSignal.emit(anchor.getGuid());
     }
 

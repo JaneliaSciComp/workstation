@@ -28,6 +28,7 @@ public class SkeletonController
     private SkeletonAnchorListener skeletonAnchorListener;
     private AnnotationManager annoMgr;
     private LargeVolumeViewerTranslator lvvTranslator;
+    private QuadViewController qvController;
     
     public SkeletonController(Skeleton skeleton, SkeletonActor actor, AnnotationManager annoMgr) {
         this.skeleton = skeleton;
@@ -39,6 +40,10 @@ public class SkeletonController
     
     public void registerForEvents(LargeVolumeViewerTranslator lvvTranslator) {
         this.lvvTranslator = lvvTranslator;
+    }
+    
+    public void registerForEvents(QuadViewController qvController) {
+        this.qvController = qvController;
     }
 
     //---------------------------------IMPLEMENTS AnchoredVoxelPathListener
@@ -146,6 +151,10 @@ public class SkeletonController
     
     public void anchorAdded(AnchorSeed anchorSeed) {
         annoMgr.anchorAdded(anchorSeed);
+    }
+    
+    public void pathTraceRequested(Long id) {
+        qvController.pathTraceRequested(id);
     }
     
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {
