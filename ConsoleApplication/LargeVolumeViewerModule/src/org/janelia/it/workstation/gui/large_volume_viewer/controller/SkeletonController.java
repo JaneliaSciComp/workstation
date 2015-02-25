@@ -19,7 +19,8 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
  * This hands off interesting driving info to skeleton.
  * @author fosterl
  */
-public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener, NextParentListener, GlobalColorChangeListener, SkeletonChangeListener {
+public class SkeletonController 
+    implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener, NextParentListener, GlobalColorChangeListener, SkeletonChangeListener {
     private Skeleton skeleton;
     private SkeletonActor actor;
     private SkeletonAnchorListener skeletonAnchorListener;
@@ -31,6 +32,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         this.actor = actor;
         skeleton.addSkeletonChangeListener(this);
         skeletonAnchorListener = new ControllerSkeletonAnchorListener();
+        this.skeleton.setController(this);
     }
 
     //---------------------------------IMPLEMENTS AnchoredVoxelPathListener
@@ -108,6 +110,30 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void skeletonChanged() {
         actor.updateAnchors();
+    }
+
+    public void deleteSubtreeRequested(Anchor anchor) {
+        annoMgr.deleteSubtreeRequested(anchor);
+    }
+
+    public void splitAnchorRequested(Anchor anchor) {
+        annoMgr.splitAnchorRequested(anchor);
+    }
+
+    public void rerootNeuriteRequested(Anchor anchor) {
+        annoMgr.rerootNeuriteRequested(anchor);
+    }
+
+    public void splitNeuriteRequested(Anchor anchor) {
+        annoMgr.splitNeuriteRequested(anchor);
+    }
+
+    public void deleteLinkRequested(Anchor anchor) {
+        annoMgr.deleteLinkRequested(anchor);
+    }
+
+    public void addEditNoteRequested(Anchor anchor) {
+        annoMgr.addEditNoteRequested(anchor);
     }
     
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {

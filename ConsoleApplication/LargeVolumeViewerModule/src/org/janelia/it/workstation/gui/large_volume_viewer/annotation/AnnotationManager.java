@@ -19,7 +19,6 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.UpdateAnchorListener;
@@ -39,7 +38,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AnnotationManager implements AnchorListener, UpdateAnchorListener, AnchorAddedListener, PathTraceListener, VolumeLoadListener
+public class AnnotationManager implements UpdateAnchorListener, AnchorAddedListener, PathTraceListener, VolumeLoadListener
 /**
  * this class is the middleman between the UI and the model. first, the UI makes
  * naive requests (eg, add annotation). then this class determines if the
@@ -77,8 +76,6 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
-    //-----------------------------------IMPLEMENT AnchorListener
-    @Override
     public void deleteSubtreeRequested(Anchor anchor) {
         if (anchor != null) {
             deleteSubTree(anchor.getGuid());
@@ -87,27 +84,22 @@ public class AnnotationManager implements AnchorListener, UpdateAnchorListener, 
         }
     }
 
-    @Override
     public void splitAnchorRequested(Anchor anchor) {
         splitAnchor(anchor.getGuid());
     }
 
-    @Override
     public void rerootNeuriteRequested(Anchor anchor) {
         rerootNeurite(anchor.getGuid());
     }
 
-    @Override
     public void splitNeuriteRequested(Anchor anchor) {
         splitNeurite(anchor.getGuid());
     }
 
-    @Override
     public void deleteLinkRequested(Anchor anchor) {
         deleteLink(anchor.getGuid());
     }
 
-    @Override
     public void addEditNoteRequested(Anchor anchor) {
         if (anchor != null) {
             addEditNote(anchor.getGuid());

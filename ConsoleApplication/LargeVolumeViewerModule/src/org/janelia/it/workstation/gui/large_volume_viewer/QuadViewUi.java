@@ -385,7 +385,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         getSkeletonActor().addAnchorUpdateListener(annotationMgr);
 //        getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
                 
-        skeleton.addAnchorListener(annotationMgr);        
 //        skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
         // Nb: skeleton.anchorMovedSilentSignal intentially does *not* connect to annotationMgr!
 //        skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);

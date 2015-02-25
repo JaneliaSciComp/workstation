@@ -14,9 +14,9 @@ import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorAddedListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonChangeListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +24,6 @@ import org.slf4j.LoggerFactory;
 public class Skeleton {
 	@SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(Skeleton.class);
-
-    private TileFormat tileFormat;
-    private ViewStateListener viewStateListener;
-    private AnnotationSelectionListener annotationSelectionListener;
-    private AnchorAddedListener anchorAddedListener;
 
 	/**
 	 * AnchorSeed holds enough data to nucleate a new Anchor.
@@ -68,8 +63,13 @@ public class Skeleton {
 		}
 	};
 	
+    private SkeletonController controller;
+    private TileFormat tileFormat;
+    private ViewStateListener viewStateListener;
+    private AnnotationSelectionListener annotationSelectionListener;
+    private AnchorAddedListener anchorAddedListener;
+
 	private Set<Anchor> anchors = new LinkedHashSet<>();
-    private Collection<AnchorListener> anchorListeners = new ArrayList<>();
     private Collection<SkeletonChangeListener> skeletonChangedListeners = new ArrayList<>();
 	
 	private Map<SegmentIndex, AnchoredVoxelPath> tracedSegments =
@@ -82,12 +82,8 @@ public class Skeleton {
 //	public Signal skeletonChangedSignal = new Signal();
 //	public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
 
-    public void addAnchorListener(AnchorListener listener) {
-        anchorListeners.add(listener);
-    }
-    
-    public void removeAnchorListener(AnchorListener listener) {
-        anchorListeners.remove(listener);
+    public void setController(SkeletonController controller) {
+        this.controller = controller;
     }
     
     public void setViewStateListener(ViewStateListener listener) {
@@ -333,39 +329,27 @@ public class Skeleton {
 	}
 
     public void deleteLinkRequest(Anchor anchor) {
-        for (AnchorListener l: anchorListeners) {
-            l.deleteLinkRequested(anchor);
-        }
+        controller.deleteLinkRequested(anchor);
     }
 
     public void deleteSubtreeRequest(Anchor anchor){        
-        for (AnchorListener l: anchorListeners) {
-            l.deleteSubtreeRequested(anchor);
-        }
+        controller.deleteSubtreeRequested(anchor);
     }
 
     public void splitAnchorRequest(Anchor anchor) {
-        for (AnchorListener l: anchorListeners) {
-            l.splitAnchorRequested(anchor);
-        }
+        controller.splitAnchorRequested(anchor);
     }
 
     public void rerootNeuriteRequest(Anchor anchor) {
-        for (AnchorListener l: anchorListeners) {
-            l.rerootNeuriteRequested(anchor);
-        }
+        controller.rerootNeuriteRequested(anchor);
     }
 
     public void addEditNoteRequest(Anchor anchor) {
-        for (AnchorListener l: anchorListeners) {
-            l.addEditNoteRequested(anchor);
-        }      
+        controller.addEditNoteRequested(anchor);
     }
 
     public void splitNeuriteRequest(Anchor anchor) {
-        for (AnchorListener l: anchorListeners) {
-            l.splitNeuriteRequested(anchor);
-        }
+        controller.splitNeuriteRequested(anchor);
     }
 
 	public boolean delete(Anchor anchor) {
