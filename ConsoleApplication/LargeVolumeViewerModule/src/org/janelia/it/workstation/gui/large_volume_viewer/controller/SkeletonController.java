@@ -21,7 +21,7 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
  * @author fosterl
  */
 public class SkeletonController 
-    implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener, NextParentListener, GlobalColorChangeListener, SkeletonChangeListener {
+    implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener, NextParentListener, GlobalColorChangeListener {
     private Skeleton skeleton;
     private SkeletonActor actor;
     private SkeletonAnchorListener skeletonAnchorListener;
@@ -31,7 +31,6 @@ public class SkeletonController
         this.skeleton = skeleton;
         this.annoMgr = annoMgr;
         this.actor = actor;
-        skeleton.addSkeletonChangeListener(this);
         skeletonAnchorListener = new ControllerSkeletonAnchorListener();
         this.skeleton.setController(this);
     }
@@ -40,19 +39,19 @@ public class SkeletonController
     @Override
     public void addAnchoredVoxelPath(AnchoredVoxelPath path) {
         skeleton.addTracedSegment(path);
-        skeleton.fireSkeletonChangeEvent();
+        skeletonChanged();
     }
 
     @Override
     public void addAnchoredVoxelPaths(List<AnchoredVoxelPath> paths) {
         skeleton.addTracedSegments(paths);
-        skeleton.fireSkeletonChangeEvent();
+        skeletonChanged();
     }
 
     @Override
     public void removeAnchoredVoxelPath(AnchoredVoxelPath path) {
         skeleton.removeTracedSegment(path);
-        skeleton.fireSkeletonChangeEvent();
+        skeletonChanged();
     }
 
     //--------------------------------IMPLEMENTS TmGeoAnnotationAnchorListener
@@ -60,7 +59,7 @@ public class SkeletonController
     public void anchorAdded(TmGeoAnnotation tmAnchor) {
         Anchor anchor = skeleton.addTmGeoAnchor(tmAnchor);
         anchor.setSkeletonAnchorListener(skeletonAnchorListener);
-        skeleton.fireSkeletonChangeEvent();
+        skeletonChanged();
     }
 
     @Override
@@ -69,19 +68,19 @@ public class SkeletonController
         for (Anchor anchor: anchors) {
             anchor.setSkeletonAnchorListener(skeletonAnchorListener);
         }
-        skeleton.fireSkeletonChangeEvent();
+        skeletonChanged();
     }
 
     @Override
     public void anchorDeleted(TmGeoAnnotation anchor) {
         skeleton.deleteTmGeoAnchor(anchor);
-        skeleton.fireSkeletonChangeEvent();
+        skeletonChanged();
     }
 
     @Override
     public void anchorReparented(TmGeoAnnotation anchor) {
         skeleton.reparentTmGeoAnchor(anchor);
-        skeleton.fireSkeletonChangeEvent();
+        skeletonChanged();
     }
 
     @Override
@@ -92,7 +91,7 @@ public class SkeletonController
     @Override
     public void clearAnchors() {
         skeleton.clear();
-		skeleton.fireSkeletonChangeEvent();
+		skeletonChanged();
     }
 
     //--------------------------------IMPLEMENTS NextParentListener    
@@ -107,8 +106,6 @@ public class SkeletonController
         actor.changeNeuronColor(color);
     }
 
-    //--------------------------------IMPLEMENTS SkeletonChangeListener    
-    @Override
     public void skeletonChanged() {
         actor.updateAnchors();
     }
@@ -146,12 +143,12 @@ public class SkeletonController
         @Override
         public void anchorMoved(Anchor anchor) {
             annoMgr.moveAnchor(anchor);
-            skeleton.fireSkeletonChangeEvent();
+            skeletonChanged();
         }
         
         @Override
         public void anchorMovedSilent(Anchor anchor) {
-            skeleton.fireSkeletonChangeEvent();
+            skeletonChanged();
         }
         
     }

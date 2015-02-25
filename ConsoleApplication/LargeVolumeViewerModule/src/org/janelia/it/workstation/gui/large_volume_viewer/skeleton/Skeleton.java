@@ -68,7 +68,6 @@ public class Skeleton {
     private AnnotationSelectionListener annotationSelectionListener;
 
 	private Set<Anchor> anchors = new LinkedHashSet<>();
-    private Collection<SkeletonChangeListener> skeletonChangedListeners = new ArrayList<>();
 	
 	private Map<SegmentIndex, AnchoredVoxelPath> tracedSegments =
 			new ConcurrentHashMap<>();
@@ -90,14 +89,6 @@ public class Skeleton {
     
     public void setAnnotationSelectionListener(AnnotationSelectionListener l) {
         annotationSelectionListener = l;
-    }
-    
-    public void addSkeletonChangeListener(SkeletonChangeListener l) {
-        skeletonChangedListeners.add(l);
-    }
-    
-    public void removeSkeletonChangeListener(SkeletonChangeListener l) {
-        skeletonChangedListeners.remove(l);
     }
     
 	// API for synchronizing with back end database
@@ -313,10 +304,10 @@ public class Skeleton {
 			return false;
 		if (! anchor1.addNeighbor(anchor2))
 			return false;
-		fireSkeletonChangeEvent();
+        controller.skeletonChanged();
 		return true;
 	}
-
+    
     public void deleteLinkRequest(Anchor anchor) {
         controller.deleteLinkRequested(anchor);
     }
@@ -362,6 +353,11 @@ public class Skeleton {
 //		anchorDeletedSignal.emit(anchor);
 		return true;
 	}
+
+    /** Relay from external callers. */
+    public void skeletonChanged() {
+        controller.skeletonChanged();
+    }
 
     //---------------------Servicing TmGeoAnnotation anchor changes
     public Anchor addTmGeoAnchor(TmGeoAnnotation tga) {
@@ -529,9 +525,4 @@ public class Skeleton {
 		return result;
 	}
 
-    public void fireSkeletonChangeEvent() {
-        for (SkeletonChangeListener l: skeletonChangedListeners) {
-            l.skeletonChanged();
-        }
-    }
 }
