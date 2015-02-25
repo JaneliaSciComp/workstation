@@ -10,6 +10,7 @@ import java.awt.Color;
 import java.util.List;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
@@ -26,6 +27,7 @@ public class SkeletonController
     private SkeletonActor actor;
     private SkeletonAnchorListener skeletonAnchorListener;
     private AnnotationManager annoMgr;
+    private LargeVolumeViewerTranslator lvvTranslator;
     
     public SkeletonController(Skeleton skeleton, SkeletonActor actor, AnnotationManager annoMgr) {
         this.skeleton = skeleton;
@@ -33,6 +35,10 @@ public class SkeletonController
         this.actor = actor;
         skeletonAnchorListener = new ControllerSkeletonAnchorListener();
         this.skeleton.setController(this);
+    }
+    
+    public void registerForEvents(LargeVolumeViewerTranslator lvvTranslator) {
+        this.lvvTranslator = lvvTranslator;
     }
 
     //---------------------------------IMPLEMENTS AnchoredVoxelPathListener
@@ -106,6 +112,10 @@ public class SkeletonController
         actor.changeNeuronColor(color);
     }
 
+    public void annotationSelected( Long guid ) {
+        lvvTranslator.annotationSelected( guid );
+    }
+    
     public void skeletonChanged() {
         actor.updateAnchors();
     }

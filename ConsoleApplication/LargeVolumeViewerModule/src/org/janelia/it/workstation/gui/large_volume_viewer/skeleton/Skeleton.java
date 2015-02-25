@@ -64,7 +64,6 @@ public class Skeleton {
     private SkeletonController controller;
     private TileFormat tileFormat;
     private ViewStateListener viewStateListener;
-    private AnnotationSelectionListener annotationSelectionListener;
 
 	private Set<Anchor> anchors = new LinkedHashSet<>();
 	
@@ -84,10 +83,6 @@ public class Skeleton {
     
     public void setViewStateListener(ViewStateListener listener) {
         this.viewStateListener = listener;
-    }
-    
-    public void setAnnotationSelectionListener(AnnotationSelectionListener l) {
-        annotationSelectionListener = l;
     }
     
 	// API for synchronizing with back end database
@@ -251,9 +246,7 @@ public class Skeleton {
 		if (guid != null)
 			anchorsByGuid.put(guid, anchor);
 		anchorHistory.push(anchor);
-        if (annotationSelectionListener != null) {
-            annotationSelectionListener.annotationSelected(guid);
-        }
+        controller.annotationSelected(guid);
 
 //        anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
 //		anchor.anchorMovedSignal.connect(this.anchorMovedSignal);
