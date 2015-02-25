@@ -9,8 +9,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.signal.Slot;
-import org.janelia.it.workstation.signal.Slot1;
+//import org.janelia.it.workstation.signal.Slot;
+//import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -22,7 +22,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.UpdateAnchorListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorAddedListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
@@ -38,7 +37,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AnnotationManager implements UpdateAnchorListener, AnchorAddedListener, PathTraceListener, VolumeLoadListener
+public class AnnotationManager implements UpdateAnchorListener, PathTraceListener, VolumeLoadListener
 /**
  * this class is the middleman between the UI and the model. first, the UI makes
  * naive requests (eg, add annotation). then this class determines if the
@@ -106,6 +105,10 @@ public class AnnotationManager implements UpdateAnchorListener, AnchorAddedListe
         }
     }
 
+    public void anchorAdded(AnchorSeed seed) {
+        addAnnotation(seed.getLocation(), seed.getParentGuid());
+    }
+    
     //-----------------------------IMPLEMENT UpdateAnchorListener
     @Override
     public void update(Anchor anchor) {
@@ -114,12 +117,6 @@ public class AnnotationManager implements UpdateAnchorListener, AnchorAddedListe
         }
     }
 
-    //-----------------------------IMPLEMENT AnchorAddedListener
-    @Override
-    public void anchorAdded(AnchorSeed seed) {
-        addAnnotation(seed.getLocation(), seed.getParentGuid());
-    }
-    
     // ----- slots
 //    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
 //        @Override

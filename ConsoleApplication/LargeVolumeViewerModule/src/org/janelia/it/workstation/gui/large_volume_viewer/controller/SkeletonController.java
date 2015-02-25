@@ -12,6 +12,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 
@@ -134,6 +135,10 @@ public class SkeletonController
 
     public void addEditNoteRequested(Anchor anchor) {
         annoMgr.addEditNoteRequested(anchor);
+    }
+    
+    public void anchorAdded(AnchorSeed anchorSeed) {
+        annoMgr.anchorAdded(anchorSeed);
     }
     
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {

@@ -378,7 +378,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         setupAnnotationGestures();
 
         // connect up text UI and model with graphic UI(s):
-        skeleton.setAnchorAddedListener(annotationMgr);
 //        skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
 //        tracePathRequestedSignal.connect(annotationMgr.tracePathRequestedSlot);
 //        closeWorkspaceRequestSignal.connect(annotationMgr.closeWorkspaceRequestedSlot);
