@@ -45,7 +45,7 @@ import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
-import org.janelia.it.workstation.signal.Slot;
+//import org.janelia.it.workstation.signal.Slot;
 //import org.janelia.it.workstation.signal.Signal1;
 //import org.janelia.it.workstation.signal.Slot;
 import org.slf4j.Logger;
@@ -87,12 +87,12 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     private MessageListener messageListener;
     
 //    public Signal1<String> statusMessageChanged = new Signal1<String>();
-    public Slot repaintSlot = new Slot() {
-        @Override
-        public void execute() {
-            repaint();
-        }
-    };
+//    public Slot repaintSlot = new Slot() {
+//        @Override
+//        public void execute() {
+//            repaint();
+//        }
+//    };
 
 	private TileServer tileServer;
 
@@ -514,11 +514,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		// Prepare to update tile set if viewer resizes
 		removeComponentListener(tileServer); // in case it's already there
 		addComponentListener(tileServer);
-	}
-
-	@Override
-	public Slot getRepaintSlot() {
-		return repaintSlot;
 	}
 
 }

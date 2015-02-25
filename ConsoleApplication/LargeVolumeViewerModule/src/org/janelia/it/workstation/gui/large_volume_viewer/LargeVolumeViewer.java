@@ -20,8 +20,8 @@ import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 //import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot;
-import org.janelia.it.workstation.signal.Slot1;
+//import org.janelia.it.workstation.signal.Slot;
+//import org.janelia.it.workstation.signal.Slot1;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesChooser;
@@ -79,30 +79,30 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	
 //	public Signal1<String> statusMessageChanged = new Signal1<String>();
 	
-	protected Slot repaintSlot = new Slot() {
-		@Override
-		public void execute() {
-			// System.out.println("repaint slot");
-			repaint();
-		}
-	};
+//	protected Slot repaintSlot = new Slot() {
+//		@Override
+//		public void execute() {
+//			// System.out.println("repaint slot");
+//			repaint();
+//		}
+//	};
 	
-	public Slot1<MouseMode.Mode> setMouseModeSlot =
-	    new Slot1<MouseMode.Mode>() {
-            @Override
-            public void execute(MouseMode.Mode modeId) {
-                LargeVolumeViewer.this.setMouseMode(modeId);
-            }
-	};
-	
-    public Slot1<WheelMode.Mode> setWheelModeSlot =
-        new Slot1<WheelMode.Mode>() {
-            @Override
-            public void execute(WheelMode.Mode modeId) {
-                LargeVolumeViewer.this.setWheelMode(modeId);
-            }
-    };
-    
+//	public Slot1<MouseMode.Mode> setMouseModeSlot =
+//	    new Slot1<MouseMode.Mode>() {
+//            @Override
+//            public void execute(MouseMode.Mode modeId) {
+//                LargeVolumeViewer.this.setMouseMode(modeId);
+//            }
+//	};
+//	
+//    public Slot1<WheelMode.Mode> setWheelModeSlot =
+//        new Slot1<WheelMode.Mode>() {
+//            @Override
+//            public void execute(WheelMode.Mode modeId) {
+//                LargeVolumeViewer.this.setWheelMode(modeId);
+//            }
+//    };
+//    
 	public LargeVolumeViewer(GLCapabilities capabilities,
                              GLCapabilitiesChooser chooser,
                              GLContext sharedContext,
@@ -256,10 +256,10 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		return new Point2D.Double(dx, dy);
 	}
 
-	public Slot getRepaintSlot() {
-		return repaintSlot;
-	}
-
+//	public Slot getRepaintSlot() {
+//		return repaintSlot;
+//	}
+//
 	public RubberBand getRubberBand() {
 		return rubberBand;
 	}

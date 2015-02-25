@@ -118,7 +118,8 @@ public class ViewTileManager {
     public void textureLoaded(TileIndex index) {
         if (displayableTextures.contains(index)) {
             // log.info("Needed texture loaded! "+index);
-            tileConsumer.getRepaintSlot().execute();
+//            tileConsumer.getRepaintSlot().execute();
+            tileConsumer.repaint();
         }
     }
 
