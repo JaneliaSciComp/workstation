@@ -27,8 +27,8 @@ import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.PanMode;
@@ -37,6 +37,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZScanMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -44,8 +45,9 @@ import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
-//import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot;
+//import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +82,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     protected SliceActor sliceActor;
     private ReticleActor reticleActor;
     // 
-    private List<AwtActor> hudActors = new Vector<AwtActor>();
+    private List<AwtActor> hudActors = new Vector<>();
 
     private MessageListener messageListener;
     
@@ -202,7 +204,13 @@ implements MouseModalWidget, TileConsumer, RepaintListener
             return;
         this.camera = camera;
         // Update image whenever camera changes
-        camera.getViewChangedSignal().connect(repaintSlot);
+//        camera.getViewChangedSignal().connect(repaintSlot);
+        camera.addCameraListener(new CameraListenerAdapter() {
+            @Override
+            public void viewChanged() {
+                repaint();
+            }
+        });
         renderer.setCamera(camera);
         mouseMode.setCamera(camera);
         wheelMode.setCamera(camera);
@@ -512,6 +520,5 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	public Slot getRepaintSlot() {
 		return repaintSlot;
 	}
-
 
 }

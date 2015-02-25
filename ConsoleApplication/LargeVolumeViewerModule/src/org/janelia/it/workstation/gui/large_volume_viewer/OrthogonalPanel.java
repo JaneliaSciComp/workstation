@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.net.URL;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
@@ -14,9 +13,10 @@ import javax.swing.event.ChangeListener;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
@@ -130,18 +130,24 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 	/**
 	 * Update slider and spinner after camera motion
 	 */
-	public Slot setSliceSlot = new Slot() {
-		@Override
-		public void execute() {
-            volumeLoaded(null);
-		}
-	};
+//	public Slot setSliceSlot = new Slot() {
+//		@Override
+//		public void execute() {
+//            volumeLoaded(null);
+//		}
+//	};
 
 	public void setCamera(ObservableCamera3d camera) {
 		this.camera = camera;
 		viewer.setCamera(camera);
-		camera.getFocusChangedSignal().connect(
-				setSliceSlot);
+        camera.addCameraListener(new CameraListenerAdapter() {
+            @Override
+            public void focusChanged(Vec3 newFocus) {
+                volumeLoaded(null);
+            }
+        });
+//		camera.getFocusChangedSignal().connect(
+//				setSliceSlot);
 	}
 	
 	public void setSharedVolumeImage(SharedVolumeImage volumeImage3d) {

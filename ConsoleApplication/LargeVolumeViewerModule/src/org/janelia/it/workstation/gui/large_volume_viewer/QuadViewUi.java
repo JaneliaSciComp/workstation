@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer.LoadStatus;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
 //import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
@@ -22,7 +22,7 @@ import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 //import org.janelia.it.workstation.signal.Signal;
 //import org.janelia.it.workstation.signal.Signal1;
 //import org.janelia.it.workstation.signal.Slot;
-import org.janelia.it.workstation.signal.Slot1;
+//import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +46,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
@@ -223,26 +224,34 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 //		}
 //	};
 	    
-	protected Slot1<Vec3> changeZ = new Slot1<Vec3>() {
-		@Override
-		public void execute(Vec3 focus) {
-			int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
-			zScanSlider.setValue(z);
-			zScanSpinner.setValue(z);
-		}
-	};
+//	protected Slot1<Vec3> changeZ = new Slot1<Vec3>() {
+//		@Override
+//		public void execute(Vec3 focus) {
+//			focusChanged(focus);
+//		}
+//	};
 
-	protected Slot1<Double> changeZoom = new Slot1<Double>() {
-		@Override
-		public void execute(Double zoom) {
-			double zoomMin = Math.log(getMinZoom()) / Math.log(2.0);
-			double zoomMax = Math.log(getMaxZoom()) / Math.log(2.0);
-			double zoomLog = Math.log(zoom) / Math.log(2.0);
-			double relativeZoom = (zoomLog - zoomMin) / (zoomMax - zoomMin);
-			int sliderValue = (int)Math.round(relativeZoom * 1000.0);
-			zoomSlider.setValue(sliderValue);
-		}
-	};
+    public void focusChanged(Vec3 focus) {
+        int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
+        zScanSlider.setValue(z);
+        zScanSpinner.setValue(z);
+    }
+
+//	protected Slot1<Double> changeZoom = new Slot1<Double>() {
+//		@Override
+//		public void execute(Double zoom) {
+//			zoomChanged(zoom);
+//		}
+//	};
+
+    public void zoomChanged(Double zoom) {
+        double zoomMin = Math.log(getMinZoom()) / Math.log(2.0);
+        double zoomMax = Math.log(getMaxZoom()) / Math.log(2.0);
+        double zoomLog = Math.log(zoom) / Math.log(2.0);
+        double relativeZoom = (zoomLog - zoomMin) / (zoomMax - zoomMin);
+        int sliderValue = (int)Math.round(relativeZoom * 1000.0);
+        zoomSlider.setValue(sliderValue);
+    }
 
     public void setMouseMode(MouseMode.Mode mode) {
         // Only display anchors in Trace mode
@@ -368,11 +377,28 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         volumeImage.addVolumeLoadListener(annotationMgr);
 //        volumeImage.volumeInitializedSignal.connect(annotationMgr.onVolumeLoadedSlot);
 		largeVolumeViewer.setImageColorModel(imageColorModel);
-		camera.getViewChangedSignal().connect(tileServer.refreshCurrentTileSetSlot);
+//		camera.getViewChangedSignal().connect(tileServer.refreshCurrentTileSetSlot);
 //		tileServer.loadStatusChangedSignal.connect(onLoadStatusChangedSlot);
 		sliderPanel.setVisible(false);
         
-		setupUi(parentFrame, overrideFrameMenuBar);
+        camera.addCameraListener(new CameraListener() {
+            @Override
+            public void zoomChanged(Double zoom) {
+                QuadViewUi.this.zoomChanged(zoom);
+            }
+
+            @Override
+            public void focusChanged(Vec3 focus) {
+                 QuadViewUi.this.focusChanged(focus);
+            }
+
+            @Override
+            public void viewChanged() {
+                tileServer.refreshCurrentTileSet();
+            }            
+        });
+
+        setupUi(parentFrame, overrideFrameMenuBar);
         interceptModifierKeyPresses();
         interceptModeChangeGestures();
         setupAnnotationGestures();
@@ -729,8 +755,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		zViewerPanel.setLayout(new BoxLayout(zViewerPanel, BoxLayout.Y_AXIS));
 		zViewerPanel.add(largeVolumeViewer);
 //		volumeImage.volumeInitializedSignal.connect(updateRangesSlot);
-		camera.getZoomChangedSignal().connect(changeZoom);
-        camera.getFocusChangedSignal().connect(changeZ);
+//		camera.getZoomChangedSignal().connect(changeZoom);
+//        camera.getFocusChangedSignal().connect(changeZ);
 		
 		// JPanel zScanPanel = new JPanel();
 		zViewerPanel.add(zScanPanel);

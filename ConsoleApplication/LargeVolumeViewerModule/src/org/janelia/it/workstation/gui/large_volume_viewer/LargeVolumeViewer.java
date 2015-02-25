@@ -4,7 +4,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintList
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
@@ -39,6 +39,7 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
 import java.util.List;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorStateUpdater;
 import org.slf4j.Logger;
@@ -367,15 +368,26 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 			return;
 		if (camera == this.camera)
 			return;
+        if (this.camera != null  &&  cameraListener != null) {
+            this.camera.removeCameraListener(cameraListener);
+        }
 		this.camera = camera;
+        this.cameraListener = new CameraListenerAdapter() {
+            @Override
+            public void viewChanged() {
+                repaint();
+            }
+        };
 		// Update image whenever camera changes
-		camera.getViewChangedSignal().connect(repaintSlot);
+        this.camera.addCameraListener(cameraListener);
+//		camera.getViewChangedSignal().connect(repaintSlot);
 		renderer.setCamera(camera);
 		mouseMode.setCamera(camera);
 		wheelMode.setCamera(camera);
 		pointComputer.setCamera(camera);
 		skeletonActor.setCamera(camera);
 	}
+    public CameraListenerAdapter cameraListener;
 	
 	public TileServer getTileServer() {
 		return tileServer;

@@ -16,7 +16,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JSeparator;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
@@ -27,7 +27,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.Annotations
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
-import org.janelia.it.workstation.signal.Slot;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
