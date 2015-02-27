@@ -17,6 +17,7 @@ import java.util.Observer;
 import javax.swing.DefaultButtonModel;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelInitListener;
 
 /**
  * Arrange this alongside the slider panel, with channel-oriented buttons.
@@ -28,7 +29,8 @@ public class ColorButtonPanel extends JPanel {
     private List<JCheckBox> checkboxes = new ArrayList<>();
     private List<AbstractButton> bottomControls = new ArrayList<>();
     private int verticalSpacer;
-    private Observer icmInitObserver;
+//    private Observer icmInitObserver;
+    private ColorModelInitListener icmInitListener;
     
     public ColorButtonPanel( ImageColorModel imageColorModel, int verticalSpacer ) {
         super();
@@ -50,15 +52,22 @@ public class ColorButtonPanel extends JPanel {
             initGui();
         }
         
-        icmInitObserver = new Observer() {
-            @Override
-            public void update(Observable o, Object arg) {
-                initGui();
-            }
-            
-        };
+//        icmInitObserver = new Observer() {
+//            @Override
+//            public void update(Observable o, Object arg) {
+//                initGui();
+//            }
+//            
+//        };
 
-        imageColorModel.getColorModelInitializedSignal().addObserver(icmInitObserver);
+        icmInitListener = new ColorModelInitListener() {
+            @Override
+            public void colorModelInit() {
+                initGui();
+            }            
+        };
+        imageColorModel.addColorModelInitListener(icmInitListener);
+//        imageColorModel.getColorModelInitializedSignal().addObserver(icmInitObserver);
     }
 
     public void addButton( AbstractButton btn ) {
@@ -91,8 +100,9 @@ public class ColorButtonPanel extends JPanel {
     }
     
     private void cleanupObserver() {
-        if ( this.imageColorModel != null  &&  icmInitObserver != null ) {
-            this.imageColorModel.getColorModelInitializedSignal().deleteObserver(icmInitObserver);
+        if ( this.imageColorModel != null  &&  icmInitListener != null ) {
+            this.imageColorModel.removeColorModelInitListener(icmInitListener);
+//delete the icmInitObserver.            
         }
     }
     

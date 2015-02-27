@@ -47,6 +47,7 @@ import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelInitListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
@@ -707,12 +708,18 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         ColorButtonPanel colorButtonPanel = new ColorButtonPanel( imageColorModel, 1 );
         rightComponentPanel.add( colorButtonPanel, BorderLayout.EAST );
 		splitPane.setRightComponent(rightComponentPanel);
-        imageColorModel.getColorModelInitializedSignal().connect(new org.janelia.it.workstation.signal.Slot() {
-			@Override
-			public void execute() {
-				splitPane.resetToPreferredSizes();
-			}
-		});
+        imageColorModel.addColorModelInitListener(new ColorModelInitListener() {
+            @Override
+            public void colorModelInit() {
+                splitPane.resetToPreferredSizes();
+            }            
+        });
+//        imageColorModel.getColorModelInitializedSignal().connect(new org.janelia.it.workstation.signal.Slot() {
+//			@Override
+//			public void execute() {
+//				splitPane.resetToPreferredSizes();
+//			}
+//		});
 
         sliderPanel.guiInit();
         
@@ -740,7 +747,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 				this.weighty = 1.0;
 				this.insets = new Insets(1,1,1,1);				
 			}
-		};
+		}
 		
 		// Four quadrants for orthogonal views
 		// One panel for Z slice viewer (upper left northwest)

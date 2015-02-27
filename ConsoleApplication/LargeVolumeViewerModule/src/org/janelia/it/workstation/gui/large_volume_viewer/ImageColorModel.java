@@ -7,6 +7,7 @@ import java.util.Vector;
 import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.Collection;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelInitListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Slot1;
@@ -30,9 +31,10 @@ public class ImageColorModel
 	private boolean whiteSynchronized = true;
     
     private Collection<ColorModelListener> colorModelListeners = new ArrayList<>();
+    private Collection<ColorModelInitListener> colorModelInitListeners = new ArrayList<>();
 
 //	private Signal colorModelChangedSignal = new Signal();
-	private Signal colorModelInitializedSignal = new Signal();
+//	private Signal colorModelInitializedSignal = new Signal();
 	
 	/*
 	public ImageColorModel() {
@@ -54,6 +56,14 @@ public class ImageColorModel
 
     public void removeColorModelListener(ColorModelListener l) {
         colorModelListeners.remove(l);
+    }
+    
+    public void addColorModelInitListener(ColorModelInitListener listener) {
+        colorModelInitListeners.add(listener);
+    }
+    
+    public void removeColorModelInitListener(ColorModelInitListener listener) {
+        colorModelInitListeners.remove(listener);
     }
     
     /**
@@ -128,6 +138,12 @@ public class ImageColorModel
         }
     }
 
+    public void fireColorModelInitialized() {
+        for (ColorModelInitListener l: colorModelInitListeners) {
+            l.colorModelInit();
+        }
+    }
+
 	private void addChannel(Color color, int bitDepth) {
 		int c = channels.size();
 		ChannelColorModel channel = new ChannelColorModel(
@@ -182,10 +198,10 @@ public class ImageColorModel
 		});
 	}
 
-	public Signal getColorModelInitializedSignal() {
-		return colorModelInitializedSignal;
-	}
-
+//	public Signal getColorModelInitializedSignal() {
+//		return colorModelInitializedSignal;
+//	}
+//
 	public boolean isBlackSynchronized() {
 		return blackSynchronized;
 	}
@@ -242,7 +258,8 @@ public class ImageColorModel
 		}
 		// System.out.println("model channel count = "+channelCount);
 		resetColors(); // in case 1 or 2 channels
-		colorModelInitializedSignal.emit();
+        fireColorModelInitialized();
+//		colorModelInitializedSignal.emit();
 	}
 	
 	public void reset(Integer maxI, Integer numberOfChannels)
