@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import java.awt.Color;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ChannelColorChangeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
 
 import org.janelia.it.workstation.signal.Signal1;
@@ -19,15 +20,16 @@ public class ChannelColorModel
 
 	private Signal1<Color> colorChangedSignal = new Signal1<Color>();
     
-	private Signal1<Integer> blackLevelChangedSignal = new Signal1<Integer>();
-	private Signal1<Double> gammaChangedSignal = new Signal1<Double>();
-	private Signal1<Integer> whiteLevelChangedSignal = new Signal1<Integer>();
+//	private Signal1<Integer> blackLevelChangedSignal = new Signal1<Integer>();
+//	private Signal1<Double> gammaChangedSignal = new Signal1<Double>();
+//	private Signal1<Integer> whiteLevelChangedSignal = new Signal1<Integer>();
 //	private Signal1<Integer> dataMaxChangedSignal = new Signal1<Integer>();
 //	private Signal1<Boolean> visibilityChangedSignal = new Signal1<Boolean>();
     
     private final int NUM_SERIALIZED_ITEMS = 9;
     
     private ColorModelListener colorModelListener;
+    private ChannelColorChangeListener channelColorChangeListener;
 	
 	public ChannelColorModel(int index, Color color, int bitDepth) {
 		this.index = index;
@@ -43,6 +45,13 @@ public class ChannelColorModel
      */
     public void setColorModelListener(ColorModelListener colorModelListener) {
         this.colorModelListener = colorModelListener;
+    }
+
+    /**
+     * @param channelColorChangeListener the channelColorChangeListener to set
+     */
+    public void setChannelColorChangeListener(ChannelColorChangeListener channelColorChangeListener) {
+        this.channelColorChangeListener = channelColorChangeListener;
     }
 
     /**
@@ -117,9 +126,9 @@ public class ChannelColorModel
 		return blackLevel;
 	}
 
-	public Signal1<Integer> getBlackLevelChangedSignal() {
-		return blackLevelChangedSignal;
-	}
+//	public Signal1<Integer> getBlackLevelChangedSignal() {
+//		return blackLevelChangedSignal;
+//	}
 
 	public Color getColor() {
 		return color;
@@ -145,9 +154,9 @@ public class ChannelColorModel
 		return gamma;
 	}
 
-	public Signal1<Double> getGammaChangedSignal() {
-		return gammaChangedSignal;
-	}
+//	public Signal1<Double> getGammaChangedSignal() {
+//		return gammaChangedSignal;
+//	}
 
 	public int getIndex() {
 		return index;
@@ -157,9 +166,9 @@ public class ChannelColorModel
 		return whiteLevel;
 	}
 
-	public Signal1<Integer> getWhiteLevelChangedSignal() {
-		return whiteLevelChangedSignal;
-	}
+//	public Signal1<Integer> getWhiteLevelChangedSignal() {
+//		return whiteLevelChangedSignal;
+//	}
 	
 	public boolean isVisible() {
 		return visible;
@@ -176,7 +185,8 @@ public class ChannelColorModel
 			return;
 		this.blackLevel = blackLevel;
 		// System.out.println("black level = "+blackLevel);
-		blackLevelChangedSignal.emit(this.blackLevel);
+//		blackLevelChangedSignal.emit(this.blackLevel);
+        fireBlackLevelChanged(this.blackLevel);
         fireColorModelChanged();
 	}
 
@@ -202,7 +212,8 @@ public class ChannelColorModel
 			return;
 		this.gamma = gamma;
 		// System.out.println("gamma = "+gamma);
-		gammaChangedSignal.emit(this.gamma);
+//		gammaChangedSignal.emit(this.gamma);
+        fireGammaChanged(this.gamma);
 	}
 
 	public void setVisible(boolean visibility) {
@@ -218,7 +229,8 @@ public class ChannelColorModel
 			return;
 		this.whiteLevel = whiteLevel;
 		// System.out.println("white level = "+whiteLevel);
-		whiteLevelChangedSignal.emit(this.whiteLevel);
+		//whiteLevelChangedSignal.emit(this.whiteLevel);
+        fireWhiteLevelChanged(this.whiteLevel);
 	}
 
     /**
@@ -252,4 +264,23 @@ public class ChannelColorModel
             colorModelListener.colorModelChanged();
         }
     }
+    
+    private void fireBlackLevelChanged(Integer blackLevel) {
+        if (channelColorChangeListener != null) {
+            channelColorChangeListener.blackLevelChanged(blackLevel);
+        }
+    }
+
+    private void fireWhiteLevelChanged(Integer whiteLevel) {
+        if (channelColorChangeListener != null) {
+            channelColorChangeListener.whiteLevelChanged(whiteLevel);
+        }
+    }
+
+    private void fireGammaChanged(Double gamma) {
+        if (channelColorChangeListener != null) {
+            channelColorChangeListener.gammaChanged(gamma);
+        }
+    }
+
 }
