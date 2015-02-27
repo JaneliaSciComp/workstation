@@ -30,6 +30,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredP
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 
 
@@ -378,27 +379,10 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                     tileFormat.setVoxToMicronMatrix(voxToMicronMatrix);
                 }
                 else {
-                    // If null, the tile format can be used to construct its
-                    // own versions of these matrices, and saved.
-                    try {
-                        Entity sample = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID());
-                        micronToVoxMatrix = tileFormat.getMicronToVoxMatrix();
-                        voxToMicronMatrix = tileFormat.getVoxToMicronMatrix();
-                        String micronToVoxString = workspace.serializeMatrix(micronToVoxMatrix, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX);
-                        String voxToMicronString = workspace.serializeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX);
-                        ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX, micronToVoxString);
-                        ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX, voxToMicronString);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
+                    addMatrices(workspace, tileFormat);
                 }
             }
             
-            /*
-                    storeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX);
-            storeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX);
-
-            */
             // retrieve global color if present; if not, revert to default
             String globalColorString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_COLOR_GLOBAL);
             Color newColor;
@@ -516,6 +500,45 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         }
     }
     
+    /**
+     * This is a lazy-add of matrices. These matrices support translation
+     * between coordinate systems.
+     */
+    private void addMatrices(TmWorkspace workspace, TileFormat tileFormat) {
+        Matrix micronToVoxMatrix;
+        Matrix voxToMicronMatrix;
+        // If null, the tile format can be used to construct its
+        // own versions of these matrices, and saved.
+        try {
+            final Entity sample = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID());
+            micronToVoxMatrix = tileFormat.getMicronToVoxMatrix();
+            voxToMicronMatrix = tileFormat.getVoxToMicronMatrix();
+            final String micronToVoxString = workspace.serializeMatrix(micronToVoxMatrix, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX);
+            final String voxToMicronString = workspace.serializeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX);
+            SimpleWorker sw = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX, micronToVoxString);
+                    ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX, voxToMicronString);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    ModelMgr.getModelMgr().handleException(error);
+                }
+                
+            };
+            sw.execute();
+            
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
     /**
      * convert between path formats
      *

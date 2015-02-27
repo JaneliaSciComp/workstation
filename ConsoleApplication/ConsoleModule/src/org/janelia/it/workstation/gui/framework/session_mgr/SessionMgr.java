@@ -753,7 +753,7 @@ public class SessionMgr {
                 isLoggedIn = true;
 
                 String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
-                loggedInSubject = StringUtils.isEmpty(runAsUser) ? authenticatedSubject : ModelMgr.getModelMgr().getSubject(runAsUser);
+                loggedInSubject = StringUtils.isEmpty(runAsUser) ? authenticatedSubject : ModelMgr.getModelMgr().getSubjectWithPreferences(runAsUser);
 
                 if (loggedInSubject == null) {
                     JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Cannot run as non-existent subject " + runAsUser, "Error", JOptionPane.ERROR_MESSAGE);

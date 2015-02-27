@@ -43,6 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
@@ -1243,54 +1244,82 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         return popupMenu;
     }
 
-    public boolean loadFile(String pathToFile) throws MalformedURLException {
-        File tmpFile = new File(pathToFile);
+    /**
+     * given a string containing the canonical Linux path to the data,
+     * open the data in the viewer
+     *
+     * @param canonicalLinuxPath
+     * @return
+     * @throws MalformedURLException
+     */
 
-        // Hard code temporary path translation for Nathan
-        boolean fileMissing = ! tmpFile.exists();
-        if (fileMissing) {
-	        String mbmPrefix = "/groups/mousebrainmicro/mousebrainmicro/";
-	        String mbmPrefix2 = "/nobackup/mousebrainmicro/";
-            String linuxPrefix = null;
-            // if we get a third prefix, make this a loop
-            if (pathToFile.startsWith(mbmPrefix)) {
-                linuxPrefix = mbmPrefix;
-            } else if (pathToFile.startsWith(mbmPrefix2)) {
-                linuxPrefix = mbmPrefix2;
+    public boolean loadFile(String canonicalLinuxPath) throws MalformedURLException {
+
+        // on Linux, this just works, as the input path is the Linux path;
+        //  for Mac and Windows, we need to guess the mount point of the
+        //  shared disk and alter the path accordingly
+
+        File testFile = new File(canonicalLinuxPath);
+        if (!testFile.exists()) {
+            // must be on Mac or Windows; but first, which of the
+            //  possible Linux prefixes are we looking at?
+            // OK to compare as strings, because we know the
+            //  input path is Linux
+            String [] mbmPrefixes = {"/groups/mousebrainmicro/mousebrainmicro/",
+                    "/nobackup/mousebrainmicro/"};
+            Path linuxPrefix = null;
+            for (String testPrefix: mbmPrefixes) {
+                if (canonicalLinuxPath.startsWith(testPrefix)) {
+                    linuxPrefix = new File(testPrefix).toPath();
+                }
             }
+            Path partialPath = testFile.toPath().subpath(linuxPrefix.getNameCount(), testFile.toPath().getNameCount());
+            // System.out.println("linuxPrefix = " + linuxPrefix);
+            // System.out.println("partialPath = " + partialPath);
 
-	    	List<String> prefixesToTry = new Vector<String>();
-	        String osName = System.getProperty("os.name").toLowerCase();
-	    	if (osName.contains("win")) {
-	        	prefixesToTry.add("M:/"); // On my Windows computer
-	        	prefixesToTry.add("X:/"); // On Nathan's computer    		
-	        	for (File fileRoot : File.listRoots()) { // other drive letters
-	        		String p = fileRoot.getAbsolutePath();
-	        		prefixesToTry.add(p);
-	        		// System.out.println(p);
-	        	}
-	    	}
-	    	if (osName.contains("os x")) {
-	    		prefixesToTry.add("/Volumes/mousebrainmicro/");
-	    		prefixesToTry.add("/Volumes/nobackup/mousebrainmicro/");
-	    	}
-	        if ( (prefixesToTry.size() > 0)
-	        		&& linuxPrefix != null)
-	        {
-	        	String fileSuffix = pathToFile.replace(linuxPrefix, "");
-	        	for (String prefix : prefixesToTry) {
-	        		File testFile = new File(prefix + fileSuffix);
-	        		if (testFile.exists()) {
-	        			tmpFile = testFile;
-	        			break;
-	        		}
-	        	}
-	        }
-        }
-        
-        if (!tmpFile.exists()) {
+            // now we just need to assemble pieces: a root plus a mount name
+            //  plus the partial path we just extracted; the root is OS dependent:
+            String osName = System.getProperty("os.name").toLowerCase();
+            List<Path> prefixesToTry = new Vector<>();
+            if (osName.contains("win")) {
+                for (File fileRoot : File.listRoots()) {
+                    prefixesToTry.add(fileRoot.toPath());
+                }
+            } else if (osName.contains("os x")) {
+                // for Mac, it's a lot simpler:
+                prefixesToTry.add(new File("/Volumes").toPath());
+            }
+            // System.out.println("prefixes to try: " + prefixesToTry);
+
+            // the last, middle piece can be nothing or one of these
+            //  mounts names (nothing = enclosing dir is mounted directly
+            String [] mountNames = {"", "mousebrainmicro",
+                    "nobackup/mousebrainmicro", "mousebrainmicro/mousebrainmicro"};
+
+            boolean found = false;
+            for (Path prefix: prefixesToTry) {
+                if (found) {
+                    break;
+                }
+                for (String mount: mountNames) {
+                    if (mount.length() > 0) {
+                        testFile = prefix.resolve(new File(mount).toPath()).resolve(partialPath).toFile();
+                    } else {
+                        testFile = prefix.resolve(partialPath).toFile();
+                    }
+                    // System.out.println("trying " + testFile);
+                    if (testFile.exists()) {
+                        // System.out.println("file exists: " + testFile);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        } // end if Mac or Windows
+        // by now, if we ain't got the path, we ain't got the path
+        if (!testFile.exists()) {
             JOptionPane.showMessageDialog(this.getParent(),
-                    "Error opening folder " + tmpFile.getName()
+                    "Error opening folder " + testFile.getName()
                     +" \nIs the file share mounted?",
                     "Folder does not exist.",
                     JOptionPane.ERROR_MESSAGE);
@@ -1298,18 +1327,18 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         }
 
         // July 1, 2013 elevate url loading from LargeVolumeViewer to QuadViewUi.
-        URL url = tmpFile.toURI().toURL();
+        URL url = testFile.toURI().toURL();
         snapshot3dLauncher = new Snapshot3DLauncher(
                 largeVolumeViewer.getTileServer(),
                 largeVolumeViewer.getSliceAxis(),
                 camera,
                 getSubvolumeProvider(),
-                pathToFile,
+                canonicalLinuxPath,
                 url,
                 imageColorModel
         );
         snapshot3dLauncher.setAnnotationManager(annotationMgr);
-        volumeImage.setRemoteBasePath(pathToFile);
+        volumeImage.setRemoteBasePath(canonicalLinuxPath);
         return loadURL(url);
     }
 

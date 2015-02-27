@@ -17,26 +17,6 @@
                 </dependency>
             </module-dependencies>
             <public-packages>
-                <package>com.sun.media.jai.codec</package>
-                <package>com.sun.media.jai.codecimpl</package>
-                <package>com.sun.media.jai.codecimpl.fpx</package>
-                <package>com.sun.media.jai.codecimpl.util</package>
-                <package>com.sun.media.jai.iterator</package>
-                <package>com.sun.media.jai.mlib</package>
-                <package>com.sun.media.jai.opimage</package>
-                <package>com.sun.media.jai.remote</package>
-                <package>com.sun.media.jai.rmi</package>
-                <package>com.sun.media.jai.tilecodec</package>
-                <package>com.sun.media.jai.util</package>
-                <package>com.sun.media.jai.widget</package>
-                <package>javax.media.jai</package>
-                <package>javax.media.jai.iterator</package>
-                <package>javax.media.jai.operator</package>
-                <package>javax.media.jai.registry</package>
-                <package>javax.media.jai.remote</package>
-                <package>javax.media.jai.tilecodec</package>
-                <package>javax.media.jai.util</package>
-                <package>javax.media.jai.widget</package>
                 <package>org.janelia.it.jacs.compute.access</package>
                 <package>org.janelia.it.jacs.compute.api</package>
                 <package>org.janelia.it.jacs.compute.api.support</package>
