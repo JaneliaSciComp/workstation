@@ -2,9 +2,10 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import java.awt.Color;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ChannelColorChangeListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
 
-import org.janelia.it.workstation.signal.Signal1;
+//import org.janelia.it.workstation.signal.Signal1;
 
 public class ChannelColorModel 
 {    
@@ -18,7 +19,7 @@ public class ChannelColorModel
 	private boolean visible = true;
 	private int index; // e.g. first channel red is zero, second green is one, etc.
 
-	private Signal1<Color> colorChangedSignal = new Signal1<Color>();
+//	private Signal1<Color> colorChangedSignal = new Signal1<Color>();
     
 //	private Signal1<Integer> blackLevelChangedSignal = new Signal1<Integer>();
 //	private Signal1<Double> gammaChangedSignal = new Signal1<Double>();
@@ -29,6 +30,7 @@ public class ChannelColorModel
     private final int NUM_SERIALIZED_ITEMS = 9;
     
     private ColorModelListener colorModelListener;
+    private ColorListener colorListener;
     private ChannelColorChangeListener channelColorChangeListener;
 	
 	public ChannelColorModel(int index, Color color, int bitDepth) {
@@ -52,6 +54,13 @@ public class ChannelColorModel
      */
     public void setChannelColorChangeListener(ChannelColorChangeListener channelColorChangeListener) {
         this.channelColorChangeListener = channelColorChangeListener;
+    }
+    
+    /**
+     * @param colorListener the colorListener to set
+     */
+    public void setColorListener(ColorListener colorListener) {
+        this.colorListener = colorListener;
     }
 
     /**
@@ -134,9 +143,9 @@ public class ChannelColorModel
 		return color;
 	}
 
-	public Signal1<Color> getColorChangedSignal() {
-		return colorChangedSignal;
-	}
+//	public Signal1<Color> getColorChangedSignal() {
+//		return colorChangedSignal;
+//	}
 
 //	public Signal1<Integer> getDataMaxChangedSignal() {
 //		return dataMaxChangedSignal;
@@ -194,7 +203,8 @@ public class ChannelColorModel
 		if (this.color.equals(color))
 			return;
 		this.color = color;
-		colorChangedSignal.emit(this.color);
+        fireColorChange(this.color);
+//		colorChangedSignal.emit(this.color);
         fireColorModelChanged();
 
 	}
@@ -259,6 +269,12 @@ public class ChannelColorModel
         return NUM_SERIALIZED_ITEMS;
     }
 
+    public void fireColorChange(Color color) {
+        if (colorListener != null) {
+            colorListener.color(color);
+        }
+    }
+    
     private void fireColorModelChanged() {
         if (colorModelListener != null) {
             colorModelListener.colorModelChanged();

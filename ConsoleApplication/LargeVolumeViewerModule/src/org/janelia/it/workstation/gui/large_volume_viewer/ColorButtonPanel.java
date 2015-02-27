@@ -6,17 +6,19 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import java.awt.Color;
 import java.util.List;
 import javax.swing.AbstractButton;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Observable;
-import java.util.Observer;
+//import java.util.Observable;
+//import java.util.Observer;
 import javax.swing.DefaultButtonModel;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelInitListener;
 
 /**
@@ -149,7 +151,8 @@ public class ColorButtonPanel extends JPanel {
             JCheckBox btn = (JCheckBox)e.getSource();
             btn.setSelected(! btn.isSelected());
             ccm.setCombiningConstant( btn.isSelected() ? 1.0f : -1.0f );
-            ccm.getColorChangedSignal().emit( ccm.getColor() );
+            ccm.fireColorChange( ccm.getColor() );
+//            ccm.getColorChangedSignal().emit( ccm.getColor() );
             // Signal time to change stuff on screen.
             icm.fireColorModelChanged();
 //            icm.getColorModelChangedSignal().emit();
@@ -161,19 +164,27 @@ public class ColorButtonPanel extends JPanel {
 
         private ChannelColorModel ccm;
         private AbstractButton btn;
-        private final Observer reflectCheckedStateObserver;
+//        private final Observer reflectCheckedStateObserver;
 
         public ChannelColorButtonModel(ChannelColorModel ccm, AbstractButton btn) {
             this.ccm = ccm;
             this.btn = btn;
-            reflectCheckedStateObserver = new Observer(){
+//            reflectCheckedStateObserver = new Observer(){
+//                @Override
+//                public void update(Observable o, Object arg) {
+//                    ChannelColorButtonModel.this.fireStateChanged();
+//                }
+//            };
+            // Feed back to second checkbox which have may similar model.
+            ColorListener colorChangeListener = new ColorListener() {
                 @Override
-                public void update(Observable o, Object arg) {
+                public void color(Color color) {
                     ChannelColorButtonModel.this.fireStateChanged();
                 }
+                
             };
-            // Feed back to second checkbox which have may similar model.
-            ccm.getColorChangedSignal().addObserver(reflectCheckedStateObserver);
+            ccm.setColorListener(colorChangeListener);
+//            ccm.getColorChangedSignal().addObserver(reflectCheckedStateObserver);
         }
         
         @Override
@@ -192,7 +203,8 @@ public class ColorButtonPanel extends JPanel {
         
         public void dispose() {
             if ( ccm != null ) {
-                ccm.getColorChangedSignal().deleteObserver(reflectCheckedStateObserver);
+                ccm.setColorListener(null);
+//                        .getColorChangedSignal().deleteObserver(reflectCheckedStateObserver);
                 ccm = null;
             }
             btn = null;            
