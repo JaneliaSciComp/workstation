@@ -20,7 +20,8 @@ public class Anchor {
 		CUSTOM
 	};
 	
-	private Long janeliaWorkstationGuid;
+	private Long annotationID;
+    private Long neuronID;
 	private Vec3 location;
 	private Type anchorType = Type.UNDEFINED;
 	private double radius = 1.0;
@@ -45,7 +46,7 @@ public class Anchor {
      * @param parent (possibly null) parent, or previous node in tree.
      * @param tileFormat for translations.
      */
-	public Anchor(Vec3 locationInVoxel, Anchor parent, TileFormat tileFormat) {
+	public Anchor(Vec3 locationInVoxel, Anchor parent, Long neuronID, TileFormat tileFormat) {
         TileFormat.MicrometerXyz micron = tileFormat.micrometerXyzForVoxelXyz(
                 new TileFormat.VoxelXyz(
                         (int)locationInVoxel.getX(),
@@ -56,6 +57,7 @@ public class Anchor {
         );
         // Need to bias the position towards the center of the voxel.
 		this.location = tileFormat.centerJustifyMicrometerCoordsAsVec3(micron);
+        this.neuronID = neuronID;
 		addNeighbor(parent);
 	}
 	
@@ -80,11 +82,11 @@ public class Anchor {
 	}
 
 	public Long getGuid() {
-		return this.janeliaWorkstationGuid;
+		return this.annotationID;
 	}
 	
 	public void setGuid(Long id) {
-		this.janeliaWorkstationGuid = id;
+		this.annotationID = id;
 	}
 
 	public double getRadius() {
@@ -123,5 +125,13 @@ public class Anchor {
 	public void setRadius(double radius) {
 		this.radius = radius;
 	}
+
+    public Long getNeuronID() {
+        return neuronID;
+    }
+
+    public void setNeuronID(Long neuronID) {
+        this.neuronID = neuronID;
+    }
 
 }

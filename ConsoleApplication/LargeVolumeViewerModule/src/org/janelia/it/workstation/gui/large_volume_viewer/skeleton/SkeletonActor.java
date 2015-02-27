@@ -726,6 +726,13 @@ implements GLActor
         //  components that want to, eg, select the enclosing neuron
 		skeletonActorChangedSignal.emit();
         nextParentChangedSignal.emit(nextParent);
+
+        // debug: print what neuron we're in:
+        if (parent != null) {
+            System.out.println("anchor has neuron ID " + parent.getNeuronID());
+        } else {
+            System.out.println("anchor has null neuron ID");
+        }
 		return true;
 	}
 

@@ -84,7 +84,7 @@ public class Skeleton {
 		public void execute(TmGeoAnnotation tga) {
 			Vec3 location = new Vec3(tga.getX(), tga.getY(), tga.getZ());
 			Anchor parentAnchor = anchorsByGuid.get(tga.getParentId());
-			Anchor anchor = new Anchor(location, parentAnchor, tileFormat);
+			Anchor anchor = new Anchor(location, parentAnchor, tga.getNeuronId(), tileFormat);
 			anchor.setGuid(tga.getId());
 			addAnchor(anchor);
 		}
@@ -113,7 +113,7 @@ public class Skeleton {
                     parentAnchor = tempAnchorsByGuid.get(ann.getParentId());
                 }
 
-                Anchor anchor = new Anchor(location, parentAnchor, tileFormat);
+                Anchor anchor = new Anchor(location, parentAnchor, ann.getNeuronId(), tileFormat);
                 anchor.setGuid(ann.getId());
                 tempAnchorsByGuid.put(anchor.getGuid(), anchor);
                 anchorList.add(anchor);
@@ -150,6 +150,8 @@ public class Skeleton {
             if (!annotation.isRoot()) {
                 annotationNeighbors.add(annotation.getParentId());
             }
+            // might be reparented to new neuron:
+            anchor.setNeuronID(annotation.getNeuronId());
 
             updateNeighbors(anchor, annotationNeighbors);
         }
@@ -315,6 +317,22 @@ public class Skeleton {
     }
 
     public void addEditNoteRequest(Anchor anchor) {
+        // testing, doesn't really belong here; just need a convenient trigger to run
+        //  this code:
+        HashMap<Long, Integer> counter = new HashMap<>();
+        Long neuronID;
+        for (Anchor a: getAnchors()) {
+            neuronID = a.getNeuronID();
+            if (counter.containsKey(neuronID)) {
+                counter.put(neuronID, counter.get(neuronID) + 1);
+            } else {
+                counter.put(neuronID, 1);
+            }
+        }
+        for (Long key: counter.keySet()) {
+            System.out.println("neuron " + key + " has " + counter.get(key) + " anchors");
+        }
+
         addEditNoteRequestedSignal.emit(anchor);
     }
 
