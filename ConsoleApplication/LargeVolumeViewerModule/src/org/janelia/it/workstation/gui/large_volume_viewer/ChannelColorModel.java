@@ -17,12 +17,13 @@ public class ChannelColorModel
 	private boolean visible = true;
 	private int index; // e.g. first channel red is zero, second green is one, etc.
 
-	private Signal1<Integer> blackLevelChangedSignal = new Signal1<Integer>();
 	private Signal1<Color> colorChangedSignal = new Signal1<Color>();
-	private Signal1<Integer> dataMaxChangedSignal = new Signal1<Integer>();
+    
+	private Signal1<Integer> blackLevelChangedSignal = new Signal1<Integer>();
 	private Signal1<Double> gammaChangedSignal = new Signal1<Double>();
 	private Signal1<Integer> whiteLevelChangedSignal = new Signal1<Integer>();
-	private Signal1<Boolean> visibilityChangedSignal = new Signal1<Boolean>();
+//	private Signal1<Integer> dataMaxChangedSignal = new Signal1<Integer>();
+//	private Signal1<Boolean> visibilityChangedSignal = new Signal1<Boolean>();
     
     private final int NUM_SERIALIZED_ITEMS = 9;
     
@@ -128,13 +129,13 @@ public class ChannelColorModel
 		return colorChangedSignal;
 	}
 
-	public Signal1<Integer> getDataMaxChangedSignal() {
-		return dataMaxChangedSignal;
-	}
+//	public Signal1<Integer> getDataMaxChangedSignal() {
+//		return dataMaxChangedSignal;
+//	}
 
-	public Signal1<Boolean> getVisibilityChangedSignal() {
-		return visibilityChangedSignal;
-	}
+//	public Signal1<Boolean> getVisibilityChangedSignal() {
+//		return visibilityChangedSignal;
+//	}
 
 	public int getDataMax() {
 		return dataMax;
@@ -192,7 +193,7 @@ public class ChannelColorModel
 		if (this.dataMax == dataMax)
 			return;
 		this.dataMax = dataMax;
-		dataMaxChangedSignal.emit(this.dataMax);
+//		dataMaxChangedSignal.emit(this.dataMax);
         fireColorModelChanged();
 	}
 
@@ -208,7 +209,7 @@ public class ChannelColorModel
 		if (visibility == this.visible)
 			return;
 		this.visible = visibility;
-		visibilityChangedSignal.emit(this.visible);
+//		visibilityChangedSignal.emit(this.visible);
         fireColorModelChanged();
 	}
 
