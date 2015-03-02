@@ -701,6 +701,8 @@ SimpleWorker thread.
 //                notesUpdatedSignal.emit(workspace);
                 fireNeuronSelected(updateTargetNeuron);
 //                neuronSelectedSignal.emit(updateTargetNeuron);
+                fireWorkspaceLoaded(workspace);
+//                workspaceLoadedSignal.emit(workspace);
                 for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
                     fireAnnotationReparented(child);
 //                    annotationReparentedSignal.emit(child);

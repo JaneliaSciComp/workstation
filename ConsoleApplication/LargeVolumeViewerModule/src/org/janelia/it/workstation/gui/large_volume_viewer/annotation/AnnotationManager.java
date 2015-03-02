@@ -75,6 +75,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
+    public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi, TileServer tileServer) {
+        this.annotationModel = annotationModel;
+        this.quadViewUi = quadViewUi;
+        this.tileServer = tileServer;
+        modelMgr = ModelMgr.getModelMgr();
+    }
+
     public void deleteSubtreeRequested(Anchor anchor) {
         if (anchor != null) {
             deleteSubTree(anchor.getGuid());
@@ -109,6 +116,29 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         addAnnotation(seed.getLocation(), seed.getParentGuid());
     }
     
+    public void moveAnchor(Anchor anchor) {
+        // find closest to new anchor location that isn't the annotation already
+        //  associated with anchor; remember that anchors are in micron
+        //  coords, and we need voxels!
+        TileFormat.VoxelXyz tempLocation = getTileFormat().voxelXyzForMicrometerXyz(
+                new TileFormat.MicrometerXyz(anchor.getLocation().getX(),
+                        anchor.getLocation().getY(),anchor.getLocation().getZ()));
+        Vec3 anchorVoxelLocation = new Vec3(tempLocation.getX(),
+                tempLocation.getY(), tempLocation.getZ());
+        
+        TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchorVoxelLocation,
+                annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
+        
+        // check distance and other restrictions
+        if (closest != null && canMergeNeurite(anchor.getGuid(), anchorVoxelLocation, closest.getId())) {
+            // System.out.println("merging " + anchor.getGuid() + " to " + anchor.getLocation());
+            mergeNeurite(anchor.getGuid(), closest.getId());
+        } else {
+            // System.out.println("moving " + anchor.getGuid() + " to " + anchor.getLocation());
+            moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
+        }
+    }
+
     //-----------------------------IMPLEMENT UpdateAnchorListener
     @Override
     public void update(Anchor anchor) {
@@ -118,6 +148,34 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     // ----- slots
+//    public Slot1<Anchor> splitAnchorRequestedSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            splitAnchor(anchor.getGuid());
+//        }
+//    };
+//
+//    public Slot1<Anchor> rerootNeuriteRequestedSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            rerootNeurite(anchor.getGuid());
+//        }
+//    };
+//
+//    public Slot1<Anchor> splitNeuriteRequestedSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            splitNeurite(anchor.getGuid());
+//        }
+//    };
+//
+//    public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            moveAnchor(anchor);
+//        }
+//    };
+
 //    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
 //        @Override
 //        public void execute(URL url) {
@@ -182,31 +240,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 //            setInitialEntity(null);
 //        }
 //    };
-
-    public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi, TileServer tileServer) {
-        this.annotationModel = annotationModel;
-        this.quadViewUi = quadViewUi;
-        this.tileServer = tileServer;
-        modelMgr = ModelMgr.getModelMgr();
-    }
-
-    public void moveAnchor(Anchor anchor) {
-        // find closest to new anchor location that isn't the annotation already
-        //  associated with anchor
-        TileFormat tf = getTileFormat();
-        Vec3 anchorVoxLoc = tf.voxelVec3ForMicronVec3(anchor.getLocation());
-        TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchorVoxLoc,
-                annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
-        
-        // check distance and other restrictions
-        if (closest != null && canMergeNeurite(anchor, closest)) {
-            // System.out.println("merging " + anchor.getGuid() + " to " + anchor.getLocation());
-            mergeNeurite(anchor.getGuid(), closest.getId());
-        } else {
-            // System.out.println("moving " + anchor.getGuid() + " to " + anchor.getLocation());
-            moveAnnotation(anchor.getGuid(), anchor.getLocation());
-        }
-    }
 
     //-----------------------------IMPLEMENTS PathTraceListener
     @Override
@@ -503,27 +536,25 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
-    public boolean canMergeNeurite(Anchor anchor, TmGeoAnnotation closest) {
+    public boolean canMergeNeurite(Long anchorID, Vec3 anchorLocation, Long annotationID) {
 
         // can't merge with itself
-        if (anchor.getGuid().equals(closest.getId())) {
+        if (anchorID.equals(annotationID)) {
             return false;
         }
 
+        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(anchorID);
+        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(annotationID);
+
         // distance: close enough?
-        Vec3 anchorLocMicron = anchor.getLocation();
-        TileFormat tileFormat = getTileFormat();
-        Vec3 anchorLocVox = tileFormat.voxelVec3ForMicronVec3(anchorLocMicron);
-        double dx = closest.getX() - anchorLocVox.getX();
-        double dy = closest.getY() - anchorLocVox.getY();
-        double dz = closest.getZ() - anchorLocVox.getZ();
+        double dx = anchorLocation.getX() - targetAnnotation.getX();
+        double dy = anchorLocation.getY() - targetAnnotation.getY();
+        double dz = anchorLocation.getZ() - targetAnnotation.getZ();
         if (dx * dx + dy * dy + dz * dz > DRAG_MERGE_THRESHOLD_SQUARED) {
             return false;
         }
 
         // can't merge with same neurite (don't create cycles!)
-        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
-        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(closest.getId());
         if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
                 annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
             return false;
