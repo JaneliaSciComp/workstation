@@ -623,6 +623,7 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                workspaceLoadedSignal.emit(workspace);
                 notesUpdatedSignal.emit(workspace);
                 neuronSelectedSignal.emit(updateTargetNeuron);
                 for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
