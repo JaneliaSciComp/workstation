@@ -83,7 +83,7 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
         JTable target = (JTable) e.getSource();
         final String value = target.getValueAt(target.getSelectedRow(), target.getSelectedColumn()).toString();
 
-        List<Entity> selectedEntities = new ArrayList<Entity>();
+        List<Entity> selectedEntities = new ArrayList<>();
         for (int i : resultsTable.getTable().getSelectedRows()) {
             selectedEntities.add((Entity) resultsTable.getRows().get(i).getUserObject());
         }
@@ -180,11 +180,15 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
             protected void hadSuccess() {
                 updateTableModel();
                 resultsTable.showTable();
+                if (!entities.isEmpty()) {
+                    resultsTable.getTable().getSelectionModel().setSelectionInterval(0, 0);
+                    entitySelected(entities.get(0));
+                }
             }
 
             @Override
             protected void hadError(Throwable error) {
-                error.printStackTrace();
+                log.error("Error showing entities", error);
             }
         };
 
@@ -232,7 +236,7 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
 
             @Override
             protected void hadError(Throwable error) {
-                error.printStackTrace();
+                log.error("Error showing entity", error);
             }
 
         };
