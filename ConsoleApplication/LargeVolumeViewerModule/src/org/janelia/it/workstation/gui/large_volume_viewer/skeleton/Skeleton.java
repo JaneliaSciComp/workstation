@@ -189,7 +189,11 @@ public class Skeleton {
 			Anchor anchor = anchorsByGuid.get(tga.getId());
 			if (anchor == null)
 				return;
-			anchor.setLocationSilent(new Vec3(tga.getX(), tga.getY(), tga.getZ()));
+            // remember, annotations are in voxel coordinates and anchors are
+            //  in micron coordinates:
+            Vec3 tempLocation = tileFormat.micronVec3ForVoxelVec3Centered(new Vec3(tga.getX(),
+                tga.getY(), tga.getZ()));
+			anchor.setLocationSilent(tempLocation);
 		}
 	};
 

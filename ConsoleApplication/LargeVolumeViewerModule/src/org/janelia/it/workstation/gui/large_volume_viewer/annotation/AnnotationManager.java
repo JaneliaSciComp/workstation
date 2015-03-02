@@ -31,7 +31,6 @@ import java.util.regex.Pattern;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
-import org.janelia.it.workstation.shared.util.ImportExportSWCExchanger;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 
 
@@ -129,18 +128,24 @@ public class AnnotationManager
         public void execute(Anchor anchor) {
 
             // find closest to new anchor location that isn't the annotation already
-            //  associated with anchor
-            TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchor.getLocation(),
+            //  associated with anchor; remember that anchors are in micron
+            //  coords, and we need voxels!
+            TileFormat.VoxelXyz tempLocation = getTileFormat().voxelXyzForMicrometerXyz(
+                new TileFormat.MicrometerXyz(anchor.getLocation().getX(),
+                    anchor.getLocation().getY(),anchor.getLocation().getZ()));
+            Vec3 anchorVoxelLocation = new Vec3(tempLocation.getX(),
+                tempLocation.getY(), tempLocation.getZ());
+
+            TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchorVoxelLocation,
                 annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
 
-
             // check distance and other restrictions
-            if (closest != null && canMergeNeurite(anchor, closest)) {
+            if (closest != null && canMergeNeurite(anchor.getGuid(), anchorVoxelLocation, closest.getId())) {
                 // System.out.println("merging " + anchor.getGuid() + " to " + anchor.getLocation());
                 mergeNeurite(anchor.getGuid(), closest.getId());
             } else {
                 // System.out.println("moving " + anchor.getGuid() + " to " + anchor.getLocation());
-                moveAnnotation(anchor.getGuid(), anchor.getLocation());
+                moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
             }
         }
     };
@@ -478,24 +483,25 @@ public class AnnotationManager
     }
 
 
-    public boolean canMergeNeurite(Anchor anchor, TmGeoAnnotation closest) {
+    public boolean canMergeNeurite(Long anchorID, Vec3 anchorLocation, Long annotationID) {
 
         // can't merge with itself
-        if (anchor.getGuid().equals(closest.getId())) {
+        if (anchorID.equals(annotationID)) {
             return false;
         }
 
+        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(anchorID);
+        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(annotationID);
+
         // distance: close enough?
-        double dx = closest.getX() - anchor.getLocation().getX();
-        double dy = closest.getY() - anchor.getLocation().getY();
-        double dz = closest.getZ() - anchor.getLocation().getZ();
+        double dx = anchorLocation.getX() - targetAnnotation.getX();
+        double dy = anchorLocation.getY() - targetAnnotation.getY();
+        double dz = anchorLocation.getZ() - targetAnnotation.getZ();
         if (dx * dx + dy * dy + dz * dz > DRAG_MERGE_THRESHOLD_SQUARED) {
             return false;
         }
 
         // can't merge with same neurite (don't create cycles!)
-        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
-        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(closest.getId());
         if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
                 annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
             return false;
