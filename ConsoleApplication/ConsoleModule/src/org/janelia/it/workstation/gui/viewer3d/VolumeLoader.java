@@ -144,18 +144,19 @@ public class VolumeLoader implements VolumeLoaderI {
             }
 
             textureData = textureDataBuilder.buildTextureData( isLuminance );            
-            if ( FileType.TIF.equals( getFileType( localFileName, baseName, extension ) )  &&
+            final FileType fileType = getFileType( localFileName, baseName, extension );
+            if ( FileType.TIF.equals( fileType)  &&
                  localFileName.contains("tiff_mousebrain") ) {
                 textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE16 );
                 textureData.setExplicitVoxelComponentOrder( GL2.GL_LUMINANCE );
                 textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
             }
-            else if ( FileType.TIF.equals( getFileType( localFileName, baseName, extension ) ) ) {
+            else if ( FileType.TIF.equals( fileType ) ) {
                 textureData.setExplicitInternalFormat( GL2.GL_RGBA );
                 textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
                 textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
             }
-            else if ( FileType.H264.equals( getFileType( localFileName, baseName, extension ) ) ) {
+            else if ( FileType.H264.equals( fileType )  ||  FileType.H265.equals( fileType ) ) {
                 textureData.setExplicitInternalFormat( GL2.GL_RGB );
                 textureData.setExplicitVoxelComponentOrder( GL2.GL_RGB );
                 textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
