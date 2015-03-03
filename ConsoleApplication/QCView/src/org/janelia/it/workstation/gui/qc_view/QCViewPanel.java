@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,9 +60,11 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 public class QCViewPanel extends JPanel implements Refreshable {
 
     private static final Logger log = LoggerFactory.getLogger(QCViewPanel.class);
-
+    
+    private static final Color DISABLED_COLOR = (Color)UIManager.get("Label.disabledForeground");
     protected static final int PAGE_SIZE = 50;
     
+    private final String disabledColorHex;
     private final SearchParametersPanel searchParamsPanel;
     private final ViewerPane viewerPane;
     private final IconDemoPanel imageViewer;
@@ -69,9 +72,15 @@ public class QCViewPanel extends JPanel implements Refreshable {
     private final SearchResults searchResults = new SearchResults();
     
     public QCViewPanel() {
-
-        log.info("Init QCViewPanel");
         
+        if (DISABLED_COLOR!=null) {
+            String rgb = Integer.toHexString(DISABLED_COLOR.getRGB());
+            disabledColorHex = "#"+rgb.substring(2, rgb.length());
+        }
+        else {
+            disabledColorHex = null;
+        }
+
         Set<String> entityTypes = new HashSet<String>();
         entityTypes.add(EntityConstants.TYPE_LSM_STACK);
         filters.put("entity_type",entityTypes);
@@ -142,166 +151,13 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
         log.debug("performSearch(pageNum={},showLoading={})", pageNum, showLoading);
 
-        final SolrQueryBuilder builder = new SolrQueryBuilder();
-        builder.setAuxString("+sage_id_txt:*");
-        
-        searchParamsPanel.getQueryBuilder(builder);
-        if (!builder.hasQuery()) {
-            return;
-        }
-
-        builder.getFilters().putAll(filters);
-
-        log.info("Search for "+builder.getSearchString());
-
         SimpleWorker worker = new SimpleWorker() {
 
-            private ResultPage resultPage;
             private RootedEntity tempSearchRE;
 
             @Override
             protected void doStuff() throws Exception {
-                resultPage = new ResultPage(performSearch(builder, pageNum, PAGE_SIZE));
-                log.info("Adding result page ({} results)", resultPage.getResults().size());
-                searchResults.clear();
-                searchResults.addPage(resultPage);
-
-                // Map LSMs to samples
-                List<String> upMapping = new ArrayList<String>();
-                List<String> downMapping = new ArrayList<String>();
-                upMapping.add(EntityConstants.TYPE_IMAGE_TILE);
-                upMapping.add(EntityConstants.TYPE_SUPPORTING_DATA);
-                upMapping.add(EntityConstants.TYPE_SAMPLE);
-                ResultTreeMapping projection = new ResultTreeMapping(upMapping, downMapping);
-                searchResults.setResultTreeMapping(projection);
-                searchResults.projectResultPages();
-                                
-                // Figure out which LSMs go with which Sample
-                final Map<Long,String> sampleIdToDataset = new HashMap<Long,String>();
-                final Map<Long,Entity> sampleMap = new HashMap<Long,Entity>();
-//                final Set<String> parentSampleNames = new HashSet<String>();
-                final Multimap<Long,EntityDocument> sampleToLsm = ArrayListMultimap.<Long,EntityDocument>create();
-                SolrResults pageResults = resultPage.getSolrResults();
-                for (EntityDocument entityDoc : pageResults.getEntityDocuments()) {
-                    Entity lsmEntity = entityDoc.getEntity();
-                    
-                    List<Entity> mappedEntities = resultPage.getMappedEntities(lsmEntity.getId());
-                    if (mappedEntities.isEmpty()) {
-                        log.info("No sample for entity "+lsmEntity.getId());
-                        continue;
-                    }
-                    if (mappedEntities.size()>1) {
-                        log.warn("More than one sample for LSM "+lsmEntity.getName());
-                    }
-                    Entity sample = mappedEntities.get(0);
-                    
-                    String lsmDataSet = (String)entityDoc.getDocument().getFieldValue("sage_light_imagery_data_set_t");
-                    sampleIdToDataset.put(sample.getId(), lsmDataSet);
-                    
-                    sampleMap.put(sample.getId(), sample);
-                    sampleToLsm.put(sample.getId(), entityDoc);
-//                    if (sample.getName().contains("~")) {
-//                        String sampleName = sample.getName().replaceFirst("~\\d+x$", "");
-//                        parentSampleNames.add(sampleName);
-//                    }
-                    
-                    // If the sample does not have it's own Data Set, borrow it from the LSM
-                    if (sample.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER)==null) {
-                        sample.setValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER, lsmDataSet);
-                    }   
-                }
-                
-                // Remove redundant parent samples
-//                List<Long> toDelete = new ArrayList<Long>();
-//                for(Long sampleId : sampleToLsm.keySet()) {
-//                    Entity sample = sampleMap.get(sampleId);
-//                    if (parentSampleNames.contains(sample.getName())) {
-//                        toDelete.add(sampleId);
-//                        log.warn("Removing parent sample "+sample.getName());
-//                    }
-//                }
-//                for(Long sampleId : toDelete) {
-//                    sampleToLsm.removeAll(sampleId);
-//                }
-                
-                List<Long> sortedSampleIds = new ArrayList<Long>(sampleToLsm.keySet());
-                Collections.sort(sortedSampleIds, new Comparator<Long>() {
-                    @Override
-                    public int compare(Long id1, Long id2) {
-                        Entity e1 = sampleMap.get(id1);
-                        Entity e2 = sampleMap.get(id2);
-                        ComparisonChain chain = ComparisonChain.start()
-                            .compare(e1.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER), e2.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER), Ordering.natural().nullsLast())
-                            .compare(e1.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE), e2.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE), Ordering.natural().nullsLast())
-                            .compare(e1.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE), e2.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE), Ordering.natural().nullsFirst());
-                        return chain.result();
-                    }
-                });
-                
-                Entity searchResultsEntity = new Entity();
-                searchResultsEntity.setId(TimebasedIdentifierGenerator.generateIdList(1).get(0));
-                searchResultsEntity.setName("Search Results");
-                searchResultsEntity.setOwnerKey(SessionMgr.getSubjectKey());
-                searchResultsEntity.setEntityTypeName(EntityConstants.TYPE_FOLDER);
-
-                List<EntityData> eds = new ArrayList<EntityData>();
-                for (Long sampleId : sortedSampleIds) {
-                    Entity sample = sampleMap.get(sampleId);
-                    
-                    String dataSet = sampleIdToDataset.get(sample.getId());
-                    dataSet = dataSet==null?"":dataSet;
-                            
-                    List<EntityData> sampleEds = new ArrayList<EntityData>();
-                
-                    ModelMgr.getModelMgr().loadLazyEntity(sample, false);
-                    Entity supportingData = EntityUtils.getSupportingData(sample);
-                    
-                    ModelMgr.getModelMgr().loadLazyEntity(supportingData, true);
-                    
-                    for(Entity tileEntity : EntityUtils.getChildrenOfType(supportingData, EntityConstants.TYPE_IMAGE_TILE)) {
-
-                        String tile = tileEntity.getName();
-                        
-                        // Really cheating here. The model is the view. But this is the only way to get things done without rewriting the IconDemoPanel.
-                        Set<EntityData> mips = new HashSet<EntityData>();
-                        EntityData ed1 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
-                        EntityData ed2 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_REFERENCE_MIP_IMAGE);
-                        EntityData ed3 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SIGNAL_MIP_IMAGE);
-                        if (ed1!=null) mips.add(ed1);
-                        if (ed2!=null) mips.add(ed2);
-                        if (ed3!=null) mips.add(ed3);
-
-                        for(Entity lsmEntity : EntityUtils.getChildrenOfType(tileEntity, EntityConstants.TYPE_LSM_STACK)) {
-                            
-                            String objective = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE);
-                            String slideCode = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE);
-                            String qiScore = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_QI_SCORE);
-
-                            objective = objective==null?"":objective;
-                            slideCode = slideCode==null?"":slideCode;
-                            qiScore = qiScore==null?"":qiScore;
-
-                            lsmEntity.setName("<html><b>"+slideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+qiScore+"&nbsp;</html>");
-                            lsmEntity.getEntityData().addAll(mips);
-                            EntityData ed = new EntityData();
-                            ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
-                            ed.setParentEntity(searchResultsEntity);
-                            ed.setChildEntity(lsmEntity);
-                            sampleEds.add(ed);
-                        }
-                    }
-                
-                    eds.addAll(sampleEds);
-                }
-
-                int i = 0;
-                for(EntityData ed : eds) {
-                    ed.setOrderIndex(i++);
-                }
-                
-                log.info("Setting "+eds.size()+" children");
-                searchResultsEntity.setEntityData(new HashSet<EntityData>(eds));
-                this.tempSearchRE = new UnrootedEntity(searchResultsEntity);
+                this.tempSearchRE = performSearch(pageNum);
             }
 
             @Override
@@ -334,9 +190,218 @@ public class QCViewPanel extends JPanel implements Refreshable {
     }
     
     /**
+     * Perform the search and organize the results
+     * @param pageNum
+     * @return
+     * @throws Exception 
+     */
+    private RootedEntity performSearch(final int pageNum) throws Exception {
+        
+        if (SwingUtilities.isEventDispatchThread()) {
+            throw new RuntimeException("GeneralSearchDialog.search called in the EDT");
+        }
+        
+        final SolrQueryBuilder builder = new SolrQueryBuilder();
+        builder.setAuxString("+sage_id_txt:*");
+        
+        searchParamsPanel.getQueryBuilder(builder);
+        if (!builder.hasQuery()) {
+            return null;
+        }
+
+        builder.getFilters().putAll(filters);
+
+        log.info("Search for "+builder.getSearchString());
+        
+        ResultPage resultPage = new ResultPage(performSearch(builder, pageNum, PAGE_SIZE));
+        log.info("Adding result page ({} results)", resultPage.getResults().size());
+        searchResults.clear();
+        searchResults.addPage(resultPage);
+
+        // Map LSMs to samples
+        List<String> upMapping = new ArrayList<String>();
+        List<String> downMapping = new ArrayList<String>();
+        upMapping.add(EntityConstants.TYPE_IMAGE_TILE);
+        upMapping.add(EntityConstants.TYPE_SUPPORTING_DATA);
+        upMapping.add(EntityConstants.TYPE_SAMPLE);
+        ResultTreeMapping projection = new ResultTreeMapping(upMapping, downMapping);
+        searchResults.setResultTreeMapping(projection);
+        searchResults.projectResultPages();
+
+        // Figure out which LSMs go with which Sample
+        final Map<Long,String> sampleIdToDataset = new HashMap<Long,String>();
+        final Map<Long,Entity> sampleMap = new HashMap<Long,Entity>();
+        final Multimap<Long,EntityDocument> sampleToLsm = ArrayListMultimap.<Long,EntityDocument>create();
+        SolrResults pageResults = resultPage.getSolrResults();
+        for (EntityDocument entityDoc : pageResults.getEntityDocuments()) {
+            Entity lsmEntity = entityDoc.getEntity();
+
+            List<Entity> mappedEntities = resultPage.getMappedEntities(lsmEntity.getId());
+            if (mappedEntities.isEmpty()) {
+                log.info("No sample for entity "+lsmEntity.getId());
+                continue;
+            }
+            if (mappedEntities.size()>1) {
+                log.warn("More than one sample for LSM "+lsmEntity.getName());
+            }
+            Entity sample = mappedEntities.get(0);
+
+            String lsmDataSet = (String)entityDoc.getDocument().getFieldValue("sage_light_imagery_data_set_t");
+            sampleIdToDataset.put(sample.getId(), lsmDataSet);
+
+            sampleMap.put(sample.getId(), sample);
+            sampleToLsm.put(sample.getId(), entityDoc);
+
+            // If the sample does not have it's own Data Set, borrow it from the LSM
+            if (sample.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER)==null) {
+                sample.setValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER, lsmDataSet);
+            }   
+        }
+
+        List<Long> sortedSampleIds = new ArrayList<Long>(sampleToLsm.keySet());
+        Collections.sort(sortedSampleIds, new Comparator<Long>() {
+            @Override
+            public int compare(Long id1, Long id2) {
+                Entity e1 = sampleMap.get(id1);
+                Entity e2 = sampleMap.get(id2);
+                ComparisonChain chain = ComparisonChain.start()
+                    .compare(e1.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER), e2.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER), Ordering.natural().nullsLast())
+                    .compare(e1.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE), e2.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE), Ordering.natural().nullsLast())
+                    .compare(e1.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE), e2.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE), Ordering.natural().nullsFirst());
+                return chain.result();
+            }
+        });
+
+        Entity searchResultsEntity = new Entity();
+        searchResultsEntity.setId(TimebasedIdentifierGenerator.generateIdList(1).get(0));
+        searchResultsEntity.setName("Search Results");
+        searchResultsEntity.setOwnerKey(SessionMgr.getSubjectKey());
+        searchResultsEntity.setEntityTypeName(EntityConstants.TYPE_FOLDER);
+
+        Map<String,Map<String,EntityData>> slideCodeToLsmMap = new LinkedHashMap<String,Map<String,EntityData>>();
+
+        Set<String> tilePattern = new HashSet<String>();
+
+        Map<String,EntityData> slideCodeEds = null;
+        String dataSetSlideCode = null;
+
+        for (Long sampleId : sortedSampleIds) {
+            Entity sample = sampleMap.get(sampleId);
+
+            String dataSet = sampleIdToDataset.get(sample.getId());
+            dataSet = dataSet==null?"":dataSet;
+
+            ModelMgr.getModelMgr().loadLazyEntity(sample, false);
+            Entity supportingData = EntityUtils.getSupportingData(sample);
+
+            ModelMgr.getModelMgr().loadLazyEntity(supportingData, true);
+
+            for(Entity tileEntity : EntityUtils.getChildrenOfType(supportingData, EntityConstants.TYPE_IMAGE_TILE)) {
+
+                String tile = tileEntity.getName();
+
+                // Really cheating here. The model is the view. But this is the only way to get things done without rewriting the IconDemoPanel.
+                Set<EntityData> mips = new HashSet<EntityData>();
+                EntityData ed1 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
+                EntityData ed2 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_REFERENCE_MIP_IMAGE);
+                EntityData ed3 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SIGNAL_MIP_IMAGE);
+                if (ed1!=null) mips.add(ed1);
+                if (ed2!=null) mips.add(ed2);
+                if (ed3!=null) mips.add(ed3);
+
+                for(Entity lsmEntity : EntityUtils.getChildrenOfType(tileEntity, EntityConstants.TYPE_LSM_STACK)) {
+
+                    String lsmSlideCode = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE);
+
+                    String key = dataSet+"~"+lsmSlideCode;
+                    if (dataSetSlideCode==null || !dataSetSlideCode.equals(key)) {
+                        slideCodeEds = new LinkedHashMap<String,EntityData>();
+                        dataSetSlideCode = key;
+                        log.debug("Starting "+dataSetSlideCode);
+                    }
+
+                    String objective = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE);
+                    String qiScore = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_QI_SCORE);
+
+                    lsmSlideCode = lsmSlideCode==null?"":lsmSlideCode;
+                    objective = objective==null?"":objective;
+                    qiScore = qiScore==null?"":qiScore;
+
+                    String patternCode = objective+" "+tile;
+
+                    Entity virtualLsm = getVirtualEntity("<html><b>"+lsmSlideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+qiScore+"&nbsp;</html>", lsmEntity);
+                    virtualLsm.getEntityData().addAll(mips);
+
+                    EntityData ed = new EntityData();
+                    ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
+                    ed.setOwnerKey(SessionMgr.getSubjectKey());
+                    ed.setParentEntity(searchResultsEntity);
+                    ed.setChildEntity(virtualLsm);
+                    log.debug("   Adding "+patternCode);
+                    slideCodeEds.put(patternCode, ed);
+
+                    tilePattern.add(patternCode);
+                }
+            }
+
+            slideCodeToLsmMap.put(dataSetSlideCode, slideCodeEds);
+        }
+
+        List<String> sortedTilePattern = new ArrayList<String>(tilePattern);
+        Collections.sort(sortedTilePattern);
+
+        List<EntityData> eds = new ArrayList<EntityData>();
+
+        int i = 0;
+        for(String key : slideCodeToLsmMap.keySet()) {
+            Map<String,EntityData> slideCodeMap = slideCodeToLsmMap.get(key);
+            log.debug("slideCodeToLsmMap["+key+"] = "+slideCodeMap.size()+" items:");
+            for(String d : slideCodeMap.keySet()) {
+                log.debug("  "+d);
+            }
+            String[] dataSetSlideCodeArr = key.split("~");
+            //String dataSet = dataSetSlideCodeArr[0];
+            String slideCode = dataSetSlideCodeArr[1];
+            for(String patternCode : sortedTilePattern) {
+                EntityData ed = slideCodeMap.get(patternCode);    
+                if (ed==null) {
+                    log.debug("   "+patternCode+" not found");
+
+                    // Build disable title
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("<html>");
+                    if (disabledColorHex!=null) {
+                        sb.append("<font color=").append(disabledColorHex).append(">");
+                    }
+                    sb.append("<b>").append(slideCode).append("</b> - ").append(patternCode);
+                    if (disabledColorHex!=null) {
+                        sb.append("</font>");
+                    }
+                    sb.append("</html>");
+
+                    Entity placeholder = getVirtualEntity(sb.toString());
+                    ed = new EntityData();
+                    ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
+                    ed.setParentEntity(searchResultsEntity);
+                    ed.setChildEntity(placeholder);
+                }
+                else {
+                    log.debug("   "+patternCode+" found");
+                }
+                eds.add(ed);
+                ed.setOrderIndex(i++);
+            }
+        }
+
+        log.debug("Setting "+eds.size()+" children");
+        searchResultsEntity.setEntityData(new HashSet<EntityData>(eds));
+        return new UnrootedEntity(searchResultsEntity);
+    }
+    
+    /**
      * Actually execute the query. This method must be called from a worker thread.
      */
-    public SolrResults performSearch(SolrQueryBuilder builder, int page, int pageSize) throws Exception {
+    private SolrResults performSearch(SolrQueryBuilder builder, int page, int pageSize) throws Exception {
 
         if (SwingUtilities.isEventDispatchThread()) {
             throw new RuntimeException("GeneralSearchDialog.search called in the EDT");
@@ -349,25 +414,27 @@ public class QCViewPanel extends JPanel implements Refreshable {
         log.info("Searching SOLR: " + query.getQuery());
         return ModelMgr.getModelMgr().searchSolr(query);
     }
-
-    protected void populateResultView(final ResultPage resultPage) {
-
-        if (resultPage == null) {
-            return;
-        }
-//        long numResults = pageResults.getResponse().getResults().getNumFound();
-
-        if (searchResults.getNumLoadedPages() == 1) {
-            // First page, so clear the previous results
-//            resultsTable.removeAllRows();
-        }
-
-        
-
-//        int numLoadedResults = resultsTable.getRows().size();
-//        statusLabel.setText(numResults + " results found for '" + fullQueryString.trim() + "', " + numLoadedResults + " results loaded.");
-//        statusLabel.setToolTipText("Query took " + pageResults.getResponse().getElapsedTime() + " milliseconds");
-
+    
+    private Entity getVirtualEntity(String title) {
+        Entity virtualEntity = new Entity();
+        virtualEntity.setId(TimebasedIdentifierGenerator.generateIdList(1).get(0));
+        virtualEntity.setName("Virtual Entity");
+        virtualEntity.setEntityTypeName(EntityConstants.IN_MEMORY_TYPE_VIRTUAL_ENTITY);
+        virtualEntity.setOwnerKey(SessionMgr.getSubjectKey());
+        virtualEntity.setValueByAttributeName(EntityConstants.IN_MEMORY_ATTRIBUTE_TITLE, title);
+        return virtualEntity;
+    }
+    
+    private Entity getVirtualEntity(String title, Entity template) {
+        Entity virtualEntity = new Entity();
+        virtualEntity.setId(template.getId());
+        virtualEntity.setName(template.getName());
+        virtualEntity.setEntityTypeName(EntityConstants.IN_MEMORY_TYPE_VIRTUAL_ENTITY);
+        virtualEntity.setOwnerKey(template.getOwnerKey());
+        virtualEntity.setCreationDate(template.getCreationDate());
+        virtualEntity.setUpdatedDate(template.getUpdatedDate());
+        virtualEntity.setValueByAttributeName(EntityConstants.IN_MEMORY_ATTRIBUTE_TITLE, title);
+        return virtualEntity;
     }
     
     @Override
