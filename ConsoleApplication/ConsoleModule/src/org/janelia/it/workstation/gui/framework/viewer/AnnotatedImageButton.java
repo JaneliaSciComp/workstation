@@ -238,7 +238,10 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         int fontSize = (int) Math.round((double) maxWidth * 0.005) + 10;
         Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
         titleLabel.setFont(titleLabelFont);
-        titleLabel.setPreferredSize(new Dimension(maxWidth, titleLabel.getFontMetrics(titleLabelFont).getHeight()));
+        int lines = StringUtils.countMatches(title, "<br>")+1;
+        int height = titleLabel.getFontMetrics(titleLabelFont).getHeight();
+        height *= lines;
+        titleLabel.setPreferredSize(new Dimension(maxWidth, height));
         titleLabel.setText(title);
         titleLabel.setToolTipText(title);
     }

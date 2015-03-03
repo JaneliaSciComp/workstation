@@ -254,12 +254,12 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                     selectedEntityRoot = entityRoot;
                 }
             }
+        }
 
-            if (selectedEntityRoot == null) {
-                log.error("Ontology {} was not found in the ontology root list", rootId);
-                initializeTree(null);
-                return;
-            }
+        if (selectedEntityRoot == null) {
+            log.error("Ontology {} was not found in the ontology root list", rootId);
+            initializeTree(null);
+            return;
         }
 
         log.debug("Loading ontology {}", rootId);

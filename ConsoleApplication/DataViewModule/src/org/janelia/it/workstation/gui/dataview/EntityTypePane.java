@@ -110,7 +110,7 @@ public class EntityTypePane extends JScrollPane {
                     SearchPane searchPane = entityPane.getSearchPane();
                     SearchResultsPanel searchResultsPanel = entityPane.getSearchResultsPanel();
                     searchPane.setTabIndex(1);
-                    searchPane.getSolrPanel().setSearchString("+entity_type:\"" + entityType.getName() + "\"");
+                    searchPane.getSolrPanel().setInputFieldValue("+entity_type:\"" + entityType.getName() + "\"");
                     searchPane.performSolrSearch(true);
                 }
             });
@@ -129,7 +129,7 @@ public class EntityTypePane extends JScrollPane {
                     SearchResultsPanel searchResultsPanel = entityPane.getSearchResultsPanel();
                     searchPane.setTabIndex(1);
                     String attrName = SolrUtils.getDynamicFieldName(entityAttr.getName());
-                    searchPane.getSolrPanel().setSearchString("+" + attrName + ":*");
+                    searchPane.getSolrPanel().setInputFieldValue("+" + attrName + ":*");
                     searchResultsPanel.setColumnVisibility(attrName, true);
                     searchPane.performSolrSearch(true);
                 }
