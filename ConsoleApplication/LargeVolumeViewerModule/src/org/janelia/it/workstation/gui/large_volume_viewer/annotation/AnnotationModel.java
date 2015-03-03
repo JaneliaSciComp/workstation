@@ -229,8 +229,8 @@ SimpleWorker thread.
     // this method sets the current neuron but does not
     //  emit the signal to update the UI
     public void setCurrentNeuron(TmNeuron neuron) {
-        currentNeuron = neuron;
-        updateCurrentNeuron();
+            currentNeuron = neuron;
+            updateCurrentNeuron();
     }
 
     // this method sets the current neuron *and*
@@ -1062,7 +1062,9 @@ SimpleWorker thread.
 
         // updates
         updateCurrentWorkspace();
-        if (neuron1.getId().equals(currentNeuron.getId())) {
+        // Guard against null neuron, here.  Can happen as signals are passed
+        // around and things are termporarily cleared. LLF
+        if (currentNeuron != null  &&  neuron1.getId().equals(currentNeuron.getId())) {
             updateCurrentNeuron();
         }
 

@@ -517,9 +517,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             SimpleWorker mover = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    TileFormat tileFormat = getTileFormat();
-                    Vec3 voxelLocation = tileFormat.voxelVec3ForMicronVec3(micronLocation);
-                    annotationModel.moveAnnotation(annotationID, voxelLocation);
+                    annotationModel.moveAnnotation(annotationID, micronLocation);
                 }
 
                 @Override
