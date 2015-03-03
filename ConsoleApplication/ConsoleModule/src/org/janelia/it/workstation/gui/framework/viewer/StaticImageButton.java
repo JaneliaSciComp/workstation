@@ -52,16 +52,23 @@ public class StaticImageButton extends AnnotatedImageButton {
             this.staticIcon = Icons.getLargeIconAsBufferedImage(rootedEntity.getEntity());
 
             // Register our aspect ratio
-            double w = label.getIcon().getIconWidth();
-            double h = label.getIcon().getIconHeight();
-            registerAspectRatio(w, h);
+            if (label.getIcon()!=null) {
+                double w = label.getIcon().getIconWidth();
+                double h = label.getIcon().getIconHeight();
+                registerAspectRatio(w, h);
+            }
 
-            int width = iconPanel.getImagesPanel().getMaxImageWidth();
-            if (width <= staticIcon.getWidth()) { // Don't scale up icons
-                label.setIcon(new ImageIcon(Utils.getScaledImage(staticIcon, width)));
+            if (staticIcon != null) {
+                int width = iconPanel.getImagesPanel().getMaxImageWidth();
+                if (width <= staticIcon.getWidth()) { // Don't scale up icons
+                    label.setIcon(new ImageIcon(Utils.getScaledImage(staticIcon, width)));
+                }
+                else {
+                    label.setIcon(new ImageIcon(staticIcon));
+                }
             }
             else {
-                label.setIcon(new ImageIcon(staticIcon));
+                label.setIcon(null);
             }
         }
         else {
