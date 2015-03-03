@@ -45,7 +45,6 @@ public final class QCViewTopComponent extends TopComponent {
     
     public QCViewTopComponent() {
         
-        log.info("Init QCViewTopComponent");
         this.qcViewPanel = new QCViewPanel();
         initComponents();
         setName(Bundle.CTL_QCViewTopComponent());
@@ -84,7 +83,6 @@ public final class QCViewTopComponent extends TopComponent {
     
     @Override
     public void componentOpened() {
-        log.info("Adding qc view to QCViewTopComponent");
         mainPanel.add(qcViewPanel, BorderLayout.CENTER);
     }
 
