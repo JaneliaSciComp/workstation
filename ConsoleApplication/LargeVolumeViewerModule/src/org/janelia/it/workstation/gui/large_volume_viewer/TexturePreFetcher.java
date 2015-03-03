@@ -66,7 +66,7 @@ public class TexturePreFetcher
 			return false;
 		TileTexture texture = new TileTexture(index, loadAdapter);
 		// TODO - handle MISSING textures vs. ERROR textures
-		Future<?> foo = textureLoadExecutor.submit(new TextureLoadWorker(texture, textureCache));
+		Future<?> foo = textureLoadExecutor.submit(new TextureLoadWorker(texture, textureCache, tileServer));
 		futures.put(foo, texture.getIndex());
 		textureCache.setLoadQueued(index, true);
 		// recentRequests.put(index, index);

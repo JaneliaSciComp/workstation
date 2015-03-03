@@ -15,8 +15,9 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.color_slider.UglyColorSlider;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelInitListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.signal.Slot;
 
 public class ColorChannelWidget extends JPanel 
 {
@@ -43,20 +44,20 @@ public class ColorChannelWidget extends JPanel
 		add(colorButton);
 		updateColor();
         updateVisibility();
-		imageColorModel.getColorModelInitializedSignal().connect(new Slot() {
-			@Override
-			public void execute() {
+        imageColorModel.addColorModelInitListener(new ColorModelInitListener() {
+            @Override
+            public void colorModelInit() {
 				updateColor();
                 updateVisibility();
-			}
-		});
-		imageColorModel.getColorModelChangedSignal().connect(new Slot() {
-			@Override
-			public void execute() {
-				updateColor();
+            }            
+        });
+		imageColorModel.addColorModelListener(new ColorModelListener() {
+            @Override
+            public void colorModelChanged() {
+                updateColor();
                 updateVisibility();
-			}
-		});
+            }            
+        });
 	}
 
 	public void setWhiteColor(Color whiteColor) {

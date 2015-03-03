@@ -137,6 +137,24 @@
                 <package>ch.qos.logback.core.status</package>
                 <package>ch.qos.logback.core.subst</package>
                 <package>ch.qos.logback.core.util</package>
+                <package>ch.systemsx.cisd.args4j</package>
+                <package>ch.systemsx.cisd.args4j.spi</package>
+                <package>ch.systemsx.cisd.base</package>
+                <package>ch.systemsx.cisd.base.annotation</package>
+                <package>ch.systemsx.cisd.base.convert</package>
+                <package>ch.systemsx.cisd.base.exceptions</package>
+                <package>ch.systemsx.cisd.base.image</package>
+                <package>ch.systemsx.cisd.base.io</package>
+                <package>ch.systemsx.cisd.base.mdarray</package>
+                <package>ch.systemsx.cisd.base.namedthread</package>
+                <package>ch.systemsx.cisd.base.tests</package>
+                <package>ch.systemsx.cisd.base.unix</package>
+                <package>ch.systemsx.cisd.base.utilities</package>
+                <package>ch.systemsx.cisd.hdf5</package>
+                <package>ch.systemsx.cisd.hdf5.cleanup</package>
+                <package>ch.systemsx.cisd.hdf5.h5ar</package>
+                <package>ch.systemsx.cisd.hdf5.hdf5lib</package>
+                <package>ch.systemsx.cisd.hdf5.io</package>
                 <package>client</package>
                 <package>color</package>
                 <package>com.clarkparsia.owlapi.explanation</package>
@@ -622,6 +640,10 @@
                 <package>loci.plugins.util</package>
                 <package>magicofcalculus</package>
                 <package>math3d</package>
+                <package>ncsa.hdf.hdf5lib</package>
+                <package>ncsa.hdf.hdf5lib.callbacks</package>
+                <package>ncsa.hdf.hdf5lib.exceptions</package>
+                <package>ncsa.hdf.hdf5lib.structs</package>
                 <package>net.jpountz.lz4</package>
                 <package>net.jpountz.util</package>
                 <package>net.jpountz.xxhash</package>
@@ -1022,6 +1044,8 @@
                 <package>org.apache.commons.lang3.text.translate</package>
                 <package>org.apache.commons.lang3.time</package>
                 <package>org.apache.commons.lang3.tuple</package>
+                <package>org.apache.commons.lang.enums</package>
+                <package>org.apache.commons.lang.exception</package>
                 <package>org.apache.commons.logging</package>
                 <package>org.apache.commons.logging.impl</package>
                 <package>org.apache.html.dom</package>
@@ -1953,6 +1977,10 @@
                 <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/jogl-all-natives-linux-amd64.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jogl-all-natives-linux-amd64.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/ome-xml.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/ome-xml.jar</binary-origin>
             </class-path-extension>
@@ -1979,6 +2007,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/wsdl4j-1.6.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/wsdl4j-1.6.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/sis-jhdf5-batteries_included.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/sis-jhdf5-batteries_included.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/logback-classic-1.0.13.jar</runtime-relative-path>
@@ -2163,10 +2195,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaSilverMoon.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaSilverMoon.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/ffmpeg-windows-x86.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/ffmpeg-windows-x86.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlueLight.jar</runtime-relative-path>

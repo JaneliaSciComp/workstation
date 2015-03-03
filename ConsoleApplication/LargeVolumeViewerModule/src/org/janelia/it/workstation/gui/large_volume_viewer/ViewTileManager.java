@@ -8,10 +8,9 @@ import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.StatusUpdateListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
-import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +23,13 @@ import org.slf4j.LoggerFactory;
 public class ViewTileManager {
 	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(ViewTileManager.class);
+
+    /**
+     * @param loadStatusChangedListener the loadStatusChangedListener to set
+     */
+    public void setLoadStatusChangedListener(StatusUpdateListener loadStatusChangedListener) {
+        this.loadStatusChangedListener = loadStatusChangedListener;
+    }
 
 	/*
 	 * A TileSet is a group of rectangles that complete the LargeVolumeViewer image
@@ -91,23 +97,19 @@ public class ViewTileManager {
 	private TileConsumer tileConsumer;
 	private TextureCache textureCache;
 	private SharedVolumeImage volumeImage;
-
-	public Signal1<LoadStatus> loadStatusChanged = new Signal1<LoadStatus>();
-	
-	public Slot1<TileIndex> onTextureLoadedSlot = new Slot1<TileIndex>() {
-		@Override
-		public void execute(TileIndex index) {
-			if (! displayableTextures.contains(index))
-				return;
-			// log.info("Needed texture loaded! "+index);
-			tileConsumer.getRepaintSlot().execute();
-		}
-	};
-	
+    private StatusUpdateListener loadStatusChangedListener;
+    
 	public ViewTileManager(TileConsumer tileConsumer)
 	{
 		this.tileConsumer = tileConsumer;
 	}
+
+    public void textureLoaded(TileIndex index) {
+        if (displayableTextures.contains(index)) {
+            // log.info("Needed texture loaded! "+index);
+            tileConsumer.repaint();
+        }
+    }
 
 	public void clear() {
 		emergencyTiles = null;
@@ -202,7 +204,9 @@ public class ViewTileManager {
 		if (loadStatus == this.loadStatus)
 			return;
 		this.loadStatus = loadStatus;
-		loadStatusChanged.emit(loadStatus);
+        if (loadStatusChangedListener != null) {
+            loadStatusChangedListener.update();
+        }
 	}
 
 	public void setTextureCache(TextureCache textureCache) {

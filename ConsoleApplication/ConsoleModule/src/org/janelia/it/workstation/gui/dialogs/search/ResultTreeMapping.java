@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.outline.EntityTree;
-import org.janelia.it.jacs.compute.api.support.EntityMapStep;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -18,11 +17,11 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  */
 public class ResultTreeMapping {
 
-    private List<EntityMapStep> upMappingSteps = new ArrayList<EntityMapStep>();
-    private List<EntityMapStep> downMappingSteps = new ArrayList<EntityMapStep>();
+    private List<String> upMapping = new ArrayList<>();
+    private List<String> downMapping = new ArrayList<>();
 
     public ResultTreeMapping(EntityTree entityTree, String uniqueId1, String uniqueId2) {
-
+        
         String[] path1 = uniqueId1.split("/");
         String[] path2 = uniqueId2.split("/");
 
@@ -50,7 +49,7 @@ public class ResultTreeMapping {
             if (uniqueId.matches(".*?e_\\d+$")) {
                 EntityData entityData = entityTree.getEntityDataByUniqueId(uniqueId);
                 if (entityData != null) {
-                    upMappingSteps.add(new EntityMapStep(entityData, true));
+                    upMapping.add(entityData.getParentEntity().getEntityTypeName());
                 }
             }
         }
@@ -61,30 +60,20 @@ public class ResultTreeMapping {
             if (uniqueId.matches(".*?e_\\d+$")) {
                 EntityData entityData = entityTree.getEntityDataByUniqueId(uniqueId);
                 if (entityData != null) {
-                    downMappingSteps.add(new EntityMapStep(entityData, false));
+                    downMapping.add(entityData.getChildEntity().getEntityTypeName());
                 }
             }
         }
-    }
+    } 
 
-    public List<MappedId> getProjectedIds(List<Long> entityIds) throws Exception {
-        if (entityIds == null || entityIds.isEmpty()) {
-            return new ArrayList<MappedId>();
-        }
-        List<String> upMapping = new ArrayList<String>();
-        List<String> downMapping = new ArrayList<String>();
-        for (EntityMapStep step : upMappingSteps) {
-            upMapping.add(step.getEntityType());
-        }
-        for (EntityMapStep step : downMappingSteps) {
-            downMapping.add(step.getEntityType());
-        }
-        return ModelMgr.getModelMgr().getProjectedResults(entityIds, upMapping, downMapping);
+    public ResultTreeMapping(List<String> upMapping, List<String> downMapping) {
+        this.upMapping = upMapping;
+        this.downMapping = downMapping;
     }
 
     private List<String> getFullPaths(String[] path) {
-        List<String> fullPaths = new ArrayList<String>();
-        StringBuffer sb = new StringBuffer();
+        List<String> fullPaths = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
         for (String stepId : path) {
             if (StringUtils.isEmpty(stepId)) {
                 continue;
@@ -95,14 +84,21 @@ public class ResultTreeMapping {
         }
         return fullPaths;
     }
+    
+    public List<MappedId> getProjectedIds(List<Long> entityIds) throws Exception {
+        if (entityIds == null || entityIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return ModelMgr.getModelMgr().getProjectedResults(entityIds, upMapping, downMapping);
+    }
 
     public String getDescription() {
-        StringBuffer desc = new StringBuffer();
-        for (EntityMapStep step : upMappingSteps) {
-            desc.append("<'" + step.getEntityType() + "'");
+        StringBuilder desc = new StringBuilder();
+        for (String type : upMapping) {
+            desc.append("<'").append(type).append("'");
         }
-        for (EntityMapStep step : downMappingSteps) {
-            desc.append(">'" + step.getEntityType() + "'");
+        for (String type : downMapping) {
+            desc.append(">'").append(type).append("'");
         }
         return desc.toString();
     }
