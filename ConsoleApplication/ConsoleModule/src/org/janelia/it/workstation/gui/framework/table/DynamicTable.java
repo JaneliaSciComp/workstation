@@ -39,12 +39,14 @@ public abstract class DynamicTable extends JPanel {
     private final JPanel mainPane;
 
     private final boolean allowRightClickCellSelection;
+    private boolean autoResizeColumns = true;
     private TableModel tableModel;
 
     private List<DynamicColumn> columns = new ArrayList<>();
     private List<DynamicColumn> displayedColumns = new ArrayList<>();
     private List<DynamicRow> rows = new ArrayList<>();
     private List<Object> userObjects = new ArrayList<>();
+    private List<Integer> colWidths = new ArrayList<>();
 
     private Map<DynamicColumn, TableCellRenderer> renderers = new HashMap<>();
 
@@ -58,6 +60,14 @@ public abstract class DynamicTable extends JPanel {
         this(true, false);
     }
 
+    public boolean isAutoResizeColumns() {
+        return autoResizeColumns;
+    }
+
+    public void setAutoResizeColumns(boolean autoResizeColumns) {
+        this.autoResizeColumns = autoResizeColumns;
+    }
+    
     protected void loadAllResults() {
         if (!hasMoreResults) {
             return;
@@ -555,6 +565,10 @@ public abstract class DynamicTable extends JPanel {
      */
     public synchronized void updateTableModel() {
 
+        if (!isAutoResizeColumns()) {
+            storeColWidths();
+        }
+        
         displayedColumns.clear();
 
         // Data formatted for the JTable
@@ -618,7 +632,12 @@ public abstract class DynamicTable extends JPanel {
             }
         }
 
-        autoResizeColWidth();
+        if (isAutoResizeColumns()) {
+            autoResizeColWidth();
+        }
+        else {
+            restoreColWidths();
+        }
     }
 
     public void setColumnRenderer(DynamicColumn column, TableCellRenderer renderer) {
@@ -678,7 +697,28 @@ public abstract class DynamicTable extends JPanel {
         loadMoreButton.setVisible(!autoLoadResults);
         loadAllButton.setVisible(!autoLoadResults);
     }
-
+    
+    private void storeColWidths() {
+        colWidths.clear();
+        DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
+        for (int c = 0; c<table.getColumnCount(); c++) {
+            TableColumn col = colModel.getColumn(c);
+            colWidths.add(col.getPreferredWidth());
+        }
+    }
+    
+    private void restoreColWidths() {
+        DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
+        int c = 0;
+        for(Integer colWidth : colWidths) {
+            if (c>=colModel.getColumnCount()) {
+                break;
+            }
+            TableColumn col = colModel.getColumn(c++);
+            col.setPreferredWidth(colWidth);
+        }
+    }
+    
     /**
      * Borrowed from http://www.pikopong.com/blog/2008/08/13/auto-resize-jtable-column-width/
      *
@@ -688,11 +728,11 @@ public abstract class DynamicTable extends JPanel {
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         DefaultTableCellRenderer defaultRenderer = (DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer();
+        DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
 
         int margin = 5;
 
         for (int c = 0; c<table.getColumnCount(); c++) {
-            DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
             TableColumn col = colModel.getColumn(c);
             int width;
 

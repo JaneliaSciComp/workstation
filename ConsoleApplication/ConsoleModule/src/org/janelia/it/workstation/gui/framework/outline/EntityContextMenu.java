@@ -106,9 +106,9 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     public  EntityContextMenu(RootedEntity rootedEntity) {
-        List<RootedEntity> rootedEntityList = new ArrayList<>();
-        rootedEntityList.add(rootedEntity);
-        init(rootedEntityList);
+        List<RootedEntity> singleEntityList = new ArrayList<>();
+        singleEntityList.add(rootedEntity);
+        init(singleEntityList);
     }
     
     public final void init(List<RootedEntity> rootedEntityList) {
