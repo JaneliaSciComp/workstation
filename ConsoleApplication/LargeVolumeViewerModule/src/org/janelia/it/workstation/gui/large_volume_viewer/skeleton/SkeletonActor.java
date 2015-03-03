@@ -28,7 +28,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.UpdateAnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 // import TracedPathShader;
@@ -36,12 +36,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.shader.PathShader;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
-//import org.janelia.it.workstation.signal.Signal;
-//import org.janelia.it.workstation.signal.Signal1;
-//import org.janelia.it.workstation.signal.Slot;
-//import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
@@ -113,29 +107,6 @@ implements GLActor
     // private TracedPathShader tracedShader = new TracedPathShader();
     private boolean anchorsVisible = true;
 	
-//	public Signal skeletonActorChangedSignal = new Signal();
-
-//    public Signal1<Anchor> nextParentChangedSignal = new Signal1<>();
-	
-//	private Slot updateAnchorsSlot = new Slot() {
-//		@Override
-//		public void execute() {updateAnchors();}
-//	};
-
-//    public Slot1<Long> setNextParentSlot = new Slot1<Long>() {
-//        @Override
-//        public void execute(Long annotationID) {
-//            setNextParentByID(annotationID);
-//        }
-//    };
-
-//    public Slot1<Color> changeGlobalColorSlot = new Slot1<Color>() {
-//        @Override
-//        public void execute(Color color) {
-//            changeNeuronColor(color);
-//        }
-//    };
-
 	private TileFormat tileFormat;
 
 	public SkeletonActor() {
@@ -431,7 +402,6 @@ implements GLActor
 			return; // no change
 		this.anchorsVisible = anchorsVisible;
         updater.update();
-//		skeletonActorChangedSignal.emit();
 	}
 
 	public void setZThicknessInPixels(float zThicknessInPixels) {
@@ -444,7 +414,6 @@ implements GLActor
         neuronColor[2] = color.getBlue() / 255.0f;
         // skeletonActorChangedSignal.emit();
         updateAnchors();
-//        updateAnchorsSlot.execute();
     }
 
 	public synchronized void updateAnchors() {
@@ -569,7 +538,6 @@ implements GLActor
         }
 
         updater.update();
-//		skeletonActorChangedSignal.emit();
 	}
 	
 	public void setTileFormat(TileFormat tileFormat) {
@@ -716,7 +684,6 @@ implements GLActor
 			return;
 		hoverAnchorIndex = ix;
         updater.update();
-//		skeletonActorChangedSignal.emit(); // TODO leads to instability?
 	}
 
 	public Anchor getNextParent() {
@@ -744,8 +711,6 @@ implements GLActor
         // first signal is for drawing the marker, second is for notifying
         //  components that want to, eg, select the enclosing neuron
         updater.update();
-//		skeletonActorChangedSignal.emit();
-//        nextParentChangedSignal.emit(nextParent);
         updater.update(nextParent);
 		return true;
 	}
@@ -768,7 +733,6 @@ implements GLActor
 			vertices.put( offset+i, (float)(vertices.get(offset+i) + dv.get(i)) );
 		}
         updater.update();
-//		skeletonActorChangedSignal.emit();
 	}
 	
 	public void lightweightPlaceAnchor(Anchor dragAnchor, Vec3 location) {
@@ -782,7 +746,6 @@ implements GLActor
 			vertices.put( offset+i, (float)(double)location.get(i) );
 		}
         updater.update();
-//		skeletonActorChangedSignal.emit();
 	}
 
 	public boolean isVisible() {
@@ -793,7 +756,6 @@ implements GLActor
             return;
         bIsVisible = b;
         updater.update();
-//        skeletonActorChangedSignal.emit();
     }
 
     public void addTracedSegment(TracedPathActor actor) {
@@ -802,7 +764,6 @@ implements GLActor
         tracedSegments.put(actor.getSegmentIndex(), actor);
     	// log.info("tracedSegments.size() [694] = "+tracedSegments.size());
         updater.update();
-//        skeletonActorChangedSignal.emit();
     }
     
 }

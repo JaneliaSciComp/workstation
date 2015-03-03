@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-//import org.janelia.it.workstation.signal.Signal1;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -14,8 +13,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanTo
  * in the large volume viewer
  */
 public class GoToLocationAction extends AbstractAction {
-
-//    public Signal1<Vec3> gotoLocationSignal = new Signal1<>();
 
     private Camera3d camera;
     private CameraPanToListener listener;
@@ -85,7 +82,6 @@ public class GoToLocationAction extends AbstractAction {
         if (listener != null) {
             listener.cameraPanTo(newLocation);
         }
-//        gotoLocationSignal.emit(newLocation);
     }
 
     /**

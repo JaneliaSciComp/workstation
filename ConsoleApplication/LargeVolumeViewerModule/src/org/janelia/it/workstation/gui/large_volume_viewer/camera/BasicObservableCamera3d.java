@@ -9,31 +9,21 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
-//import org.janelia.it.workstation.signal.Signal;
-//import org.janelia.it.workstation.signal.Signal1;
 
 public class BasicObservableCamera3d 
 extends Observable 
 implements Camera3d, ObservableCamera3d
 {
 	private Camera3d camera = new BasicCamera3d();
-//	private Signal viewChangedSignal = new Signal();
-//	private Signal1<Double> zoomChangedSignal = new Signal1<Double>();
-//	private Signal1<Vec3> focusChangedSignal = new Signal1<Vec3>();
     
     private List<CameraListener> cameraListeners = new ArrayList<>();    
 	
-//	public Signal1<Vec3> getFocusChangedSignal() {
-//		return focusChangedSignal;
-//	}
-
 	@Override
 	public boolean incrementFocusPixels(double dx, double dy, double dz) {
 		boolean result = markAndNotify(camera.incrementFocusPixels(dx, dy, dz));
 		if (result) {
             fireFocusChanged(camera.getFocus());
         }
-//			getFocusChangedSignal().emit(camera.getFocus());
 		return result;
 	}
 
@@ -43,7 +33,6 @@ implements Camera3d, ObservableCamera3d
 		if (result) {
             fireFocusChanged(camera.getFocus());
         }
-//			getFocusChangedSignal().emit(camera.getFocus());
 		return result;
 	}
 
@@ -52,7 +41,6 @@ implements Camera3d, ObservableCamera3d
 		boolean result = markAndNotify(camera.incrementZoom(zoomRatio));
 		if (result) {
             fireZoomChanged(camera.getPixelsPerSceneUnit());
-//			getZoomChangedSignal().emit(camera.getPixelsPerSceneUnit());
 		}
 		return result;
 	}
@@ -62,7 +50,6 @@ implements Camera3d, ObservableCamera3d
 			return false;
 		// System.out.println("emit viewChanged");
         fireViewChanged();
-//		getViewChangedSignal().emit();	
 		return true;
 	}
 
@@ -87,7 +74,6 @@ implements Camera3d, ObservableCamera3d
 		if (result) {
             fireFocusChanged(camera.getFocus());
         }
-//			getFocusChangedSignal().emit(camera.getFocus());
 		return result;
 	}
 
@@ -102,7 +88,6 @@ implements Camera3d, ObservableCamera3d
 		if (result) {
             fireFocusChanged(camera.getFocus());
         }
-//			getFocusChangedSignal().emit(camera.getFocus());
 		return result;
 	}
 
@@ -112,7 +97,6 @@ implements Camera3d, ObservableCamera3d
 		if (result) {
             fireFocusChanged(camera.getFocus());
         }
-//			getFocusChangedSignal().emit(camera.getFocus());
 		return result;		
 	}
 
@@ -126,7 +110,6 @@ implements Camera3d, ObservableCamera3d
 		boolean result = markAndNotify(camera.setPixelsPerSceneUnit(pixelsPerSceneUnit));
 		if (result) {
             fireZoomChanged(camera.getPixelsPerSceneUnit());
-//			getZoomChangedSignal().emit(camera.getPixelsPerSceneUnit());
 		}
 		return result;
 	}

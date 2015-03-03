@@ -21,8 +21,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageList
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-//import org.janelia.it.workstation.signal.Slot;
-//import org.janelia.it.workstation.signal.Slot1;
 
 /*
  * GUI widget combining a large volume viewer with a slice slider.
@@ -43,22 +41,6 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 	private ViewTileManager viewTileManager;
 	private TileServer tileServer;
 	
-//	public Slot1<MouseMode.Mode> setMouseModeSlot = new Slot1<MouseMode.Mode>() 
-//	{
-//        @Override
-//        public void execute(MouseMode.Mode modeId) {
-//            viewer.setMouseMode(modeId);
-//        }
-//	};
-//	
-//    public Slot1<WheelMode.Mode> setWheelModeSlot = new Slot1<WheelMode.Mode>() 
-//    {
-//        @Override
-//        public void execute(WheelMode.Mode modeId) {
-//            viewer.setWheelMode(modeId);
-//        }
-//    };
-    
     public OrthogonalPanel(CoordinateAxis axis) {
 		this.axis = axis;
 		viewer = new OrthogonalViewer(axis);
@@ -130,13 +112,6 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 	/**
 	 * Update slider and spinner after camera motion
 	 */
-//	public Slot setSliceSlot = new Slot() {
-//		@Override
-//		public void execute() {
-//            volumeLoaded(null);
-//		}
-//	};
-
 	public void setCamera(ObservableCamera3d camera) {
 		this.camera = camera;
 		viewer.setCamera(camera);
@@ -146,8 +121,6 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
                 volumeLoaded(null);
             }
         });
-//		camera.getFocusChangedSignal().connect(
-//				setSliceSlot);
 	}
 	
 	public void setSharedVolumeImage(SharedVolumeImage volumeImage3d) {
@@ -156,7 +129,6 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 		this.volume = volumeImage3d;
 		viewer.setVolumeImage3d(volumeImage3d);
         volume.addVolumeLoadListener(this);
-//		volume.volumeInitializedSignal.connect(setSliceSlot);
 		viewTileManager.setVolumeImage(volumeImage3d);
 	}
 	

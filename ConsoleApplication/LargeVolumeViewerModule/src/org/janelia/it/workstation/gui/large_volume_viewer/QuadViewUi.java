@@ -5,7 +5,6 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer.LoadStatus;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
-//import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.OrthogonalModeAction.OrthogonalMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
@@ -19,10 +18,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrive
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-//import org.janelia.it.workstation.signal.Signal;
-//import org.janelia.it.workstation.signal.Signal1;
-//import org.janelia.it.workstation.signal.Slot;
-//import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -196,55 +191,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		}
 	};
 
-//	public Signal1<MouseMode.Mode> mouseModeChangedSignal = 
-//		    new Signal1<>();
-//	    public Signal1<WheelMode.Mode> wheelModeChangedSignal = 
-//	        new Signal1<>();
-
-// Never emitted.    public Signal1<AnchoredVoxelPath> addAnchoredPathRequestSignal = new Signal1<>();
-
-//    public Signal1<PathTraceToParentRequest> tracePathRequestedSignal = new Signal1<>();
-//
-//    public Signal closeWorkspaceRequestSignal = new Signal();
-
-//	private Slot1<MouseMode.Mode> onMouseModeChangedSlot = new Slot1<MouseMode.Mode>() {
-//		@Override
-//		public void execute(Mode mode) {
-//			// Only display anchors in Trace mode
-//			if (mode == MouseMode.Mode.TRACE)
-//				getSkeletonActor().setAnchorsVisible(true);
-//			else
-//				getSkeletonActor().setAnchorsVisible(false);
-//		}
-//	};
-	    
-	// Slots
-//	private Slot1<URL> loadUrlSlot = new Slot1<URL>() {
-//		@Override
-//		public void execute(URL url) {
-//			loadRender(url);
-//		}
-//	};
-	    
-//	protected Slot1<Vec3> changeZ = new Slot1<Vec3>() {
-//		@Override
-//		public void execute(Vec3 focus) {
-//			focusChanged(focus);
-//		}
-//	};
-
     public void focusChanged(Vec3 focus) {
         int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
         zScanSlider.setValue(z);
         zScanSpinner.setValue(z);
     }
-
-//	protected Slot1<Double> changeZoom = new Slot1<Double>() {
-//		@Override
-//		public void execute(Double zoom) {
-//			zoomChanged(zoom);
-//		}
-//	};
 
     public void zoomChanged(Double zoom) {
         double zoomMin = Math.log(getMinZoom()) / Math.log(2.0);
@@ -272,102 +223,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         Anchor anchor = getSkeletonActor().getNextParent();
         if (anchor != null) {
             setCameraFocus(anchor.getLocation());
-//            setCameraFocusSlot.execute(
-//                    anchor.getLocation()
-//            );
         }
     }
-
-//    public Slot1<Vec3> setCameraFocusSlot = new Slot1<Vec3>() {
-//		@Override
-//		public void execute(Vec3 focus) {
-//			camera.setFocus(focus);
-//		}
-//	};
-	
-//	protected Slot updateRangesSlot = new Slot() {
-//		@Override
-//		public void execute() 
-//		{
-//            updateRanges();
-//		}
-//
-//	};
-
-//	public Slot1<String> setStatusMessageSlot = new Slot1<String>() {
-//		@Override
-//		public void execute(String message) {
-//			statusLabel.setText(message);
-//		}
-//	};
-	
-//	private Slot1<LoadStatus> onLoadStatusChangedSlot = new Slot1<LoadStatus>() {
-//		@Override
-//		public void execute(LoadStatus status) {
-//			// log.info("load status ordinal "+status.ordinal());
-//			loadStatusLabel.setLoadStatus(status);
-//		}
-//	};
-
-//    public Slot centerNextParentVoxelSlot = new Slot() {
-//        @Override
-//        public void execute() {
-//            Anchor anchor = getSkeletonActor().getNextParent();
-//            if (anchor != null) {
-//                setCameraFocus(
-//                        tileFormat.micronVec3ForVoxelVec3Cornered(anchor.getLocation())
-//                );
-////                setCameraFocusSlot.execute(
-////                        tileFormat.micronVec3ForVoxelVec3Cornered(anchor.getLocation())
-////                );
-//            }
-//        }
-//    };
-	
-//    public Slot centerNextParentMicronSlot = new Slot() {
-//        @Override
-//        public void execute() {
-//            Anchor anchor = getSkeletonActor().getNextParent();
-//            if (anchor != null) {
-//                setCameraFocus(anchor.getLocation());
-////                setCameraFocusSlot.execute(
-////                        anchor.getLocation()
-////                );
-//            }
-//        }
-//    };
-	
-//    public Slot1<Long> tracePathSegmentSlot = new Slot1<Long>() {
-//        @Override
-//        public void execute(Long annotationID) {
-//            // this needs to happen before you draw anchored paths; should
-//            //  go somewhere else so it only happens once, but not clear where;
-//            //  not clear we have a trigger for when the image is loaded enough for
-//            //  this info to be available (it loads asynchronously)
-//            getSkeletonActor().setTileFormat(
-//                    tileServer.getLoadAdapter().getTileFormat());
-//
-//            // construct new request; add image data to anchor and pass it on
-//            PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
-//            request.setImageVolume(volumeImage);
-//            request.setTextureCache(tileServer.getTextureCache());
-//            tracePathRequestedSignal.emit(request);
-//        }
-//    };
-
-//    public Slot1<String> loadColorModelSlot = new Slot1<String>() {
-//        @Override
-//        public void execute(String modelString) {
-//            imageColorModelFromString(modelString);
-//        }
-//    };
-
-//    public Slot colorModelUpdatedSlot = new Slot() {
-//        @Override
-//        public void execute() {
-//            sliderPanel.updateLockButtons();
-//        }
-//    };
 
 	/**
 	 * Create the frame.
@@ -375,12 +232,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
 	{
         volumeImage.addVolumeLoadListener(this);
-//		volumeImage.volumeInitializedSignal.connect(onVolumeLoadedSlot);
         volumeImage.addVolumeLoadListener(annotationMgr);
-//        volumeImage.volumeInitializedSignal.connect(annotationMgr.onVolumeLoadedSlot);
 		largeVolumeViewer.setImageColorModel(imageColorModel);
-//		camera.getViewChangedSignal().connect(tileServer.refreshCurrentTileSetSlot);
-//		tileServer.loadStatusChangedSignal.connect(onLoadStatusChangedSlot);
 		sliderPanel.setVisible(false);
         
         camera.addCameraListener(new CameraListener() {
@@ -406,17 +259,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         setupAnnotationGestures();
 
         // connect up text UI and model with graphic UI(s):
-//        skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
-//        tracePathRequestedSignal.connect(annotationMgr.tracePathRequestedSlot);
-//        closeWorkspaceRequestSignal.connect(annotationMgr.closeWorkspaceRequestedSlot);
         getSkeletonActor().addAnchorUpdateListener(annotationMgr);
-//        getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
                 
-//        skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
         // Nb: skeleton.anchorMovedSilentSignal intentially does *not* connect to annotationMgr!
-//        skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
-//        annotationModel.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
-//        addAnchoredPathRequestSignal.connect(annotationMgr.addPathRequestedSlot);
 
         quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer);
         largeVolumeViewerTranslator.setViewStateListener(quadViewController);
@@ -447,8 +292,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 skeleton, largeVolumeViewer.getSkeletonActor(), annotationMgr
         );
         largeVolumeViewerTranslator.connectSkeletonSignals(skeleton, skeletonController);
-//        largeVolumeViewerTranslator.cameraPanToSignal.connect(setCameraFocusSlot);
-//        largeVolumeViewerTranslator.loadColorModelSignal.connect(loadColorModelSlot);
 
 		// must come after setupUi() (etc), since it triggers UI changes:
 		annotationMgr.setInitialEntity(initialEntity);
@@ -464,17 +307,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         // 
         collectGarbageAction.putValue(Action.NAME, "Collect Garbage");
         //
-//        largeVolumeViewer.statusMessageChanged.connect(setStatusMessageSlot);
         largeVolumeViewer.setSkeleton(skeleton);
         //
         largeVolumeViewer.setWheelMode(WheelMode.Mode.SCAN);
         // Respond to orthogonal mode changes
-//        orthogonalModeAction.orthogonalModeChanged.connect(new Slot1<OrthogonalMode>() {
-//            @Override
-//            public void execute(OrthogonalMode mode) {
-//                setOrthogonalMode(mode);
-//            }
-//        });
         setZViewMode();
         // Connect mode changes to widgets
         // First connect mode actions to one signal
@@ -485,20 +321,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         quadViewController.registerForEvents(zScanScrollModeAction);
         quadViewController.registerForEvents(tileServer);
         quadViewController.registerForEvents(goToLocationAction);
-//        panModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
-//        zoomMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
-//        traceMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
-//        zoomScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
-//        zScanScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
-//        mouseModeChangedSignal.connect(onMouseModeChangedSlot);
-        // Next connect that signal to various widgets
-//        mouseModeChangedSignal.connect(largeVolumeViewer.setMouseModeSlot);
-//        wheelModeChangedSignal.connect(largeVolumeViewer.setWheelModeSlot);
-        // annotation-related actions:
-//        centerNextParentAction.centerNextParentSignal.connect(centerNextParentVoxelSlot);
-//        annotationPanel.centerAnnotationSignal.connect(centerNextParentMicronSlot);
-        // go to location action
-//        goToLocationAction.gotoLocationSignal.connect(setCameraFocusSlot);
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
@@ -509,11 +331,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         skeletonController.registerForEvents(quadViewController);  // Pass-through
         for (OrthogonalPanel v : viewPanels) {
             quadViewController.registerForEvents(v);
-//            mouseModeChangedSignal.connect(v.setMouseModeSlot);
-//            wheelModeChangedSignal.connect(v.setWheelModeSlot);
             v.setCamera(camera);
             // TODO - move most of this setup into OrthogonalViewer class.
-//            v.getViewer().statusMessageChanged.connect(setStatusMessageSlot);
             v.setSharedVolumeImage(volumeImage);
             v.setSystemMenuItemGenerator(new MenuItemGenerator() {
                 @Override
@@ -527,8 +346,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             });
             v.setTileServer(tileServer);
             v.getViewer().getSliceActor().setImageColorModel(imageColorModel);
-//            imageColorModel.getColorModelChangedSignal().connect(v.getViewer().repaintSlot);
-//            imageColorModel.getColorModelChangedSignal().connect(colorModelUpdatedSlot);
 
             final boolean bShowTileOutlines = false; // Debugging aid
             if (bShowTileOutlines) {
@@ -572,7 +389,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         if (pathTraceListener != null) {
             pathTraceListener.pathTrace(request);
         }
-//        tracePathRequestedSignal.emit(request);
     }
     
 	public void clearCache() {
@@ -715,12 +531,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 splitPane.resetToPreferredSizes();
             }            
         });
-//        imageColorModel.getColorModelInitializedSignal().connect(new org.janelia.it.workstation.signal.Slot() {
-//			@Override
-//			public void execute() {
-//				splitPane.resetToPreferredSizes();
-//			}
-//		});
 
         sliderPanel.guiInit();
         
@@ -762,9 +572,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		largeVolumeViewer.setBackground(Color.DARK_GRAY);
 		zViewerPanel.setLayout(new BoxLayout(zViewerPanel, BoxLayout.Y_AXIS));
 		zViewerPanel.add(largeVolumeViewer);
-//		volumeImage.volumeInitializedSignal.connect(updateRangesSlot);
-//		camera.getZoomChangedSignal().connect(changeZoom);
-//        camera.getFocusChangedSignal().connect(changeZ);
 		
 		// JPanel zScanPanel = new JPanel();
 		zViewerPanel.add(zScanPanel);
@@ -1122,12 +929,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         }
         else {
             toolBarPanel.add(addViewMenuItem());
-            // Listener for clicking on buttons
-//            JPanel tempPanel = new JPanel();
-//            tempPanel.setLayout(new BoxLayout(tempPanel, BoxLayout.LINE_AXIS));
-//            tempPanel.add(menuBar);
-//            tempPanel.add(Box.createHorizontalGlue());
-//            add(tempPanel);
         }
     }
 
@@ -1220,7 +1021,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         mnFile.add(recentFileMenu);
         recentFileList = new RecentFileList(recentFileMenu);
         quadViewController.registerForEvents(recentFileList);
-//        recentFileList.getOpenUrlRequestedSignal().connect(loadUrlSlot);
 
         return mnFile;
     }
@@ -1350,7 +1150,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         if (wsCloseListener != null) {
             wsCloseListener.closeWorkspace();
         }
-//        closeWorkspaceRequestSignal.emit();
 
         // then just go ahead and load the file
         boolean rtnVal = loadURL(url);
@@ -1384,13 +1183,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public void imageColorModelFromString(String modelString) {
         imageColorModel.fromString(modelString);
     }
-
-//    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
-//		@Override
-//		public void execute(URL url) {
-//            volumeLoaded(url);
-//		}
-//    };
 
     /**
      * this method returns a provider of read-only subvolume of data (maximum zoom,

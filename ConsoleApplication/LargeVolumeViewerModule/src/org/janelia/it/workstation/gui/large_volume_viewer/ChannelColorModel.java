@@ -5,8 +5,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.ChannelColo
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
 
-//import org.janelia.it.workstation.signal.Signal1;
-
 public class ChannelColorModel 
 {    
 	private Color color;
@@ -19,14 +17,6 @@ public class ChannelColorModel
 	private boolean visible = true;
 	private int index; // e.g. first channel red is zero, second green is one, etc.
 
-//	private Signal1<Color> colorChangedSignal = new Signal1<Color>();
-    
-//	private Signal1<Integer> blackLevelChangedSignal = new Signal1<Integer>();
-//	private Signal1<Double> gammaChangedSignal = new Signal1<Double>();
-//	private Signal1<Integer> whiteLevelChangedSignal = new Signal1<Integer>();
-//	private Signal1<Integer> dataMaxChangedSignal = new Signal1<Integer>();
-//	private Signal1<Boolean> visibilityChangedSignal = new Signal1<Boolean>();
-    
     private final int NUM_SERIALIZED_ITEMS = 9;
     
     private ColorModelListener colorModelListener;
@@ -135,25 +125,9 @@ public class ChannelColorModel
 		return blackLevel;
 	}
 
-//	public Signal1<Integer> getBlackLevelChangedSignal() {
-//		return blackLevelChangedSignal;
-//	}
-
 	public Color getColor() {
 		return color;
 	}
-
-//	public Signal1<Color> getColorChangedSignal() {
-//		return colorChangedSignal;
-//	}
-
-//	public Signal1<Integer> getDataMaxChangedSignal() {
-//		return dataMaxChangedSignal;
-//	}
-
-//	public Signal1<Boolean> getVisibilityChangedSignal() {
-//		return visibilityChangedSignal;
-//	}
 
 	public int getDataMax() {
 		return dataMax;
@@ -163,10 +137,6 @@ public class ChannelColorModel
 		return gamma;
 	}
 
-//	public Signal1<Double> getGammaChangedSignal() {
-//		return gammaChangedSignal;
-//	}
-
 	public int getIndex() {
 		return index;
 	}
@@ -175,10 +145,6 @@ public class ChannelColorModel
 		return whiteLevel;
 	}
 
-//	public Signal1<Integer> getWhiteLevelChangedSignal() {
-//		return whiteLevelChangedSignal;
-//	}
-	
 	public boolean isVisible() {
 		return visible;
 	}
@@ -194,7 +160,6 @@ public class ChannelColorModel
 			return;
 		this.blackLevel = blackLevel;
 		// System.out.println("black level = "+blackLevel);
-//		blackLevelChangedSignal.emit(this.blackLevel);
         fireBlackLevelChanged(this.blackLevel);
         fireColorModelChanged();
 	}
@@ -204,7 +169,6 @@ public class ChannelColorModel
 			return;
 		this.color = color;
         fireColorChange(this.color);
-//		colorChangedSignal.emit(this.color);
         fireColorModelChanged();
 
 	}
@@ -213,7 +177,6 @@ public class ChannelColorModel
 		if (this.dataMax == dataMax)
 			return;
 		this.dataMax = dataMax;
-//		dataMaxChangedSignal.emit(this.dataMax);
         fireColorModelChanged();
 	}
 
@@ -222,7 +185,6 @@ public class ChannelColorModel
 			return;
 		this.gamma = gamma;
 		// System.out.println("gamma = "+gamma);
-//		gammaChangedSignal.emit(this.gamma);
         fireGammaChanged(this.gamma);
 	}
 
@@ -230,7 +192,6 @@ public class ChannelColorModel
 		if (visibility == this.visible)
 			return;
 		this.visible = visibility;
-//		visibilityChangedSignal.emit(this.visible);
         fireColorModelChanged();
 	}
 
@@ -239,7 +200,6 @@ public class ChannelColorModel
 			return;
 		this.whiteLevel = whiteLevel;
 		// System.out.println("white level = "+whiteLevel);
-		//whiteLevelChangedSignal.emit(this.whiteLevel);
         fireWhiteLevelChanged(this.whiteLevel);
 	}
 

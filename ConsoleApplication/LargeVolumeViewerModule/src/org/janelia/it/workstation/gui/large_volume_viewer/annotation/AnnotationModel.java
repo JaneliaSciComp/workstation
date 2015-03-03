@@ -12,8 +12,6 @@ import org.janelia.it.workstation.shared.util.SWCDataConverter;
 import org.janelia.it.workstation.shared.util.SWCNode;
 import org.janelia.it.workstation.shared.util.SWCData;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-//import org.janelia.it.workstation.signal.Signal1;
-//import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
@@ -50,15 +48,15 @@ this class.  use "updateCurrentWorkspace/Neuron" to keep the local copies of
 those objects in sync with the back end.  other components will limit themselves
 to accessing those two objects in general.
 
-this class does not interact directly with the UI.  its slots are connected to
-UI elements that select, and its signals are connected with a variety of UI elements
-that need to respond to changing data.  this sometimes makes it hard to know
-whether methods are called in the Java EDT (event thread) or not, and that's
-important for knowing how you have to call the UI updates.  the answer is that
-all the calls that hit the db go through modelMgr and could throw exceptions. 
-so any call that calls modelMgr must catch Exceptions, and therefore it should
-emit its signals on the EDT, because it's probably being called from a 
-SimpleWorker thread.
+this class does not interact directly with the UI.  it observes 
+UI elements that select, and its events are connected with a variety of UI
+elements that need to respond to changing data.  this sometimes makes it hard 
+to know whether methods are called in the Java EDT (event thread) or not, and 
+that's important for knowing how you have to call the UI updates.  the answer 
+is that all the calls that hit the db go through modelMgr and could throw 
+exceptions.  so any call that calls modelMgr must catch Exceptions, and 
+therefore it should emit its signals on the EDT, because it's probably being 
+called from a  SimpleWorker thread.
 */
 {
     public static final String STD_SWC_EXTENSION = ".swc";
@@ -77,39 +75,6 @@ SimpleWorker thread.
     private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
     private Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
     
-    // ----- signals
-//    public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<>();
-
-//    public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<>();
-
-//    public Signal1<TmGeoAnnotation> annotationAddedSignal = new Signal1<>();
-//    public Signal1<List<TmGeoAnnotation>> annotationsDeletedSignal = new Signal1<>();
-//    public Signal1<TmGeoAnnotation> annotationReparentedSignal = new Signal1<>();
-//    public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<>();
-    
-//    public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<>();
-//    public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<>();
-
-//    public Signal1<Long> pathTraceRequestedSignal = new Signal1<>();
-
-//    public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<>();
-
-//    public Signal1<TmWorkspace> notesUpdatedSignal = new Signal1<>();
-
-    // ----- slots
-//    public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
-//        @Override
-//        public void execute(TmNeuron neuron) {
-//            selectNeuron(neuron);
-////            neuronSelectedSignal.emit(neuron);
-//        }
-//    };
-
-//    public void neuronClicked(TmNeuron neuron) {
-//        setCurrentNeuron(neuron);
-//        fireNeuronSelected(neuron);
-//    }
-
     // ----- constants
     // name of entity that holds our workspaces
     public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
@@ -182,9 +147,7 @@ SimpleWorker thread.
             @Override
             public void run() {
                 fireWorkspaceLoaded(updateWorkspace);
-//                workspaceLoadedSignal.emit(updateWorkspace);
                 fireNeuronSelected(null);
-//                neuronSelectedSignal.emit(null);
             }
         });
 
@@ -238,7 +201,6 @@ SimpleWorker thread.
     public void selectNeuron(TmNeuron neuron) {
         setCurrentNeuron(neuron);
         fireNeuronSelected(neuron);
-//        neuronSelectedSignal.emit(neuron);
     }
 
     private void updateCurrentNeuron() {
@@ -395,9 +357,7 @@ SimpleWorker thread.
             @Override
             public void run() {
                 fireWorkspaceLoaded(workspace);
-//                workspaceLoadedSignal.emit(workspace);
                 fireNeuronSelected(neuron);
-//                neuronSelectedSignal.emit(neuron);
             }
         });
     }
@@ -424,13 +384,9 @@ SimpleWorker thread.
             @Override
             public void run() {
                 fireNeuronSelected(null);
-//                neuronSelectedSignal.emit(null);
                 fireAnnotationsDeleted(tempAnnotationList);
-//                annotationsDeletedSignal.emit(tempAnnotationList);
                 fireAnchoredPathsRemoved(tempPathList);
-//                anchoredPathsRemovedSignal.emit(tempPathList);
                 fireWorkspaceLoaded(workspace);
-//                workspaceLoadedSignal.emit(workspace);
             }
         });
     }
@@ -484,9 +440,7 @@ SimpleWorker thread.
             @Override
             public void run() {
                 fireNeuronSelected(currNeuron);
-//                neuronSelectedSignal.emit(currNeuron);
                 fireAnnotationAdded(annotation);
-//                annotationAddedSignal.emit(annotation);
             }
         });
     }
@@ -515,16 +469,13 @@ SimpleWorker thread.
         if (automatedTracingEnabled()) {
             if (viewStateListener != null)
                 viewStateListener.pathTraceRequested(annotation.getId());
-//            pathTraceRequestedSignal.emit(annotation.getId());
         }
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireNeuronSelected(neuron);
-//                neuronSelectedSignal.emit(neuron);
                 fireAnnotationAdded(annotation);
-//                annotationAddedSignal.emit(annotation);
             }
         });
 
@@ -554,7 +505,6 @@ SimpleWorker thread.
                 @Override
                 public void run() {
                     fireAnnotationNotMoved(annotationID);
-//                    annotationNotMovedSignal.emit(getGeoAnnotationFromID(annotationID));
                 }
             });
             throw e;
@@ -579,10 +529,8 @@ SimpleWorker thread.
         if (automatedTracingEnabled()) {
             // trace to parent, and each child to this parent:
             viewStateListener.pathTraceRequested(annotation.getId());
-//            pathTraceRequestedSignal.emit(annotation.getId());
             for (TmGeoAnnotation child : neuron.getChildrenOf(annotation)) {
                 viewStateListener.pathTraceRequested(child.getId());
-//                pathTraceRequestedSignal.emit(child.getId());
             }
         }
 
@@ -590,12 +538,10 @@ SimpleWorker thread.
             @Override
             public void run() {
                 fireNotesUpdated(workspace);
-//                notesUpdatedSignal.emit(workspace);
 
                 if (getCurrentNeuron() != null) {
                     if (neuron.getId().equals(getCurrentNeuron().getId())) {
                         fireNeuronSelected(getCurrentNeuron());
-//                        neuronSelectedSignal.emit(getCurrentNeuron());
                     }
                 }
             }
@@ -690,7 +636,6 @@ SimpleWorker thread.
         for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
             if (automatedTracingEnabled()) {
                 viewStateListener.pathTraceRequested(child.getId());
-//                pathTraceRequestedSignal.emit(child.getId());
             }
         }
 
@@ -698,17 +643,12 @@ SimpleWorker thread.
             @Override
             public void run() {
                 fireNotesUpdated(workspace);
-//                notesUpdatedSignal.emit(workspace);
                 fireNeuronSelected(updateTargetNeuron);
-//                neuronSelectedSignal.emit(updateTargetNeuron);
                 fireWorkspaceLoaded(workspace);
-//                workspaceLoadedSignal.emit(workspace);
                 for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
                     fireAnnotationReparented(child);
-//                    annotationReparentedSignal.emit(child);
                 }
                 fireAnnotationsDeleted(deleteList);
-//                annotationsDeletedSignal.emit(deleteList);
             }
         });
 
@@ -777,14 +717,12 @@ SimpleWorker thread.
         // if we're tracing, retrace if there's a new connection
         if (automatedTracingEnabled() && child != null) {
             viewStateListener.pathTraceRequested(child.getId());
-//            pathTraceRequestedSignal.emit(child.getId());
         }
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireNotesUpdated(workspace);
-//                notesUpdatedSignal.emit(workspace);
 
                 // need to delete an anchor (which does undraw it); but then
                 //  need to redraw the neurite, because we need the link
@@ -792,11 +730,9 @@ SimpleWorker thread.
                 List<TmGeoAnnotation> deleteList = new ArrayList<>(1);
                 deleteList.add(link);
                 fireAnnotationsDeleted(deleteList);
-//                annotationsDeletedSignal.emit(deleteList);
 
                 if (updateChild != null) {
                     fireAnnotationReparented(updateChild);
-//                    annotationReparentedSignal.emit(updateChild);
                 }
 
             }
@@ -856,11 +792,8 @@ SimpleWorker thread.
             @Override
             public void run() {
                 fireNotesUpdated(workspace);
-//                notesUpdatedSignal.emit(workspace);
                 fireNeuronSelected(updateNeuron);
-//                neuronSelectedSignal.emit(updateNeuron);
                 fireAnnotationsDeleted(deleteList);
-//                annotationsDeletedSignal.emit(deleteList);
             }
         });
 
@@ -943,9 +876,7 @@ SimpleWorker thread.
         if (automatedTracingEnabled()) {
             if (viewStateListener != null) {
                 viewStateListener.pathTraceRequested(newAnnotation.getId());
-//            pathTraceRequestedSignal.emit(newAnnotation.getId());
                 viewStateListener.pathTraceRequested(annotation1.getId());
-//            pathTraceRequestedSignal.emit(annotation1.getId());
             }
         }
 
@@ -983,7 +914,6 @@ SimpleWorker thread.
                 @Override
                 public void run() {
                     fireNeuronSelected(updateNeuron);
-//                    neuronSelectedSignal.emit(updateNeuron);
                 }
             });
         }
@@ -1012,9 +942,7 @@ SimpleWorker thread.
             @Override
             public void run() {
                 fireAnnotationReparented(updateNeuron.getGeoAnnotationMap().get(newRootID));
-//                annotationReparentedSignal.emit(updateNeuron.getGeoAnnotationMap().get(newRootID));
                 fireNeuronSelected(updateNeuron);
-//                neuronSelectedSignal.emit(updateNeuron);
             }
         });
     }
@@ -1072,7 +1000,6 @@ SimpleWorker thread.
             @Override
             public void run() {
                 fireAnchoredPathAdded(path);
-//                anchoredPathAddedSignal.emit(path);
             }
         });
 
@@ -1103,7 +1030,6 @@ SimpleWorker thread.
             @Override
             public void run() {
                 fireAnchoredPathsRemoved(pathList);
-//                anchoredPathsRemovedSignal.emit(pathList);
             }
         });
     }
@@ -1166,7 +1092,6 @@ SimpleWorker thread.
             @Override
             public void run() {
                 fireNotesUpdated(workspace);
-//                notesUpdatedSignal.emit(workspace);
             }
         });
 
@@ -1183,7 +1108,6 @@ SimpleWorker thread.
             @Override
             public void run() {
                 fireNotesUpdated(workspace);
-//                notesUpdatedSignal.emit(workspace);
             }
         });
     }
@@ -1195,7 +1119,6 @@ SimpleWorker thread.
 
         // persisted, so go ahead and change it
         fireGlobalAnnotationColorChanged(color);
-//        globalAnnotationColorChangedSignal.emit(color);
     }
 
     public boolean automatedRefinementEnabled() {
@@ -1324,10 +1247,8 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-//                workspaceLoadedSignal.emit(workspace);
                 fireWorkspaceLoaded(workspace);
                 fireNeuronSelected(neuron);
-//                neuronSelectedSignal.emit(neuron);
             }
         });
 

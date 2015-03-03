@@ -10,8 +10,6 @@ import java.util.Collection;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ChannelColorChangeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelInitListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
-//import org.janelia.it.workstation.signal.Signal;
-//import org.janelia.it.workstation.signal.Slot1;
 
 public class ImageColorModel 
 {
@@ -34,9 +32,6 @@ public class ImageColorModel
     private Collection<ColorModelListener> colorModelListeners = new ArrayList<>();
     private Collection<ColorModelInitListener> colorModelInitListeners = new ArrayList<>();
 
-//	private Signal colorModelChangedSignal = new Signal();
-//	private Signal colorModelInitializedSignal = new Signal();
-	
 	/*
 	public ImageColorModel() {
 		init(3, 8); // Default to 3 8-bit channels
@@ -184,11 +179,7 @@ public class ImageColorModel
             }            
         });
 		channels.add(channel);
-		// connect signals
-//		channel.getColorChangedSignal().connect(colorModelChangedSignal);
-//		channel.getDataMaxChangedSignal().connect(colorModelChangedSignal);
-//		channel.getVisibilityChangedSignal().connect(colorModelChangedSignal);
-
+		// connect observers
         channel.setChannelColorChangeListener(new ChannelColorChangeListener() {
             @Override
             public void blackLevelChanged(Integer blackLevel) {
@@ -206,35 +197,8 @@ public class ImageColorModel
             }            
         });
         
-//		channel.getBlackLevelChangedSignal().connect(new Slot1<Integer>() {
-//			@Override
-//			public void execute(Integer blackLevel) {
-//                ImageColorModel.this.blackLevelChanged(blackLevel);
-////				colorModelChangedSignal.emit();
-//			}
-//		});
-
-//		channel.getGammaChangedSignal().connect(new Slot1<Double>() {
-//			@Override
-//			public void execute(Double gamma) {
-//                gammaChanged(gamma);
-////				colorModelChangedSignal.emit();
-//			}
-//		});
-
-//		channel.getWhiteLevelChangedSignal().connect(new Slot1<Integer>() {
-//			@Override
-//			public void execute(Integer whiteLevel) {
-//                whiteLevelChanged(whiteLevel);
-////				colorModelChangedSignal.emit();
-//			}
-//		});
 	}
 
-//	public Signal getColorModelInitializedSignal() {
-//		return colorModelInitializedSignal;
-//	}
-//
 	public boolean isBlackSynchronized() {
 		return blackSynchronized;
 	}
@@ -243,7 +207,6 @@ public class ImageColorModel
         if (blackSynchronized != this.blackSynchronized) {
 		    this.blackSynchronized = blackSynchronized;
             fireColorModelChanged();
-//				colorModelChangedSignal.emit();
         }
 	}
 
@@ -255,7 +218,6 @@ public class ImageColorModel
         if (gammaSynchronized != this.gammaSynchronized) {
 		    this.gammaSynchronized = gammaSynchronized;
             fireColorModelChanged();
-//				colorModelChangedSignal.emit();
         }
 	}
 
@@ -267,13 +229,8 @@ public class ImageColorModel
         if (whiteSynchronized != this.whiteSynchronized) {
 		    this.whiteSynchronized = whiteSynchronized;
             fireColorModelChanged();
-//				colorModelChangedSignal.emit();
         }
 	}
-
-//	public Signal getColorModelChangedSignal() {
-//		return colorModelChangedSignal;
-//	}
 
 	public ChannelColorModel getChannel(int channelIndex) {
 		return channels.get(channelIndex);
@@ -292,7 +249,6 @@ public class ImageColorModel
 		// System.out.println("model channel count = "+channelCount);
 		resetColors(); // in case 1 or 2 channels
         fireColorModelInitialized();
-//		colorModelInitializedSignal.emit();
 	}
 	
 	public void reset(Integer maxI, Integer numberOfChannels)

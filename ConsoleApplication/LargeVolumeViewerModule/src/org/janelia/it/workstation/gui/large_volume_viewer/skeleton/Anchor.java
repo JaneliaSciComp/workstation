@@ -7,7 +7,6 @@ import org.janelia.it.workstation.geom.CoordinateAxis;
 
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-//import org.janelia.it.workstation.signal.Signal1;
 
 public class Anchor {
 
@@ -31,14 +30,13 @@ public class Anchor {
 
     private SkeletonAnchorListener skeletonAnchorListener;
     
-    // the difference between these signals: one is triggered by
+    // the difference between skel-anchor listener methods: 
+    //  one is triggered by
     //  user mouse actions, will trigger things happening due
     //  to the anchor's having been moved (eg, merges)
     // the "silent" version is triggered
     //  programmatically and won't cause anything other than
     //  the positioning and drawing of the anchor
-//	public Signal1<Anchor> anchorMovedSignal = new Signal1<>();
-//	public Signal1<Anchor> anchorMovedSilentSignal = new Signal1<>();
 
     /**
      * Construct a valid anchor, based on information provided from external
@@ -113,7 +111,6 @@ public class Anchor {
         if (skeletonAnchorListener != null) {
             skeletonAnchorListener.anchorMoved(this);
         }
-//		anchorMovedSignal.emit(this);
 	}
 
     /**
@@ -130,7 +127,6 @@ public class Anchor {
         if (skeletonAnchorListener != null) {
             skeletonAnchorListener.anchorMovedSilent(this);
         }
-//		anchorMovedSilentSignal.emit(this);
 	}
 
 	public void setAnchorType(Type anchorType) {

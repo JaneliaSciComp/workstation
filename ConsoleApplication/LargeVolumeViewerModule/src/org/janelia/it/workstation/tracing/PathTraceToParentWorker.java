@@ -10,7 +10,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.octree.ZoomLevel;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
-//import org.janelia.it.workstation.signal.Signal1;
 
 import java.util.List;
 import java.util.Vector;
@@ -29,9 +28,6 @@ public class PathTraceToParentWorker extends BackgroundWorker {
 
     // timeout in seconds
     private double timeout = 10.0;
-
-    // public Signal1<TracedPathSegment> pathTracedSignal = new Signal1<TracedPathSegment>();
-//    public Signal1<AnchoredVoxelPath> pathTracedSignal = new Signal1<>();
 
     public PathTraceToParentWorker(PathTraceToParentRequest request) {
         this.request = request;
@@ -120,7 +116,6 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             if (pathTraceListener != null) {
                 pathTraceListener.pathTraced(result);
             }
-//            pathTracedSignal.emit(result);
 
             setStatus("Done");
         }

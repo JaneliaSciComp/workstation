@@ -45,9 +45,6 @@ import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
-//import org.janelia.it.workstation.signal.Slot;
-//import org.janelia.it.workstation.signal.Signal1;
-//import org.janelia.it.workstation.signal.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,14 +83,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 
     private MessageListener messageListener;
     
-//    public Signal1<String> statusMessageChanged = new Signal1<String>();
-//    public Slot repaintSlot = new Slot() {
-//        @Override
-//        public void execute() {
-//            repaint();
-//        }
-//    };
-
 	private TileServer tileServer;
 
 	public OrthogonalViewer(CoordinateAxis axis) {
@@ -138,7 +127,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         setMouseMode(MouseMode.Mode.PAN);
         setWheelMode(WheelMode.Mode.ZOOM);
         rubberBand.setRepaintListener(this);
-//        rubberBand.changed.connect(repaintSlot);
         addMouseListener(this);
         addMouseMotionListener(this);
         addMouseWheelListener(this);
@@ -204,7 +192,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
             return;
         this.camera = camera;
         // Update image whenever camera changes
-//        camera.getViewChangedSignal().connect(repaintSlot);
         camera.addCameraListener(new CameraListenerAdapter() {
             @Override
             public void viewChanged() {
@@ -286,7 +273,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         if (messageListener != null) {
             messageListener.message(msg);
         }
-//        statusMessageChanged.emit(msg);
     }
 
     @Override
@@ -396,7 +382,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		skeletonActor.setZThicknessInPixels(getViewport().getDepth());
 		skeletonActor.setCamera(camera);
         skeletonActor.getUpdater().addListener(this);
-//		skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
         renderer.addActor(skeletonActor);
 	}
 

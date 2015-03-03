@@ -61,8 +61,6 @@ public class TextureLoadWorker implements Runnable
 		else if (texture.loadImageToRam()) {
 			textureCache.add(texture);
             tileServer.textureLoaded(texture.getIndex());
-//            tileServer.textureLoadedSignal.emit(texture.getIndex()); // inform consumers (RavelerTileServer?)
-//			textureCache.textureLoadedSignal.emit(texture.getIndex()); // inform consumers (RavelerTileServer?)
 			// log.info("Loaded texture "+texture.getIndex());
 		}
 		else {

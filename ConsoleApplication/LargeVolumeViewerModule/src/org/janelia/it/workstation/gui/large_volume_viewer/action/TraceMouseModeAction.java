@@ -6,14 +6,11 @@ import javax.swing.KeyStroke;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 
 import org.janelia.it.workstation.gui.util.Icons;
-//import org.janelia.it.workstation.signal.Signal1;
 
 public class TraceMouseModeAction extends AbstractAction {
 	private static final long serialVersionUID = 1L;
     private MouseWheelModeListener mwmListener;
 	
-//	public Signal1<MouseMode.Mode> setMouseModeSignal = new Signal1<MouseMode.Mode>();
-
 	public TraceMouseModeAction() {
 		putValue(NAME, "Trace");
 		putValue(SMALL_ICON, Icons.getIcon("nib.png"));
@@ -38,7 +35,6 @@ public class TraceMouseModeAction extends AbstractAction {
 	@Override
 	public void actionPerformed(ActionEvent e) {
         mwmListener.setMode(MouseMode.Mode.TRACE);
-//	    setMouseModeSignal.emit(MouseMode.Mode.TRACE);
 		putValue(SELECTED_KEY, true);
 	}
 

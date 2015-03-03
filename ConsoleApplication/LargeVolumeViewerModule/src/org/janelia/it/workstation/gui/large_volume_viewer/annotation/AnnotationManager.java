@@ -9,8 +9,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-//import org.janelia.it.workstation.signal.Slot;
-//import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -21,7 +19,7 @@ import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
-import org.janelia.it.workstation.gui.large_volume_viewer.UpdateAnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
@@ -45,10 +43,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
  * lastly, this class gathers and/or reformats info as needed to actually make
  * the call to the back end, usually spinning off a worker thread to do so.
  *
- * this class's slots are usually connected to various UI signals, and its
- * signals typically hook up to AnnotationModel slots. this class has no
+ * this class's events are usually connected to various UI signals, and it
+ * typically fires events for AnnotationModel. this class has no
  * responsibilities in notifying UI elements of what's been done; that's handled
- * by signals emitted from AnnotationModel.
+ * by events generated at AnnotationModel.
  */
 {
 
@@ -146,100 +144,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             selectNeuronFromAnnotation(anchor.getGuid());
         }
     }
-
-    // ----- slots
-//    public Slot1<Anchor> splitAnchorRequestedSlot = new Slot1<Anchor>() {
-//        @Override
-//        public void execute(Anchor anchor) {
-//            splitAnchor(anchor.getGuid());
-//        }
-//    };
-//
-//    public Slot1<Anchor> rerootNeuriteRequestedSlot = new Slot1<Anchor>() {
-//        @Override
-//        public void execute(Anchor anchor) {
-//            rerootNeurite(anchor.getGuid());
-//        }
-//    };
-//
-//    public Slot1<Anchor> splitNeuriteRequestedSlot = new Slot1<Anchor>() {
-//        @Override
-//        public void execute(Anchor anchor) {
-//            splitNeurite(anchor.getGuid());
-//        }
-//    };
-//
-//    public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
-//        @Override
-//        public void execute(Anchor anchor) {
-//            moveAnchor(anchor);
-//        }
-//    };
-
-//    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
-//        @Override
-//        public void execute(URL url) {
-//            onVolumeLoaded();
-//        }
-//    };
-
-//    public Slot1<Skeleton.AnchorSeed> addAnchorRequestedSlot = new Slot1<Skeleton.AnchorSeed>() {
-//        @Override
-//        public void execute(Skeleton.AnchorSeed seed) {
-//            addAnnotation(seed.getLocation(), seed.getParentGuid());
-//        }
-//    };
-
-//    public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
-//        @Override
-//        public void execute(Anchor anchor) {
-//            moveAnchor(anchor);
-//        }
-//    };
-
-//    public Slot1<Anchor> selectAnnotationSlot = new Slot1<Anchor>() {
-//        @Override
-//        public void execute(Anchor anchor) {
-//            if (anchor != null) {
-//                selectNeuronFromAnnotation(anchor.getGuid());
-//            }
-//        }
-//    };
-
-//    public Slot1<PathTraceToParentRequest> tracePathRequestedSlot = new Slot1<PathTraceToParentRequest>() {
-//        @Override
-//        public void execute(PathTraceToParentRequest request) {
-//            tracePathToParent(request);
-//        }
-//    };
-
-//    public Slot1<AnchoredVoxelPath> addPathRequestedSlot = new Slot1<AnchoredVoxelPath>() {
-//        @Override
-//        public void execute(AnchoredVoxelPath voxelPath) {
-//            pathTraced(voxelPath);
-//        }
-//    };
-
-//    public Slot1<Anchor> addEditNoteRequestedSlot = new Slot1<Anchor>() {
-//        @Override
-//        public void execute(Anchor anchor) {
-//            addEditNote(anchor.getGuid());
-//        }
-//    };
-//
-//    public Slot1<TmGeoAnnotation> editNoteRequestedSlot = new Slot1<TmGeoAnnotation>() {
-//        @Override
-//        public void execute(TmGeoAnnotation ann) {
-//            addEditNote(ann.getId());
-//        }
-//    };
-
-//    public Slot closeWorkspaceRequestedSlot = new Slot() {
-//        @Override
-//        public void execute() {
-//            setInitialEntity(null);
-//        }
-//    };
 
     //-----------------------------IMPLEMENTS PathTraceListener
     @Override
@@ -581,7 +485,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     "You can't merge a neurite with itself!",
                     "Can't merge!!");
             annotationModel.fireAnnotationNotMoved(sourceAnnotation);
-//            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
             return;
         }
 
@@ -598,7 +501,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 JOptionPane.OK_CANCEL_OPTION);
         if (ans != JOptionPane.OK_OPTION) {
             annotationModel.fireAnnotationNotMoved(sourceAnnotation);
-//            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
             return;
         }
 
@@ -1177,7 +1079,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         // tracing:
         PathTraceToParentWorker worker = new PathTraceToParentWorker(request, AUTOMATIC_TRACING_TIMEOUT);
         worker.setPathTraceListener(this);
-//        worker.pathTracedSignal.connect(addPathRequestedSlot);
         worker.execute();
 
         // we'd really prefer to see this worker's status in the Progress Monitor, but as of

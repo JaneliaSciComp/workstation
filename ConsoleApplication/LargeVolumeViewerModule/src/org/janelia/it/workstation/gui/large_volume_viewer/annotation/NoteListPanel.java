@@ -6,8 +6,6 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.geom.Vec3;
-//import org.janelia.it.workstation.signal.Signal1;
-//import org.janelia.it.workstation.signal.Slot1;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,26 +33,6 @@ public class NoteListPanel extends JPanel {
 
     private int width;
     private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
-
-    // ----- slots
-//    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
-//        @Override
-//        public void execute(TmWorkspace workspace) {
-//            loadWorkspace(workspace);
-//        }
-//    };
-
-//    public Slot1<TmWorkspace> notesUpdatedSlot = new Slot1<TmWorkspace>() {
-//        @Override
-//        public void execute(TmWorkspace workspace) {
-//            loadWorkspace(workspace);
-//        }
-//    };
-
-    // ----- signals
-//    public Signal1<Vec3> cameraPanToSignal = new Signal1<>();
-//    public Signal1<TmGeoAnnotation> editNoteRequestedSignal = new Signal1<>();
-
 
     public NoteListPanel(int width) {
         this.width = width;
@@ -124,14 +102,12 @@ public class NoteListPanel extends JPanel {
                             if (panListener != null) {
                                 panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
                             }
-//                            cameraPanToSignal.emit(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
                         }
                     } else if (evt.getClickCount() == 2) {
                         if (ann != null) {
                             if (editNoteRequestListener != null) {
                                 editNoteRequestListener.editNote(ann);
                             }
-//                            editNoteRequestedSignal.emit(ann);
                         }
                     }
                 }

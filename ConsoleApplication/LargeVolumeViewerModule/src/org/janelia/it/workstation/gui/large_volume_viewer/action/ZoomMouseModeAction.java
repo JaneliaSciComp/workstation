@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import org.janelia.it.workstation.gui.util.Icons;
-//import org.janelia.it.workstation.signal.Signal1;
 
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
@@ -12,7 +11,6 @@ public class ZoomMouseModeAction extends AbstractAction
 {
 	private static final long serialVersionUID = 1L;
     private MouseWheelModeListener mwmListener;
-//    public Signal1<MouseMode.Mode> setMouseModeSignal = new Signal1<MouseMode.Mode>();
 
 	public ZoomMouseModeAction() {
 		putValue(NAME, "Zoom");
@@ -28,7 +26,6 @@ public class ZoomMouseModeAction extends AbstractAction
 	@Override
 	public void actionPerformed(ActionEvent e) {
         mwmListener.setMode(MouseMode.Mode.ZOOM);
-//		setMouseModeSignal.emit(MouseMode.Mode.ZOOM);
 		putValue(SELECTED_KEY, true);
 	}
 

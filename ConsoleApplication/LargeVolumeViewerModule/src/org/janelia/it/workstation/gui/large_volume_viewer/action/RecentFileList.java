@@ -9,8 +9,6 @@ import java.util.prefs.Preferences;
 import javax.swing.JMenu;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UrlLoadListener;
 
-//import org.janelia.it.workstation.signal.Signal1;
-
 /**
  *  Memorized list of recently opened files for display in a menu.
  *  
@@ -27,8 +25,6 @@ public class RecentFileList
     private UrlLoadListener urlLoadListener;
 	private LinkedList<RecentFileAction> actions = new LinkedList<>();
 
-//	private Signal1<URL> openUrlRequestedSignal = new Signal1<URL>();
-	
 	public RecentFileList(JMenu menu)
 	{
 		this.menu = menu;
@@ -45,7 +41,6 @@ public class RecentFileList
         for (RecentFileAction action: actions) {
         	// Propagate signal
             action.setUrlLoadListener(urlLoadListener);
-//		action.getOpenFileRequestedSignal().connect(getOpenUrlRequestedSignal());
         }
     }
 	
@@ -66,10 +61,6 @@ public class RecentFileList
 		updateMenu();
 	}
 	
-//	public Signal1<URL> getOpenUrlRequestedSignal() {
-//		return openUrlRequestedSignal;
-//	}
-
 	private void loadRecentFiles() {
 		int index = 1;
 		Vector<RecentFileAction> a = new Vector<RecentFileAction>();
@@ -82,7 +73,6 @@ public class RecentFileList
 				URL url = new URL(value);
 				RecentFileAction action = new RecentFileAction(url);
                 action.setUrlLoadListener(urlLoadListener);
-//				action.getOpenFileRequestedSignal().connect(getOpenUrlRequestedSignal());
 				a.add(action);
 			} catch (MalformedURLException e) {
 				// ignore bad URLs

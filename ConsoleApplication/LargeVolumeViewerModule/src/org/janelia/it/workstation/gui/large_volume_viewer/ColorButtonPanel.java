@@ -13,8 +13,6 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-//import java.util.Observable;
-//import java.util.Observer;
 import javax.swing.DefaultButtonModel;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
@@ -31,7 +29,6 @@ public class ColorButtonPanel extends JPanel {
     private List<JCheckBox> checkboxes = new ArrayList<>();
     private List<AbstractButton> bottomControls = new ArrayList<>();
     private int verticalSpacer;
-//    private Observer icmInitObserver;
     private ColorModelInitListener icmInitListener;
     
     public ColorButtonPanel( ImageColorModel imageColorModel, int verticalSpacer ) {
@@ -54,14 +51,6 @@ public class ColorButtonPanel extends JPanel {
             initGui();
         }
         
-//        icmInitObserver = new Observer() {
-//            @Override
-//            public void update(Observable o, Object arg) {
-//                initGui();
-//            }
-//            
-//        };
-
         icmInitListener = new ColorModelInitListener() {
             @Override
             public void colorModelInit() {
@@ -69,7 +58,6 @@ public class ColorButtonPanel extends JPanel {
             }            
         };
         imageColorModel.addColorModelInitListener(icmInitListener);
-//        imageColorModel.getColorModelInitializedSignal().addObserver(icmInitObserver);
     }
 
     public void addButton( AbstractButton btn ) {
@@ -104,7 +92,6 @@ public class ColorButtonPanel extends JPanel {
     private void cleanupObserver() {
         if ( this.imageColorModel != null  &&  icmInitListener != null ) {
             this.imageColorModel.removeColorModelInitListener(icmInitListener);
-//delete the icmInitObserver.            
         }
     }
     
@@ -152,10 +139,8 @@ public class ColorButtonPanel extends JPanel {
             btn.setSelected(! btn.isSelected());
             ccm.setCombiningConstant( btn.isSelected() ? 1.0f : -1.0f );
             ccm.fireColorChange( ccm.getColor() );
-//            ccm.getColorChangedSignal().emit( ccm.getColor() );
             // Signal time to change stuff on screen.
             icm.fireColorModelChanged();
-//            icm.getColorModelChangedSignal().emit();
         }
         
     }
@@ -164,17 +149,10 @@ public class ColorButtonPanel extends JPanel {
 
         private ChannelColorModel ccm;
         private AbstractButton btn;
-//        private final Observer reflectCheckedStateObserver;
 
         public ChannelColorButtonModel(ChannelColorModel ccm, AbstractButton btn) {
             this.ccm = ccm;
             this.btn = btn;
-//            reflectCheckedStateObserver = new Observer(){
-//                @Override
-//                public void update(Observable o, Object arg) {
-//                    ChannelColorButtonModel.this.fireStateChanged();
-//                }
-//            };
             // Feed back to second checkbox which have may similar model.
             ColorListener colorChangeListener = new ColorListener() {
                 @Override
@@ -184,7 +162,6 @@ public class ColorButtonPanel extends JPanel {
                 
             };
             ccm.setColorListener(colorChangeListener);
-//            ccm.getColorChangedSignal().addObserver(reflectCheckedStateObserver);
         }
         
         @Override
@@ -204,7 +181,6 @@ public class ColorButtonPanel extends JPanel {
         public void dispose() {
             if ( ccm != null ) {
                 ccm.setColorListener(null);
-//                        .getColorChangedSignal().deleteObserver(reflectCheckedStateObserver);
                 ccm = null;
             }
             btn = null;            

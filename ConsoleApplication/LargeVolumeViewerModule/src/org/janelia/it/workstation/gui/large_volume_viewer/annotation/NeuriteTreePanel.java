@@ -13,8 +13,6 @@ import javax.swing.*;
 import javax.swing.tree.*;
 
 import org.janelia.it.workstation.geom.Vec3;
-//import org.janelia.it.workstation.signal.Signal1;
-//import org.janelia.it.workstation.signal.Slot1;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
@@ -40,19 +38,6 @@ public class NeuriteTreePanel extends JPanel
     private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
     private CameraPanToListener panListener;
     private AnnotationSelectionListener annoSelectListener;
-
-    // ----- slots
-//    public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
-//        @Override
-//        public void execute(TmNeuron neuron) {
-//            loadNeuron(neuron);
-//        }
-//    };
-
-    // ----- signals
-//    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
-//    public Signal1<TmGeoAnnotation> annotationClickedSignal = new Signal1<TmGeoAnnotation>();
-
 
     public NeuriteTreePanel(int width) {
         this.width = width;
@@ -287,7 +272,6 @@ public class NeuriteTreePanel extends JPanel
         if (annoSelectListener != null) {
             annoSelectListener.annotationSelected(getAnnotationAtPath(path).getId());
         }
-//        annotationClickedSignal.emit(getAnnotationAtPath(path));
     }
 
     private void onAnnotationDoubleClicked(TreePath path) {
@@ -298,7 +282,6 @@ public class NeuriteTreePanel extends JPanel
         if (this.panListener != null) {
             panListener.cameraPanTo(new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
         }
-//        cameraPanToSignal.emit(new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
     }
 
     private void sortGeoAnnotationList(List<TmGeoAnnotation> annotationList) {

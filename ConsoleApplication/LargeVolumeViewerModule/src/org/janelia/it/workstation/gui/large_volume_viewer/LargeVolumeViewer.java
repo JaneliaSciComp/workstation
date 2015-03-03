@@ -19,9 +19,6 @@ import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
-//import org.janelia.it.workstation.signal.Signal1;
-//import org.janelia.it.workstation.signal.Slot;
-//import org.janelia.it.workstation.signal.Slot1;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesChooser;
@@ -77,32 +74,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	MenuItemGenerator systemMenuItemGenerator;
 	MenuItemGenerator modeMenuItemGenerator;    
 	
-//	public Signal1<String> statusMessageChanged = new Signal1<String>();
-	
-//	protected Slot repaintSlot = new Slot() {
-//		@Override
-//		public void execute() {
-//			// System.out.println("repaint slot");
-//			repaint();
-//		}
-//	};
-	
-//	public Slot1<MouseMode.Mode> setMouseModeSlot =
-//	    new Slot1<MouseMode.Mode>() {
-//            @Override
-//            public void execute(MouseMode.Mode modeId) {
-//                LargeVolumeViewer.this.setMouseMode(modeId);
-//            }
-//	};
-//	
-//    public Slot1<WheelMode.Mode> setWheelModeSlot =
-//        new Slot1<WheelMode.Mode>() {
-//            @Override
-//            public void execute(WheelMode.Mode modeId) {
-//                LargeVolumeViewer.this.setWheelMode(modeId);
-//            }
-//    };
-//    
 	public LargeVolumeViewer(GLCapabilities capabilities,
                              GLCapabilitiesChooser chooser,
                              GLContext sharedContext,
@@ -142,7 +113,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		renderer.setBackgroundColor(Color.black);
         setPreferredSize( new Dimension( 600, 600 ) );
         rubberBand.setRepaintListener(this);
-//        rubberBand.changed.connect(repaintSlot);
         // setToolTipText("Double click to center on a point.");
         renderer.addActor(sliceActor);
         // renderer.addActor(new TileOutlineActor(viewTileManager));
@@ -153,7 +123,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         renderer.addActor(skeletonActor);
         SkeletonActorStateUpdater sasUpdater = skeletonActor.getUpdater();
         sasUpdater.addListener(this);
-//        skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
         skeletonActor.setZThicknessInPixels(viewport.getDepth());
 		//
         // PopupMenu
@@ -256,10 +225,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		return new Point2D.Double(dx, dy);
 	}
 
-//	public Slot getRepaintSlot() {
-//		return repaintSlot;
-//	}
-//
 	public RubberBand getRubberBand() {
 		return rubberBand;
 	}
@@ -292,7 +257,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         if (messageListener != null) {
             messageListener.message(msg);
         }
-//		statusMessageChanged.emit(msg);
 		// System.out.println(xyz);
 	}
 
@@ -380,7 +344,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         };
 		// Update image whenever camera changes
         this.camera.addCameraListener(cameraListener);
-//		camera.getViewChangedSignal().connect(repaintSlot);
 		renderer.setCamera(camera);
 		mouseMode.setCamera(camera);
 		wheelMode.setCamera(camera);
@@ -397,7 +360,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		if (this.imageColorModel == imageColorModel)
 			return;
 		this.imageColorModel = imageColorModel;
-//        imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
 		sliceActor.setImageColorModel(imageColorModel);
 	}
 	

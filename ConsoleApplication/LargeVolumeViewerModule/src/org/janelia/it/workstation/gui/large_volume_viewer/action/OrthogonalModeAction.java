@@ -20,9 +20,6 @@ public class OrthogonalModeAction extends AbstractAction
 		ORTHOGONAL, Z_VIEW
 	}
     
-//	public Signal1<OrthogonalMode> orthogonalModeChanged =
-//			new Signal1<OrthogonalMode>();
-	
 	private OrthogonalMode mode;
 	
 	public OrthogonalModeAction(QuadViewUi ui) {
@@ -35,11 +32,9 @@ public class OrthogonalModeAction extends AbstractAction
 		// System.out.println("Orthogonal Mode action performed");
 		if (mode == OrthogonalMode.Z_VIEW) {
 			setOrthogonalMode();
-//			orthogonalModeChanged.emit(mode);
 		}
 		else if (mode == OrthogonalMode.ORTHOGONAL) {
 			setZViewMode();
-//			orthogonalModeChanged.emit(mode);
 		}
         ui.setOrthogonalMode(mode);
 	}

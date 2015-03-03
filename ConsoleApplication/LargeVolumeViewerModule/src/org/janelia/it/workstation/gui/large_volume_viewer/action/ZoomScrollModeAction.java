@@ -5,14 +5,11 @@ import javax.swing.AbstractAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 
 import org.janelia.it.workstation.gui.util.Icons;
-//import org.janelia.it.workstation.signal.Signal1;
 
 public class ZoomScrollModeAction extends AbstractAction
 {
 	protected ZoomMode zoomMode = new ZoomMode();
     private MouseWheelModeListener mwmListener;
-
-//    public Signal1<WheelMode.Mode> setWheelModeSignal = new Signal1<WheelMode.Mode>();
 
 	public ZoomScrollModeAction() {
 		putValue(NAME, "Zoom");
@@ -25,7 +22,6 @@ public class ZoomScrollModeAction extends AbstractAction
 	@Override
 	public void actionPerformed(ActionEvent e) {
         mwmListener.setMode(WheelMode.Mode.ZOOM);
-//		setWheelModeSignal.emit(WheelMode.Mode.ZOOM);
 		putValue(SELECTED_KEY, true); // this mode is now selected
 	}
 

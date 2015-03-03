@@ -19,8 +19,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.generator.InterleavedI
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.MinResSliceGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.SliceGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.UmbrellaSliceGenerator;
-//import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,45 +59,11 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	
 	// New path for handling tile updates July 9, 2013 cmb
 	private Set<TileIndex> currentDisplayTiles = new HashSet<>();
-	public Slot refreshCurrentTileSetSlot = new Slot() {
-		@Override
-		public void execute() {refreshCurrentTileSet();}
-	};
-	
-	// Initiate loading of low resolution textures
-//	private Slot startMinResPreFetchSlot = new Slot() {
-//		@Override
-//		public void execute() {
-//            startMinResPreFetch();
-//		}
-//
-//	};
-
-//	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
-//	public Signal1<LoadStatus> loadStatusChangedSignal = new Signal1<LoadStatus>();
-
-//	public Slot onVolumeInitializedSlot = new Slot() {
-//		@Override
-//		public void execute() {
-//            if (volumeLoaded(null)) {
-//                return;
-//            }
-//		}
-//	};
-
-//	private Slot updateLoadStatusSlot = new Slot() {
-//		@Override
-//		public void execute() {
-//			updateLoadStatus();
-//		}
-//	};
 	
 	public TileServer(SharedVolumeImage sharedVolumeImage) {
 		setSharedVolumeImage(sharedVolumeImage);
 		minResPreFetcher.setTextureCache(getTextureCache());
 		futurePreFetcher.setTextureCache(getTextureCache());
-//		textureCache.textureLoadedSignal.connect(textureLoadedSignal);
-//		getTextureCache().queueDrainedSignal.connect(updateLoadStatusSlot);
         queueDrainedListener = new StatusUpdateListener() {
             @Override
             public void update() {
@@ -164,9 +128,6 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 		if (viewTileManagers.contains(viewTileManager))
 			return; // already there
 		viewTileManagers.add(viewTileManager);
-//		textureLoadedSignal.connect(viewTileManager.onTextureLoadedSlot);
-//		viewTileManager.loadStatusChanged.connect(updateLoadStatusSlot);
-		// viewTileManager.tileSetChangedSignal.connect(updateFuturePreFetchSlot);
         viewTileManager.setLoadStatusChangedListener(queueDrainedListener);
 		viewTileManager.setTextureCache(getTextureCache());
 	}
@@ -179,12 +140,8 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
             textureCache.clear();
             textureIds = textureCache.popObsoleteTextureIds();
             textureCache.setQueueDrainedListener(null);
-//            textureCache.textureLoadedSignal.disconnect(textureLoadedSignal);
-//            textureCache.queueDrainedSignal.disconnect(updateLoadStatusSlot);
         }
         textureCache = new TextureCache();
-//        textureCache.textureLoadedSignal.connect(textureLoadedSignal);
-//        textureCache.queueDrainedSignal.connect(updateLoadStatusSlot);
         textureCache.setQueueDrainedListener(queueDrainedListener);
         if (textureIds != null)
             textureCache.getHistoryCache().storeObsoleteTextureIds(textureIds); // so old texture ids can get deleted next draw
@@ -222,7 +179,6 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
         if (loadStatusListener != null) {
             loadStatusListener.updateLoadStatus(loadStatus);
         }
-//		loadStatusChangedSignal.emit(loadStatus);
 	}
 
 	public SharedVolumeImage getSharedVolumeImage() {
@@ -234,7 +190,6 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 			return;
 		this.sharedVolumeImage = sharedVolumeImage;
         this.sharedVolumeImage.addVolumeLoadListener(this);
-//		sharedVolumeImage.volumeInitializedSignal.connect(onVolumeInitializedSlot);
 	}
 
 	public TextureCache getTextureCache() {

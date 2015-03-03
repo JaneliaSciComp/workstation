@@ -10,7 +10,6 @@ import javax.swing.event.ChangeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.ChannelColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
-//import org.janelia.it.workstation.signal.Slot;
 
 public class UglyColorSlider extends JSlider 
 {
@@ -30,7 +29,6 @@ public class UglyColorSlider extends JSlider
 		this.channelIndex = channelIndex;
 		this.imageColorModel = imageColorModel;
 		updateSliderValuesFromColorModel();
-//		imageColorModel.getColorModelChangedSignal().connect(updateSliderSlot);
 		imageColorModel.addColorModelListener(new ColorModelListener() {
             @Override
             public void colorModelChanged() {

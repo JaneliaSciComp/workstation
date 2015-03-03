@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.StatusUpdateListener;
 
-//import org.janelia.it.workstation.signal.Signal;
-//import org.janelia.it.workstation.signal.Signal1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,12 +24,6 @@ public class TextureCache
 	// private Set<TileIndex> queuedRequests = new HashSet<TileIndex>();
 	private Map<TileIndex, Long> queuedTextureTime = new HashMap<>();
     private StatusUpdateListener queueDrainedListener;
-
-//	private Signal cacheClearedSignal = new Signal();
-	
-//	public Signal queueDrainedSignal = new Signal();
-
-//	public Signal1<TileIndex> textureLoadedSignal = new Signal1<>();
 
 	public synchronized void add(TileTexture texture) {
 		TileIndex index = texture.getIndex();
@@ -55,7 +47,6 @@ public class TextureCache
 		historyCache.clear();
 		persistentCache.clear();
 		queuedTextureTime.clear();
-//		cacheClearedSignal.emit();
 	}
 
 	boolean containsKey(TileIndex index) {
@@ -103,7 +94,6 @@ public class TextureCache
 				return;
 			queuedTextureTime.remove(index); 
 			if (queuedTextureTime.isEmpty()  &&  queueDrainedListener != null) {
-//				queueDrainedSignal.emit();
                 queueDrainedListener.update();
             }
 		}

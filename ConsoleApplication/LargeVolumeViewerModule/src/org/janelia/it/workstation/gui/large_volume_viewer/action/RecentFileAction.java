@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
-//import org.janelia.it.workstation.signal.Signal1;
-
 import java.awt.event.ActionEvent;
 import java.net.URL;
 
@@ -21,7 +19,6 @@ public class RecentFileAction extends AbstractAction
 	
 	private URL url;
     private UrlLoadListener urlLoadListener;
-//	private Signal1<URL> openFileRequestedSignal = new Signal1<URL>();
 
 	RecentFileAction(URL url) {
 		setUrl(url);
@@ -66,17 +63,12 @@ public class RecentFileAction extends AbstractAction
 		putValue(SHORT_DESCRIPTION, "Load image from " + url.toString());
 	}
 
-//	public Signal1<URL> getOpenFileRequestedSignal() {
-//		return openFileRequestedSignal;
-//	}
-
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		// log.info("requesting load of "+url);
         if (urlLoadListener != null) {
             urlLoadListener.loadUrl(url);
         }
-//		getOpenFileRequestedSignal().emit(url);
 	}
 
 }

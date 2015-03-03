@@ -5,13 +5,10 @@ import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 
-//import org.janelia.it.workstation.signal.Signal;
-
 // this action centers the 2d view on the annotation that is "selected"
 public class CenterNextParentAction extends AbstractAction 
 {
 
-//    public Signal centerNextParentSignal = new Signal();
     private QuadViewUi ui;
     
     public CenterNextParentAction(QuadViewUi ui) {
@@ -30,6 +27,5 @@ public class CenterNextParentAction extends AbstractAction
     public void actionPerformed(ActionEvent e) 
     {
         ui.centerNextParentMicron();
-//        centerNextParentSignal.emit();
     }
 }

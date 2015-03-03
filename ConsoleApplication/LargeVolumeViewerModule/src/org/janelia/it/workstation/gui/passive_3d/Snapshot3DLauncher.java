@@ -271,12 +271,6 @@ public class Snapshot3DLauncher {
                 saveColorPreference();
             }            
         });
-//        independentCM.getColorModelChangedSignal().connect(new Slot() {
-//            @Override
-//            public void execute() {
-//                saveColorPreference();
-//            }
-//        });
     }
 
     private void saveColorPreference() {

@@ -6,7 +6,6 @@ import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
-//import org.janelia.it.workstation.signal.Signal1;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,8 +23,6 @@ implements VolumeImage3d
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
     private Collection<VolumeLoadListener> volumeLoadListeners = new ArrayList<>();
     private String remoteBasePath;
-
-//	public Signal1<URL> volumeInitializedSignal = new Signal1<>();
 
     public void addVolumeLoadListener( VolumeLoadListener l ) {
         volumeLoadListeners.add(l);
@@ -182,7 +179,6 @@ implements VolumeImage3d
 		boundingBox3d.setMin(newBox.getMin());
 		boundingBox3d.setMax(newBox.getMax());
 		fireVolumeLoaded(folderUrl);
-//		volumeInitializedSignal.emit(folderUrl);
 		
 		return true;
 	}

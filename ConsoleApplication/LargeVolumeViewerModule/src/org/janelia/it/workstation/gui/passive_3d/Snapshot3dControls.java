@@ -12,8 +12,6 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.Action;
@@ -191,7 +189,6 @@ public class Snapshot3dControls {
         getColorButtonPanel().add(sharedColorModelButton);
 
         activeColorModel.addColorModelListener(viewUpdateListener);
-//        activeColorModel.getColorModelChangedSignal().addObserver( viewUpdateListener );
         
         filterActions = new ArrayList<>();
         getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.SPHERE_3_3_3, "Filter 3x3x3 Round" ) );
@@ -313,10 +310,8 @@ public class Snapshot3dControls {
         
         @Override
         public void actionPerformed(ActionEvent ae) {
-//            controls.getActiveColorModel().getColorModelChangedSignal().deleteObserver(listener);
             controls.getActiveColorModel().removeColorModelListener( listener );
             controls.setIndependentColorModel( ! controls.isIndendentColorModel() );
-//            controls.getActiveColorModel().getColorModelChangedSignal().addObserver( listener );
             controls.getActiveColorModel().addColorModelListener( listener );
         }
     }

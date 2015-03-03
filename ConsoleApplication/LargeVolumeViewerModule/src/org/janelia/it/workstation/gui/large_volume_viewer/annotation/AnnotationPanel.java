@@ -6,7 +6,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-//import org.janelia.it.workstation.signal.Signal;
 
 import javax.swing.*;
 
@@ -82,38 +81,13 @@ public class AnnotationPanel extends JPanel
             }
         };
 
-    // ----- signals & slots
-//    public Signal centerAnnotationSignal = new Signal();
+    // ----- Actions
     private final Action centerAnnotationAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             viewStateListener.centerNextParent();
-//            centerAnnotationSignal.emit();
         }
     };
-
-//    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
-//        @Override
-//        public void execute(TmWorkspace workspace) {
-//            if (workspace != null) {
-//                boolean state;
-//                String automaticRefinementPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
-//                if (automaticRefinementPref != null) {
-//                    state = Boolean.parseBoolean(automaticRefinementPref);
-//                } else {
-//                    state = false;
-//                }
-//                automaticRefinementMenuItem.setSelected(state);
-//                String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
-//                if (automaticTracingPref != null) {
-//                    state = Boolean.parseBoolean(automaticTracingPref);
-//                } else {
-//                    state = false;
-//                }
-//                automaticTracingMenuItem.setSelected(state);
-//            }
-//        }
-//    };
 
     public AnnotationPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
         LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
@@ -164,25 +138,6 @@ public class AnnotationPanel extends JPanel
         panelController.registerForEvents(annotationModel);
         panelController.registerForEvents(annotationMgr);
         panelController.registerForEvents(workspaceInfoPanel);
-//        annotationModel.neuronSelectedSignal.connect(neuriteTreePanel.neuronSelectedSlot);
-//        annotationModel.neuronSelectedSignal.connect(workspaceNeuronList.neuronSelectedSlot);
-//
-//        annotationModel.workspaceLoadedSignal.connect(workspaceLoadedSlot);
-//        annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.workspaceLoadedSlot);
-//        annotationModel.workspaceLoadedSignal.connect(workspaceNeuronList.workspaceLoadedSlot);
-//        annotationModel.workspaceLoadedSignal.connect(noteListPanel.workspaceLoadedSlot);
-//        annotationModel.notesUpdatedSignal.connect(noteListPanel.notesUpdatedSlot);
-
-        // us to model:
-//        workspaceNeuronList.neuronClickedSignal.connect(annotationModel.neuronClickedSlot);
-
-        // us to graphics UI
-//        neuriteTreePanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
-//        neuriteTreePanel.annotationClickedSignal.connect(largeVolumeViewerTranslator.annotationClickedSlot);
-//        workspaceNeuronList.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
-//        noteListPanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
-//        noteListPanel.editNoteRequestedSignal.connect(annotationMgr.editNoteRequestedSlot);
-
     }
 
     private void setupUI() {
