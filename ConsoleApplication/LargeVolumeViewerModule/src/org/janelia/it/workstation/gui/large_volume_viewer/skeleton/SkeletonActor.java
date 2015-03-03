@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
-// import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.ImageIcon;
@@ -30,14 +29,10 @@ import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
-// import TracedPathShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PathShader;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
-import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot;
@@ -59,10 +54,10 @@ implements GLActor
 	private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
 	
 	// semantic constants for allocating byte arrays
-	private final int floatByteCount = 4;
-	private final int vertexFloatCount = 3;
-	private final int intByteCount = 4;
-	private final int colorFloatCount = 3;
+	private static final int FLOAT_BYTE_COUNT = 4;
+	private static final int VERTEX_FLOAT_COUNT = 3;
+	private static final int INT_BYTE_COUNT = 4;
+	private static final int COLOR_FLOAT_COUNT = 3;
 
 	private int hoverAnchorIndex = -1;
 	private boolean bIsGlInitialized = false;
@@ -104,7 +99,6 @@ implements GLActor
     // note: this initial color is now overridden by other components
     private float neuronColor[] = {0.8f,1.0f,0.3f};
     private final float blackColor[] = {0,0,0};
-    // private TracedPathShader tracedShader = new TracedPathShader();
     private boolean anchorsVisible = true;
 	
 	public Signal skeletonActorChangedSignal = new Signal();
@@ -129,7 +123,6 @@ implements GLActor
             neuronColor[0] = color.getRed() / 255.0f;
             neuronColor[1] = color.getGreen() / 255.0f;
             neuronColor[2] = color.getBlue() / 255.0f;
-            // skeletonActorChangedSignal.emit();
             updateAnchorsSlot.execute();
         }
     };
@@ -152,18 +145,18 @@ implements GLActor
 		// if (verticesNeedCopy) { // TODO
         if (true) {
             gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
-        		vertices.rewind();
+            vertices.rewind();
 	        gl.glBufferData(GL.GL_ARRAY_BUFFER, 
-	        		vertexCount * floatByteCount * vertexFloatCount, 
+	        		vertexCount * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT,
 	        		vertices, GL.GL_DYNAMIC_DRAW);
-        		verticesNeedCopy = false;
+            verticesNeedCopy = false;
 
     		// colors
 	        colors.rewind();
 	        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colorBo);
 	        gl.glBufferData(GL.GL_ARRAY_BUFFER, 
-	        		vertexCount * floatByteCount * colorFloatCount,
-	        		colors, 
+	        		vertexCount * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT,
+	        		colors,
 	        		GL.GL_DYNAMIC_DRAW);
         }
 		// if (linesNeedCopy) // TODO
@@ -172,16 +165,16 @@ implements GLActor
 	        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
 			lineIndices.rewind();
 	        gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, 
-	        		lineIndices.capacity() * intByteCount,
+	        		lineIndices.capacity() * INT_BYTE_COUNT,
 	        		lineIndices, GL.GL_DYNAMIC_DRAW);
 	        linesNeedCopy = false;
 		}
         gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, vbo );
-        gl2.glVertexPointer(vertexFloatCount, GL2.GL_FLOAT, 0, 0L);
+        gl2.glVertexPointer(VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
         gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
-        gl2.glColorPointer(colorFloatCount, GL2.GL_FLOAT, 0, 0L);
+        gl2.glColorPointer(COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
 		lineShader.load(gl2);
  		lineShader.setUniform(gl, "zThickness", zThicknessInPixels);
@@ -196,16 +189,14 @@ implements GLActor
         // wider black line
 		gl.glLineWidth(3.5f);
 		lineShader.setUniform3v(gl, "baseColor", 1, blackColor);
-        // gl.glColor4f(0, 0, 0, 0.7f); // black
-        gl.glDrawElements(GL2.GL_LINES, 
+        gl.glDrawElements(GL2.GL_LINES,
         		lineIndices.capacity(), 
         		GL2.GL_UNSIGNED_INT, 
         		0L);
         // narrower white line
 		gl.glLineWidth(1.5f);
 		lineShader.setUniform3v(gl, "baseColor", 1, neuronColor);
-        // gl.glColor4f(1, 1, 1, 0.7f); // white
-        gl.glDrawElements(GL2.GL_LINES, 
+        gl.glDrawElements(GL2.GL_LINES,
         		lineIndices.capacity(), 
         		GL2.GL_UNSIGNED_INT, 
         		0L);
@@ -245,7 +236,6 @@ implements GLActor
  		anchorShader.setUniform(gl, "highlightAnchorIndex", hoverAnchorIndex);
  		int parentIndex = getIndexForAnchor(nextParent);
  		anchorShader.setUniform(gl, "parentAnchorIndex", parentIndex);
- 		// float zThickness = viewport.getDepth(); //  / (float)camera.getPixelsPerSceneUnit();
  		// At high zoom, keep thickness to at least 5 pixels deep.
  		anchorShader.setUniform(gl, "zThickness", zThicknessInPixels);
  		float focus[] = {
@@ -253,73 +243,56 @@ implements GLActor
  	 			(float)camera.getFocus().getY(),
  	 			(float)camera.getFocus().getZ()};
  	 	anchorShader.setUniform3v(gl, "focus", 1, focus);
- 		// anchorShader.setUniform(gl, "focusZ", (float)camera.getFocus().getZ());
  		anchorShader.setUniform(gl, "anchorTexture", 0);
  		anchorShader.setUniform(gl, "parentAnchorTexture", 1);
 
-        // To ease transition to vbos...
-		boolean bUseVertexArray = false;
-		if (bUseVertexArray) {
-			// This works
-	        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-	        vertices.rewind();
-	        	gl.glVertexPointer(vertexFloatCount, GL2.GL_FLOAT, 0, vertices);			
-	 		boolean bUseIndices = true;
-	 		if (bUseIndices) { // works
-	 			pointIndices.rewind();
-	 			gl.glDrawElements(GL2.GL_POINTS, pointIndices.capacity(), GL2.GL_UNSIGNED_INT, pointIndices);
-	 		}
-	 		else { // works
-	 			gl.glDrawArrays(GL2.GL_POINTS, 0, vertexCount);
-	 		}
-		    gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-		}
-		else { // vertex buffer object
-			// TODO - crashes unless glBufferData called every time.
-	        // if (verticesNeedCopy) {
-		    if (true) {
-        		    	// vertices
-        		    	vertices.rewind();
-        		    	gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
-		        gl.glBufferData(GL2.GL_ARRAY_BUFFER, 
-		        		vertexCount * floatByteCount * vertexFloatCount, 
-		        		vertices, GL2.GL_DYNAMIC_DRAW);
-		        
-		        // colors
-		        colors.rewind();
-		        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
-		        gl.glBufferData(GL2.GL_ARRAY_BUFFER, 
-		        		vertexCount * floatByteCount * colorFloatCount,
-		        		colors, 
-		        		GL2.GL_DYNAMIC_DRAW);
-		        
-		        verticesNeedCopy = false;
-	        		// point indices
-				pointIndices.rewind();
-		        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
-	    	        gl.glBufferData(GL2.GL_ELEMENT_ARRAY_BUFFER, 
-	    	        		pointIndices.capacity() * intByteCount,
-	    	        		pointIndices, GL2.GL_DYNAMIC_DRAW);
-	        }
-	        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
-	        gl.glVertexPointer(vertexFloatCount, GL2.GL_FLOAT, 0, 0L);
-	        gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
-	        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
-	        gl.glColorPointer(colorFloatCount, GL2.GL_FLOAT, 0, 0L);
-	        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
-			PassThroughTextureShader.checkGlError(gl, "paint anchors 1");
-	        gl.glDrawElements(GL2.GL_POINTS, 
-	        		pointIndices.capacity(), 
-	        		GL2.GL_UNSIGNED_INT, 
-	        		0L);
-	        // tear down
-	        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
-			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, 0);
-		    gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-		    gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
-		}
-		// 
+
+         // vertex buffer object
+        // TODO - crashes unless glBufferData called every time.
+        // if (verticesNeedCopy) {
+        if (true) {
+                    // vertices
+                    vertices.rewind();
+                    gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
+            gl.glBufferData(GL2.GL_ARRAY_BUFFER,
+                    vertexCount * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT,
+                    vertices, GL2.GL_DYNAMIC_DRAW);
+
+            // colors
+            colors.rewind();
+            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+            gl.glBufferData(GL2.GL_ARRAY_BUFFER,
+                    vertexCount * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT,
+                    colors,
+                    GL2.GL_DYNAMIC_DRAW);
+
+            verticesNeedCopy = false;
+                // point indices
+            pointIndices.rewind();
+            gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
+                gl.glBufferData(GL2.GL_ELEMENT_ARRAY_BUFFER,
+                        pointIndices.capacity() * INT_BYTE_COUNT,
+                        pointIndices, GL2.GL_DYNAMIC_DRAW);
+        }
+        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
+        gl.glVertexPointer(VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
+        gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+        gl.glColorPointer(COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
+        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
+        PassThroughTextureShader.checkGlError(gl, "paint anchors 1");
+        gl.glDrawElements(GL2.GL_POINTS,
+                pointIndices.capacity(),
+                GL2.GL_UNSIGNED_INT,
+                0L);
+        // tear down
+        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
+        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, 0);
+        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+        gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+
+		//
 	    anchorShader.unload(gl);
         gl.glDisable(GL2.GL_POINT_SPRITE);
         gl.glDisable(GL2.GL_TEXTURE_2D);
@@ -439,13 +412,13 @@ implements GLActor
 		if (skeleton == null)
 			return;
 		vertexCount = skeleton.getAnchors().size();
-		ByteBuffer vertexBytes = ByteBuffer.allocateDirect(vertexCount * floatByteCount * vertexFloatCount);
+		ByteBuffer vertexBytes = ByteBuffer.allocateDirect(vertexCount * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT);
 		vertexBytes.order(ByteOrder.nativeOrder()); // important!
 		vertices = vertexBytes.asFloatBuffer();
 		vertices.rewind();
 		int vertexIndex = 0;
 		//
-		ByteBuffer colorBytes = ByteBuffer.allocateDirect(vertexCount * floatByteCount * colorFloatCount);
+		ByteBuffer colorBytes = ByteBuffer.allocateDirect(vertexCount * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT);
 		colorBytes.order(ByteOrder.nativeOrder());
 		colors = colorBytes.asFloatBuffer();
 		colors.rewind();
@@ -528,7 +501,7 @@ implements GLActor
 				tempLineIndices.add(i2);
 			}
 		}
-		ByteBuffer lineBytes = ByteBuffer.allocateDirect(tempLineIndices.size()*intByteCount);
+		ByteBuffer lineBytes = ByteBuffer.allocateDirect(tempLineIndices.size()* INT_BYTE_COUNT);
 		lineBytes.order(ByteOrder.nativeOrder());
 		lineIndices = lineBytes.asIntBuffer();
 		lineIndices.rewind();
@@ -537,7 +510,7 @@ implements GLActor
 		lineIndices.rewind();
 		linesNeedCopy = true;
 		// Populate point index buffer
-		ByteBuffer pointBytes = ByteBuffer.allocateDirect(pointCount*intByteCount);
+		ByteBuffer pointBytes = ByteBuffer.allocateDirect(pointCount* INT_BYTE_COUNT);
 		pointBytes.order(ByteOrder.nativeOrder());
 		pointIndices = pointBytes.asIntBuffer();
 		pointIndices.rewind();
@@ -578,7 +551,6 @@ implements GLActor
 		try {
 			lineShader.init(gl);
 			anchorShader.init(gl);
-			// tracedShader.init(gl);
 		} catch (ShaderCreationException e) {
 			e.printStackTrace();
 			return;
@@ -739,26 +711,13 @@ implements GLActor
 	/*
 	 * Change visual anchor position without actually changing the Skeleton model
 	 */
-	public void lightweightNudgeAnchor(Anchor dragAnchor, Vec3 dv) {
-		if (dragAnchor == null)
-			return;
-		int index = getIndexForAnchor(dragAnchor);
-		if (index < 0)
-			return;
-		int offset = index * vertexFloatCount;
-		for (int i = 0; i < 3; ++i) {
-			vertices.put( offset+i, (float)(vertices.get(offset+i) + dv.get(i)) );
-		}
-		skeletonActorChangedSignal.emit();
-	}
-	
 	public void lightweightPlaceAnchor(Anchor dragAnchor, Vec3 location) {
 		if (dragAnchor == null)
 			return;
 		int index = getIndexForAnchor(dragAnchor);
 		if (index < 0)
 			return;
-		int offset = index * vertexFloatCount;
+		int offset = index * VERTEX_FLOAT_COUNT;
 		for (int i = 0; i < 3; ++i) {
 			vertices.put( offset+i, (float)(double)location.get(i) );
 		}
