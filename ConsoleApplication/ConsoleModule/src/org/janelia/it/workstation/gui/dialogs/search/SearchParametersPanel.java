@@ -227,16 +227,20 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         init(evt.getSearchConfig());
     }
 
+    public SolrQueryBuilder getQueryBuilder() {
+        SolrQueryBuilder builder = new SolrQueryBuilder();
+        return getQueryBuilder(builder);
+    }
+    
     /**
      * Returns a query builder for the current search parameters.
      *
      * @return
      */
-    public SolrQueryBuilder getQueryBuilder() {
+    public SolrQueryBuilder getQueryBuilder(SolrQueryBuilder builder) {
 
         this.searchString = getSearchString();
 
-        SolrQueryBuilder builder = new SolrQueryBuilder();
         for (String subjectKey : SessionMgr.getSubjectKeys()) {
             builder.addOwnerKey(subjectKey);
         }

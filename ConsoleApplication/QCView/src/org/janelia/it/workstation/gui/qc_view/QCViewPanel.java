@@ -142,7 +142,10 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
         log.debug("performSearch(pageNum={},showLoading={})", pageNum, showLoading);
 
-        final SolrQueryBuilder builder = searchParamsPanel.getQueryBuilder();
+        final SolrQueryBuilder builder = new SolrQueryBuilder();
+        builder.setAuxString("+sage_id_txt:*");
+        
+        searchParamsPanel.getQueryBuilder(builder);
         if (!builder.hasQuery()) {
             return;
         }
@@ -174,16 +177,13 @@ public class QCViewPanel extends JPanel implements Refreshable {
                 searchResults.projectResultPages();
                                 
                 // Figure out which LSMs go with which Sample
-                final Map<Long,String> lsmIdToDataset = new HashMap<Long,String>();
+                final Map<Long,String> sampleIdToDataset = new HashMap<Long,String>();
                 final Map<Long,Entity> sampleMap = new HashMap<Long,Entity>();
-                final Set<String> parentSampleNames = new HashSet<String>();
+//                final Set<String> parentSampleNames = new HashSet<String>();
                 final Multimap<Long,EntityDocument> sampleToLsm = ArrayListMultimap.<Long,EntityDocument>create();
                 SolrResults pageResults = resultPage.getSolrResults();
                 for (EntityDocument entityDoc : pageResults.getEntityDocuments()) {
                     Entity lsmEntity = entityDoc.getEntity();
-                    
-                    String lsmDataSet = (String)entityDoc.getDocument().getFirstValue("sage_light_imagery_data_set_t");
-                    lsmIdToDataset.put(lsmEntity.getId(), lsmDataSet);
                     
                     List<Entity> mappedEntities = resultPage.getMappedEntities(lsmEntity.getId());
                     if (mappedEntities.isEmpty()) {
@@ -194,12 +194,16 @@ public class QCViewPanel extends JPanel implements Refreshable {
                         log.warn("More than one sample for LSM "+lsmEntity.getName());
                     }
                     Entity sample = mappedEntities.get(0);
+                    
+                    String lsmDataSet = (String)entityDoc.getDocument().getFieldValue("sage_light_imagery_data_set_t");
+                    sampleIdToDataset.put(sample.getId(), lsmDataSet);
+                    
                     sampleMap.put(sample.getId(), sample);
                     sampleToLsm.put(sample.getId(), entityDoc);
-                    if (sample.getName().contains("~")) {
-                        String sampleName = sample.getName().replaceFirst("~\\d+x$", "");
-                        parentSampleNames.add(sampleName);
-                    }
+//                    if (sample.getName().contains("~")) {
+//                        String sampleName = sample.getName().replaceFirst("~\\d+x$", "");
+//                        parentSampleNames.add(sampleName);
+//                    }
                     
                     // If the sample does not have it's own Data Set, borrow it from the LSM
                     if (sample.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER)==null) {
@@ -208,16 +212,17 @@ public class QCViewPanel extends JPanel implements Refreshable {
                 }
                 
                 // Remove redundant parent samples
-                List<Long> toDelete = new ArrayList<Long>();
-                for(Long sampleId : sampleToLsm.keySet()) {
-                    Entity sample = sampleMap.get(sampleId);
-                    if (parentSampleNames.contains(sample.getName())) {
-                        toDelete.add(sampleId);
-                    }
-                }
-                for(Long sampleId : toDelete) {
-                    sampleToLsm.removeAll(sampleId);
-                }
+//                List<Long> toDelete = new ArrayList<Long>();
+//                for(Long sampleId : sampleToLsm.keySet()) {
+//                    Entity sample = sampleMap.get(sampleId);
+//                    if (parentSampleNames.contains(sample.getName())) {
+//                        toDelete.add(sampleId);
+//                        log.warn("Removing parent sample "+sample.getName());
+//                    }
+//                }
+//                for(Long sampleId : toDelete) {
+//                    sampleToLsm.removeAll(sampleId);
+//                }
                 
                 List<Long> sortedSampleIds = new ArrayList<Long>(sampleToLsm.keySet());
                 Collections.sort(sortedSampleIds, new Comparator<Long>() {
@@ -243,6 +248,9 @@ public class QCViewPanel extends JPanel implements Refreshable {
                 for (Long sampleId : sortedSampleIds) {
                     Entity sample = sampleMap.get(sampleId);
                     
+                    String dataSet = sampleIdToDataset.get(sample.getId());
+                    dataSet = dataSet==null?"":dataSet;
+                            
                     List<EntityData> sampleEds = new ArrayList<EntityData>();
                 
                     ModelMgr.getModelMgr().loadLazyEntity(sample, false);
@@ -265,17 +273,15 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
                         for(Entity lsmEntity : EntityUtils.getChildrenOfType(tileEntity, EntityConstants.TYPE_LSM_STACK)) {
                             
-                            String dataSet = lsmIdToDataset.get(lsmEntity.getId());
                             String objective = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE);
                             String slideCode = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE);
                             String qiScore = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_QI_SCORE);
 
                             objective = objective==null?"":objective;
-                            dataSet = dataSet==null?"":dataSet;
                             slideCode = slideCode==null?"":slideCode;
                             qiScore = qiScore==null?"":qiScore;
 
-                            lsmEntity.setName("<html><b>"+slideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+qiScore+"</html>");
+                            lsmEntity.setName("<html><b>"+slideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+qiScore+"&nbsp;</html>");
                             lsmEntity.getEntityData().addAll(mips);
                             EntityData ed = new EntityData();
                             ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
