@@ -216,36 +216,7 @@ implements GLActor
 			return;
 
         GL2 gl = glDrawable.getGL().getGL2();
-        gl.glEnable(GL2.GL_POINT_SPRITE);
-        gl.glEnable(GL2.GL_VERTEX_PROGRAM_POINT_SIZE);
-        gl.glEnable(GL2.GL_TEXTURE_2D);
-        // parent anchor texture
-        gl.glActiveTexture(GL2.GL_TEXTURE1);
-        gl.glBindTexture(GL2.GL_TEXTURE_2D, parentAnchorTextureId);
-        gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR );
-        gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR );
-        // plain anchor texture
-        gl.glActiveTexture(GL2.GL_TEXTURE0);
-        gl.glBindTexture(GL2.GL_TEXTURE_2D, anchorTextureId);
-        gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR );
-        gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR );
-        //
-        gl.glEnable(GL2.GL_BLEND);
-        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
-        anchorShader.load(gl);
- 		anchorShader.setUniform(gl, "highlightAnchorIndex", hoverAnchorIndex);
- 		int parentIndex = getIndexForAnchor(nextParent);
- 		anchorShader.setUniform(gl, "parentAnchorIndex", parentIndex);
- 		// At high zoom, keep thickness to at least 5 pixels deep.
- 		anchorShader.setUniform(gl, "zThickness", zThicknessInPixels);
- 		float focus[] = {
- 	 			(float)camera.getFocus().getX(),
- 	 			(float)camera.getFocus().getY(),
- 	 			(float)camera.getFocus().getZ()};
- 	 	anchorShader.setUniform3v(gl, "focus", 1, focus);
- 		anchorShader.setUniform(gl, "anchorTexture", 0);
- 		anchorShader.setUniform(gl, "parentAnchorTexture", 1);
-
+        setupAnchorShaders(gl);
 
          // vertex buffer object
         // TODO - crashes unless glBufferData called every time.
@@ -292,13 +263,48 @@ implements GLActor
         gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
         gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
 
-		//
-	    anchorShader.unload(gl);
+        tearDownAnchorShaders(gl);
+	}
+
+    private void tearDownAnchorShaders(GL2 gl) {
+        anchorShader.unload(gl);
         gl.glDisable(GL2.GL_POINT_SPRITE);
         gl.glDisable(GL2.GL_TEXTURE_2D);
-	}
-	
-	@Override
+    }
+
+    private void setupAnchorShaders(GL2 gl) {
+        gl.glEnable(GL2.GL_POINT_SPRITE);
+        gl.glEnable(GL2.GL_VERTEX_PROGRAM_POINT_SIZE);
+        gl.glEnable(GL2.GL_TEXTURE_2D);
+        // parent anchor texture
+        gl.glActiveTexture(GL2.GL_TEXTURE1);
+        gl.glBindTexture(GL2.GL_TEXTURE_2D, parentAnchorTextureId);
+        gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR );
+        gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR );
+        // plain anchor texture
+        gl.glActiveTexture(GL2.GL_TEXTURE0);
+        gl.glBindTexture(GL2.GL_TEXTURE_2D, anchorTextureId);
+        gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR );
+        gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR );
+        //
+        gl.glEnable(GL2.GL_BLEND);
+        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+        anchorShader.load(gl);
+        anchorShader.setUniform(gl, "highlightAnchorIndex", hoverAnchorIndex);
+        int parentIndex = getIndexForAnchor(nextParent);
+        anchorShader.setUniform(gl, "parentAnchorIndex", parentIndex);
+        // At high zoom, keep thickness to at least 5 pixels deep.
+        anchorShader.setUniform(gl, "zThickness", zThicknessInPixels);
+        float focus[] = {
+                 (float)camera.getFocus().getX(),
+                 (float)camera.getFocus().getY(),
+                 (float)camera.getFocus().getZ()};
+        anchorShader.setUniform3v(gl, "focus", 1, focus);
+        anchorShader.setUniform(gl, "anchorTexture", 0);
+        anchorShader.setUniform(gl, "parentAnchorTexture", 1);
+    }
+
+    @Override
 	public void display(GLAutoDrawable glDrawable) {
 	    if (! bIsVisible)
 	        return;
