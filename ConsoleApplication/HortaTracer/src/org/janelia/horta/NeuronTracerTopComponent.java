@@ -57,6 +57,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.util.Collection;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -65,8 +67,10 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
@@ -97,6 +101,8 @@ import org.janelia.scenewindow.SceneRenderer;
 import org.janelia.scenewindow.SceneRenderer.CameraType;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
+import org.janelia.console.viewerapi.SynchronizationHelper;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProvider;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -160,6 +166,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     private CenterCrossHairActor crossHairActor;
         
     private NeuronMPRenderer neuronMPRenderer;
+    
+    private String currentSource;
     
     private boolean doCubifyVoxels = false;
     private Logger logger = LoggerFactory.getLogger(NeuronTracerTopComponent.class);
@@ -692,9 +700,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                             tracingInteractor
                     );
                     for (File f : fileList) {
-                        InputStream yamlStream = new FileInputStream(f);
-                        volumeSource = new MouseLightYamlBrickSource(yamlStream);
-                        loader.loadYamlFile(f);
+                        InputStream sourceYamlStream = new FileInputStream(f);
+                        InputStream loaderYamlStream = new FileInputStream(f);
+                        currentSource = f.toURI().toURL().toString();
+
+                        loadYaml(sourceYamlStream, loader, loaderYamlStream);                        
+//                        sourceYamlStream.close();             
+//                        loaderYamlStream.close();
                     }
                     logger.info("Yaml files loaded!");
                 } catch (UnsupportedFlavorException | IOException ex) {
@@ -703,6 +715,11 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
             }
         }));
+    }
+
+    private void loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, InputStream loaderYamlStream) throws IOException {
+        volumeSource = new MouseLightYamlBrickSource(sourceYamlStream);
+        loader.loadYamlFile(loaderYamlStream);
     }
 
     /**
@@ -1154,30 +1171,18 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // Synchronize with LVV
                 // TODO - is LVV present?
                 menu.add(new JPopupMenu.Separator());
-                JMenu synchronizeMenu = new JMenu("Synchronize with Large Volume Viewer");
-                menu.add(synchronizeMenu);
-                synchronizeMenu.add(new AbstractAction("Synchronize now") {
-                    @Override
-                    public void actionPerformed(ActionEvent e)
-                    {
-                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                    }
-                });
-                synchronizeMenu.add(new AbstractAction("Synchronize always") {
-                    @Override
-                    public void actionPerformed(ActionEvent e)
-                    {
-                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                    }
-                });
-                synchronizeMenu.add(new AbstractAction("Desynchronize") {
-                    @Override
-                    public void actionPerformed(ActionEvent e)
-                    {
-                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                    }
-                });
-                
+                // Want to lookup, get URL and get focus.
+                SynchronizationHelper helper = new SynchronizationHelper();
+                Collection<Tiled3dSampleLocationProvider> locationProviders =
+                        helper.getSampleLocationProviders("NeuronTracer");
+                if (locationProviders.size() > 1) {
+                    JMenu synchronizeAllMenu = new JMenu("Sychronize with other 3D viewer.");
+                    buildSyncMenu(locationProviders, synchronizeAllMenu);
+                    menu.add(synchronizeAllMenu);
+                }
+                else if (locationProviders.size() == 1) {
+                    buildSyncMenu(locationProviders, menu);
+                }
                 // Cancel/do nothing action
                 menu.add(new JPopupMenu.Separator());
                 menu.add(new AbstractAction("Close this menu [ESC]") {
@@ -1309,4 +1314,58 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         return true;
     }
+
+    private void buildSyncMenu(Collection<Tiled3dSampleLocationProvider> locationProviders, JComponent synchronizeAllMenu) {
+        for (final Tiled3dSampleLocationProvider provider : locationProviders) {
+            final String description = provider.getProviderDescription();
+            JMenu synchronizeMenu = new JMenu("Synchronize with " + description);
+            synchronizeAllMenu.add(synchronizeMenu);
+            synchronizeMenu.add(new AbstractAction("Synchronize with " + description + " now") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    double[] focusCoords = provider.getCoords();
+                    URL focusUrl = provider.getSampleUrl();
+                    NeuronTraceLoader loader = new NeuronTraceLoader(
+                            NeuronTracerTopComponent.this,
+                            neuronMPRenderer, 
+                            sceneWindow, 
+                            tracingInteractor
+                    );
+                    try {
+                        // First ensure that this component uses same sample.
+                        if (focusUrl != null) {
+                            String urlStr = focusUrl.toString();
+                            if (!urlStr.equals(currentSource)) {
+                                InputStream stream1 = focusUrl.openStream();
+                                InputStream stream2 = focusUrl.openStream();
+                                loadYaml(stream1, loader, stream2);
+                            }
+                        }
+                        
+                        // Now, position this component over other component's
+                        // focus.
+                        if (focusCoords != null) {
+//                            NeuronTracerTopComponent.this.set
+                        }
+                    } catch (IOException ioe) {
+                        logger.error(ioe.getMessage());
+                        Exceptions.printStackTrace(ioe);
+                    }
+                }
+            });
+            synchronizeMenu.add(new AbstractAction("Synchronize with " + description + " always") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+            });
+        }
+        synchronizeAllMenu.add(new JMenuItem(new AbstractAction("Desynchronize") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        }));
+    }
+
 }
