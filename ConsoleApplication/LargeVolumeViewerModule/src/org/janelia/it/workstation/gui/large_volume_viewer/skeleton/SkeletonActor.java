@@ -414,9 +414,24 @@ implements GLActor
 		this.zThicknessInPixels = zThicknessInPixels;
 	}
 
+    /**
+     * update the arrays we'll send to OpenGL; this includes the
+     * anchors/points (thus the name of the method), the lines
+     * between them, and the automatically traced paths if present
+     *
+     * the update in general consists of looping over all points,
+     * and copying their positions into appropriate byte array,
+     * getting the data ready for the next call to display()
+     */
 	protected synchronized void updateAnchors() {
+
 		if (skeleton == null)
 			return;
+
+        // we'll do the point update in this method, then call out
+        //  to other methods for the lines and paths; no reason we
+        //  couldn't also refactor this into its own method, too
+
 		vertexCount = skeleton.getAnchors().size();
 		ByteBuffer vertexBytes = ByteBuffer.allocateDirect(vertexCount * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT);
 		vertexBytes.order(ByteOrder.nativeOrder()); // important!
@@ -448,83 +463,13 @@ implements GLActor
 			vertexIndex += 1;
 			pointCount += 1;
 		}
-		//
-		// Update Traced path actors
-		Set<SegmentIndex> foundSegments = new HashSet<SegmentIndex>();
-		Collection<AnchoredVoxelPath> skeletonSegments = skeleton.getTracedSegments();
-		// log.info("Skeleton has " + skeletonSegments.size() + " traced segments");
-		for (AnchoredVoxelPath segment : skeletonSegments) {
-			SegmentIndex ix = segment.getSegmentIndex();
-			foundSegments.add(ix);
-			if (tracedSegments.containsKey(ix)) {
-				// Is the old traced segment still valid?
-				AnchoredVoxelPath oldSegment = tracedSegments.get(ix).getSegment();
-				List<VoxelPosition> p0 = oldSegment.getPath();
-				List<VoxelPosition> p1 = segment.getPath();
-				boolean looksTheSame = true;
-				if (p0.size() != p1.size()) // same size?
-					looksTheSame = false;
-				else if (p0.get(0) != p1.get(0)) // same first voxel?
-					looksTheSame = false;
-				else if (p0.get(p0.size()-1) != p1.get(p1.size()-1)) // same final voxel?
-					looksTheSame = false;
-				if (looksTheSame)
-					continue; // already have this segment, no need to recompute!
-				else
-					tracedSegments.remove(ix); // obsolete. remove it.
-			}
-			TracedPathActor actor = new TracedPathActor(segment, getTileFormat());
-			addTracedSegment(actor);
-		}
-    	// log.info("tracedSegments.size() [485] = "+tracedSegments.size());
-		// Delete obsolete traced segments
-    	// COPY the keyset, to avoid damaging the original tracedSegment keys.
-		Set<SegmentIndex> orphanSegments = new HashSet<SegmentIndex>(tracedSegments.keySet());
-		orphanSegments.removeAll(foundSegments);
-		for (SegmentIndex ix : orphanSegments) {
-			log.info("Removing orphan segment");
-			tracedSegments.remove(ix);
-		}
-    	// log.info("tracedSegments.size() [492] = "+tracedSegments.size());
-		//
-		// Populate line index buffer - AFTER traced segments have been finalized
-		List<Integer> tempLineIndices = new Vector<Integer>(); // because we don't know size yet
-		for (Anchor anchor : skeleton.getAnchors()) {
-			int i1 = getIndexForAnchor(anchor);
-			if (i1 < 0)
-				continue;
-			for (Anchor neighbor : anchor.getNeighbors()) {
-				int i2 = getIndexForAnchor(neighbor);
-				if (i2 < 0)
-					continue;
-				if (i1 >= i2)
-					continue; // only use ascending pairs, for uniqueness
-				SegmentIndex segmentIndex = new SegmentIndex(anchor.getGuid(), neighbor.getGuid());
-				// Don't draw lines where there is already a traced segment.
-				if (tracedSegments.containsKey(segmentIndex))
-					continue;
-				tempLineIndices.add(i1);
-				tempLineIndices.add(i2);
-			}
-		}
-		ByteBuffer lineBytes = ByteBuffer.allocateDirect(tempLineIndices.size()* INT_BYTE_COUNT);
-		lineBytes.order(ByteOrder.nativeOrder());
-		lineIndices = lineBytes.asIntBuffer();
-		lineIndices.rewind();
-		for (int i : tempLineIndices) // fill actual int buffer
-			lineIndices.put(i);
-		lineIndices.rewind();
-		linesNeedCopy = true;
-		// Populate point index buffer
-		ByteBuffer pointBytes = ByteBuffer.allocateDirect(pointCount* INT_BYTE_COUNT);
-		pointBytes.order(ByteOrder.nativeOrder());
-		pointIndices = pointBytes.asIntBuffer();
-		pointIndices.rewind();
-		for (Anchor anchor : skeleton.getAnchors()) {
-			int i1 = anchorIndices.get(anchor);
-			pointIndices.put(i1);
-		}
-		verticesNeedCopy = true;
+
+
+		// automatically traced paths
+        updateTracedPaths();
+
+        // lines between points, if no path
+        updateLines(pointCount);
 
         if (!skeleton.getAnchors().contains(getNextParent())) {
             setNextParent(null);
@@ -532,15 +477,96 @@ implements GLActor
 
 		skeletonActorChangedSignal.emit();
 	}
-	
-	public void setTileFormat(TileFormat tileFormat) {
+
+    private void updateLines(int pointCount) {
+        // Populate line index buffer - AFTER traced segments have been finalized
+        List<Integer> tempLineIndices = new Vector<Integer>(); // because we don't know size yet
+        for (Anchor anchor : skeleton.getAnchors()) {
+            int i1 = getIndexForAnchor(anchor);
+            if (i1 < 0)
+                continue;
+            for (Anchor neighbor : anchor.getNeighbors()) {
+                int i2 = getIndexForAnchor(neighbor);
+                if (i2 < 0)
+                    continue;
+                if (i1 >= i2)
+                    continue; // only use ascending pairs, for uniqueness
+                SegmentIndex segmentIndex = new SegmentIndex(anchor.getGuid(), neighbor.getGuid());
+                // Don't draw lines where there is already a traced segment.
+                if (tracedSegments.containsKey(segmentIndex))
+                    continue;
+                tempLineIndices.add(i1);
+                tempLineIndices.add(i2);
+            }
+        }
+        ByteBuffer lineBytes = ByteBuffer.allocateDirect(tempLineIndices.size()* INT_BYTE_COUNT);
+        lineBytes.order(ByteOrder.nativeOrder());
+        lineIndices = lineBytes.asIntBuffer();
+        lineIndices.rewind();
+        for (int i : tempLineIndices) // fill actual int buffer
+            lineIndices.put(i);
+        lineIndices.rewind();
+        linesNeedCopy = true;
+        // Populate point index buffer
+        ByteBuffer pointBytes = ByteBuffer.allocateDirect(pointCount* INT_BYTE_COUNT);
+        pointBytes.order(ByteOrder.nativeOrder());
+        pointIndices = pointBytes.asIntBuffer();
+        pointIndices.rewind();
+        for (Anchor anchor : skeleton.getAnchors()) {
+            int i1 = anchorIndices.get(anchor);
+            pointIndices.put(i1);
+        }
+        verticesNeedCopy = true;
+    }
+
+    private void updateTracedPaths() {
+        // Update Traced path actors
+        Set<SegmentIndex> foundSegments = new HashSet<SegmentIndex>();
+        Collection<AnchoredVoxelPath> skeletonSegments = skeleton.getTracedSegments();
+        // log.info("Skeleton has " + skeletonSegments.size() + " traced segments");
+        for (AnchoredVoxelPath segment : skeletonSegments) {
+            SegmentIndex ix = segment.getSegmentIndex();
+            foundSegments.add(ix);
+            if (tracedSegments.containsKey(ix)) {
+                // Is the old traced segment still valid?
+                AnchoredVoxelPath oldSegment = tracedSegments.get(ix).getSegment();
+                List<VoxelPosition> p0 = oldSegment.getPath();
+                List<VoxelPosition> p1 = segment.getPath();
+                boolean looksTheSame = true;
+                if (p0.size() != p1.size()) // same size?
+                    looksTheSame = false;
+                else if (p0.get(0) != p1.get(0)) // same first voxel?
+                    looksTheSame = false;
+                else if (p0.get(p0.size()-1) != p1.get(p1.size()-1)) // same final voxel?
+                    looksTheSame = false;
+                if (looksTheSame)
+                    continue; // already have this segment, no need to recompute!
+                else
+                    tracedSegments.remove(ix); // obsolete. remove it.
+            }
+            TracedPathActor actor = new TracedPathActor(segment, getTileFormat());
+            addTracedSegment(actor);
+        }
+        // log.info("tracedSegments.size() [485] = "+tracedSegments.size());
+        // Delete obsolete traced segments
+        // COPY the keyset, to avoid damaging the original tracedSegment keys.
+        Set<SegmentIndex> orphanSegments = new HashSet<SegmentIndex>(tracedSegments.keySet());
+        orphanSegments.removeAll(foundSegments);
+        for (SegmentIndex ix : orphanSegments) {
+            log.info("Removing orphan segment");
+            tracedSegments.remove(ix);
+        }
+        // log.info("tracedSegments.size() [492] = "+tracedSegments.size());
+    }
+
+
+    public void setTileFormat(TileFormat tileFormat) {
 		this.tileFormat = tileFormat;
 
         // propagate to all traced path actors, too:
         for (TracedPathActor path : tracedSegments.values()) {
             path.setTileFormat(tileFormat);
         }
-
 	}
 	
 	private TileFormat getTileFormat() {
