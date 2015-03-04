@@ -31,13 +31,30 @@
 package org.janelia.horta;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- *
+ * Helper methods to reliably convert from the "standardized" linux file location
+ * to a predictable file location on another operating system.
  * @author Christopher Bruns
  */
 public class OsFilePathRemapper
 {
+    private static final Map<String,String> sWinPrefixMappings = new HashMap<>();
+    private static final Map<String,String> sMacPrefixMappings = new HashMap<>();
+    static {
+        sWinPrefixMappings.put("/nobackup/mousebrainmicro/", "\\\\fxt\\nobackup\\mousebrainmicro\\"); // Windows
+        sWinPrefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "\\\\dm11\\mousebrainmicro\\");
+        sWinPrefixMappings.put("/tier2/mousebrainmicro/mousebrainmicro/", "\\\\tier2\\mousebrainmicro\\mousebrainmicro\\");
+        //prefixMappings.put("/tier2/", "//tier2/"); // Windows
+        //prefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "//dm11/mousebrainmicro/"); // Windows
+
+        sMacPrefixMappings.put("/nobackup/mousebrainmicro/", "/Volumes/nobackup/mousebrainmicro/"); // Mac
+        sMacPrefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "/Volumes/mousebrainmicro/");
+        sMacPrefixMappings.put("/tier2/mousebrainmicro/mousebrainmicro/", "/Volumes/mousebrainmicro/mousebrainmicro/");
+    }
+    
     public static String remapLinuxPath(String linuxPath) {
         File file = new File(linuxPath);
         // Only munge the path if the stated path does not exist
@@ -47,12 +64,26 @@ public class OsFilePathRemapper
         String path = linuxPath;
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
-            // path = path.replace("/tier2/mousebrainmicro/mousebrainmicro/", "X:/");
-            path = path.replace("/nobackup/mousebrainmicro/", "\\\\fxt\\nobackup\\mousebrainmicro\\");
-            path = path.replace("/groups/mousebrainmicro/mousebrainmicro/", "\\\\dm11\\mousebrainmicro\\");
-            path = path.replace("/tier2/mousebrainmicro/mousebrainmicro/", "\\\\tier2\\mousebrainmicro\\mousebrainmicro\\");
+            path = replaceViaMapping(path, sWinPrefixMappings);
+        // path = path.replace("/tier2/mousebrainmicro/mousebrainmicro/", "X:/");
+//            path = path.replace("/nobackup/mousebrainmicro/", "\\\\fxt\\nobackup\\mousebrainmicro\\");
+//            path = path.replace("/groups/mousebrainmicro/mousebrainmicro/", "\\\\dm11\\mousebrainmicro\\");
+//            path = path.replace("/tier2/mousebrainmicro/mousebrainmicro/", "\\\\tier2\\mousebrainmicro\\mousebrainmicro\\");
+        }
+        else if (os.contains("mac")) {
+            path = replaceViaMapping(path, sMacPrefixMappings);
+        }
+        else {
+            System.out.println("Unrecognized OS name " + os + " returning linux path.");
         }
             
         return path;
     }    
+
+    private static String replaceViaMapping(String path, Map<String,String> mapping) {
+        for (String key: mapping.keySet()) {
+            path = path.replace(key, mapping.get(key));
+        }
+        return path;
+    }
 }

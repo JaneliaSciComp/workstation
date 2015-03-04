@@ -160,6 +160,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private final GoToLocationAction goToLocationAction = new GoToLocationAction(camera);
     
     private QuadViewController quadViewController;
+    private URL loadedUrl;
 
 	// annotation-related
     private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction(this);
@@ -1157,19 +1158,22 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         return rtnVal;
     }
 
-    public boolean loadURL(URL url) {
+    public boolean loadURL(URL url) {  
+        boolean rtnVal = false;
     	// Check if url exists first...
     	try {
-    		url.openStream();
-        	return volumeImage.loadURL(url);
+    		url.openStream();            
+        	rtnVal = volumeImage.loadURL(url);
+            this.setLoadedUrl(url);
     	} catch (IOException exc) {
             JOptionPane.showMessageDialog(this.getParent(),
                     "Error opening folder " + url
                     +" \nIs the file share mounted?",
                     "Could not open folder",
                     JOptionPane.ERROR_MESSAGE);
-            return false;
+            rtnVal = false;
     	}
+        return rtnVal;
     }
     
     public void setStatusLabelText(String text) {
@@ -1217,6 +1221,30 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
      */
     public void setWsCloseListener(WorkspaceClosureListener wsCloseListener) {
         this.wsCloseListener = wsCloseListener;
+    }
+
+    /**
+     * @return the loadedUrl
+     */
+    public URL getLoadedUrl() {
+        return loadedUrl;
+    }
+
+    /**
+     * @param loadedUrl the loadedUrl to set
+     */
+    public void setLoadedUrl(URL loadedUrl) {
+        this.loadedUrl = loadedUrl;
+    }
+    
+    public double[] getCoords() {
+        final Vec3 focus = camera.getFocus();
+        double[] rtnVal = new double[] {
+            focus.getX(),
+            focus.getY(),
+            focus.getZ()
+        };
+        return rtnVal;
     }
 
     static class LoadStatusLabel extends JLabel {

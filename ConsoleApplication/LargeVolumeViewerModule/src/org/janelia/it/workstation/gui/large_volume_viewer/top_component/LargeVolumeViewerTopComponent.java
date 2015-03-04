@@ -13,6 +13,7 @@ import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.*;
+import org.openide.util.lookup.Lookups;
 import org.openide.windows.WindowManager;
 
 /**
@@ -47,7 +48,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_LargeVolumeViewerTopComponent());
         setToolTipText(Bundle.HINT_LargeVolumeViewerTopComponent());
-
+        establishLocationProvider();
     }
 
     public void openLargeVolumeViewer( Long entityId ) throws Exception {
@@ -107,4 +108,11 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
     }
+
+    protected void establishLocationProvider() {
+        LargeVolumeViewerLocationProvider locProvider = 
+                new LargeVolumeViewerLocationProvider(state.getLvvv());
+        this.associateLookup( Lookups.singleton( locProvider ) );
+    }
+    
 }
