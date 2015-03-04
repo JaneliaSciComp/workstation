@@ -383,7 +383,6 @@ void main() {
         vec3 texCoord = currentTexelPos * textureScale; // converted back to normalized texture coordinates,
         // Fetch texture intensity (EXPENSIVE!)
         vec4 vecLocalIntensity = vec4(0, 0, 0, 0);
-        const bool doTriCubic = true;
         if (filteringOrder == 3) {
             // slow tricubic filtering
             vecLocalIntensity = filterFastCubic3D(volumeTexture, currentTexelPos, textureScale, levelOfDetail);
