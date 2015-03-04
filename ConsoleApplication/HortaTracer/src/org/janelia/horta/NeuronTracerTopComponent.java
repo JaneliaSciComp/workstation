@@ -49,8 +49,6 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -111,6 +109,8 @@ import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.RequestProcessor;
 import org.openide.util.lookup.Lookups;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
@@ -162,6 +162,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private NeuronMPRenderer neuronMPRenderer;
     
     private boolean doCubifyVoxels = false;
+    private Logger logger = LoggerFactory.getLogger(NeuronTracerTopComponent.class);
     
     public NeuronTracerTopComponent() {
         // This block is what the wizard created
@@ -203,7 +204,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 ConstVector3 newFocus = new Vector3(sceneWindow.getCamera().getVantage().getFocusPosition());
                 if (newFocus.equals(cachedFocus))
                     return; // no change
-                // System.out.println("focus changed"); // TODO
+                // logger.info("focus changed"); // TODO
                 cachedFocus = newFocus;
             }
         };
@@ -213,7 +214,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         brightnessModel.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
-                // System.out.println("Camera changed");
+                // logger.info("Camera changed");
                 sceneWindow.getInnerComponent().repaint();
             }
         });
@@ -283,7 +284,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 max = Math.max(max, i);
             }
         }
-        // System.out.println("Min = "+min+"; Max = "+max);
+        // logger.info("Min = "+min+"; Max = "+max);
         if (max == Float.MIN_VALUE) {
             return; // no valid intensities found
         }
@@ -332,10 +333,10 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 xyz = worldXyzForScreenXy(event.getPoint());
                             } else {
                                 xyz = hoverAnchor.getLocationUm();
-                                // System.out.println("Using neuron cursor XYZ "+xyz);
+                                // logger.info("Using neuron cursor XYZ "+xyz);
                             }
 
-                            // System.out.println(xyz);
+                            // logger.info(xyz);
                             previousClickTime = System.nanoTime();
                             PerspectiveCamera pCam = (PerspectiveCamera) camera;
                             animateToFocusXyz(xyz, pCam.getVantage(), 150);
@@ -388,7 +389,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             float alpha = s / (float) (stepCount - 1);
             double deltaTime = (System.nanoTime() - startTime) / 1e6;
             double desiredTime = (alpha * targetTime) / 1e6;
-            // System.out.println("Elapsed = "+deltaTime+" ms; desired = "+desiredTime+" ms");
+            // logger.info("Elapsed = "+deltaTime+" ms; desired = "+desiredTime+" ms");
             if (deltaTime > desiredTime) {
                 continue; // skip this frame
             }
@@ -403,7 +404,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             }
         }
         double elapsed = (System.nanoTime() - startTime) * 1e-6;
-        // System.out.println("Animation took " + elapsed + " ms");
+        // logger.info("Animation took " + elapsed + " ms");
         // never skip the final frame
         if (vantage.setFocusPosition(endPos)) {
             didMove = true;
@@ -684,10 +685,16 @@ public final class NeuronTracerTopComponent extends TopComponent
                 Transferable t = dtde.getTransferable();
                 try {
                     List<File> fileList = (List) t.getTransferData(DataFlavor.javaFileListFlavor);
+                    NeuronTraceLoader loader = new NeuronTraceLoader(
+                            NeuronTracerTopComponent.this,
+                            neuronMPRenderer, 
+                            sceneWindow, 
+                            tracingInteractor
+                    );
                     for (File f : fileList) {
-                        loadYamlFile(f);
+                        loader.loadYamlFile(f);
                     }
-                    System.out.println("Yaml files loaded!");
+                    logger.info("Yaml files loaded!");
                 } catch (UnsupportedFlavorException | IOException ex) {
                     JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading yaml file");
                     Exceptions.printStackTrace(ex);
@@ -788,7 +795,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                     return;
                                 }
                                 tracingInteractor.setTracingModeOn();
-                                // System.out.println("Ha ha. Just kidding. TODO");
+                                // logger.info("Ha ha. Just kidding. TODO");
                             }
                         };
                         // action.setEnabled(false); // Until I implement it...
@@ -835,7 +842,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 FileDialog.SAVE);
                         chooser.setFile("*.png");
                         chooser.setVisible(true);
-                        System.out.println("Screen shot file name = " + chooser.getFile());
+                        logger.info("Screen shot file name = " + chooser.getFile());
                         if (chooser.getFile() == null) {
                             return;
                         }
@@ -922,11 +929,11 @@ public final class NeuronTracerTopComponent extends TopComponent
                                             + String.format("%1$,.2f", timer.reportMsAndRestart() / 1000.0)
                                             + " seconds."
                                     );
-                                    // System.out.println("yaml load took " + timer.reportMsAndRestart() + " ms");
+                                    // logger.info("yaml load took " + timer.reportMsAndRestart() + " ms");
 
                                     // Recenter
                                     Vector3 centerFocus = volumeSource.getBoundingBox().getCentroid();
-                                    // System.out.println("Center of volume is " + centerFocus.toString());
+                                    // logger.info("Center of volume is " + centerFocus.toString());
                                     PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
                                     animateToFocusXyz(centerFocus, pCam.getVantage(), 150);
 
@@ -1185,43 +1192,17 @@ public final class NeuronTracerTopComponent extends TopComponent
                 if (!NeuronTracerTopComponent.this.isShowing()) {
                     return;
                 }
-                // System.out.println("showPopup");
+                // logger.info("showPopup");
                 createMenu().show(NeuronTracerTopComponent.this, event.getPoint().x, event.getPoint().y);
             }
         });
     }
 
-    public void loadYamlFile(File f) throws IOException {
-        final File file = f;
-        Runnable task = new Runnable() {
-            public void run() {
-                ProgressHandle progress = ProgressHandleFactory.createHandle("Loading brain tiles");
-                progress.start();
-                progress.progress("Loading YAML tile information...");
-
-                PerformanceTimer timer = new PerformanceTimer();
-                BrainTileInfoList tileList = new BrainTileInfoList();
-                try {
-                    tileList.loadYamlFile(file);
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-                progress.progress("YAML tile information loaded");
-                System.out.println("yaml load took " + timer.reportMsAndRestart() + " ms");
-                loadExampleTile(tileList, progress); // TODO remove this testing hack
-                progress.progress("Example tile loaded");
-
-                progress.finish();
-            }
-        };
-        RequestProcessor.getDefault().post(task);
-    }
-
-    private GL3Actor createBrickActor(BrainTileInfo brainTile) throws IOException 
+    public GL3Actor createBrickActor(BrainTileInfo brainTile) throws IOException 
     {
         Texture3d texture = brainTile.loadBrick(10);
 
-        // System.out.println("tiff load to texture took "+elapsedTimeMs+" ms");
+        // logger.info("tiff load to texture took "+elapsedTimeMs+" ms");
         volumeMipMaterial
                 = // new TexCoordMaterial();
                 // new VolumeSurfaceMaterial(texture);
@@ -1233,53 +1214,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         return boxMesh;
     }
     
-    public boolean loadExampleTile(BrainTileInfoList tileList, ProgressHandle progress) {
-
-        BrainTileInfo exampleTile = null;
-        // Find first existing tile
-        for (BrainTileInfo tile : tileList) {
-            if (tile.folderExists()) {
-                exampleTile = tile;
-                break;
-            }
-        }
-        
-        if (exampleTile == null) {
-            return false;
-        }
-
-        File tileFile = new File(exampleTile.getParentPath(), exampleTile.getLocalPath());
-        System.out.println(tileFile);
-
-        progress.progress("Loading tile file " + tileFile);
-        try {
-            GL3Actor brickActor = createBrickActor(exampleTile);
-            // mprActor.addChild(brickActor);
-            neuronMPRenderer.addVolumeActor(brickActor);
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-
-        // progress.finish();
-        
-        for (NeuriteActor tracingActor : tracingInteractor.createActors()) {
-            sceneWindow.getRenderer().addActor(tracingActor);
-            tracingActor.getModel().addObserver(new Observer() {
-                @Override
-                public void update(Observable o, Object arg) {
-                    sceneWindow.getInnerComponent().repaint();
-                }
-            });
-        }
-
-        Vantage v = sceneWindow.getVantage();
-        v.centerOn(exampleTile.getBoundingBox());
-        v.setDefaultBoundingBox(exampleTile.getBoundingBox());
-        v.notifyObservers();
-
-        return true;
-    }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -1362,11 +1296,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         Vantage v = sceneWindow.getVantage();
         if (doCubifyVoxels) {
             v.setWorldScaleHack(1, 1, 0.4f);
-            System.out.println("distort");
+            logger.info("distort");
         }
         else {
             v.setWorldScaleHack(1, 1, 1);
-            System.out.println("undistort");
+            logger.info("undistort");
         }
         v.notifyObservers();
         sceneWindow.getGLAutoDrawable().display();
