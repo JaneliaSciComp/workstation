@@ -692,6 +692,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                             tracingInteractor
                     );
                     for (File f : fileList) {
+                        InputStream yamlStream = new FileInputStream(f);
+                        volumeSource = new MouseLightYamlBrickSource(yamlStream);
                         loader.loadYamlFile(f);
                     }
                     logger.info("Yaml files loaded!");
