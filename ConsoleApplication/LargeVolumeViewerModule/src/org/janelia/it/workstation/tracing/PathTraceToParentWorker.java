@@ -10,10 +10,10 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.octree.ZoomLevel;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
-import org.janelia.it.workstation.signal.Signal1;
 
 import java.util.List;
 import java.util.Vector;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
 
 /**
  * this worker traces a detailed path given a request; adapted from PathTraceWorker,
@@ -24,12 +24,10 @@ import java.util.Vector;
 public class PathTraceToParentWorker extends BackgroundWorker {
 
     private PathTraceToParentRequest request;
+    private PathTraceListener pathTraceListener;
 
     // timeout in seconds
     private double timeout = 10.0;
-
-    // public Signal1<TracedPathSegment> pathTracedSignal = new Signal1<TracedPathSegment>();
-    public Signal1<AnchoredVoxelPath> pathTracedSignal = new Signal1<>();
 
     public PathTraceToParentWorker(PathTraceToParentRequest request) {
         this.request = request;
@@ -40,6 +38,10 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         this.timeout = timeout;
     }
 
+    public void setPathTraceListener(PathTraceListener l) {
+        pathTraceListener = l;
+    }
+    
     @Override
     public String getName() {
         return "trace path to parent of anchor";
@@ -111,7 +113,9 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             PathTraceRequest simpleRequest = new PathTraceRequest(request.getXyz1(),
                     request.getXyz2(), request.getAnchorGuid1(), request.getAnchorGuid2());
             TracedPathSegment result = new TracedPathSegment(simpleRequest, reducedPath, intensities);
-            pathTracedSignal.emit(result);
+            if (pathTraceListener != null) {
+                pathTraceListener.pathTraced(result);
+            }
 
             setStatus("Done");
         }

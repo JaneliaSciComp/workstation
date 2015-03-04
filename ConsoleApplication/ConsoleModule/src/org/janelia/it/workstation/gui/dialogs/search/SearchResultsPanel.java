@@ -751,6 +751,10 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 
             for (final Count count : ff.getValues()) {
 
+                if (count==null) {
+                    log.warn("Got null count value for facet field "+ff.getName());
+                    continue;
+                }
                 final SearchAttribute attr = searchConfig.getAttributeByName(ff.getName());
                 final String name = attr == null ? null : attr.getName();
                 final String label = searchConfig.getFormattedFieldValue(count.getName(), name) + " (" + count.getCount() + ")";

@@ -9,13 +9,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
 
-
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
-
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronSelectedListener;
 
 /**
  * this widget displays a list of neurons in a workspace
@@ -26,9 +24,18 @@ public class WorkspaceNeuronList extends JPanel {
 
     private JList neuronListBox;
     private DefaultListModel neuronListModel;
+    private CameraPanToListener panListener;
+    private NeuronSelectedListener neuronSelectedListener;
 
     private int width;
     private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
+
+    /**
+     * @param neuronSelectedListener the neuronSelectedListener to set
+     */
+    public void setNeuronSelectedListener(NeuronSelectedListener neuronSelectedListener) {
+        this.neuronSelectedListener = neuronSelectedListener;
+    }
 
     // to add new sort order: add to enum here, add menu in AnnotationPanel.java,
     //  and implement the sort in sortNeuronList below
@@ -36,27 +43,16 @@ public class WorkspaceNeuronList extends JPanel {
     public enum NeuronSortOrder {ALPHABETICAL, CREATIONDATE};
     private NeuronSortOrder neuronSortOrder;
 
-    // ----- slots
-    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
-        @Override
-        public void execute(TmWorkspace workspace) {
-            loadWorkspace(workspace);
-        }
-    };
-    public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
-        @Override
-        public void execute(TmNeuron neuron) {
-            selectNeuron(neuron);
-        }
-    };
-
-    // ----- signals
-    public Signal1<TmNeuron> neuronClickedSignal = new Signal1<TmNeuron>();
-    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
-
     public WorkspaceNeuronList(int width) {
         this.width = width;
         setupUI();
+    }
+
+    /**
+     * @param panListener the panListener to set
+     */
+    public void setPanListener(CameraPanToListener panListener) {
+        this.panListener = panListener;
     }
 
     @Override
@@ -99,7 +95,8 @@ public class WorkspaceNeuronList extends JPanel {
                             } else {
                                 selectedNeuron = null;
                             }
-                            neuronClickedSignal.emit(selectedNeuron);
+                            if (neuronSelectedListener != null)
+                                neuronSelectedListener.selectNeuron(selectedNeuron);
                         }
                     }
                 }
@@ -228,7 +225,9 @@ public class WorkspaceNeuronList extends JPanel {
             for (TmGeoAnnotation ann: neuron.getGeoAnnotationMap().values()) {
                 bounds.include(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
             }
-            cameraPanToSignal.emit(bounds.getCenter());
+            if (panListener != null) {
+                panListener.cameraPanTo(bounds.getCenter());
+            }
         }
     }
 

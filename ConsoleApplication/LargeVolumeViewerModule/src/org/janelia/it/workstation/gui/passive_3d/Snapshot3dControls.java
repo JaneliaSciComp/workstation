@@ -12,8 +12,6 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.Action;
@@ -24,6 +22,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.ColorButtonPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SliderPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.passive_3d.filter.MatrixFilter3D;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
@@ -189,7 +188,7 @@ public class Snapshot3dControls {
         components.add( sharedColorModelButton );        
         getColorButtonPanel().add(sharedColorModelButton);
 
-        activeColorModel.getColorModelChangedSignal().addObserver( viewUpdateListener );
+        activeColorModel.addColorModelListener(viewUpdateListener);
         
         filterActions = new ArrayList<>();
         getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.SPHERE_3_3_3, "Filter 3x3x3 Round" ) );
@@ -277,7 +276,7 @@ public class Snapshot3dControls {
         }
     }
 
-    private static class ViewUpdateListener implements ActionListener, Observer {
+    private static class ViewUpdateListener implements ActionListener, ColorModelListener {
         private Snapshot3d view;
         
         public ViewUpdateListener( Snapshot3d view ) {
@@ -290,7 +289,7 @@ public class Snapshot3dControls {
         }
 
         @Override
-        public void update(Observable o, Object arg) {
+        public void colorModelChanged() {
             updateView();
         }
 
@@ -311,9 +310,9 @@ public class Snapshot3dControls {
         
         @Override
         public void actionPerformed(ActionEvent ae) {
-            controls.getActiveColorModel().getColorModelChangedSignal().deleteObserver(listener);
+            controls.getActiveColorModel().removeColorModelListener( listener );
             controls.setIndependentColorModel( ! controls.isIndendentColorModel() );
-            controls.getActiveColorModel().getColorModelChangedSignal().addObserver( listener );
+            controls.getActiveColorModel().addColorModelListener( listener );
         }
     }
 }

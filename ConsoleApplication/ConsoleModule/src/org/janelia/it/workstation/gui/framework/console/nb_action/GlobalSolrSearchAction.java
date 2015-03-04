@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import java.awt.event.ActionEvent;
@@ -15,17 +10,17 @@ import org.openide.util.NbBundle.Messages;
 
 @ActionID(
         category = "Search",
-        id = "GlobalSOLrSearchAction"
+        id = "GlobalSolrSearchAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_GlobalSOLrSearch"
+        displayName = "#CTL_GlobalSolrSearch"
 )
 @ActionReferences({
     @ActionReference(path = "Menu/Search", position = 1000),
     @ActionReference(path = "Shortcuts", name = "M-F")
 })
-@Messages("CTL_GlobalSOLrSearch=Search")
-public final class GlobalSOLrSearchAction implements ActionListener {
+@Messages("CTL_GlobalSolrSearch=Search")
+public final class GlobalSolrSearchAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {

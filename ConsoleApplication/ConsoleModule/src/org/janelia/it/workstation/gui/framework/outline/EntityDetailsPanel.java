@@ -83,24 +83,25 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
     private static final String OWNER_PERMISSION = "owner";
 
     private JTabbedPane tabbedPane;
-    private List<String> tabNames = new ArrayList<String>();
+    private List<String> tabNames = new ArrayList<>();
 
-    private JLabel attributesLoadingLabel;
-    private JPanel attributesPanel;
-    private DynamicTable attributesTable;
+    private final JLabel attributesLoadingLabel;
+    private final JPanel attributesPanel;
+    private final DynamicTable attributesTable;
 
-    private JLabel permissionsLoadingLabel;
-    private JPanel permissionsPanel;
-    private DynamicTable permissionsTable;
-    private JPanel permissionsButtonPane;
-    private JButton addPermissionButton;
+    private final JLabel permissionsLoadingLabel;
+    private final JPanel permissionsPanel;
+    private final DynamicTable permissionsTable;
+    private final JPanel permissionsButtonPane;
+    private final JButton addPermissionButton;
 
-    private JLabel annotationsLoadingLabel;
-    private JPanel annotationsPanel;
-    private AnnotationView annotationsView;
+    private final JLabel annotationsLoadingLabel;
+    private final JPanel annotationsPanel;
+    private final AnnotationView annotationsView;
 
-    private EntityActorPermissionDialog eapDialog;
+    private final EntityActorPermissionDialog eapDialog;
 
+    private boolean firstLoad = true;
     private List<Subject> subjects;
     private Entity entity;
     private String role;
@@ -147,6 +148,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                 return null;
             }
         };
+        attributesTable.setAutoResizeColumns(false);
         attributesTable.addColumn(ATTRIBUTES_COLUMN_KEY, ATTRIBUTES_COLUMN_KEY, true, false, false, true);
         attributesTable.addColumn(ATTRIBUTES_COLUMN_VALUE, ATTRIBUTES_COLUMN_VALUE, true, false, false, true);
 
@@ -154,7 +156,6 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
         // Permissions tab
         permissionsLoadingLabel = createLoadingLabel();
-        permissionsPanel = new JPanel(new BorderLayout());
         permissionsTable = new DynamicTable(true, false) {
             @Override
             public Object getValue(Object userObject, DynamicColumn column) {
@@ -263,6 +264,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                 eapDialog.showForPermission(eap);
             }
         };
+        permissionsTable.setAutoResizeColumns(false);
         permissionsTable.addColumn(PERMISSIONS_COLUMN_SUBJECT, PERMISSIONS_COLUMN_SUBJECT, true, false, false, true);
         permissionsTable.addColumn(PERMISSIONS_COLUMN_TYPE, PERMISSIONS_COLUMN_TYPE, true, false, false, true);
         permissionsTable.addColumn(PERMISSIONS_COLUMN_PERMS, PERMISSIONS_COLUMN_PERMS, true, false, false, true);
@@ -419,7 +421,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                     attributesTable.addRow(new AttributeValue("Updated Date", df.format(loadedEntity.getUpdatedDate())));
                 }
 
-                Set<String> attrNames = new HashSet<String>();
+                Set<String> attrNames = new HashSet<>();
 
                 List<EntityData> entityDatas = ModelMgrUtils.getAccessibleEntityDatas(loadedEntity);
                 Collections.sort(entityDatas, new Comparator<EntityData>() {
@@ -458,6 +460,10 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                 }
 
                 attributesTable.updateTableModel();
+                if (firstLoad) {
+                    attributesTable.autoResizeColWidth();
+                    firstLoad = false;
+                }
                 attributesPanel.removeAll();
                 attributesPanel.add(attributesTable, BorderLayout.CENTER);
             }
@@ -479,7 +485,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
         SimpleWorker worker = new SimpleWorker() {
 
-            List<Subject> subjects;
+            private List<Subject> subjects;
 
             @Override
             protected void doStuff() throws Exception {
@@ -515,7 +521,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
         SimpleWorker permissionsLoadingWorker = new SimpleWorker() {
 
-            private List<EntityActorPermission> eaps = new ArrayList<EntityActorPermission>();
+            private final List<EntityActorPermission> eaps = new ArrayList<>();
 
             @Override
             protected void doStuff() throws Exception {
@@ -562,7 +568,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
         SimpleWorker annotationLoadingWorker = new SimpleWorker() {
 
-            private List<OntologyAnnotation> annotations = new ArrayList<OntologyAnnotation>();
+            private final List<OntologyAnnotation> annotations = new ArrayList<>();
 
             @Override
             protected void doStuff() throws Exception {
@@ -607,11 +613,11 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
     }
 
     public List<Subject> getUnusedSubjects() {
-        List<Subject> filtered = new ArrayList<Subject>();
+        List<Subject> filtered = new ArrayList<>();
         for (Subject subject : subjects) {
             boolean used = false;
             for (EntityActorPermission eap : entity.getEntityActorPermissions()) {
-                if (subject.equals(eap.getSubjectKey())) {
+                if (subject.getKey().equals(eap.getSubjectKey())) {
                     used = true;
                 }
             }
@@ -636,23 +642,26 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         this.subjects = subjects;
     }
 
+    @Override
     public void refresh() {
         loadSubjects();
         loadAttributes(entity.getId());
     }
 
+    @Override
     public void totalRefresh() {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public boolean isAccessible() {
         return true;
     }
 
     private class AttributeValue {
 
-        private String name;
-        private String value;
+        private final String name;
+        private final String value;
 
         public AttributeValue(String name, String value) {
             super();

@@ -7,9 +7,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.KeyListener;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
@@ -23,7 +21,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
-import org.janelia.it.workstation.signal.Slot1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,25 +45,12 @@ implements MouseMode, KeyListener
 	// private Anchor nextParent = null;
 	private boolean autoFocusNextAnchor = false;
 	
-	public Slot1<Anchor> focusOnAnchorSlot = new Slot1<Anchor>() {
-		@Override
-		public void execute(Anchor anchor) {
-			if (! autoFocusNextAnchor)
-				return;
-			skeletonActor.setNextParent(anchor);
-			skeleton.getHistory().push(anchor);
-			camera.setFocus(anchor.getLocation());
-			// One at a time
-			autoFocusNextAnchor = false;
-		}
-	};
-	
 	public TraceMode(Skeleton skeleton) {
 		this.skeleton = skeleton;
 		setHoverCursor(penCursor);
 		setDragCursor(crossCursor);
 		// Center on new anchors, and mark them with a "P"
-		skeleton.anchorAddedSignal.connect(focusOnAnchorSlot);
+		skeleton.skeletonChanged();
 	}
 
 	@Override 
