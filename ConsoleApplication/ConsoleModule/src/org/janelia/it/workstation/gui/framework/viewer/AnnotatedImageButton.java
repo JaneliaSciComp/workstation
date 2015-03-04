@@ -180,7 +180,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
 
         StringBuilder tsb = new StringBuilder();
         
-        if (EntityConstants.IN_MEMORY_TYPE_VIRTUAL_ENTITY.equals(entity.getEntityTypeName())) {
+        if (EntityUtils.isVirtual(entity)) {
             String title = entity.getValueByAttributeName(EntityConstants.IN_MEMORY_ATTRIBUTE_TITLE);
             if (title!=null) {
                 tsb.append(title);

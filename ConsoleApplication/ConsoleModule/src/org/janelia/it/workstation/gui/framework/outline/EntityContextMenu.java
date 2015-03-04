@@ -94,7 +94,8 @@ public class EntityContextMenu extends JPopupMenu {
     protected List<RootedEntity> rootedEntityList;
     protected RootedEntity rootedEntity;
     protected boolean multiple;
-        
+    protected boolean virtual;
+    
     // Internal state
     protected boolean nextAddRequiresSeparator = false;
 
@@ -117,6 +118,12 @@ public class EntityContextMenu extends JPopupMenu {
         this.multiple = rootedEntityList.size() > 1;
         if (!multiple) {
             checkNotNull(rootedEntity, "Rooted entity cannot be null");
+        }
+        for(RootedEntity re : rootedEntityList) {
+            if (EntityUtils.isVirtual(re.getEntity())) {
+                virtual = true;
+                break;
+            }
         }
     }
     
@@ -249,6 +256,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     protected JMenuItem getPermissionItem() {
         if (multiple) return null;
+        if (virtual) return null;
         
         if (!ModelMgrUtils.isOwner(rootedEntity.getEntity())) return null;
         
@@ -525,7 +533,8 @@ public class EntityContextMenu extends JPopupMenu {
 
     protected JMenuItem getShowReferencesItem() {
         if (multiple) return null;
-
+        if (virtual) return null;
+        
         JMenuItem copyMenuItem = new JMenuItem("  Show References");
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
@@ -625,6 +634,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     protected JMenuItem getRenameItem() {
         if (multiple) return null;
+        if (virtual) return null;
         
         JMenuItem renameItem = new JMenuItem("  Rename");
         renameItem.addActionListener(new ActionListener() {
@@ -667,8 +677,8 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getProcessingBlockItem() {
 
         final List<Entity> samples = new ArrayList<>();
-        for (RootedEntity rootedEntity : rootedEntityList) {
-            Entity sample = rootedEntity.getEntity();
+        for (RootedEntity re : rootedEntityList) {
+            Entity sample = re.getEntity();
             if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
                 if (!sample.getName().contains("~")) {
                     samples.add(sample);
@@ -936,13 +946,7 @@ public class EntityContextMenu extends JPopupMenu {
                     protected void doStuff() throws Exception {
                         // Update database
                         commonRoot = ModelMgr.getModelMgr().createCommonRoot(folderName);
-                        List<Long> ids = new ArrayList<>();
-                        for (RootedEntity rootedEntity : rootedEntityList) {
-                            ids.add(rootedEntity.getEntity().getId());
-                        }
-                        ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids, EntityConstants.ATTRIBUTE_ENTITY);
-                        // Update history
-                        updateAddToRootFolderHistory(commonRoot);
+                        addToCommonRoot(commonRoot);
                     }
 
                     @Override
@@ -977,14 +981,7 @@ public class EntityContextMenu extends JPopupMenu {
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        // Update database
-                        List<Long> ids = new ArrayList<>();
-                        for (RootedEntity rootedEntity : rootedEntityList) {
-                            ids.add(rootedEntity.getEntity().getId());
-                        }
-                        ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids, EntityConstants.ATTRIBUTE_ENTITY);
-                        // Update history
-                        updateAddToRootFolderHistory(commonRoot);
+                        addToCommonRoot(commonRoot);
                     }
 
                     @Override
@@ -1033,15 +1030,7 @@ public class EntityContextMenu extends JPopupMenu {
                         SimpleWorker worker = new SimpleWorker() {
                             @Override
                             protected void doStuff() throws Exception {
-                                // Update database
-                                List<Long> ids = new ArrayList<>();
-                                for (RootedEntity rootedEntity : rootedEntityList) {
-                                    ids.add(rootedEntity.getEntity().getId());
-                                }
-                                ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids,
-                                        EntityConstants.ATTRIBUTE_ENTITY);
-                                // Update history
-                                updateAddToRootFolderHistory(commonRoot);
+                                addToCommonRoot(commonRoot);
                             }
 
                             @Override
@@ -1066,6 +1055,22 @@ public class EntityContextMenu extends JPopupMenu {
         return newFolderMenu;
     }
 
+    private void addToCommonRoot(Entity commonRoot) throws Exception {
+
+        // Update database
+        List<Long> ids = new ArrayList<>();
+        for (RootedEntity re : rootedEntityList) {
+            Entity entity = re.getEntity();
+            if (!EntityConstants.IN_MEMORY_TYPE_PLACEHOLDER_ENTITY.equals(entity.getEntityTypeName()) && entity.getId()!=null) {
+                ids.add(entity.getId());
+            }
+        }
+        
+        ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids, EntityConstants.ATTRIBUTE_ENTITY);
+        // Update history
+        updateAddToRootFolderHistory(commonRoot);                
+    }
+    
     protected JMenuItem getDeleteItem() {
         return getDeleteItem("", false);
     }
@@ -1414,10 +1419,10 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getOpenInFirstViewerItem() {
-        if (multiple)
-            return null;
-        if (StringUtils.isEmpty(rootedEntity.getUniqueId()))
-            return null;
+        if (multiple) return null;
+        if (virtual) return null;
+        if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
+        
         JMenuItem copyMenuItem = new JMenuItem("  Open (Left Pane)");
 
         copyMenuItem.addActionListener(new ActionListener() {
@@ -1451,10 +1456,10 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getOpenInSecondViewerItem() {
-        if (multiple)
-            return null;
-        if (StringUtils.isEmpty(rootedEntity.getUniqueId()))
-            return null;
+        if (multiple) return null;
+        if (virtual) return null;
+        if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
+        
         JMenuItem copyMenuItem = new JMenuItem("  Open (Right Pane)");
 
         copyMenuItem.addActionListener(new ActionListener() {
@@ -1732,6 +1737,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     protected JMenuItem getSearchHereItem() {
         if (multiple) return null;
+        if (virtual) return null;
         
         JMenuItem searchHereMenuItem = new JMenuItem("  Search Here");
         searchHereMenuItem.addActionListener(new ActionListener() {

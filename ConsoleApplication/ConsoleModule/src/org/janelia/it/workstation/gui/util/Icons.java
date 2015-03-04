@@ -294,6 +294,9 @@ public class Icons {
             return getIcon(large ? "file_large.png" : "shape_handles.png");
         }
         else if (EntityConstants.IN_MEMORY_TYPE_VIRTUAL_ENTITY.equals(type)) {
+            return getIcon(large ? "file_large.png" : "images.png");
+        }
+        else if (EntityConstants.IN_MEMORY_TYPE_PLACEHOLDER_ENTITY.equals(type)) {
             return null;
         }
         

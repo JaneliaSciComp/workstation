@@ -132,6 +132,18 @@ public class QCViewPanel extends JPanel implements Refreshable {
             public void setAsActive() {
                 // This viewer cannot be activated
             }
+            
+            @Override
+            public void refresh(final boolean invalidateCache, final Callable<Void> successCallback) {
+                try {
+                    performSearch(0, true);
+                    ConcurrentUtils.invoke(successCallback);
+                }
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
+                
+            }
         };
         viewerPane.setViewer(imageViewer);
         
@@ -201,14 +213,17 @@ public class QCViewPanel extends JPanel implements Refreshable {
             throw new RuntimeException("GeneralSearchDialog.search called in the EDT");
         }
         
+        // Build the basic query from what the user has input
         final SolrQueryBuilder builder = new SolrQueryBuilder();
-        builder.setAuxString("+sage_id_txt:*");
-        
         searchParamsPanel.getQueryBuilder(builder);
-        if (!builder.hasQuery()) {
-            return null;
-        }
-
+        if (!builder.hasQuery()) return null;
+        
+        // Only looking for LSMs which have a denormalized SAGE id gives us the sub-sample LSMs we're looking for, 
+        // without any parent-sample LSMs that we're not interested in.
+        builder.setAuxString(builder.getAuxString()+" +sage_id_txt:*");
+        // Sort by slide code so that we get a consistent set of data (we can't sort by slide_code_txt because it's a multivalued field)
+        builder.setSortField("sage_light_imagery_slide_code_t");
+        // Filter to get LSMs only 
         builder.getFilters().putAll(filters);
 
         log.info("Search for "+builder.getSearchString());
@@ -379,7 +394,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
                     }
                     sb.append("</html>");
 
-                    Entity placeholder = getVirtualEntity(sb.toString());
+                    Entity placeholder = getPlaceholderEntity(sb.toString());
                     ed = new EntityData();
                     ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
                     ed.setParentEntity(searchResultsEntity);
@@ -415,11 +430,11 @@ public class QCViewPanel extends JPanel implements Refreshable {
         return ModelMgr.getModelMgr().searchSolr(query);
     }
     
-    private Entity getVirtualEntity(String title) {
+    private Entity getPlaceholderEntity(String title) {
         Entity virtualEntity = new Entity();
         virtualEntity.setId(TimebasedIdentifierGenerator.generateIdList(1).get(0));
-        virtualEntity.setName("Virtual Entity");
-        virtualEntity.setEntityTypeName(EntityConstants.IN_MEMORY_TYPE_VIRTUAL_ENTITY);
+        virtualEntity.setName("Placeholder");
+        virtualEntity.setEntityTypeName(EntityConstants.IN_MEMORY_TYPE_PLACEHOLDER_ENTITY);
         virtualEntity.setOwnerKey(SessionMgr.getSubjectKey());
         virtualEntity.setValueByAttributeName(EntityConstants.IN_MEMORY_ATTRIBUTE_TITLE, title);
         return virtualEntity;
