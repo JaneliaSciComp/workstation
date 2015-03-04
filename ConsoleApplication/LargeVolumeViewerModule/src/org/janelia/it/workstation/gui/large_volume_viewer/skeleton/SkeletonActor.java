@@ -266,12 +266,6 @@ implements GLActor
         tearDownAnchorShaders(gl);
 	}
 
-    private void tearDownAnchorShaders(GL2 gl) {
-        anchorShader.unload(gl);
-        gl.glDisable(GL2.GL_POINT_SPRITE);
-        gl.glDisable(GL2.GL_TEXTURE_2D);
-    }
-
     private void setupAnchorShaders(GL2 gl) {
         gl.glEnable(GL2.GL_POINT_SPRITE);
         gl.glEnable(GL2.GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -302,6 +296,12 @@ implements GLActor
         anchorShader.setUniform3v(gl, "focus", 1, focus);
         anchorShader.setUniform(gl, "anchorTexture", 0);
         anchorShader.setUniform(gl, "parentAnchorTexture", 1);
+    }
+
+    private void tearDownAnchorShaders(GL2 gl) {
+        anchorShader.unload(gl);
+        gl.glDisable(GL2.GL_POINT_SPRITE);
+        gl.glDisable(GL2.GL_TEXTURE_2D);
     }
 
     @Override
