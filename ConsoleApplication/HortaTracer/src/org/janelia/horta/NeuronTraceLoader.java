@@ -78,6 +78,7 @@ public class NeuronTraceLoader {
     
     public void loadYamlFile(final InputStream yamlStream) throws IOException {
         Runnable task = new Runnable() {
+            @Override
             public void run() {
                 ProgressHandle progress = ProgressHandleFactory.createHandle("Loading brain tiles");
                 progress.start();

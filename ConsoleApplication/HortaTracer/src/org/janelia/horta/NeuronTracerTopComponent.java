@@ -1225,10 +1225,21 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
             }
 
-                        // Now, position this component over other component's
+            // Now, position this component over other component's
             // focus.
             if (focusCoords != null) {
-//                            NeuronTracerTopComponent.this.set
+                Vantage v = sceneWindow.getVantage();
+                v.setFocusPosition(
+                        new Vector3(
+                                (float)focusCoords[0],
+                                (float)focusCoords[1],
+                                (float)focusCoords[2]
+                        )
+                );
+                v.notifyObservers();
+            }
+            else {
+                logger.info("No focus coords provided.");
             }
         }
         
