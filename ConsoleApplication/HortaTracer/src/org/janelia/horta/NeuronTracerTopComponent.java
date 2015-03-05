@@ -57,6 +57,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
@@ -115,6 +117,7 @@ import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.RequestProcessor;
 import org.openide.util.lookup.Lookups;
+import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,7 +138,7 @@ import org.slf4j.LoggerFactory;
 @ActionReference(path = "Menu/Window/Horta" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_NeuronTracerAction",
-        preferredID = "NeuronTracerTopComponent"
+        preferredID = NeuronTracerTopComponent.PREFERRED_ID
 )
 @Messages({
     "CTL_NeuronTracerAction=Horta Tracer",
@@ -144,6 +147,8 @@ import org.slf4j.LoggerFactory;
 })
 public final class NeuronTracerTopComponent extends TopComponent
         implements VolumeProjection {
+    public static final String PREFERRED_ID = "NeuronTracerTopComponent";
+    public static final String BASE_YML_FILE = "tilebase.cache.yml";
 
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor interactor;
@@ -229,6 +234,10 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         setUpActors();
         
+    }
+
+    public static JComponent findThisComponent() {
+        return WindowManager.getDefault().findTopComponent(PREFERRED_ID);
     }
 
     private void setUpActors() 
@@ -1175,6 +1184,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 SynchronizationHelper helper = new SynchronizationHelper();
                 Collection<Tiled3dSampleLocationProvider> locationProviders =
                         helper.getSampleLocationProviders("NeuronTracer");
+                logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
                 if (locationProviders.size() > 1) {
                     JMenu synchronizeAllMenu = new JMenu("Sychronize with other 3D viewer.");
                     buildSyncMenu(locationProviders, synchronizeAllMenu);
@@ -1317,6 +1327,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     private void buildSyncMenu(Collection<Tiled3dSampleLocationProvider> locationProviders, JComponent synchronizeAllMenu) {
         for (final Tiled3dSampleLocationProvider provider : locationProviders) {
+            logger.info("Adding menu item for {}.", provider.getProviderUniqueName());
             final String description = provider.getProviderDescription();
             JMenu synchronizeMenu = new JMenu("Synchronize with " + description);
             synchronizeAllMenu.add(synchronizeMenu);
@@ -1334,10 +1345,19 @@ public final class NeuronTracerTopComponent extends TopComponent
                     try {
                         // First ensure that this component uses same sample.
                         if (focusUrl != null) {
-                            String urlStr = focusUrl.toString();
+                            String urlStr = focusUrl.toString();                            
                             if (!urlStr.equals(currentSource)) {
-                                InputStream stream1 = focusUrl.openStream();
-                                InputStream stream2 = focusUrl.openStream();
+                                URI uri = focusUrl.toURI();
+                                URI yamlUri = new URI(
+                                    uri.getScheme(),
+                                    uri.getAuthority(),
+                                    uri.getPath() + "/" + BASE_YML_FILE,
+                                    uri.getFragment()
+                                );
+                                logger.info("Constructed URI: {}.", uri);
+                                URL yamlUrl = yamlUri.toURL();
+                                InputStream stream1 = yamlUrl.openStream();
+                                InputStream stream2 = yamlUrl.openStream();
                                 loadYaml(stream1, loader, stream2);
                             }
                         }
@@ -1347,9 +1367,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                         if (focusCoords != null) {
 //                            NeuronTracerTopComponent.this.set
                         }
-                    } catch (IOException ioe) {
+                    } catch (IOException | URISyntaxException ioe) {
                         logger.error(ioe.getMessage());
                         Exceptions.printStackTrace(ioe);
+                        JOptionPane.showMessageDialog(
+                                NeuronTracerTopComponent.findThisComponent(), 
+                                "Check that " + BASE_YML_FILE + " exists in synch source"
+                        );
                     }
                 }
             });

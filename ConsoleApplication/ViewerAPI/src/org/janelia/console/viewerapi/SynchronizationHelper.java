@@ -39,6 +39,14 @@ import org.openide.util.Lookup;
  * @author fosterl
  */
 public class SynchronizationHelper {
+    /**
+     * Obtain all possible sources of sample/location synchronization, except
+     * for the one listed.  The excluded one is meant to reflect the name of
+     * the location acceptor, who will not wish to synchronize with itself.
+     * 
+     * @param excludedName do not return a provider by this name.  May be null.
+     * @return all providers who wish to advertize their locations/samples.
+     */
     public Collection<Tiled3dSampleLocationProvider> getSampleLocationProviders(String excludedName) {
         Lookup lookup = Lookups.forPath(Tiled3dSampleLocationProvider.LOOKUP_PATH);
         Collection<? extends Tiled3dSampleLocationProvider> candidates = 
