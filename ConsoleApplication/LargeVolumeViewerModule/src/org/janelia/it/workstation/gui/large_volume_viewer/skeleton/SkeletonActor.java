@@ -237,7 +237,8 @@ implements GLActor
         GL2 gl = glDrawable.getGL().getGL2();
         setupAnchorShaders(gl);
 
-        boolean notPerNeuron = true;
+        //boolean notPerNeuron = true;
+        boolean notPerNeuron = false;
         if (notPerNeuron) {
             // old: not per-neuron
             // vertex buffer object
@@ -286,6 +287,51 @@ implements GLActor
             gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
         } else {
             // new: per-neuron
+            for (Long neuronID: neuronVertices.keySet()) {
+                // TODO - crashes unless glBufferData called every time.
+                // if (verticesNeedCopy) {
+                if (true) {
+                    // vertices
+                    neuronVertices.get(neuronID).rewind();
+                    gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
+                    gl.glBufferData(GL2.GL_ARRAY_BUFFER,
+                            neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT,
+                            neuronVertices.get(neuronID), GL2.GL_DYNAMIC_DRAW);
+
+                    // colors
+                    neuronColors.get(neuronID).rewind();
+                    gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+                    gl.glBufferData(GL2.GL_ARRAY_BUFFER,
+                            neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT,
+                            neuronColors.get(neuronID),
+                            GL2.GL_DYNAMIC_DRAW);
+
+                    verticesNeedCopy = false;
+                    // point indices
+                    neuronPointIndices.get(neuronID).rewind();
+                    gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
+                    gl.glBufferData(GL2.GL_ELEMENT_ARRAY_BUFFER,
+                            neuronPointIndices.get(neuronID).capacity() * INT_BYTE_COUNT,
+                            neuronPointIndices.get(neuronID), GL2.GL_DYNAMIC_DRAW);
+                }
+                gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+                gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
+                gl.glVertexPointer(VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
+                gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+                gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+                gl.glColorPointer(COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
+                gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
+                PassThroughTextureShader.checkGlError(gl, "paint anchors 1");
+                gl.glDrawElements(GL2.GL_POINTS,
+                        neuronPointIndices.get(neuronID).capacity(),
+                        GL2.GL_UNSIGNED_INT,
+                        0L);
+                // tear down
+                gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
+                gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, 0);
+                gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+                gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+            }
         }
 
         tearDownAnchorShaders(gl);
@@ -503,6 +549,11 @@ implements GLActor
             neuronColors.get(neuronID).put(neuronColor[0]);
             neuronColors.get(neuronID).put(neuronColor[1]);
             neuronColors.get(neuronID).put(neuronColor[2]);
+            // test: make anchors cycle colors:
+            float temp = neuronColor[0];
+            neuronColor[0] = neuronColor[1];
+            neuronColor[1] = neuronColor[2];
+            neuronColor[2] = temp;
 
             if (neuronVertexIndex.containsKey(neuronID)) {
                 currentVertexIndex = neuronVertexIndex.get(neuronID);
