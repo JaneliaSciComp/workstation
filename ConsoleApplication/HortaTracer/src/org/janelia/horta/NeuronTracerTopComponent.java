@@ -107,8 +107,6 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProvider;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
-import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.api.progress.ProgressHandleFactory;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -175,6 +173,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private NeuronMPRenderer neuronMPRenderer;
     
     private String currentSource;
+    private NeuronTraceLoader loader;
     
     private boolean doCubifyVoxels = false;
     private Logger logger = LoggerFactory.getLogger(NeuronTracerTopComponent.class);
@@ -239,9 +238,19 @@ public final class NeuronTracerTopComponent extends TopComponent
         });
 
         setUpActors();
-        
+
+        loader = new NeuronTraceLoader(
+                NeuronTracerTopComponent.this,
+                neuronMPRenderer,
+                sceneWindow,
+                tracingInteractor
+        );
     }
 
+    public void setVolumeSource(StaticVolumeBrickSource volumeSource) {
+        this.volumeSource = volumeSource;
+    }
+    
     /** Tells caller what source we are examining. */
     public URL getCurrentSourceURL() throws MalformedURLException, URISyntaxException {
         return new URI(currentSource).toURL();
@@ -363,7 +372,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             // logger.info(xyz);
                             previousClickTime = System.nanoTime();
                             PerspectiveCamera pCam = (PerspectiveCamera) camera;
-                            animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                            loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
                         }
                     }
 
@@ -393,51 +402,6 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                 };
 
-    }
-
-    /**
-     * Animates to next point in 3D space TODO - run this in another thread
-     *
-     * @param xyz
-     * @param vantage
-     */
-    private void animateToFocusXyz(Vector3 xyz, Vantage vantage, int milliseconds) {
-        Vector3 startPos = new Vector3(vantage.getFocusPosition());
-        Vector3 endPos = new Vector3(xyz);
-        long startTime = System.nanoTime();
-        long targetTime = milliseconds * 1000000;
-        final int stepCount = 40;
-        boolean didMove = false;
-        for (int s = 0; s < stepCount - 1; ++s) {
-            // skip frames to match expected time
-            float alpha = s / (float) (stepCount - 1);
-            double deltaTime = (System.nanoTime() - startTime) / 1e6;
-            double desiredTime = (alpha * targetTime) / 1e6;
-            // logger.info("Elapsed = "+deltaTime+" ms; desired = "+desiredTime+" ms");
-            if (deltaTime > desiredTime) {
-                continue; // skip this frame
-            }
-            Vector3 a = new Vector3(startPos).multiplyScalar(1.0f - alpha);
-            Vector3 b = new Vector3(endPos).multiplyScalar(alpha);
-            a = a.add(b);
-            if (vantage.setFocusPosition(a)) {
-                didMove = true;
-                vantage.notifyObservers();
-                sceneWindow.getGLAutoDrawable().display();
-                // sceneWindow.getInnerComponent().repaint();
-            }
-        }
-        double elapsed = (System.nanoTime() - startTime) * 1e-6;
-        // logger.info("Animation took " + elapsed + " ms");
-        // never skip the final frame
-        if (vantage.setFocusPosition(endPos)) {
-            didMove = true;
-        }
-        if (didMove) {
-            vantage.notifyObservers();
-            sceneWindow.getGLAutoDrawable().display();
-            // sceneWindow.getInnerComponent().repaint();
-        }
     }
 
     private void animateToCameraRotation(Rotation rot, Vantage vantage, int milliseconds) {
@@ -709,12 +673,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                 Transferable t = dtde.getTransferable();
                 try {
                     List<File> fileList = (List) t.getTransferData(DataFlavor.javaFileListFlavor);
-                    NeuronTraceLoader loader = new NeuronTraceLoader(
-                            NeuronTracerTopComponent.this,
-                            neuronMPRenderer, 
-                            sceneWindow, 
-                            tracingInteractor
-                    );
                     for (File f : fileList) {
                         InputStream sourceYamlStream = new FileInputStream(f);
                         InputStream loaderYamlStream = new FileInputStream(f);
@@ -738,54 +696,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         loader.loadYamlFile(loaderYamlStream);
     }
 
-    /**
-     * Helper method toward automatic tile loading
-     */
-    private BrickInfo loadTileAtCurrentFocus() throws IOException {
-        PerformanceTimer timer = new PerformanceTimer();
-
-        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-
-        // 2 - Load the brick at the center...
-        // TODO - should happen automatically
-        // Find the best resolution available
-        double screenPixelResolution = pCam.getVantage().getSceneUnitsPerViewportHeight()
-                / pCam.getViewport().getHeightPixels();
-        double minDist = Double.MAX_VALUE;
-        Double bestRes = null;
-        for (Double res : volumeSource.getAvailableResolutions()) {
-            double dist = Math.abs(Math.log(res) - Math.log(screenPixelResolution));
-            if (dist < minDist) {
-                bestRes = res;
-                minDist = dist;
-            }
-        }
-        Double brickResolution = bestRes;
-        BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution);
-        BrickInfo brickInfo = brickInfoSet.getBestContainingBrick(pCam.getVantage().getFocusPosition());
-
-        ProgressHandle progress
-                = ProgressHandleFactory.createHandle(
-                "Loading Tiff Volume...");
-        progress.start();
-
-        GL3Actor boxMesh = createBrickActor((BrainTileInfo) brickInfo);
-
-        progress.finish();
-
-        StatusDisplayer.getDefault().setStatusText(
-                "One TIFF file loaded and processed in "
-                + String.format("%1$,.2f", timer.reportMsAndRestart() / 1000.0)
-                + " seconds."
-        );
-
-        // mprActor.addChild(boxMesh);
-        neuronMPRenderer.clearVolumeActors();
-        neuronMPRenderer.addVolumeActor(boxMesh);
-        
-        return brickInfo;
-    }
-    
     private void setupContextMenu(Component innerComponent) {
         // Context menu for window - at first just to see if it works with OpenGL
         // (A: YES, if applied to the inner component)
@@ -804,7 +714,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-                            animateToFocusXyz(mouseStageLocation, pCam.getVantage(), 150);
+                            loader.animateToFocusXyz(mouseStageLocation, pCam.getVantage(), 150);
                         }
                     });
                 }
@@ -900,7 +810,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         Runnable task = new Runnable() {
                             public void run() {
                                 try {
-                                    BrickInfo centerBrickInfo = loadTileAtCurrentFocus();
+                                    BrickInfo centerBrickInfo = loader.loadTileAtCurrentFocus( volumeSource );
                                     sceneWindow.getGLAutoDrawable().display();
                                 } catch (IOException ex) {
                                     Exceptions.printStackTrace(ex);
@@ -937,66 +847,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                                     JOptionPane.ERROR_MESSAGE);
                             return;
                         }
-
-                        Runnable task = new Runnable() {
-                            public void run() {
-                                ProgressHandle progress
-                                        = ProgressHandleFactory.createHandle("Loading brain tile metadata");
-                                progress.start();
-                                progress.progress("Loading YAML tile information...");
-
-                                PerformanceTimer timer = new PerformanceTimer();
-
-                                InputStream yamlStream;
-                                try {
-                                    // 1 - Load tile index
-                                    yamlStream = new FileInputStream(yamlFile);
-                                    volumeSource = new MouseLightYamlBrickSource(yamlStream);
-                                    int tileCount = 0;
-                                    for (Double res : volumeSource.getAvailableResolutions()) {
-                                        BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(res);
-                                        tileCount += brickInfoSet.size();
-                                    }
-                                    progress.finish();
-                                    StatusDisplayer.getDefault().setStatusText(
-                                            tileCount
-                                            + " tiles loaded in "
-                                            + String.format("%1$,.2f", timer.reportMsAndRestart() / 1000.0)
-                                            + " seconds."
-                                    );
-                                    // logger.info("yaml load took " + timer.reportMsAndRestart() + " ms");
-
-                                    // Recenter
-                                    Vector3 centerFocus = volumeSource.getBoundingBox().getCentroid();
-                                    // logger.info("Center of volume is " + centerFocus.toString());
-                                    PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-                                    animateToFocusXyz(centerFocus, pCam.getVantage(), 150);
-
-                                    BrickInfo centerBrickInfo = loadTileAtCurrentFocus();
-                                    
-                                    Vantage v = pCam.getVantage();
-                                    v.centerOn(centerBrickInfo.getBoundingBox());
-                                    v.setDefaultBoundingBox(centerBrickInfo.getBoundingBox());
-                                    v.notifyObservers();
-
-                                } catch (FileNotFoundException ex) {
-                                    JOptionPane.showMessageDialog(
-                                            NeuronTracerTopComponent.this,
-                                            "ERROR loading YAML file "
-                                            + yamlFile.getAbsolutePath(),
-                                            "ERROR: YAML load error",
-                                            JOptionPane.ERROR_MESSAGE);
-                                } catch (IOException ex) {
-                                    JOptionPane.showMessageDialog(
-                                            NeuronTracerTopComponent.this,
-                                            "ERROR loading Volume file",
-                                            "ERROR: Volume load error",
-                                            JOptionPane.ERROR_MESSAGE);
-                                } finally {
-                                    progress.finish();
-                                }
-                            }
-                        };
+                        Runnable task = new YamlFileRunnable(
+                                yamlFile, sceneWindow, loader, NeuronTracerTopComponent.this
+                        );
                         RequestProcessor.getDefault().post(task);
                     }
                 });
@@ -1353,13 +1206,6 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         @Override
         public void acceptLocation(URL focusUrl, double[] focusCoords) throws Exception {
-            NeuronTraceLoader loader = new NeuronTraceLoader(
-                    NeuronTracerTopComponent.this,
-                    neuronMPRenderer,
-                    sceneWindow,
-                    tracingInteractor
-            );
-
             // First ensure that this component uses same sample.
             if (focusUrl != null) {
                 String urlStr = focusUrl.toString();

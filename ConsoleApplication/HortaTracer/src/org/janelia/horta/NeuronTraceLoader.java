@@ -37,10 +37,16 @@ import java.util.Observer;
 import javax.swing.JOptionPane;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.geometry.util.PerformanceTimer;
+import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
+import org.janelia.horta.volume.BrickInfo;
+import org.janelia.horta.volume.BrickInfoSet;
+import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
+import org.openide.awt.StatusDisplayer;
 import org.openide.util.Exceptions;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
@@ -59,7 +65,11 @@ public class NeuronTraceLoader {
     private SceneWindow sceneWindow;
     private TracingInteractor tracingInteractor;
     
-    public NeuronTraceLoader(NeuronTracerTopComponent nttc, NeuronMPRenderer neuronMPRenderer, SceneWindow sceneWindow, TracingInteractor tracingInteractor) {
+    public NeuronTraceLoader(
+            NeuronTracerTopComponent nttc, 
+            NeuronMPRenderer neuronMPRenderer, 
+            SceneWindow sceneWindow, 
+            TracingInteractor tracingInteractor) {
         this.nttc = nttc;
         this.neuronMPRenderer = neuronMPRenderer;
         this.sceneWindow = sceneWindow;
@@ -94,6 +104,99 @@ public class NeuronTraceLoader {
             public static final String FAILED_TO_LOAD_EXAMPLE_TILE_MSG = "Failed to load example tile.";
         };
         RequestProcessor.getDefault().post(task);
+    }
+
+    /**
+     * Animates to next point in 3D space TODO - run this in another thread
+     *
+     * @param xyz
+     * @param vantage
+     */
+    public void animateToFocusXyz(Vector3 xyz, Vantage vantage, int milliseconds) {
+        Vector3 startPos = new Vector3(vantage.getFocusPosition());
+        Vector3 endPos = new Vector3(xyz);
+        long startTime = System.nanoTime();
+        long targetTime = milliseconds * 1000000;
+        final int stepCount = 40;
+        boolean didMove = false;
+        for (int s = 0; s < stepCount - 1; ++s) {
+            // skip frames to match expected time
+            float alpha = s / (float) (stepCount - 1);
+            double deltaTime = (System.nanoTime() - startTime) / 1e6;
+            double desiredTime = (alpha * targetTime) / 1e6;
+            // logger.info("Elapsed = "+deltaTime+" ms; desired = "+desiredTime+" ms");
+            if (deltaTime > desiredTime) {
+                continue; // skip this frame
+            }
+            Vector3 a = new Vector3(startPos).multiplyScalar(1.0f - alpha);
+            Vector3 b = new Vector3(endPos).multiplyScalar(alpha);
+            a = a.add(b);
+            if (vantage.setFocusPosition(a)) {
+                didMove = true;
+                vantage.notifyObservers();
+                sceneWindow.getGLAutoDrawable().display();
+                // sceneWindow.getInnerComponent().repaint();
+            }
+        }
+        double elapsed = (System.nanoTime() - startTime) * 1e-6;
+        // logger.info("Animation took " + elapsed + " ms");
+        // never skip the final frame
+        if (vantage.setFocusPosition(endPos)) {
+            didMove = true;
+        }
+        if (didMove) {
+            vantage.notifyObservers();
+            sceneWindow.getGLAutoDrawable().display();
+            // sceneWindow.getInnerComponent().repaint();
+        }
+    }
+
+    /**
+     * Helper method toward automatic tile loading
+     */
+    public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource ) throws IOException {
+        PerformanceTimer timer = new PerformanceTimer();
+
+        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+
+        // 2 - Load the brick at the center...
+        // TODO - should happen automatically
+        // Find the best resolution available
+        double screenPixelResolution = pCam.getVantage().getSceneUnitsPerViewportHeight()
+                / pCam.getViewport().getHeightPixels();
+        double minDist = Double.MAX_VALUE;
+        Double bestRes = null;
+        for (Double res : volumeSource.getAvailableResolutions()) {
+            double dist = Math.abs(Math.log(res) - Math.log(screenPixelResolution));
+            if (dist < minDist) {
+                bestRes = res;
+                minDist = dist;
+            }
+        }
+        Double brickResolution = bestRes;
+        BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution);
+        BrickInfo brickInfo = brickInfoSet.getBestContainingBrick(pCam.getVantage().getFocusPosition());
+
+        ProgressHandle progress
+                = ProgressHandleFactory.createHandle(
+                "Loading Tiff Volume...");
+        progress.start();
+
+        GL3Actor boxMesh = nttc.createBrickActor((BrainTileInfo) brickInfo);
+
+        progress.finish();
+
+        StatusDisplayer.getDefault().setStatusText(
+                "One TIFF file loaded and processed in "
+                + String.format("%1$,.2f", timer.reportMsAndRestart() / 1000.0)
+                + " seconds."
+        );
+
+        // mprActor.addChild(boxMesh);
+        neuronMPRenderer.clearVolumeActors();
+        neuronMPRenderer.addVolumeActor(boxMesh);
+        
+        return brickInfo;
     }
 
     private boolean loadExampleTile(BrainTileInfoList tileList, ProgressHandle progress) {
