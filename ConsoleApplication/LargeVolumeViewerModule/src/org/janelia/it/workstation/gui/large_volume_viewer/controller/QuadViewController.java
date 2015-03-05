@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.swing.JComponent;
+import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
@@ -43,6 +44,7 @@ public class QuadViewController implements ViewStateListener {
     private final Collection<MouseWheelModeListener> relayMwmListeners = new ArrayList<>();
     private final Collection<ColorModelListener> relayCMListeners = new ArrayList<>();
     private final Collection<JComponent> orthPanels = new ArrayList<>();
+    private ViewerLocationAcceptor viewerLocationAcceptor = new QuadViewLocationAcceptor();
            
     public QuadViewController(QuadViewUi ui, AnnotationManager annoMgr, LargeVolumeViewer lvv) {
         this.ui = ui;
@@ -148,6 +150,10 @@ public class QuadViewController implements ViewStateListener {
     
     public void registerForEvents(GoToLocationAction action) {
         action.setListener(new QvucGotoListener());
+    }
+    
+    public ViewerLocationAcceptor getLocationAcceptor() {
+        return viewerLocationAcceptor;
     }
     
     public void mouseModeChanged(MouseMode.Mode mode) {
@@ -264,4 +270,15 @@ public class QuadViewController implements ViewStateListener {
         
     }
     
+    private class QuadViewLocationAcceptor implements ViewerLocationAcceptor {
+
+        @Override
+        public void acceptLocation(URL url, double[] coords) throws Exception {            
+            Vec3 newFocus = new Vec3( coords[0], coords[1], coords[2] );
+            ui.loadRender(url);
+            ui.focusChanged(newFocus);
+        }
+        
+    }
+        
 }

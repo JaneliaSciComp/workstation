@@ -40,13 +40,18 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Vector;
 import java.util.List;
+import org.janelia.console.viewerapi.RelocationMenuBuilder;
+import org.janelia.console.viewerapi.SynchronizationHelper;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelInitListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.SWCDataConverter;
@@ -342,6 +347,13 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     result.add(addFileMenuItem());
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.add(addViewMenuItem());
+                    
+                    // Add menus/items for relocating per other views.
+                    SynchronizationHelper helper = new SynchronizationHelper();
+                    Collection<Tiled3dSampleLocationProvider> locationProviders =
+                        helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
+                    result.addAll( menuBuilder.buildSyncMenu(locationProviders, quadViewController.getLocationAcceptor()) );
                     return result;
                 }
             });
@@ -1162,16 +1174,16 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         boolean rtnVal = false;
     	// Check if url exists first...
     	try {
+            if (url == null) {
+                throw new IllegalArgumentException("Location for re-centering not found.");
+            }
     		url.openStream();            
         	rtnVal = volumeImage.loadURL(url);
             this.setLoadedUrl(url);
     	} catch (IOException exc) {
-            JOptionPane.showMessageDialog(this.getParent(),
+            throw new RuntimeException(
                     "Error opening folder " + url
-                    +" \nIs the file share mounted?",
-                    "Could not open folder",
-                    JOptionPane.ERROR_MESSAGE);
-            rtnVal = false;
+                    +" \nIs the file share mounted?");
     	}
         return rtnVal;
     }
@@ -1195,7 +1207,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public SubvolumeProvider getSubvolumeProvider(){
         return new SubvolumeProvider(volumeImage, tileServer);
     }
-
+    
     //---------------------------IMPLEMENTS VolumeLoadListener
     @Override
     public void volumeLoaded(URL url) {

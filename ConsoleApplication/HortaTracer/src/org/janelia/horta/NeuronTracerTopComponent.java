@@ -57,6 +57,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -69,7 +70,6 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -77,6 +77,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
@@ -105,6 +106,7 @@ import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProvider;
+import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -129,7 +131,7 @@ import org.slf4j.LoggerFactory;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "NeuronTracerTopComponent",
+        preferredID = NeuronTracerTopComponent.PREFERRED_ID,
         iconBase = "org/janelia/horta/neuronTracerCubic16.png",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
@@ -177,6 +179,10 @@ public final class NeuronTracerTopComponent extends TopComponent
     private boolean doCubifyVoxels = false;
     private Logger logger = LoggerFactory.getLogger(NeuronTracerTopComponent.class);
     
+    public static NeuronTracerTopComponent findThisComponent() {
+        return (NeuronTracerTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
+    }
+
     public NeuronTracerTopComponent() {
         // This block is what the wizard created
         initComponents();
@@ -236,10 +242,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         
     }
 
-    public static JComponent findThisComponent() {
-        return WindowManager.getDefault().findTopComponent(PREFERRED_ID);
+    /** Tells caller what source we are examining. */
+    public URL getCurrentSourceURL() throws MalformedURLException, URISyntaxException {
+        return new URI(currentSource).toURL();
     }
-
+    
     private void setUpActors() 
     {
         
@@ -1183,15 +1190,21 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // Want to lookup, get URL and get focus.
                 SynchronizationHelper helper = new SynchronizationHelper();
                 Collection<Tiled3dSampleLocationProvider> locationProviders =
-                        helper.getSampleLocationProviders("NeuronTracer");
+                        helper.getSampleLocationProviders(HortaLocationProvider.UNIQUE_NAME);
                 logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
+                ViewerLocationAcceptor acceptor = new SampleLocationAcceptor();
+                RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
                 if (locationProviders.size() > 1) {
                     JMenu synchronizeAllMenu = new JMenu("Sychronize with other 3D viewer.");
-                    buildSyncMenu(locationProviders, synchronizeAllMenu);
+                    for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, acceptor)) {
+                        synchronizeAllMenu.add(item);
+                    }
                     menu.add(synchronizeAllMenu);
                 }
                 else if (locationProviders.size() == 1) {
-                    buildSyncMenu(locationProviders, menu);
+                    for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, acceptor)) {
+                        menu.add(item);
+                    }
                 }
                 // Cancel/do nothing action
                 menu.add(new JPopupMenu.Separator());
@@ -1229,6 +1242,17 @@ public final class NeuronTracerTopComponent extends TopComponent
         GL3Actor boxMesh = new MeshActor(
                 boxGeometry, volumeMipMaterial, null);
         return boxMesh;
+    }
+    
+    public double[] getStageLocation() {
+        if (mouseStageLocation == null) {
+            return null;
+        }
+        else {
+            return new double[] {
+                mouseStageLocation.getX(), mouseStageLocation.getY(), mouseStageLocation.getZ()
+            };
+        }
     }
     
     /**
@@ -1324,72 +1348,43 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         return true;
     }
+    
+    private class SampleLocationAcceptor implements ViewerLocationAcceptor {
 
-    private void buildSyncMenu(Collection<Tiled3dSampleLocationProvider> locationProviders, JComponent synchronizeAllMenu) {
-        for (final Tiled3dSampleLocationProvider provider : locationProviders) {
-            logger.info("Adding menu item for {}.", provider.getProviderUniqueName());
-            final String description = provider.getProviderDescription();
-            JMenu synchronizeMenu = new JMenu("Synchronize with " + description);
-            synchronizeAllMenu.add(synchronizeMenu);
-            synchronizeMenu.add(new AbstractAction("Synchronize with " + description + " now") {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    double[] focusCoords = provider.getCoords();
-                    URL focusUrl = provider.getSampleUrl();
-                    NeuronTraceLoader loader = new NeuronTraceLoader(
-                            NeuronTracerTopComponent.this,
-                            neuronMPRenderer, 
-                            sceneWindow, 
-                            tracingInteractor
+        @Override
+        public void acceptLocation(URL focusUrl, double[] focusCoords) throws Exception {
+            NeuronTraceLoader loader = new NeuronTraceLoader(
+                    NeuronTracerTopComponent.this,
+                    neuronMPRenderer,
+                    sceneWindow,
+                    tracingInteractor
+            );
+
+            // First ensure that this component uses same sample.
+            if (focusUrl != null) {
+                String urlStr = focusUrl.toString();
+                if (!urlStr.equals(currentSource)) {
+                    URI uri = focusUrl.toURI();
+                    URI yamlUri = new URI(
+                            uri.getScheme(),
+                            uri.getAuthority(),
+                            uri.getPath() + "/" + BASE_YML_FILE,
+                            uri.getFragment()
                     );
-                    try {
-                        // First ensure that this component uses same sample.
-                        if (focusUrl != null) {
-                            String urlStr = focusUrl.toString();                            
-                            if (!urlStr.equals(currentSource)) {
-                                URI uri = focusUrl.toURI();
-                                URI yamlUri = new URI(
-                                    uri.getScheme(),
-                                    uri.getAuthority(),
-                                    uri.getPath() + "/" + BASE_YML_FILE,
-                                    uri.getFragment()
-                                );
-                                logger.info("Constructed URI: {}.", uri);
-                                URL yamlUrl = yamlUri.toURL();
-                                InputStream stream1 = yamlUrl.openStream();
-                                InputStream stream2 = yamlUrl.openStream();
-                                loadYaml(stream1, loader, stream2);
-                            }
-                        }
-                        
-                        // Now, position this component over other component's
-                        // focus.
-                        if (focusCoords != null) {
-//                            NeuronTracerTopComponent.this.set
-                        }
-                    } catch (IOException | URISyntaxException ioe) {
-                        logger.error(ioe.getMessage());
-                        Exceptions.printStackTrace(ioe);
-                        JOptionPane.showMessageDialog(
-                                NeuronTracerTopComponent.findThisComponent(), 
-                                "Check that " + BASE_YML_FILE + " exists in synch source"
-                        );
-                    }
+                    logger.info("Constructed URI: {}.", uri);
+                    URL yamlUrl = yamlUri.toURL();
+                    InputStream stream1 = yamlUrl.openStream();
+                    InputStream stream2 = yamlUrl.openStream();
+                    loadYaml(stream1, loader, stream2);
                 }
-            });
-            synchronizeMenu.add(new AbstractAction("Synchronize with " + description + " always") {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-            });
-        }
-        synchronizeAllMenu.add(new JMenuItem(new AbstractAction("Desynchronize") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
-        }));
-    }
 
+                        // Now, position this component over other component's
+            // focus.
+            if (focusCoords != null) {
+//                            NeuronTracerTopComponent.this.set
+            }
+        }
+        
+    }
 }

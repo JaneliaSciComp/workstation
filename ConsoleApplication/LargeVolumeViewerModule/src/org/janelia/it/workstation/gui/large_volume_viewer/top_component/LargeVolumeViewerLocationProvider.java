@@ -20,7 +20,7 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = Tiled3dSampleLocationProvider.class, path=Tiled3dSampleLocationProvider.LOOKUP_PATH)
 public class LargeVolumeViewerLocationProvider implements Tiled3dSampleLocationProvider {
 
-    private static final String PROVIDER_UNIQUE_NAME = "LargeVolumeViewer";
+    public static final String PROVIDER_UNIQUE_NAME = "LargeVolumeViewer";
     private static final String DESCRIPTION = "Large Volume Viewer";
     
     private LargeVolumeViewViewer viewer;
