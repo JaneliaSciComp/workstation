@@ -23,6 +23,8 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.ImageIcon;
 
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
@@ -65,14 +67,34 @@ implements GLActor
 	private int vertexCount = 3;
 	private FloatBuffer vertices;
 	private FloatBuffer colors;
+
+    // new, per-neuron:
+    private Multiset<Long> neuronVertexCount = HashMultiset.create();
+    private Map<Long, FloatBuffer> neuronVertices = new HashMap<>();
+    private Map<Long, FloatBuffer> neuronColors = new HashMap<>();
+
 	private int vbo = -1;
 	private int lineIbo = -1;
 	private int pointIbo = -1;
 	private int colorBo = -1;
-	private IntBuffer lineIndices;
-	private IntBuffer pointIndices;
+
+    // not currently used:
 	private boolean linesNeedCopy = false;
 	private boolean verticesNeedCopy = false;
+
+	// Vertex buffer objects need indices
+	private Map<Anchor, Integer> anchorIndices = new HashMap<Anchor, Integer>();
+	private Map<Integer, Anchor> indexAnchors = new HashMap<Integer, Anchor>();
+	private IntBuffer pointIndices;
+	private IntBuffer lineIndices;
+
+    // new, per neuron:
+    // still only need one anchorIndices; it will have indices into individual,
+    //  per-neuron arrays, though; the others are per-neuron
+    private Map<Anchor, Integer> neuronAnchorIndices = new HashMap<>();
+    private Map<Long, Map<Integer, Anchor>> neuronIndexAnchors = new HashMap<>();
+    private Map<Long, IntBuffer> neuronPointIndices = new HashMap<>();
+
 	private PathShader lineShader = new PathShader();
 	private AnchorShader anchorShader = new AnchorShader();
 	private BoundingBox3d bb = new BoundingBox3d();
@@ -83,9 +105,6 @@ implements GLActor
 	private int parentAnchorTextureId = -1;
 	//
 	private Skeleton skeleton;
-	// Vertex buffer objects need indices
-	private Map<Anchor, Integer> anchorIndices = new HashMap<Anchor, Integer>();
-	private Map<Integer, Anchor> indexAnchors = new HashMap<Integer, Anchor>();
 	private Camera3d camera;
 	private float zThicknessInPixels = 100;
 	//
@@ -218,50 +237,56 @@ implements GLActor
         GL2 gl = glDrawable.getGL().getGL2();
         setupAnchorShaders(gl);
 
-         // vertex buffer object
-        // TODO - crashes unless glBufferData called every time.
-        // if (verticesNeedCopy) {
-        if (true) {
-                    // vertices
-                    vertices.rewind();
-                    gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
-            gl.glBufferData(GL2.GL_ARRAY_BUFFER,
-                    vertexCount * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT,
-                    vertices, GL2.GL_DYNAMIC_DRAW);
+        boolean notPerNeuron = true;
+        if (notPerNeuron) {
+            // old: not per-neuron
+            // vertex buffer object
+            // TODO - crashes unless glBufferData called every time.
+            // if (verticesNeedCopy) {
+            if (true) {
+                        // vertices
+                        vertices.rewind();
+                        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
+                gl.glBufferData(GL2.GL_ARRAY_BUFFER,
+                        vertexCount * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT,
+                        vertices, GL2.GL_DYNAMIC_DRAW);
 
-            // colors
-            colors.rewind();
+                // colors
+                colors.rewind();
+                gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+                gl.glBufferData(GL2.GL_ARRAY_BUFFER,
+                        vertexCount * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT,
+                        colors,
+                        GL2.GL_DYNAMIC_DRAW);
+
+                verticesNeedCopy = false;
+                    // point indices
+                pointIndices.rewind();
+                gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
+                    gl.glBufferData(GL2.GL_ELEMENT_ARRAY_BUFFER,
+                            pointIndices.capacity() * INT_BYTE_COUNT,
+                            pointIndices, GL2.GL_DYNAMIC_DRAW);
+            }
+            gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
+            gl.glVertexPointer(VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
+            gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
             gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
-            gl.glBufferData(GL2.GL_ARRAY_BUFFER,
-                    vertexCount * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT,
-                    colors,
-                    GL2.GL_DYNAMIC_DRAW);
-
-            verticesNeedCopy = false;
-                // point indices
-            pointIndices.rewind();
+            gl.glColorPointer(COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
             gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
-                gl.glBufferData(GL2.GL_ELEMENT_ARRAY_BUFFER,
-                        pointIndices.capacity() * INT_BYTE_COUNT,
-                        pointIndices, GL2.GL_DYNAMIC_DRAW);
+            PassThroughTextureShader.checkGlError(gl, "paint anchors 1");
+            gl.glDrawElements(GL2.GL_POINTS,
+                    pointIndices.capacity(),
+                    GL2.GL_UNSIGNED_INT,
+                    0L);
+            // tear down
+            gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
+            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, 0);
+            gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+            gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+        } else {
+            // new: per-neuron
         }
-        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
-        gl.glVertexPointer(VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
-        gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
-        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
-        gl.glColorPointer(COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
-        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
-        PassThroughTextureShader.checkGlError(gl, "paint anchors 1");
-        gl.glDrawElements(GL2.GL_POINTS,
-                pointIndices.capacity(),
-                GL2.GL_UNSIGNED_INT,
-                0L);
-        // tear down
-        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
-        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, 0);
-        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-        gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
 
         tearDownAnchorShaders(gl);
 	}
@@ -432,20 +457,78 @@ implements GLActor
         //  to other methods for the lines and paths; no reason we
         //  couldn't also refactor this into its own method, too
 
+        // new: per neuron:
+        // first, how many vertices per neuron; then, fill the buffers (one per neuron)
+        for (Anchor anchor: skeleton.getAnchors()) {
+            neuronVertexCount.add(anchor.getNeuronID());
+        }
+        for (Long neuronID: neuronVertexCount.elementSet()) {
+            ByteBuffer tempBytes = ByteBuffer.allocateDirect(neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT);
+            tempBytes.order(ByteOrder.nativeOrder());
+            neuronVertices.put(neuronID, tempBytes.asFloatBuffer());
+            neuronVertices.get(neuronID).rewind();
+
+            tempBytes = ByteBuffer.allocateDirect(neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT);
+            tempBytes.order(ByteOrder.nativeOrder());
+            neuronColors.put(neuronID, tempBytes.asFloatBuffer());
+            neuronColors.get(neuronID).rewind();
+        }
+
+        // old, not per-neuron:
 		vertexCount = skeleton.getAnchors().size();
 		ByteBuffer vertexBytes = ByteBuffer.allocateDirect(vertexCount * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT);
 		vertexBytes.order(ByteOrder.nativeOrder()); // important!
 		vertices = vertexBytes.asFloatBuffer();
 		vertices.rewind();
-		int vertexIndex = 0;
 		//
 		ByteBuffer colorBytes = ByteBuffer.allocateDirect(vertexCount * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT);
 		colorBytes.order(ByteOrder.nativeOrder());
 		colors = colorBytes.asFloatBuffer();
 		colors.rewind();
+
+
+        // indices, new (per-neuron):
+        neuronAnchorIndices.clear();
+        neuronIndexAnchors.clear();
+        Map<Long, Integer> neuronVertexIndex = new HashMap<>();
+        // far more wordy than the original
+        int currentVertexIndex;
+        for (Anchor anchor: skeleton.getAnchors()) {
+            Long neuronID = anchor.getNeuronID();
+            Vec3 xyz = anchor.getLocation();
+            neuronVertices.get(neuronID).put((float) xyz.getX());
+            neuronVertices.get(neuronID).put((float) xyz.getY());
+            neuronVertices.get(neuronID).put((float) xyz.getZ());
+            // colors in RGB order
+            neuronColors.get(neuronID).put(neuronColor[0]);
+            neuronColors.get(neuronID).put(neuronColor[1]);
+            neuronColors.get(neuronID).put(neuronColor[2]);
+
+            if (neuronVertexIndex.containsKey(neuronID)) {
+                currentVertexIndex = neuronVertexIndex.get(neuronID);
+            } else {
+                currentVertexIndex = 0;
+                neuronVertexIndex.put(neuronID, currentVertexIndex);
+            }
+            neuronAnchorIndices.put(anchor, currentVertexIndex);
+
+            if (!neuronIndexAnchors.containsKey(neuronID)) {
+                neuronIndexAnchors.put(neuronID, new HashMap<Integer, Anchor>());
+            }
+            neuronIndexAnchors.get(neuronID).put(currentVertexIndex, anchor);
+
+            neuronVertexIndex.put(neuronID, currentVertexIndex + 1);
+        }
+        // note that pointCount in the old version is actualy redundant; it's
+        //  the same as the next vertexIndex; so I am not going to maintain
+        //  a second variable for the new version
+
+
+        // old (no neuron distinction):
 		// Track vertex index, to support vertex buffer object
 		anchorIndices.clear();
 		indexAnchors.clear();
+		int vertexIndex = 0;
 		int pointCount = 0;
 		// Populate vertex array
 		for (Anchor anchor : skeleton.getAnchors()) {
@@ -463,6 +546,31 @@ implements GLActor
 			vertexIndex += 1;
 			pointCount += 1;
 		}
+
+        // old (not per neuron)
+        // Populate point index buffer
+        ByteBuffer pointBytes = ByteBuffer.allocateDirect(pointCount* INT_BYTE_COUNT);
+        pointBytes.order(ByteOrder.nativeOrder());
+        pointIndices = pointBytes.asIntBuffer();
+        pointIndices.rewind();
+        for (Anchor anchor : skeleton.getAnchors()) {
+            int i1 = anchorIndices.get(anchor);
+            pointIndices.put(i1);
+        }
+
+        // new (per-neuron)
+        for (Long neuronID: neuronVertexIndex.keySet()) {
+            // recall that the last value neuronVertexIndex takes is the
+            //  number of points:
+            ByteBuffer tempBytes = ByteBuffer.allocateDirect(neuronVertexIndex.get(neuronID) * INT_BYTE_COUNT);
+            tempBytes.order(ByteOrder.nativeOrder());
+            neuronPointIndices.put(neuronID, tempBytes.asIntBuffer());
+            neuronPointIndices.get(neuronID).rewind();
+        }
+        for (Anchor anchor: skeleton.getAnchors()) {
+            int i1 = neuronAnchorIndices.get(anchor);
+            neuronPointIndices.get(anchor.getNeuronID()).put(i1);
+        }
 
 
 		// automatically traced paths
@@ -507,15 +615,6 @@ implements GLActor
             lineIndices.put(i);
         lineIndices.rewind();
         linesNeedCopy = true;
-        // Populate point index buffer
-        ByteBuffer pointBytes = ByteBuffer.allocateDirect(pointCount* INT_BYTE_COUNT);
-        pointBytes.order(ByteOrder.nativeOrder());
-        pointIndices = pointBytes.asIntBuffer();
-        pointIndices.rewind();
-        for (Anchor anchor : skeleton.getAnchors()) {
-            int i1 = anchorIndices.get(anchor);
-            pointIndices.put(i1);
-        }
         verticesNeedCopy = true;
     }
 
