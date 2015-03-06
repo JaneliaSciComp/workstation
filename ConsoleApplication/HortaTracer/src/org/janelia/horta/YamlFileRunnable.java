@@ -25,7 +25,6 @@ import org.openide.awt.StatusDisplayer;
  */
 public class YamlFileRunnable implements Runnable {
     private File yamlFile;
-    private StaticVolumeBrickSource volumeSource;
     private SceneWindow sceneWindow;
     private NeuronTracerTopComponent nttc;
     private NeuronTraceLoader loader;
@@ -54,7 +53,8 @@ public class YamlFileRunnable implements Runnable {
         try {
             // 1 - Load tile index
             yamlStream = new FileInputStream(yamlFile);
-            volumeSource = new MouseLightYamlBrickSource(yamlStream);
+            StaticVolumeBrickSource volumeSource = 
+                    new MouseLightYamlBrickSource(yamlStream);
             int tileCount = 0;
             for (Double res : volumeSource.getAvailableResolutions()) {
                 BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(res);
@@ -67,7 +67,7 @@ public class YamlFileRunnable implements Runnable {
                     + String.format("%1$,.2f", timer.reportMsAndRestart() / 1000.0)
                     + " seconds."
             );
-                                    // logger.info("yaml load took " + timer.reportMsAndRestart() + " ms");
+            // logger.info("yaml load took " + timer.reportMsAndRestart() + " ms");
 
             // Recenter
             Vector3 centerFocus = volumeSource.getBoundingBox().getCentroid();
