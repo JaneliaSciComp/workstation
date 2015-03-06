@@ -239,9 +239,9 @@ implements GLActor
         GL2 gl = glDrawable.getGL().getGL2();
         setupAnchorShaders(gl);
 
-        //boolean notPerNeuron = true;
-        boolean notPerNeuron = false;
-        if (notPerNeuron) {
+        boolean usePerNeuron = true;
+        //boolean usePerNeuron = false;
+        if (!usePerNeuron) {
             // old: not per-neuron
             // vertex buffer object
             // TODO - crashes unless glBufferData called every time.
@@ -386,13 +386,56 @@ implements GLActor
 		if ( ! bIsGlInitialized )
 			init(glDrawable);
 
+
+        //boolean usePerNeuron = false;
+        boolean usePerNeuron = true;
+
 		// System.out.println("painting skeleton");
 		displayLines(glDrawable);
 
-		displayTracedSegments(glDrawable);
+        if (usePerNeuron) {
+            displayTracedSegmentsPerNeuron(glDrawable);
+        } else {
+            displayTracedSegments(glDrawable);
+        }
 		
 		if (isAnchorsVisible())
 			displayAnchors(glDrawable);
+	}
+
+	private void displayTracedSegmentsPerNeuron(GLAutoDrawable glDrawable) {
+		GL gl = glDrawable.getGL();
+		GL2 gl2 = gl.getGL2();
+		GL2GL3 gl2gl3 = gl.getGL2GL3();
+		// log.info("Displaying "+tracedSegments.size()+" traced segments");
+		lineShader.load(gl2);
+ 		float zt = zThicknessInPixels;
+ 		float zoomLimit = 5.0f;
+ 		if (camera.getPixelsPerSceneUnit() > zoomLimit) {
+ 			zt = zThicknessInPixels * (float)camera.getPixelsPerSceneUnit() / zoomLimit;
+ 		}
+ 		lineShader.setUniform(gl2gl3, "zThickness", zt);
+ 		// log.info("zThickness = "+zThickness);
+ 		float focus[] = {
+ 			(float)camera.getFocus().getX(),
+ 			(float)camera.getFocus().getY(),
+ 			(float)camera.getFocus().getZ()};
+ 		lineShader.setUniform3v(gl2gl3, "focus", 1, focus);
+		// black background
+        gl.glLineWidth(5.0f);
+
+        for (Long neuronID: neuronTracedSegments.keySet()) {
+            lineShader.setUniform3v(gl2gl3, "baseColor", 1, blackColor);
+            for (TracedPathActor segment : neuronTracedSegments.get(neuronID).values())
+                segment.display(glDrawable);
+            gl.glLineWidth(3.0f);
+            for (TracedPathActor segment : neuronTracedSegments.get(neuronID).values()) {
+                // neuron colored foreground
+                lineShader.setUniform3v(gl2gl3, "baseColor", 1, neuronColor);
+                segment.display(glDrawable);
+            }
+        }
+        lineShader.unload(gl2);
 	}
 
 	private void displayTracedSegments(GLAutoDrawable glDrawable) {
@@ -629,6 +672,7 @@ implements GLActor
 
 
 		// automatically traced paths
+        // two version temporarily
         updateTracedPaths();
         updateTracedPathsPerNeuron();
 
