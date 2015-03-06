@@ -94,6 +94,7 @@ implements GLActor
     private Map<Anchor, Integer> neuronAnchorIndices = new HashMap<>();
     private Map<Long, Map<Integer, Anchor>> neuronIndexAnchors = new HashMap<>();
     private Map<Long, IntBuffer> neuronPointIndices = new HashMap<>();
+    private Map<Long, IntBuffer> neuronLineIndices = new HashMap<>();
 
 	private PathShader lineShader = new PathShader();
 	private AnchorShader anchorShader = new AnchorShader();
@@ -476,7 +477,17 @@ implements GLActor
 			return anchorIndices.get(anchor);
 		return -1;
 	}
-	
+
+	public int getIndexForAnchorPerNeuron(Anchor anchor) {
+        // note this is identical to the previous method except for the
+        //  map we're searchibg
+		if (anchor == null)
+			return -1;
+		if (neuronAnchorIndices.containsKey(anchor))
+			return neuronAnchorIndices.get(anchor);
+		return -1;
+	}
+
 	public Anchor getAnchorAtIndex(int index) {
 		return indexAnchors.get(index);
 	}
@@ -677,8 +688,10 @@ implements GLActor
         updateTracedPathsPerNeuron();
 
 
-        // lines between points, if no path
-        updateLines(pointCount);
+        // lines between points, if no path (must be done after path updates so
+        //  we know where the paths are!)
+        updateLines();
+        updateLinesPerNeuron();
 
         if (!skeleton.getAnchors().contains(getNextParent())) {
             setNextParent(null);
@@ -687,7 +700,56 @@ implements GLActor
 		skeletonActorChangedSignal.emit();
 	}
 
-    private void updateLines(int pointCount) {
+    private void updateLinesPerNeuron() {
+        // iterate through anchors and record lines where there are no traced
+        //  paths; then copy the line indices you get into an array
+        // note: I believe this works because we process the points and
+        //  lines in exactly the same order (the order skeleton.getAnchors()
+        //  returns them in)
+
+        Map<Long, List<Integer>> tempLineIndices = new HashMap<>();
+        for (Anchor anchor : skeleton.getAnchors()) {
+            int i1 = getIndexForAnchorPerNeuron(anchor);
+            if (i1 < 0)
+                continue;
+            for (Anchor neighbor : anchor.getNeighbors()) {
+                int i2 = getIndexForAnchorPerNeuron(neighbor);
+                if (i2 < 0)
+                    continue;
+                if (i1 >= i2)
+                    continue; // only use ascending pairs, for uniqueness
+                SegmentIndex segmentIndex = new SegmentIndex(anchor.getGuid(), neighbor.getGuid());
+                // some neurons may not have any paths:
+                if (!neuronTracedSegments.containsKey(anchor.getNeuronID())) {
+                    continue;
+                }
+                // Don't draw lines where there is already a traced segment.
+                if (neuronTracedSegments.get(anchor.getNeuronID()).containsKey(segmentIndex))
+                    continue;
+                if (!tempLineIndices.containsKey(anchor.getNeuronID())) {
+                    tempLineIndices.put(anchor.getNeuronID(), new Vector<Integer>());
+                }
+                tempLineIndices.get(anchor.getNeuronID()).add(i1);
+                tempLineIndices.get(anchor.getNeuronID()).add(i2);
+            }
+        }
+
+        // loop over neurons and fill the arrays
+        for (Long neuronID: tempLineIndices.keySet()) {
+            ByteBuffer lineBytes = ByteBuffer.allocateDirect(tempLineIndices.get(neuronID).size() * INT_BYTE_COUNT);
+            lineBytes.order(ByteOrder.nativeOrder());
+            neuronLineIndices.put(neuronID, lineBytes.asIntBuffer());
+            neuronLineIndices.get(neuronID).rewind();
+            for (int i : tempLineIndices.get(neuronID)) // fill actual int buffer
+                neuronLineIndices.get(neuronID).put(i);
+            neuronLineIndices.get(neuronID).rewind();
+        }
+
+        linesNeedCopy = true;
+        verticesNeedCopy = true;
+    }
+
+    private void updateLines() {
         // Populate line index buffer - AFTER traced segments have been finalized
         List<Integer> tempLineIndices = new Vector<Integer>(); // because we don't know size yet
         for (Anchor anchor : skeleton.getAnchors()) {
