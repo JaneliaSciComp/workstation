@@ -114,6 +114,8 @@ implements GLActor
     
     private Map<SegmentIndex, TracedPathActor> tracedSegments =
     		new ConcurrentHashMap<SegmentIndex, TracedPathActor>();
+    // new, per-neuron:
+    private Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments = new HashMap<>();
 
     // note: this initial color is now overridden by other components
     private float neuronColor[] = {0.8f,1.0f,0.3f};
@@ -549,11 +551,13 @@ implements GLActor
             neuronColors.get(neuronID).put(neuronColor[0]);
             neuronColors.get(neuronID).put(neuronColor[1]);
             neuronColors.get(neuronID).put(neuronColor[2]);
+            /*
             // test: make anchors cycle colors:
             float temp = neuronColor[0];
             neuronColor[0] = neuronColor[1];
             neuronColor[1] = neuronColor[2];
             neuronColor[2] = temp;
+            */
 
             if (neuronVertexIndex.containsKey(neuronID)) {
                 currentVertexIndex = neuronVertexIndex.get(neuronID);
@@ -626,6 +630,8 @@ implements GLActor
 
 		// automatically traced paths
         updateTracedPaths();
+        updateTracedPathsPerNeuron();
+
 
         // lines between points, if no path
         updateLines(pointCount);
@@ -667,6 +673,68 @@ implements GLActor
         lineIndices.rewind();
         linesNeedCopy = true;
         verticesNeedCopy = true;
+    }
+
+    private void updateTracedPathsPerNeuron() {
+        // new version populates per-neuron data structures
+
+        // Update Traced path actors
+        Set<SegmentIndex> foundSegments = new HashSet<SegmentIndex>();
+        Collection<AnchoredVoxelPath> skeletonSegments = skeleton.getTracedSegments();
+        // log.info("Skeleton has " + skeletonSegments.size() + " traced segments");
+        for (AnchoredVoxelPath segment : skeletonSegments) {
+            SegmentIndex ix = segment.getSegmentIndex();
+
+            // need neuron ID; get it from the anchor at either end of the
+            //  traced path
+            Long neuronID = skeleton.getAnchorByID(ix.getAnchor1Guid()).getNeuronID();
+
+            foundSegments.add(ix);
+            if (neuronTracedSegments.containsKey(neuronID)) {
+                if (neuronTracedSegments.get(neuronID).containsKey(ix)) {
+                    // Is the old traced segment still valid?
+                    AnchoredVoxelPath oldSegment = neuronTracedSegments.get(neuronID).get(ix).getSegment();
+                    List<VoxelPosition> p0 = oldSegment.getPath();
+                    List<VoxelPosition> p1 = segment.getPath();
+                    boolean looksTheSame = true;
+                    if (p0.size() != p1.size()) // same size?
+                        looksTheSame = false;
+                    else if (p0.get(0) != p1.get(0)) // same first voxel?
+                        looksTheSame = false;
+                    else if (p0.get(p0.size()-1) != p1.get(p1.size()-1)) // same final voxel?
+                        looksTheSame = false;
+                    if (looksTheSame)
+                        continue; // already have this segment, no need to recompute!
+                    else
+                        tracedSegments.remove(ix); // obsolete. remove it.
+                }
+            } else {
+                // haven't seen this neuron yet
+                neuronTracedSegments.put(neuronID, new ConcurrentHashMap<SegmentIndex, TracedPathActor>());
+            }
+            TracedPathActor actor = new TracedPathActor(segment, getTileFormat());
+
+            // in old version, separated in addTracedSegment() method
+            neuronTracedSegments.get(neuronID).put(actor.getSegmentIndex(), actor);
+
+            // not sure why this is in the loop instead of out of it!
+            skeletonActorChangedSignal.emit();
+        }
+
+        // log.info("tracedSegments.size() [485] = "+tracedSegments.size());
+        // Delete obsolete traced segments
+        // COPY the keyset, to avoid damaging the original tracedSegment keys.
+        Set<SegmentIndex> orphanSegments = new HashSet<>();
+        for (Long neuronID: neuronTracedSegments.keySet()) {
+            orphanSegments.addAll(neuronTracedSegments.get(neuronID).keySet());
+        }
+        orphanSegments.removeAll(foundSegments);
+        for (SegmentIndex ix : orphanSegments) {
+            log.info("Removing orphan segment");
+            Long currentNeuronID = skeleton.getAnchorByID(ix.getAnchor1Guid()).getNeuronID();
+            neuronTracedSegments.get(currentNeuronID).remove(ix);
+        }
+        // log.info("tracedSegments.size() [492] = "+tracedSegments.size());
     }
 
     private void updateTracedPaths() {
@@ -916,11 +984,12 @@ implements GLActor
         skeletonActorChangedSignal.emit();
     }
 
-    public void addTracedSegment(TracedPathActor actor) {
+    private void addTracedSegment(TracedPathActor actor) {
     	// log.info("tracedSegments.size() [691] = "+tracedSegments.size());
     	// log.info("Adding traced segment to SkeletonActor");
         tracedSegments.put(actor.getSegmentIndex(), actor);
     	// log.info("tracedSegments.size() [694] = "+tracedSegments.size());
         skeletonActorChangedSignal.emit();
     }
+
 }

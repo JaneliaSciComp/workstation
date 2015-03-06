@@ -409,7 +409,11 @@ public class Skeleton {
 	public Set<Anchor> getAnchors() {
 		return anchors;
 	}
-	
+
+    public Anchor getAnchorByID(Long anchorID) {
+        return anchorsByGuid.get(anchorID);
+    }
+
 	public HistoryStack<Anchor> getHistory() {
 		return anchorHistory;
 	}
