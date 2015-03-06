@@ -38,7 +38,6 @@ extends AbstractAction
 		if (! camera.setFocus(volumeImage.getVoxelCenter()))
 			return;
 		// ...then scale.
-System.err.println("Set focus to " + volumeImage.getVoxelCenter() + " resulting focus was " + camera.getFocus());
 		resetZoomAction.actionPerformed(actionEvent);
 	}
 }

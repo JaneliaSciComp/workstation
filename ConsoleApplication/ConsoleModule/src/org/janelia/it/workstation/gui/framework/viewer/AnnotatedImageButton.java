@@ -179,7 +179,19 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         Entity entity = rootedEntity.getEntity();
 
         StringBuilder tsb = new StringBuilder();
-        tsb.append(entity.getName());
+        
+        if (EntityUtils.isVirtual(entity)) {
+            String title = entity.getValueByAttributeName(EntityConstants.IN_MEMORY_ATTRIBUTE_TITLE);
+            if (title!=null) {
+                tsb.append(title);
+            }
+            else {
+                tsb.append(entity.getName());
+            }
+        }
+        else {
+            tsb.append(entity.getName());
+        }
 
         String splitPart = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
         if (splitPart != null) {
@@ -238,7 +250,14 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         int fontSize = (int) Math.round((double) maxWidth * 0.005) + 10;
         Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
         titleLabel.setFont(titleLabelFont);
-        titleLabel.setPreferredSize(new Dimension(maxWidth, titleLabel.getFontMetrics(titleLabelFont).getHeight()));
+        int lines = StringUtils.countMatches(title, "<br>")+1;
+        int height = titleLabel.getFontMetrics(titleLabelFont).getHeight();
+        height *= lines;
+        if (lines>1) {
+            // Some extra padding for multiline titles
+            height += lines;
+        }
+        titleLabel.setPreferredSize(new Dimension(maxWidth, height));
         titleLabel.setText(title);
         titleLabel.setToolTipText(title);
     }

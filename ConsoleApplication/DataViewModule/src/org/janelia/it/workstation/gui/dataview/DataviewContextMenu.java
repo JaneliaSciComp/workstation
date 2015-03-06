@@ -198,7 +198,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
                             Entity entity = toDeleteForReal.get(i);
                             Boolean needSu = needSuForReal.get(i);
                             if (needSu) {
-                                SessionMgr.getSessionMgr().setSubject(ModelMgr.getModelMgr().getSubject(entity.getOwnerKey()));
+                                SessionMgr.getSessionMgr().setSubject(ModelMgr.getModelMgr().getSubjectWithPreferences(entity.getOwnerKey()));
                             }
                             ModelMgr.getModelMgr().deleteEntityTree(entity.getId(), unlink);
                             if (needSu) {

@@ -10,11 +10,13 @@ import java.util.List;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
-
-import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
+import javax.swing.plaf.basic.BasicComboBoxUI;
+import javax.swing.plaf.basic.BasicComboPopup;
+import javax.swing.plaf.basic.ComboPopup;
 import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
-import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.solr.SolrUtils;
+import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 
@@ -47,15 +49,29 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
     protected Entity searchRoot;
     protected List<SearchCriteria> searchCriteriaList = new ArrayList<SearchCriteria>();
     protected String searchString = "";
-
+    
+    /**
+     * Suppress pop up if there are no entries. 
+     */
+    private class ComboUI extends BasicComboBoxUI {
+        protected ComboPopup createPopup() {
+            BasicComboPopup popup = (BasicComboPopup) super.createPopup();
+            if (inputField.getItemCount()==0) {
+                popup.setPreferredSize(new Dimension(0, 0));
+            }
+            return popup;
+        }
+    }
+  
     public SearchParametersPanel() {
 
         titleLabel = new JLabel("Search for ");
         titleLabel2 = new JLabel();
-
+                
         inputField = new JComboBox();
         inputField.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
         inputField.setEditable(true);
+        inputField.setUI(new ComboUI());
         inputField.setToolTipText("Enter search terms...");
 
         searchButton = new JButton("Search");
@@ -83,7 +99,6 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
                 performSearch(false);
             }
         });
-        deleteContextButton.setVisible(false);
 
         JPanel searchBox = new JPanel();
         searchBox.setLayout(new BoxLayout(searchBox, BoxLayout.LINE_AXIS));
@@ -154,6 +169,8 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
             }
         });
 
+        setSearchRoot(null);
+        
         JPanel infoPanel = new JPanel(new BorderLayout());
         infoPanel.add(infoButton, BorderLayout.EAST);
 
@@ -210,16 +227,20 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         init(evt.getSearchConfig());
     }
 
+    public SolrQueryBuilder getQueryBuilder() {
+        SolrQueryBuilder builder = new SolrQueryBuilder();
+        return getQueryBuilder(builder);
+    }
+    
     /**
      * Returns a query builder for the current search parameters.
      *
      * @return
      */
-    public SolrQueryBuilder getQueryBuilder() {
+    public SolrQueryBuilder getQueryBuilder(SolrQueryBuilder builder) {
 
-        searchString = (String) inputField.getSelectedItem();
+        this.searchString = getSearchString();
 
-        SolrQueryBuilder builder = new SolrQueryBuilder();
         for (String subjectKey : SessionMgr.getSubjectKeys()) {
             builder.addOwnerKey(subjectKey);
         }
@@ -352,7 +373,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
             deleteContextButton.setVisible(true);
         }
     }
-
+    
     public Entity getSearchRoot() {
         return searchRoot;
     }
@@ -361,15 +382,30 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         return searchCriteriaList;
     }
 
+    /**
+     * The default implementation sets the current search string to the 
+     * input field value every time this method is called. You can override
+     * this method to provide alternate behavior, such as post-processing of the 
+     * search string. 
+     * @return 
+     */
     public String getSearchString() {
+        this.searchString = getInputFieldValue();
         return searchString;
     }
 
     public void setSearchString(String searchString) {
         this.searchString = searchString;
+    }
+    
+    public String getInputFieldValue() {
+        return (String)inputField.getSelectedItem();
+    }
+    
+    public void setInputFieldValue(String searchString) {
         inputField.setSelectedItem(searchString);
     }
-
+        
     public JLabel getTitleLabel() {
         return titleLabel;
     }

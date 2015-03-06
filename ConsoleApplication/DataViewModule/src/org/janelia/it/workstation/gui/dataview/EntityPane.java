@@ -118,7 +118,7 @@ public class EntityPane extends JPanel {
 
             @Override
             protected void hadError(Throwable error) {
-                error.printStackTrace();
+                log.error("Error loading parent EDs",error);
             }
         };
 
@@ -138,7 +138,7 @@ public class EntityPane extends JPanel {
 
             @Override
             protected void hadError(Throwable error) {
-                error.printStackTrace();
+                log.error("Error loading lazy entity",error);
             }
         };
 
@@ -166,7 +166,7 @@ public class EntityPane extends JPanel {
             }
 
             protected void hadError(Throwable error) {
-                error.printStackTrace();
+                log.error("Error finding entity with id "+entityId,error);
                 JOptionPane.showMessageDialog(EntityPane.this, "Error finding entity", "Entity Search Error", JOptionPane.ERROR_MESSAGE);
             }
         };
@@ -181,7 +181,7 @@ public class EntityPane extends JPanel {
             private List<Entity> entities;
 
             protected void doStuff() throws Exception {
-                entities = ModelMgr.getModelMgr().getOwnedEntitiesByName(entityName);
+                entities = ModelMgr.getModelMgr().getEntitiesByName(entityName);
             }
 
             protected void hadSuccess() {
@@ -189,7 +189,7 @@ public class EntityPane extends JPanel {
             }
 
             protected void hadError(Throwable error) {
-                error.printStackTrace();
+                log.error("Error finding entity with name "+entityName,error);
                 JOptionPane.showMessageDialog(EntityPane.this, "Error finding entity", "Entity Search Error", JOptionPane.ERROR_MESSAGE);
             }
         };

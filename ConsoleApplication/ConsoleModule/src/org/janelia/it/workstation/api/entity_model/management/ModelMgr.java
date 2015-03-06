@@ -49,6 +49,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Executor;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 
 public final class ModelMgr {
 
@@ -84,6 +85,8 @@ public final class ModelMgr {
         // Register an exception handler.
         ModelMgr.getModelMgr().registerExceptionHandler(new PrintStackTraceHandler());
     }
+    
+    private Map<String,Subject> subjectByKey = new HashMap<>();
 
     private ModelMgr() {
         log.info("Initializing Model Manager");
@@ -108,6 +111,7 @@ public final class ModelMgr {
                     }
                 }
             });
+
         }
         log.info("Successfully initialized");
     } //Singleton enforcement
@@ -118,7 +122,37 @@ public final class ModelMgr {
     
     public void init() throws Exception {
         // TODO: in the future, this should not rely on SessionMgr
+        log.info("Loading workspace");
         getCurrentWorkspace();
+            
+//            SimpleWorker worker = new SimpleWorker() {
+//
+//                List<Subject> subjects = null;
+//                @Override
+//                protected void doStuff() throws Exception {
+//                    subjects = getSubjects();
+//                }
+//
+//                @Override
+//                protected void hadSuccess() {
+//                    for(Subject subject : subjects) {
+//                        subjectByKey.put(subject.getKey(), subject);
+//                    }
+//                }
+//
+//                @Override
+//                protected void hadError(Throwable error) {
+//                    SessionMgr.getSessionMgr().handleException(error);
+//                }
+//            };
+//
+//            worker.execute();
+
+        log.info("Preloading subjects");
+        List<Subject> subjects = getSubjects();
+        for(Subject subject : subjects) {
+            subjectByKey.put(subject.getKey(), subject);
+        }
     }
 
     public void addModelMgrObserver(ModelMgrObserver mml) {
@@ -258,7 +292,7 @@ public final class ModelMgr {
     }
 
     public void saveSortCriteria(Long entityId, String sortCriteria) throws Exception {
-        Subject subject = ModelMgr.getModelMgr().getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
+        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
         if (StringUtils.isEmpty(sortCriteria)) {
             subject.getPreferenceMap().remove(CATEGORY_SORT_CRITERIA + ":" + entityId);
             log.debug("Removed user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId);
@@ -273,7 +307,7 @@ public final class ModelMgr {
 
     public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
-        Subject subject = ModelMgr.getModelMgr().getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
+        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
         Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(category);
 
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(subject.getKey(), ontologyId);
@@ -287,7 +321,7 @@ public final class ModelMgr {
     public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
 
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
-        Subject subject = ModelMgr.getModelMgr().getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
+        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
 
         // First delete all keybinds for this ontology
         for (String key : subject.getCategoryPreferences(category).keySet()) {
@@ -988,7 +1022,15 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getComputeFacade().getSubject();
     }
 
-    public Subject getSubject(String nameOrKey) throws Exception {
+    public Subject getSubjectByKey(String key) throws Exception {
+        Subject subject = subjectByKey.get(key);
+        if (subject!=null) return subject;
+        subject = FacadeManager.getFacadeManager().getComputeFacade().getSubject(key);
+        subjectByKey.put(subject.getKey(), subject);
+        return subject;
+    }
+    
+    public Subject getSubjectWithPreferences(String nameOrKey) throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().getSubject(nameOrKey);
     }
 

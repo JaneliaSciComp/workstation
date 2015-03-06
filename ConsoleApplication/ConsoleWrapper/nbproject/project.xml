@@ -2330,10 +2330,6 @@
                 <binary-origin>release/modules/ext/syntheticaSilverMoon.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/ffmpeg-windows-x86.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/ffmpeg-windows-x86.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlueLight.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaBlueLight.jar</binary-origin>
             </class-path-extension>

@@ -81,6 +81,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.jacs.model.user_data.Subject;
 
 /**
  * The right-hand ontology panel which displays all the ontologies that a user has access to.
@@ -253,12 +254,12 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                     selectedEntityRoot = entityRoot;
                 }
             }
+        }
 
-            if (selectedEntityRoot == null) {
-                log.error("Ontology {} was not found in the ontology root list", rootId);
-                initializeTree(null);
-                return;
-            }
+        if (selectedEntityRoot == null) {
+            log.error("Ontology {} was not found in the ontology root list", rootId);
+            initializeTree(null);
+            return;
         }
 
         log.debug("Loading ontology {}", rootId);
@@ -379,14 +380,17 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                 public void actionPerformed(ActionEvent e) {
 
                     final JScrollPopupMenu ontologyListMenu = new JScrollPopupMenu();
-                    ontologyListMenu.setMaximumVisibleRows(20);
+                    ontologyListMenu.setMaximumVisibleRows(50);
 
                     for (final Entity entityRoot : entityRootList) {
-                        String owner = entityRoot.getOwnerKey();
-                        if (owner.contains(":")) {
-                            owner = owner.substring(owner.indexOf(':') + 1);
+                        Subject subject = null;
+                        try {
+                            subject = ModelMgr.getModelMgr().getSubjectByKey(entityRoot.getOwnerKey());
                         }
-
+                        catch (Exception ex) {
+                            log.error("Error getting subject: "+entityRoot.getOwnerKey(),ex);
+                        }
+                        String owner = subject==null?entityRoot.getOwnerKey():subject.getFullName();
                         JMenuItem roleMenuItem = new JCheckBoxMenuItem(entityRoot.getName() + " (" + owner + ")", root != null && entityRoot.getId().equals(root.getId()));
                         roleMenuItem.setIcon(Icons.getIcon(entityRoot));
                         roleMenuItem.addActionListener(new ActionListener() {

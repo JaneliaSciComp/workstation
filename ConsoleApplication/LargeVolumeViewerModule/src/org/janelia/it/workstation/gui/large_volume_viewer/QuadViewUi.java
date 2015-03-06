@@ -2,10 +2,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer.LoadStatus;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.OrthogonalModeAction.OrthogonalMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
@@ -15,12 +14,10 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolume
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrivenSWCExchanger;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.signal.Signal;
-import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot;
-import org.janelia.it.workstation.signal.Slot1;
-import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,10 +38,15 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrivenSWCExchanger;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelInitListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.SWCDataConverter;
@@ -57,7 +59,7 @@ import org.janelia.it.workstation.shared.util.SWCDataConverter;
  *
  */
 @SuppressWarnings("serial")
-public class QuadViewUi extends JPanel
+public class QuadViewUi extends JPanel implements VolumeLoadListener
 {
 	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
@@ -143,7 +145,7 @@ public class QuadViewUi extends JPanel
 	private final ZScanScrollModeAction zScanScrollModeAction = new ZScanScrollModeAction();
 	private final ZoomScrollModeAction zoomScrollModeAction = new ZoomScrollModeAction();
 	private final ButtonGroup scrollModeGroup = new ButtonGroup();
-	private final OrthogonalModeAction orthogonalModeAction = new OrthogonalModeAction();
+	private final OrthogonalModeAction orthogonalModeAction = new OrthogonalModeAction(this);
 	// zoom actions
 	private final Action zoomInAction = new ZoomInAction(camera);
 	private final Action zoomOutAction = new ZoomOutAction(camera);
@@ -156,12 +158,16 @@ public class QuadViewUi extends JPanel
 	private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(volumeImage, camera, -10);
     // go to actions
     private final GoToLocationAction goToLocationAction = new GoToLocationAction(camera);
+    
+    private QuadViewController quadViewController;
 
 	// annotation-related
-    private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction();
+    private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction(this);
     private TileFormat tileFormat;
     
     private Snapshot3DLauncher snapshot3dLauncher;
+    private PathTraceRequestListener pathTraceListener;
+    private WorkspaceClosureListener wsCloseListener;
 
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
@@ -185,207 +191,83 @@ public class QuadViewUi extends JPanel
 		}
 	};
 
-	public Signal1<MouseMode.Mode> mouseModeChangedSignal = 
-		    new Signal1<MouseMode.Mode>();
-	    public Signal1<WheelMode.Mode> wheelModeChangedSignal = 
-	        new Signal1<WheelMode.Mode>();
+    public void focusChanged(Vec3 focus) {
+        int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
+        zScanSlider.setValue(z);
+        zScanSpinner.setValue(z);
+    }
 
-    public Signal1<AnchoredVoxelPath> addAnchoredPathRequestSignal = new Signal1<AnchoredVoxelPath>();
+    public void zoomChanged(Double zoom) {
+        double zoomMin = Math.log(getMinZoom()) / Math.log(2.0);
+        double zoomMax = Math.log(getMaxZoom()) / Math.log(2.0);
+        double zoomLog = Math.log(zoom) / Math.log(2.0);
+        double relativeZoom = (zoomLog - zoomMin) / (zoomMax - zoomMin);
+        int sliderValue = (int)Math.round(relativeZoom * 1000.0);
+        zoomSlider.setValue(sliderValue);
+    }
 
-    public Signal1<PathTraceToParentRequest> tracePathRequestedSignal = new Signal1<PathTraceToParentRequest>();
-
-    public Signal closeWorkspaceRequestSignal = new Signal();
-
-	private Slot1<MouseMode.Mode> onMouseModeChangedSlot = new Slot1<MouseMode.Mode>() {
-		@Override
-		public void execute(Mode mode) {
-			// Only display anchors in Trace mode
-			if (mode == MouseMode.Mode.TRACE)
-				getSkeletonActor().setAnchorsVisible(true);
-			else
-				getSkeletonActor().setAnchorsVisible(false);
-		}
-	};
-	    
-	// Slots
-	private Slot1<URL> loadUrlSlot = new Slot1<URL>() {
-		@Override
-		public void execute(URL url) {
-			loadRender(url);
-		}
-	};
-	    
-	protected Slot1<Vec3> changeZ = new Slot1<Vec3>() {
-		@Override
-		public void execute(Vec3 focus) {
-			int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
-			zScanSlider.setValue(z);
-			zScanSpinner.setValue(z);
-		}
-	};
-
-	protected Slot1<Double> changeZoom = new Slot1<Double>() {
-		@Override
-		public void execute(Double zoom) {
-			double zoomMin = Math.log(getMinZoom()) / Math.log(2.0);
-			double zoomMax = Math.log(getMaxZoom()) / Math.log(2.0);
-			double zoomLog = Math.log(zoom) / Math.log(2.0);
-			double relativeZoom = (zoomLog - zoomMin) / (zoomMax - zoomMin);
-			int sliderValue = (int)Math.round(relativeZoom * 1000.0);
-			zoomSlider.setValue(sliderValue);
-		}
-	};
-	
-	public Slot1<Vec3> setCameraFocusSlot = new Slot1<Vec3>() {
-		@Override
-		public void execute(Vec3 focus) {
-			camera.setFocus(focus);
-		}
-	};
-	
-	protected Slot updateRangesSlot = new Slot() {
-		@Override
-		public void execute() 
-		{
-			// Z range
-			double zMin = volumeImage.getBoundingBox3d().getMin().getZ();
-			double zMax = volumeImage.getBoundingBox3d().getMax().getZ();
-			int z0 = (int)Math.round(zMin / volumeImage.getZResolution());
-			int z1 = (int)Math.round(zMax / volumeImage.getZResolution()) - 1;
-			if (z0 > z1)
-				z1 = z0;
-			// Z-scan is only relevant if there is more than one slice.
-			boolean useZScan = ((z1 - z0) > 1);
-			if (useZScan) {
-				zScanPanel.setVisible(true);
-				largeVolumeViewer.setWheelMode(WheelMode.Mode.SCAN);
-				zScanScrollModeAction.setEnabled(true);
-				zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
-				int z = (int)Math.round((camera.getFocus().getZ()-0.5) / volumeImage.getZResolution());
-				if (z < z0)
-					z = z0;
-				if (z > z1)
-					z = z1;
-				zScanSlider.setMinimum(z0);
-				zScanSlider.setMaximum(z1);
-				zScanSlider.setValue(z);
-				zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
-				// Allow octree zsteps to depend on zoom
-				tileFormat = tileServer.getLoadAdapter().getTileFormat();
-                updateSWCDataConverter();
-                
-				zScanMode.setTileFormat(tileFormat);
-				nextZSliceAction.setTileFormat(tileFormat);
-				previousZSliceAction.setTileFormat(tileFormat);
-				advanceZSlicesAction.setTileFormat(tileFormat);
-				goBackZSlicesAction.setTileFormat(tileFormat);
-                skeleton.setTileFormat(tileFormat);
-			}
-			else { // no Z scan
-				zScanPanel.setVisible(false);
-				zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
-				zScanScrollModeAction.setEnabled(false);
-			}
-            
-            snapshot3dLauncher.setMaxIntensity(volumeImage.getMaximumIntensity());
-            snapshot3dLauncher.setNumberOfChannels(volumeImage.getNumberOfChannels());
-		}
-		// TODO update zoom range too?
-	};
-
-	public Slot1<String> setStatusMessageSlot = new Slot1<String>() {
-		@Override
-		public void execute(String message) {
-			statusLabel.setText(message);
-		}
-	};
-	
-	private Slot1<LoadStatus> onLoadStatusChangedSlot = new Slot1<LoadStatus>() {
-		@Override
-		public void execute(LoadStatus status) {
-			// log.info("load status ordinal "+status.ordinal());
-			loadStatusLabel.setLoadStatus(status);
-		}
-	};
-
-    public Slot centerNextParentSlot = new Slot() {
-        @Override
-        public void execute() {
-            Anchor anchor = getSkeletonActor().getNextParent();
-            if (anchor != null) {
-                setCameraFocusSlot.execute(
-                        tileFormat.micronVec3ForVoxelVec3Cornered(anchor.getLocation())
-                );
-            }
+    public void setMouseMode(MouseMode.Mode mode) {
+        // Only display anchors in Trace mode
+        if (mode == MouseMode.Mode.TRACE) {
+            getSkeletonActor().setAnchorsVisible(true);
+        } else {
+            getSkeletonActor().setAnchorsVisible(false);
         }
-    };
-	
-    public Slot1<Long> tracePathSegmentSlot = new Slot1<Long>() {
-        @Override
-        public void execute(Long annotationID) {
-            // this needs to happen before you draw anchored paths; should
-            //  go somewhere else so it only happens once, but not clear where;
-            //  not clear we have a trigger for when the image is loaded enough for
-            //  this info to be available (it loads asynchronously)
-            getSkeletonActor().setTileFormat(
-                    tileServer.getLoadAdapter().getTileFormat());
-
-            // construct new request; add image data to anchor and pass it on
-            PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
-            request.setImageVolume(volumeImage);
-            request.setTextureCache(tileServer.getTextureCache());
-            tracePathRequestedSignal.emit(request);
+    }
+    
+    public void setCameraFocus( Vec3 focus ) {
+        camera.setFocus(focus);
+    }
+    
+    public void centerNextParentMicron() {
+        Anchor anchor = getSkeletonActor().getNextParent();
+        if (anchor != null) {
+            setCameraFocus(anchor.getLocation());
         }
-    };
-
-    public Slot1<String> loadColorModelSlot = new Slot1<String>() {
-        @Override
-        public void execute(String modelString) {
-            imageColorModelFromString(modelString);
-        }
-    };
-
-    public Slot colorModelUpdatedSlot = new Slot() {
-        @Override
-        public void execute() {
-            sliderPanel.updateLockButtons();
-        }
-    };
+    }
 
 	/**
 	 * Create the frame.
 	 */
 	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
 	{
-		volumeImage.volumeInitializedSignal.connect(onVolumeLoadedSlot);
-        volumeImage.volumeInitializedSignal.connect(annotationMgr.onVolumeLoadedSlot);
+        volumeImage.addVolumeLoadListener(this);
+        volumeImage.addVolumeLoadListener(annotationMgr);
 		largeVolumeViewer.setImageColorModel(imageColorModel);
-		camera.getViewChangedSignal().connect(tileServer.refreshCurrentTileSetSlot);
-		tileServer.loadStatusChangedSignal.connect(onLoadStatusChangedSlot);
 		sliderPanel.setVisible(false);
         
-		setupUi(parentFrame, overrideFrameMenuBar);
+        camera.addCameraListener(new CameraListener() {
+            @Override
+            public void zoomChanged(Double zoom) {
+                QuadViewUi.this.zoomChanged(zoom);
+            }
+
+            @Override
+            public void focusChanged(Vec3 focus) {
+                 QuadViewUi.this.focusChanged(focus);
+            }
+
+            @Override
+            public void viewChanged() {
+                tileServer.refreshCurrentTileSet();
+            }            
+        });
+
+        setupUi(parentFrame, overrideFrameMenuBar);
         interceptModifierKeyPresses();
         interceptModeChangeGestures();
         setupAnnotationGestures();
 
         // connect up text UI and model with graphic UI(s):
-        skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
-        tracePathRequestedSignal.connect(annotationMgr.tracePathRequestedSlot);
-        closeWorkspaceRequestSignal.connect(annotationMgr.closeWorkspaceRequestedSlot);
-        skeleton.subtreeDeleteRequestedSignal.connect(annotationMgr.deleteSubtreeRequestedSlot);
-        skeleton.linkDeleteRequestedSignal.connect(annotationMgr.deleteLinkRequestedSlot);
-        skeleton.splitAnchorRequestedSignal.connect(annotationMgr.splitAnchorRequestedSlot);
-        skeleton.rerootNeuriteRequestedSignal.connect(annotationMgr.rerootNeuriteRequestedSlot);
-        skeleton.splitNeuriteRequestedSignal.connect(annotationMgr.splitNeuriteRequestedSlot);
-        getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
-        skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
+        getSkeletonActor().addAnchorUpdateListener(annotationMgr);
+                
         // Nb: skeleton.anchorMovedSilentSignal intentially does *not* connect to annotationMgr!
-        skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
-        annotationModel.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
-        addAnchoredPathRequestSignal.connect(annotationMgr.addPathRequestedSlot);
-        skeleton.addEditNoteRequestedSignal.connect(annotationMgr.addEditNoteRequestedSlot);
 
+        quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer);
+        largeVolumeViewerTranslator.setViewStateListener(quadViewController);
+        annotationPanel.setViewStateListener(quadViewController);
+        annotationModel.setViewStateListener(quadViewController);
+        
         // Toggle skeleton actor with v key
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, 0, false), "vKeyPressed");
@@ -406,10 +288,10 @@ public class QuadViewUi extends JPanel
             }
         });
 
-        largeVolumeViewerTranslator.connectSkeletonSignals(skeleton);
-        largeVolumeViewerTranslator.cameraPanToSignal.connect(setCameraFocusSlot);
-        largeVolumeViewerTranslator.loadColorModelSignal.connect(loadColorModelSlot);
-
+        SkeletonController skeletonController = new SkeletonController(
+                skeleton, largeVolumeViewer.getSkeletonActor(), annotationMgr
+        );
+        largeVolumeViewerTranslator.connectSkeletonSignals(skeleton, skeletonController);
 
 		// must come after setupUi() (etc), since it triggers UI changes:
 		annotationMgr.setInitialEntity(initialEntity);
@@ -425,48 +307,32 @@ public class QuadViewUi extends JPanel
         // 
         collectGarbageAction.putValue(Action.NAME, "Collect Garbage");
         //
-        largeVolumeViewer.statusMessageChanged.connect(setStatusMessageSlot);
         largeVolumeViewer.setSkeleton(skeleton);
         //
         largeVolumeViewer.setWheelMode(WheelMode.Mode.SCAN);
         // Respond to orthogonal mode changes
-        orthogonalModeAction.orthogonalModeChanged.connect(new Slot1<OrthogonalMode>() {
-            @Override
-            public void execute(OrthogonalMode mode) {
-                if (mode == OrthogonalMode.ORTHOGONAL)
-                    setOrthogonalMode();
-                else if (mode == OrthogonalMode.Z_VIEW)
-                    setZViewMode();
-                // repaint(); // not necessary.
-            }
-        });
         setZViewMode();
         // Connect mode changes to widgets
         // First connect mode actions to one signal
-        panModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
-        zoomMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
-        traceMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
-        zoomScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
-        zScanScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
-        mouseModeChangedSignal.connect(onMouseModeChangedSlot);
-        // Next connect that signal to various widgets
-        mouseModeChangedSignal.connect(largeVolumeViewer.setMouseModeSlot);
-        wheelModeChangedSignal.connect(largeVolumeViewer.setWheelModeSlot);
-        // annotation-related actions:
-        centerNextParentAction.centerNextParentSignal.connect(centerNextParentSlot);
-        annotationPanel.centerAnnotationSignal.connect(centerNextParentSlot);
-        // go to location action
-        goToLocationAction.gotoLocationSignal.connect(setCameraFocusSlot);
+        quadViewController.registerForEvents(panModeAction);
+        quadViewController.registerForEvents(zoomMouseModeAction);
+        quadViewController.registerForEvents(traceMouseModeAction);
+        quadViewController.registerForEvents(zoomScrollModeAction);
+        quadViewController.registerForEvents(zScanScrollModeAction);
+        quadViewController.registerForEvents(tileServer);
+        quadViewController.registerForEvents(goToLocationAction);
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
         sharedSkeletonActor.setSkeleton(largeVolumeViewer.getSkeleton());
+        quadViewController.registerForEvents(imageColorModel);
+        quadViewController.unregisterOrthPanels();        
+        quadViewController.registerAsOrthPanelForRepaint(seViewer); // Must do separately.
+        skeletonController.registerForEvents(quadViewController);  // Pass-through
         for (OrthogonalPanel v : viewPanels) {
-            mouseModeChangedSignal.connect(v.setMouseModeSlot);
-            wheelModeChangedSignal.connect(v.setWheelModeSlot);
+            quadViewController.registerForEvents(v);
             v.setCamera(camera);
             // TODO - move most of this setup into OrthogonalViewer class.
-            v.getViewer().statusMessageChanged.connect(setStatusMessageSlot);
             v.setSharedVolumeImage(volumeImage);
             v.setSystemMenuItemGenerator(new MenuItemGenerator() {
                 @Override
@@ -480,8 +346,6 @@ public class QuadViewUi extends JPanel
             });
             v.setTileServer(tileServer);
             v.getViewer().getSliceActor().setImageColorModel(imageColorModel);
-            imageColorModel.getColorModelChangedSignal().connect(v.getViewer().repaintSlot);
-            imageColorModel.getColorModelChangedSignal().connect(colorModelUpdatedSlot);
 
             final boolean bShowTileOutlines = false; // Debugging aid
             if (bShowTileOutlines) {
@@ -494,11 +358,91 @@ public class QuadViewUi extends JPanel
         panModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
         zoomScrollModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
 	}
+
+    public void setOrthogonalMode(OrthogonalMode mode) {
+        if (mode == OrthogonalMode.ORTHOGONAL)
+            setOrthogonalMode();
+        else if (mode == OrthogonalMode.Z_VIEW)
+            setZViewMode();
+    }
+
+    public void updateSliderLockButtons() {
+        sliderPanel.updateLockButtons();
+    }
+    
+    public void setLoadStatus(LoadStatus loadStatus) {
+        loadStatusLabel.setLoadStatus(loadStatus);
+    }
+
+    public void pathTraceRequested(Long annotationID) {
+        // this needs to happen before you draw anchored paths; should
+        //  go somewhere else so it only happens once, but not clear where;
+        //  not clear we have a trigger for when the image is loaded enough for
+        //  this info to be available (it loads asynchronously)
+        getSkeletonActor().setTileFormat(
+                tileServer.getLoadAdapter().getTileFormat());
+
+        // construct new request; add image data to anchor and pass it on
+        PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
+        request.setImageVolume(volumeImage);
+        request.setTextureCache(tileServer.getTextureCache());
+        if (pathTraceListener != null) {
+            pathTraceListener.pathTrace(request);
+        }
+    }
     
 	public void clearCache() {
 		tileServer.clearCache();
 	}
 	
+    // TODO update zoom range too?
+    private void updateRanges() {
+        // Z range
+        double zMin = volumeImage.getBoundingBox3d().getMin().getZ();
+        double zMax = volumeImage.getBoundingBox3d().getMax().getZ();
+        int z0 = (int) Math.round(zMin / volumeImage.getZResolution());
+        int z1 = (int) Math.round(zMax / volumeImage.getZResolution()) - 1;
+        if (z0 > z1) {
+            z1 = z0;
+        }
+        // Z-scan is only relevant if there is more than one slice.
+        boolean useZScan = ((z1 - z0) > 1);
+        if (useZScan) {
+            zScanPanel.setVisible(true);
+            largeVolumeViewer.setWheelMode(WheelMode.Mode.SCAN);
+            zScanScrollModeAction.setEnabled(true);
+            zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+            int z = (int) Math.round((camera.getFocus().getZ() - 0.5) / volumeImage.getZResolution());
+            if (z < z0) {
+                z = z0;
+            }
+            if (z > z1) {
+                z = z1;
+            }
+            zScanSlider.setMinimum(z0);
+            zScanSlider.setMaximum(z1);
+            zScanSlider.setValue(z);
+            zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
+            // Allow octree zsteps to depend on zoom
+            tileFormat = tileServer.getLoadAdapter().getTileFormat();
+            updateSWCDataConverter();
+
+            zScanMode.setTileFormat(tileFormat);
+            nextZSliceAction.setTileFormat(tileFormat);
+            previousZSliceAction.setTileFormat(tileFormat);
+            advanceZSlicesAction.setTileFormat(tileFormat);
+            goBackZSlicesAction.setTileFormat(tileFormat);
+            skeleton.setTileFormat(tileFormat);
+        } else { // no Z scan
+            zScanPanel.setVisible(false);
+            zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+            zScanScrollModeAction.setEnabled(false);
+        }
+
+        snapshot3dLauncher.setMaxIntensity(volumeImage.getMaximumIntensity());
+        snapshot3dLauncher.setNumberOfChannels(volumeImage.getNumberOfChannels());
+    }
+    
 	private double getMaxZoom() {
 		double maxRes = Math.min(volumeImage.getXResolution(), Math.min(
 				volumeImage.getYResolution(),
@@ -543,7 +487,7 @@ public class QuadViewUi extends JPanel
 		neViewer.setVisible(true);
 		swViewer.setVisible(true);
 		seViewer.setVisible(true);
-		tileServer.refreshCurrentTileSetSlot.execute();
+		tileServer.refreshCurrentTileSet();
 	}
 	
 	private SkeletonActor getSkeletonActor() {
@@ -555,7 +499,7 @@ public class QuadViewUi extends JPanel
 		neViewer.setVisible(false);
 		swViewer.setVisible(false);
 		seViewer.setVisible(false);
-		tileServer.refreshCurrentTileSetSlot.execute();
+		tileServer.refreshCurrentTileSet();
 	}
 	
 	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
@@ -581,12 +525,12 @@ public class QuadViewUi extends JPanel
         ColorButtonPanel colorButtonPanel = new ColorButtonPanel( imageColorModel, 1 );
         rightComponentPanel.add( colorButtonPanel, BorderLayout.EAST );
 		splitPane.setRightComponent(rightComponentPanel);
-        imageColorModel.getColorModelInitializedSignal().connect(new org.janelia.it.workstation.signal.Slot() {
-			@Override
-			public void execute() {
-				splitPane.resetToPreferredSizes();
-			}
-		});
+        imageColorModel.addColorModelInitListener(new ColorModelInitListener() {
+            @Override
+            public void colorModelInit() {
+                splitPane.resetToPreferredSizes();
+            }            
+        });
 
         sliderPanel.guiInit();
         
@@ -614,7 +558,7 @@ public class QuadViewUi extends JPanel
 				this.weighty = 1.0;
 				this.insets = new Insets(1,1,1,1);				
 			}
-		};
+		}
 		
 		// Four quadrants for orthogonal views
 		// One panel for Z slice viewer (upper left northwest)
@@ -628,9 +572,6 @@ public class QuadViewUi extends JPanel
 		largeVolumeViewer.setBackground(Color.DARK_GRAY);
 		zViewerPanel.setLayout(new BoxLayout(zViewerPanel, BoxLayout.Y_AXIS));
 		zViewerPanel.add(largeVolumeViewer);
-		volumeImage.volumeInitializedSignal.connect(updateRangesSlot);
-		camera.getZoomChangedSignal().connect(changeZoom);
-        camera.getFocusChangedSignal().connect(changeZ);
 		
 		// JPanel zScanPanel = new JPanel();
 		zViewerPanel.add(zScanPanel);
@@ -988,12 +929,6 @@ public class QuadViewUi extends JPanel
         }
         else {
             toolBarPanel.add(addViewMenuItem());
-            // Listener for clicking on buttons
-//            JPanel tempPanel = new JPanel();
-//            tempPanel.setLayout(new BoxLayout(tempPanel, BoxLayout.LINE_AXIS));
-//            tempPanel.add(menuBar);
-//            tempPanel.add(Box.createHorizontalGlue());
-//            add(tempPanel);
         }
     }
 
@@ -1085,7 +1020,7 @@ public class QuadViewUi extends JPanel
         recentFileMenu.setVisible(false);
         mnFile.add(recentFileMenu);
         recentFileList = new RecentFileList(recentFileMenu);
-        recentFileList.getOpenUrlRequestedSignal().connect(loadUrlSlot);
+        quadViewController.registerForEvents(recentFileList);
 
         return mnFile;
     }
@@ -1109,54 +1044,82 @@ public class QuadViewUi extends JPanel
         return popupMenu;
     }
 
-    public boolean loadFile(String pathToFile) throws MalformedURLException {
-        File tmpFile = new File(pathToFile);
+    /**
+     * given a string containing the canonical Linux path to the data,
+     * open the data in the viewer
+     *
+     * @param canonicalLinuxPath
+     * @return
+     * @throws MalformedURLException
+     */
 
-        // Hard code temporary path translation for Nathan
-        boolean fileMissing = ! tmpFile.exists();
-        if (fileMissing) {
-	        String mbmPrefix = "/groups/mousebrainmicro/mousebrainmicro/";
-	        String mbmPrefix2 = "/nobackup/mousebrainmicro/";
-            String linuxPrefix = null;
-            // if we get a third prefix, make this a loop
-            if (pathToFile.startsWith(mbmPrefix)) {
-                linuxPrefix = mbmPrefix;
-            } else if (pathToFile.startsWith(mbmPrefix2)) {
-                linuxPrefix = mbmPrefix2;
+    public boolean loadFile(String canonicalLinuxPath) throws MalformedURLException {
+
+        // on Linux, this just works, as the input path is the Linux path;
+        //  for Mac and Windows, we need to guess the mount point of the
+        //  shared disk and alter the path accordingly
+
+        File testFile = new File(canonicalLinuxPath);
+        if (!testFile.exists()) {
+            // must be on Mac or Windows; but first, which of the
+            //  possible Linux prefixes are we looking at?
+            // OK to compare as strings, because we know the
+            //  input path is Linux
+            String [] mbmPrefixes = {"/groups/mousebrainmicro/mousebrainmicro/",
+                    "/nobackup/mousebrainmicro/"};
+            Path linuxPrefix = null;
+            for (String testPrefix: mbmPrefixes) {
+                if (canonicalLinuxPath.startsWith(testPrefix)) {
+                    linuxPrefix = new File(testPrefix).toPath();
+                }
             }
+            Path partialPath = testFile.toPath().subpath(linuxPrefix.getNameCount(), testFile.toPath().getNameCount());
+            // System.out.println("linuxPrefix = " + linuxPrefix);
+            // System.out.println("partialPath = " + partialPath);
 
-	    	List<String> prefixesToTry = new Vector<String>();
-	        String osName = System.getProperty("os.name").toLowerCase();
-	    	if (osName.contains("win")) {
-	        	prefixesToTry.add("M:/"); // On my Windows computer
-	        	prefixesToTry.add("X:/"); // On Nathan's computer    		
-	        	for (File fileRoot : File.listRoots()) { // other drive letters
-	        		String p = fileRoot.getAbsolutePath();
-	        		prefixesToTry.add(p);
-	        		// System.out.println(p);
-	        	}
-	    	}
-	    	if (osName.contains("os x")) {
-	    		prefixesToTry.add("/Volumes/mousebrainmicro/");
-	    		prefixesToTry.add("/Volumes/nobackup/mousebrainmicro/");
-	    	}
-	        if ( (prefixesToTry.size() > 0)
-	        		&& linuxPrefix != null)
-	        {
-	        	String fileSuffix = pathToFile.replace(linuxPrefix, "");
-	        	for (String prefix : prefixesToTry) {
-	        		File testFile = new File(prefix + fileSuffix);
-	        		if (testFile.exists()) {
-	        			tmpFile = testFile;
-	        			break;
-	        		}
-	        	}
-	        }
-        }
-        
-        if (!tmpFile.exists()) {
+            // now we just need to assemble pieces: a root plus a mount name
+            //  plus the partial path we just extracted; the root is OS dependent:
+            String osName = System.getProperty("os.name").toLowerCase();
+            List<Path> prefixesToTry = new Vector<>();
+            if (osName.contains("win")) {
+                for (File fileRoot : File.listRoots()) {
+                    prefixesToTry.add(fileRoot.toPath());
+                }
+            } else if (osName.contains("os x")) {
+                // for Mac, it's a lot simpler:
+                prefixesToTry.add(new File("/Volumes").toPath());
+            }
+            // System.out.println("prefixes to try: " + prefixesToTry);
+
+            // the last, middle piece can be nothing or one of these
+            //  mounts names (nothing = enclosing dir is mounted directly
+            String [] mountNames = {"", "mousebrainmicro",
+                    "nobackup/mousebrainmicro", "mousebrainmicro/mousebrainmicro"};
+
+            boolean found = false;
+            for (Path prefix: prefixesToTry) {
+                if (found) {
+                    break;
+                }
+                for (String mount: mountNames) {
+                    if (mount.length() > 0) {
+                        testFile = prefix.resolve(new File(mount).toPath()).resolve(partialPath).toFile();
+                    } else {
+                        testFile = prefix.resolve(partialPath).toFile();
+                    }
+                    // System.out.println("trying " + testFile);
+                    if (testFile.exists()) {
+                        // System.out.println("file exists: " + testFile);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        } // end if Mac or Windows
+        // by now, if we ain't got the path, we ain't got the path
+        if (!testFile.exists()) {
             JOptionPane.showMessageDialog(this.getParent(),
-                    "Error opening folder " + tmpFile.getName()
+                    "Error opening folder " + testFile.getName()
                     +" \nIs the file share mounted?",
                     "Folder does not exist.",
                     JOptionPane.ERROR_MESSAGE);
@@ -1164,18 +1127,18 @@ public class QuadViewUi extends JPanel
         }
 
         // July 1, 2013 elevate url loading from LargeVolumeViewer to QuadViewUi.
-        URL url = tmpFile.toURI().toURL();
+        URL url = testFile.toURI().toURL();
         snapshot3dLauncher = new Snapshot3DLauncher(
                 largeVolumeViewer.getTileServer(),
                 largeVolumeViewer.getSliceAxis(),
                 camera,
                 getSubvolumeProvider(),
-                pathToFile,
+                canonicalLinuxPath,
                 url,
                 imageColorModel
         );
         snapshot3dLauncher.setAnnotationManager(annotationMgr);
-        volumeImage.setRemoteBasePath(pathToFile);
+        volumeImage.setRemoteBasePath(canonicalLinuxPath);
         return loadURL(url);
     }
 
@@ -1184,7 +1147,9 @@ public class QuadViewUi extends JPanel
      */
     public boolean loadRender(URL url) {
         // need to close/clear workspace and sample here:
-        closeWorkspaceRequestSignal.emit();
+        if (wsCloseListener != null) {
+            wsCloseListener.closeWorkspace();
+        }
 
         // then just go ahead and load the file
         boolean rtnVal = loadURL(url);
@@ -1206,6 +1171,10 @@ public class QuadViewUi extends JPanel
             return false;
     	}
     }
+    
+    public void setStatusLabelText(String text) {
+        statusLabel.setText(text);
+    }
 
     public String imageColorModelAsString() {
         return imageColorModel.asString();
@@ -1215,25 +1184,39 @@ public class QuadViewUi extends JPanel
         imageColorModel.fromString(modelString);
     }
 
-    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
-		@Override
-		public void execute(URL url) {
-			recentFileList.add(url);
-			imageColorModel.reset(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
-			resetViewAction.actionPerformed(null);
-
-            getSkeletonActor().setTileFormat(
-                    tileServer.getLoadAdapter().getTileFormat());
-
-		}
-    };
-
     /**
      * this method returns a provider of read-only subvolume of data (maximum zoom,
      * intended for calculations)
      */
     public SubvolumeProvider getSubvolumeProvider(){
         return new SubvolumeProvider(volumeImage, tileServer);
+    }
+
+    //---------------------------IMPLEMENTS VolumeLoadListener
+    @Override
+    public void volumeLoaded(URL url) {
+        updateRanges();
+        
+        recentFileList.add(url);
+        imageColorModel.reset(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
+        resetViewAction.actionPerformed(null);
+        
+        getSkeletonActor().setTileFormat(
+                tileServer.getLoadAdapter().getTileFormat());
+    }
+
+    /**
+     * @param pathTraceListener the pathTraceListener to set
+     */
+    public void setPathTraceListener(PathTraceRequestListener pathTraceListener) {
+        this.pathTraceListener = pathTraceListener;
+    }
+
+    /**
+     * @param wsCloseListener the wsCloseListener to set
+     */
+    public void setWsCloseListener(WorkspaceClosureListener wsCloseListener) {
+        this.wsCloseListener = wsCloseListener;
     }
 
     static class LoadStatusLabel extends JLabel {
