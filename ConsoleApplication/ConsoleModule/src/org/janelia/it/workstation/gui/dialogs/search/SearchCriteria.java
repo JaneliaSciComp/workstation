@@ -1,15 +1,16 @@
 package org.janelia.it.workstation.gui.dialogs.search;
 
+import de.javasoft.swing.DateComboBox;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 import javax.swing.*;
 
-import net.sourceforge.jdatepicker.JDateComponentFactory;
-import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
 
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -21,19 +22,17 @@ import org.janelia.it.workstation.gui.util.Icons;
  */
 public abstract class SearchCriteria extends JPanel {
 
-    private JComboBox termBox;
-    private JComboBox operatorBox;
-
-    private JPanel textInputPanel;
-    private JLabel toTextLabel;
-    private JTextField input1;
-    private JTextField input2;
-
-    private JPanel dateInputPanel;
-    private JLabel toDateLabel;
-    protected JDatePickerImpl startDatePicker;
-    protected JDatePickerImpl endDatePicker;
-
+    private final JComboBox termBox;
+    private final JComboBox operatorBox;
+    private final JPanel textInputPanel;
+    private final JLabel toTextLabel;
+    private final JTextField input1;
+    private final JTextField input2;
+    private final JPanel dateInputPanel;
+    private final JLabel toDateLabel;
+    private final DateComboBox startDatePicker;
+    private final DateComboBox endDatePicker;
+    
     private SearchAttribute attribute;
     private CriteriaOperator op;
 
@@ -82,13 +81,13 @@ public abstract class SearchCriteria extends JPanel {
         dateInputPanel.setVisible(false);
         add(dateInputPanel);
 
-        this.startDatePicker = (JDatePickerImpl) JDateComponentFactory.createJDatePicker();
+        this.startDatePicker = new DateComboBox();
         dateInputPanel.add(startDatePicker);
 
         toDateLabel = new JLabel("to");
         dateInputPanel.add(toDateLabel);
 
-        this.endDatePicker = (JDatePickerImpl) JDateComponentFactory.createJDatePicker();
+        this.endDatePicker = new DateComboBox();
         dateInputPanel.add(endDatePicker);
 
         init(attributes);
@@ -125,14 +124,15 @@ public abstract class SearchCriteria extends JPanel {
             termModel.addElement(attribute);
         }
         DefaultComboBoxModel operatorModel = (DefaultComboBoxModel) operatorBox.getModel();
-        for (CriteriaOperator op : CriteriaOperator.values()) {
-            operatorModel.addElement(op);
-        }
+        operatorModel.addElement(CriteriaOperator.NOT_NULL);
+        operatorModel.addElement(CriteriaOperator.CONTAINS);
         operatorModel.setSelectedItem(CriteriaOperator.NOT_NULL);
     }
 
     private void setAttribute(SearchAttribute attribute) {
         this.attribute = attribute;
+        DefaultComboBoxModel operatorModel = (DefaultComboBoxModel) operatorBox.getModel();
+        operatorModel.removeElement(CriteriaOperator.BETWEEN);
 
         switch (attribute.getDataType()) {
             case STRING:
@@ -140,6 +140,7 @@ public abstract class SearchCriteria extends JPanel {
                 dateInputPanel.setVisible(false);
                 break;
             case DATE:
+                operatorModel.addElement(CriteriaOperator.BETWEEN);
                 textInputPanel.setVisible(false);
                 dateInputPanel.setVisible(true);
                 break;
@@ -217,7 +218,7 @@ public abstract class SearchCriteria extends JPanel {
             case STRING:
                 return input1.getText();
             case DATE:
-                return startDatePicker.getModel().getValue();
+                return startDatePicker.getDate();
         }
         throw new IllegalStateException("Unknown data type: " + dataType);
     }
@@ -228,7 +229,7 @@ public abstract class SearchCriteria extends JPanel {
             case STRING:
                 return input2.getText();
             case DATE:
-                return endDatePicker.getModel().getValue();
+                return endDatePicker.getDate();
         }
         throw new IllegalStateException("Unknown data type: " + dataType);
     }

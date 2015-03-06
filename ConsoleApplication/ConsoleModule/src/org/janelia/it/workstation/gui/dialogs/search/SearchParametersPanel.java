@@ -5,7 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.*;
@@ -254,6 +254,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         if (advancedSearchCheckbox.isSelected()) {
 
             StringBuilder aux = new StringBuilder();
+            StringBuilder auxAnnot = new StringBuilder();
 
             for (SearchCriteria criteria : searchCriteriaList) {
 
@@ -266,10 +267,10 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
                 }
 
                 if (sa.getDataType().equals(DataType.DATE)) {
-                    Calendar startCal = (Calendar) criteria.getValue1();
-                    Calendar endCal = (Calendar) criteria.getValue2();
-                    value1 = startCal == null ? "*" : SolrUtils.formatDate(startCal.getTime());
-                    value2 = endCal == null ? "*" : SolrUtils.formatDate(endCal.getTime());
+                    Date startCal = (Date) criteria.getValue1();
+                    Date endCal = (Date) criteria.getValue2();
+                    value1 = startCal == null ? "*" : SolrUtils.formatDate(startCal);
+                    value2 = endCal == null ? "*" : SolrUtils.formatDate(endCal);
                 }
                 else {
                     value1 = (String) criteria.getValue1();
@@ -280,6 +281,21 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
                     continue;
                 }
 
+                if ("annotations".equals(sa.getName())) {
+                    if (auxAnnot.length()>1) {
+                        auxAnnot.append(" ");
+                    }
+                    switch (criteria.getOp()) {
+                        case NOT_NULL:
+                            auxAnnot.append("*");
+                            break;
+                        default:
+                            auxAnnot.append(value1);
+                            break;
+                    }
+                    continue;
+                }
+                
                 if (aux.length() > 0) {
                     aux.append(" ");
                 }
@@ -305,6 +321,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
             }
 
             builder.setAuxString(aux.toString());
+            builder.setAuxAnnotationQueryString(auxAnnot.toString());
         }
 
         return builder;

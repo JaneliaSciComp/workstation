@@ -42,6 +42,7 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.dialogs.search.ResultPage;
 import org.janelia.it.workstation.gui.dialogs.search.ResultTreeMapping;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
@@ -92,7 +93,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
             @Override
             public String getSearchString() {
                 String s = (String)getInputFieldValue();
-                if (!s.contains(" ") && !s.endsWith("*")) {
+                if (!StringUtils.isEmpty(s) && !s.contains(" ") && !s.endsWith("*")) {
                     return s+"*";
                 }
                 return s;
@@ -220,7 +221,8 @@ public class QCViewPanel extends JPanel implements Refreshable {
         
         // Only looking for LSMs which have a denormalized SAGE id gives us the sub-sample LSMs we're looking for, 
         // without any parent-sample LSMs that we're not interested in.
-        builder.setAuxString(builder.getAuxString()+" +sage_id_txt:*");
+        String aux = builder.getAuxString()==null?"":builder.getAuxString();
+        builder.setAuxString(aux+" +sage_id_txt:*");
         // Sort by slide code so that we get a consistent set of data (we can't sort by slide_code_txt because it's a multivalued field)
         builder.setSortField("sage_light_imagery_slide_code_t");
         // Filter to get LSMs only 

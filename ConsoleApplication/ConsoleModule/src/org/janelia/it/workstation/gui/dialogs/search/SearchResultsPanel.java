@@ -498,6 +498,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         query.setStart(pageSize * page);
         query.setRows(pageSize);
 
+        log.info("Searching SOLR: " + query.getQuery());
         return ModelMgr.getModelMgr().searchSolr(query);
     }
 
