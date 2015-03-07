@@ -69,7 +69,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
     private final SearchParametersPanel searchParamsPanel;
     private final ViewerPane viewerPane;
     private final IconDemoPanel imageViewer;
-    private final Map<String, Set<String>> filters = new HashMap<String, Set<String>>();
+    private final Map<String, Set<String>> filters = new HashMap<>();
     private final SearchResults searchResults = new SearchResults();
     
     public QCViewPanel() {
@@ -236,8 +236,8 @@ public class QCViewPanel extends JPanel implements Refreshable {
         searchResults.addPage(resultPage);
 
         // Map LSMs to samples
-        List<String> upMapping = new ArrayList<String>();
-        List<String> downMapping = new ArrayList<String>();
+        List<String> upMapping = new ArrayList<>();
+        List<String> downMapping = new ArrayList<>();
         upMapping.add(EntityConstants.TYPE_IMAGE_TILE);
         upMapping.add(EntityConstants.TYPE_SUPPORTING_DATA);
         upMapping.add(EntityConstants.TYPE_SAMPLE);
@@ -246,8 +246,8 @@ public class QCViewPanel extends JPanel implements Refreshable {
         searchResults.projectResultPages();
 
         // Figure out which LSMs go with which Sample
-        final Map<Long,String> sampleIdToDataset = new HashMap<Long,String>();
-        final Map<Long,Entity> sampleMap = new HashMap<Long,Entity>();
+        final Map<Long,String> sampleIdToDataset = new HashMap<>();
+        final Map<Long,Entity> sampleMap = new HashMap<>();
         final Multimap<Long,EntityDocument> sampleToLsm = ArrayListMultimap.<Long,EntityDocument>create();
         SolrResults pageResults = resultPage.getSolrResults();
         for (EntityDocument entityDoc : pageResults.getEntityDocuments()) {
@@ -275,7 +275,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
             }   
         }
 
-        List<Long> sortedSampleIds = new ArrayList<Long>(sampleToLsm.keySet());
+        List<Long> sortedSampleIds = new ArrayList<>(sampleToLsm.keySet());
         Collections.sort(sortedSampleIds, new Comparator<Long>() {
             @Override
             public int compare(Long id1, Long id2) {
@@ -295,9 +295,9 @@ public class QCViewPanel extends JPanel implements Refreshable {
         searchResultsEntity.setOwnerKey(SessionMgr.getSubjectKey());
         searchResultsEntity.setEntityTypeName(EntityConstants.TYPE_FOLDER);
 
-        Map<String,Map<String,EntityData>> slideCodeToLsmMap = new LinkedHashMap<String,Map<String,EntityData>>();
+        Map<String,Map<String,EntityData>> slideCodeToLsmMap = new LinkedHashMap<>();
 
-        Set<String> tilePattern = new HashSet<String>();
+        Set<String> tilePattern = new HashSet<>();
 
         Map<String,EntityData> slideCodeEds = null;
         String dataSetSlideCode = null;
@@ -318,7 +318,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
                 String tile = tileEntity.getName();
 
                 // Really cheating here. The model is the view. But this is the only way to get things done without rewriting the IconDemoPanel.
-                Set<EntityData> mips = new HashSet<EntityData>();
+                Set<EntityData> mips = new HashSet<>();
                 EntityData ed1 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
                 EntityData ed2 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_REFERENCE_MIP_IMAGE);
                 EntityData ed3 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SIGNAL_MIP_IMAGE);
@@ -332,7 +332,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
                     String key = dataSet+"~"+lsmSlideCode;
                     if (dataSetSlideCode==null || !dataSetSlideCode.equals(key)) {
-                        slideCodeEds = new LinkedHashMap<String,EntityData>();
+                        slideCodeEds = new LinkedHashMap<>();
                         dataSetSlideCode = key;
                         log.debug("Starting "+dataSetSlideCode);
                     }
@@ -364,10 +364,10 @@ public class QCViewPanel extends JPanel implements Refreshable {
             slideCodeToLsmMap.put(dataSetSlideCode, slideCodeEds);
         }
 
-        List<String> sortedTilePattern = new ArrayList<String>(tilePattern);
+        List<String> sortedTilePattern = new ArrayList<>(tilePattern);
         Collections.sort(sortedTilePattern);
 
-        List<EntityData> eds = new ArrayList<EntityData>();
+        List<EntityData> eds = new ArrayList<>();
 
         int i = 0;
         for(String key : slideCodeToLsmMap.keySet()) {
@@ -377,7 +377,6 @@ public class QCViewPanel extends JPanel implements Refreshable {
                 log.debug("  "+d);
             }
             String[] dataSetSlideCodeArr = key.split("~");
-            //String dataSet = dataSetSlideCodeArr[0];
             String slideCode = dataSetSlideCodeArr[1];
             for(String patternCode : sortedTilePattern) {
                 EntityData ed = slideCodeMap.get(patternCode);    
@@ -411,7 +410,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
         }
 
         log.debug("Setting "+eds.size()+" children");
-        searchResultsEntity.setEntityData(new HashSet<EntityData>(eds));
+        searchResultsEntity.setEntityData(new HashSet<>(eds));
         return new UnrootedEntity(searchResultsEntity);
     }
     

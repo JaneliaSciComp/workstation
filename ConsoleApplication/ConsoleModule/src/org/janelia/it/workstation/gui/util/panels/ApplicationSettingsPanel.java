@@ -156,7 +156,8 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         UIManager.LookAndFeelInfo[] infos = UIManager.getInstalledLookAndFeels();
 
         for (UIManager.LookAndFeelInfo info : infos) {
-            JRadioButton rb = new JRadioButton(info.getName());
+            String name = info.getName() + (info.getName().startsWith("Synthetica") ? "" : " (Unsupported)");
+            JRadioButton rb = new JRadioButton(name);
             rb.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
                     settingsChanged = true;
