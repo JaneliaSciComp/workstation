@@ -155,7 +155,84 @@ implements GLActor
 		// log.info("New SkeletonActor");
 	}
 	
-	private synchronized void displayLines(GLAutoDrawable glDrawable) {
+	private synchronized void displayLinesPerNeuron(GLAutoDrawable glDrawable) {
+        if (neuronLineIndices.size() == 0)
+            return;
+
+        GL2GL3 gl = glDrawable.getGL().getGL2GL3();
+        GL2 gl2 = gl.getGL2();
+
+
+        for (Long neuronID: neuronVertices.keySet()) {
+            if (!neuronLineIndices.containsKey(neuronID))
+                continue;
+
+            // if (verticesNeedCopy) { // TODO
+            if (true) {
+                gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
+                neuronVertices.get(neuronID).rewind();
+                gl.glBufferData(GL.GL_ARRAY_BUFFER,
+                        neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT,
+                        neuronVertices.get(neuronID), GL.GL_DYNAMIC_DRAW);
+                verticesNeedCopy = false;
+
+                neuronColors.get(neuronID).rewind();
+                gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colorBo);
+                gl.glBufferData(GL.GL_ARRAY_BUFFER,
+                        neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT,
+                        neuronColors.get(neuronID),
+                        GL.GL_DYNAMIC_DRAW);
+            }
+            // if (linesNeedCopy) // TODO
+            if (true) {
+                gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
+                neuronLineIndices.get(neuronID).rewind();
+                gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER,
+                        neuronLineIndices.get(neuronID).capacity() * INT_BYTE_COUNT,
+                        neuronLineIndices.get(neuronID), GL.GL_DYNAMIC_DRAW);
+                linesNeedCopy = false;
+            }
+            gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+            gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, vbo );
+            gl2.glVertexPointer(VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
+            gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+            gl2.glColorPointer(COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
+            gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
+            lineShader.load(gl2);
+            lineShader.setUniform(gl, "zThickness", zThicknessInPixels);
+            // log.info("zThickness = "+zThickness);
+            float focus[] = {
+                (float)camera.getFocus().getX(),
+                (float)camera.getFocus().getY(),
+                (float)camera.getFocus().getZ()};
+            lineShader.setUniform3v(gl, "focus", 1, focus);
+            gl.glEnable(GL2.GL_LINE_SMOOTH);
+            gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
+            // wider black line
+            gl.glLineWidth(3.5f);
+            lineShader.setUniform3v(gl, "baseColor", 1, blackColor);
+            gl.glDrawElements(GL2.GL_LINES,
+                    neuronLineIndices.get(neuronID).capacity(),
+                    GL2.GL_UNSIGNED_INT,
+                    0L);
+            // narrower white line
+            gl.glLineWidth(1.5f);
+            lineShader.setUniform3v(gl, "baseColor", 1, neuronColor);
+            gl.glDrawElements(GL2.GL_LINES,
+                    neuronLineIndices.get(neuronID).capacity(),
+                    GL2.GL_UNSIGNED_INT,
+                    0L);
+        }
+
+        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);	
+	    gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+        gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
+        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
+        lineShader.unload(gl2);
+	}
+
+    private synchronized void displayLines(GLAutoDrawable glDrawable) {
 		// Line segments using vertex buffer objects
 		if (lineIndices == null)
 			return;
@@ -168,7 +245,7 @@ implements GLActor
         if (true) {
             gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
             vertices.rewind();
-	        gl.glBufferData(GL.GL_ARRAY_BUFFER, 
+	        gl.glBufferData(GL.GL_ARRAY_BUFFER,
 	        		vertexCount * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT,
 	        		vertices, GL.GL_DYNAMIC_DRAW);
             verticesNeedCopy = false;
@@ -176,17 +253,17 @@ implements GLActor
     		// colors
 	        colors.rewind();
 	        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colorBo);
-	        gl.glBufferData(GL.GL_ARRAY_BUFFER, 
+	        gl.glBufferData(GL.GL_ARRAY_BUFFER,
 	        		vertexCount * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT,
 	        		colors,
 	        		GL.GL_DYNAMIC_DRAW);
         }
 		// if (linesNeedCopy) // TODO
-		if (true) 
+		if (true)
 		{
 	        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
 			lineIndices.rewind();
-	        gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, 
+	        gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER,
 	        		lineIndices.capacity() * INT_BYTE_COUNT,
 	        		lineIndices, GL.GL_DYNAMIC_DRAW);
 	        linesNeedCopy = false;
@@ -212,24 +289,24 @@ implements GLActor
 		gl.glLineWidth(3.5f);
 		lineShader.setUniform3v(gl, "baseColor", 1, blackColor);
         gl.glDrawElements(GL2.GL_LINES,
-        		lineIndices.capacity(), 
-        		GL2.GL_UNSIGNED_INT, 
+        		lineIndices.capacity(),
+        		GL2.GL_UNSIGNED_INT,
         		0L);
         // narrower white line
 		gl.glLineWidth(1.5f);
 		lineShader.setUniform3v(gl, "baseColor", 1, neuronColor);
         gl.glDrawElements(GL2.GL_LINES,
-        		lineIndices.capacity(), 
-        		GL2.GL_UNSIGNED_INT, 
+        		lineIndices.capacity(),
+        		GL2.GL_UNSIGNED_INT,
         		0L);
         //
-        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);	
+        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
 	    gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
         lineShader.unload(gl2);
 	}
-	
+
 	private synchronized void displayAnchors(GLAutoDrawable glDrawable) {
 		// Paint anchors as point sprites
 		if (pointIndices == null)
@@ -392,7 +469,11 @@ implements GLActor
         boolean usePerNeuron = true;
 
 		// System.out.println("painting skeleton");
-		displayLines(glDrawable);
+        if (usePerNeuron) {
+            displayLinesPerNeuron(glDrawable);
+        } else {
+            displayLines(glDrawable);
+        }
 
         if (usePerNeuron) {
             displayTracedSegmentsPerNeuron(glDrawable);
@@ -700,7 +781,7 @@ implements GLActor
 		skeletonActorChangedSignal.emit();
 	}
 
-    private void updateLinesPerNeuron() {
+    private void    updateLinesPerNeuron() {
         // iterate through anchors and record lines where there are no traced
         //  paths; then copy the line indices you get into an array
         // note: I believe this works because we process the points and
@@ -719,13 +800,12 @@ implements GLActor
                 if (i1 >= i2)
                     continue; // only use ascending pairs, for uniqueness
                 SegmentIndex segmentIndex = new SegmentIndex(anchor.getGuid(), neighbor.getGuid());
-                // some neurons may not have any paths:
-                if (!neuronTracedSegments.containsKey(anchor.getNeuronID())) {
+                // if neuron has any paths, check and don't draw line
+                //  where there's already a traced segment
+                if (neuronTracedSegments.containsKey(anchor.getNeuronID()) &&
+                    neuronTracedSegments.get(anchor.getNeuronID()).containsKey(segmentIndex)) {
                     continue;
                 }
-                // Don't draw lines where there is already a traced segment.
-                if (neuronTracedSegments.get(anchor.getNeuronID()).containsKey(segmentIndex))
-                    continue;
                 if (!tempLineIndices.containsKey(anchor.getNeuronID())) {
                     tempLineIndices.put(anchor.getNeuronID(), new Vector<Integer>());
                 }
@@ -785,7 +865,7 @@ implements GLActor
         // new version populates per-neuron data structures
 
         // Update Traced path actors
-        Set<SegmentIndex> foundSegments = new HashSet<SegmentIndex>();
+        Set<SegmentIndex> foundSegments = new HashSet<>();
         Collection<AnchoredVoxelPath> skeletonSegments = skeleton.getTracedSegments();
         // log.info("Skeleton has " + skeletonSegments.size() + " traced segments");
         for (AnchoredVoxelPath segment : skeletonSegments) {
@@ -1017,6 +1097,9 @@ implements GLActor
 		gl.glDeleteBuffers(4, ix2, 0);
 		for (TracedPathActor path : tracedSegments.values())
 			path.dispose(glDrawable);
+        // new: per neuron
+        neuronTracedSegments.clear();
+        // old: not per neuron
 		tracedSegments.clear();
     	// log.info("tracedSegments.size() [629] = "+tracedSegments.size());
 	}
