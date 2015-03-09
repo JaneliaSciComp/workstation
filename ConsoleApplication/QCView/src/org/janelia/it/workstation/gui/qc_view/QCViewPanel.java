@@ -42,7 +42,6 @@ import org.janelia.it.jacs.shared.solr.EntityDocument;
 import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.dialogs.search.ResultPage;
 import org.janelia.it.workstation.gui.dialogs.search.ResultTreeMapping;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
@@ -89,22 +88,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createLineBorder((Color) UIManager.get("windowBorder")));
 
-        this.searchParamsPanel = new SearchParametersPanel() {
-//            @Override
-//            public String getSearchString() {
-//                String s = (String)getInputFieldValue();
-//                String[] tokens = s.split("\\s+");
-//                StringBuilder sb = new StringBuilder();
-//                for(String token : tokens) {
-//                    if (sb.length()>0) sb.append(" ");
-//                    sb.append(token);
-//                    if (!StringUtils.isEmpty(token) && !s.endsWith("*")) {
-//                        sb.append("*");
-//                    }
-//                }
-//                return sb.toString();
-//            }
-        };
+        this.searchParamsPanel = new SearchParametersPanel();
         
         SearchConfiguration searchConfig = new SearchConfiguration();
         searchConfig.load();
