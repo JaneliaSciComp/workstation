@@ -313,14 +313,17 @@ public class LargeVolumeViewerTranslator {
             }
 
             // note that we must add annotations in parent-child sequence
-            //  so lines get drawn correctly
+            //  so lines get drawn correctly; we must send this as one big
+            //  list so the anchor update routine is run once will all anchors
+            //  present rather than piecemeal (which will cause problems in
+            //  some cases on workspace reloads)
+            List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
             for (TmNeuron neuron: workspace.getNeuronList()) {
                 for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-                    // first step in optimization; could conceivably aggregate these
-                    //  lists into one big list and send signal once:
-                    anchorsAddedSignal.emit(neuron.getSubTreeList(root));
+                    addedAnchorList.addAll(neuron.getSubTreeList(root));
                 }
             }
+            anchorsAddedSignal.emit(addedAnchorList);
 
             // draw anchored paths, too, after all the anchors are drawn
             List<TmAnchoredPath> annList = new ArrayList<>();

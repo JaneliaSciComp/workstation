@@ -866,6 +866,17 @@ implements GLActor
         // new version populates per-neuron data structures
 
         // Update Traced path actors
+
+        // first, a short-circuit; if there are no anchors, the whole
+        //  skeleton was cleared, and we can clear our traced segments as well;
+        //  this is necessary because unlike in the old not-per-neuron way of
+        //  doing things, we would normally need some info from anchors that
+        //  just isn't there when the whole skeleton is cleared
+        if (skeleton.getAnchors().size() == 0) {
+            neuronTracedSegments.clear();
+            return;
+        }
+
         Set<SegmentIndex> foundSegments = new HashSet<>();
         Collection<AnchoredVoxelPath> skeletonSegments = skeleton.getTracedSegments();
         // log.info("Skeleton has " + skeletonSegments.size() + " traced segments");
