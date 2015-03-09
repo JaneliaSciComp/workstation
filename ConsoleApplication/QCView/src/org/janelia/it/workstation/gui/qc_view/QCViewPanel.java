@@ -34,12 +34,12 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -82,7 +82,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
             disabledColorHex = null;
         }
 
-        Set<String> entityTypes = new HashSet<String>();
+        Set<String> entityTypes = new HashSet<>();
         entityTypes.add(EntityConstants.TYPE_LSM_STACK);
         filters.put("entity_type",entityTypes);
         
@@ -90,20 +90,20 @@ public class QCViewPanel extends JPanel implements Refreshable {
         setBorder(BorderFactory.createLineBorder((Color) UIManager.get("windowBorder")));
 
         this.searchParamsPanel = new SearchParametersPanel() {
-            @Override
-            public String getSearchString() {
-                String s = (String)getInputFieldValue();
-                String[] tokens = s.split("\\s+");
-                StringBuilder sb = new StringBuilder();
-                for(String token : tokens) {
-                    if (sb.length()>0) sb.append(" ");
-                    sb.append(s);
-                    if (!StringUtils.isEmpty(token) && !s.endsWith("*")) {
-                        sb.append("*");
-                    }
-                }
-                return sb.toString();
-            }
+//            @Override
+//            public String getSearchString() {
+//                String s = (String)getInputFieldValue();
+//                String[] tokens = s.split("\\s+");
+//                StringBuilder sb = new StringBuilder();
+//                for(String token : tokens) {
+//                    if (sb.length()>0) sb.append(" ");
+//                    sb.append(token);
+//                    if (!StringUtils.isEmpty(token) && !s.endsWith("*")) {
+//                        sb.append("*");
+//                    }
+//                }
+//                return sb.toString();
+//            }
         };
         
         SearchConfiguration searchConfig = new SearchConfiguration();

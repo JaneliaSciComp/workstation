@@ -1,12 +1,49 @@
 package org.janelia.it.workstation.gui.dialogs.search;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
+
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
+import javax.swing.SwingUtilities;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.TableModel;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.FacetField.Count;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -23,18 +60,6 @@ import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.TableModel;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * A general search results panel.

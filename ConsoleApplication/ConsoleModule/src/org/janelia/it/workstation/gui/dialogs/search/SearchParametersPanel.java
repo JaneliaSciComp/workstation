@@ -1,6 +1,11 @@
 package org.janelia.it.workstation.gui.dialogs.search;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URI;
@@ -8,13 +13,22 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.ComboPopup;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
+
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;

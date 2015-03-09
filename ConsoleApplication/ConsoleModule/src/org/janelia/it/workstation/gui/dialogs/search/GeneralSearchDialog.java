@@ -1,14 +1,44 @@
 package org.janelia.it.workstation.gui.dialogs.search;
 
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.ProgressMonitor;
+import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileFilter;
+
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
@@ -22,19 +52,6 @@ import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.FolderUtils;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-
-import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.io.File;
-import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
