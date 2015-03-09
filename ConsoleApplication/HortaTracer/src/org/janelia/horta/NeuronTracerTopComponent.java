@@ -1209,6 +1209,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             // First ensure that this component uses same sample.
             if (focusUrl != null) {
                 String urlStr = focusUrl.toString();
+                // Check: if same as current source, no need to change that.
                 if (!urlStr.equals(currentSource)) {
                     URI uri = focusUrl.toURI();
                     URI yamlUri = new URI(
@@ -1223,24 +1224,31 @@ public final class NeuronTracerTopComponent extends TopComponent
                     InputStream stream2 = yamlUrl.openStream();
                     loadYaml(stream1, loader, stream2);
                 }
-            }
 
-            // Now, position this component over other component's
-            // focus.
-            if (focusCoords != null) {
-                Vantage v = sceneWindow.getVantage();
-                v.setFocusPosition(
-                        new Vector3(
-                                (float)focusCoords[0],
-                                (float)focusCoords[1],
-                                (float)focusCoords[2]
-                        )
-                );
-                v.notifyObservers();
+                // Now, position this component over other component's
+                // focus.
+                if (focusCoords != null) {
+                    Vantage v = sceneWindow.getVantage();
+                    Vector3 focusVector3 = new Vector3(
+                            (float) focusCoords[0],
+                            (float) focusCoords[1],
+                            (float) focusCoords[2]
+                    );
+                    loader.animateToFocusXyz(focusVector3, v, 150);
+                    //                    v.setFocusPosition(focusVector3);
+                    //                    v.notifyObservers();
+                } else {
+                    logger.info("No focus coords provided.");
+                }
+                
+                // Load up the tile.
+                loader.loadTileAtCurrentFocus(volumeSource);
+                sceneWindow.getGLAutoDrawable().display();
             }
             else {
-                logger.info("No focus coords provided.");
+                logger.warn("No URL location provided.");
             }
+
         }
         
     }
