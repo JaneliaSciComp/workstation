@@ -93,10 +93,16 @@ public class QCViewPanel extends JPanel implements Refreshable {
             @Override
             public String getSearchString() {
                 String s = (String)getInputFieldValue();
-                if (!StringUtils.isEmpty(s) && !s.contains(" ") && !s.endsWith("*")) {
-                    return s+"*";
+                String[] tokens = s.split("\\s+");
+                StringBuilder sb = new StringBuilder();
+                for(String token : tokens) {
+                    if (sb.length()>0) sb.append(" ");
+                    sb.append(s);
+                    if (!StringUtils.isEmpty(token) && !s.endsWith("*")) {
+                        sb.append("*");
+                    }
                 }
-                return s;
+                return sb.toString();
             }
         };
         
@@ -144,6 +150,11 @@ public class QCViewPanel extends JPanel implements Refreshable {
                     SessionMgr.getSessionMgr().handleException(e);
                 }
                 
+            }
+            
+            @Override
+            public boolean isLabelSizeLimitedByImageSize() {
+                return false;
             }
         };
         viewerPane.setViewer(imageViewer);
@@ -246,6 +257,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
         searchResults.projectResultPages();
 
         // Figure out which LSMs go with which Sample
+        final Map<Long,String> lsmIdToGenotype = new HashMap<>();
         final Map<Long,String> sampleIdToDataset = new HashMap<>();
         final Map<Long,Entity> sampleMap = new HashMap<>();
         final Multimap<Long,EntityDocument> sampleToLsm = ArrayListMultimap.<Long,EntityDocument>create();
@@ -266,6 +278,9 @@ public class QCViewPanel extends JPanel implements Refreshable {
             String lsmDataSet = (String)entityDoc.getDocument().getFieldValue("sage_light_imagery_data_set_t");
             sampleIdToDataset.put(sample.getId(), lsmDataSet);
 
+            String lsmGenotype = (String)entityDoc.getDocument().getFieldValue("sage_line_genotype_t");
+            lsmIdToGenotype.put(lsmEntity.getId(), lsmGenotype);
+            
             sampleMap.put(sample.getId(), sample);
             sampleToLsm.put(sample.getId(), entityDoc);
 
@@ -330,6 +345,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
                     String lsmSlideCode = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE);
 
+        
                     String key = dataSet+"~"+lsmSlideCode;
                     if (dataSetSlideCode==null || !dataSetSlideCode.equals(key)) {
                         slideCodeEds = new LinkedHashMap<>();
@@ -339,14 +355,16 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
                     String objective = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE);
                     String qiScore = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_QI_SCORE);
-
+                    String genotype = lsmIdToGenotype.get(lsmEntity.getId());
+                    
                     lsmSlideCode = lsmSlideCode==null?"":lsmSlideCode;
                     objective = objective==null?"":objective;
-                    qiScore = qiScore==null?"":qiScore;
+                    qiScore = qiScore==null?"":"(qi="+qiScore+")";
+                    genotype = genotype==null?"":genotype;
 
                     String patternCode = objective+" "+tile;
 
-                    Entity virtualLsm = getVirtualEntity("<html><b>"+lsmSlideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+qiScore+"&nbsp;</html>", lsmEntity);
+                    Entity virtualLsm = getVirtualEntity("<html><b>"+lsmSlideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+genotype+" "+qiScore+"</html>", lsmEntity);
                     virtualLsm.getEntityData().addAll(mips);
 
                     EntityData ed = new EntityData();
