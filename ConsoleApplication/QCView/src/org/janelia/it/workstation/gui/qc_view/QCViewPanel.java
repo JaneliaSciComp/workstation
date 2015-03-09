@@ -34,15 +34,14 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.dialogs.search.ResultPage;
 import org.janelia.it.workstation.gui.dialogs.search.ResultTreeMapping;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
@@ -82,23 +81,14 @@ public class QCViewPanel extends JPanel implements Refreshable {
             disabledColorHex = null;
         }
 
-        Set<String> entityTypes = new HashSet<String>();
+        Set<String> entityTypes = new HashSet<>();
         entityTypes.add(EntityConstants.TYPE_LSM_STACK);
         filters.put("entity_type",entityTypes);
         
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createLineBorder((Color) UIManager.get("windowBorder")));
 
-        this.searchParamsPanel = new SearchParametersPanel() {
-            @Override
-            public String getSearchString() {
-                String s = (String)getInputFieldValue();
-                if (!StringUtils.isEmpty(s) && !s.contains(" ") && !s.endsWith("*")) {
-                    return s+"*";
-                }
-                return s;
-            }
-        };
+        this.searchParamsPanel = new SearchParametersPanel();
         
         SearchConfiguration searchConfig = new SearchConfiguration();
         searchConfig.load();
@@ -144,6 +134,11 @@ public class QCViewPanel extends JPanel implements Refreshable {
                     SessionMgr.getSessionMgr().handleException(e);
                 }
                 
+            }
+            
+            @Override
+            public boolean isLabelSizeLimitedByImageSize() {
+                return false;
             }
         };
         viewerPane.setViewer(imageViewer);
@@ -246,6 +241,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
         searchResults.projectResultPages();
 
         // Figure out which LSMs go with which Sample
+        final Map<Long,String> lsmIdToGenotype = new HashMap<>();
         final Map<Long,String> sampleIdToDataset = new HashMap<>();
         final Map<Long,Entity> sampleMap = new HashMap<>();
         final Multimap<Long,EntityDocument> sampleToLsm = ArrayListMultimap.<Long,EntityDocument>create();
@@ -266,6 +262,9 @@ public class QCViewPanel extends JPanel implements Refreshable {
             String lsmDataSet = (String)entityDoc.getDocument().getFieldValue("sage_light_imagery_data_set_t");
             sampleIdToDataset.put(sample.getId(), lsmDataSet);
 
+            String lsmGenotype = (String)entityDoc.getDocument().getFieldValue("sage_line_genotype_t");
+            lsmIdToGenotype.put(lsmEntity.getId(), lsmGenotype);
+            
             sampleMap.put(sample.getId(), sample);
             sampleToLsm.put(sample.getId(), entityDoc);
 
@@ -330,6 +329,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
                     String lsmSlideCode = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE);
 
+        
                     String key = dataSet+"~"+lsmSlideCode;
                     if (dataSetSlideCode==null || !dataSetSlideCode.equals(key)) {
                         slideCodeEds = new LinkedHashMap<>();
@@ -339,14 +339,16 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
                     String objective = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE);
                     String qiScore = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_QI_SCORE);
-
+                    String genotype = lsmIdToGenotype.get(lsmEntity.getId());
+                    
                     lsmSlideCode = lsmSlideCode==null?"":lsmSlideCode;
                     objective = objective==null?"":objective;
-                    qiScore = qiScore==null?"":qiScore;
+                    qiScore = qiScore==null?"":"(qi="+qiScore+")";
+                    genotype = genotype==null?"":genotype;
 
                     String patternCode = objective+" "+tile;
 
-                    Entity virtualLsm = getVirtualEntity("<html><b>"+lsmSlideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+qiScore+"&nbsp;</html>", lsmEntity);
+                    Entity virtualLsm = getVirtualEntity("<html><b>"+lsmSlideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+genotype+" "+qiScore+"</html>", lsmEntity);
                     virtualLsm.getEntityData().addAll(mips);
 
                     EntityData ed = new EntityData();
