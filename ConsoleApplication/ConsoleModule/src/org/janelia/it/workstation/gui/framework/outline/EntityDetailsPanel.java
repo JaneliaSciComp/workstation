@@ -451,7 +451,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                             String attrName = attr.getLabel();
                             if (!attrNames.contains(attrName)) {
                                 attrNames.add(attrName);
-                                AttributeValue attrValue = new AttributeValue(attrName + " (SAGE)", value);
+                                AttributeValue attrValue = new AttributeValue(attrName, value);
                                 attributesTable.addRow(attrValue);
                             }
                         }
