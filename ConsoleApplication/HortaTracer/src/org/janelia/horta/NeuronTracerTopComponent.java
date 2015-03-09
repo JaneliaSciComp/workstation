@@ -105,7 +105,7 @@ import org.janelia.scenewindow.SceneRenderer.CameraType;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
-import org.janelia.console.viewerapi.Tiled3dSampleLocationProvider;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -254,6 +254,17 @@ public final class NeuronTracerTopComponent extends TopComponent
     /** Tells caller what source we are examining. */
     public URL getCurrentSourceURL() throws MalformedURLException, URISyntaxException {
         return new URI(currentSource).toURL();
+    }
+    
+    public void setLocation(URL url, double[] coords) {
+        try {
+            new SampleLocationAcceptor().acceptLocation(url, coords);
+        } catch (Exception ex) {
+            throw new RuntimeException(
+                    "Failed to load location " + url.toString() + ", " +
+                    coords[0] + "," + coords[1] + "," + coords[2]
+            );
+        }
     }
     
     private void setUpActors() 
@@ -1042,20 +1053,22 @@ public final class NeuronTracerTopComponent extends TopComponent
                 menu.add(new JPopupMenu.Separator());
                 // Want to lookup, get URL and get focus.
                 SynchronizationHelper helper = new SynchronizationHelper();
-                Collection<Tiled3dSampleLocationProvider> locationProviders =
+                Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
                         helper.getSampleLocationProviders(HortaLocationProvider.UNIQUE_NAME);
+                Tiled3dSampleLocationProviderAcceptor origin = 
+                        helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
                 logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
                 ViewerLocationAcceptor acceptor = new SampleLocationAcceptor();
                 RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
                 if (locationProviders.size() > 1) {
                     JMenu synchronizeAllMenu = new JMenu("Sychronize with other 3D viewer.");
-                    for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, acceptor)) {
+                    for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
                         synchronizeAllMenu.add(item);
                     }
                     menu.add(synchronizeAllMenu);
                 }
                 else if (locationProviders.size() == 1) {
-                    for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, acceptor)) {
+                    for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
                         menu.add(item);
                     }
                 }

@@ -50,21 +50,36 @@ public class RelocationMenuBuilder {
     // NOTE: This may be switched to Slf4j or Log4j at CB's discretion.
     private Logger logger = Logger.getLogger(RelocationMenuBuilder.class.getSimpleName());
             
-    public List<JMenuItem> buildSyncMenu(Collection<Tiled3dSampleLocationProvider> locationProviders, ViewerLocationAcceptor acceptor) {
+    /**
+     * Helper to build up a menu of other-side targets for sychronization.
+     * @param locationProviderAcceptors list of all "other" providers (not I).
+     * @param originator I, as a location acceptor.
+     * @param viewerLocationAcceptor externally-created acceptor.  Probably 'I'.
+     * @return the menu items thus produced.
+     */
+    public List<JMenuItem> buildSyncMenu(Collection<Tiled3dSampleLocationProviderAcceptor> locationProviderAcceptors, Tiled3dSampleLocationProviderAcceptor originator, ViewerLocationAcceptor viewerLocationAcceptor) {
         List<JMenuItem> rtnVal = new ArrayList<>();
-        for (final Tiled3dSampleLocationProvider provider : locationProviders) {
+        for (final Tiled3dSampleLocationProviderAcceptor providerAcceptor : locationProviderAcceptors) {
             if (logger.isLoggable(Level.INFO))
-                logger.info("Adding menu item for " + provider.getProviderUniqueName());
-            final String description = provider.getProviderDescription();
+                logger.info("Adding menu item for " + providerAcceptor.getProviderUniqueName());
+            final String description = providerAcceptor.getProviderDescription();
             JMenu synchronizeMenu = new JMenu("Synchronize with " + description);
             rtnVal.add(synchronizeMenu);
-            synchronizeMenu.add(new SampleRelocateAction(description, provider, acceptor));
+            if (providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.both)  ||
+                providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.provider)) {
+                synchronizeMenu.add(new AcceptSampleLocationAction(description, providerAcceptor, viewerLocationAcceptor));
+            }
             synchronizeMenu.add(new AbstractAction("Synchronize with " + description + " always") {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
             });
+            // Here, the provider is being inverted, to accept the new location.
+            if (providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.both)  ||
+                providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.acceptor)) {
+                synchronizeMenu.add(new PushSampleLocationAction(description, providerAcceptor, originator));
+            }
         }
         rtnVal.add(new JMenuItem(new AbstractAction("Desynchronize") {
             @Override
@@ -76,13 +91,40 @@ public class RelocationMenuBuilder {
         return rtnVal;
     }
 
-    private class SampleRelocateAction extends AbstractAction {
+    private class PushSampleLocationAction extends AbstractAction {
+        private ViewerLocationAcceptor acceptor;
+        private Tiled3dSampleLocationProviderAcceptor origin;
 
-        private Tiled3dSampleLocationProvider provider;
+        public PushSampleLocationAction(String description, Tiled3dSampleLocationProviderAcceptor acceptor, Tiled3dSampleLocationProviderAcceptor origin) {
+            super("Push location to " + description + " now");
+            this.acceptor = new DefaultViewerLocationAcceptor(acceptor, origin);  
+            this.origin = origin;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            double[] focusCoords = origin.getCoords();
+            URL focusUrl = origin.getSampleUrl();
+            try {
+                acceptor.acceptLocation(focusUrl, focusCoords);
+            } catch (Exception ioe) {
+                logger.severe(ioe.getMessage());
+                Exceptions.printStackTrace(ioe);
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Check that required files exist in synch source"
+                );
+            }
+        }
+    }
+    
+    private class AcceptSampleLocationAction extends AbstractAction {
+
+        private Tiled3dSampleLocationProviderAcceptor provider;
         private ViewerLocationAcceptor acceptor;
 
-        public SampleRelocateAction(String description, Tiled3dSampleLocationProvider provider, ViewerLocationAcceptor acceptor) {
-            super("Synchronize with " + description + " now");
+        public AcceptSampleLocationAction(String description, Tiled3dSampleLocationProviderAcceptor provider, ViewerLocationAcceptor acceptor) {
+            super("Accept location from " + description + " now");
             this.provider = provider;
             this.acceptor = acceptor;
         }
@@ -103,5 +145,19 @@ public class RelocationMenuBuilder {
             }
         }
     }
+    
+    private class DefaultViewerLocationAcceptor implements ViewerLocationAcceptor {
+        private Tiled3dSampleLocationProviderAcceptor provider;
+        private Tiled3dSampleLocationProviderAcceptor origin;
+        public DefaultViewerLocationAcceptor(Tiled3dSampleLocationProviderAcceptor provider, Tiled3dSampleLocationProviderAcceptor origin) {
+            this.provider = provider;
+            this.origin = origin;
+        }
 
+        @Override
+        public void acceptLocation(URL url, double[] coords) throws Exception {
+            provider.setSampleLocation(url, coords);
+        }        
+    }
+    
 }

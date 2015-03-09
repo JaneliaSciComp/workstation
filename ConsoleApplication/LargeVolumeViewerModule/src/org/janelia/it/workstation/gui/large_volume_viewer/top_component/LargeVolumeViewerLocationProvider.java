@@ -7,7 +7,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
 import java.net.URL;
-import org.janelia.console.viewerapi.Tiled3dSampleLocationProvider;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -17,13 +17,14 @@ import org.openide.util.lookup.ServiceProvider;
  * 
  * @author fosterl
  */
-@ServiceProvider(service = Tiled3dSampleLocationProvider.class, path=Tiled3dSampleLocationProvider.LOOKUP_PATH)
-public class LargeVolumeViewerLocationProvider implements Tiled3dSampleLocationProvider {
+@ServiceProvider(service = Tiled3dSampleLocationProviderAcceptor.class, path=Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH)
+public class LargeVolumeViewerLocationProvider implements Tiled3dSampleLocationProviderAcceptor {
 
     public static final String PROVIDER_UNIQUE_NAME = "LargeVolumeViewer";
     private static final String DESCRIPTION = "Large Volume Viewer";
     
-    private LargeVolumeViewViewer viewer;
+    private final LargeVolumeViewViewer viewer;
+    
     public LargeVolumeViewerLocationProvider( LargeVolumeViewViewer viewer ) {
         this.viewer = viewer;
     }
@@ -53,6 +54,27 @@ public class LargeVolumeViewerLocationProvider implements Tiled3dSampleLocationP
     @Override
     public String getProviderDescription() {
         return DESCRIPTION;
+    }
+
+    @Override
+    public ParticipantType getParticipantType() {
+        return ParticipantType.both;
+    }
+
+    @Override
+    public void setSampleLocation(URL sampleUrl, double[] coords) {
+        LargeVolumeViewerTopComponent lvv = 
+                LargeVolumeViewerTopComponent.findThisTopComponent();
+        if (! lvv.isOpened()) {
+            lvv.open();
+        }
+        if (lvv.isOpened()) {
+            lvv.requestActive();
+            viewer.setLocation(sampleUrl, coords);
+        }
+        else {
+            throw new IllegalStateException("Failed to open Large Volume Viewer.");
+        }
     }
 
 }

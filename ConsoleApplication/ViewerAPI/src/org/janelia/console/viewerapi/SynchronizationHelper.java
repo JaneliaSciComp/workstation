@@ -47,14 +47,37 @@ public class SynchronizationHelper {
      * @param excludedName do not return a provider by this name.  May be null.
      * @return all providers who wish to advertize their locations/samples.
      */
-    public Collection<Tiled3dSampleLocationProvider> getSampleLocationProviders(String excludedName) {
-        Lookup lookup = Lookups.forPath(Tiled3dSampleLocationProvider.LOOKUP_PATH);
-        Collection<? extends Tiled3dSampleLocationProvider> candidates = 
-                        lookup.lookupAll(Tiled3dSampleLocationProvider.class);
-        Collection<Tiled3dSampleLocationProvider> rtnVal = new ArrayList<>();
-        for ( Tiled3dSampleLocationProvider provider: candidates ) {
+    public Collection<Tiled3dSampleLocationProviderAcceptor> getSampleLocationProviders(String excludedName) {
+        Lookup lookup = Lookups.forPath(Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH);
+        Collection<? extends Tiled3dSampleLocationProviderAcceptor> candidates = 
+                        lookup.lookupAll(Tiled3dSampleLocationProviderAcceptor.class);
+        Collection<Tiled3dSampleLocationProviderAcceptor> rtnVal = new ArrayList<>();
+        for ( Tiled3dSampleLocationProviderAcceptor provider: candidates ) {
             if ( !provider.getProviderUniqueName().equals( excludedName ) ) {
                 rtnVal.add( provider );
+            }
+        }
+        return rtnVal;
+    }
+    
+    /**
+     * Obtain provider by name listed. Converse of 
+     * @See Collection<Tiled3dSampleLocationProviderAcceptor> #getSampleLocationProviders(String excludedName)
+     * 
+     * @param includedName ONLY return a provider by this name.  May NOT be null.
+     * @return all providers who wish to advertise their locations/samples.
+     */
+    public Tiled3dSampleLocationProviderAcceptor getSampleLocationProviderByName(String includedName) {
+        if (includedName == null) {
+            throw new IllegalArgumentException("Must provide non-null provider name");
+        }
+        Tiled3dSampleLocationProviderAcceptor rtnVal = null;
+        Lookup lookup = Lookups.forPath(Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH);
+        Collection<? extends Tiled3dSampleLocationProviderAcceptor> candidates = 
+                        lookup.lookupAll(Tiled3dSampleLocationProviderAcceptor.class);
+        for ( Tiled3dSampleLocationProviderAcceptor provider: candidates ) {
+            if ( provider.getProviderUniqueName().equals( includedName ) ) {
+                rtnVal = provider;
             }
         }
         return rtnVal;

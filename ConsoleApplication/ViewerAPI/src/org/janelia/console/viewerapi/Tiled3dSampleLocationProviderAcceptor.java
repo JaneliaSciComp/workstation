@@ -36,11 +36,19 @@ import java.net.URL;
  * 
  * @author fosterl
  */
-public interface Tiled3dSampleLocationProvider {
+public interface Tiled3dSampleLocationProviderAcceptor {
     public static final String LOOKUP_PATH = "Tiled3dSample/Location/Nodes";
-    /** @return where-at, in case reload required. */
+    public enum ParticipantType {
+        acceptor, provider, both
+    }
+    
+    ParticipantType getParticipantType();
+    
+    /** Only acceptor or both type should be called here. */
+    void setSampleLocation(URL sampleUrl, double[] coords);
+    /** Provider, or both-type: @return where-at, in case reload required. */
     URL getSampleUrl();
-    /** @return can set focus here. */
+    /** Provider, or both-type: @return can set focus here. */
     double[] getCoords();
     /** @return Unique across all impls. Answers: is this one me? */
     String getProviderUniqueName();
