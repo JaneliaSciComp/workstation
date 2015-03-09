@@ -815,6 +815,7 @@ implements GLActor
         }
 
         // loop over neurons and fill the arrays
+        neuronLineIndices.clear();
         for (Long neuronID: tempLineIndices.keySet()) {
             ByteBuffer lineBytes = ByteBuffer.allocateDirect(tempLineIndices.get(neuronID).size() * INT_BYTE_COUNT);
             lineBytes.order(ByteOrder.nativeOrder());
