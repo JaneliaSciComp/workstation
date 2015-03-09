@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.geometric_search;
+package org.janelia.it.workstation.gui.geometric_search.admin;
 
 import java.awt.BorderLayout;
 import java.awt.Font;
@@ -8,11 +8,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.swing.*;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 
 import org.janelia.it.jacs.compute.api.GeometricSearchBeanRemote;
@@ -24,7 +19,6 @@ import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicRow;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -6,6 +6,10 @@
 package org.janelia.it.workstation.gui.geometric_search;
 
 import java.awt.BorderLayout;
+
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.geometric_search.admin.GeometricSearchAdminPanel;
+import org.janelia.it.workstation.gui.geometric_search.search.GeometricSearchPanel;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -39,6 +43,7 @@ import org.openide.util.NbBundle.Messages;
 public final class GeometricSearchTopComponent extends TopComponent {
 
     GeometricSearchAdminPanel adminPanel;
+    GeometricSearchPanel searchPanel;
 
     public GeometricSearchTopComponent() {
         initComponents();
@@ -109,10 +114,11 @@ public final class GeometricSearchTopComponent extends TopComponent {
     private javax.swing.JTabbedPane geometricSearchTabPane;
     private javax.swing.JPanel searchTabPanel;
     // End of variables declaration//GEN-END:variables
+
     @Override
     public void componentOpened() {
-        adminTabPanel.setLayout( new BorderLayout() );
-        adminTabPanel.add( adminPanel, BorderLayout.CENTER );
+        ModelMgr.getModelMgr().registerOnEventBus(this);
+        initMyComponents();
     }
 
     @Override
@@ -131,4 +137,22 @@ public final class GeometricSearchTopComponent extends TopComponent {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
     }
+
+    private void initMyComponents() {
+        initAdmin();
+        initSearch();
+    }
+
+    private void initAdmin() {
+        adminTabPanel.setLayout( new BorderLayout() );
+        adminPanel=new GeometricSearchAdminPanel();
+        adminTabPanel.add( adminPanel, BorderLayout.CENTER );
+    }
+
+    private void initSearch() {
+        searchTabPanel.setLayout( new BorderLayout() );
+        searchPanel=new GeometricSearchPanel();
+        searchTabPanel.add( searchPanel, BorderLayout.CENTER );
+    }
+
 }
