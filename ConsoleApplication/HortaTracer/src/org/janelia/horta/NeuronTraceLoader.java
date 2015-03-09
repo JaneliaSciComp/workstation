@@ -113,7 +113,7 @@ public class NeuronTraceLoader {
      * @param xyz
      * @param vantage
      */
-    public void animateToFocusXyz(Vector3 xyz, Vantage vantage, int milliseconds) {
+    public boolean animateToFocusXyz(Vector3 xyz, Vantage vantage, int milliseconds) {
         Vector3 startPos = new Vector3(vantage.getFocusPosition());
         Vector3 endPos = new Vector3(xyz);
         long startTime = System.nanoTime();
@@ -150,6 +150,7 @@ public class NeuronTraceLoader {
             sceneWindow.getGLAutoDrawable().display();
             // sceneWindow.getInnerComponent().repaint();
         }
+        return didMove;
     }
 
     /**

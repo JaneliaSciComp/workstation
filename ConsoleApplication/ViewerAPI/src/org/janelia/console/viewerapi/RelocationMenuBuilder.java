@@ -92,21 +92,24 @@ public class RelocationMenuBuilder {
     }
 
     private class PushSampleLocationAction extends AbstractAction {
-        private ViewerLocationAcceptor acceptor;
-        private Tiled3dSampleLocationProviderAcceptor origin;
+        private ViewerLocationAcceptor locationAcceptor;
+        private Tiled3dSampleLocationProviderAcceptor locationProvider;
 
-        public PushSampleLocationAction(String description, Tiled3dSampleLocationProviderAcceptor acceptor, Tiled3dSampleLocationProviderAcceptor origin) {
+        public PushSampleLocationAction(String description, Tiled3dSampleLocationProviderAcceptor locationAcceptor, Tiled3dSampleLocationProviderAcceptor locationProvider) {
             super("Push location to " + description + " now");
-            this.acceptor = new DefaultViewerLocationAcceptor(acceptor, origin);  
-            this.origin = origin;
+            this.locationAcceptor = new DefaultViewerLocationAcceptor(locationAcceptor);  
+            this.locationProvider = locationProvider;
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            double[] focusCoords = origin.getCoords();
-            URL focusUrl = origin.getSampleUrl();
+            double[] focusCoords = locationProvider.getCoords();
+            URL focusUrl = locationProvider.getSampleUrl();
             try {
-                acceptor.acceptLocation(focusUrl, focusCoords);
+                locationAcceptor.acceptLocation(focusUrl, focusCoords);
+                if (focusCoords == null) {
+                    logger.info("Null Coords from " + locationProvider.getClass().getName() + ", sent to " + locationAcceptor.getClass().getName());
+                }
             } catch (Exception ioe) {
                 logger.severe(ioe.getMessage());
                 Exceptions.printStackTrace(ioe);
@@ -148,10 +151,8 @@ public class RelocationMenuBuilder {
     
     private class DefaultViewerLocationAcceptor implements ViewerLocationAcceptor {
         private Tiled3dSampleLocationProviderAcceptor provider;
-        private Tiled3dSampleLocationProviderAcceptor origin;
-        public DefaultViewerLocationAcceptor(Tiled3dSampleLocationProviderAcceptor provider, Tiled3dSampleLocationProviderAcceptor origin) {
+        public DefaultViewerLocationAcceptor(Tiled3dSampleLocationProviderAcceptor provider) {
             this.provider = provider;
-            this.origin = origin;
         }
 
         @Override

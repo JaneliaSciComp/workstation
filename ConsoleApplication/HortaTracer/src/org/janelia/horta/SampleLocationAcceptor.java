@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
@@ -88,14 +89,19 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 // Now, position this component over other component's
             // focus.
             if (focusCoords != null) {
-                Vantage v = sceneWindow.getVantage();
+                PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();                
+                Vantage v = pCam.getVantage();
+                //Vantage v = sceneWindow.getVantage();
                 Vector3 focusVector3 = new Vector3(
                         (float) focusCoords[0],
                         (float) focusCoords[1],
                         (float) focusCoords[2]
                 );
-                loader.animateToFocusXyz(focusVector3, v, 150);
-                    //                    v.setFocusPosition(focusVector3);
+                if (! loader.animateToFocusXyz(focusVector3, v, 150) ) {
+                    logger.warn("Did not change focus as directed.");
+                }
+                logger.info("Set focus to " + focusVector3);
+                //                    v.setFocusPosition(focusVector3);
                 //                    v.notifyObservers();
             } else {
                 logger.info("No focus coords provided.");
