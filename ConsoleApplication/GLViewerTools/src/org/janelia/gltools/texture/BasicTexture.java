@@ -40,7 +40,7 @@ import java.util.Set;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GL3;
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.janelia.gltools.GL3Resource;
 
 /**
