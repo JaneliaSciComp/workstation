@@ -343,9 +343,9 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     @Override
-    public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, InputStream loaderYamlStream) throws IOException {
+    public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, InputStream loaderYamlStream, boolean loadExample) throws IOException {
         volumeSource = new MouseLightYamlBrickSource(sourceYamlStream);
-        loader.loadYamlFile(loaderYamlStream);
+        loader.loadYamlFile(loaderYamlStream, loadExample);
         return volumeSource;
     }
 
@@ -701,7 +701,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         InputStream loaderYamlStream = new FileInputStream(f);
                         currentSource = f.toURI().toURL().toString();
 
-                        loadYaml(sourceYamlStream, loader, loaderYamlStream);                        
+                        loadYaml(sourceYamlStream, loader, loaderYamlStream, true);                        
 //                        sourceYamlStream.close();             
 //                        loaderYamlStream.close();
                     }

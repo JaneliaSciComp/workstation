@@ -144,10 +144,10 @@ public class LargeVolumeViewViewer extends JPanel {
     }
     
     public double[] getCoords() {
+        double[] rtnVal = null;
         if (viewUI != null)
-            return viewUI.getCoords();
-        else
-            return null;
+            rtnVal = viewUI.getCoords();
+        return rtnVal;
     }
     
     public void setLocation(URL sampleUrl, double[] coords) {

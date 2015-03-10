@@ -83,29 +83,35 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 URL yamlUrl = yamlUri.toURL();
                 InputStream stream1 = yamlUrl.openStream();
                 InputStream stream2 = yamlUrl.openStream();
-                volumeSource = yamlLoader.loadYaml(stream1, loader, stream2);
+                volumeSource = yamlLoader.loadYaml(stream1, loader, stream2, false);
             }
 
-                // Now, position this component over other component's
+            // Now, position this component over other component's
             // focus.
-            if (focusCoords != null) {
-                PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();                
-                Vantage v = pCam.getVantage();
+            Vector3 focusVector3 = null;
+            PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+            Vantage v = pCam.getVantage();
+            if (focusCoords == null) {
+                logger.info("No focus coords provided.");
+                focusVector3 = sceneWindow.getCamera().getVantage().getFocusPosition();
+            }
+            else {
                 //Vantage v = sceneWindow.getVantage();
-                Vector3 focusVector3 = new Vector3(
+                focusVector3 = new Vector3(
                         (float) focusCoords[0],
                         (float) focusCoords[1],
                         (float) focusCoords[2]
                 );
-                if (! loader.animateToFocusXyz(focusVector3, v, 150) ) {
-                    logger.warn("Did not change focus as directed.");
-                }
-                logger.info("Set focus to " + focusVector3);
-                //                    v.setFocusPosition(focusVector3);
-                //                    v.notifyObservers();
-            } else {
-                logger.info("No focus coords provided.");
             }
+//            if (!loader.animateToFocusXyz(focusVector3, v, 150)) {
+//                logger.warn("Did not change focus as directed.");
+//            }
+            if (!v.setFocusPosition(focusVector3)) {
+                logger.warn("Did not change focus as directed.");
+            }
+            v.setDefaultFocus(focusVector3);
+            logger.info("Set focus, default focus, to " + focusVector3);
+            v.notifyObservers();
 
             // Load up the tile.
             loader.loadTileAtCurrentFocus(volumeSource);
