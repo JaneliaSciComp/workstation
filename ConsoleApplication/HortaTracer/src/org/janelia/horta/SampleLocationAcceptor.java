@@ -118,6 +118,13 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             }
             v.setDefaultFocus(focusVector3);
             logger.info("Set focus, default focus, to " + focusVector3);
+            
+            double zoom = sampleLocation.getMicrometersPerWindowHeight();
+            if (zoom > 0) {
+                v.setSceneUnitsPerViewportHeight((float)zoom);
+                logger.info("Set micrometers per view height to " + zoom);
+            }
+
             v.notifyObservers();
 
             // Load up the tile.
