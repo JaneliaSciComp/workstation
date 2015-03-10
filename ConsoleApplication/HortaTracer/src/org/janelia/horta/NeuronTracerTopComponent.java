@@ -78,6 +78,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
+import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
@@ -256,18 +257,18 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new URI(currentSource).toURL();
     }
     
-    public void setLocation(URL url, double[] coords) {
+    public void setSampleLocation(SampleLocation sampleLocation) {
         try {
             ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
                     currentSource, loader, NeuronTracerTopComponent.this, sceneWindow, volumeSource
             );
-            acceptor.acceptLocation(url, coords);
-            currentSource = url.toString();
+            acceptor.acceptLocation(sampleLocation);
+            currentSource = sampleLocation.getSampleUrl().toString();
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
             throw new RuntimeException(
-                    "Failed to load location " + url.toString() + ", " +
-                    coords[0] + "," + coords[1] + "," + coords[2]
+                    "Failed to load location " + sampleLocation.getSampleUrl().toString() + ", " +
+                    sampleLocation.getFocusXUm() + "," + sampleLocation.getFocusYUm() + "," + sampleLocation.getFocusZUm()
             );
         }
     }

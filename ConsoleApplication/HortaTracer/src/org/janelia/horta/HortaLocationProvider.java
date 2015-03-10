@@ -29,8 +29,13 @@
  */
 package org.janelia.horta;
 
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import org.janelia.console.viewerapi.BasicSampleLocation;
+import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
+import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,34 +53,24 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProviderAccep
     private final Logger logger = LoggerFactory.getLogger(HortaLocationProvider.class);
     
     @Override
-    public URL getSampleUrl() {
-        URL rtnVal = null;
+    public SampleLocation getSampleLocation() {
         NeuronTracerTopComponent nttc = getNeuronTracer();
-        if (nttc != null) {
-            try {
-                rtnVal = nttc.getCurrentSourceURL();
-            } catch (Exception ex) {
-                logger.error(ex.getMessage());
-                ex.printStackTrace();
-            }            
-        }
-        else {
+        if (nttc == null) {
             logger.info("No neuron tracer component found.");
+            return null;
         }
-        return rtnVal;
-    }
-
-    @Override
-    public double[] getCoords() {
-        double[] rtnVal = null;
-        NeuronTracerTopComponent nttc = getNeuronTracer();
-        if (nttc != null) {
-            rtnVal = nttc.getStageLocation();
+        BasicSampleLocation result = new BasicSampleLocation();
+        URL url = null;
+        try {
+            url = nttc.getCurrentSourceURL();
+        } catch (Exception ex) {
+            logger.error(ex.getMessage());
+            Exceptions.printStackTrace(ex);
         }
-        else {
-            logger.info("No neuron tracer component found.");
-        }
-        return rtnVal;
+        result.setSampleUrl(url);
+        double[] focus = nttc.getStageLocation();
+        result.setFocusUm(focus[0], focus[1], focus[2]);
+        return result;
     }
 
     @Override
@@ -98,7 +93,7 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProviderAccep
     }
 
     @Override
-    public void setSampleLocation(URL sampleUrl, double[] coords) {
+    public void setSampleLocation(SampleLocation sampleLocation) {
         NeuronTracerTopComponent nttc = getNeuronTracer();
         if (nttc == null) {
             throw new IllegalStateException("Failed to find Neuron Tracer.");
@@ -109,7 +104,7 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProviderAccep
         if (nttc.isOpened()) {
             nttc.requestActive();
             try {
-                nttc.setLocation(sampleUrl, coords);
+                nttc.setSampleLocation(sampleLocation);
             } catch (Exception ex) {
                 logger.error(ex.getMessage());
                 ex.printStackTrace();

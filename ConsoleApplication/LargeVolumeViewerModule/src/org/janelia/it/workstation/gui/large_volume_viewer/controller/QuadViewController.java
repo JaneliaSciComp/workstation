@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.swing.JComponent;
+import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
@@ -273,9 +274,12 @@ public class QuadViewController implements ViewStateListener {
     private class QuadViewLocationAcceptor implements ViewerLocationAcceptor {
 
         @Override
-        public void acceptLocation(URL url, double[] coords) throws Exception {            
-            Vec3 newFocus = new Vec3( coords[0], coords[1], coords[2] );
-            ui.loadRender(url);
+        public void acceptLocation(SampleLocation sampleLocation) throws Exception {            
+            Vec3 newFocus = new Vec3( 
+                    sampleLocation.getFocusXUm(),
+                    sampleLocation.getFocusYUm(),
+                    sampleLocation.getFocusZUm() );
+            ui.loadRender(sampleLocation.getSampleUrl());
             ui.focusChanged(newFocus);
         }
         

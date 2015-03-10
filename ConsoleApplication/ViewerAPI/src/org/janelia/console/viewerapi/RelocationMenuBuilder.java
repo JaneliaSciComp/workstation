@@ -103,10 +103,14 @@ public class RelocationMenuBuilder {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            double[] focusCoords = locationProvider.getCoords();
-            URL focusUrl = locationProvider.getSampleUrl();
+            SampleLocation sampleLocation = locationProvider.getSampleLocation();
+            double[] focusCoords = new double[] {
+                sampleLocation.getFocusXUm(),
+                sampleLocation.getFocusYUm(),
+                sampleLocation.getFocusZUm()
+            };
             try {
-                locationAcceptor.acceptLocation(focusUrl, focusCoords);
+                locationAcceptor.acceptLocation(sampleLocation);
                 if (focusCoords == null) {
                     logger.info("Null Coords from " + locationProvider.getClass().getName() + ", sent to " + locationAcceptor.getClass().getName());
                 }
@@ -134,10 +138,14 @@ public class RelocationMenuBuilder {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            double[] focusCoords = provider.getCoords();
-            URL focusUrl = provider.getSampleUrl();
-            try {
-                acceptor.acceptLocation(focusUrl, focusCoords);
+            SampleLocation sampleLocation = provider.getSampleLocation();
+            double[] focusCoords = new double[] {
+                sampleLocation.getFocusXUm(),
+                sampleLocation.getFocusYUm(),
+                sampleLocation.getFocusZUm()
+            };
+           try {
+                acceptor.acceptLocation(sampleLocation);
             } catch (Exception ioe) {
                 logger.severe(ioe.getMessage());
                 Exceptions.printStackTrace(ioe);
@@ -156,8 +164,8 @@ public class RelocationMenuBuilder {
         }
 
         @Override
-        public void acceptLocation(URL url, double[] coords) throws Exception {
-            provider.setSampleLocation(url, coords);
+        public void acceptLocation(SampleLocation sampleLocation) throws Exception {
+            provider.setSampleLocation(sampleLocation);
         }        
     }
     

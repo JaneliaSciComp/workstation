@@ -43,7 +43,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Vector;
 import java.util.List;
+import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
+import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
@@ -1237,6 +1239,18 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         this.wsCloseListener = wsCloseListener;
     }
 
+    public SampleLocation getSampleLocation() {
+        BasicSampleLocation result = new BasicSampleLocation();
+        result.setSampleUrl(loadedUrl);
+        final Vec3 focus = camera.getFocus();
+        result.setFocusUm(focus.getX(), focus.getY(), focus.getZ());
+        TileConsumer viewer = allSliceViewers.get(0);
+        result.setMicrometersPerWindowHeight(
+                viewer.getViewport().getHeight()
+                / camera.getPixelsPerSceneUnit());
+        return result;
+    }
+    
     /**
      * @return the loadedUrl
      */
@@ -1249,16 +1263,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
      */
     public void setLoadedUrl(URL loadedUrl) {
         this.loadedUrl = loadedUrl;
-    }
-    
-    public double[] getCoords() {
-        final Vec3 focus = camera.getFocus();
-        double[] rtnVal = new double[] {
-            focus.getX(),
-            focus.getY(),
-            focus.getZ()
-        };
-        return rtnVal;
     }
 
     static class LoadStatusLabel extends JLabel {

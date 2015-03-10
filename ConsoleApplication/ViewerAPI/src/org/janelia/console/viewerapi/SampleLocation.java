@@ -39,7 +39,7 @@ import java.net.URL;
 public interface SampleLocation
 {
     URL getSampleUrl();
-    void setSampleUrl();
+    void setSampleUrl(URL url);
 
     double getFocusXUm();
     double getFocusYUm();
@@ -47,5 +47,5 @@ public interface SampleLocation
     void setFocusUm(double x, double y, double z);
     
     double getMicrometersPerWindowHeight();
-    void setMicrometersPerWindowHeight();
+    void setMicrometersPerWindowHeight(double zoom);
 }

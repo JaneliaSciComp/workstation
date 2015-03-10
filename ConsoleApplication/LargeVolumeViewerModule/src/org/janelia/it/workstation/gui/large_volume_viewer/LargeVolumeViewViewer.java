@@ -16,6 +16,7 @@ import java.awt.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.Callable;
+import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
@@ -136,22 +137,12 @@ public class LargeVolumeViewViewer extends JPanel {
 		return slcRootedEntity;
 	}
     
-    public URL getSampleUrl() {
-        if (viewUI == null)
-            return null;
-        else
-            return viewUI.getLoadedUrl();
+    public SampleLocation getSampleLocation() {
+        return viewUI.getSampleLocation();
     }
     
-    public double[] getCoords() {
-        double[] rtnVal = null;
-        if (viewUI != null)
-            rtnVal = viewUI.getCoords();
-        return rtnVal;
-    }
-    
-    public void setLocation(URL sampleUrl, double[] coords) {
-        viewUI.loadRender(sampleUrl);
+    public void setLocation(SampleLocation sampleLocation) {
+        viewUI.loadRender(sampleLocation.getSampleUrl());
     }
 	
     public void close() {

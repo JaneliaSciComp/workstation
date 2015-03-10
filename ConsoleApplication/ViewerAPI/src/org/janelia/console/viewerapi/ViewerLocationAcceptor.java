@@ -35,5 +35,5 @@ import java.net.URL;
  * @author fosterl
  */
 public interface ViewerLocationAcceptor {
-    void acceptLocation(URL url, double[] coords) throws Exception;
+    void acceptLocation(SampleLocation sampleLocation) throws Exception;
 }

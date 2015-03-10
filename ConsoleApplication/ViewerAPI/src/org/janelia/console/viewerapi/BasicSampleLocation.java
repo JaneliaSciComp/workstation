@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
  * Copyright (c) 2014, Howard Hughes Medical Institute, All rights reserved.
@@ -27,29 +27,90 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package org.janelia.console.viewerapi;
 
 import java.net.URL;
 
 /**
- * Implement this to become a provider of focusable location.
- * 
- * @author fosterl
+ *
+ * @author Christopher Bruns
  */
-public interface Tiled3dSampleLocationProviderAcceptor {
-    public static final String LOOKUP_PATH = "Tiled3dSample/Location/Nodes";
-    public enum ParticipantType {
-        acceptor, provider, both
+public class BasicSampleLocation implements SampleLocation
+{
+    private URL sampleUrl = null;
+    private double focusXUm = 0;
+    private double focusYUm = 0;
+    private double focusZUm = 0;
+    private double micrometersPerWindowHeight = 100;
+
+    public BasicSampleLocation()
+    {
     }
-    
-    ParticipantType getParticipantType();
-    
-    /** Only acceptor or both type should be called here. */
-    void setSampleLocation(SampleLocation location);
-    /** Provider, or both-type: @return where-at, in case reload required. */
-    SampleLocation getSampleLocation();
-    /** @return Unique across all impls. Answers: is this one me? */
-    String getProviderUniqueName();
-    /** @return Shown to user.  Menu item? */
-    String getProviderDescription();
+
+    @Override
+    public URL getSampleUrl()
+    {
+        return sampleUrl;
+    }
+
+    @Override
+    public void setSampleUrl(URL sampleUrl)
+    {
+        this.sampleUrl = sampleUrl;
+    }
+
+    @Override
+    public double getFocusXUm()
+    {
+        return focusXUm;
+    }
+
+    public void setFocusXUm(double focusXUm)
+    {
+        this.focusXUm = focusXUm;
+    }
+
+    @Override
+    public double getFocusYUm()
+    {
+        return focusYUm;
+    }
+
+    public void setFocusYUm(double focusYUm)
+    {
+        this.focusYUm = focusYUm;
+    }
+
+    @Override
+    public double getFocusZUm()
+    {
+        return focusZUm;
+    }
+
+    public void setFocusZUm(double focusZUm)
+    {
+        this.focusZUm = focusZUm;
+    }
+
+    @Override
+    public double getMicrometersPerWindowHeight()
+    {
+        return micrometersPerWindowHeight;
+    }
+
+    @Override
+    public void setMicrometersPerWindowHeight(double micrometersPerWindowHeight)
+    {
+        this.micrometersPerWindowHeight = micrometersPerWindowHeight;
+    }
+
+    @Override
+    public void setFocusUm(double x, double y, double z)
+    {
+        setFocusXUm(x);
+        setFocusYUm(y);
+        setFocusZUm(z);
+    }
+
 }
