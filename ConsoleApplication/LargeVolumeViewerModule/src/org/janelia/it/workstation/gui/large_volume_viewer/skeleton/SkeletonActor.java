@@ -27,6 +27,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
@@ -176,6 +177,7 @@ implements GLActor
                         neuronVertices.get(neuronID), GL.GL_DYNAMIC_DRAW);
                 verticesNeedCopy = false;
 
+                // same color array as for vertices (anchors)
                 neuronColors.get(neuronID).rewind();
                 gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colorBo);
                 gl.glBufferData(GL.GL_ARRAY_BUFFER,
@@ -216,9 +218,12 @@ implements GLActor
                     neuronLineIndices.get(neuronID).capacity(),
                     GL2.GL_UNSIGNED_INT,
                     0L);
-            // narrower white line
+            // narrower colored line
             gl.glLineWidth(1.5f);
-            lineShader.setUniform3v(gl, "baseColor", 1, neuronColor);
+            // new, not final: get color from neuron ID
+            lineShader.setUniform3v(gl, "baseColor", 1, NeuronStyle.getStyleForNeuron(neuronID).getColorAsFloats());
+            // old:
+            //lineShader.setUniform3v(gl, "baseColor", 1, neuronColor);
             gl.glDrawElements(GL2.GL_LINES,
                     neuronLineIndices.get(neuronID).capacity(),
                     GL2.GL_UNSIGNED_INT,
@@ -513,7 +518,10 @@ implements GLActor
             gl.glLineWidth(3.0f);
             for (TracedPathActor segment : neuronTracedSegments.get(neuronID).values()) {
                 // neuron colored foreground
-                lineShader.setUniform3v(gl2gl3, "baseColor", 1, neuronColor);
+                // new, not final
+                lineShader.setUniform3v(gl2gl3, "baseColor", 1, NeuronStyle.getStyleForNeuron(neuronID).getColorAsFloats());
+                // old
+                //lineShader.setUniform3v(gl2gl3, "baseColor", 1, neuronColor);
                 segment.display(glDrawable);
             }
         }
@@ -682,10 +690,17 @@ implements GLActor
             neuronVertices.get(neuronID).put((float) xyz.getX());
             neuronVertices.get(neuronID).put((float) xyz.getY());
             neuronVertices.get(neuronID).put((float) xyz.getZ());
+            // new, not in final form:
+            neuronColors.get(neuronID).put(NeuronStyle.getStyleForNeuron(neuronID).getRedAsFloat());
+            neuronColors.get(neuronID).put(NeuronStyle.getStyleForNeuron(neuronID).getGreenAsFloat());
+            neuronColors.get(neuronID).put(NeuronStyle.getStyleForNeuron(neuronID).getBlueAsFloat());
+            /*
+            // old:
             // colors in RGB order
             neuronColors.get(neuronID).put(neuronColor[0]);
             neuronColors.get(neuronID).put(neuronColor[1]);
             neuronColors.get(neuronID).put(neuronColor[2]);
+            /*
             /*
             // test: make anchors cycle colors:
             float temp = neuronColor[0];
