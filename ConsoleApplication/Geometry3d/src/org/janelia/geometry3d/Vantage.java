@@ -144,8 +144,6 @@ implements CompositeObject3d, ObservableInterface
         this.focusPosition.copy(focusPosition);
         changeObservable.setChanged();
         // System.out.println("New Vantage focus = "+focusPosition);
-System.out.println("Focus was set to " + focusPosition + ".  Dumping stack from Vantage.java");
-Thread.dumpStack();
         return true;
     }
     
