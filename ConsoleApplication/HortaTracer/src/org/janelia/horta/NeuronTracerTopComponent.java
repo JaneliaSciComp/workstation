@@ -54,7 +54,6 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -70,18 +69,13 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.geometry.util.PerformanceTimer;
-import org.janelia.horta.volume.BrickInfo;
-import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.MouseLightYamlBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.geometry3d.AbstractCamera;
@@ -116,7 +110,6 @@ import org.openide.awt.StatusDisplayer;
 import org.openide.util.Exceptions;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.RequestProcessor;
 import org.openide.util.lookup.Lookups;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
@@ -142,8 +135,8 @@ import org.slf4j.LoggerFactory;
         preferredID = NeuronTracerTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_NeuronTracerAction=Horta Tracer",
-    "CTL_NeuronTracerTopComponent=Horta Tracer",
+    "CTL_NeuronTracerAction=Horta 3D",
+    "CTL_NeuronTracerTopComponent=Horta 3D",
     "HINT_NeuronTracerTopComponent=Horta Neuron Tracer window"
 })
 public final class NeuronTracerTopComponent extends TopComponent
