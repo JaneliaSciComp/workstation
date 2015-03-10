@@ -7,9 +7,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.KeyListener;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
@@ -32,8 +30,7 @@ implements MouseMode, KeyListener
 {
 	private Skeleton skeleton;
 	private SkeletonActor skeletonActor;
-	private int currentHover = -1;
-	// private Anchor hoverAnchor = null;
+	private Anchor hoverAnchor = null;
 	private Vec3 popupXyz = null;
 	// Sometimes users move an anchor with the mouse
 	private Anchor dragAnchor = null;
@@ -97,22 +94,22 @@ implements MouseMode, KeyListener
 		// But this will have to do for double clicking...
 		// Double click to center; on anchor or on slice point
 		if (event.getClickCount() == 2) {
-            if (currentHover >= 0) {
-                Anchor hoverAnchor = skeletonActor.getAnchorAtIndex(currentHover);
-                if (hoverAnchor != null) {
-                    camera.setFocus(hoverAnchor.getLocation());
-                    skeleton.getHistory().push(hoverAnchor);
+            if (hoverAnchor != null) {
+                camera.setFocus(hoverAnchor.getLocation());
+                skeleton.getHistory().push(hoverAnchor);
                 }
-                else {
-                    Logger logger = LoggerFactory.getLogger(TraceMode.class);
-                    logger.error("No anchor found at index " + currentHover);
+            else {
+                // not clear how this would happen?  in old world,
+                //  if hover index doesn't lead to an anchor, it would,
+                //  but not, not sure it's possible?
+                Logger logger = LoggerFactory.getLogger(TraceMode.class);
+                logger.error("problem finding anchor in mouseClicked");
                 }
             }
-            else {
-				// center on slice point
-				camera.setFocus(worldFromPixel(event.getPoint()));
-			}
-		}
+        else {
+            // center on slice point
+            camera.setFocus(worldFromPixel(event.getPoint()));
+        }
 	}
 	
 	private void appendAnchor(Vec3 xyz) {
@@ -135,10 +132,8 @@ implements MouseMode, KeyListener
 			appendAnchor(xyz);
 		}
 		else if (event.getButton() == MouseEvent.BUTTON1) {
-			if (currentHover >= 0) {
-				Anchor anchor = skeletonActor.getAnchorAtIndex(currentHover);
-				skeletonActor.setNextParent(anchor);
-				// System.out.println("select parent anchor "+currentHover);
+			if (hoverAnchor != null) {
+				skeletonActor.setNextParent(hoverAnchor);
 			}
 		}
 	}
@@ -196,16 +191,13 @@ implements MouseMode, KeyListener
 			minDist2 = d2;
 			closest = a;
 		}
-		int ix = -1;
-		if ((closest != null) && (skeletonActor != null))
-			ix = skeletonActor.getIndexForAnchor(closest);
-		if (ix != currentHover) {
-			if (ix >= 0) {
-				// System.out.println("Hover anchor "+ix);
-			}
-			currentHover = ix;
-			skeletonActor.setHoverAnchorIndex(ix);
+
+        // closest == null means you're not on an anchor anymore
+		if ((skeletonActor != null) && closest != hoverAnchor) {
+			hoverAnchor = closest;
+			skeletonActor.setHoverAnchor(hoverAnchor);
 		}
+
 		checkShiftPlusCursor(event);
 	}
 
@@ -216,12 +208,12 @@ implements MouseMode, KeyListener
 		if (event.getButton() == MouseEvent.BUTTON1) 
 		{
 			// start dragging anchor position
-			if (currentHover < 0) {
+			if (hoverAnchor == null) {
 				dragAnchor = null;
 				dragStart = null;
 			}
 			else {
-				dragAnchor = skeletonActor.getAnchorAtIndex(currentHover);
+				dragAnchor = hoverAnchor;
 				dragStart = event.getPoint();
 			}
 		}
@@ -286,9 +278,7 @@ implements MouseMode, KeyListener
 	}
 
 	private Anchor getHoverAnchor() {
-        if (currentHover >= 0)
-            return skeletonActor.getAnchorAtIndex(currentHover);
-		return null;
+        return hoverAnchor;
 	}
 	
 	@Override
@@ -489,7 +479,7 @@ implements MouseMode, KeyListener
 	}
 
 	private void checkShiftPlusCursor(InputEvent event) {
-		if (currentHover >= 0) // no adding points while hovering over another point
+		if (hoverAnchor != null) // no adding points while hovering over another point
 			checkCursor(penCursor);
 		else if (event.isShiftDown()) // display addable cursor
 			checkCursor(penPlusCursor);

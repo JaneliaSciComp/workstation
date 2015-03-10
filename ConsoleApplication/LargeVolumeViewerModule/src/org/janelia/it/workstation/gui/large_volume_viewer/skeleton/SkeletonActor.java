@@ -62,7 +62,6 @@ implements GLActor
 	private static final int INT_BYTE_COUNT = 4;
 	private static final int COLOR_FLOAT_COUNT = 3;
 
-	private int hoverAnchorIndex = -1;
 	private boolean bIsGlInitialized = false;
 	
 	private int vertexCount = 3;
@@ -110,7 +109,11 @@ implements GLActor
 	private Camera3d camera;
 	private float zThicknessInPixels = 100;
 	//
-	private Anchor nextParent = null;
+    // old, being phased out:
+    private int hoverAnchorIndex = -1;
+    // new: save the anchor instead of its index:
+    private Anchor hoverAnchor = null;
+    private Anchor nextParent = null;
 	//
     private boolean bIsVisible = true;
     
@@ -373,6 +376,21 @@ implements GLActor
         } else {
             // new: per-neuron
             for (Long neuronID: neuronVertices.keySet()) {
+                // setup per-neuron anchor shader settings (used to be in setupAnchorShader)
+                int tempIndex;
+                if (hoverAnchor != null && hoverAnchor.getNeuronID() == neuronID) {
+                    tempIndex = getIndexForAnchorPerNeuron(hoverAnchor);
+                } else {
+                    tempIndex = -1;
+                }
+                anchorShader.setUniform(gl, "highlightAnchorIndex", tempIndex);
+                if (nextParent != null && nextParent.getNeuronID() == neuronID) {
+                    tempIndex = getIndexForAnchorPerNeuron(nextParent);
+                } else {
+                    tempIndex = -1;
+                }
+                anchorShader.setUniform(gl, "parentAnchorIndex", tempIndex);
+
                 // TODO - crashes unless glBufferData called every time.
                 // if (verticesNeedCopy) {
                 if (true) {
@@ -1131,6 +1149,16 @@ implements GLActor
     	// log.info("tracedSegments.size() [629] = "+tracedSegments.size());
 	}
 
+    // new; replaces setHoverAnchorIndex
+    public synchronized  void setHoverAnchor(Anchor anchor) {
+        if (anchor == hoverAnchor) {
+            return;
+        }
+        hoverAnchor = anchor;
+        skeletonActorChangedSignal.emit();
+    }
+
+    // old, being phased out
 	public synchronized void setHoverAnchorIndex(int ix) {
 		if (ix == hoverAnchorIndex) 
 			return;
@@ -1187,7 +1215,7 @@ implements GLActor
 			return;
 		int offset = index * VERTEX_FLOAT_COUNT;
 		for (int i = 0; i < 3; ++i) {
-            neuronVertices.get(dragAnchor.getNeuronID()).put( offset+i, (float)(double)location.get(i) );
+            neuronVertices.get(dragAnchor.getNeuronID()).put(offset+i, (float)(double)location.get(i) );
 		}
 
         // old, not per-neuron:
