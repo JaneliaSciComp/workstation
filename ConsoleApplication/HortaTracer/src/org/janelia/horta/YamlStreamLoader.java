@@ -39,5 +39,5 @@ import org.janelia.horta.volume.StaticVolumeBrickSource;
  * @author fosterl
  */
 public interface YamlStreamLoader {
-    StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, InputStream loaderYamlStream) throws IOException;
+    StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, InputStream loaderYamlStream, boolean loadExample) throws IOException;
 }

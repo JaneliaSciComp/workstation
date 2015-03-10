@@ -76,7 +76,11 @@ public class NeuronTraceLoader {
         this.tracingInteractor = tracingInteractor;
     }
     
-    public void loadYamlFile(final InputStream yamlStream) throws IOException {
+    public void loadYamlFile(InputStream yamlStream) throws IOException {
+        loadYamlFile(yamlStream, true);
+    }
+    
+    public void loadYamlFile(final InputStream yamlStream, final boolean loadExample) throws IOException {
         Runnable task = new Runnable() {
             @Override
             public void run() {
@@ -94,11 +98,13 @@ public class NeuronTraceLoader {
                 progress.progress("YAML tile information loaded");
                 logger.info("yaml load took " + timer.reportMsAndRestart() + " ms");
                 // TODO remove this testing hack
-                if (! loadExampleTile(tileList, progress)) {
-                    RuntimeException re = new RuntimeException(FAILED_TO_LOAD_EXAMPLE_TILE_MSG);
-                    handleException(re);
+                if (loadExample) {
+                    if (!loadExampleTile(tileList, progress)) {
+                        RuntimeException re = new RuntimeException(FAILED_TO_LOAD_EXAMPLE_TILE_MSG);
+                        handleException(re);
+                    }
+                    progress.progress("Example tile loaded");
                 }
-                progress.progress("Example tile loaded");
 
                 progress.finish();
             }

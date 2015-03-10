@@ -146,7 +146,7 @@ public class LargeVolumeViewViewer extends JPanel {
     public double[] getCoords() {
         double[] rtnVal = null;
         if (viewUI != null)
-            viewUI.getCoords();
+            rtnVal = viewUI.getCoords();
         return rtnVal;
     }
     
