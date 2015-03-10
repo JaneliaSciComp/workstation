@@ -76,7 +76,7 @@ public abstract class BasicTexture implements GL3Resource
     protected boolean useImmutableTexture = false;
     
     protected boolean needsUpload = false;
-    protected boolean reclaimRamAfterUpload = true;
+    protected boolean reclaimRamAfterUpload = false;
     
     protected void copyParameters(BasicTexture rhs) {
         mipMapLevel = rhs.mipMapLevel;
