@@ -23,9 +23,9 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
     Mip3d mip3d;
 
 
-    /** Call this for refresh time. */
+    @Override
     public void refresh() {
-        logger.info("refresh()");
+        logger.info("*** refresh()");
 
         if ( mip3d == null ) {
             logger.warn("Have to create a new mip3d on refresh.");
@@ -37,11 +37,12 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
     @Override
     public void totalRefresh() {
+        logger.info("*** totalRefresh()");
         refresh();
     }
 
     private void createMip3d() {
-        logger.info("createMip3d()");
+        logger.info("*** createMip3d()");
         if ( mip3d != null ) {
             mip3d.releaseMenuActions();
         }
@@ -51,12 +52,14 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
     }
 
     public void displayReady() {
+        logger.info("*** displayReady()");
+        createMip3d();
+        mip3d.addActor(new TestBlueTileActor());
         mip3d.refresh();
-        removeAll();
         add(mip3d, BorderLayout.CENTER);
         mip3d.resetView();
-        mip3d.setResetFirstRedraw( true );
+        mip3d.setResetFirstRedraw(true);
+        logger.info("*** displayReady() done");
     }
-
 
 }

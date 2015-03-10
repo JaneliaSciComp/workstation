@@ -51,6 +51,7 @@ public final class GeometricSearchTopComponent extends TopComponent {
     GeometricSearchPanel searchPanel;
 
     public GeometricSearchTopComponent() {
+        logger.info("GeometricSearchTopComponent()");
         initComponents();
         adminPanel=new GeometricSearchAdminPanel();
         setName(Bundle.CTL_GeometricSearchTopComponent());
@@ -122,6 +123,7 @@ public final class GeometricSearchTopComponent extends TopComponent {
 
     @Override
     public void componentOpened() {
+        logger.info("componentOpened()");
         ModelMgr.getModelMgr().registerOnEventBus(this);
         initMyComponents();
     }
@@ -159,6 +161,7 @@ public final class GeometricSearchTopComponent extends TopComponent {
         searchTabPanel.setLayout( new BorderLayout() );
         searchPanel=new GeometricSearchPanel();
         searchTabPanel.add( searchPanel, BorderLayout.CENTER );
+        searchPanel.displayReady();
     }
 
 }
