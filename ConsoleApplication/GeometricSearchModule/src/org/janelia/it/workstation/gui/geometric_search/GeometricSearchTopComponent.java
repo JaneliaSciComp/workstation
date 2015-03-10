@@ -15,6 +15,8 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
@@ -41,6 +43,9 @@ import org.openide.util.NbBundle.Messages;
     "HINT_GeometricSearchTopComponent=This is a Geometric Search window"
 })
 public final class GeometricSearchTopComponent extends TopComponent {
+
+    private Logger logger = LoggerFactory.getLogger(GeometricSearchTopComponent.class);
+
 
     GeometricSearchAdminPanel adminPanel;
     GeometricSearchPanel searchPanel;
@@ -150,6 +155,7 @@ public final class GeometricSearchTopComponent extends TopComponent {
     }
 
     private void initSearch() {
+        logger.info("initSearch()");
         searchTabPanel.setLayout( new BorderLayout() );
         searchPanel=new GeometricSearchPanel();
         searchTabPanel.add( searchPanel, BorderLayout.CENTER );
