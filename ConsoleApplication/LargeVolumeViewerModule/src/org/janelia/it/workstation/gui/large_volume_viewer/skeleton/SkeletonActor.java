@@ -1180,13 +1180,25 @@ implements GLActor
 	public void lightweightPlaceAnchor(Anchor dragAnchor, Vec3 location) {
 		if (dragAnchor == null)
 			return;
-		int index = getIndexForAnchor(dragAnchor);
+
+        // new, per-neuron
+		int index = getIndexForAnchorPerNeuron(dragAnchor);
 		if (index < 0)
 			return;
 		int offset = index * VERTEX_FLOAT_COUNT;
 		for (int i = 0; i < 3; ++i) {
+            neuronVertices.get(dragAnchor.getNeuronID()).put( offset+i, (float)(double)location.get(i) );
+		}
+
+        // old, not per-neuron:
+		index = getIndexForAnchor(dragAnchor);
+		if (index < 0)
+			return;
+		offset = index * VERTEX_FLOAT_COUNT;
+		for (int i = 0; i < 3; ++i) {
 			vertices.put( offset+i, (float)(double)location.get(i) );
 		}
+
 		skeletonActorChangedSignal.emit();
 	}
 
