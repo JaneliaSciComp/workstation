@@ -57,6 +57,9 @@ public class YamlFileRunnable implements Runnable {
                     new MouseLightYamlBrickSource(yamlStream);
             int tileCount = 0;
             for (Double res : volumeSource.getAvailableResolutions()) {
+                if (res == null) {
+                    throw new RuntimeException("Available resolutions include null.");
+                }
                 BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(res);
                 tileCount += brickInfoSet.size();
             }
