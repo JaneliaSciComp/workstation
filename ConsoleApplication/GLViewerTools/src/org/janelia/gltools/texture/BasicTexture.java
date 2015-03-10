@@ -76,6 +76,7 @@ public abstract class BasicTexture implements GL3Resource
     protected boolean useImmutableTexture = false;
     
     protected boolean needsUpload = false;
+    protected boolean reclaimRamAfterUpload = true;
     
     protected void copyParameters(BasicTexture rhs) {
         mipMapLevel = rhs.mipMapLevel;
@@ -236,9 +237,21 @@ public abstract class BasicTexture implements GL3Resource
         gl.glTexParameteri(textureTarget, GL.GL_TEXTURE_MAG_FILTER, magFilter);
         gl.glTexParameteri(textureTarget, GL.GL_TEXTURE_MIN_FILTER, minFilter);
     }
+
+    public void deallocateRam() {
+        for (BasicTexture mipmap : mipmaps) {
+            mipmap.deallocateRam();
+        }
+        pixels = null;
+        shortPixels = null;
+        intPixels = null;
+    }
     
     @Override
     public void dispose(GL3 gl) {
+        for (BasicTexture mipmap : mipmaps) {
+            mipmap.dispose(gl);
+        }
         if (handle != 0) {
             int[] h = {handle};
             gl.glDeleteTextures(1, h, 0);

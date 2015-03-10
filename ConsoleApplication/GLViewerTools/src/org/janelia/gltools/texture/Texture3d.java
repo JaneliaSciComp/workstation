@@ -90,6 +90,9 @@ public class Texture3d extends BasicTexture implements GL3Resource
                 type,
                 pixels);
         needsUpload = false;
+        if (reclaimRamAfterUpload) {
+            deallocateRam();
+        }
     }
     
     @Override
@@ -273,6 +276,8 @@ public class Texture3d extends BasicTexture implements GL3Resource
         computeMipmaps();
 
         System.out.println("Computing mipmaps took "+timer.reportMsAndRestart()+" ms");
+        
+        needsUpload = true;
         
         return this;
     }
