@@ -1,9 +1,9 @@
-package org.janelia.it.workstation.gui.large_volume_viewer;
+package org.janelia.console.viewerapi.model;
 
 import java.awt.Color;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ChannelColorChangeListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
+import org.janelia.console.viewerapi.controller.ChannelColorChangeListener;
+import org.janelia.console.viewerapi.controller.ColorListener;
+import org.janelia.console.viewerapi.controller.ColorModelListener;
 
 public class ChannelColorModel 
 {    

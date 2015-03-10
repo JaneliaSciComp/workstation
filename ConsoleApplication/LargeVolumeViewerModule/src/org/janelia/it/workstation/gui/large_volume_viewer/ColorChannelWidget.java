@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.console.viewerapi.model.ChannelColorModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,8 +17,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.color_slider.UglyColorSlider;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelInitListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
+import org.janelia.console.viewerapi.controller.ColorModelInitListener;
+import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.util.Icons;
 
 public class ColorChannelWidget extends JPanel 

@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.console.viewerapi.model.ChannelColorModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Rotation3d;

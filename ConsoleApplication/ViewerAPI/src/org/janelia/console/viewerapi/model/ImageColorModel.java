@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.large_volume_viewer;
+package org.janelia.console.viewerapi.model;
 
 import java.awt.Color;
 import java.util.Arrays;
@@ -7,9 +7,9 @@ import java.util.Vector;
 import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.Collection;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ChannelColorChangeListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelInitListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
+import org.janelia.console.viewerapi.controller.ChannelColorChangeListener;
+import org.janelia.console.viewerapi.controller.ColorModelInitListener;
+import org.janelia.console.viewerapi.controller.ColorModelListener;
 
 public class ImageColorModel 
 {
