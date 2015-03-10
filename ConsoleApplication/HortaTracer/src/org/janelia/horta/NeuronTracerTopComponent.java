@@ -747,6 +747,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
+                /*
                 if (tracingInteractor.getTracingMode() != TracingInteractor.TracingMode.TRACING) {
                     if (mouseStageLocation != null) {
                         // TODO - actually build a neuron model
@@ -774,6 +775,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     // action.setEnabled(false); // Until I implement it...
                     menu.add(action);
                 }
+                */
 
                 menu.add(new JPopupMenu.Separator());
 

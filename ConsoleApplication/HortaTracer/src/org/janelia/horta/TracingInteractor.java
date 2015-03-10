@@ -208,8 +208,9 @@ public class TracingInteractor extends MouseAdapter
         if ( (event.getClickCount() == 1) && (event.getButton() == MouseEvent.BUTTON1) )
         {
             // Shift-clicking causes entry into tracing mode
-            if (event.isShiftDown())
-                setTracingModeOn();
+            if (event.isShiftDown()) {
+                // setTracingModeOn();
+            }
 
             // Regular click has no tracing effect in navigating mode
             if (tracingMode == TracingMode.NAVIGATING)
