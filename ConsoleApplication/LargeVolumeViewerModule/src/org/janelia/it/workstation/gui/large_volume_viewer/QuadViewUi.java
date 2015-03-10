@@ -45,7 +45,7 @@ import java.util.Vector;
 import java.util.List;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SynchronizationHelper;
-import org.janelia.console.viewerapi.Tiled3dSampleLocationProvider;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelInitListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
@@ -350,10 +350,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     
                     // Add menus/items for relocating per other views.
                     SynchronizationHelper helper = new SynchronizationHelper();
-                    Collection<Tiled3dSampleLocationProvider> locationProviders =
+                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
                         helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                    Tiled3dSampleLocationProviderAcceptor originator =
+                        helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                     RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-                    result.addAll( menuBuilder.buildSyncMenu(locationProviders, quadViewController.getLocationAcceptor()) );
+                    result.addAll( menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor()) );
                     return result;
                 }
             });

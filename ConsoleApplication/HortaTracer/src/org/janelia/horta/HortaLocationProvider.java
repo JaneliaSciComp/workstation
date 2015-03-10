@@ -30,7 +30,7 @@
 package org.janelia.horta;
 
 import java.net.URL;
-import org.janelia.console.viewerapi.Tiled3dSampleLocationProvider;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +40,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author fosterl
  */
-@ServiceProvider(service = Tiled3dSampleLocationProvider.class, path=Tiled3dSampleLocationProvider.LOOKUP_PATH)
-public class HortaLocationProvider implements Tiled3dSampleLocationProvider {
+@ServiceProvider(service = Tiled3dSampleLocationProviderAcceptor.class, path=Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH)
+public class HortaLocationProvider implements Tiled3dSampleLocationProviderAcceptor {
     public static final String UNIQUE_NAME = "NeuronTracer";
     public static final String DESCRIPTION = "Neuron Tracer / Horta";
     
@@ -90,5 +90,33 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProvider {
     
     private NeuronTracerTopComponent getNeuronTracer() {
         return NeuronTracerTopComponent.findThisComponent();
+    }
+
+    @Override
+    public ParticipantType getParticipantType() {
+        return ParticipantType.both;
+    }
+
+    @Override
+    public void setSampleLocation(URL sampleUrl, double[] coords) {
+        NeuronTracerTopComponent nttc = getNeuronTracer();
+        if (nttc == null) {
+            throw new IllegalStateException("Failed to find Neuron Tracer.");
+        }
+        if (! nttc.isOpened()) {
+            nttc.open();
+        }
+        if (nttc.isOpened()) {
+            nttc.requestActive();
+            try {
+                nttc.setLocation(sampleUrl, coords);
+            } catch (Exception ex) {
+                logger.error(ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
+        else {
+            throw new IllegalStateException("Failed to open Neuron Tracer.");
+        }
     }
 }

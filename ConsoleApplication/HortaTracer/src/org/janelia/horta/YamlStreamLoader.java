@@ -27,23 +27,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.janelia.console.viewerapi;
+package org.janelia.horta;
 
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
+import org.janelia.horta.volume.StaticVolumeBrickSource;
 
 /**
- * Implement this to become a provider of focusable location.
- * 
+ * Implement this to dispose of YML input streams and load a result.
+ *
  * @author fosterl
  */
-public interface Tiled3dSampleLocationProvider {
-    public static final String LOOKUP_PATH = "Tiled3dSample/Location/Nodes";
-    /** @return where-at, in case reload required. */
-    URL getSampleUrl();
-    /** @return can set focus here. */
-    double[] getCoords();
-    /** @return Unique across all impls. Answers: is this one me? */
-    String getProviderUniqueName();
-    /** @return Shown to user.  Menu item? */
-    String getProviderDescription();
+public interface YamlStreamLoader {
+    StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, InputStream loaderYamlStream) throws IOException;
 }

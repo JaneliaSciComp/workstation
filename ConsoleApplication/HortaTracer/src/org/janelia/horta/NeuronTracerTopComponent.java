@@ -1,4 +1,4 @@
-/* 
+/*//GEN-LINE:initComponents
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
  * Copyright (c) 2014, Howard Hughes Medical Institute, All rights reserved.
@@ -105,7 +105,7 @@ import org.janelia.scenewindow.SceneRenderer.CameraType;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
-import org.janelia.console.viewerapi.Tiled3dSampleLocationProvider;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -146,7 +146,7 @@ import org.slf4j.LoggerFactory;
     "HINT_NeuronTracerTopComponent=Horta Neuron Tracer window"
 })
 public final class NeuronTracerTopComponent extends TopComponent
-        implements VolumeProjection {
+        implements VolumeProjection, YamlStreamLoader {
     public static final String PREFERRED_ID = "NeuronTracerTopComponent";
     public static final String BASE_YML_FILE = "tilebase.cache.yml";
 
@@ -256,6 +256,22 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new URI(currentSource).toURL();
     }
     
+    public void setLocation(URL url, double[] coords) {
+        try {
+            ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+                    currentSource, loader, NeuronTracerTopComponent.this, sceneWindow, volumeSource
+            );
+            acceptor.acceptLocation(url, coords);
+            currentSource = url.toString();
+        } catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+            throw new RuntimeException(
+                    "Failed to load location " + url.toString() + ", " +
+                    coords[0] + "," + coords[1] + "," + coords[2]
+            );
+        }
+    }
+    
     private void setUpActors() 
     {
         
@@ -324,6 +340,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         brightnessModel.setMinimum(min / 65535f);
         brightnessModel.setMaximum(max / 65535f);
         brightnessModel.notifyObservers();
+    }
+
+    @Override
+    public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, InputStream loaderYamlStream) throws IOException {
+        volumeSource = new MouseLightYamlBrickSource(sourceYamlStream);
+        loader.loadYamlFile(loaderYamlStream);
+        return volumeSource;
     }
 
     private void setupMouseNavigation() {
@@ -691,11 +714,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         }));
     }
 
-    private void loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, InputStream loaderYamlStream) throws IOException {
-        volumeSource = new MouseLightYamlBrickSource(sourceYamlStream);
-        loader.loadYamlFile(loaderYamlStream);
-    }
-
     private void setupContextMenu(Component innerComponent) {
         // Context menu for window - at first just to see if it works with OpenGL
         // (A: YES, if applied to the inner component)
@@ -1042,20 +1060,24 @@ public final class NeuronTracerTopComponent extends TopComponent
                 menu.add(new JPopupMenu.Separator());
                 // Want to lookup, get URL and get focus.
                 SynchronizationHelper helper = new SynchronizationHelper();
-                Collection<Tiled3dSampleLocationProvider> locationProviders =
+                Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
                         helper.getSampleLocationProviders(HortaLocationProvider.UNIQUE_NAME);
+                Tiled3dSampleLocationProviderAcceptor origin = 
+                        helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
                 logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
-                ViewerLocationAcceptor acceptor = new SampleLocationAcceptor();
+                ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+                        currentSource, loader, NeuronTracerTopComponent.this, sceneWindow, volumeSource
+                );
                 RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
                 if (locationProviders.size() > 1) {
                     JMenu synchronizeAllMenu = new JMenu("Sychronize with other 3D viewer.");
-                    for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, acceptor)) {
+                    for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
                         synchronizeAllMenu.add(item);
                     }
                     menu.add(synchronizeAllMenu);
                 }
                 else if (locationProviders.size() == 1) {
-                    for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, acceptor)) {
+                    for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
                         menu.add(item);
                     }
                 }
@@ -1113,7 +1135,7 @@ public final class NeuronTracerTopComponent extends TopComponent
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
      */
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
     private void initComponents()
     {
 
@@ -1127,10 +1149,10 @@ public final class NeuronTracerTopComponent extends TopComponent
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 300, Short.MAX_VALUE)
         );
-    }// </editor-fold>//GEN-END:initComponents
+    }// </editor-fold>                        
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    // End of variables declaration//GEN-END:variables
+    // Variables declaration - do not modify                     
+    // End of variables declaration                   
     @Override
     public void componentOpened() {
         // TODO add custom code on component opening
@@ -1202,54 +1224,54 @@ public final class NeuronTracerTopComponent extends TopComponent
         return true;
     }
     
-    private class SampleLocationAcceptor implements ViewerLocationAcceptor {
-
-        @Override
-        public void acceptLocation(URL focusUrl, double[] focusCoords) throws Exception {
-            // First ensure that this component uses same sample.
-            if (focusUrl != null) {
-                String urlStr = focusUrl.toString();
-                // Check: if same as current source, no need to change that.
-                if (!urlStr.equals(currentSource)) {
-                    URI uri = focusUrl.toURI();
-                    URI yamlUri = new URI(
-                            uri.getScheme(),
-                            uri.getAuthority(),
-                            uri.getPath() + "/" + BASE_YML_FILE,
-                            uri.getFragment()
-                    );
-                    logger.info("Constructed URI: {}.", uri);
-                    URL yamlUrl = yamlUri.toURL();
-                    InputStream stream1 = yamlUrl.openStream();
-                    InputStream stream2 = yamlUrl.openStream();
-                    loadYaml(stream1, loader, stream2);
-                }
-
-                // Now, position this component over other component's
-                // focus.
-                if (focusCoords != null) {
-                    Vantage v = sceneWindow.getVantage();
-                    Vector3 focusVector3 = new Vector3(
-                            (float) focusCoords[0],
-                            (float) focusCoords[1],
-                            (float) focusCoords[2]
-                    );
-                    loader.animateToFocusXyz(focusVector3, v, 150);
-                    //                    v.setFocusPosition(focusVector3);
-                    //                    v.notifyObservers();
-                } else {
-                    logger.info("No focus coords provided.");
-                }
-                
-                // Load up the tile.
-                loader.loadTileAtCurrentFocus(volumeSource);
-                sceneWindow.getGLAutoDrawable().display();
-            }
-            else {
-                logger.warn("No URL location provided.");
-            }
-
-        }
-        
-    }
+//    private class SampleLocationAcceptor implements ViewerLocationAcceptor {
+//
+//        @Override
+//        public void acceptLocation(URL focusUrl, double[] focusCoords) throws Exception {
+//            // First ensure that this component uses same sample.
+//            if (focusUrl != null) {
+//                String urlStr = focusUrl.toString();
+//                // Check: if same as current source, no need to change that.
+//                if (!urlStr.equals(currentSource)) {
+//                    URI uri = focusUrl.toURI();
+//                    URI yamlUri = new URI(
+//                            uri.getScheme(),
+//                            uri.getAuthority(),
+//                            uri.getPath() + "/" + BASE_YML_FILE,
+//                            uri.getFragment()
+//                    );
+//                    logger.info("Constructed URI: {}.", uri);
+//                    URL yamlUrl = yamlUri.toURL();
+//                    InputStream stream1 = yamlUrl.openStream();
+//                    InputStream stream2 = yamlUrl.openStream();
+//                    loadYaml(stream1, loader, stream2);
+//                }
+//
+//                // Now, position this component over other component's
+//                // focus.
+//                if (focusCoords != null) {
+//                    Vantage v = sceneWindow.getVantage();
+//                    Vector3 focusVector3 = new Vector3(
+//                            (float) focusCoords[0],
+//                            (float) focusCoords[1],
+//                            (float) focusCoords[2]
+//                    );
+//                    loader.animateToFocusXyz(focusVector3, v, 150);
+//                    //                    v.setFocusPosition(focusVector3);
+//                    //                    v.notifyObservers();
+//                } else {
+//                    logger.info("No focus coords provided.");
+//                }
+//                
+//                // Load up the tile.
+//                loader.loadTileAtCurrentFocus(volumeSource);
+//                sceneWindow.getGLAutoDrawable().display();
+//            }
+//            else {
+//                logger.warn("No URL location provided.");
+//            }
+//
+//        }
+//        
+//    }
 }
