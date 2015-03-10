@@ -16,7 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.workstation.gui.large_volume_viewer.color_slider.UglyColorSlider;
+import org.janelia.console.viewerapi.color_slider.UglyColorSlider;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.util.Icons;

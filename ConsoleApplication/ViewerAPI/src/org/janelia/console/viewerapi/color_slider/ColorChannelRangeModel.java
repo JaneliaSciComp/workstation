@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.color_slider;
+package org.janelia.console.viewerapi.color_slider;
 
 import javax.swing.DefaultBoundedRangeModel;
 
