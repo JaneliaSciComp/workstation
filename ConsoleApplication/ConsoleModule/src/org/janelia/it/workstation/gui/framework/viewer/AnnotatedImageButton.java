@@ -35,6 +35,9 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  */
 public abstract class AnnotatedImageButton extends JPanel implements DragGestureListener {
 
+    private static final String HTML_LINEBREAK = "<br>";
+    private static final String TEXT_LINEBREAK = "\\n";
+    
     protected final JLabel titleLabel;
     protected final JLabel subtitleLabel;
     protected final JPanel mainPanel;
@@ -180,7 +183,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
 
         StringBuilder tsb = new StringBuilder();
         
-        if (EntityConstants.IN_MEMORY_TYPE_VIRTUAL_ENTITY.equals(entity.getEntityTypeName())) {
+        if (EntityUtils.isVirtual(entity)) {
             String title = entity.getValueByAttributeName(EntityConstants.IN_MEMORY_ATTRIBUTE_TITLE);
             if (title!=null) {
                 tsb.append(title);
@@ -244,22 +247,18 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
 
         mainPanel.add(init(rootedEntity));
     }
-
+    
     public void setTitle(String title, int maxWidth) {
         // Subtle font size scaling 
         int fontSize = (int) Math.round((double) maxWidth * 0.005) + 10;
         Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
         titleLabel.setFont(titleLabelFont);
-        int lines = StringUtils.countMatches(title, "<br>")+1;
-        int height = titleLabel.getFontMetrics(titleLabelFont).getHeight();
-        height *= lines;
-        if (lines>1) {
-            // Some extra padding for multiline titles
-            height += lines;
-        }
-        titleLabel.setPreferredSize(new Dimension(maxWidth, height));
         titleLabel.setText(title);
-        titleLabel.setToolTipText(title);
+        titleLabel.setToolTipText(title.replaceAll(HTML_LINEBREAK, TEXT_LINEBREAK));
+        if (iconPanel.isLabelSizeLimitedByImageSize()) {
+            int height = getLabelHeight(titleLabel);
+            titleLabel.setPreferredSize(new Dimension(maxWidth, height));
+        }
     }
 
     public void setSubtitle(String subtitle, int maxWidth) {
@@ -271,12 +270,28 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         int fontSize = (int) Math.round((double) maxWidth * 0.003) + 10;
         Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
         subtitleLabel.setFont(titleLabelFont);
-        subtitleLabel.setPreferredSize(new Dimension(maxWidth, subtitleLabel.getFontMetrics(titleLabelFont).getHeight()));
         subtitleLabel.setText(subtitle);
-        subtitleLabel.setToolTipText(subtitle);
+        subtitleLabel.setToolTipText(subtitle.replaceAll(HTML_LINEBREAK, TEXT_LINEBREAK));
         subtitleLabel.setVisible(true);
+        if (iconPanel.isLabelSizeLimitedByImageSize()) {
+            int height = getLabelHeight(subtitleLabel);
+            subtitleLabel.setPreferredSize(new Dimension(maxWidth, height));
+        }
     }
 
+    private int getLabelHeight(JLabel label) {
+        String text = label.getText();
+        Font font = label.getFont();
+        int lines = StringUtils.countMatches(text, HTML_LINEBREAK)+1;
+        int height = label.getFontMetrics(font).getHeight();
+        height *= lines;
+        if (lines>1) {
+            // Some extra padding for multiline titles
+            height += lines;
+        }
+        return height;
+    }
+    
     public abstract JComponent init(RootedEntity rootedEntity);
 
     public synchronized void setTitleVisible(boolean visible) {

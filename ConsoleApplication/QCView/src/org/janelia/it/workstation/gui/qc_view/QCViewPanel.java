@@ -34,12 +34,12 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.gui.dialogs.search.ResultPage;
@@ -68,7 +68,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
     private final SearchParametersPanel searchParamsPanel;
     private final ViewerPane viewerPane;
     private final IconDemoPanel imageViewer;
-    private final Map<String, Set<String>> filters = new HashMap<String, Set<String>>();
+    private final Map<String, Set<String>> filters = new HashMap<>();
     private final SearchResults searchResults = new SearchResults();
     
     public QCViewPanel() {
@@ -81,23 +81,14 @@ public class QCViewPanel extends JPanel implements Refreshable {
             disabledColorHex = null;
         }
 
-        Set<String> entityTypes = new HashSet<String>();
+        Set<String> entityTypes = new HashSet<>();
         entityTypes.add(EntityConstants.TYPE_LSM_STACK);
         filters.put("entity_type",entityTypes);
         
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createLineBorder((Color) UIManager.get("windowBorder")));
 
-        this.searchParamsPanel = new SearchParametersPanel() {
-            @Override
-            public String getSearchString() {
-                String s = (String)getInputFieldValue();
-                if (!s.contains(" ") && !s.endsWith("*")) {
-                    return s+"*";
-                }
-                return s;
-            }
-        };
+        this.searchParamsPanel = new SearchParametersPanel();
         
         SearchConfiguration searchConfig = new SearchConfiguration();
         searchConfig.load();
@@ -131,6 +122,23 @@ public class QCViewPanel extends JPanel implements Refreshable {
             @Override
             public void setAsActive() {
                 // This viewer cannot be activated
+            }
+            
+            @Override
+            public void refresh(final boolean invalidateCache, final Callable<Void> successCallback) {
+                try {
+                    performSearch(0, true);
+                    ConcurrentUtils.invoke(successCallback);
+                }
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
+                
+            }
+            
+            @Override
+            public boolean isLabelSizeLimitedByImageSize() {
+                return false;
             }
         };
         viewerPane.setViewer(imageViewer);
@@ -201,14 +209,18 @@ public class QCViewPanel extends JPanel implements Refreshable {
             throw new RuntimeException("GeneralSearchDialog.search called in the EDT");
         }
         
+        // Build the basic query from what the user has input
         final SolrQueryBuilder builder = new SolrQueryBuilder();
-        builder.setAuxString("+sage_id_txt:*");
-        
         searchParamsPanel.getQueryBuilder(builder);
-        if (!builder.hasQuery()) {
-            return null;
-        }
-
+        if (!builder.hasQuery()) return null;
+        
+        // Only looking for LSMs which have a denormalized SAGE id gives us the sub-sample LSMs we're looking for, 
+        // without any parent-sample LSMs that we're not interested in.
+        String aux = builder.getAuxString()==null?"":builder.getAuxString();
+        builder.setAuxString(aux+" +sage_id_txt:*");
+        // Sort by slide code so that we get a consistent set of data (we can't sort by slide_code_txt because it's a multivalued field)
+        builder.setSortField("sage_light_imagery_slide_code_t");
+        // Filter to get LSMs only 
         builder.getFilters().putAll(filters);
 
         log.info("Search for "+builder.getSearchString());
@@ -219,8 +231,8 @@ public class QCViewPanel extends JPanel implements Refreshable {
         searchResults.addPage(resultPage);
 
         // Map LSMs to samples
-        List<String> upMapping = new ArrayList<String>();
-        List<String> downMapping = new ArrayList<String>();
+        List<String> upMapping = new ArrayList<>();
+        List<String> downMapping = new ArrayList<>();
         upMapping.add(EntityConstants.TYPE_IMAGE_TILE);
         upMapping.add(EntityConstants.TYPE_SUPPORTING_DATA);
         upMapping.add(EntityConstants.TYPE_SAMPLE);
@@ -229,8 +241,9 @@ public class QCViewPanel extends JPanel implements Refreshable {
         searchResults.projectResultPages();
 
         // Figure out which LSMs go with which Sample
-        final Map<Long,String> sampleIdToDataset = new HashMap<Long,String>();
-        final Map<Long,Entity> sampleMap = new HashMap<Long,Entity>();
+        final Map<Long,String> lsmIdToGenotype = new HashMap<>();
+        final Map<Long,String> sampleIdToDataset = new HashMap<>();
+        final Map<Long,Entity> sampleMap = new HashMap<>();
         final Multimap<Long,EntityDocument> sampleToLsm = ArrayListMultimap.<Long,EntityDocument>create();
         SolrResults pageResults = resultPage.getSolrResults();
         for (EntityDocument entityDoc : pageResults.getEntityDocuments()) {
@@ -249,6 +262,9 @@ public class QCViewPanel extends JPanel implements Refreshable {
             String lsmDataSet = (String)entityDoc.getDocument().getFieldValue("sage_light_imagery_data_set_t");
             sampleIdToDataset.put(sample.getId(), lsmDataSet);
 
+            String lsmGenotype = (String)entityDoc.getDocument().getFieldValue("sage_line_genotype_t");
+            lsmIdToGenotype.put(lsmEntity.getId(), lsmGenotype);
+            
             sampleMap.put(sample.getId(), sample);
             sampleToLsm.put(sample.getId(), entityDoc);
 
@@ -258,7 +274,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
             }   
         }
 
-        List<Long> sortedSampleIds = new ArrayList<Long>(sampleToLsm.keySet());
+        List<Long> sortedSampleIds = new ArrayList<>(sampleToLsm.keySet());
         Collections.sort(sortedSampleIds, new Comparator<Long>() {
             @Override
             public int compare(Long id1, Long id2) {
@@ -278,9 +294,9 @@ public class QCViewPanel extends JPanel implements Refreshable {
         searchResultsEntity.setOwnerKey(SessionMgr.getSubjectKey());
         searchResultsEntity.setEntityTypeName(EntityConstants.TYPE_FOLDER);
 
-        Map<String,Map<String,EntityData>> slideCodeToLsmMap = new LinkedHashMap<String,Map<String,EntityData>>();
+        Map<String,Map<String,EntityData>> slideCodeToLsmMap = new LinkedHashMap<>();
 
-        Set<String> tilePattern = new HashSet<String>();
+        Set<String> tilePattern = new HashSet<>();
 
         Map<String,EntityData> slideCodeEds = null;
         String dataSetSlideCode = null;
@@ -301,7 +317,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
                 String tile = tileEntity.getName();
 
                 // Really cheating here. The model is the view. But this is the only way to get things done without rewriting the IconDemoPanel.
-                Set<EntityData> mips = new HashSet<EntityData>();
+                Set<EntityData> mips = new HashSet<>();
                 EntityData ed1 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
                 EntityData ed2 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_REFERENCE_MIP_IMAGE);
                 EntityData ed3 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SIGNAL_MIP_IMAGE);
@@ -313,23 +329,26 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
                     String lsmSlideCode = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE);
 
+        
                     String key = dataSet+"~"+lsmSlideCode;
                     if (dataSetSlideCode==null || !dataSetSlideCode.equals(key)) {
-                        slideCodeEds = new LinkedHashMap<String,EntityData>();
+                        slideCodeEds = new LinkedHashMap<>();
                         dataSetSlideCode = key;
                         log.debug("Starting "+dataSetSlideCode);
                     }
 
                     String objective = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE);
                     String qiScore = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_QI_SCORE);
-
+                    String genotype = lsmIdToGenotype.get(lsmEntity.getId());
+                    
                     lsmSlideCode = lsmSlideCode==null?"":lsmSlideCode;
                     objective = objective==null?"":objective;
-                    qiScore = qiScore==null?"":qiScore;
+                    qiScore = qiScore==null?"":"(qi="+qiScore+")";
+                    genotype = genotype==null?"":genotype;
 
                     String patternCode = objective+" "+tile;
 
-                    Entity virtualLsm = getVirtualEntity("<html><b>"+lsmSlideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+qiScore+"&nbsp;</html>", lsmEntity);
+                    Entity virtualLsm = getVirtualEntity("<html><b>"+lsmSlideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+genotype+" "+qiScore+"</html>", lsmEntity);
                     virtualLsm.getEntityData().addAll(mips);
 
                     EntityData ed = new EntityData();
@@ -347,10 +366,10 @@ public class QCViewPanel extends JPanel implements Refreshable {
             slideCodeToLsmMap.put(dataSetSlideCode, slideCodeEds);
         }
 
-        List<String> sortedTilePattern = new ArrayList<String>(tilePattern);
+        List<String> sortedTilePattern = new ArrayList<>(tilePattern);
         Collections.sort(sortedTilePattern);
 
-        List<EntityData> eds = new ArrayList<EntityData>();
+        List<EntityData> eds = new ArrayList<>();
 
         int i = 0;
         for(String key : slideCodeToLsmMap.keySet()) {
@@ -360,7 +379,6 @@ public class QCViewPanel extends JPanel implements Refreshable {
                 log.debug("  "+d);
             }
             String[] dataSetSlideCodeArr = key.split("~");
-            //String dataSet = dataSetSlideCodeArr[0];
             String slideCode = dataSetSlideCodeArr[1];
             for(String patternCode : sortedTilePattern) {
                 EntityData ed = slideCodeMap.get(patternCode);    
@@ -379,7 +397,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
                     }
                     sb.append("</html>");
 
-                    Entity placeholder = getVirtualEntity(sb.toString());
+                    Entity placeholder = getPlaceholderEntity(sb.toString());
                     ed = new EntityData();
                     ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
                     ed.setParentEntity(searchResultsEntity);
@@ -394,7 +412,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
         }
 
         log.debug("Setting "+eds.size()+" children");
-        searchResultsEntity.setEntityData(new HashSet<EntityData>(eds));
+        searchResultsEntity.setEntityData(new HashSet<>(eds));
         return new UnrootedEntity(searchResultsEntity);
     }
     
@@ -415,11 +433,11 @@ public class QCViewPanel extends JPanel implements Refreshable {
         return ModelMgr.getModelMgr().searchSolr(query);
     }
     
-    private Entity getVirtualEntity(String title) {
+    private Entity getPlaceholderEntity(String title) {
         Entity virtualEntity = new Entity();
         virtualEntity.setId(TimebasedIdentifierGenerator.generateIdList(1).get(0));
-        virtualEntity.setName("Virtual Entity");
-        virtualEntity.setEntityTypeName(EntityConstants.IN_MEMORY_TYPE_VIRTUAL_ENTITY);
+        virtualEntity.setName("Placeholder");
+        virtualEntity.setEntityTypeName(EntityConstants.IN_MEMORY_TYPE_PLACEHOLDER_ENTITY);
         virtualEntity.setOwnerKey(SessionMgr.getSubjectKey());
         virtualEntity.setValueByAttributeName(EntityConstants.IN_MEMORY_ATTRIBUTE_TITLE, title);
         return virtualEntity;

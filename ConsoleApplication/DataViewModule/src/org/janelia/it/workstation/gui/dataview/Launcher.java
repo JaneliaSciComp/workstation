@@ -2,7 +2,9 @@ package org.janelia.it.workstation.gui.dataview;
 
 import org.janelia.it.workstation.nb_action.EntityAcceptor;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.Group;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.WindowManager;
@@ -45,6 +47,9 @@ public class Launcher implements EntityAcceptor  {
     @Override
     public boolean isCompatible(Entity e) {
         // Only administrators can use the data viewer
+        if (EntityUtils.isVirtual(e)) {
+            return false;
+        }
         return SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME) || SessionMgr.currentUserIsInGroup(Group.ADMIN_GROUP_NAME);
     }
 

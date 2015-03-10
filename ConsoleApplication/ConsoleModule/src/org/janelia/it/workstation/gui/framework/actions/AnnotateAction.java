@@ -141,6 +141,7 @@ public class AnnotateAction extends OntologyElementAction {
             protected void doStuff() throws Exception {
                 int i = 1;
                 for (Entity entity : selectedEntities) {
+                    if (EntityUtils.isVirtual(entity)) continue;
                     doAnnotation(entity, finalTerm, finalValue);
                     setProgress(i++, selectedEntities.size());
                 }

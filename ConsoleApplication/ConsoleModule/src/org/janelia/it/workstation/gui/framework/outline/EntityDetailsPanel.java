@@ -47,6 +47,7 @@ import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
 import org.janelia.it.jacs.shared.solr.SolrResults;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -57,6 +58,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
+
+import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
  * A panel for displaying details about the currently selected entity.
@@ -448,7 +451,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                             String attrName = attr.getLabel();
                             if (!attrNames.contains(attrName)) {
                                 attrNames.add(attrName);
-                                AttributeValue attrValue = new AttributeValue(attrName + " (SAGE)", value);
+                                AttributeValue attrValue = new AttributeValue(attrName, value);
                                 attributesTable.addRow(attrValue);
                             }
                         }
@@ -501,7 +504,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
             @Override
             protected void hadSuccess() {
                 setSubjects(subjects);
-                addPermissionButton.setEnabled(ModelMgrUtils.isOwner(entity));
+                addPermissionButton.setEnabled(ModelMgrUtils.isOwner(entity) && !EntityUtils.isVirtual(entity));
                 log.debug("Setting permission button state to {}", addPermissionButton.isEnabled());
             }
 
