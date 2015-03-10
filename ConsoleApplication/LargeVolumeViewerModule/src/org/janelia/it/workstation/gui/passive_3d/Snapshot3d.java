@@ -20,7 +20,7 @@ import javax.swing.Action;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ColorButtonPanel;
-import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
 /**

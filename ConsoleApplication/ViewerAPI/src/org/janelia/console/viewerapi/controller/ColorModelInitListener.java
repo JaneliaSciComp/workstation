@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package org.janelia.it.workstation.gui.large_volume_viewer.controller;
+package org.janelia.console.viewerapi.controller;
 
 /**
  * Implement this to hear when the color model is initialized. 

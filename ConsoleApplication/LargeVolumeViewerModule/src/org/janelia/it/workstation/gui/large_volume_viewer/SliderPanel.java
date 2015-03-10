@@ -6,6 +6,7 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import java.awt.Insets;
 import javax.swing.AbstractButton;
 import javax.swing.Box;
@@ -14,7 +15,7 @@ import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelListener;
+import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.util.Icons;
 
 /**

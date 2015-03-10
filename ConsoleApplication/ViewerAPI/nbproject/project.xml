@@ -7,6 +7,15 @@
             <suite-component/>
             <module-dependencies>
                 <dependency>
+                    <code-name-base>org.janelia.it.workstation</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <release-version>1</release-version>
+                        <specification-version>1.7</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.openide.util</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -25,6 +34,8 @@
             </module-dependencies>
             <public-packages>
                 <package>org.janelia.console.viewerapi</package>
+                <package>org.janelia.console.viewerapi.controller</package>
+                <package>org.janelia.console.viewerapi.model</package>
             </public-packages>
         </data>
     </configuration>

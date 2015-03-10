@@ -6,13 +6,14 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
+import org.janelia.console.viewerapi.controller.ColorModelListener;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.swing.JComponent;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.OrthogonalPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;

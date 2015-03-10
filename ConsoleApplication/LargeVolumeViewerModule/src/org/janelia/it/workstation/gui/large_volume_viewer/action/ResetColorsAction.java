@@ -5,7 +5,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
-import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 
 public class ResetColorsAction 
 extends AbstractAction 

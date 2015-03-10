@@ -6,6 +6,8 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.console.viewerapi.model.ChannelColorModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import java.awt.Color;
 import java.util.List;
 import javax.swing.AbstractButton;
@@ -16,8 +18,8 @@ import java.util.ArrayList;
 import javax.swing.DefaultButtonModel;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ColorModelInitListener;
+import org.janelia.console.viewerapi.controller.ColorListener;
+import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 
 /**
  * Arrange this alongside the slider panel, with channel-oriented buttons.
