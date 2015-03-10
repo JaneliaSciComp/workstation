@@ -346,7 +346,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     @Override
     public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, InputStream loaderYamlStream, boolean loadExample) throws IOException {
         volumeSource = new MouseLightYamlBrickSource(sourceYamlStream);
-        loader.loadYamlFile(loaderYamlStream, loadExample);
+        // loader.loadYamlFile(loaderYamlStream, loadExample); // works without this...
         return volumeSource;
     }
 
@@ -824,6 +824,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
+                /*
                 menu.add(new AbstractAction("Load tile at current location")
                 {
                     @Override
@@ -842,7 +843,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
 
                 });
+                 */
                 
+                /*
                 // TODO - remove this temporary menu item I used to debug more general volume loading
                 menu.add(new AbstractAction("Load Mouse Light YAML file and recenter...") {
                     @Override
@@ -874,6 +877,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         RequestProcessor.getDefault().post(task);
                     }
                 });
+                 */
                 
                 if (volumeMipMaterial != null) {
                     JMenu filterMenu = new JMenu("Rendering filter");

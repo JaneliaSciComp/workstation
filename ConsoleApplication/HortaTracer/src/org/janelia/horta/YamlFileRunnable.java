@@ -73,11 +73,15 @@ public class YamlFileRunnable implements Runnable {
             Vector3 centerFocus = volumeSource.getBoundingBox().getCentroid();
             // logger.info("Center of volume is " + centerFocus.toString());
             PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-            loader.animateToFocusXyz(centerFocus, pCam.getVantage(), 150);
+            
+            Vantage v = pCam.getVantage();
+            v.setFocusPosition(centerFocus);
+            v.notifyObservers();
+            
+            // loader.animateToFocusXyz(centerFocus, pCam.getVantage(), 150);
 
             BrickInfo centerBrickInfo = loader.loadTileAtCurrentFocus( volumeSource );
 
-            Vantage v = pCam.getVantage();
             v.centerOn(centerBrickInfo.getBoundingBox());
             v.setDefaultBoundingBox(centerBrickInfo.getBoundingBox());
             v.notifyObservers();
