@@ -28,38 +28,89 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 package org.janelia.console.viewerapi;
 
 import java.net.URL;
-import java.util.Observer;
 
 /**
- * interface SpecimenCamera
+ *
  * @author Christopher Bruns
- * Proof-of-concept initial Janelia Workstation API for communicating between
- *  Large Volume Viewer and Horta.
- * To minimize dependencies, I aim to use only bog-standard Java types, where possible.
- * This initial version communicates only data folder, and camera center location.
- * Future versions need to also communicate:
- *         * neuron/annotation structures
- *         * color/brightness settings
- *         * more camera parameters, such as rotation and zoom
  */
-public interface SpecimenCamera extends CameraModel
+public class BasicSampleLocation implements SampleLocation
 {
-    // Read-only methods in upper section - so slave clients can follow the camera position
+    private URL sampleUrl = null;
+    private double focusXUm = 0;
+    private double focusYUm = 0;
+    private double focusZUm = 0;
+    private double micrometersPerWindowHeight = 100;
 
-    URL getDataPath(); // location of folder containing image data (both octree and raw-tile-yml database)
+    public BasicSampleLocation()
+    {
+    }
 
-    // read-only-ish Observable API, for handling camera changes
-    void addObserver(Observer observer); // (member of Observable class)
+    @Override
+    public URL getSampleUrl()
+    {
+        return sampleUrl;
+    }
 
-    void deleteObserver(Observer observer); // (member of Observable class)
+    @Override
+    public void setSampleUrl(URL sampleUrl)
+    {
+        this.sampleUrl = sampleUrl;
+    }
 
-    // mutable Observable API
-    // notifyObservers() allows fine grained control, so a large number of changes could be
-    // built up, before (possibly expensively) releasing the horses.
-    // This mechanism will obviously be more important for things like neuron structure changes.
-    void notifyObservers(); // trigger consequences of camera change, if something did change (member of Observable class)
+    @Override
+    public double getFocusXUm()
+    {
+        return focusXUm;
+    }
+
+    public void setFocusXUm(double focusXUm)
+    {
+        this.focusXUm = focusXUm;
+    }
+
+    @Override
+    public double getFocusYUm()
+    {
+        return focusYUm;
+    }
+
+    public void setFocusYUm(double focusYUm)
+    {
+        this.focusYUm = focusYUm;
+    }
+
+    @Override
+    public double getFocusZUm()
+    {
+        return focusZUm;
+    }
+
+    public void setFocusZUm(double focusZUm)
+    {
+        this.focusZUm = focusZUm;
+    }
+
+    @Override
+    public double getMicrometersPerWindowHeight()
+    {
+        return micrometersPerWindowHeight;
+    }
+
+    @Override
+    public void setMicrometersPerWindowHeight(double micrometersPerWindowHeight)
+    {
+        this.micrometersPerWindowHeight = micrometersPerWindowHeight;
+    }
+
+    @Override
+    public void setFocusUm(double x, double y, double z)
+    {
+        setFocusXUm(x);
+        setFocusYUm(y);
+        setFocusZUm(z);
+    }
+
 }

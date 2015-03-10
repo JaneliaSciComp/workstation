@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
  * Copyright (c) 2014, Howard Hughes Medical Institute, All rights reserved.
@@ -30,24 +30,22 @@
 
 package org.janelia.console.viewerapi;
 
-import java.util.Observer;
+import java.net.URL;
 
 /**
  *
  * @author Christopher Bruns
  */
-public interface CameraModel
+public interface SampleLocation
 {
+    URL getSampleUrl();
+    void setSampleUrl(URL url);
 
-    // camera focus location
-    float getFocusXUm(); // camera focus X position, in micrometers
-
-    float getFocusYUm();
-
-    float getFocusZUm();
-
-    // Mutable methods below - so peer modules can change the camera position
-    // Camera focus position
-    void setFocusUm(float x, float y, float z); // in micrometer stage coordinates
+    double getFocusXUm();
+    double getFocusYUm();
+    double getFocusZUm();
+    void setFocusUm(double x, double y, double z);
     
+    double getMicrometersPerWindowHeight();
+    void setMicrometersPerWindowHeight(double zoom);
 }

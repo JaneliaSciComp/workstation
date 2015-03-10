@@ -7,6 +7,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
 import java.net.URL;
+import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.openide.util.lookup.ServiceProvider;
@@ -35,16 +36,6 @@ public class LargeVolumeViewerLocationProvider implements Tiled3dSampleLocationP
                 LargeVolumeViewerTopComponent.findThisTopComponent();
         this.viewer = lvv.getLvvv();
     }
-    
-    @Override
-    public URL getSampleUrl() {
-        return viewer.getSampleUrl();
-    }
-
-    @Override
-    public double[] getCoords() {
-        return viewer.getCoords();
-    }
 
     @Override
     public String getProviderUniqueName() {
@@ -62,7 +53,7 @@ public class LargeVolumeViewerLocationProvider implements Tiled3dSampleLocationP
     }
 
     @Override
-    public void setSampleLocation(URL sampleUrl, double[] coords) {
+    public void setSampleLocation(SampleLocation sampleLocation) {
         LargeVolumeViewerTopComponent lvv = 
                 LargeVolumeViewerTopComponent.findThisTopComponent();
         if (! lvv.isOpened()) {
@@ -70,11 +61,17 @@ public class LargeVolumeViewerLocationProvider implements Tiled3dSampleLocationP
         }
         if (lvv.isOpened()) {
             lvv.requestActive();
-            viewer.setLocation(sampleUrl, coords);
+            viewer.setLocation(sampleLocation);
         }
         else {
             throw new IllegalStateException("Failed to open Large Volume Viewer.");
         }
+    }
+
+    @Override
+    public SampleLocation getSampleLocation()
+    {
+        return viewer.getSampleLocation();
     }
 
 }

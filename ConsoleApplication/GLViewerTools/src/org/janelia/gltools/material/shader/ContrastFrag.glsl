@@ -79,9 +79,9 @@ void main() {
     const bool applyColorMap = true;
     vec3 color = vec3(1,1,1); // white
     if (applyColorMap) {
-        vec3 color1 = vec3(0, 0, 1); // blue
-        vec3 color2 = vec3(0, 0.8, 1); // cyan
-        vec3 color3 = vec3(0.95,0.95,1); // white-ish
+        vec3 color1 = vec3(0, 0.5, 0.1); // green
+        vec3 color2 = vec3(0, 1.0, 0); // green/cyan
+        vec3 color3 = vec3(1,1,0.95); // white-ish
         if (intensity < 0.5)
             color = mix(color1, color2, 2*intensity);
         else

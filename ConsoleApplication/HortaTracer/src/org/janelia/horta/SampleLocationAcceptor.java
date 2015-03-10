@@ -32,6 +32,7 @@ package org.janelia.horta;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
@@ -66,8 +67,9 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     }
     
     @Override
-    public void acceptLocation(URL focusUrl, double[] focusCoords) throws Exception {
+    public void acceptLocation(SampleLocation sampleLocation) throws Exception {
         // First ensure that this component uses same sample.
+        URL focusUrl = sampleLocation.getSampleUrl();
         if (focusUrl != null) {
             String urlStr = focusUrl.toString();
             // Check: if same as current source, no need to change that.
@@ -91,6 +93,11 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             Vector3 focusVector3 = null;
             PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
             Vantage v = pCam.getVantage();
+            double [] focusCoords = new double[] {
+                sampleLocation.getFocusXUm(),
+                sampleLocation.getFocusYUm(),
+                sampleLocation.getFocusZUm()
+            };
             if (focusCoords == null) {
                 logger.info("No focus coords provided.");
                 focusVector3 = sceneWindow.getCamera().getVantage().getFocusPosition();
@@ -111,6 +118,13 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             }
             v.setDefaultFocus(focusVector3);
             logger.info("Set focus, default focus, to " + focusVector3);
+            
+            double zoom = sampleLocation.getMicrometersPerWindowHeight();
+            if (zoom > 0) {
+                v.setSceneUnitsPerViewportHeight((float)zoom);
+                logger.info("Set micrometers per view height to " + zoom);
+            }
+
             v.notifyObservers();
 
             // Load up the tile.

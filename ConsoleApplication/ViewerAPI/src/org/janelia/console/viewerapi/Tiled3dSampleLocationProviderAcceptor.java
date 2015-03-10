@@ -45,11 +45,9 @@ public interface Tiled3dSampleLocationProviderAcceptor {
     ParticipantType getParticipantType();
     
     /** Only acceptor or both type should be called here. */
-    void setSampleLocation(URL sampleUrl, double[] coords);
+    void setSampleLocation(SampleLocation location);
     /** Provider, or both-type: @return where-at, in case reload required. */
-    URL getSampleUrl();
-    /** Provider, or both-type: @return can set focus here. */
-    double[] getCoords();
+    SampleLocation getSampleLocation();
     /** @return Unique across all impls. Answers: is this one me? */
     String getProviderUniqueName();
     /** @return Shown to user.  Menu item? */
