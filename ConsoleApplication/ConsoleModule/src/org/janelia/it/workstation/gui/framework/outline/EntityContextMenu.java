@@ -120,7 +120,7 @@ public class EntityContextMenu extends JPopupMenu {
             checkNotNull(rootedEntity, "Rooted entity cannot be null");
         }
         for(RootedEntity re : rootedEntityList) {
-            if (EntityUtils.isVirtual(re.getEntity())) {
+            if (re.getEntityData()!=null && EntityUtils.isVirtual(re.getEntity())) {
                 virtual = true;
                 break;
             }

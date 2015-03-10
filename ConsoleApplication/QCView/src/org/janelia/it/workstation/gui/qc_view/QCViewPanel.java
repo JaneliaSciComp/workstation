@@ -348,7 +348,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
                     String patternCode = objective+" "+tile;
 
-                    Entity virtualLsm = getVirtualEntity("<html><b>"+lsmSlideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+genotype+" "+qiScore+"</html>", lsmEntity);
+                    Entity virtualLsm = getVirtualEntity("<html><b>"+lsmSlideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+genotype+" "+qiScore+"&nbsp;</html>", lsmEntity);
                     virtualLsm.getEntityData().addAll(mips);
 
                     EntityData ed = new EntityData();

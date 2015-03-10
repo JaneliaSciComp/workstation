@@ -203,7 +203,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         
         Entity selectedEntityRoot = null;
 
-        this.entityRootList = new ArrayList<Entity>();
+        this.entityRootList = new ArrayList<>();
         for (Entity entityRoot : entityRootList) {
             if (entityRoot.getId().equals(selectedId)) {
                 selectedEntityRoot = entityRoot;
@@ -225,17 +225,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         super.initializeTree(rootEntity);
 
         getDynamicTree().add(getToolbar(), BorderLayout.PAGE_END);
-
-//        if (selectedTree.getToolbar()!=null) {
-//            decorateToolbar(selectedTree.getToolbar().getJToolBar());
-//        }
-        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, true), "enterAction");
-        getActionMap().put("enterAction", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // TODO: apply annotation?
-            }
-        });
     }
 
     /**
@@ -616,7 +605,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             log.debug("Ontology was deleted: '{}'", entity.getName());
 
             if (entityRootList != null) {
-                Set<Entity> toRemove = new HashSet<Entity>();
+                Set<Entity> toRemove = new HashSet<>();
                 for (Entity entityRoot : entityRootList) {
                     if (entityRoot.getId().equals(entity.getId())) {
                         // An ontology root was changed
@@ -708,7 +697,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     }
 
     private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
-    private Queue<Callable<Void>> callbacks = new ConcurrentLinkedQueue<Callable<Void>>();
+    private Queue<Callable<Void>> callbacks = new ConcurrentLinkedQueue<>();
 
     private synchronized void executeCallBacks() {
         synchronized (this) {
