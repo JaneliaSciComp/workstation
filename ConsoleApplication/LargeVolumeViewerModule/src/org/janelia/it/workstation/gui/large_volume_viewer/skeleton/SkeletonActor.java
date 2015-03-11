@@ -666,9 +666,12 @@ implements GLActor
         //  to other methods for the lines and paths; no reason we
         //  couldn't also refactor this into its own method, too
 
-        // new: per neuron:
-        // first, how many vertices per neuron; then, fill the buffers (one per neuron)
+        // new: per neuron
+        // clear out the maps first
         neuronVertexCount.clear();
+        neuronVertices.clear();
+        neuronColors.clear();
+        // first, how many vertices per neuron; then, fill the buffers (one per neuron)
         for (Anchor anchor: skeleton.getAnchors()) {
             neuronVertexCount.add(anchor.getNeuronID());
         }
@@ -783,6 +786,7 @@ implements GLActor
         }
 
         // new (per-neuron)
+        neuronPointIndices.clear();
         for (Long neuronID: neuronVertexIndex.keySet()) {
             // recall that the last value neuronVertexIndex takes is the
             //  number of points:
@@ -815,7 +819,7 @@ implements GLActor
 		skeletonActorChangedSignal.emit();
 	}
 
-    private void    updateLinesPerNeuron() {
+    private void updateLinesPerNeuron() {
         // iterate through anchors and record lines where there are no traced
         //  paths; then copy the line indices you get into an array
         // note: I believe this works because we process the points and
