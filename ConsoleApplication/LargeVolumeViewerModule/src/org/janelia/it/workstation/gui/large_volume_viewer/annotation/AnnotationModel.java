@@ -419,9 +419,6 @@ SimpleWorker thread.
             updateCurrentNeuron();
         }
 
-        // we need to explicitly set the neuron ID in the annotation:
-        annotation.setNeuronId(neuron.getId());
-
         final TmNeuron currNeuron = getCurrentNeuron();
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -456,9 +453,6 @@ SimpleWorker thread.
         if (automatedTracingEnabled()) {
             pathTraceRequestedSignal.emit(annotation.getId());
         }
-
-        // we need to explicitly set the neuron ID in the annotation:
-        annotation.setNeuronId(neuron.getId());
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
