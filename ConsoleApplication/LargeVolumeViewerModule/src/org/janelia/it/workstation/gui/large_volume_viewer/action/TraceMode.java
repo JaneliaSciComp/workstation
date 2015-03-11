@@ -87,30 +87,22 @@ implements MouseMode, KeyListener
 	
 	@Override
 	public void mouseClicked(MouseEvent event) {
-		super.mouseClicked(event);
-		// Java swing mouseClicked() requires zero motion and is therefore stupid.
-		// onMouseActuallyClicked(event);
-		// 
-		// But this will have to do for double clicking...
-		// Double click to center; on anchor or on slice point
-		if (event.getClickCount() == 2) {
+        super.mouseClicked(event);
+        // Java swing mouseClicked() requires zero motion and is therefore stupid.
+        // onMouseActuallyClicked(event);
+        //
+        // But this will have to do for double clicking...
+        // Double click to center; on anchor or on slice point
+        if (event.getClickCount() == 2) {
             if (hoverAnchor != null) {
                 camera.setFocus(hoverAnchor.getLocation());
                 skeleton.getHistory().push(hoverAnchor);
-                }
-            else {
-                // not clear how this would happen?  in old world,
-                //  if hover index doesn't lead to an anchor, it would,
-                //  but not, not sure it's possible?
-                Logger logger = LoggerFactory.getLogger(TraceMode.class);
-                logger.error("problem finding anchor in mouseClicked");
-                }
+            } else {
+                // center on slice point
+                camera.setFocus(worldFromPixel(event.getPoint()));
             }
-        else {
-            // center on slice point
-            camera.setFocus(worldFromPixel(event.getPoint()));
         }
-	}
+    }
 	
 	private void appendAnchor(Vec3 xyz) {
 		autoFocusNextAnchor = true; // center on new position
