@@ -275,7 +275,9 @@ public class Skeleton {
         // this is a bit of a cheat; I send one anchor knowing that it's
         //  never used--the whole skeleton gets updated, and that's what
         //  I want since I've potentially added many anchors
-        anchorAddedSignal.emit(anchorList.get(0));
+        if (anchorList.size() > 0) {
+            anchorAddedSignal.emit(anchorList.get(0));
+        }
 	}
 
 	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {        
