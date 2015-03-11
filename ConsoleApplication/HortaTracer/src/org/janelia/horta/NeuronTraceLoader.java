@@ -187,14 +187,7 @@ public class NeuronTraceLoader {
         BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution);
         BrickInfo brickInfo = brickInfoSet.getBestContainingBrick(pCam.getVantage().getFocusPosition());
 
-        ProgressHandle progress
-                = ProgressHandleFactory.createHandle(
-                "Loading Tiff Volume...");
-        progress.start();
-
         GL3Actor boxMesh = nttc.createBrickActor((BrainTileInfo) brickInfo);
-
-        progress.finish();
 
         StatusDisplayer.getDefault().setStatusText(
                 "One TIFF file loaded and processed in "
@@ -203,7 +196,7 @@ public class NeuronTraceLoader {
         );
 
         // mprActor.addChild(boxMesh);
-        neuronMPRenderer.clearVolumeActors();
+        neuronMPRenderer.clearVolumeActors(); // TODO - release texture memory
         neuronMPRenderer.addVolumeActor(boxMesh);
         
         return brickInfo;

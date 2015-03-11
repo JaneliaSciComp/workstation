@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -63,30 +64,41 @@ public class RelocationMenuBuilder {
             if (logger.isLoggable(Level.INFO))
                 logger.info("Adding menu item for " + providerAcceptor.getProviderUniqueName());
             final String description = providerAcceptor.getProviderDescription();
+            /*
             JMenu synchronizeMenu = new JMenu("Synchronize with " + description);
             rtnVal.add(synchronizeMenu);
             if (providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.both)  ||
                 providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.provider)) {
                 synchronizeMenu.add(new AcceptSampleLocationAction(description, providerAcceptor, viewerLocationAcceptor));
             }
+            /*
             synchronizeMenu.add(new AbstractAction("Synchronize with " + description + " always") {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
             });
+             */
             // Here, the provider is being inverted, to accept the new location.
             if (providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.both)  ||
                 providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.acceptor)) {
-                synchronizeMenu.add(new PushSampleLocationAction(description, providerAcceptor, originator));
+                rtnVal.add(new JMenuItem(new PushSampleLocationAction(description, providerAcceptor, originator)));
+                
+                // Tantalize user with future option to continuously synchronize
+                JCheckBoxMenuItem synchronizeMenu = new JCheckBoxMenuItem("Continuously Track Location in "+description, false);
+                synchronizeMenu.setEnabled(false); // grayed out for now
+                rtnVal.add(synchronizeMenu);
             }
         }
+        
+        /*
         rtnVal.add(new JMenuItem(new AbstractAction("Desynchronize") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
-        }));
+               
+        })); */
         
         return rtnVal;
     }
@@ -96,7 +108,7 @@ public class RelocationMenuBuilder {
         private Tiled3dSampleLocationProviderAcceptor locationProvider;
 
         public PushSampleLocationAction(String description, Tiled3dSampleLocationProviderAcceptor locationAcceptor, Tiled3dSampleLocationProviderAcceptor locationProvider) {
-            super("Push location to " + description + " now");
+            super("Navigate to This Location in " + description);
             this.locationAcceptor = new DefaultViewerLocationAcceptor(locationAcceptor);  
             this.locationProvider = locationProvider;
         }

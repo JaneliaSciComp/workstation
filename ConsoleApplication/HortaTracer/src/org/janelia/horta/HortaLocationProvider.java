@@ -47,8 +47,8 @@ import org.slf4j.LoggerFactory;
  */
 @ServiceProvider(service = Tiled3dSampleLocationProviderAcceptor.class, path=Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH)
 public class HortaLocationProvider implements Tiled3dSampleLocationProviderAcceptor {
-    public static final String UNIQUE_NAME = "NeuronTracer";
-    public static final String DESCRIPTION = "Neuron Tracer / Horta";
+    public static final String UNIQUE_NAME = "Horta";
+    public static final String DESCRIPTION = "Horta";
     
     private final Logger logger = LoggerFactory.getLogger(HortaLocationProvider.class);
     

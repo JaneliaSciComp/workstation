@@ -29,8 +29,10 @@
  */
 package org.janelia.horta;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
@@ -40,6 +42,10 @@ import org.janelia.geometry3d.Vector3;
 import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.scenewindow.SceneWindow;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
+import org.openide.util.Exceptions;
+import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,82 +73,98 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     }
     
     @Override
-    public void acceptLocation(SampleLocation sampleLocation) throws Exception {
-        // First ensure that this component uses same sample.
-        URL focusUrl = sampleLocation.getSampleUrl();
-        if (focusUrl != null) {
-            String urlStr = focusUrl.toString();
-            // Check: if same as current source, no need to change that,
-            // unless the volume source has not been populated.
-            if (volumeSource != null && volumeSource.getAvailableResolutions().isEmpty()) {
-                logger.warn("Volume source may not have been populated. " + volumeSource);
+    public void acceptLocation(final SampleLocation sampleLocation) throws Exception {
+        Runnable task = new Runnable() {
+            @Override
+            public void run()
+            {
+                ProgressHandle progress
+                        = ProgressHandleFactory.createHandle("Loading View in Horta...");
+                progress.start();
+                try {
+                    progress.setDisplayName("Loading brain specimen (YAML)...");
+                    // TODO - ensure that Horta viewer is open
+                    // First ensure that this component uses same sample.
+                    setSampleUrl(sampleLocation.getSampleUrl());
+                    progress.setDisplayName("Centering on location...");
+                    setCameraLocation(sampleLocation);
+                    progress.setDisplayName("Loading brain tile image...");
+                    loadFocusedTile();
+                    sceneWindow.getGLAutoDrawable().display();     
+                } catch (Exception ex) {
+                    
+                }
+                finally {
+                    progress.finish();
+                }
             }
-            if (!urlStr.equals(currentSource)  || 
-                volumeSource == null  ||
-                volumeSource.getAvailableResolutions().isEmpty()) {
-
-                URI uri = focusUrl.toURI();
-                URI yamlUri = new URI(
-                        uri.getScheme(),
-                        uri.getAuthority(),
-                        uri.getPath() + "/" + BASE_YML_FILE,
-                        uri.getFragment()
-                );
-                logger.info("Constructed URI: {}.", uri);
-                URL yamlUrl = yamlUri.toURL();
-                InputStream stream1 = yamlUrl.openStream();
-                InputStream stream2 = yamlUrl.openStream();
-                volumeSource = yamlLoader.loadYaml(stream1, loader, stream2, false);
-                currentSource = urlStr;
-                logger.info("Making NEW volume source {}.", volumeSource);                
-            }
-
-            // Now, position this component over other component's
-            // focus.
-            Vector3 focusVector3 = null;
-            PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-            Vantage v = pCam.getVantage();
-            double [] focusCoords = new double[] {
-                sampleLocation.getFocusXUm(),
-                sampleLocation.getFocusYUm(),
-                sampleLocation.getFocusZUm()
-            };
-            if (focusCoords == null) {
-                logger.info("No focus coords provided.");
-                focusVector3 = sceneWindow.getCamera().getVantage().getFocusPosition();
-            }
-            else {
-                //Vantage v = sceneWindow.getVantage();
-                focusVector3 = new Vector3(
-                        (float) focusCoords[0],
-                        (float) focusCoords[1],
-                        (float) focusCoords[2]
-                );
-            }
-//            if (!loader.animateToFocusXyz(focusVector3, v, 150)) {
-//                logger.warn("Did not change focus as directed.");
-//            }
-            if (!v.setFocusPosition(focusVector3)) {
-                logger.warn("Did not change focus as directed.");
-            }
-            v.setDefaultFocus(focusVector3);
-            logger.info("Set focus, default focus, to " + focusVector3);
-            
-            double zoom = sampleLocation.getMicrometersPerWindowHeight();
-            if (zoom > 0) {
-                v.setSceneUnitsPerViewportHeight((float)zoom);
-                logger.info("Set micrometers per view height to " + zoom);
-            }
-
-            v.notifyObservers();
-
-            // Load up the tile.
-            loader.loadTileAtCurrentFocus(volumeSource);
-            sceneWindow.getGLAutoDrawable().display();
-        } else {
-            logger.warn("No URL location provided.");
-        }
-
+        };
+        RequestProcessor.getDefault().post(task);
     }
 
+    /**
+     * Returns true if Url was changed. False otherwise.
+     * 
+    */
+    private boolean setSampleUrl(URL focusUrl) {
+        String urlStr = focusUrl.toString();
+        // Check: if same as current source, no need to change that.
+        if (urlStr.equals(currentSource))
+            return false;
+        URI uri;
+        try {
+            uri = focusUrl.toURI();
+            URI yamlUri = new URI(
+                    uri.getScheme(),
+                    uri.getAuthority(),
+                    uri.getPath() + "/" + BASE_YML_FILE,
+                    uri.getFragment()
+            );
+            logger.info("Constructed URI: {}.", uri);
+            URL yamlUrl = yamlUri.toURL();
+            InputStream stream1 = yamlUrl.openStream();
+            InputStream stream2 = yamlUrl.openStream();
+            volumeSource = yamlLoader.loadYaml(stream1, loader, stream2, false);
+        } catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+            return false;
+        }
+        return true;
+    }
+    
+    private boolean setCameraLocation(SampleLocation sampleLocation) {
+        // Now, position this component over other component's
+        // focus.
+        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+        Vantage v = pCam.getVantage();
+        Vector3 focusVector3 = new Vector3(
+            (float)sampleLocation.getFocusXUm(),
+            (float)sampleLocation.getFocusYUm(),
+            (float)sampleLocation.getFocusZUm());
+        
+        if (!v.setFocusPosition(focusVector3)) {
+            logger.warn("Did not change focus as directed.");
+        }
+
+        double zoom = sampleLocation.getMicrometersPerWindowHeight();
+        if (zoom > 0) {
+            v.setSceneUnitsPerViewportHeight((float)zoom);
+            logger.info("Set micrometers per view height to " + zoom);
+        }
+
+        v.notifyObservers();
+        return true;
+    }
+    
+    private boolean loadFocusedTile() {
+        try {
+            // TODO - check whether tile already loaded
+            loader.loadTileAtCurrentFocus(volumeSource);
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+            return false;
+        }
+        return true;
+    }
+    
 }
