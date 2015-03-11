@@ -987,7 +987,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     );
                     RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
                     if (locationProviders.size() > 1) {
-                        JMenu synchronizeAllMenu = new JMenu("Sychronize with Other 3D Viewer.");
+                        JMenu synchronizeAllMenu = new JMenu("Synchronize with Other 3D Viewer.");
                         for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
                             synchronizeAllMenu.add(item);
                         }
@@ -1142,55 +1142,5 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         return true;
     }
-    
-//    private class SampleLocationAcceptor implements ViewerLocationAcceptor {
-//
-//        @Override
-//        public void acceptLocation(URL focusUrl, double[] focusCoords) throws Exception {
-//            // First ensure that this component uses same sample.
-//            if (focusUrl != null) {
-//                String urlStr = focusUrl.toString();
-//                // Check: if same as current source, no need to change that.
-//                if (!urlStr.equals(currentSource)) {
-//                    URI uri = focusUrl.toURI();
-//                    URI yamlUri = new URI(
-//                            uri.getScheme(),
-//                            uri.getAuthority(),
-//                            uri.getPath() + "/" + BASE_YML_FILE,
-//                            uri.getFragment()
-//                    );
-//                    logger.info("Constructed URI: {}.", uri);
-//                    URL yamlUrl = yamlUri.toURL();
-//                    InputStream stream1 = yamlUrl.openStream();
-//                    InputStream stream2 = yamlUrl.openStream();
-//                    loadYaml(stream1, loader, stream2);
-//                }
-//
-//                // Now, position this component over other component's
-//                // focus.
-//                if (focusCoords != null) {
-//                    Vantage v = sceneWindow.getVantage();
-//                    Vector3 focusVector3 = new Vector3(
-//                            (float) focusCoords[0],
-//                            (float) focusCoords[1],
-//                            (float) focusCoords[2]
-//                    );
-//                    loader.animateToFocusXyz(focusVector3, v, 150);
-//                    //                    v.setFocusPosition(focusVector3);
-//                    //                    v.notifyObservers();
-//                } else {
-//                    logger.info("No focus coords provided.");
-//                }
-//                
-//                // Load up the tile.
-//                loader.loadTileAtCurrentFocus(volumeSource);
-//                sceneWindow.getGLAutoDrawable().display();
-//            }
-//            else {
-//                logger.warn("No URL location provided.");
-//            }
-//
-//        }
-//        
-//    }
+
 }

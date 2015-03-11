@@ -117,12 +117,14 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         
         if (!v.setFocusPosition(focusVector3)) {
             logger.warn("Did not change focus as directed.");
-        }
+        }        
+        v.setDefaultFocus(focusVector3);
 
         double zoom = sampleLocation.getMicrometersPerWindowHeight();
         if (zoom > 0) {
             v.setSceneUnitsPerViewportHeight((float)zoom);
             logger.info("Set micrometers per view height to " + zoom);
+            v.setDefaultSceneUnitsPerViewportHeight((float)zoom);
         }
 
         v.notifyObservers();
