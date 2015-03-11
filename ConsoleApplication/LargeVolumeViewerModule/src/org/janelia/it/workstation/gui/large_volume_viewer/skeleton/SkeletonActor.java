@@ -378,13 +378,13 @@ implements GLActor
             for (Long neuronID: neuronVertices.keySet()) {
                 // setup per-neuron anchor shader settings (used to be in setupAnchorShader)
                 int tempIndex;
-                if (hoverAnchor != null && hoverAnchor.getNeuronID() == neuronID) {
+                if (hoverAnchor != null && hoverAnchor.getNeuronID().equals(neuronID)) {
                     tempIndex = getIndexForAnchorPerNeuron(hoverAnchor);
                 } else {
                     tempIndex = -1;
                 }
                 anchorShader.setUniform(gl, "highlightAnchorIndex", tempIndex);
-                if (nextParent != null && nextParent.getNeuronID() == neuronID) {
+                if (nextParent != null && nextParent.getNeuronID().equals(neuronID)) {
                     tempIndex = getIndexForAnchorPerNeuron(nextParent);
                 } else {
                     tempIndex = -1;
@@ -668,6 +668,7 @@ implements GLActor
 
         // new: per neuron:
         // first, how many vertices per neuron; then, fill the buffers (one per neuron)
+        neuronVertexCount.clear();
         for (Anchor anchor: skeleton.getAnchors()) {
             neuronVertexCount.add(anchor.getNeuronID());
         }
