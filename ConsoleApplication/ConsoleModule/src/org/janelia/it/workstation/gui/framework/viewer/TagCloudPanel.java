@@ -28,7 +28,7 @@ public class TagCloudPanel<T> extends JPanel {
 
     private static final Border PADDING_BORDER = BorderFactory.createEmptyBorder(5, 5, 5, 5);
 
-    private List<T> tags = new ArrayList<T>();
+    private List<T> tags = new ArrayList<>();
 
     public TagCloudPanel() {
         setLayout(new WrapLayout());
@@ -40,8 +40,8 @@ public class TagCloudPanel<T> extends JPanel {
     }
 
     public void setTags(List<T> tags) {
-        if (tags == null) {
-            this.tags = new ArrayList<T>();
+        if (tags==null) {
+            this.tags = new ArrayList<>();
         }
         else {
             this.tags = tags;
@@ -81,7 +81,7 @@ public class TagCloudPanel<T> extends JPanel {
     }
 
     protected JLabel createMoreLabel(int num) {
-        JLabel tagLabel = new JLabel(num + " more...");
+        JLabel tagLabel = new JLabel(num+" more...");
         tagLabel.setBorder(getBorder(null));
         tagLabel.setFont(new Font("Sans Serif", Font.BOLD, 12));
         tagLabel.setOpaque(true);
@@ -93,27 +93,27 @@ public class TagCloudPanel<T> extends JPanel {
 
         removeAll();
 
-        List<T> tags = getTags();
+        List<T> displayedTags = getTags();
 
         // Check if the text inside the tags goes over the maximum total, and limit the number of tags first by the
         // max text length, an then to a hard number limit.
         int maxNumTags = DEFAULT_MAX_NUM_TAGS;
         int c = 0;
-        for (int i = 0; i < tags.size(); i++) {
-            T tag = tags.get(i);
-            c += tag.toString().length() + 5; // every tag adds a constant to account for overhead (padding, border, etc)
-            if (c > DEFAULT_MAX_TAG_LENGTH) {
-                maxNumTags = i - 1;
+        for (int i = 0; i<displayedTags.size(); i++) {
+            T tag = displayedTags.get(i);
+            c += tag.toString().length()+5; // every tag adds a constant to account for overhead (padding, border, etc)
+            if (c>DEFAULT_MAX_TAG_LENGTH) {
+                maxNumTags = i-1;
                 break;
             }
         }
 
         // Only display a subset of the tags, if there are too many. 
-        if (tags.size() > maxNumTags) {
-            tags = tags.subList(0, maxNumTags);
+        if (displayedTags.size()>maxNumTags) {
+            displayedTags = displayedTags.subList(0, maxNumTags);
         }
 
-        for (final T tag : tags) {
+        for (final T tag : displayedTags) {
 
             JLabel tagLabel = createTagLabel(tag);
             add(tagLabel);
@@ -158,8 +158,8 @@ public class TagCloudPanel<T> extends JPanel {
         }
 
         // When there are too many tags, display a "More" button that the user can click to get everything.
-        if (getTags().size() > maxNumTags) {
-            JLabel moreLabel = createMoreLabel(getTags().size() - maxNumTags);
+        if (getTags().size()>maxNumTags) {
+            JLabel moreLabel = createMoreLabel(getTags().size()-maxNumTags);
             add(moreLabel);
             moreLabel.addMouseListener(new MouseHandler() {
                 @Override
@@ -173,7 +173,7 @@ public class TagCloudPanel<T> extends JPanel {
         }
 
         // This is to conserve space in the grid if none of the images have annotations
-        if (tags.isEmpty()) {
+        if (displayedTags.isEmpty()) {
             setPreferredSize(new Dimension(0, 0));
         }
         else {

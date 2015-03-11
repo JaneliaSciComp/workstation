@@ -35,18 +35,18 @@ import java.util.List;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> implements AnnotationView {
-	
-	private static final Logger log = LoggerFactory.getLogger(AnnotationTagCloudPanel.class);
-	
+
+    private static final Logger log = LoggerFactory.getLogger(AnnotationTagCloudPanel.class);
+
     private void deleteTag(final OntologyAnnotation tag) {
-    	
+
         Utils.setWaitingCursor(SessionMgr.getMainFrame());
 
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-            	ModelMgr.getModelMgr().removeAnnotation(tag.getId());
+                ModelMgr.getModelMgr().removeAnnotation(tag.getId());
             }
 
             @Override
@@ -56,7 +56,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
 
             @Override
             protected void hadError(Throwable error) {
-                error.printStackTrace();
+                log.error("Error deleting annotation", error);
                 Utils.setDefaultCursor(SessionMgr.getMainFrame());
                 JOptionPane.showMessageDialog(AnnotationTagCloudPanel.this, "Error deleting annotation", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -67,25 +67,24 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
 
     @Override
     protected void showPopupMenu(final MouseEvent e, final OntologyAnnotation tag) {
-    	
-    	Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewer();
-		List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(viewer.getSelectionCategory());
-		List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
-		for (String entityId : selectionIds) {
-			rootedEntityList.add(viewer.getRootedEntityById(entityId));
-		}
-		
-		
+
+        Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewer();
+        List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(viewer.getSelectionCategory());
+        List<RootedEntity> rootedEntityList = new ArrayList<>();
+        for (String entityId : selectionIds) {
+            rootedEntityList.add(viewer.getRootedEntityById(entityId));
+        }
+
         JPopupMenu popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
-        
+
         if (rootedEntityList.size()>1) {
             JMenuItem titleItem = new JMenuItem("(Multiple Selected)");
             titleItem.setEnabled(false);
             popupMenu.add(titleItem);
-            
-        	if (SessionMgr.getSubjectKey().equals(tag.getOwner())) {
-        		final RemoveAnnotationTermAction termAction = new RemoveAnnotationTermAction(tag.getKeyEntityId(), tag.getKeyString());
+
+            if (SessionMgr.getSubjectKey().equals(tag.getOwner())) {
+                final RemoveAnnotationTermAction termAction = new RemoveAnnotationTermAction(tag.getKeyEntityId(), tag.getKeyString());
                 JMenuItem deleteByTermItem = new JMenuItem(termAction.getName());
                 deleteByTermItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -99,10 +98,10 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                     Entity tmpOntologyTerm = ModelMgr.getModelMgr().getEntityById(tmpOntKeyId);
                     if (null!=tmpOntologyTerm) {
                         String tmpOntologyTermType = tmpOntologyTerm.getValueByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE);
-                        if (EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_ENUM.equals(tmpOntologyTermType) ||
-                                EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_ENUM_TEXT.equals(tmpOntologyTermType)||
-                                EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_INTERVAL.equals(tmpOntologyTermType)||
-                                EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_TEXT.equals(tmpOntologyTermType)) {
+                        if (EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_ENUM.equals(tmpOntologyTermType)
+                                ||EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_ENUM_TEXT.equals(tmpOntologyTermType)
+                                ||EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_INTERVAL.equals(tmpOntologyTermType)
+                                ||EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_TEXT.equals(tmpOntologyTermType)) {
                             final BulkEditAnnotationKeyValueAction bulkEditAction = new BulkEditAnnotationKeyValueAction(tag);
                             JMenuItem editByValueItem = new JMenuItem("  "+bulkEditAction.getName());
                             editByValueItem.addActionListener(new ActionListener() {
@@ -129,14 +128,14 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                     SessionMgr.getSessionMgr().handleException(e1);
                 }
             }
-            
+
         }
         else {
             JMenuItem titleItem = new JMenuItem(tag.getEntity().getName());
             titleItem.setEnabled(false);
             popupMenu.add(titleItem);
-            
-        	if (SessionMgr.getSubjectKey().equals(tag.getOwner())) {
+
+            if (SessionMgr.getSubjectKey().equals(tag.getOwner())) {
                 JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
                 deleteItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -144,9 +143,9 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                     }
                 });
                 popupMenu.add(deleteItem);
-        	}
+            }
 
-            if (null!=tag.getValueString()){
+            if (null!=tag.getValueString()) {
                 JMenuItem editItem = new JMenuItem("  Edit Annotation");
                 editItem.addActionListener(new ActionListener() {
                     @Override
@@ -155,18 +154,20 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                         dialog.setAnnotationValue(tag.getValueString());
                         dialog.setVisible(true);
                         String value = dialog.getAnnotationValue();
-                        if (null==value) { value=""; }
+                        if (null==value) {
+                            value = "";
+                        }
                         tag.setValueString(value);
                         tag.getEntity().setValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM, value);
                         String tmpName = tag.getEntity().getName();
-                        String namePrefix = tmpName.substring(0,tmpName.indexOf("=")+2);
+                        String namePrefix = tmpName.substring(0, tmpName.indexOf("=")+2);
                         tag.getEntity().setName(namePrefix+value);
                         try {
                             Entity tmpAnnotatedEntity = ModelMgr.getModelMgr().getEntityById(tag.getTargetEntityId());
                             ModelMgr.getModelMgr().saveOrUpdateAnnotation(tmpAnnotatedEntity, tag.getEntity());
                         }
                         catch (Exception e1) {
-                            e1.printStackTrace();
+                            log.error("Error editing annotation", e1);
                             SessionMgr.getSessionMgr().handleException(e1);
                         }
                     }
@@ -186,18 +187,18 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             JMenuItem detailsItem = new JMenuItem("  View Details");
             detailsItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
-                	OntologyOutline.viewAnnotationDetails(tag);
+                    OntologyOutline.viewAnnotationDetails(tag);
                 }
             });
             popupMenu.add(detailsItem);
         }
 
         if (tag.isComputation()) {
-    		final AcceptComputationalAnnotationsAction acceptAction = new AcceptComputationalAnnotationsAction();
+            final AcceptComputationalAnnotationsAction acceptAction = new AcceptComputationalAnnotationsAction();
             JMenuItem acceptItem = new JMenuItem(acceptAction.getName());
             acceptItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
-                	acceptAction.doAction();
+                    acceptAction.doAction();
                 }
             });
             popupMenu.add(acceptItem);
@@ -206,12 +207,12 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
         popupMenu.show(e.getComponent(), e.getX(), e.getY());
         e.consume();
     }
-    
-	@Override
-	protected JLabel createTagLabel(OntologyAnnotation tag) {
-		JLabel label = super.createTagLabel(tag);
-		
-		label.setBackground(ModelMgr.getModelMgr().getUserColorMapping().getColor(tag.getOwner()));
+
+    @Override
+    protected JLabel createTagLabel(OntologyAnnotation tag) {
+        JLabel label = super.createTagLabel(tag);
+
+        label.setBackground(ModelMgr.getModelMgr().getUserColorMapping().getColor(tag.getOwner()));
 
         if (tag.isComputation()) {
             label.setToolTipText("This annotation was computationally inferred");
@@ -220,45 +221,45 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
         else {
             label.setToolTipText("This annotation was made by "+tag.getOwner());
         }
-        
-		AnnotationSession currentSession = ModelMgr.getModelMgr().getCurrentAnnotationSession();
-		if (currentSession != null) {
-			if (tag.getSessionId() != null && tag.getSessionId().equals(currentSession.getId())) {
-				// This annotation is in the current session, so display it normally.	
-			}
-			else {
-				// Dim the annotations from other sessions.
-				Color dimFgColor = label.getBackground().darker();
-			    Border paddingBorder = BorderFactory.createEmptyBorder(5, 5, 5, 5);
-			    Border lineBorder = BorderFactory.createLineBorder(dimFgColor, 1);
-			    Border border = BorderFactory.createCompoundBorder(lineBorder, paddingBorder);
-				label.setBorder(border);
-				label.setForeground(dimFgColor);
-			}
-		}
-		else {
-			// We're not even in a session, just display everything normally.
-		}
-		
-		return label;
-	}
 
-	@Override
+        AnnotationSession currentSession = ModelMgr.getModelMgr().getCurrentAnnotationSession();
+        if (currentSession!=null) {
+            if (tag.getSessionId()!=null&&tag.getSessionId().equals(currentSession.getId())) {
+                // This annotation is in the current session, so display it normally.	
+            }
+            else {
+                // Dim the annotations from other sessions.
+                Color dimFgColor = label.getBackground().darker();
+                Border paddingBorder = BorderFactory.createEmptyBorder(5, 5, 5, 5);
+                Border lineBorder = BorderFactory.createLineBorder(dimFgColor, 1);
+                Border border = BorderFactory.createCompoundBorder(lineBorder, paddingBorder);
+                label.setBorder(border);
+                label.setForeground(dimFgColor);
+            }
+        }
+        else {
+            // We're not even in a session, just display everything normally.
+        }
+
+        return label;
+    }
+
+    @Override
     public List<OntologyAnnotation> getAnnotations() {
         return getTags();
     }
 
-	@Override
+    @Override
     public void setAnnotations(List<OntologyAnnotation> annotations) {
         setTags(annotations);
     }
 
-	@Override
+    @Override
     public void removeAnnotation(OntologyAnnotation annotation) {
         removeTag(annotation);
     }
 
-	@Override
+    @Override
     public void addAnnotation(OntologyAnnotation annotation) {
         addTag(annotation);
     }
