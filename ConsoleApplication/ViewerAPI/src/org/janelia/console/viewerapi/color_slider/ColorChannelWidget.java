@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.large_volume_viewer;
+package org.janelia.console.viewerapi.color_slider;
 
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
@@ -15,11 +15,12 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import org.janelia.console.viewerapi.SimpleIcons;
+import org.janelia.console.viewerapi.ToolButton;
+import org.janelia.console.viewerapi.ToolModeButton;
 
-import org.janelia.console.viewerapi.color_slider.UglyColorSlider;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
-import org.janelia.it.workstation.gui.util.Icons;
 
 public class ColorChannelWidget extends JPanel 
 {
@@ -100,10 +101,10 @@ public class ColorChannelWidget extends JPanel
 		private static final long serialVersionUID = 1L;
 		public VisibilityButton() {
 			super(new ChannelVisibilityAction(channelIndex));
-			setIcon(Icons.getIcon("closed_eye.png"));
-            setRolloverIcon(Icons.getIcon("closed_eye.png"));
-			setSelectedIcon(Icons.getIcon("eye.png"));
-			setRolloverSelectedIcon(Icons.getIcon("eye.png"));
+			setIcon(SimpleIcons.getIcon("closed_eye.png"));
+            setRolloverIcon(SimpleIcons.getIcon("closed_eye.png"));
+			setSelectedIcon(SimpleIcons.getIcon("eye.png"));
+			setRolloverSelectedIcon(SimpleIcons.getIcon("eye.png"));
 			setSelected(true);
 			setToolTipText("Click to show/hide color channel " + channelIndex);
 			setMaximumSize(getPreferredSize()); // after loading icon on Windows

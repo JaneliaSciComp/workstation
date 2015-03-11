@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package org.janelia.it.workstation.gui.large_volume_viewer;
+package org.janelia.console.viewerapi.color_slider;
 
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import java.awt.Insets;
@@ -15,8 +15,8 @@ import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import org.janelia.console.viewerapi.SimpleIcons;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
-import org.janelia.it.workstation.gui.util.Icons;
 
 /**
  * Encapsulates all multi-slider functionality for reuse.
@@ -115,10 +115,10 @@ public class SliderPanel extends JPanel {
 		lockBlackButton = new JToggleButton("");
 		lockBlackButton.setToolTipText("Synchronize channel black levels");
 		lockBlackButton.setMargin(new Insets(0, 0, 0, 0));
-		lockBlackButton.setRolloverIcon(Icons.getIcon(IMAGES_LOCK_UNLOCK));
-		lockBlackButton.setRolloverSelectedIcon(Icons.getIcon(IMAGES_LOCK));
-		lockBlackButton.setIcon(Icons.getIcon(IMAGES_LOCK_UNLOCK));
-		lockBlackButton.setSelectedIcon(Icons.getIcon(IMAGES_LOCK));
+		lockBlackButton.setRolloverIcon(SimpleIcons.getIcon(IMAGES_LOCK_UNLOCK));
+		lockBlackButton.setRolloverSelectedIcon(SimpleIcons.getIcon(IMAGES_LOCK));
+		lockBlackButton.setIcon(SimpleIcons.getIcon(IMAGES_LOCK_UNLOCK));
+		lockBlackButton.setSelectedIcon(SimpleIcons.getIcon(IMAGES_LOCK));
 		lockBlackButton.setSelected(true);
 		colorLockPanel.add(lockBlackButton);
 		lockBlackButton.addChangeListener(new ChangeListener() {
@@ -137,10 +137,10 @@ public class SliderPanel extends JPanel {
 		lockGrayButton = new JToggleButton("");
 		lockGrayButton.setToolTipText("Synchronize channel gray levels");
 		lockGrayButton.setMargin(new Insets(0, 0, 0, 0));
-		lockGrayButton.setRolloverIcon(Icons.getIcon(IMAGES_LOCK_UNLOCK));
-		lockGrayButton.setRolloverSelectedIcon(Icons.getIcon(IMAGES_LOCK));
-		lockGrayButton.setIcon(Icons.getIcon(IMAGES_LOCK_UNLOCK));
-		lockGrayButton.setSelectedIcon(Icons.getIcon(IMAGES_LOCK));
+		lockGrayButton.setRolloverIcon(SimpleIcons.getIcon(IMAGES_LOCK_UNLOCK));
+		lockGrayButton.setRolloverSelectedIcon(SimpleIcons.getIcon(IMAGES_LOCK));
+		lockGrayButton.setIcon(SimpleIcons.getIcon(IMAGES_LOCK_UNLOCK));
+		lockGrayButton.setSelectedIcon(SimpleIcons.getIcon(IMAGES_LOCK));
 		lockGrayButton.setSelected(true);
 		colorLockPanel.add(lockGrayButton);
 		lockGrayButton.addChangeListener(new ChangeListener() {
@@ -159,10 +159,10 @@ public class SliderPanel extends JPanel {
 		lockWhiteButton = new JToggleButton("");
 		lockWhiteButton.setToolTipText("Synchronize channel white levels");
 		lockWhiteButton.setMargin(new Insets(0, 0, 0, 0));
-		lockWhiteButton.setRolloverIcon(Icons.getIcon(IMAGES_LOCK_UNLOCK));
-		lockWhiteButton.setRolloverSelectedIcon(Icons.getIcon(IMAGES_LOCK));
-		lockWhiteButton.setIcon(Icons.getIcon(IMAGES_LOCK_UNLOCK));
-		lockWhiteButton.setSelectedIcon(Icons.getIcon(IMAGES_LOCK));
+		lockWhiteButton.setRolloverIcon(SimpleIcons.getIcon(IMAGES_LOCK_UNLOCK));
+		lockWhiteButton.setRolloverSelectedIcon(SimpleIcons.getIcon(IMAGES_LOCK));
+		lockWhiteButton.setIcon(SimpleIcons.getIcon(IMAGES_LOCK_UNLOCK));
+		lockWhiteButton.setSelectedIcon(SimpleIcons.getIcon(IMAGES_LOCK));
 		lockWhiteButton.setSelected(true);
 		colorLockPanel.add(lockWhiteButton);
 		lockWhiteButton.addChangeListener(new ChangeListener() {

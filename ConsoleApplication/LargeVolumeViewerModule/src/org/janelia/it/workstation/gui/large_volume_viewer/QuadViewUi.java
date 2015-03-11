@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.console.viewerapi.ToolButton;
+import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;

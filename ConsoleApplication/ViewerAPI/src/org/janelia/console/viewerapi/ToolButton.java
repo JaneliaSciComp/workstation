@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.large_volume_viewer;
+package org.janelia.console.viewerapi;
 
 import java.awt.Insets;
 import java.awt.event.ActionEvent;

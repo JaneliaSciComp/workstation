@@ -72,8 +72,15 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         URL focusUrl = sampleLocation.getSampleUrl();
         if (focusUrl != null) {
             String urlStr = focusUrl.toString();
-            // Check: if same as current source, no need to change that.
-            if (!urlStr.equals(currentSource)) {
+            // Check: if same as current source, no need to change that,
+            // unless the volume source has not been populated.
+            if (volumeSource != null && volumeSource.getAvailableResolutions().isEmpty()) {
+                logger.warn("Volume source may not have been populated. " + volumeSource);
+            }
+            if (!urlStr.equals(currentSource)  || 
+                volumeSource == null  ||
+                volumeSource.getAvailableResolutions().isEmpty()) {
+
                 URI uri = focusUrl.toURI();
                 URI yamlUri = new URI(
                         uri.getScheme(),
@@ -86,6 +93,8 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 InputStream stream1 = yamlUrl.openStream();
                 InputStream stream2 = yamlUrl.openStream();
                 volumeSource = yamlLoader.loadYaml(stream1, loader, stream2, false);
+                currentSource = urlStr;
+                logger.info("Making NEW volume source {}.", volumeSource);                
             }
 
             // Now, position this component over other component's
