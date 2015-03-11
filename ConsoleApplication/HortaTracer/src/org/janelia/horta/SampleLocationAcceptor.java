@@ -150,19 +150,21 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         = ProgressHandleFactory.createHandle("Loading View in Horta...");
                 progress.start();
                 try {
-                    progress.progress("Loading brain specimen...");
+                    progress.setDisplayName("Loading brain specimen (YAML)...");
                     // TODO - ensure that Horta viewer is open
                     // First ensure that this component uses same sample.
                     setSampleUrl(sampleLocation.getSampleUrl());
-                    progress.progress("Centering on location...");
+                    progress.setDisplayName("Centering on location...");
                     setCameraLocation(sampleLocation);
-                    progress.progress("Loading brain tile image...");
+                    progress.setDisplayName("Loading brain tile image...");
                     loadFocusedTile();
                     sceneWindow.getGLAutoDrawable().display();     
                 } catch (Exception ex) {
                     
                 }
-                progress.finish();
+                finally {
+                    progress.finish();
+                }
             }
         };
         RequestProcessor.getDefault().post(task);

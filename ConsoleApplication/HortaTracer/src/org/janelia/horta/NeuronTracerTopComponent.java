@@ -741,139 +741,71 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
-                /*
-                if (tracingInteractor.getTracingMode() != TracingInteractor.TracingMode.TRACING) {
-                    if (mouseStageLocation != null) {
-                        // TODO - actually build a neuron model
-                        // TODO - check whether real 3D volume information is here
-                        Action action = new AbstractAction("Reconstruct this neurite [SHIFT-click]") {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                if (tracingInteractor.getHoverLocation() == null) {
-                                    return;
-                                }
-                                tracingInteractor.setTracingModeOn();
-                                // logger.info("Ha ha. Just kidding. TODO");
-                            }
-                        };
-                        // action.setEnabled(false); // Until I implement it...
-                        menu.add(action);
-                    }
-                } else {
-                    Action action = new AbstractAction("Stop reconstructing this neurite [ESC]") {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            tracingInteractor.setTracingModeOff();
-                        }
-                    };
-                    // action.setEnabled(false); // Until I implement it...
-                    menu.add(action);
-                }
-                */
-
                 menu.add(new JPopupMenu.Separator());
 
-                menu.add(new AbstractAction("Auto contrast") {
+                menu.add(new AbstractAction("Auto Contrast") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         autoContrast();
                     }
                 });
 
-                menu.add(new AbstractAction("Save screen shot...") {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
-                        glad.getContext().makeCurrent();
-
-                        // In Jogl 2.1.3, Screenshot is deprecated, but the non-deprecated method does not work. Idiots.
-                        // BufferedImage image = Screenshot.readToBufferedImage(glad.getSurfaceWidth(), glad.getSurfaceHeight());
-                        // In Jogl 2.2.4, this newer screenshot method seems to work OK
-                        AWTGLReadBufferUtil rbu = new AWTGLReadBufferUtil(glad.getGLProfile(), false);
-                        BufferedImage image = rbu.readPixelsToBufferedImage(glad.getGL(), true);
-
-                        glad.getContext().release();
-                        if (image == null) {
-                            return;
-                        }
-                        FileDialog chooser = new FileDialog((Frame) null,
-                                "Save Neuron Tracer Image",
-                                FileDialog.SAVE);
-                        chooser.setFile("*.png");
-                        chooser.setVisible(true);
-                        logger.info("Screen shot file name = " + chooser.getFile());
-                        if (chooser.getFile() == null) {
-                            return;
-                        }
-                        if (chooser.getFile().isEmpty()) {
-                            return;
-                        }
-                        File outputFile = new File(chooser.getDirectory(), chooser.getFile());
-                        try {
-                            ImageIO.write(image, "png", outputFile);
-                        } catch (IOException ex) {
-                            Exceptions.printStackTrace(ex);
-                        }
-                    }
-                });
-
-                /*
-                menu.add(new AbstractAction("Load tile at current location")
-                {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        Runnable task = new Runnable() {
-                            public void run() {
-                                try {
-                                    BrickInfo centerBrickInfo = loader.loadTileAtCurrentFocus( volumeSource );
-                                    sceneWindow.getGLAutoDrawable().display();
-                                } catch (IOException ex) {
-                                    Exceptions.printStackTrace(ex);
-                                }
-                            }
-                        };
-                        RequestProcessor.getDefault().post(task);
-                    }
-
-                });
-                 */
-                
-                /*
-                // TODO - remove this temporary menu item I used to debug more general volume loading
-                menu.add(new AbstractAction("Load Mouse Light YAML file and recenter...") {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        // Ask user what file to open
-                        JFileChooser fileChooser = new JFileChooser();
-                        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                        fileChooser.setFileFilter(new FileNameExtensionFilter(
-                                "Mouse Light Tile Index",
-                                "yml", "yaml"));
-                        fileChooser.setDialogTitle("Open Mouse Light tilebase index");
-                        int openResult = fileChooser.showOpenDialog(
-                                NeuronTracerTopComponent.this);
-                        if (openResult != JFileChooser.APPROVE_OPTION) {
-                            return;
-                        }
-                        final File yamlFile = fileChooser.getSelectedFile();
-                        if (!yamlFile.exists()) {
-                            JOptionPane.showMessageDialog(
-                                    NeuronTracerTopComponent.this,
-                                    "ERROR: No such file " + yamlFile.getAbsolutePath(),
-                                    "ERROR: File not found.",
-                                    JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-                        Runnable task = new YamlFileRunnable(
-                                yamlFile, sceneWindow, loader, NeuronTracerTopComponent.this
-                        );
-                        RequestProcessor.getDefault().post(task);
-                    }
-                });
-                 */
-                
                 if (volumeMipMaterial != null) {
-                    JMenu filterMenu = new JMenu("Rendering filter");
+                    JMenu projectionMenu = new JMenu("Projection");
+                    
+                    menu.add(projectionMenu);
+                    
+                    projectionMenu.add(new JRadioButtonMenuItem(
+                            new AbstractAction("Maximum Intensity") 
+                    {
+                        {  
+                            putValue(Action.SELECTED_KEY, 
+                                volumeMipMaterial.getProjectionMode() == 0);
+                        }
+                        
+                        @Override
+                        public void actionPerformed(ActionEvent e) 
+                        {
+                            volumeMipMaterial.setProjectionMode(0);
+                            neuronMPRenderer.setIntensityBufferDirty();
+                            sceneWindow.getGLAutoDrawable().display();
+                        }
+                    }));
+                
+                    
+                    projectionMenu.add(new JRadioButtonMenuItem(
+                            new AbstractAction("Occluding") 
+                    {
+                        {  
+                            putValue(Action.SELECTED_KEY, 
+                                volumeMipMaterial.getProjectionMode() == 1);
+                        }
+                        
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            volumeMipMaterial.setProjectionMode(1);
+                            neuronMPRenderer.setIntensityBufferDirty();
+                            sceneWindow.getGLAutoDrawable().display();
+                        }
+                    }));
+                    
+                    projectionMenu.add(new JRadioButtonMenuItem(
+                            new AbstractAction("Isosurface") 
+                    {
+                        {  
+                            putValue(Action.SELECTED_KEY, 
+                                volumeMipMaterial.getProjectionMode() == 2);
+                        }
+                        
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            volumeMipMaterial.setProjectionMode(2);
+                            neuronMPRenderer.setIntensityBufferDirty();
+                            sceneWindow.getGLAutoDrawable().display();
+                        }
+                    }));
+                                        
+                    JMenu filterMenu = new JMenu("Rendering Filter");
                     menu.add(filterMenu);
 
                     filterMenu.add(new JRadioButtonMenuItem(
@@ -922,60 +854,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                             sceneWindow.getGLAutoDrawable().display();
                         }
                     }));
-                    
-                    filterMenu = new JMenu("Projection");
-                    menu.add(filterMenu);
-                    
-                    filterMenu.add(new JRadioButtonMenuItem(
-                            new AbstractAction("Maximum Intensity") 
-                    {
-                        {  
-                            putValue(Action.SELECTED_KEY, 
-                                volumeMipMaterial.getProjectionMode() == 0);
-                        }
-                        
-                        @Override
-                        public void actionPerformed(ActionEvent e) 
-                        {
-                            volumeMipMaterial.setProjectionMode(0);
-                            neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.getGLAutoDrawable().display();
-                        }
-                    }));
-                
-                    
-                    filterMenu.add(new JRadioButtonMenuItem(
-                            new AbstractAction("Occluding") 
-                    {
-                        {  
-                            putValue(Action.SELECTED_KEY, 
-                                volumeMipMaterial.getProjectionMode() == 1);
-                        }
-                        
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            volumeMipMaterial.setProjectionMode(1);
-                            neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.getGLAutoDrawable().display();
-                        }
-                    }));
-                    
-                    filterMenu.add(new JRadioButtonMenuItem(
-                            new AbstractAction("Isosurface") 
-                    {
-                        {  
-                            putValue(Action.SELECTED_KEY, 
-                                volumeMipMaterial.getProjectionMode() == 2);
-                        }
-                        
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            volumeMipMaterial.setProjectionMode(2);
-                            neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.getGLAutoDrawable().display();
-                        }
-                    }));
-                                        
                 }
                 
                 if (sceneWindow != null) {
@@ -1038,7 +916,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     
                 }
                 
-                JCheckBoxMenuItem cubeDistortMenu = new JCheckBoxMenuItem("Compress voxels in Z", doCubifyVoxels);
+                JCheckBoxMenuItem cubeDistortMenu = new JCheckBoxMenuItem("Compress Voxels in Z", doCubifyVoxels);
                 menu.add(cubeDistortMenu);
                 cubeDistortMenu.addActionListener(new AbstractAction() {
                     @Override
@@ -1055,35 +933,76 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
                 
-                // Synchronize with LVV
-                // TODO - is LVV present?
-                menu.add(new JPopupMenu.Separator());
-                // Want to lookup, get URL and get focus.
-                SynchronizationHelper helper = new SynchronizationHelper();
-                Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
-                        helper.getSampleLocationProviders(HortaLocationProvider.UNIQUE_NAME);
-                Tiled3dSampleLocationProviderAcceptor origin = 
-                        helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
-                logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
-                ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                        currentSource, loader, NeuronTracerTopComponent.this, sceneWindow, volumeSource
-                );
-                RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-                if (locationProviders.size() > 1) {
-                    JMenu synchronizeAllMenu = new JMenu("Sychronize with other 3D viewer.");
-                    for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
-                        synchronizeAllMenu.add(item);
+                menu.add(new AbstractAction("Save Screen Shot...") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
+                        glad.getContext().makeCurrent();
+
+                        // In Jogl 2.1.3, Screenshot is deprecated, but the non-deprecated method does not work. Idiots.
+                        // BufferedImage image = Screenshot.readToBufferedImage(glad.getSurfaceWidth(), glad.getSurfaceHeight());
+                        // In Jogl 2.2.4, this newer screenshot method seems to work OK
+                        AWTGLReadBufferUtil rbu = new AWTGLReadBufferUtil(glad.getGLProfile(), false);
+                        BufferedImage image = rbu.readPixelsToBufferedImage(glad.getGL(), true);
+
+                        glad.getContext().release();
+                        if (image == null) {
+                            return;
+                        }
+                        FileDialog chooser = new FileDialog((Frame) null,
+                                "Save Neuron Tracer Image",
+                                FileDialog.SAVE);
+                        chooser.setFile("*.png");
+                        chooser.setVisible(true);
+                        logger.info("Screen shot file name = " + chooser.getFile());
+                        if (chooser.getFile() == null) {
+                            return;
+                        }
+                        if (chooser.getFile().isEmpty()) {
+                            return;
+                        }
+                        File outputFile = new File(chooser.getDirectory(), chooser.getFile());
+                        try {
+                            ImageIO.write(image, "png", outputFile);
+                        } catch (IOException ex) {
+                            Exceptions.printStackTrace(ex);
+                        }
                     }
-                    menu.add(synchronizeAllMenu);
-                }
-                else if (locationProviders.size() == 1) {
-                    for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
-                        menu.add(item);
+                });
+
+                boolean showLinkToLvv = false; // does not work yet. Might not work on April 1.
+                if (showLinkToLvv) {
+                    // Synchronize with LVV
+                    // TODO - is LVV present?
+                    menu.add(new JPopupMenu.Separator());
+                    // Want to lookup, get URL and get focus.
+                    SynchronizationHelper helper = new SynchronizationHelper();
+                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
+                            helper.getSampleLocationProviders(HortaLocationProvider.UNIQUE_NAME);
+                    Tiled3dSampleLocationProviderAcceptor origin = 
+                            helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
+                    logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
+                    ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+                            currentSource, loader, NeuronTracerTopComponent.this, sceneWindow, volumeSource
+                    );
+                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
+                    if (locationProviders.size() > 1) {
+                        JMenu synchronizeAllMenu = new JMenu("Sychronize with Other 3D Viewer.");
+                        for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
+                            synchronizeAllMenu.add(item);
+                        }
+                        menu.add(synchronizeAllMenu);
+                    }
+                    else if (locationProviders.size() == 1) {
+                        for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
+                            menu.add(item);
+                        }
                     }
                 }
+                
                 // Cancel/do nothing action
                 menu.add(new JPopupMenu.Separator());
-                menu.add(new AbstractAction("Close this menu [ESC]") {
+                menu.add(new AbstractAction("Close This Menu [ESC]") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                     }
