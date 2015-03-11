@@ -41,7 +41,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
     private DynamicTable dynamicTable;
     private JLabel summaryLabel;
 
-    private List<OntologyAnnotation> annotations = new ArrayList<OntologyAnnotation>();
+    private List<OntologyAnnotation> annotations = new ArrayList<>();
 
     public AnnotationTablePanel() {
         setLayout(new BorderLayout());
@@ -57,7 +57,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
     @Override
     public void setAnnotations(List<OntologyAnnotation> annotations) {
         if (annotations == null) {
-            this.annotations = new ArrayList<OntologyAnnotation>();
+            this.annotations = new ArrayList<>();
         }
         else {
             this.annotations = annotations;
