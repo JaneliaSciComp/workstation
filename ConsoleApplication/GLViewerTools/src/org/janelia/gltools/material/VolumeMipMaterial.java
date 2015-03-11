@@ -65,16 +65,15 @@ public class VolumeMipMaterial extends BasicMaterial
     
     private final BrightnessModel colorMap;
     
-    private int filteringOrder = 1;  // 0: NEAREST; 1: TRILINEAR; 2: <not used> 3: TRICUBIC
     private int filteringOrderIndex = -1;
     
-    private int projectionMode = 0; // 0: Maximum intensity projection; 1: Occluding
     // private int projectionModeIndex = -1;
     
     protected final ShaderProgram mipShader;
     protected final ShaderProgram occShader;
     protected final ShaderProgram isoShader;
     private boolean uniformIndicesAreDirty = true;
+    private VolumeState volumeState = new VolumeState();
     
     public VolumeMipMaterial(Texture3d volumeTexture, BrightnessModel colorMap) 
     {
@@ -94,13 +93,26 @@ public class VolumeMipMaterial extends BasicMaterial
         setShadingStyle(Shading.FLAT);
     }
 
+    public VolumeState getVolumeState()
+    {
+        return volumeState;
+    }
+
+    public void setVolumeState(VolumeState volumeState)
+    {
+        if (this.volumeState == volumeState)
+            return;
+        this.volumeState = volumeState;
+        this.uniformIndicesAreDirty = true;
+    }
+
     @Override
     protected void activateCull(GL3 gl) {
         gl.glEnable(GL3.GL_CULL_FACE);
         gl.glCullFace(GL3.GL_FRONT);
     }
     
-    public float getViewSlabThickness(AbstractCamera camera) {
+    public static float getViewSlabThickness(AbstractCamera camera) {
         // Clip on slab, to limit depth of rendering
         float screenResolution = 
                 camera.getVantage().getSceneUnitsPerViewportHeight()
@@ -111,28 +123,32 @@ public class VolumeMipMaterial extends BasicMaterial
     }
 
     public int getFilteringOrder() {
-        return filteringOrder;
+        return volumeState.filteringOrder;
     }
 
     public void setFilteringOrder(int filteringOrder) {
-        this.filteringOrder = filteringOrder;
+        volumeState.filteringOrder = filteringOrder;
     }
 
     public int getProjectionMode() {
-        return projectionMode;
+        return volumeState.projectionMode;
     }
 
     public void setProjectionMode(int projectionMode) {
-        if (this.projectionMode == projectionMode)
+        if (volumeState.projectionMode == projectionMode)
             return;
-        this.projectionMode = projectionMode;
-        if (projectionMode == 0)
+        volumeState.projectionMode = projectionMode;
+        updateShaderProgram();
+        uniformIndicesAreDirty = true;
+    }
+    
+    private void updateShaderProgram() {
+        if (volumeState.projectionMode == 0)
             shaderProgram = mipShader;
-        else if (projectionMode == 1)
+        else if (volumeState.projectionMode == 1)
             shaderProgram = occShader;
         else
-            shaderProgram = isoShader;
-        uniformIndicesAreDirty = true;
+            shaderProgram = isoShader;        
     }
     
     @Override
@@ -233,12 +249,13 @@ public class VolumeMipMaterial extends BasicMaterial
     
     @Override
     public void load(GL3 gl, AbstractCamera camera) {
+        updateShaderProgram();
         super.load(gl, camera);
         
         if (uniformIndicesAreDirty)
             updateUniformIndices(gl);
 
-        if (filteringOrder <= 0) {
+        if (volumeState.filteringOrder <= 0) {
             volumeTexture.setMagFilter(GL3.GL_NEAREST);
             volumeTexture.setMinFilter(GL3.GL_NEAREST_MIPMAP_NEAREST);
         }
@@ -248,7 +265,7 @@ public class VolumeMipMaterial extends BasicMaterial
             volumeTexture.setMagFilter(GL3.GL_LINEAR);
             volumeTexture.setMinFilter(GL3.GL_LINEAR_MIPMAP_NEAREST);
         }
-        gl.glUniform1i(filteringOrderIndex, filteringOrder);
+        gl.glUniform1i(filteringOrderIndex, volumeState.filteringOrder);
         // gl.glUniform1i(projectionModeIndex, projectionMode);
 
         int textureUnit = 0;
@@ -269,6 +286,7 @@ public class VolumeMipMaterial extends BasicMaterial
     
     @Override
     public void init(GL3 gl) {
+        updateShaderProgram();
         super.init(gl);
         updateUniformIndices(gl);
         volumeTexture.init(gl);
@@ -315,6 +333,11 @@ public class VolumeMipMaterial extends BasicMaterial
                 Exceptions.printStackTrace(ex);
             }        
         }
+    }
+    
+    public static class VolumeState {
+        public int filteringOrder = 1;  // 0: NEAREST; 1: TRILINEAR; 2: <not used> 3: TRICUBIC
+        public int projectionMode = 0; // 0: Maximum intensity projection; 1: Occluding    
     }
     
 }

@@ -76,6 +76,7 @@ public class NeuronTraceLoader {
         this.tracingInteractor = tracingInteractor;
     }
     
+    /*
     public void loadYamlFile(InputStream yamlStream) throws IOException {
         loadYamlFile(yamlStream, true);
     }
@@ -112,6 +113,7 @@ public class NeuronTraceLoader {
         };
         RequestProcessor.getDefault().post(task);
     }
+    */
 
     /**
      * Animates to next point in 3D space TODO - run this in another thread
@@ -188,6 +190,10 @@ public class NeuronTraceLoader {
         BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution);
         BrickInfo brickInfo = brickInfoSet.getBestContainingBrick(pCam.getVantage().getFocusPosition());
 
+        // TODO - check for existing brick here
+        BrainTileInfo brainTileInfo = (BrainTileInfo) brickInfo;
+        String brickName = brainTileInfo.getLocalPath();
+        
         GL3Actor boxMesh = nttc.createBrickActor((BrainTileInfo) brickInfo);
 
         StatusDisplayer.getDefault().setStatusText(

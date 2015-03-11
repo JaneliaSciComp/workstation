@@ -49,6 +49,10 @@ implements GL3Resource
     protected final Framebuffer framebuffer;
     private final List<GL3Actor> actors = new ArrayList<>();
 
+    // Queue old resources for deletion
+    private final List<GL3Resource> obsoleteResources = new ArrayList<>();
+
+
     public RenderPass(Framebuffer framebuffer) {
         this.framebuffer = framebuffer;
     }
@@ -68,6 +72,12 @@ implements GL3Resource
     }
     
     public void display(GL3 gl, AbstractCamera camera) {
+        // Clean up old junk while we have an active context
+        for (GL3Resource deadActor : obsoleteResources) {
+            deadActor.dispose(gl);
+        }
+        obsoleteResources.clear();
+        
         if (actors.isEmpty())
             return;
         if (! needsRerun())
@@ -127,6 +137,10 @@ implements GL3Resource
     }
     
     public void clearActors() {
+        // Save a list of old actors, so their resources can be reclaimed
+        for (GL3Resource oldActor : actors) {
+            obsoleteResources.add(oldActor);
+        }
         actors.clear();
     }
 

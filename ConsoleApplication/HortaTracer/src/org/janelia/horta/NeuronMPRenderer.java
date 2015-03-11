@@ -32,6 +32,8 @@ package org.janelia.horta;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
@@ -40,6 +42,7 @@ import org.janelia.gltools.BasicScreenBlitActor;
 import org.janelia.gltools.ColorBackgroundActor;
 import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.GL3Actor;
+import org.janelia.gltools.GL3Resource;
 import org.janelia.gltools.LightingBlitActor;
 import org.janelia.gltools.MultipassRenderer;
 import org.janelia.gltools.RemapColorActor;

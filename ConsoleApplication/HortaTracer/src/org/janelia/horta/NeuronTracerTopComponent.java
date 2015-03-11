@@ -146,8 +146,10 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor interactor;
+    
     // private MultipassVolumeActor mprActor;
-    private VolumeMipMaterial volumeMipMaterial;
+    // private VolumeMipMaterial volumeMipMaterial;
+    private VolumeMipMaterial.VolumeState volumeState = new VolumeMipMaterial.VolumeState();
 
     // Avoid letting double clicks move twice
     private long previousClickTime = Long.MIN_VALUE;
@@ -518,10 +520,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     private float depthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
         float result = neuronMPRenderer.relativeDepthOffsetForScreenXy(xy, camera);
-        if (volumeMipMaterial == null) {
-            return result;
-        }
-        result *= 0.5f * volumeMipMaterial.getViewSlabThickness(camera);
+        result *= 0.5f * VolumeMipMaterial.getViewSlabThickness(camera);
         return result;
     }
 
@@ -750,7 +749,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
-                if (volumeMipMaterial != null) {
+                if (volumeState != null) {
                     JMenu projectionMenu = new JMenu("Projection");
                     
                     menu.add(projectionMenu);
@@ -760,13 +759,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                     {
                         {  
                             putValue(Action.SELECTED_KEY, 
-                                volumeMipMaterial.getProjectionMode() == 0);
+                                volumeState.projectionMode == 0);
                         }
                         
                         @Override
                         public void actionPerformed(ActionEvent e) 
                         {
-                            volumeMipMaterial.setProjectionMode(0);
+                            volumeState.projectionMode = 0;
                             neuronMPRenderer.setIntensityBufferDirty();
                             sceneWindow.getGLAutoDrawable().display();
                         }
@@ -778,12 +777,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                     {
                         {  
                             putValue(Action.SELECTED_KEY, 
-                                volumeMipMaterial.getProjectionMode() == 1);
+                                volumeState.projectionMode == 1);
                         }
                         
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            volumeMipMaterial.setProjectionMode(1);
+                            volumeState.projectionMode = 1;
                             neuronMPRenderer.setIntensityBufferDirty();
                             sceneWindow.getGLAutoDrawable().display();
                         }
@@ -794,12 +793,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                     {
                         {  
                             putValue(Action.SELECTED_KEY, 
-                                volumeMipMaterial.getProjectionMode() == 2);
+                                volumeState.projectionMode == 2);
                         }
                         
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            volumeMipMaterial.setProjectionMode(2);
+                            volumeState.projectionMode = 2;
                             neuronMPRenderer.setIntensityBufferDirty();
                             sceneWindow.getGLAutoDrawable().display();
                         }
@@ -813,12 +812,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                     {
                         {  
                             putValue(Action.SELECTED_KEY, 
-                                volumeMipMaterial.getFilteringOrder() == 0);
+                                volumeState.filteringOrder == 0);
                         }
                         
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            volumeMipMaterial.setFilteringOrder(0);
+                            volumeState.filteringOrder = 0;
                             neuronMPRenderer.setIntensityBufferDirty();
                             sceneWindow.getGLAutoDrawable().display();
                         }
@@ -829,12 +828,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                     {
                         {  
                             putValue(Action.SELECTED_KEY, 
-                                volumeMipMaterial.getFilteringOrder() == 1);
+                                volumeState.filteringOrder == 1);
                         }
                         
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            volumeMipMaterial.setFilteringOrder(1);
+                            volumeState.filteringOrder = 1;
                             neuronMPRenderer.setIntensityBufferDirty();
                             sceneWindow.getGLAutoDrawable().display();
                         }
@@ -844,12 +843,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                             new AbstractAction("Tricubic") {
                         {  
                             putValue(Action.SELECTED_KEY, 
-                                volumeMipMaterial.getFilteringOrder() == 3);
+                                volumeState.filteringOrder == 3);
                         }
                         
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            volumeMipMaterial.setFilteringOrder(3);
+                            volumeState.filteringOrder = 3;
                             neuronMPRenderer.setIntensityBufferDirty();
                             sceneWindow.getGLAutoDrawable().display();
                         }
@@ -1027,10 +1026,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         Texture3d texture = brainTile.loadBrick(10);
 
         // logger.info("tiff load to texture took "+elapsedTimeMs+" ms");
-        volumeMipMaterial
+        VolumeMipMaterial volumeMipMaterial
                 = // new TexCoordMaterial();
                 // new VolumeSurfaceMaterial(texture);
                 new VolumeMipMaterial(texture, brightnessModel);
+        volumeMipMaterial.setVolumeState(volumeState);
         // texture.setMagFilter(GL3.GL_NEAREST); // TODO for demo only
         MeshGeometry boxGeometry = new BrainTileMesh(brainTile);
         GL3Actor boxMesh = new MeshActor(
