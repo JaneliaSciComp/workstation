@@ -325,28 +325,34 @@ implements LookupListener
     // This method make GL updates lag if called directly too often
     private void immediateUpdateControllerFields()
     {
-        // turn off listener
-        doUpdateColorMap = false;
+        try { // I saw a NPE in here once in the client viewer...
+            // turn off listener
+            doUpdateColorMap = false;
 
-        if (selectedColorMap == null) {
-            minSlider.setValue(minSlider.getMinimum());
-            maxSlider.setValue(maxSlider.getMaximum());
-            // Gray out tools not connected to a BrightnessModel
-            for (JComponent w : widgets)
-                if (w != null) w.setEnabled(false);
+            if (selectedColorMap == null) {
+                minSlider.setValue(minSlider.getMinimum());
+                maxSlider.setValue(maxSlider.getMaximum());
+                // Gray out tools not connected to a BrightnessModel
+                for (JComponent w : widgets)
+                    if (w != null) w.setEnabled(false);
+            }
+            else {
+                // Ungray controls for live BrightnessModel
+                for (JComponent w : widgets)
+                    if (w != null) w.setEnabled(true);
+
+                // We use doUpdateColorMap flag to avoid race condition.
+                minSlider.setValue((int)(selectedColorMap.getMinimum() * minSlider.getMaximum())); // saw NPE here...
+                maxSlider.setValue((int)(selectedColorMap.getMaximum() * minSlider.getMaximum()));
+            }
         }
-        else {
-            // Ungray controls for live BrightnessModel
-            for (JComponent w : widgets)
-                if (w != null) w.setEnabled(true);
-            
-            // We use doUpdateColorMap flag to avoid race condition.
-            minSlider.setValue((int)(selectedColorMap.getMinimum() * minSlider.getMaximum()));
-            maxSlider.setValue((int)(selectedColorMap.getMaximum() * minSlider.getMaximum()));
+        catch (Exception ex) {
+            ex.printStackTrace();
         }
-        
-        // Turn listeners back on
-        doUpdateColorMap = true;
+        finally {
+            // Turn listeners back on
+            doUpdateColorMap = true;
+        }
     }
     
     private void updateColorMapProperties() {
