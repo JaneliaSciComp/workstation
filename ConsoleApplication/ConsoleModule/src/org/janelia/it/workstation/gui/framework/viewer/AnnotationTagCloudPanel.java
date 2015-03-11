@@ -28,6 +28,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * A tag cloud of Entity-based annotations which support context menu operations such as deletion.
@@ -135,7 +136,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             titleItem.setEnabled(false);
             popupMenu.add(titleItem);
 
-            if (SessionMgr.getSubjectKey().equals(tag.getOwner())) {
+            if (EntityUtils.hasWriteAccess(tag.getEntity(), SessionMgr.getSubjectKeys())) {
                 JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
                 deleteItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
