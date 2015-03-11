@@ -13,26 +13,27 @@ public class TestMip3d extends Mip3d {
 
     private final Logger logger = LoggerFactory.getLogger(TestMip3d.class);
 
-    @Override
-    public void paint( Graphics graphics ) {
-        logger.info("paint()");
-        super.paint( graphics );
-        if ( this.getVolumeModel() == null  ||  this.getVolumeModel().getCamera3d() == null ) {
-            logger.info("volumeModel or camera3D null - returning");
-            return;
-        }
-
-        try {
-            graphics.setColor(Color.white);
-            graphics.setFont( new Font("Ariel", Font.PLAIN, 10 ) );
-            String testString = "This is a test";
-            graphics.drawString(testString, 0, 0);
-            graphics.drawLine(0,0,1,1);
-        } catch ( Exception ex ) {
-            ex.printStackTrace();
-            throw new RuntimeException( ex );
-        }
-    }
+//    @Override
+//    public void paint( Graphics graphics ) {
+//        logger.info("paint()");
+//        super.paint( graphics );
+//        if ( this.getVolumeModel() == null  ||  this.getVolumeModel().getCamera3d() == null ) {
+//            logger.info("volumeModel or camera3D null - returning");
+//            return;
+//        }
+//
+//        try {
+//            logger.info("Drawing test text");
+//            graphics.setColor(Color.white);
+//            graphics.setFont( new Font("Ariel", Font.PLAIN, 10 ) );
+//            String testString = "This is a test";
+//            graphics.drawString(testString, 10, 10);
+//            graphics.drawLine(0,0,100,100);
+//        } catch ( Exception ex ) {
+//            ex.printStackTrace();
+//            throw new RuntimeException( ex );
+//        }
+//    }
 
 
 }

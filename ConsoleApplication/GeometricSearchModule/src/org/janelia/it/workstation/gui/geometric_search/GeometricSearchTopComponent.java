@@ -70,6 +70,10 @@ public final class GeometricSearchTopComponent extends TopComponent {
         searchTabPanel = new javax.swing.JPanel();
         adminTabPanel = new javax.swing.JPanel();
 
+        setPreferredSize(new java.awt.Dimension(1200, 900));
+
+        searchTabPanel.setPreferredSize(new java.awt.Dimension(1200, 900));
+
         javax.swing.GroupLayout searchTabPanelLayout = new javax.swing.GroupLayout(searchTabPanel);
         searchTabPanel.setLayout(searchTabPanelLayout);
         searchTabPanelLayout.setHorizontalGroup(
@@ -161,6 +165,7 @@ public final class GeometricSearchTopComponent extends TopComponent {
         searchTabPanel.setLayout( new BorderLayout() );
         searchPanel=new GeometricSearchPanel();
         searchTabPanel.add( searchPanel, BorderLayout.CENTER );
+        searchPanel.setVisible(true);
         searchPanel.displayReady();
     }
 
