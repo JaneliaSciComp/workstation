@@ -41,6 +41,7 @@ import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
+import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
@@ -63,57 +64,20 @@ public class NeuronTraceLoader {
     private NeuronTracerTopComponent nttc;
     private NeuronMPRenderer neuronMPRenderer;
     private SceneWindow sceneWindow;
-    private TracingInteractor tracingInteractor;
+    // private TracingInteractor tracingInteractor;
     
     public NeuronTraceLoader(
             NeuronTracerTopComponent nttc, 
             NeuronMPRenderer neuronMPRenderer, 
-            SceneWindow sceneWindow, 
-            TracingInteractor tracingInteractor) {
+            SceneWindow sceneWindow 
+            // TracingInteractor tracingInteractor
+            ) {
         this.nttc = nttc;
         this.neuronMPRenderer = neuronMPRenderer;
         this.sceneWindow = sceneWindow;
-        this.tracingInteractor = tracingInteractor;
+        // this.tracingInteractor = tracingInteractor;
     }
-    
-    /*
-    public void loadYamlFile(InputStream yamlStream) throws IOException {
-        loadYamlFile(yamlStream, true);
-    }
-    
-    public void loadYamlFile(final InputStream yamlStream, final boolean loadExample) throws IOException {
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                ProgressHandle progress = ProgressHandleFactory.createHandle("Loading brain tiles");
-                progress.start();
-                progress.progress("Loading YAML tile information...");
 
-                PerformanceTimer timer = new PerformanceTimer();
-                BrainTileInfoList tileList = new BrainTileInfoList();
-                try {
-                    tileList.loadYamlFile(yamlStream);
-                } catch (IOException ex) {
-                    handleException(ex);
-                }
-                progress.progress("YAML tile information loaded");
-                logger.info("yaml load took " + timer.reportMsAndRestart() + " ms");
-                // TODO remove this testing hack
-                if (loadExample) {
-                    if (!loadExampleTile(tileList, progress)) {
-                        RuntimeException re = new RuntimeException(FAILED_TO_LOAD_EXAMPLE_TILE_MSG);
-                        handleException(re);
-                    }
-                    progress.progress("Example tile loaded");
-                }
-
-                progress.finish();
-            }
-            public static final String FAILED_TO_LOAD_EXAMPLE_TILE_MSG = "Failed to load example tile.";
-        };
-        RequestProcessor.getDefault().post(task);
-    }
-    */
 
     /**
      * Animates to next point in 3D space TODO - run this in another thread
@@ -189,25 +153,38 @@ public class NeuronTraceLoader {
         BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution);
         BrickInfo brickInfo = brickInfoSet.getBestContainingBrick(pCam.getVantage().getFocusPosition());
 
-        // TODO - check for existing brick here
+        // Check for existing brick already loaded here
         BrainTileInfo brainTileInfo = (BrainTileInfo) brickInfo;
         String brickName = brainTileInfo.getLocalPath();
+        boolean tileAlreadyLoaded = false;
+        for (GL3Actor actor : neuronMPRenderer.getVolumeActors()) {
+            if (!(actor instanceof BrickActor))
+                continue;
+            BrickActor ba = (BrickActor)actor;
+            if (ba.getBrainTile().isSameBrick(brainTileInfo)) {
+                tileAlreadyLoaded = true;
+                break;
+            }
+        }
         
-        GL3Actor boxMesh = nttc.createBrickActor((BrainTileInfo) brickInfo);
+        if (! tileAlreadyLoaded) {
+            GL3Actor boxMesh = nttc.createBrickActor((BrainTileInfo) brickInfo);
 
-        StatusDisplayer.getDefault().setStatusText(
-                "One TIFF file loaded and processed in "
-                + String.format("%1$,.2f", timer.reportMsAndRestart() / 1000.0)
-                + " seconds."
-        );
+            StatusDisplayer.getDefault().setStatusText(
+                    "One TIFF file loaded and processed in "
+                    + String.format("%1$,.2f", timer.reportMsAndRestart() / 1000.0)
+                    + " seconds."
+            );
 
-        // mprActor.addChild(boxMesh);
-        neuronMPRenderer.clearVolumeActors(); // TODO - release texture memory
-        neuronMPRenderer.addVolumeActor(boxMesh);
+            // mprActor.addChild(boxMesh);
+            neuronMPRenderer.clearVolumeActors();
+            neuronMPRenderer.addVolumeActor(boxMesh);
+        }
         
         return brickInfo;
     }
 
+    /*
     private boolean loadExampleTile(BrainTileInfoList tileList, ProgressHandle progress) {
 
         BrainTileInfo exampleTile = null;
@@ -263,11 +240,14 @@ public class NeuronTraceLoader {
 
         return true;
     }
+    */
 
+    /* 
     private void handleException(Exception ex) {
         Exceptions.printStackTrace(ex);
         JOptionPane.showMessageDialog(nttc, ex);
     }
+     */
     
 
 }

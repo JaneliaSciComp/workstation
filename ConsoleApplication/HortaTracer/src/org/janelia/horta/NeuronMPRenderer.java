@@ -232,4 +232,9 @@ extends MultipassRenderer
             rt.setDirty(true);
     }
 
+    Iterable<GL3Actor> getVolumeActors()
+    {
+        return hdrPass.getActors();
+    }
+
 }

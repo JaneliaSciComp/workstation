@@ -102,6 +102,7 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.horta.volume.BrickActor;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -238,8 +239,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         loader = new NeuronTraceLoader(
                 NeuronTracerTopComponent.this,
                 neuronMPRenderer,
-                sceneWindow,
-                tracingInteractor
+                sceneWindow
+                // tracingInteractor
         );
     }
 
@@ -1023,19 +1024,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     public GL3Actor createBrickActor(BrainTileInfo brainTile) throws IOException 
     {
-        Texture3d texture = brainTile.loadBrick(10);
-
-        // logger.info("tiff load to texture took "+elapsedTimeMs+" ms");
-        VolumeMipMaterial volumeMipMaterial
-                = // new TexCoordMaterial();
-                // new VolumeSurfaceMaterial(texture);
-                new VolumeMipMaterial(texture, brightnessModel);
-        volumeMipMaterial.setVolumeState(volumeState);
-        // texture.setMagFilter(GL3.GL_NEAREST); // TODO for demo only
-        MeshGeometry boxGeometry = new BrainTileMesh(brainTile);
-        GL3Actor boxMesh = new MeshActor(
-                boxGeometry, volumeMipMaterial, null);
-        return boxMesh;
+        return new BrickActor(brainTile, brightnessModel, volumeState);
     }
     
     public double[] getStageLocation() {

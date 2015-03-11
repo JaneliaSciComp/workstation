@@ -157,5 +157,10 @@ implements GL3Resource
         for (GL3Actor actor : actors)
             actor.init(gl);
     }
+
+    public Iterable<GL3Actor> getActors()
+    {
+        return actors;
+    }
     
 }

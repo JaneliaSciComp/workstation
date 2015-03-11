@@ -288,6 +288,21 @@ implements BrickInfo
         }
         return true;
     }
+
+    @Override
+    public boolean isSameBrick(BrickInfo other)
+    {
+        if (! (other instanceof BrainTileInfo)) {
+            return false;
+        }
+        BrainTileInfo rhs = (BrainTileInfo) other;
+        if ( ! rhs.parentPath.equals(parentPath))
+            return false;
+        if ( ! rhs.localPath.equals(localPath))
+            return false;
+        
+        return true;
+    }
     
     
 }

@@ -30,30 +30,48 @@
 
 package org.janelia.horta.volume;
 
-import Jama.Matrix;
 import java.io.IOException;
-import java.util.List;
-import org.janelia.geometry3d.Box3;
-import org.janelia.geometry3d.ConstVector3;
-import org.janelia.geometry3d.Vector3;
-import org.janelia.gltools.texture.Texture3d;
+import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.gltools.MeshActor;
+import org.janelia.gltools.material.VolumeMipMaterial;
+import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
+import org.janelia.horta.BrainTileInfo;
+import org.janelia.horta.BrainTileMesh;
 
 /**
  *
  * @author Christopher Bruns
  */
-public interface BrickInfo {
-    List<? extends ConstVector3> getCornerLocations(); // XYZ at extreme corners of raster volume
-    List<? extends ConstVector3> getValidCornerLocations(); // XYZ at corners of non-zero subvolume, e.g. to ignore openGL padding to 4-byte boundary
-    List<? extends ConstVector3> getTilingSubsetLocations(); // XYZ at corners of minimal tiling subvolume, e.g. to ignore adjacent tile overlap regions
-    VoxelIndex getRasterDimensions(); // Length of principal edges, in voxels
-    int getChannelCount(); // Number of color channels
-    int getBytesPerIntensity(); // Number of bytes per intensity
-    double getResolutionMicrometers(); // Finest resolution
-    Box3 getBoundingBox();
-    Texture3d loadBrick(double maxEdgePadWidth) throws IOException;
-    boolean isSameBrick(BrickInfo other);
+public class BrickActor extends MeshActor
+{
+    private final BrainTileInfo brainTile;
+    
+    public BrickActor(BrainTileInfo brainTile, 
+            BrightnessModel brightnessModel, 
+            VolumeState volumeState) throws IOException 
+    {
+        super(
+                new BrainTileMesh(brainTile), 
+                new BrickMaterial(brainTile, brightnessModel, volumeState),
+                null);
+        this.brainTile = brainTile;
+    }
 
-    // Matrix that transforms local texture coordinates to world units (e.g. stage micrometers)
-    Matrix getTexCoord_X_stageUm();
+    public BrainTileInfo getBrainTile()
+    {
+        return brainTile;
+    }
+    
+    private static class BrickMaterial extends VolumeMipMaterial {
+
+        private BrickMaterial(
+                BrainTileInfo brainTile, 
+                BrightnessModel brightnessModel,
+                VolumeState volumeState) throws IOException
+        {
+            super(brainTile.loadBrick(10), brightnessModel);
+            setVolumeState(volumeState);
+        }
+        
+    }
 }
