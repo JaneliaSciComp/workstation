@@ -802,8 +802,8 @@ public class IconDemoPanel extends IconPanel {
                 allUsersMenuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         if (hiddenUsers.isEmpty()) {
-                            for (String username : savedUsers) {
-                                hiddenUsers.add(username);
+                            for (String subjectKey : savedUsers) {
+                                hiddenUsers.add(subjectKey);
                             }
                         }
                         else {
@@ -816,16 +816,17 @@ public class IconDemoPanel extends IconPanel {
 
                 userListMenu.addSeparator();
 
-                for (final String username : savedUsers) {
-                    JMenuItem userMenuItem = new JCheckBoxMenuItem(username, !hiddenUsers.contains(username));
-                    userMenuItem.setBackground(userColors.getColor(username));
+                for (final String subjectKey : savedUsers) {
+                    String name = EntityUtils.getNameFromSubjectKey(subjectKey);
+                    JMenuItem userMenuItem = new JCheckBoxMenuItem(name, !hiddenUsers.contains(subjectKey));
+                    userMenuItem.setBackground(userColors.getColor(subjectKey));
                     userMenuItem.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent e) {
-                            if (hiddenUsers.contains(username)) {
-                                hiddenUsers.remove(username);
+                            if (hiddenUsers.contains(subjectKey)) {
+                                hiddenUsers.remove(subjectKey);
                             }
                             else {
-                                hiddenUsers.add(username);
+                                hiddenUsers.add(subjectKey);
                             }
                             refreshAnnotations(null);
                         }
@@ -1282,9 +1283,8 @@ public class IconDemoPanel extends IconPanel {
         // Refresh all user list
         allUsers.clear();
         for (OntologyAnnotation annotation : annotations.getAnnotations()) {
-            String name = EntityUtils.getNameFromSubjectKey(annotation.getOwner());
-            if (!allUsers.contains(name)) {
-                allUsers.add(name);
+            if (!allUsers.contains(annotation.getOwner())) {
+                allUsers.add(annotation.getOwner());
             }
         }
         Collections.sort(allUsers);
