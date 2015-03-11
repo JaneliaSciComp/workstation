@@ -69,9 +69,15 @@ public class VolumeMipMaterial extends BasicMaterial
     
     // private int projectionModeIndex = -1;
     
-    protected final ShaderProgram mipShader;
-    protected final ShaderProgram occShader;
-    protected final ShaderProgram isoShader;
+    protected final ShaderProgram mipShader = new VolumeMipShader(0);
+    protected final ShaderProgram occShader = new VolumeMipShader(1);
+    protected final ShaderProgram isoShader = new VolumeMipShader(2);
+    protected final ShaderProgram[] shaderPrograms = new ShaderProgram[] {
+        mipShader,
+        occShader,
+        isoShader
+    };
+    
     private boolean uniformIndicesAreDirty = true;
     private VolumeState volumeState = new VolumeState();
     
@@ -83,11 +89,7 @@ public class VolumeMipMaterial extends BasicMaterial
         // this.volumeTexture.setMinFilter(GL3.GL_NEAREST_MIPMAP_NEAREST);
         this.volumeTexture.setMinFilter(GL3.GL_LINEAR_MIPMAP_NEAREST);
         this.volumeTexture.setMagFilter(GL3.GL_LINEAR);
-        
-        mipShader = new VolumeMipShader(0);
-        occShader = new VolumeMipShader(1);
-        isoShader = new VolumeMipShader(2);
-        
+
         shaderProgram = mipShader;
         
         setShadingStyle(Shading.FLAT);
@@ -143,12 +145,10 @@ public class VolumeMipMaterial extends BasicMaterial
     }
     
     private void updateShaderProgram() {
-        if (volumeState.projectionMode == 0)
-            shaderProgram = mipShader;
-        else if (volumeState.projectionMode == 1)
-            shaderProgram = occShader;
-        else
-            shaderProgram = isoShader;        
+        if (shaderProgram != shaderPrograms[volumeState.projectionMode]) {
+            shaderProgram = shaderPrograms[volumeState.projectionMode];
+            uniformIndicesAreDirty = true;
+        }
     }
     
     @Override
@@ -270,7 +270,7 @@ public class VolumeMipMaterial extends BasicMaterial
 
         int textureUnit = 0;
         volumeTexture.bind(gl, textureUnit);
-        gl.glUniform1i(volumeTextureIndex, textureUnit);
+        gl.glUniform1i(volumeTextureIndex, textureUnit); // TODO - sometimes triggers GL error
     }
     
     @Override

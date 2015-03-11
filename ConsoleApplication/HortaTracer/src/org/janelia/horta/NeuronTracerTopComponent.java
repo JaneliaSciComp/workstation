@@ -809,7 +809,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     menu.add(filterMenu);
 
                     filterMenu.add(new JRadioButtonMenuItem(
-                            new AbstractAction("Nearest-neighbor") 
+                            new AbstractAction("Nearest-neighbor (Discrete Voxels)") 
                     {
                         {  
                             putValue(Action.SELECTED_KEY, 
@@ -841,7 +841,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }));
 
                     filterMenu.add(new JRadioButtonMenuItem(
-                            new AbstractAction("Tricubic") {
+                            new AbstractAction("Tricubic (Slow & Smooth)") {
                         {  
                             putValue(Action.SELECTED_KEY, 
                                 volumeState.filteringOrder == 3);
