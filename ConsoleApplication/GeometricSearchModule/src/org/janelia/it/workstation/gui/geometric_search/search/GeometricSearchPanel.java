@@ -62,7 +62,6 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         double pixelsPerSceneUnit = Math.abs(BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS / cameraFocusDistance);
         logger.info("createMip3d() cameraFocusDistance=" + cameraFocusDistance + " pixelsPerSceneUnit=" + pixelsPerSceneUnit);
         mip3d.getVolumeModel().getCamera3d().setPixelsPerSceneUnit(pixelsPerSceneUnit);
-        mip3d.resetView();
         mip3d.setResetFirstRedraw(true);
         mip3d.addActor(new TestBlueTileActor());
         mip3d.resetView();
