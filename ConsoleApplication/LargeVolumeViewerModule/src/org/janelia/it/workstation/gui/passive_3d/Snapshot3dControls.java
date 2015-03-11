@@ -21,7 +21,7 @@ import javax.swing.ProgressMonitor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.ColorButtonPanel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.it.workstation.gui.large_volume_viewer.SliderPanel;
+import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.passive_3d.filter.MatrixFilter3D;
 import org.janelia.it.workstation.gui.util.Icons;

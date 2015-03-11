@@ -184,9 +184,8 @@ public class NeuronTraceLoader {
             }
         }
         Double brickResolution = bestRes;
-        if (brickResolution == null) {
-            throw new RuntimeException("No best-resolution found.");
-        }
+        assert brickResolution != null : "No best-resolution found.  Volume Source=" + volumeSource;
+
         BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution);
         BrickInfo brickInfo = brickInfoSet.getBestContainingBrick(pCam.getVantage().getFocusPosition());
 

@@ -72,14 +72,41 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         this.volumeSource = volumeSource;
     }
     
+    @Override
+    public void acceptLocation(final SampleLocation sampleLocation) throws Exception {
+        Runnable task = new Runnable() {
+            @Override
+            public void run()
+            {
+                ProgressHandle progress
+                        = ProgressHandleFactory.createHandle("Loading View in Horta...");
+                progress.start();
+                try {
+                    progress.setDisplayName("Loading brain specimen (YAML)...");
+                    // TODO - ensure that Horta viewer is open
+                    // First ensure that this component uses same sample.
+                    setSampleUrl(sampleLocation.getSampleUrl());
+                    progress.setDisplayName("Centering on location...");
+                    setCameraLocation(sampleLocation);
+                    progress.setDisplayName("Loading brain tile image...");
+                    loadFocusedTile();
+                    sceneWindow.getGLAutoDrawable().display();     
+                } catch (Exception ex) {
+                    
+                }
+                finally {
+                    progress.finish();
+                }
+            }
+        };
+        RequestProcessor.getDefault().post(task);
+    }
+
     /**
      * Returns true if Url was changed. False otherwise.
      * 
     */
     private boolean setSampleUrl(URL focusUrl) {
-        if (focusUrl == null)
-            return false;      
-        // First ensure that this component uses same sample.
         String urlStr = focusUrl.toString();
         // Check: if same as current source, no need to change that.
         if (urlStr.equals(currentSource))
@@ -142,34 +169,4 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         return true;
     }
     
-    @Override
-    public void acceptLocation(final SampleLocation sampleLocation) throws Exception {
-        Runnable task = new Runnable() {
-            @Override
-            public void run()
-            {
-                ProgressHandle progress
-                        = ProgressHandleFactory.createHandle("Loading View in Horta...");
-                progress.start();
-                try {
-                    progress.setDisplayName("Loading brain specimen (YAML)...");
-                    // TODO - ensure that Horta viewer is open
-                    // First ensure that this component uses same sample.
-                    setSampleUrl(sampleLocation.getSampleUrl());
-                    progress.setDisplayName("Centering on location...");
-                    setCameraLocation(sampleLocation);
-                    progress.setDisplayName("Loading brain tile image...");
-                    loadFocusedTile();
-                    sceneWindow.getGLAutoDrawable().display();     
-                } catch (Exception ex) {
-                    
-                }
-                finally {
-                    progress.finish();
-                }
-            }
-        };
-        RequestProcessor.getDefault().post(task);
-    }
-
 }

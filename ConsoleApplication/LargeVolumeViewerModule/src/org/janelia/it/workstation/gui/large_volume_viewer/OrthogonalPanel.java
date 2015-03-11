@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.console.viewerapi.ToolButton;
 import java.awt.Dimension;
 import java.net.URL;
 import javax.swing.BoxLayout;
