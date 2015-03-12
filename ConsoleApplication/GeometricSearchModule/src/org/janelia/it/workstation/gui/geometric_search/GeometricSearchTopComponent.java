@@ -152,6 +152,7 @@ public final class GeometricSearchTopComponent extends TopComponent {
     private void initMyComponents() {
         initAdmin();
         initSearch();
+        searchTabPanel.setVisible(true);
     }
 
     private void initAdmin() {

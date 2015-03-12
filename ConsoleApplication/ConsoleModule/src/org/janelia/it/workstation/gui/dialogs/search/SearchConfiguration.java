@@ -1,25 +1,33 @@
 package org.janelia.it.workstation.gui.dialogs.search;
 
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
 import org.janelia.it.jacs.shared.solr.SageTerm;
 import org.janelia.it.jacs.shared.solr.SolrUtils;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataStore;
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 /**
  * The configuration of search attributes available for query and display.
@@ -249,7 +257,7 @@ public class SearchConfiguration {
             value = entity.getEntityTypeName();
         }
         else if ("username".equals(fieldName)) {
-            value = ModelMgrUtils.getNameFromSubjectKey(entity.getOwnerKey());
+            value = EntityUtils.getNameFromSubjectKey(entity.getOwnerKey());
         }
         else if ("creation_date".equals(fieldName)) {
             value = entity.getCreationDate();
@@ -261,7 +269,7 @@ public class SearchConfiguration {
             if ("annotations".equals(fieldName)) {
                 StringBuffer sb = new StringBuffer();
                 for (String subjectKey : SessionMgr.getSubjectKeys()) {
-                    String owner = subjectKey.contains(":") ? subjectKey.split(":")[1] : subjectKey;
+                    String owner = EntityUtils.getNameFromSubjectKey(subjectKey);
                     Object v = doc.getFieldValues(owner + "_annotations");
                     if (v != null) {
                         if (sb.length() > 0) {

@@ -59,7 +59,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 
-import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
  * A panel for displaying details about the currently selected entity.
@@ -615,7 +614,14 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         return subjects;
     }
 
-    public List<Subject> getUnusedSubjects() {
+    /**
+     * Returns the subjects which have not been granted access yet, and the 
+     * currently selected subject specified by currSubjectKey. If currSubjectKey
+     * is null, then only the unused subjects are returned.
+     * @param currSubjectKey
+     * @return 
+     */
+    public List<Subject> getUnusedSubjects(String currSubjectKey) {
         List<Subject> filtered = new ArrayList<>();
         for (Subject subject : subjects) {
             boolean used = false;
@@ -624,7 +630,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                     used = true;
                 }
             }
-            if (!used) {
+            if (!used || subject.getKey().equals(currSubjectKey)) {
                 filtered.add(subject);
             }
         }

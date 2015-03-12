@@ -18,15 +18,43 @@ public class TestBlueTileActor implements GLActor
 
     @Override
     public void display(GLAutoDrawable glDrawable) {
-        GL2 gl = glDrawable.getGL().getGL2();
+
+        logger.info("display()");
+
+        GL2 gl2 = glDrawable.getGL().getGL2();
+
+        gl2.glPointSize(10.0f);
+        gl2.glColor3f(0.10f, 0.10f, 1.0f);
+        gl2.glBegin(gl2.GL_POINTS);
+        for (int i=-10;i<10;i++) {
+            for (int j=-10;j<10;j++) {
+                for (int k=-10;k<10;k++) {
+                    float x=k*1.0f;
+                    float y=j*1.0f;
+                    float z=i*1.0f;
+                    gl2.glVertex3f(x,y,z);
+                    if (i==0 && k==0 && j==0) {
+                        gl2.glEnd();
+                        gl2.glColor3f(1.0f, 0.1f, 0.1f);
+                        gl2.glBegin(gl2.GL_POINTS);
+                        gl2.glVertex3f(x,y,z);
+                        gl2.glEnd();
+                        gl2.glColor3f(0.1f, 0.1f, 1.0f);
+                        gl2.glBegin(gl2.GL_POINTS);
+                    }
+                }
+            }
+        }
+        gl2.glEnd();
+
     }
 
     @Override
     public BoundingBox3d getBoundingBox3d() {
         // NOTE - Y coordinate is inverted w.r.t. glVertex3d(...)
         BoundingBox3d result = new BoundingBox3d();
-        result.setMin(0, -1.0, 0);
-        result.setMax(1.0,  0, 0);
+        result.setMin(-100.0, -100.0, -100.0);
+        result.setMax(100.0,  100.0, 100.0);
         return result;
     }
 
