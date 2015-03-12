@@ -962,19 +962,17 @@ implements GLActor
             skeletonActorChangedSignal.emit();
         }
 
-        // log.info("tracedSegments.size() [485] = "+tracedSegments.size());
-        // Delete obsolete traced segments
-        // COPY the keyset, to avoid damaging the original tracedSegment keys.
-        Set<SegmentIndex> orphanSegments = new HashSet<>();
+        // carefully iterate over segments and prune the obsolete ones
         for (Long neuronID: neuronTracedSegments.keySet()) {
-            orphanSegments.addAll(neuronTracedSegments.get(neuronID).keySet());
+            Set<SegmentIndex> neuronSegmentIndices = new HashSet<>(neuronTracedSegments.get(neuronID).keySet());
+            for (SegmentIndex ix: neuronSegmentIndices) {
+                if (!foundSegments.contains(ix) ) {
+                    log.info("Removing orphan segment");
+                    neuronTracedSegments.get(neuronID).remove(ix);
+                }
+            }
         }
-        orphanSegments.removeAll(foundSegments);
-        for (SegmentIndex ix : orphanSegments) {
-            log.info("Removing orphan segment");
-            Long currentNeuronID = skeleton.getAnchorByID(ix.getAnchor1Guid()).getNeuronID();
-            neuronTracedSegments.get(currentNeuronID).remove(ix);
-        }
+
         // log.info("tracedSegments.size() [492] = "+tracedSegments.size());
     }
 
