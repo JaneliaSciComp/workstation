@@ -142,7 +142,7 @@ public class LargeVolumeViewViewer extends JPanel {
     }
     
     public void setLocation(SampleLocation sampleLocation) {
-        viewUI.loadRender(sampleLocation.getSampleUrl());
+        viewUI.setSampleLocation(sampleLocation);
     }
 	
     public void close() {

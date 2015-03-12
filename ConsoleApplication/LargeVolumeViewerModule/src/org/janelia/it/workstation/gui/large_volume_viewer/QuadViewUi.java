@@ -1245,13 +1245,41 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public SampleLocation getSampleLocation() {
         BasicSampleLocation result = new BasicSampleLocation();
         result.setSampleUrl(loadedUrl);
-        final Vec3 focus = camera.getFocus();
+        
+        // Use the pointer location, not camera focus
+        Vec3 focus = null;
+        for (TileConsumer viewer : allSliceViewers) {
+            Vec3 w = ((OrthogonalViewer)viewer).getPopupPositionInWorld();
+            if (w != null) {
+                focus = w;
+                break;
+            }
+        }
+        if (focus == null)
+            focus = camera.getFocus();
+        
         result.setFocusUm(focus.getX(), focus.getY(), focus.getZ());
         TileConsumer viewer = allSliceViewers.get(0);
         result.setMicrometersPerWindowHeight(
                 viewer.getViewport().getHeight()
                 / camera.getPixelsPerSceneUnit());
         return result;
+    }
+    
+    public void setSampleLocation(SampleLocation sampleLocation) {
+        Vec3 focus = new Vec3(
+                sampleLocation.getFocusXUm(),
+                sampleLocation.getFocusYUm(),
+                sampleLocation.getFocusZUm());
+        URL url = sampleLocation.getSampleUrl();
+        TileConsumer viewer = allSliceViewers.get(0);
+        float zoom = (float) (viewer.getViewport().getHeight() 
+                / sampleLocation.getMicrometersPerWindowHeight());
+        
+        if (! loadedUrl.equals(url))
+            loadRender(url);
+        camera.setFocus(focus);
+        camera.setPixelsPerSceneUnit(zoom);
     }
     
     /**

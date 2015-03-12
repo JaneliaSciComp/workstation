@@ -4,6 +4,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintList
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -73,6 +74,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     // Popup menu
     MenuItemGenerator systemMenuItemGenerator;
     MenuItemGenerator modeMenuItemGenerator;
+    private Point popupPoint = null; // Cache location of popup menu item
     //
     protected RubberBand rubberBand = new RubberBand();
     protected SkeletonActor skeletonActor;
@@ -143,6 +145,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                 // System.out.println("popup");
                 if (e.isConsumed()) 
                     return;
+                popupPoint = e.getPoint();
                 JPopupMenu popupMenu = new JPopupMenu();
                 // Mode specific menu items first
                 List<JMenuItem> modeItems = modeMenuItemGenerator.getMenus(e);
@@ -500,5 +503,13 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		removeComponentListener(tileServer); // in case it's already there
 		addComponentListener(tileServer);
 	}
+    
+    
+    Vec3 getPopupPositionInWorld()
+    {
+        if (popupPoint == null)
+            return null;
+        return pointComputer.worldFromPixel(popupPoint);
+    }
 
 }

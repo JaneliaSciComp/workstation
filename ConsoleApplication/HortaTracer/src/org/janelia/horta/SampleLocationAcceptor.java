@@ -55,7 +55,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
 
     private String currentSource;
     private NeuronTraceLoader loader;
-    private YamlStreamLoader yamlLoader;
+    private NeuronTracerTopComponent nttc;
     private SceneWindow sceneWindow;
 
     private static final Logger logger = LoggerFactory.getLogger(SampleLocationAcceptor.class);
@@ -63,11 +63,11 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     public SampleLocationAcceptor(
             String currentSource, 
             NeuronTraceLoader loader, 
-            YamlStreamLoader yamlLoader, 
+            NeuronTracerTopComponent nttc, 
             SceneWindow sceneWindow) {
         this.currentSource = currentSource;
         this.loader = loader;
-        this.yamlLoader = yamlLoader;
+        this.nttc = nttc;
         this.sceneWindow = sceneWindow;
     }
     
@@ -123,7 +123,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         String urlStr = focusUrl.toString();
         // Check: if same as current source, no need to change that.
         if (urlStr.equals(currentSource))
-            return null;
+            return nttc.getVolumeSource();
         URI uri;
         try {
             uri = focusUrl.toURI();
@@ -136,7 +136,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             logger.info("Constructed URI: {}.", uri);
             URL yamlUrl = yamlUri.toURL();
             InputStream stream1 = yamlUrl.openStream();
-            StaticVolumeBrickSource volumeSource = yamlLoader.loadYaml(stream1, loader, progress);
+            StaticVolumeBrickSource volumeSource = nttc.loadYaml(stream1, loader, progress);
             return volumeSource;
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);

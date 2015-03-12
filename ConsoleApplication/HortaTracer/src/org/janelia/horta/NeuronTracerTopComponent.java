@@ -341,6 +341,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         brightnessModel.notifyObservers();
     }
 
+    public StaticVolumeBrickSource getVolumeSource()
+    {
+        return volumeSource;
+    }
+    
     @Override
     public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, ProgressHandle progress) throws IOException {
         volumeSource = new MouseLightYamlBrickSource(sourceYamlStream, progress);
@@ -975,8 +980,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
-                boolean showLinkToLvv = false; // does not work yet. Might not work on April 1.
-                if (showLinkToLvv) {
+                boolean showLinkToLvv = true; // does not work yet. Might not work on April 1.
+                if ( (mouseStageLocation != null) && (showLinkToLvv) ) {
                     // Synchronize with LVV
                     // TODO - is LVV present?
                     menu.add(new JPopupMenu.Separator());
