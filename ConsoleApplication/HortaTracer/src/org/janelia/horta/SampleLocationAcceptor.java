@@ -90,7 +90,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     setCameraLocation(sampleLocation);
                     progress.setDisplayName("Loading brain tile image...");
                     loadFocusedTile();
-                    sceneWindow.getGLAutoDrawable().display();     
+                    sceneWindow.getGLAutoDrawable().display();
                 } catch (Exception ex) {
                     
                 }

@@ -154,10 +154,12 @@ extends MultipassRenderer
     
     public void addVolumeActor(GL3Actor boxMesh) {
         hdrPass.addActor(boxMesh);
+        setIntensityBufferDirty();
     }
     
     public void clearVolumeActors() {
         hdrPass.clearActors();
+        setIntensityBufferDirty();
     }
     
     @Override
