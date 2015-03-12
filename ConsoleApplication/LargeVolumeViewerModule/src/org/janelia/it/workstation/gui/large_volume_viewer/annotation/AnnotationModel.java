@@ -548,6 +548,11 @@ SimpleWorker thread.
         sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
 
+        // remove traced paths early, before we move between neurons
+        for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
+            removeAnchoredPath(child, sourceAnnotation);
+        }
+
         // if source neurite not in same neuron as dest neruite: move it
         TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
@@ -560,11 +565,9 @@ SimpleWorker thread.
         targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
 
 
-        // reparent all source annotation's children to dest ann; remove
-        //  traced paths while we're here
+        // reparent all source annotation's children to dest ann
         for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
             modelMgr.reparentGeometricAnnotation(child, targetAnnotationID, targetNeuron);
-            removeAnchoredPath(child, sourceAnnotation);
         }
 
         // if the source ann has a note, move it to or append it to the target ann:
