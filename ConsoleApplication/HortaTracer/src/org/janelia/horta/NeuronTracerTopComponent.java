@@ -103,6 +103,8 @@ import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.horta.volume.BrickActor;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -256,7 +258,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void setSampleLocation(SampleLocation sampleLocation) {
         try {
             ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                    currentSource, loader, NeuronTracerTopComponent.this, sceneWindow, volumeSource
+                    currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
             );
             acceptor.acceptLocation(sampleLocation);
             currentSource = sampleLocation.getSampleUrl().toString();
@@ -340,9 +342,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     @Override
-    public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, InputStream loaderYamlStream, boolean loadExample) throws IOException {
-        volumeSource = new MouseLightYamlBrickSource(sourceYamlStream);
-        // loader.loadYamlFile(loaderYamlStream, loadExample); // works without this...
+    public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, ProgressHandle progress) throws IOException {
+        volumeSource = new MouseLightYamlBrickSource(sourceYamlStream, progress);
         return volumeSource;
     }
 
@@ -688,22 +689,26 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
                 dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
                 Transferable t = dtde.getTransferable();
+                ProgressHandle progress
+                        = ProgressHandleFactory.createHandle("Loading Yaml File...");
                 try {
                     List<File> fileList = (List) t.getTransferData(DataFlavor.javaFileListFlavor);
                     for (File f : fileList) {
                         InputStream sourceYamlStream = new FileInputStream(f);
-                        InputStream loaderYamlStream = new FileInputStream(f);
                         currentSource = f.toURI().toURL().toString();
 
-                        loadYaml(sourceYamlStream, loader, loaderYamlStream, true);                        
-//                        sourceYamlStream.close();             
-//                        loaderYamlStream.close();
+                        volumeSource = loadYaml(sourceYamlStream, loader, progress);                        
+                        sourceYamlStream.close();
+                        loader.loadTileAtCurrentFocus(volumeSource);
                     }
                     logger.info("Yaml files loaded!");
                 } catch (UnsupportedFlavorException | IOException ex) {
                     JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading yaml file");
                     Exceptions.printStackTrace(ex);
+                } finally {
+                    progress.finish();
                 }
+                
             }
         }));
     }
@@ -983,7 +988,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
                     logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
                     ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                            currentSource, loader, NeuronTracerTopComponent.this, sceneWindow, volumeSource
+                            currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
                     );
                     RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
                     if (locationProviders.size() > 1) {

@@ -34,6 +34,8 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -55,7 +57,6 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private NeuronTraceLoader loader;
     private YamlStreamLoader yamlLoader;
     private SceneWindow sceneWindow;
-    private StaticVolumeBrickSource volumeSource;
 
     private static final Logger logger = LoggerFactory.getLogger(SampleLocationAcceptor.class);
     
@@ -63,13 +64,11 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             String currentSource, 
             NeuronTraceLoader loader, 
             YamlStreamLoader yamlLoader, 
-            SceneWindow sceneWindow, 
-            StaticVolumeBrickSource volumeSource) {
+            SceneWindow sceneWindow) {
         this.currentSource = currentSource;
         this.loader = loader;
         this.yamlLoader = yamlLoader;
         this.sceneWindow = sceneWindow;
-        this.volumeSource = volumeSource;
     }
     
     @Override
@@ -82,17 +81,30 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         = ProgressHandleFactory.createHandle("Loading View in Horta...");
                 progress.start();
                 try {
-                    progress.setDisplayName("Loading brain specimen (YAML)...");
+                    progress.setDisplayName("Loading brain specimen (tilebase.cache.yml)...");
                     // TODO - ensure that Horta viewer is open
                     // First ensure that this component uses same sample.
-                    setSampleUrl(sampleLocation.getSampleUrl());
+                    StaticVolumeBrickSource volumeSource = setSampleUrl(sampleLocation.getSampleUrl(), progress);
+                    if (volumeSource == null) {
+                        throw new IOException("Loading volume source failed");
+                    }
                     progress.setDisplayName("Centering on location...");
                     setCameraLocation(sampleLocation);
                     progress.setDisplayName("Loading brain tile image...");
-                    loadFocusedTile();
+                    loader.loadTileAtCurrentFocus(volumeSource);
                     sceneWindow.getGLAutoDrawable().display();
-                } catch (Exception ex) {
-                    
+                } catch (final IOException ex) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                            JOptionPane.showMessageDialog(
+                                    sceneWindow.getOuterComponent(), 
+                                    "Error loading brain specimen: " + ex.getMessage(), 
+                                    "Brain Raw Data Error", 
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    });                   
                 }
                 finally {
                     progress.finish();
@@ -106,11 +118,11 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
      * Returns true if Url was changed. False otherwise.
      * 
     */
-    private boolean setSampleUrl(URL focusUrl) {
+    private StaticVolumeBrickSource setSampleUrl(URL focusUrl, ProgressHandle progress) {
         String urlStr = focusUrl.toString();
         // Check: if same as current source, no need to change that.
         if (urlStr.equals(currentSource))
-            return false;
+            return null;
         URI uri;
         try {
             uri = focusUrl.toURI();
@@ -123,13 +135,12 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             logger.info("Constructed URI: {}.", uri);
             URL yamlUrl = yamlUri.toURL();
             InputStream stream1 = yamlUrl.openStream();
-            InputStream stream2 = yamlUrl.openStream();
-            volumeSource = yamlLoader.loadYaml(stream1, loader, stream2, false);
+            StaticVolumeBrickSource volumeSource = yamlLoader.loadYaml(stream1, loader, progress);
+            return volumeSource;
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
-            return false;
+            return null;
         }
-        return true;
     }
     
     private boolean setCameraLocation(SampleLocation sampleLocation) {
@@ -155,17 +166,6 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         }
 
         v.notifyObservers();
-        return true;
-    }
-    
-    private boolean loadFocusedTile() {
-        try {
-            // TODO - check whether tile already loaded
-            loader.loadTileAtCurrentFocus(volumeSource);
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-            return false;
-        }
         return true;
     }
     

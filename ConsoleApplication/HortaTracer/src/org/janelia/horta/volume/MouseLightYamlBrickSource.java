@@ -30,7 +30,10 @@
 
 package org.janelia.horta.volume;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,6 +42,8 @@ import java.util.Map;
 import org.janelia.horta.BrainTileInfo;
 import org.janelia.geometry3d.Box3;
 import org.janelia.horta.OsFilePathRemapper;
+import org.netbeans.api.progress.ProgressHandle;
+import org.openide.util.Exceptions;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -52,9 +57,14 @@ implements StaticVolumeBrickSource
     private final Map<Double, BrickInfoSet> resMap = new HashMap<>();
     private final Box3 boundingBox = new Box3();
     
-    public MouseLightYamlBrickSource(InputStream yamlStream) {
+    public MouseLightYamlBrickSource(InputStream yamlStream, ProgressHandle progress) {
+        progress.switchToDeterminate(100);
+        progress.progress(5);
         Yaml yaml = new Yaml();
-        Map<String, Object> tilebase = (Map<String, Object>)yaml.load(yamlStream);
+        progress.progress(10);
+        Object foo = yaml.load(yamlStream);
+        Map<String, Object> tilebase = (Map<String, Object>)foo;
+        progress.progress(20);
 
         // Correct base path for OS network access, before populating tiles.
         String parentPath = (String) tilebase.get("path");
@@ -67,8 +77,11 @@ implements StaticVolumeBrickSource
         
         tilebasePath = parentPath;
         
+        progress.progress(25);
         List<Map<String, Object>> tiles = (List<Map<String, Object>>) tilebase.get("tiles");
         // Index tiles for easy retrieval
+        int tileCount = 0;
+        float totalTiles = tiles.size();
         for (Map<String, Object> tile : tiles) {
             String tilePath = (String) tile.get("path");
             
@@ -94,7 +107,11 @@ implements StaticVolumeBrickSource
             BrickInfoSet brickSet = resMap.get(resolution);
             brickSet.add(tileInfo);
             // System.out.println(tilePath);
-        }        
+            
+            tileCount += 1;
+            progress.progress( (int)(25 + (90-25)*(tileCount/totalTiles)) );
+        }
+        progress.progress(90);
     }
 
     private Double getNearbyResolution(Double targetRes) {

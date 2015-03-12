@@ -29,15 +29,28 @@
  */
 package org.janelia.scenewindow;
 
+import java.awt.Color;
 import org.janelia.geometry3d.AbstractCamera;
 import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
+import org.openide.util.Exceptions;
 
 /**
  * Vantage manages a View matrix
@@ -48,6 +61,12 @@ extends SceneInteractor
 implements MouseListener, MouseMotionListener, MouseWheelListener
 {
     private Point previousPoint = null;
+    private Cursor openHandCursor;
+    private Cursor grabHandCursor;
+    private Cursor rotateCursor;
+    private Cursor crosshairCursor;
+    private Cursor currentCursor;
+    private Component component;
     
     public OrbitPanZoomInteractor(AbstractCamera camera, Component component) 
     {
@@ -55,8 +74,60 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
         component.addMouseListener(this);
         component.addMouseMotionListener(this);
         component.addMouseWheelListener(this);
+        createCursorImages();
+        this.component = component;
+        checkCursor(crosshairCursor);
     }
 
+	protected void checkCursor(Cursor newCursor) {
+		if (newCursor == null)
+			return;
+		currentCursor = newCursor;
+		if (component == null)
+			return;
+		if (component.getCursor() == currentCursor)
+			return;
+		component.setCursor(currentCursor);
+	}
+	
+    private Cursor loadLocalCursorImage(String fileName, int centerX, int centerY, String description) {
+        URL url = OrbitPanZoomInteractor.class.getResource(fileName);
+        if (url == null)
+            return null;
+        Image image = null;
+        try {
+            image = ImageIO.read(url);
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        if (image == null)
+            return null;
+
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        ImageIcon icon = new ImageIcon(image);
+        Dimension imageSize = new Dimension(icon.getIconWidth(), icon.getIconHeight());
+		Dimension cursorSize = toolkit.getBestCursorSize(imageSize.width, imageSize.height);
+		if (! cursorSize.equals(imageSize)) {
+			int w = (int)cursorSize.width;
+			int h = (int)cursorSize.height;
+			BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+			Graphics g = bi.createGraphics();
+			g.setColor(new Color(0f, 0f, 0f, 0f));
+			g.fillRect(0, 0, w, h);
+			icon.paintIcon(null, g, 0, 0);
+			image = bi;
+		}
+
+        return toolkit.createCustomCursor(image, new Point(centerX, centerY), description);
+    }
+    
+    private void createCursorImages() {
+        openHandCursor = loadLocalCursorImage("grab_opened.png", 8, 8, "openHandCursor");
+        grabHandCursor = loadLocalCursorImage("grab_closed.png", 8, 8, "grabHandCursor");
+        rotateCursor = loadLocalCursorImage("rotate_icon.png", 4, 4, "rotateCursor");
+        crosshairCursor = loadLocalCursorImage("crosshair3.png", 8, 8, "crosshairCursor");
+    }
+    
     @Override
     public String getToolTipText() {
         return ""
@@ -76,12 +147,22 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
     public void mousePressed(MouseEvent event) {
         previousPoint = event.getPoint();
         // System.out.println("mouse pressed");
+        if (event.isPopupTrigger()) {
+            // Do not change cursor on popup
+        }
+        else if ((event.getModifiers() & InputEvent.BUTTON2_MASK) != 0) {
+			checkCursor(rotateCursor);
+		}
+        else {
+			checkCursor(grabHandCursor);
+		}
     }
 
     @Override
     public void mouseReleased(MouseEvent event) {
         previousPoint = null;
         // System.out.println("mouse released");
+        checkCursor(crosshairCursor);
     }
 
     @Override

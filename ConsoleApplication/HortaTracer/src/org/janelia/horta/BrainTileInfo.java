@@ -42,6 +42,7 @@ import org.janelia.geometry3d.Box3;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.texture.Texture3d;
+import org.netbeans.api.progress.ProgressHandle;
 
 /**
  * Represents Mouse Brain tile information entry from tilebase.cache.yml file.
