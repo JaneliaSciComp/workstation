@@ -51,6 +51,7 @@ public final class GeometricSearchTopComponent extends TopComponent {
     GeometricSearchPanel searchPanel;
 
     public GeometricSearchTopComponent() {
+        logger.info("GeometricSearchTopComponent()");
         initComponents();
         adminPanel=new GeometricSearchAdminPanel();
         setName(Bundle.CTL_GeometricSearchTopComponent());
@@ -68,6 +69,10 @@ public final class GeometricSearchTopComponent extends TopComponent {
         geometricSearchTabPane = new javax.swing.JTabbedPane();
         searchTabPanel = new javax.swing.JPanel();
         adminTabPanel = new javax.swing.JPanel();
+
+        setPreferredSize(new java.awt.Dimension(1200, 900));
+
+        searchTabPanel.setPreferredSize(new java.awt.Dimension(1200, 900));
 
         javax.swing.GroupLayout searchTabPanelLayout = new javax.swing.GroupLayout(searchTabPanel);
         searchTabPanel.setLayout(searchTabPanelLayout);
@@ -122,6 +127,7 @@ public final class GeometricSearchTopComponent extends TopComponent {
 
     @Override
     public void componentOpened() {
+        logger.info("componentOpened()");
         ModelMgr.getModelMgr().registerOnEventBus(this);
         initMyComponents();
     }
@@ -146,6 +152,7 @@ public final class GeometricSearchTopComponent extends TopComponent {
     private void initMyComponents() {
         initAdmin();
         initSearch();
+        searchTabPanel.setVisible(true);
     }
 
     private void initAdmin() {
@@ -159,6 +166,8 @@ public final class GeometricSearchTopComponent extends TopComponent {
         searchTabPanel.setLayout( new BorderLayout() );
         searchPanel=new GeometricSearchPanel();
         searchTabPanel.add( searchPanel, BorderLayout.CENTER );
+        searchPanel.setVisible(true);
+        searchPanel.displayReady();
     }
 
 }
