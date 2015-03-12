@@ -22,7 +22,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
     private final Logger logger = LoggerFactory.getLogger(GeometricSearchPanel.class);
     TestMip3d mip3d;
-    TestGLJPanel testGLJPanel;
+    //TestGLJPanel testGLJPanel;
 
 
     @Override

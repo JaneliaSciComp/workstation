@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.DebugGL2;
+import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import java.awt.*;
 import java.util.ArrayList;
@@ -68,7 +69,10 @@ public class TestMipRenderer extends BaseRenderer
 
     @Override
     public void display(GLAutoDrawable glDrawable) {
+
+        volumeModel.setCameraDepth(new Vec3(0.0, 0.0, -20.0));
         // Preset background from the volume model.
+
         float[] backgroundClrArr = volumeModel.getBackgroundColorFArr();
         this.backgroundColor = new Color( backgroundClrArr[ 0 ], backgroundClrArr[ 1 ], backgroundClrArr[ 2 ] );
         super.display(glDrawable); // fills background
@@ -81,6 +85,7 @@ public class TestMipRenderer extends BaseRenderer
         }
 
         //final GL2 gl = glDrawable.getGL().getGL2();
+
         final GL2Adapter gl = GL2AdapterFactory.createGL2Adapter(glDrawable);
         gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
         gl.glPushMatrix();
@@ -105,6 +110,7 @@ public class TestMipRenderer extends BaseRenderer
         }
 
         // Copy member list of actors local for independent iteration.
+
         for (GLActor actor : new ArrayList<>( actors ))
             actor.display(glDrawable);
 
@@ -128,11 +134,13 @@ public class TestMipRenderer extends BaseRenderer
 
     @Override
     public void reshape(GLAutoDrawable glDrawable, int x, int y, int width, int height) {
+
         this.widthInPixels = width;
         this.heightInPixels = height;
 
         // System.out.println("reshape() called: x = "+x+", y = "+y+", width = "+width+", height = "+height);
         //final GL2 gl = glDrawable.getGL().getGL2();
+
         GL2Adapter gl2Adapter = GL2AdapterFactory.createGL2Adapter( glDrawable );
 
         updateProjection(gl2Adapter);
@@ -147,7 +155,9 @@ public class TestMipRenderer extends BaseRenderer
     }
 
     public void rotatePixels(double dx, double dy, double dz) {
+
         // Rotate like a trackball
+
         double dragDistance = Math.sqrt(dy*dy + dx*dx + dz*dz);
         if (dragDistance <= 0.0)
             return;
@@ -155,13 +165,20 @@ public class TestMipRenderer extends BaseRenderer
         double windowSize = Math.sqrt(
                 widthInPixels*widthInPixels
                         + heightInPixels*heightInPixels);
+
         // Drag across the entire window to rotate all the way around
+
         double rotationAngle = 2.0 * Math.PI * dragDistance/windowSize;
+
         // System.out.println(rotationAxis.toString() + rotationAngle);
+
         Rotation3d rotation = new Rotation3d().setFromAngleAboutUnitVector(
                 rotationAngle, rotationAxis);
+
         // System.out.println(rotation);
+
         getVolumeModel().getCamera3d().setRotation( getVolumeModel().getCamera3d().getRotation().times( rotation.transpose() ) );
+
         // System.out.println(R_ground_camera);
     }
 
@@ -174,14 +191,31 @@ public class TestMipRenderer extends BaseRenderer
     }
 
     public void updateProjection(GL2Adapter gl) {
+
+        //logger.info("updateProjection()");
+
+        int wi=(int) widthInPixels;
+
+        int hi=(int) heightInPixels;
+
+        //logger.info("widthInPixels="+widthInPixels+" wi="+wi+" heightInPixels="+heightInPixels+" hi="+hi);
+
         gl.getGL2GL3().glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
+
         double verticalApertureInDegrees = 180.0/Math.PI * 2.0 * Math.abs(
                 Math.atan2(heightInPixels/2.0, DISTANCE_TO_SCREEN_IN_PIXELS));
+
         gl.glMatrixMode( GL2Adapter.MatrixMode.GL_PROJECTION );
         gl.glLoadIdentity();
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = volumeModel.getCameraFocusDistance();
         double scaledFocusDistance = Math.abs(cameraFocusDistance) * glUnitsPerPixel();
+
+        logger.info("verticalApertureInDegrees="+verticalApertureInDegrees+" h="+h+" scaledFocusDistance="+scaledFocusDistance+
+                " cameraFocusDistance="+cameraFocusDistance+" glUnitsPerPixel="+glUnitsPerPixel());
+
+        scaledFocusDistance=20.0;
+
         glu.gluPerspective(verticalApertureInDegrees,
                 h,
                 0.5 * scaledFocusDistance,

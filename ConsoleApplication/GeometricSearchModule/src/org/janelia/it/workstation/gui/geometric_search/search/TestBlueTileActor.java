@@ -26,9 +26,9 @@ public class TestBlueTileActor implements GLActor
         gl2.glPointSize(10.0f);
         gl2.glColor3f(0.10f, 0.10f, 1.0f);
         gl2.glBegin(gl2.GL_POINTS);
-        for (int i=-100;i<100;i++) {
-            for (int j=-100;j<100;j++) {
-                for (int k=-100;k<100;k++) {
+        for (int i=-10;i<10;i++) {
+            for (int j=-10;j<10;j++) {
+                for (int k=-10;k<10;k++) {
                     float x=k*1.0f;
                     float y=j*1.0f;
                     float z=i*1.0f;
