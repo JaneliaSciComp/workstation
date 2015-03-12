@@ -922,8 +922,13 @@ implements GLActor
             SegmentIndex ix = segment.getSegmentIndex();
 
             // need neuron ID; get it from the anchor at either end of the
-            //  traced path
-            Long neuronID = skeleton.getAnchorByID(ix.getAnchor1Guid()).getNeuronID();
+            //  traced path; if there isn't an anchor, just move on--that
+            //  path is also gone (happens when neurons deleted, merged)
+            Anchor pathAnchor = skeleton.getAnchorByID(ix.getAnchor1Guid());
+            if (pathAnchor == null) {
+                continue;
+            }
+            Long neuronID = pathAnchor.getNeuronID();
 
             foundSegments.add(ix);
             if (neuronTracedSegments.containsKey(neuronID)) {
