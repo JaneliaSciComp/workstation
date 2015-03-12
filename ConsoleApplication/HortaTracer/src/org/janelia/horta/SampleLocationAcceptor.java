@@ -90,6 +90,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     }
                     progress.setDisplayName("Centering on location...");
                     setCameraLocation(sampleLocation);
+                    progress.switchToIndeterminate(); // TODO - enhance tile loading with a progress listener
                     progress.setDisplayName("Loading brain tile image...");
                     loader.loadTileAtCurrentFocus(volumeSource);
                     sceneWindow.getGLAutoDrawable().display();
