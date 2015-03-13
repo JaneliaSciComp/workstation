@@ -70,7 +70,6 @@ public class TestMipRenderer extends BaseRenderer
     @Override
     public void display(GLAutoDrawable glDrawable) {
 
-        volumeModel.setCameraDepth(new Vec3(0.0, 0.0, -20.0));
         // Preset background from the volume model.
 
         float[] backgroundClrArr = volumeModel.getBackgroundColorFArr();
@@ -89,7 +88,9 @@ public class TestMipRenderer extends BaseRenderer
         final GL2Adapter gl = GL2AdapterFactory.createGL2Adapter(glDrawable);
         gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
         gl.glPushMatrix();
+        logger.info("display() calling updateProjection()");
         updateProjection(gl);
+        logger.info("display() DONE calling updateProjection()");
         gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
         gl.glPushMatrix();
         gl.glLoadIdentity();
@@ -100,24 +101,37 @@ public class TestMipRenderer extends BaseRenderer
         Vec3 u = rotation.times( UP_IN_CAMERA );
         double unitsPerPixel = glUnitsPerPixel();
         Vec3 c = f.plus(rotation.times(volumeModel.getCameraDepth().times(unitsPerPixel)));
+
+        logger.info("gluLookAt - cx="+c.x()+" cy="+c.y()+" cz="+c.z());
+        logger.info("gluLookAt - fx="+f.x()+" fy="+f.y()+" fz="+f.z());
+        logger.info("gluLookAt - ux="+u.x()+" uy="+u.y()+" uz="+u.z());
+
+
         gl.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
                 f.x(), f.y(), f.z(), // focus in ground
                 u.x(), u.y(), u.z()); // up vector in ground
 
-        if ( System.getProperty( "glComposablePipelineDebug", "f" ).toLowerCase().startsWith("t") ) {
-            DebugGL2 debugGl2 = new JaneliaDebugGL2(glDrawable);
-            glDrawable.setGL(debugGl2);
-        }
+//        if ( System.getProperty( "glComposablePipelineDebug", "f" ).toLowerCase().startsWith("t") ) {
+//            DebugGL2 debugGl2 = new JaneliaDebugGL2(glDrawable);
+//            glDrawable.setGL(debugGl2);
+//        }
 
         // Copy member list of actors local for independent iteration.
 
+        logger.info("display() starting actor display() loop");
+
         for (GLActor actor : new ArrayList<>( actors ))
             actor.display(glDrawable);
+
+        logger.info("display() done actor display() loop");
 
         gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
         gl.glPopMatrix();
         gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
         gl.glPopMatrix();
+
+
+        logger.info("display() end");
     }
 
     public double glUnitsPerPixel() {
@@ -125,10 +139,12 @@ public class TestMipRenderer extends BaseRenderer
     }
 
     public void resetView() {
+        logger.info("resetView()");
         // Adjust view to fit the actual objects present
         BoundingBox3d boundingBox = getBoundingBox();
         volumeModel.getCamera3d().setFocus(boundingBox.getCenter());
         getVolumeModel().getCamera3d().resetRotation();
+        logger.info("Calling resetCameraDepth with height="+boundingBox.getHeight());
         resetCameraDepth(boundingBox);
     }
 
@@ -143,15 +159,23 @@ public class TestMipRenderer extends BaseRenderer
 
         GL2Adapter gl2Adapter = GL2AdapterFactory.createGL2Adapter( glDrawable );
 
+        logger.info("reshape() - calling updateProjection()");
+
+        BoundingBox3d boundingBox = getBoundingBox();
+        resetCameraDepth(boundingBox);
+
         updateProjection(gl2Adapter);
+
+        logger.info("reshape() - DONE calling updateProjection()");
+
+
         gl2Adapter.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
         gl2Adapter.glLoadIdentity();
 
-        double previousFocusDistance = volumeModel.getCameraFocusDistance();
-        if ( previousFocusDistance == DEFAULT_CAMERA_FOCUS_DISTANCE ) {
-            BoundingBox3d boundingBox = getBoundingBox();
-            resetCameraDepth(boundingBox);
-        }
+        //double previousFocusDistance = volumeModel.getCameraFocusDistance();
+        //if ( previousFocusDistance == DEFAULT_CAMERA_FOCUS_DISTANCE ) {
+
+        //}
     }
 
     public void rotatePixels(double dx, double dy, double dz) {
@@ -192,7 +216,7 @@ public class TestMipRenderer extends BaseRenderer
 
     public void updateProjection(GL2Adapter gl) {
 
-        //logger.info("updateProjection()");
+        logger.info("updateProjection()");
 
         int wi=(int) widthInPixels;
 
@@ -213,8 +237,6 @@ public class TestMipRenderer extends BaseRenderer
 
         logger.info("verticalApertureInDegrees="+verticalApertureInDegrees+" h="+h+" scaledFocusDistance="+scaledFocusDistance+
                 " cameraFocusDistance="+cameraFocusDistance+" glUnitsPerPixel="+glUnitsPerPixel());
-
-        scaledFocusDistance=20.0;
 
         glu.gluPerspective(verticalApertureInDegrees,
                 h,
@@ -289,12 +311,14 @@ public class TestMipRenderer extends BaseRenderer
 
     private void resetCameraDepth(BoundingBox3d boundingBox) {
         double heightInMicrometers = boundingBox.getHeight();
+        logger.info("resetCameraDepth - boundingBox height="+boundingBox.getHeight());
         if (heightInMicrometers <= 0.0) { // watch for NaN!
             logger.warn("Adjusted height to account for zero-height bounding box.");
             heightInMicrometers = 2.0; // whatever
         }
         // System.out.println("Focus = " + focusInGround);
         // cameraFocusDistance = DEFAULT_CAMERA_FOCUS_DISTANCE * defaultHeightInPixels / heightInPixels;
+
         double finalAspectRatio = maxAspectRatio(boundingBox);
         double heightRatioFactor = heightInMicrometers / heightInPixels;
         if ( heightRatioFactor < 0.5 ) {
@@ -304,7 +328,7 @@ public class TestMipRenderer extends BaseRenderer
             heightRatioFactor = 1.0;
         }
         double newFocusDistance = finalAspectRatio * 1.05 * DISTANCE_TO_SCREEN_IN_PIXELS * heightRatioFactor;
-        logger.debug("Setting camera depth to " + (-newFocusDistance) + " for finalAspectRatio of " + finalAspectRatio + " and hgithRatioFactor of " + heightRatioFactor);
+        logger.info("resetCameraDepth() setting camera depth to " + (-newFocusDistance) + " for finalAspectRatio of " + finalAspectRatio + " and hgithRatioFactor of " + heightRatioFactor);
         volumeModel.setCameraDepth( new Vec3( 0.0, 0.0, -newFocusDistance ) );
         getVolumeModel().setCameraPixelsPerSceneUnit(DISTANCE_TO_SCREEN_IN_PIXELS, getVolumeModel().getCameraFocusDistance());
     }
