@@ -21,7 +21,7 @@ import java.awt.*;
 public class GeometricSearchPanel extends JPanel implements Refreshable {
 
     private final Logger logger = LoggerFactory.getLogger(GeometricSearchPanel.class);
-    TestMip3d mip3d;
+    Mip3d mip3d;
     //TestGLJPanel testGLJPanel;
 
     @Override
@@ -54,7 +54,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         if ( mip3d != null ) {
             mip3d.releaseMenuActions();
         }
-        mip3d = new TestMip3d();
+        mip3d = new Mip3d();
         mip3d.setPreferredSize(new Dimension(800, 800));
         mip3d.setVisible(true);
         mip3d.setResetFirstRedraw(true);
