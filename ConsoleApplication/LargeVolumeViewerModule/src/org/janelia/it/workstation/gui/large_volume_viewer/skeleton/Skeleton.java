@@ -323,22 +323,6 @@ public class Skeleton {
     }
 
     public void addEditNoteRequest(Anchor anchor) {
-        // testing, doesn't really belong here; just need a convenient trigger to run
-        //  this code:
-        HashMap<Long, Integer> counter = new HashMap<>();
-        Long neuronID;
-        for (Anchor a: getAnchors()) {
-            neuronID = a.getNeuronID();
-            if (counter.containsKey(neuronID)) {
-                counter.put(neuronID, counter.get(neuronID) + 1);
-            } else {
-                counter.put(neuronID, 1);
-            }
-        }
-        for (Long key: counter.keySet()) {
-            System.out.println("neuron " + key + " has " + counter.get(key) + " anchors");
-        }
-
         addEditNoteRequestedSignal.emit(anchor);
     }
 
