@@ -104,7 +104,7 @@ public class TestMipRenderer extends BaseRenderer
 
         logger.info("gluLookAt - cx="+c.x()+" cy="+c.y()+" cz="+c.z());
         logger.info("gluLookAt - fx="+f.x()+" fy="+f.y()+" fz="+f.z());
-        logger.info("gluLookAt - ux="+c.x()+" cy="+c.y()+" cz="+c.z());
+        logger.info("gluLookAt - ux="+u.x()+" uy="+u.y()+" uz="+u.z());
 
 
         gl.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
