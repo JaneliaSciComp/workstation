@@ -24,7 +24,6 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
     TestMip3d mip3d;
     //TestGLJPanel testGLJPanel;
 
-
     @Override
     public void refresh() {
         logger.info("*** refresh()");
@@ -56,16 +55,10 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             mip3d.releaseMenuActions();
         }
         mip3d = new TestMip3d();
-        mip3d.setPreferredSize( new Dimension( 800, 800 ) );
+        mip3d.setPreferredSize(new Dimension(800, 800));
         mip3d.setVisible(true);
-        double cameraFocusDistance = mip3d.getVolumeModel().getCameraFocusDistance();
-        double pixelsPerSceneUnit = Math.abs(BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS / cameraFocusDistance);
-        logger.info("createMip3d() cameraFocusDistance=" + cameraFocusDistance + " pixelsPerSceneUnit=" + pixelsPerSceneUnit);
-        mip3d.getVolumeModel().getCamera3d().setPixelsPerSceneUnit(pixelsPerSceneUnit);
         mip3d.setResetFirstRedraw(true);
         mip3d.addActor(new TestBlueTileActor());
-        mip3d.resetView();
-        mip3d.refresh();
         add(mip3d, BorderLayout.CENTER);
 
 //        if (testGLJPanel==null) {
@@ -78,7 +71,11 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
     public void displayReady() {
         logger.info("*** displayReady()");
-        createMip3d();
+        if (mip3d==null) {
+            createMip3d();
+        }
+        mip3d.resetView();
+        mip3d.refresh();
         logger.info("*** displayReady() done");
     }
 

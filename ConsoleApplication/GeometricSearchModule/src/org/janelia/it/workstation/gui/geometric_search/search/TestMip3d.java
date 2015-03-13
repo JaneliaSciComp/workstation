@@ -73,6 +73,7 @@ public class TestMip3d extends BaseGLViewer implements ActionListener
     }
 
     public void resetView() {
+        logger.info("resetView() !");
         renderer.resetView();
         repaint();
     }
@@ -175,5 +176,7 @@ public class TestMip3d extends BaseGLViewer implements ActionListener
             renderer.resetView();
         }
     }
+
+
 
 }
