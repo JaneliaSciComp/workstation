@@ -169,7 +169,7 @@ public class Skeleton {
     public Anchor addTmGeoAnchor(TmGeoAnnotation tga) {
         Vec3 location = new Vec3(tga.getX(), tga.getY(), tga.getZ());
         Anchor parentAnchor = anchorsByGuid.get(tga.getParentId());
-        Anchor anchor = new Anchor(location, parentAnchor, tileFormat);
+        Anchor anchor = new Anchor(location, parentAnchor, tga.getNeuronId(), tileFormat);
         anchor.setGuid(tga.getId());
         addAnchor(anchor);
         return anchor;
@@ -192,7 +192,7 @@ public class Skeleton {
                 parentAnchor = tempAnchorsByGuid.get(ann.getParentId());
             }
 
-            Anchor anchor = new Anchor(location, parentAnchor, tileFormat);
+            Anchor anchor = new Anchor(location, parentAnchor, ann.getNeuronId(), tileFormat);
             anchor.setGuid(ann.getId());
             tempAnchorsByGuid.put(anchor.getGuid(), anchor);
             anchorList.add(anchor);
@@ -282,7 +282,11 @@ public class Skeleton {
 	public Set<Anchor> getAnchors() {
 		return anchors;
 	}
-	
+
+    public Anchor getAnchorByID(Long anchorID) {
+        return anchorsByGuid.get(anchorID);
+    }
+
 	public HistoryStack<Anchor> getHistory() {
 		return anchorHistory;
 	}

@@ -439,114 +439,6 @@ implements GLActor
 	public synchronized void updateAnchors() {
 		if (skeleton == null)
 			return;
-		vertexCount = skeleton.getAnchors().size();
-		ByteBuffer vertexBytes = ByteBuffer.allocateDirect(vertexCount * floatByteCount * vertexFloatCount);
-		vertexBytes.order(ByteOrder.nativeOrder()); // important!
-		vertices = vertexBytes.asFloatBuffer();
-		vertices.rewind();
-		int vertexIndex = 0;
-		//
-		ByteBuffer colorBytes = ByteBuffer.allocateDirect(vertexCount * floatByteCount * colorFloatCount);
-		colorBytes.order(ByteOrder.nativeOrder());
-		colors = colorBytes.asFloatBuffer();
-		colors.rewind();
-		// Track vertex index, to support vertex buffer object
-		anchorIndices.clear();
-		indexAnchors.clear();
-		int pointCount = 0;
-		// Populate vertex array
-		for (Anchor anchor : skeleton.getAnchors()) {
-			Vec3 xyz = anchor.getLocation();
-			vertices.put((float)xyz.getX());
-			vertices.put((float)xyz.getY());
-			vertices.put((float)xyz.getZ());
-			//
-			colors.put(neuronColor[0]); // red
-			colors.put(neuronColor[1]); // green
-			colors.put(neuronColor[2]); // blue
-			//
-			anchorIndices.put(anchor, vertexIndex);
-			indexAnchors.put(vertexIndex, anchor);
-			vertexIndex += 1;
-			pointCount += 1;
-		}
-		//
-		// Update Traced path actors
-		Set<SegmentIndex> foundSegments = new HashSet<SegmentIndex>();
-		Collection<AnchoredVoxelPath> skeletonSegments = skeleton.getTracedSegments();
-		// log.info("Skeleton has " + skeletonSegments.size() + " traced segments");
-		for (AnchoredVoxelPath segment : skeletonSegments) {
-			SegmentIndex ix = segment.getSegmentIndex();
-			foundSegments.add(ix);
-			if (tracedSegments.containsKey(ix)) {
-				// Is the old traced segment still valid?
-				AnchoredVoxelPath oldSegment = tracedSegments.get(ix).getSegment();
-				List<VoxelPosition> p0 = oldSegment.getPath();
-				List<VoxelPosition> p1 = segment.getPath();
-				boolean looksTheSame = true;
-				if (p0.size() != p1.size()) // same size?
-					looksTheSame = false;
-				else if (p0.get(0) != p1.get(0)) // same first voxel?
-					looksTheSame = false;
-				else if (p0.get(p0.size()-1) != p1.get(p1.size()-1)) // same final voxel?
-					looksTheSame = false;
-				if (looksTheSame)
-					continue; // already have this segment, no need to recompute!
-				else
-					tracedSegments.remove(ix); // obsolete. remove it.
-			}
-			TracedPathActor actor = new TracedPathActor(segment, getTileFormat());
-			addTracedSegment(actor);
-		}
-    	// log.info("tracedSegments.size() [485] = "+tracedSegments.size());
-		// Delete obsolete traced segments
-    	// COPY the keyset, to avoid damaging the original tracedSegment keys.
-		Set<SegmentIndex> orphanSegments = new HashSet<SegmentIndex>(tracedSegments.keySet());
-		orphanSegments.removeAll(foundSegments);
-		for (SegmentIndex ix : orphanSegments) {
-			log.info("Removing orphan segment");
-			tracedSegments.remove(ix);
-		}
-    	// log.info("tracedSegments.size() [492] = "+tracedSegments.size());
-		//
-		// Populate line index buffer - AFTER traced segments have been finalized
-		List<Integer> tempLineIndices = new Vector<Integer>(); // because we don't know size yet
-		for (Anchor anchor : skeleton.getAnchors()) {
-			int i1 = getIndexForAnchor(anchor);
-			if (i1 < 0)
-				continue;
-			for (Anchor neighbor : anchor.getNeighbors()) {
-				int i2 = getIndexForAnchor(neighbor);
-				if (i2 < 0)
-					continue;
-				if (i1 >= i2)
-					continue; // only use ascending pairs, for uniqueness
-				SegmentIndex segmentIndex = new SegmentIndex(anchor.getGuid(), neighbor.getGuid());
-				// Don't draw lines where there is already a traced segment.
-				if (tracedSegments.containsKey(segmentIndex))
-					continue;
-				tempLineIndices.add(i1);
-				tempLineIndices.add(i2);
-			}
-		}
-		ByteBuffer lineBytes = ByteBuffer.allocateDirect(tempLineIndices.size()*intByteCount);
-		lineBytes.order(ByteOrder.nativeOrder());
-		lineIndices = lineBytes.asIntBuffer();
-		lineIndices.rewind();
-		for (int i : tempLineIndices) // fill actual int buffer
-			lineIndices.put(i);
-		lineIndices.rewind();
-		linesNeedCopy = true;
-		// Populate point index buffer
-		ByteBuffer pointBytes = ByteBuffer.allocateDirect(pointCount*intByteCount);
-		pointBytes.order(ByteOrder.nativeOrder());
-		pointIndices = pointBytes.asIntBuffer();
-		pointIndices.rewind();
-		for (Anchor anchor : skeleton.getAnchors()) {
-			int i1 = anchorIndices.get(anchor);
-			pointIndices.put(i1);
-		}
-		verticesNeedCopy = true;
 
         // we do the point update in this method, then call out
         //  to other methods for the lines and paths; no reason we
@@ -741,7 +633,7 @@ implements GLActor
             //  all it does is trigger a repaint; I suppose it's better to
             //  paint after every path added, so they pop in as they are
             //  ready; paint can't be that expensive, can it?
-            skeletonActorChangedSignal.emit();
+            updater.update();
         }
 
         // carefully iterate over segments and prune the obsolete ones
@@ -901,7 +793,7 @@ implements GLActor
             return;
         }
         hoverAnchor = anchor;
-        skeletonActorChangedSignal.emit();
+        updater.update();
     }
 
 	public Anchor getNextParent() {
