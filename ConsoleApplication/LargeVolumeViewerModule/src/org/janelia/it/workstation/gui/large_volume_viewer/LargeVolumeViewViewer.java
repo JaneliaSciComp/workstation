@@ -14,7 +14,9 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.concurrent.Callable;
+import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
@@ -134,6 +136,14 @@ public class LargeVolumeViewViewer extends JPanel {
 	public RootedEntity getContextRootedEntity() {
 		return slcRootedEntity;
 	}
+    
+    public SampleLocation getSampleLocation() {
+        return viewUI.getSampleLocation();
+    }
+    
+    public void setLocation(SampleLocation sampleLocation) {
+        viewUI.setSampleLocation(sampleLocation);
+    }
 	
     public void close() {
         logger.info("Closing");
@@ -156,12 +166,13 @@ public class LargeVolumeViewViewer extends JPanel {
             revalidate();
             repaint();
         }
-    }
+    }    
 
     public void totalRefresh() {
         refresh();
     }
 
+    //------------------------------Private Methods
     private void establishObserver() {
         modelMgrObserver = new ModelMgrListener( this, sliceSample);
         ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);

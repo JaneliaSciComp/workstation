@@ -3,17 +3,16 @@ package org.janelia.it.workstation.gui.large_volume_viewer.action;
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.signal.Signal1;
 
 // PanModeAction puts the large volume viewer into Pan mode.
 public class PanModeAction extends AbstractAction 
 {
 	private static final long serialVersionUID = 1L;
+    private MouseWheelModeListener mwmListener;
 	
-	public Signal1<MouseMode.Mode> setMouseModeSignal = new Signal1<MouseMode.Mode>();
-
 	public PanModeAction() {
 		putValue(NAME, "Pan");
 		putValue(SMALL_ICON, Icons.getIcon("grab_opened.png"));
@@ -35,7 +34,14 @@ public class PanModeAction extends AbstractAction
 	@Override
 	public void actionPerformed(ActionEvent e) 
 	{
-		setMouseModeSignal.emit(MouseMode.Mode.PAN);
+        mwmListener.setMode(MouseMode.Mode.PAN);
 		putValue(SELECTED_KEY, true);
 	}
+
+    /**
+     * @param mwmListener the mwmListener to set
+     */
+    public void setMwmListener(MouseWheelModeListener mwmListener) {
+        this.mwmListener = mwmListener;
+    }
 }

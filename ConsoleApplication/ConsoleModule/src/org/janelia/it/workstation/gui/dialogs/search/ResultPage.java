@@ -18,14 +18,13 @@ public class ResultPage {
 
     private static final Logger log = LoggerFactory.getLogger(ResultPage.class);
 
-    private SolrResults solrResults;
-    private Map<Long, Entity> resultEntityById = new HashMap<Long, Entity>();
-
-    private List<MappedId> mapping = new ArrayList<MappedId>();
-    private List<Entity> mappedEntityList = new ArrayList<Entity>();
-    private Map<Long, Entity> mappedEntityById = new HashMap<Long, Entity>();
-    private Map<Long, List<Entity>> mappedEntitiesByResultId = new HashMap<Long, List<Entity>>();
-    private Map<Long, List<Entity>> resultEntitiesByMappedId = new HashMap<Long, List<Entity>>();
+    private final SolrResults solrResults;
+    private final Map<Long, Entity> resultEntityById = new HashMap<>();
+    private final List<MappedId> mapping = new ArrayList<>();
+    private final List<Entity> mappedEntityList = new ArrayList<>();
+    private final Map<Long, Entity> mappedEntityById = new HashMap<>();
+    private final Map<Long, List<Entity>> mappedEntitiesByResultId = new HashMap<>();
+    private final Map<Long, List<Entity>> resultEntitiesByMappedId = new HashMap<>();
 
     public ResultPage(SolrResults solrResults) {
         this.solrResults = solrResults;
@@ -47,15 +46,17 @@ public class ResultPage {
 
         clearMapping();
 
-        final List<Long> entityIds = new ArrayList<Long>();
+        final List<Long> entityIds = new ArrayList<>();
         for (Entity entity : solrResults.getResultList()) {
             entityIds.add(entity.getId());
         }
 
-        mapping.addAll(projection.getProjectedIds(entityIds));
+        List<MappedId> newMapping = projection.getProjectedIds(entityIds);
+        mapping.addAll(newMapping);
+        log.info("Added "+newMapping.size()+" mappings");
 
-        Set<Long> locallyVisitedMappedIds = new HashSet<Long>();
-        Set<Long> mappedEntityIds = new HashSet<Long>();
+        Set<Long> locallyVisitedMappedIds = new HashSet<>();
+        Set<Long> mappedEntityIds = new HashSet<>();
         for (MappedId mappedId : mapping) {
             Long mappedEntityId = mappedId.getMappedId();
             if (locallyVisitedMappedIds.contains(mappedEntityId)) {
@@ -65,7 +66,8 @@ public class ResultPage {
             mappedEntityIds.add(mappedEntityId);
         }
 
-        List<Entity> allMappedEntities = ModelMgr.getModelMgr().getEntitiesByIds(new ArrayList<Long>(mappedEntityIds));
+        List<Entity> allMappedEntities = ModelMgr.getModelMgr().getEntitiesByIds(new ArrayList<>(mappedEntityIds));
+        log.info("Got "+allMappedEntities.size()+" mapped entities");
 
         for (Entity entity : allMappedEntities) {
             if (entity != null) {
@@ -76,7 +78,7 @@ public class ResultPage {
         for (MappedId mappedId : mapping) {
             List<Entity> resultEntities = resultEntitiesByMappedId.get(mappedId.getMappedId());
             if (resultEntities == null) {
-                resultEntities = new ArrayList<Entity>();
+                resultEntities = new ArrayList<>();
                 resultEntitiesByMappedId.put(mappedId.getMappedId(), resultEntities);
             }
             Entity resultEntity = resultEntityById.get(mappedId.getOriginalId());
@@ -91,7 +93,7 @@ public class ResultPage {
         for (MappedId mappedId : mapping) {
             List<Entity> mappedEntities = mappedEntitiesByResultId.get(mappedId.getOriginalId());
             if (mappedEntities == null) {
-                mappedEntities = new ArrayList<Entity>();
+                mappedEntities = new ArrayList<>();
                 mappedEntitiesByResultId.put(mappedId.getOriginalId(), mappedEntities);
             }
             Entity mappedEntity = mappedEntityById.get(mappedId.getMappedId());
@@ -152,7 +154,7 @@ public class ResultPage {
     public List<Entity> getMappedEntities(Long entityId) {
         List<Entity> list = mappedEntitiesByResultId.get(entityId);
         if (list == null) {
-            return new ArrayList<Entity>();
+            return new ArrayList<>();
         }
         return list;
     }
@@ -160,7 +162,7 @@ public class ResultPage {
     public List<Entity> getResultEntities(Long mappedEntityId) {
         List<Entity> list = resultEntitiesByMappedId.get(mappedEntityId);
         if (list == null) {
-            return new ArrayList<Entity>();
+            return new ArrayList<>();
         }
         return list;
     }

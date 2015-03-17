@@ -12,17 +12,19 @@ import java.util.Set;
 import java.util.Vector;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.LoadStatusListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.StatusUpdateListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.InterleavedIterator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.MinResSliceGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.SliceGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.UmbrellaSliceGenerator;
-import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TileServer 
-implements ComponentListener // so changes in viewer size/visibility can be tracked
+implements ComponentListener, // so changes in viewer size/visibility can be tracked
+           VolumeLoadListener
 // implements VolumeImage3d
 {
 	private static final Logger log = LoggerFactory.getLogger(TileServer.class);
@@ -47,97 +49,86 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 	// Refactoring 6/12/2013
 	private SharedVolumeImage sharedVolumeImage;
 	private TextureCache textureCache = new TextureCache();
+    
+    private LoadStatusListener loadStatusListener;
+    private StatusUpdateListener queueDrainedListener;
 	
 	// One for each orthogonal viewer
 	// private Set<TileConsumer> tileConsumers = new HashSet<TileConsumer>();
-	private Set<ViewTileManager> viewTileManagers = new HashSet<ViewTileManager>();
+	private Set<ViewTileManager> viewTileManagers = new HashSet<>();
 	
 	// New path for handling tile updates July 9, 2013 cmb
-	private Set<TileIndex> currentDisplayTiles = new HashSet<TileIndex>();
-	public Slot refreshCurrentTileSetSlot = new Slot() {
-		@Override
-		public void execute() {refreshCurrentTileSet();}
-	};
-	
-	// Initiate loading of low resolution textures
-	private Slot startMinResPreFetchSlot = new Slot() {
-		@Override
-		public void execute() {
-			// log.info("starting pre fetch of lowest resolution tiles");
-			// Load X and Y slices too (in addition to Z), if available
-			if (sharedVolumeImage.getLoadAdapter() == null)
-				return;
-			// queue load of all low resolution textures
-			minResPreFetcher.clear();
-			TileFormat format = sharedVolumeImage.getLoadAdapter().getTileFormat();
-			List<MinResSliceGenerator> generators = new Vector<MinResSliceGenerator>();
-			if (format.isHasXSlices())
-				generators.add(new MinResSliceGenerator(format, CoordinateAxis.X));
-			if (format.isHasYSlices())
-				generators.add(new MinResSliceGenerator(format, CoordinateAxis.Y));
-			if (format.isHasZSlices())
-				generators.add(new MinResSliceGenerator(format, CoordinateAxis.Z));
-
-			Iterable<TileIndex> tileGenerator;
-			if (generators.size() < 1)
-				return;
-			else if (generators.size() == 1)
-				tileGenerator = generators.get(0);
-			else {
-				Iterator<MinResSliceGenerator> i = generators.iterator();
-				tileGenerator = new InterleavedIterator<TileIndex>(i.next(), i.next());
-				while (i.hasNext()) {
-					tileGenerator = new InterleavedIterator<TileIndex>(tileGenerator, i.next());
-				}
-			}
-			int tileCount = 0;
-			for (TileIndex i : tileGenerator) {
-				minResPreFetcher.loadDisplayedTexture(i, TileServer.this);
-				tileCount += 1;
-			}
-			// log.info(tileCount+" min resolution tiles queued");
-		}
-	};
-
-	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
-	public Signal1<LoadStatus> loadStatusChangedSignal = new Signal1<LoadStatus>();
-
-	public Slot onVolumeInitializedSlot = new Slot() {
-		@Override
-		public void execute() {
-            if (sharedVolumeImage == null)
-                return;
-			// Initialize pre-fetchers
-			minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
-			futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
-            clearCache();
-			setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
-			refreshCurrentTileSet();
-		}
-	};
-	
-	private Slot updateLoadStatusSlot = new Slot() {
-		@Override
-		public void execute() {
-			updateLoadStatus();
-		}
-	};
+	private Set<TileIndex> currentDisplayTiles = new HashSet<>();
 	
 	public TileServer(SharedVolumeImage sharedVolumeImage) {
 		setSharedVolumeImage(sharedVolumeImage);
 		minResPreFetcher.setTextureCache(getTextureCache());
 		futurePreFetcher.setTextureCache(getTextureCache());
-		textureCache.textureLoadedSignal.connect(textureLoadedSignal);
-		getTextureCache().queueDrainedSignal.connect(updateLoadStatusSlot);
+        queueDrainedListener = new StatusUpdateListener() {
+            @Override
+            public void update() {
+                updateLoadStatus();
+            }            
+        };
+        getTextureCache().setQueueDrainedListener(queueDrainedListener);
 	}
+
+    public void textureLoaded(TileIndex tileIndex) {
+        for (ViewTileManager vtm: viewTileManagers) {
+            vtm.textureLoaded(tileIndex);
+        }
+    }
+    
+    public void startMinResPreFetch() {
+            // log.info("starting pre fetch of lowest resolution tiles");
+        // Load X and Y slices too (in addition to Z), if available
+        if (sharedVolumeImage.getLoadAdapter() == null) {
+            return;
+        }
+        // queue load of all low resolution textures
+        minResPreFetcher.clear();
+        TileFormat format = sharedVolumeImage.getLoadAdapter().getTileFormat();
+        List<MinResSliceGenerator> generators = new Vector<MinResSliceGenerator>();
+        if (format.isHasXSlices()) {
+            generators.add(new MinResSliceGenerator(format, CoordinateAxis.X));
+        }
+        if (format.isHasYSlices()) {
+            generators.add(new MinResSliceGenerator(format, CoordinateAxis.Y));
+        }
+        if (format.isHasZSlices()) {
+            generators.add(new MinResSliceGenerator(format, CoordinateAxis.Z));
+        }
+        Iterable<TileIndex> tileGenerator;
+        if (generators.size() < 1) {
+            return;
+        } else if (generators.size() == 1) {
+            tileGenerator = generators.get(0);
+        } else {
+            Iterator<MinResSliceGenerator> i = generators.iterator();
+            tileGenerator = new InterleavedIterator<TileIndex>(i.next(), i.next());
+            while (i.hasNext()) {
+                tileGenerator = new InterleavedIterator<TileIndex>(tileGenerator, i.next());
+            }
+        }
+        for (TileIndex i : tileGenerator) {
+            minResPreFetcher.loadDisplayedTexture(i, TileServer.this);
+        }
+        // log.info(tileCount+" min resolution tiles queued");
+        return;
+    }
+
+    /**
+     * @param loadStatusListener the loadStatusListener to set
+     */
+    public void setLoadStatusListener(LoadStatusListener loadStatusListener) {
+        this.loadStatusListener = loadStatusListener;
+    }
 
 	public void addViewTileManager(ViewTileManager viewTileManager) {
 		if (viewTileManagers.contains(viewTileManager))
 			return; // already there
 		viewTileManagers.add(viewTileManager);
-		textureLoadedSignal.connect(viewTileManager.onTextureLoadedSlot);
-		viewTileManager.loadStatusChanged.connect(updateLoadStatusSlot);
-		// viewTileManager.tileSetChangedSignal.connect(updateFuturePreFetchSlot);
+        viewTileManager.setLoadStatusChangedListener(queueDrainedListener);
 		viewTileManager.setTextureCache(getTextureCache());
 	}
 	
@@ -148,12 +139,10 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
         if (textureCache != null) {
             textureCache.clear();
             textureIds = textureCache.popObsoleteTextureIds();
-            textureCache.textureLoadedSignal.disconnect(textureLoadedSignal);
-            textureCache.queueDrainedSignal.disconnect(updateLoadStatusSlot);
+            textureCache.setQueueDrainedListener(null);
         }
         textureCache = new TextureCache();
-        textureCache.textureLoadedSignal.connect(textureLoadedSignal);
-        textureCache.queueDrainedSignal.connect(updateLoadStatusSlot);
+        textureCache.setQueueDrainedListener(queueDrainedListener);
         if (textureIds != null)
             textureCache.getHistoryCache().storeObsoleteTextureIds(textureIds); // so old texture ids can get deleted next draw
         minResPreFetcher.setTextureCache(textureCache);
@@ -162,7 +151,7 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
             vtm.clear();
             vtm.setTextureCache(textureCache);
         }
-		startMinResPreFetchSlot.execute(); // start loading low-res volume
+        startMinResPreFetch();
 	};
 	
 	public TileSet createLatestTiles() {
@@ -185,9 +174,11 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 	public void setLoadStatus(LoadStatus loadStatus) {
 		if (this.loadStatus == loadStatus)
 			return; // no change
-		// log.info("Load status changed to "+loadStatus);
+		log.info("Load status changed to "+loadStatus);
 		this.loadStatus = loadStatus;
-		loadStatusChangedSignal.emit(loadStatus);
+        if (loadStatusListener != null) {
+            loadStatusListener.updateLoadStatus(loadStatus);
+        }
 	}
 
 	public SharedVolumeImage getSharedVolumeImage() {
@@ -198,19 +189,14 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 		if (this.sharedVolumeImage == sharedVolumeImage)
 			return;
 		this.sharedVolumeImage = sharedVolumeImage;
-		sharedVolumeImage.volumeInitializedSignal.connect(onVolumeInitializedSlot);
+        this.sharedVolumeImage.addVolumeLoadListener(this);
 	}
 
 	public TextureCache getTextureCache() {
 		return textureCache;
 	}
 	
-	public Signal1<URL> getVolumeInitializedSignal() {
-		return sharedVolumeImage.volumeInitializedSignal;
-	}
-
 	private void updateLoadStatus() {
-		LoadStatus result;
 		if (sharedVolumeImage == null) {
 			setLoadStatus(LoadStatus.UNINITIALIZED);
 			return;
@@ -387,7 +373,7 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 	}
 	
 	// Part of new way July 9, 2013
-	private void refreshCurrentTileSet() {
+	public void refreshCurrentTileSet() {
 		TileSet tiles = createLatestTiles();
 		Set<TileIndex> indices = new HashSet<TileIndex>();
 		for (Tile2d t : tiles)
@@ -459,4 +445,18 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 		refreshCurrentTileSet();
 	}
 
+    //-------------------------------------------IMPLEMENTS VolumeLoadListener
+    @Override
+    public void volumeLoaded(URL url) {
+        if (sharedVolumeImage == null) {
+            return;
+        }
+        // Initialize pre-fetchers
+        minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
+        futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
+        clearCache();
+        setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
+        refreshCurrentTileSet();
+    }
+	
 }

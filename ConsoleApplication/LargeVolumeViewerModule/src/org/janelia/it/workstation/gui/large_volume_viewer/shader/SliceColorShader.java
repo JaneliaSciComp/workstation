@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.shader;
 
-import org.janelia.it.workstation.gui.large_volume_viewer.ChannelColorModel;
-import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
+import org.janelia.console.viewerapi.model.ChannelColorModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 
 import java.awt.Color;
 

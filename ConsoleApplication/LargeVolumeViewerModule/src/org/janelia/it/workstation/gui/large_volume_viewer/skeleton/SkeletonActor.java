@@ -30,16 +30,13 @@ import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PathShader;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
-import org.janelia.it.workstation.signal.Signal;
-import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot;
-import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
@@ -54,6 +51,10 @@ import org.slf4j.LoggerFactory;
 public class SkeletonActor 
 implements GLActor
 {
+    // NOTE: for future ref-I had caused this actor to be a skeleton change
+    //  listener. However, I realized that the SkeletonController filled the
+    //  same function, and undid this. I have tried to test to ensure no ill
+    //  effects, but leaving this note just in case. LLF
 	private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
 	
 	// semantic constants for allocating byte arrays
@@ -94,6 +95,7 @@ implements GLActor
 	private int parentAnchorTextureId = -1;
 	//
 	private Skeleton skeleton;
+    private SkeletonActorStateUpdater updater;
 	private Camera3d camera;
 	private float zThicknessInPixels = 100;
 	//
@@ -109,38 +111,17 @@ implements GLActor
     private final float blackColor[] = {0,0,0};
     private boolean anchorsVisible = true;
 	
-	public Signal skeletonActorChangedSignal = new Signal();
-
-    public Signal1<Anchor> nextParentChangedSignal = new Signal1<Anchor>();
-	
-	private Slot updateAnchorsSlot = new Slot() {
-		@Override
-		public void execute() {updateAnchors();}
-	};
-
-    public Slot1<Long> setNextParentSlot = new Slot1<Long>() {
-        @Override
-        public void execute(Long annotationID) {
-            setNextParentByID(annotationID);
-        }
-    };
-
-    public Slot1<Color> changeGlobalColorSlot = new Slot1<Color>() {
-        @Override
-        public void execute(Color color) {
-            neuronColor[0] = color.getRed() / 255.0f;
-            neuronColor[1] = color.getGreen() / 255.0f;
-            neuronColor[2] = color.getBlue() / 255.0f;
-            updateAnchorsSlot.execute();
-        }
-    };
-
 	private TileFormat tileFormat;
 
 	public SkeletonActor() {
+        updater = new SkeletonActorStateUpdater();
 		// log.info("New SkeletonActor");
 	}
 	
+    public SkeletonActorStateUpdater getUpdater() {
+        return updater;
+    }
+    
 	private synchronized void displayLines(GLAutoDrawable glDrawable) {
         if (neuronLineIndices.size() == 0)
             return;
@@ -415,13 +396,8 @@ implements GLActor
 	public void setSkeleton(Skeleton skeleton) {
 		if (skeleton == this.skeleton)
 			return;
-		if (this.skeleton != null) { 
-			// disconnect previous skeleton, if any
-			this.skeleton.skeletonChangedSignal.deleteObserver(updateAnchorsSlot);
-		}
 		this.skeleton = skeleton;
 		updateAnchors();
-		skeleton.skeletonChangedSignal.connect(updateAnchorsSlot);
 	}
 	
 	public float getZThicknessInPixels() {
@@ -436,12 +412,20 @@ implements GLActor
 		if (anchorsVisible == this.anchorsVisible)
 			return; // no change
 		this.anchorsVisible = anchorsVisible;
-		skeletonActorChangedSignal.emit();
+        updater.update();
 	}
 
 	public void setZThicknessInPixels(float zThicknessInPixels) {
 		this.zThicknessInPixels = zThicknessInPixels;
 	}
+
+    public void changeNeuronColor(Color color) {
+        neuronColor[0] = color.getRed() / 255.0f;
+        neuronColor[1] = color.getGreen() / 255.0f;
+        neuronColor[2] = color.getBlue() / 255.0f;
+        // skeletonActorChangedSignal.emit();
+        updateAnchors();
+    }
 
     /**
      * update the arrays we'll send to OpenGL; this includes the
@@ -452,10 +436,117 @@ implements GLActor
      * and copying their positions into appropriate byte array,
      * getting the data ready for the next call to display()
      */
-	protected synchronized void updateAnchors() {
-
+	public synchronized void updateAnchors() {
 		if (skeleton == null)
 			return;
+		vertexCount = skeleton.getAnchors().size();
+		ByteBuffer vertexBytes = ByteBuffer.allocateDirect(vertexCount * floatByteCount * vertexFloatCount);
+		vertexBytes.order(ByteOrder.nativeOrder()); // important!
+		vertices = vertexBytes.asFloatBuffer();
+		vertices.rewind();
+		int vertexIndex = 0;
+		//
+		ByteBuffer colorBytes = ByteBuffer.allocateDirect(vertexCount * floatByteCount * colorFloatCount);
+		colorBytes.order(ByteOrder.nativeOrder());
+		colors = colorBytes.asFloatBuffer();
+		colors.rewind();
+		// Track vertex index, to support vertex buffer object
+		anchorIndices.clear();
+		indexAnchors.clear();
+		int pointCount = 0;
+		// Populate vertex array
+		for (Anchor anchor : skeleton.getAnchors()) {
+			Vec3 xyz = anchor.getLocation();
+			vertices.put((float)xyz.getX());
+			vertices.put((float)xyz.getY());
+			vertices.put((float)xyz.getZ());
+			//
+			colors.put(neuronColor[0]); // red
+			colors.put(neuronColor[1]); // green
+			colors.put(neuronColor[2]); // blue
+			//
+			anchorIndices.put(anchor, vertexIndex);
+			indexAnchors.put(vertexIndex, anchor);
+			vertexIndex += 1;
+			pointCount += 1;
+		}
+		//
+		// Update Traced path actors
+		Set<SegmentIndex> foundSegments = new HashSet<SegmentIndex>();
+		Collection<AnchoredVoxelPath> skeletonSegments = skeleton.getTracedSegments();
+		// log.info("Skeleton has " + skeletonSegments.size() + " traced segments");
+		for (AnchoredVoxelPath segment : skeletonSegments) {
+			SegmentIndex ix = segment.getSegmentIndex();
+			foundSegments.add(ix);
+			if (tracedSegments.containsKey(ix)) {
+				// Is the old traced segment still valid?
+				AnchoredVoxelPath oldSegment = tracedSegments.get(ix).getSegment();
+				List<VoxelPosition> p0 = oldSegment.getPath();
+				List<VoxelPosition> p1 = segment.getPath();
+				boolean looksTheSame = true;
+				if (p0.size() != p1.size()) // same size?
+					looksTheSame = false;
+				else if (p0.get(0) != p1.get(0)) // same first voxel?
+					looksTheSame = false;
+				else if (p0.get(p0.size()-1) != p1.get(p1.size()-1)) // same final voxel?
+					looksTheSame = false;
+				if (looksTheSame)
+					continue; // already have this segment, no need to recompute!
+				else
+					tracedSegments.remove(ix); // obsolete. remove it.
+			}
+			TracedPathActor actor = new TracedPathActor(segment, getTileFormat());
+			addTracedSegment(actor);
+		}
+    	// log.info("tracedSegments.size() [485] = "+tracedSegments.size());
+		// Delete obsolete traced segments
+    	// COPY the keyset, to avoid damaging the original tracedSegment keys.
+		Set<SegmentIndex> orphanSegments = new HashSet<SegmentIndex>(tracedSegments.keySet());
+		orphanSegments.removeAll(foundSegments);
+		for (SegmentIndex ix : orphanSegments) {
+			log.info("Removing orphan segment");
+			tracedSegments.remove(ix);
+		}
+    	// log.info("tracedSegments.size() [492] = "+tracedSegments.size());
+		//
+		// Populate line index buffer - AFTER traced segments have been finalized
+		List<Integer> tempLineIndices = new Vector<Integer>(); // because we don't know size yet
+		for (Anchor anchor : skeleton.getAnchors()) {
+			int i1 = getIndexForAnchor(anchor);
+			if (i1 < 0)
+				continue;
+			for (Anchor neighbor : anchor.getNeighbors()) {
+				int i2 = getIndexForAnchor(neighbor);
+				if (i2 < 0)
+					continue;
+				if (i1 >= i2)
+					continue; // only use ascending pairs, for uniqueness
+				SegmentIndex segmentIndex = new SegmentIndex(anchor.getGuid(), neighbor.getGuid());
+				// Don't draw lines where there is already a traced segment.
+				if (tracedSegments.containsKey(segmentIndex))
+					continue;
+				tempLineIndices.add(i1);
+				tempLineIndices.add(i2);
+			}
+		}
+		ByteBuffer lineBytes = ByteBuffer.allocateDirect(tempLineIndices.size()*intByteCount);
+		lineBytes.order(ByteOrder.nativeOrder());
+		lineIndices = lineBytes.asIntBuffer();
+		lineIndices.rewind();
+		for (int i : tempLineIndices) // fill actual int buffer
+			lineIndices.put(i);
+		lineIndices.rewind();
+		linesNeedCopy = true;
+		// Populate point index buffer
+		ByteBuffer pointBytes = ByteBuffer.allocateDirect(pointCount*intByteCount);
+		pointBytes.order(ByteOrder.nativeOrder());
+		pointIndices = pointBytes.asIntBuffer();
+		pointIndices.rewind();
+		for (Anchor anchor : skeleton.getAnchors()) {
+			int i1 = anchorIndices.get(anchor);
+			pointIndices.put(i1);
+		}
+		verticesNeedCopy = true;
 
         // we do the point update in this method, then call out
         //  to other methods for the lines and paths; no reason we
@@ -538,7 +629,7 @@ implements GLActor
             setNextParent(null);
         }
 
-		skeletonActorChangedSignal.emit();
+        updater.update();
 	}
 
     private void updateLines() {
@@ -802,7 +893,7 @@ implements GLActor
                 path.dispose(glDrawable);
             }
         }
-        neuronTracedSegments.clear();
+        updater.update();
 	}
 
     public synchronized  void setHoverAnchor(Anchor anchor) {
@@ -837,20 +928,21 @@ implements GLActor
 		nextParent = parent;
         // first signal is for drawing the marker, second is for notifying
         //  components that want to, eg, select the enclosing neuron
-		skeletonActorChangedSignal.emit();
-        nextParentChangedSignal.emit(nextParent);
-
+        updater.update();
+        updater.update(nextParent);
 		return true;
 	}
 
+    public void addAnchorUpdateListener(UpdateAnchorListener l) {
+        getUpdater().addListener(l);
+    }
+    
 	/*
 	 * Change visual anchor position without actually changing the Skeleton model
 	 */
 	public void lightweightPlaceAnchor(Anchor dragAnchor, Vec3 location) {
 		if (dragAnchor == null)
 			return;
-
-        // new, per-neuron
 		int index = getIndexForAnchor(dragAnchor);
 		if (index < 0)
 			return;
@@ -858,8 +950,7 @@ implements GLActor
 		for (int i = 0; i < 3; ++i) {
             neuronVertices.get(dragAnchor.getNeuronID()).put(offset+i, (float)(double)location.get(i) );
 		}
-
-		skeletonActorChangedSignal.emit();
+        updater.update();
 	}
 
 	public boolean isVisible() {
@@ -869,7 +960,7 @@ implements GLActor
         if (bIsVisible == b)
             return;
         bIsVisible = b;
-        skeletonActorChangedSignal.emit();
+        updater.update();
     }
 
 }

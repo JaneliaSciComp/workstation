@@ -1,14 +1,15 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonAnchorListener;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.signal.Signal1;
 
 public class Anchor {
+
 	public enum Type {
 		UNDEFINED,
 		SOMA,
@@ -26,16 +27,17 @@ public class Anchor {
 	private Type anchorType = Type.UNDEFINED;
 	private double radius = 1.0;
 	// No explicit edge objects, just symmetric neighbor references
-	private Set<Anchor> neighbors = new LinkedHashSet<Anchor>();
+	private Set<Anchor> neighbors = new LinkedHashSet<>();
 
-    // the difference between these signals: one is triggered by
+    private SkeletonAnchorListener skeletonAnchorListener;
+    
+    // the difference between skel-anchor listener methods: 
+    //  one is triggered by
     //  user mouse actions, will trigger things happening due
     //  to the anchor's having been moved (eg, merges)
     // the "silent" version is triggered
     //  programmatically and won't cause anything other than
     //  the positioning and drawing of the anchor
-	public Signal1<Anchor> anchorMovedSignal = new Signal1<Anchor>();
-	public Signal1<Anchor> anchorMovedSilentSignal = new Signal1<Anchor>();
 
     /**
      * Construct a valid anchor, based on information provided from external
@@ -61,7 +63,14 @@ public class Anchor {
 		addNeighbor(parent);
 	}
 	
-	public boolean addNeighbor(Anchor neighbor) {
+    /**
+     * @param skeletonAnchorListener the skeletonAnchorListener to set
+     */
+    public void setSkeletonAnchorListener(SkeletonAnchorListener skeletonAnchorListener) {
+        this.skeletonAnchorListener = skeletonAnchorListener;
+    }
+
+    public boolean addNeighbor(Anchor neighbor) {
 		if (neighbor == null)
 			return false;
 		if (neighbor == this)
@@ -101,7 +110,9 @@ public class Anchor {
 		if (location.equals(this.location))
 			return;
 		this.location = location;
-		anchorMovedSignal.emit(this);
+        if (skeletonAnchorListener != null) {
+            skeletonAnchorListener.anchorMoved(this);
+        }
 	}
 
     /**
@@ -115,7 +126,9 @@ public class Anchor {
 		if (location.equals(this.location))
 			return;
 		this.location = location;
-		anchorMovedSilentSignal.emit(this);
+        if (skeletonAnchorListener != null) {
+            skeletonAnchorListener.anchorMovedSilent(this);
+        }
 	}
 
 	public void setAnchorType(Type anchorType) {

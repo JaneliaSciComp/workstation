@@ -17,11 +17,20 @@ import com.sun.media.jai.codec.FileSeekableStream;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.SeekableStream;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
+import org.openide.util.Exceptions;
 
 /*
  * Loader for large volume viewer format negotiated with Nathan Clack
@@ -208,11 +217,16 @@ extends AbstractTextureLoadAdapter
             // Combine channels into one image
             RenderedImage composite = channels[0];
             if (sc > 1) {
+                try {
                 ParameterBlockJAI pb = new ParameterBlockJAI("bandmerge");
                 for (int c = 0; c < sc; ++c) {
                     pb.addSource(channels[c]);
                 }
                 composite = JAI.create("bandmerge", pb);
+                } catch (NoClassDefFoundError exc) {
+                    exc.printStackTrace();
+                    return null;
+                }
                 // localLoadTimer.mark("merged channels");
             }
 
@@ -285,6 +299,112 @@ extends AbstractTextureLoadAdapter
 		return decoders;
 	}
 	
+    private File getOsPath(String linuxPath) {
+        // TODO - non-Windows
+        File testFile = new File(linuxPath);
+        if (testFile.exists()) return testFile; // If the folder exists, use it
+        Map<String, String> prefixMappings = new HashMap<>();
+        
+        // TODO - need more mappings
+        prefixMappings.put("/nobackup/", "//fxt/nobackup/"); // Windows
+        prefixMappings.put("/tier2/", "//tier2/"); // Windows
+        prefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "//dm11/mousebrainmicro/"); // Windows
+        
+        for (String linuxPrefix : prefixMappings.keySet()) {
+            if (linuxPath.startsWith(linuxPrefix)) {
+                String testPath = linuxPath.replace(linuxPrefix, prefixMappings.get(linuxPrefix));
+                testFile = new File(testPath);
+                if (testFile.exists())
+                    return testFile;
+            }
+        }
+        return null;
+    }
+    
+    private boolean sniffOriginAndScaleFromFolder(String path, int [] origin, double [] scale) {
+        File localPath = getOsPath(path);
+        if (localPath == null)
+            return false;
+        File transformFile = new File(localPath, "transform.txt");
+        if (! transformFile.exists())
+            return false;
+        try {
+            Pattern pattern = Pattern.compile("([os][xyz]): (\\d+(\\.\\d+)?)");
+            Scanner scanner = new Scanner(transformFile);
+            double scaleScale = 1.0 / Math.pow(2, tileFormat.getZoomLevelCount() - 1);
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                Matcher m = pattern.matcher(line);
+                if (m.matches()) {
+                    String key = m.group(1);
+                    String value = m.group(2);
+                    switch (key) {
+                        case "ox":
+                            origin[0] = Integer.parseInt(value);
+                            break;
+                        case "oy":
+                            origin[1] = Integer.parseInt(value);
+                            break;
+                        case "oz":
+                            origin[2] = Integer.parseInt(value);
+                            break;
+                        case "sx":
+                            scale[0] = Double.parseDouble(value) * scaleScale;
+                            break;
+                        case "sy":
+                            scale[1] = Double.parseDouble(value) * scaleScale;
+                            break;
+                        case "sz":
+                            scale[2] = Double.parseDouble(value) * scaleScale;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            // TODO 
+            return true;
+        } 
+        catch (FileNotFoundException ex) {} 
+        
+        return false;
+    }
+    
+    // Workaround for loading origin and scale without web services
+    private void sniffOriginAndScale() throws DataSourceInitializeException {
+        int [] origin = new int [3];
+        double [] scale = new double [3];
+        try {
+            CoordinateToRawTransform transform
+                    = ModelMgr.getModelMgr().getCoordToRawTransform(remoteBasePath);
+            origin = transform.getOrigin();
+            scale = transform.getScale();
+        } catch ( Exception ex ) {
+            if (! sniffOriginAndScaleFromFolder(remoteBasePath, origin, scale))
+                throw new DataSourceInitializeException(
+                        "Failed to find metadata", ex
+                );
+        }
+        // Scale must be converted to micrometers.
+        for (int i = 0; i < scale.length; i++) {
+            scale[ i] /= 1000; // nanometers to micrometers
+        }
+        // Origin must be divided by 1000, to convert to micrometers.
+        for (int i = 0; i < origin.length; i++) {
+            origin[ i] = (int) (origin[i] /(1000 * scale[i])); // nanometers to voxels
+        }
+
+        tileFormat.setVoxelMicrometers(scale);
+        // Shifting everything by ten voxels to the right.
+        int[] mockOrigin = new int[]{
+            0,//origin[0],
+            origin[1],
+            origin[2]
+        };
+        // tileFormat.setOrigin(mockOrigin);
+        tileFormat.setOrigin(origin);
+    }
+    
 	protected void sniffMetadata(File topFolderParam) 
 	throws DataSourceInitializeException {
         try {
@@ -367,24 +487,7 @@ extends AbstractTextureLoadAdapter
 
             // Setup the origin and the scale.
             if (remoteBasePath != null) {
-                CoordinateToRawTransform transform = 
-                    ModelMgr.getModelMgr().getCoordToRawTransform(remoteBasePath);
-                int[] origin = transform.getOrigin();
-                double[] scale = transform.getScale();
-                
-                // Scale must be converted to micrometers.
-                for ( int i = 0; i < scale.length; i++ ) {
-                    scale[ i ] /= 1000;
-                }
-                // Origin must be divided by 1000, to convert to micrometers.
-                for ( int i = 0; i < origin.length; i++ ) {
-                    origin[ i ] /= 1000;
-                    origin[ i ] /= scale[ i ];
-                }
-                
-                tileFormat.setVoxelMicrometers(scale);
-                tileFormat.setOrigin(origin);
-
+                sniffOriginAndScale();
             }
     		// TODO - actual max intensity
         

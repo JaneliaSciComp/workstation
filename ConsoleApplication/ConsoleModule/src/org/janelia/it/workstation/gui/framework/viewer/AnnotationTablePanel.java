@@ -23,6 +23,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
     private DynamicTable dynamicTable;
     private JLabel summaryLabel;
 
-    private List<OntologyAnnotation> annotations = new ArrayList<OntologyAnnotation>();
+    private List<OntologyAnnotation> annotations = new ArrayList<>();
 
     public AnnotationTablePanel() {
         setLayout(new BorderLayout());
@@ -57,7 +58,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
     @Override
     public void setAnnotations(List<OntologyAnnotation> annotations) {
         if (annotations == null) {
-            this.annotations = new ArrayList<OntologyAnnotation>();
+            this.annotations = new ArrayList<>();
         }
         else {
             this.annotations = annotations;
@@ -257,7 +258,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             });
             popupMenu.add(copyMenuItem);
 
-            if (SessionMgr.getSubjectKey().equals(annotation.getOwner())) {
+            if (EntityUtils.hasWriteAccess(annotation.getEntity(), SessionMgr.getSubjectKeys())) {
                 JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
                 deleteItem.addActionListener(new ActionListener() {
                 @Override

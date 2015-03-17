@@ -6,17 +6,20 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.console.viewerapi.model.ChannelColorModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
+import java.awt.Color;
 import java.util.List;
 import javax.swing.AbstractButton;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Observable;
-import java.util.Observer;
 import javax.swing.DefaultButtonModel;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import org.janelia.console.viewerapi.controller.ColorListener;
+import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 
 /**
  * Arrange this alongside the slider panel, with channel-oriented buttons.
@@ -28,7 +31,7 @@ public class ColorButtonPanel extends JPanel {
     private List<JCheckBox> checkboxes = new ArrayList<>();
     private List<AbstractButton> bottomControls = new ArrayList<>();
     private int verticalSpacer;
-    private Observer icmInitObserver;
+    private ColorModelInitListener icmInitListener;
     
     public ColorButtonPanel( ImageColorModel imageColorModel, int verticalSpacer ) {
         super();
@@ -50,15 +53,13 @@ public class ColorButtonPanel extends JPanel {
             initGui();
         }
         
-        icmInitObserver = new Observer() {
+        icmInitListener = new ColorModelInitListener() {
             @Override
-            public void update(Observable o, Object arg) {
+            public void colorModelInit() {
                 initGui();
-            }
-            
+            }            
         };
-
-        imageColorModel.getColorModelInitializedSignal().addObserver(icmInitObserver);
+        imageColorModel.addColorModelInitListener(icmInitListener);
     }
 
     public void addButton( AbstractButton btn ) {
@@ -91,8 +92,8 @@ public class ColorButtonPanel extends JPanel {
     }
     
     private void cleanupObserver() {
-        if ( this.imageColorModel != null  &&  icmInitObserver != null ) {
-            this.imageColorModel.getColorModelInitializedSignal().deleteObserver(icmInitObserver);
+        if ( this.imageColorModel != null  &&  icmInitListener != null ) {
+            this.imageColorModel.removeColorModelInitListener(icmInitListener);
         }
     }
     
@@ -139,9 +140,9 @@ public class ColorButtonPanel extends JPanel {
             JCheckBox btn = (JCheckBox)e.getSource();
             btn.setSelected(! btn.isSelected());
             ccm.setCombiningConstant( btn.isSelected() ? 1.0f : -1.0f );
-            ccm.getColorChangedSignal().emit( ccm.getColor() );
+            ccm.fireColorChange( ccm.getColor() );
             // Signal time to change stuff on screen.
-            icm.getColorModelChangedSignal().emit();
+            icm.fireColorModelChanged();
         }
         
     }
@@ -150,19 +151,19 @@ public class ColorButtonPanel extends JPanel {
 
         private ChannelColorModel ccm;
         private AbstractButton btn;
-        private final Observer reflectCheckedStateObserver;
 
         public ChannelColorButtonModel(ChannelColorModel ccm, AbstractButton btn) {
             this.ccm = ccm;
             this.btn = btn;
-            reflectCheckedStateObserver = new Observer(){
+            // Feed back to second checkbox which have may similar model.
+            ColorListener colorChangeListener = new ColorListener() {
                 @Override
-                public void update(Observable o, Object arg) {
+                public void color(Color color) {
                     ChannelColorButtonModel.this.fireStateChanged();
                 }
+                
             };
-            // Feed back to second checkbox which have may similar model.
-            ccm.getColorChangedSignal().addObserver(reflectCheckedStateObserver);
+            ccm.setColorListener(colorChangeListener);
         }
         
         @Override
@@ -181,7 +182,7 @@ public class ColorButtonPanel extends JPanel {
         
         public void dispose() {
             if ( ccm != null ) {
-                ccm.getColorChangedSignal().deleteObserver(reflectCheckedStateObserver);
+                ccm.setColorListener(null);
                 ccm = null;
             }
             btn = null;            

@@ -1,11 +1,10 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
-import org.janelia.it.workstation.signal.Signal1;
-
 import java.awt.event.ActionEvent;
 import java.net.URL;
 
 import javax.swing.AbstractAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.UrlLoadListener;
 
 /**
  * Menu item to load a particular file from a URL
@@ -19,11 +18,15 @@ public class RecentFileAction extends AbstractAction
 	// private static final Logger log = LoggerFactory.getLogger(RecentFileAction.class);
 	
 	private URL url;
-	private Signal1<URL> openFileRequestedSignal = new Signal1<URL>();
+    private UrlLoadListener urlLoadListener;
 
 	RecentFileAction(URL url) {
 		setUrl(url);
 	}
+    
+    public void setUrlLoadListener(UrlLoadListener urlLoadListener) {
+        this.urlLoadListener = urlLoadListener;
+    }
 
 	@Override
 	public boolean equals(Object obj) {
@@ -60,14 +63,12 @@ public class RecentFileAction extends AbstractAction
 		putValue(SHORT_DESCRIPTION, "Load image from " + url.toString());
 	}
 
-	public Signal1<URL> getOpenFileRequestedSignal() {
-		return openFileRequestedSignal;
-	}
-
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		// log.info("requesting load of "+url);
-		getOpenFileRequestedSignal().emit(url);
+        if (urlLoadListener != null) {
+            urlLoadListener.loadUrl(url);
+        }
 	}
 
 }

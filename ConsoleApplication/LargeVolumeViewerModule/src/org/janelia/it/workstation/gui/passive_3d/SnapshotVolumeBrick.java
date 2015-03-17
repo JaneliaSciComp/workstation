@@ -12,7 +12,7 @@ import javax.media.opengl.GLAutoDrawable;
 import java.awt.Color;
 import java.util.Collection;
 import java.util.Iterator;
-import org.janelia.it.workstation.gui.large_volume_viewer.ChannelColorModel;
+import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.it.workstation.gui.viewer3d.shader.TexturedShader;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
