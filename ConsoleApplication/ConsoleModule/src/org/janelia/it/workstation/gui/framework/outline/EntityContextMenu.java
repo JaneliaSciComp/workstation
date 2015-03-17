@@ -29,9 +29,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
+import javax.swing.ProgressMonitor;
 
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
@@ -379,21 +381,53 @@ public class EntityContextMenu extends JPopupMenu {
         pasteItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                try {
-                    final List<RootedEntity> selectedEntities = browser.getViewerManager()
-                            .getActiveViewer().getSelectedEntities();
-                    OntologyAnnotation baseAnnotation = ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation();
-                    for (RootedEntity entity : selectedEntities) {
-                        AnnotationSession tmpSession = ModelMgr.getModelMgr().getCurrentAnnotationSession();
-                        OntologyAnnotation tmpAnnotation = new OntologyAnnotation((null == tmpSession) ? null
-                                : tmpSession.getId(), entity.getEntityId(), baseAnnotation.getKeyEntityId(),
-                                baseAnnotation.getKeyString(), baseAnnotation.getValueEntityId(), baseAnnotation
-                                        .getValueString());
-                        ModelMgr.getModelMgr().createOntologyAnnotation(tmpAnnotation);
+
+                // TODO: this should be encapsulated in an Action
+                
+                SimpleWorker worker = new SimpleWorker() {
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        int i = 1;
+                        
+                        final List<RootedEntity> selectedEntities = browser.getViewerManager()
+                                .getActiveViewer().getSelectedEntities();
+                            
+                        for (RootedEntity rootedEntity : selectedEntities) {
+                            if (EntityUtils.isVirtual(rootedEntity.getEntity())) continue;
+                            
+                            OntologyAnnotation baseAnnotation = ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation();
+                            AnnotationSession tmpSession = ModelMgr.getModelMgr().getCurrentAnnotationSession();
+                            OntologyAnnotation annotation = new OntologyAnnotation((null == tmpSession) ? null
+                                    : tmpSession.getId(), rootedEntity.getEntityId(), baseAnnotation.getKeyEntityId(),
+                                    baseAnnotation.getKeyString(), baseAnnotation.getValueEntityId(), baseAnnotation
+                                            .getValueString());
+
+                            Entity annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
+                            log.info("Saved annotation as " + annotationEntity.getId());
+
+                            for(EntityActorPermission eap : baseAnnotation.getEntity().getEntityActorPermissions()) {
+                                ModelMgr.getModelMgr().grantPermissions(annotationEntity.getId(), eap.getSubjectKey(), eap.getPermissions(), false);
+                                log.info("Shared copied annotation with " + eap.getSubjectKey());
+                            }
+                            
+                            setProgress(i++, selectedEntities.size());
+                        }
                     }
-                } catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
-                }
+
+                    @Override
+                    protected void hadSuccess() {
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+
+                };
+
+                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Copying annotations", "", 0, 100));
+                worker.execute();
             }
         });
         return pasteItem;

@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.dialogs;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,13 +13,13 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.outline.EntityDetailsPanel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.workstation.gui.util.SubjectComboBoxRenderer;
 
 /**
  * A dialog for viewing, editing, or adding an EntityActorPermission.
@@ -56,7 +55,7 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
         subjectCombobox.setEditable(false);
         subjectCombobox.setToolTipText("Choose a user or group");
 
-        ComboBoxRenderer renderer = new ComboBoxRenderer();
+        SubjectComboBoxRenderer renderer = new SubjectComboBoxRenderer();
         subjectCombobox.setRenderer(renderer);
         subjectCombobox.setMaximumRowCount(20);
 
@@ -76,9 +75,6 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
 
         addSeparator(attrPanel, "Options");
         attrPanel.add(recursiveCheckbox, "gap para, span 2");
-
-        DefaultComboBoxModel model = (DefaultComboBoxModel) subjectCombobox.getModel();
-        model.addElement("Choose user or group...");
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
@@ -195,52 +191,5 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
     @Override
     public boolean isAccessible() {
         return true;
-    }
-
-    private class ComboBoxRenderer extends JLabel implements ListCellRenderer {
-
-        public ComboBoxRenderer() {
-            setOpaque(true);
-            setHorizontalAlignment(SwingConstants.LEFT);
-            setVerticalAlignment(SwingConstants.CENTER);
-        }
-
-        @Override
-        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-
-            if (value instanceof String) {
-                setIcon(null);
-                setText(value.toString());
-                return this;
-            }
-
-            Subject subject = (Subject) value;
-
-            if (subject == null) {
-                setIcon(Icons.getIcon("error.png"));
-                setText("Unknown");
-                return this;
-            }
-
-            if (isSelected) {
-                setBackground(list.getSelectionBackground());
-                setForeground(list.getSelectionForeground());
-            }
-            else {
-                setBackground(list.getBackground());
-                setForeground(list.getForeground());
-            }
-
-            if (subject.getKey() != null && subject.getKey().startsWith("group:")) {
-                setIcon(Icons.getIcon("group.png"));
-            }
-            else {
-                setIcon(Icons.getIcon("user.png"));
-            }
-
-            setText(subject.getFullName() + " (" + subject.getName() + ")");
-
-            return this;
-        }
     }
 }

@@ -23,7 +23,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.swing.AbstractAction;
 import javax.swing.DropMode;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -34,7 +33,6 @@ import javax.swing.JSeparator;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
-import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
@@ -82,6 +80,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.util.PermissionTemplate;
+import org.janelia.it.workstation.gui.dialogs.AutoAnnotationPermissionDialog;
+import org.janelia.it.workstation.gui.dialogs.BulkAnnotationPermissionDialog;
+import static org.janelia.it.workstation.gui.framework.outline.EntityContextMenu.mainFrame;
 
 /**
  * The right-hand ontology panel which displays all the ontologies that a user has access to.
@@ -99,12 +101,18 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
 
     private final KeyListener keyListener;
     private final KeyBindDialog keyBindDialog;
-
     private boolean recordingKeyBinds = false;
+    private boolean autoShareAnnotations = false;
 
-    private final Map<String, Action> ontologyActionMap = new HashMap<String, Action>();
+    private final BulkAnnotationPermissionDialog bulkAnnotationDialog;
+    private final AutoAnnotationPermissionDialog autoAnnotationDialog;
+    
+    private final Map<String, Action> ontologyActionMap = new HashMap<>();
 
     public OntologyOutline() {
+        
+        bulkAnnotationDialog = new BulkAnnotationPermissionDialog();
+        autoAnnotationDialog = new AutoAnnotationPermissionDialog();
 
         // Create input listeners which will be added to the DynamicTree later
         keyListener = new KeyAdapter() {
@@ -351,14 +359,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         toolBar.setFloatable(false);
         toolBar.setRollover(true);
 
-        decorateToolbar(toolBar);
-
-        return toolBar;
-
-    }
-
-    protected void decorateToolbar(JToolBar jToolBar) {
-
         if (entityRootList != null) {
             final JButton ontologyButton = new JButton("Open ontology...");
             ontologyButton.setIcon(Icons.getIcon("open_action.png"));
@@ -415,11 +415,11 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                     ontologyListMenu.show(ontologyButton, 0, ontologyButton.getHeight());
                 }
             });
-            ontologyButton.addMouseListener(new MouseForwarder(jToolBar, "ImageRoleButton->JToolBar"));
-            jToolBar.add(ontologyButton);
+            ontologyButton.addMouseListener(new MouseForwarder(toolBar, "OntologyButton->JToolBar"));
+            toolBar.add(ontologyButton);
         }
 
-        final JToggleButton keyBindButton = new JToggleButton("Set Shortcuts");
+        final JToggleButton keyBindButton = new JToggleButton();
         keyBindButton.setIcon(Icons.getIcon("keyboard_add.png"));
         keyBindButton.setToolTipText("Enter key binding mode");
         keyBindButton.addActionListener(new ActionListener() {
@@ -440,9 +440,62 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                 }
             }
         });
-        jToolBar.add(keyBindButton);
+        toolBar.add(keyBindButton);
+        
+        final JToggleButton autoShareButton = new JToggleButton();
+        autoShareButton.setIcon(Icons.getIcon("group_gear.png"));
+        autoShareButton.setToolTipText("Configure annotation auto-sharing");
+        autoShareButton.setFocusable(false);
+        autoShareButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (autoShareButton.isSelected()) {
+                    autoShareAnnotations = true;
+                    boolean pressedOk = autoAnnotationDialog.showAutoAnnotationConfiguration();
+                    if (!pressedOk) {
+                        // Cancel
+                        autoShareButton.setSelected(false);
+                    }
+                    else {
+                        JOptionPane.showMessageDialog(mainFrame,
+                            "Auto-sharing annotation with "+
+                            EntityUtils.getNameFromSubjectKey(autoAnnotationDialog.getTemplate().getSubjectKey()), 
+                            "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+                else {
+                    autoShareAnnotations = false;
+                    JOptionPane.showMessageDialog(mainFrame,
+                        "No longer auto-sharing annotations", "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+            
+        });
+        toolBar.add(autoShareButton);
+                    
+        final JButton bulkPermissionsButton = new JButton();
+        bulkPermissionsButton.setIcon(Icons.getIcon("group_edit.png"));
+        bulkPermissionsButton.setToolTipText("Bulk-edit permissions for annotations on selected entities");
+        bulkPermissionsButton.setFocusable(false);
+        bulkPermissionsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                bulkAnnotationDialog.showForSelectedEntities();
+            }
+            
+        });
+        toolBar.add(bulkPermissionsButton);
+        
+        return toolBar;
     }
 
+    public PermissionTemplate getAutoSharingTemplate() {
+        if (autoShareAnnotations) {
+            return autoAnnotationDialog.getTemplate();
+        }
+        return null;
+    }
+    
     private class OntologyOutlineContextMenu extends OntologyContextMenu {
 
         public OntologyOutlineContextMenu(DefaultMutableTreeNode node, String uniqueId) {

@@ -12,7 +12,6 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -22,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.util.List;
 import java.util.concurrent.Callable;
+import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 
@@ -183,13 +183,24 @@ public class AnnotateAction extends OntologyElementAction {
         AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
         Long sessionId = (null != session) ? session.getId() : null;
 
-        Long keyEntityId = (keyEntity == null) ? null : keyEntity.getId();
+        Long keyEntityId = keyEntity.getId();
         Long valueEntityId = (valueEntity == null) ? null : valueEntity.getId();
 
         final OntologyAnnotation annotation = new OntologyAnnotation(
         		sessionId, targetEntity.getId(), keyEntityId, keyString, valueEntityId, valueString);
 
+        createAndShareAnnotation(annotation);
+    }
+    
+    private void createAndShareAnnotation(OntologyAnnotation annotation) throws Exception {
+        
         Entity annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
         log.info("Saved annotation as " + annotationEntity.getId());
+        
+        PermissionTemplate template = SessionMgr.getBrowser().getOntologyOutline().getAutoSharingTemplate();
+        if (template!=null) {
+            ModelMgr.getModelMgr().grantPermissions(annotationEntity.getId(), template.getSubjectKey(), template.getPermissions(), false);
+            log.info("Auto-shared annotation with " + template.getSubjectKey());
+        }
     }
 }
