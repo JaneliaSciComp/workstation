@@ -868,7 +868,7 @@ called from a  SimpleWorker thread.
 
         // updates and signals:
         updateCurrentWorkspace();
-        if (neuron.getId().equals(getCurrentNeuron().getId())){
+        if (getCurrentNeuron() != null && neuron.getId().equals(getCurrentNeuron().getId())){
             updateCurrentNeuron();
         }
 
