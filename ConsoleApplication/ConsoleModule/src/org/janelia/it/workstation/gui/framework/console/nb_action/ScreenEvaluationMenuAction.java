@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog;
@@ -23,7 +18,8 @@ import java.awt.event.ActionListener;
         id = "ScreenEvaluationMenuAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_ScreenEvaluationMenuAction"
+        displayName = "#CTL_ScreenEvaluationMenuAction",
+        lazy = false
 )
 @ActionReference(path = "Menu/Services", position = 110)
 @Messages("CTL_ScreenEvaluationMenuAction=Screen Evaluation")
