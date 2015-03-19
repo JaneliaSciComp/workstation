@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import org.openide.awt.ActionID;
@@ -19,13 +14,14 @@ import java.awt.event.ActionEvent;
         id = "ReportABugMenuAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_ReportABugMenuAction"
+        displayName = "#CTL_ReportABugMenuAction",
+        lazy = true
 )
 @ActionReference(path = "Menu/Help", position = 110)
 @Messages("CTL_ReportABugMenuAction=Report A Bug")
 public final class ReportABugMenuAction extends AbstractAction implements Presenter.Menu {
 
-    JMenuItem bugReport = new JMenuItem("Report A Bug");
+    private final JMenuItem bugReport = new JMenuItem("Report A Bug");
 
     public ReportABugMenuAction() {
         bugReport.addActionListener( this );

@@ -331,6 +331,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         for (TmGeoAnnotationAnchorListener l: anchorListeners) {
             l.anchorAdded(anchor);
         }
+        // center new anchors
+        TileFormat tileFormat = getTileFormat();
+        viewStateListener.setCameraFocus(
+                tileFormat.micronVec3ForVoxelVec3Centered(new Vec3(anchor.getX(),
+                        anchor.getY(), anchor.getZ())));
     }
     private void fireAnchorDeleted(TmGeoAnnotation anchor) {
         for (TmGeoAnnotationAnchorListener l: anchorListeners) {

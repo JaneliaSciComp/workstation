@@ -868,7 +868,7 @@ called from a  SimpleWorker thread.
 
         // updates and signals:
         updateCurrentWorkspace();
-        if (neuron.getId().equals(getCurrentNeuron().getId())){
+        if (getCurrentNeuron() != null && neuron.getId().equals(getCurrentNeuron().getId())){
             updateCurrentNeuron();
         }
 
@@ -1243,12 +1243,13 @@ called from a  SimpleWorker thread.
         updateCurrentWorkspace();
         final TmWorkspace workspace = getCurrentWorkspace();
         setCurrentNeuron(neuron);
+        final TmNeuron updateNeuron = getCurrentNeuron();
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireWorkspaceLoaded(workspace);
-                fireNeuronSelected(neuron);
+                fireNeuronSelected(updateNeuron);
             }
         });
 

@@ -59,9 +59,6 @@ public class TagCloudPanel<T> extends JPanel {
         refresh();
     }
 
-//    public Map<T, JLabel> getTagLabels() {
-//        return tagLabels;
-//    }
     protected Border getLineBorder(T tag) {
         return BorderFactory.createLineBorder(Color.black, 1);
     }
