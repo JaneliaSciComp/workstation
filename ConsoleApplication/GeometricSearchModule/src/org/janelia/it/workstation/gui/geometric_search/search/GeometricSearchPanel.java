@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.io.File;
 
 
 /**
@@ -58,7 +59,10 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         mip3d.setPreferredSize(new Dimension(800, 800));
         mip3d.setVisible(true);
         mip3d.setResetFirstRedraw(true);
-        mip3d.addActor(new TestBlueTileActor());
+        //XrayMeshShader shader=new XrayMeshShader();
+        DepthShader shader=new DepthShader();
+        shader.addActor(new MeshObjFileActor(new File("/Users/murphys/compartment_62.obj")));
+        mip3d.addActor(shader);
         add(mip3d, BorderLayout.CENTER);
 
 //        if (testGLJPanel==null) {
