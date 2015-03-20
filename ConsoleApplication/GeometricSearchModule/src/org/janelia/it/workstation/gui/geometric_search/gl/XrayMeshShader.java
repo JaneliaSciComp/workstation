@@ -1,13 +1,9 @@
-package org.janelia.it.workstation.gui.geometric_search.search;
+package org.janelia.it.workstation.gui.geometric_search.gl;
 
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +11,6 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;

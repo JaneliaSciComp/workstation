@@ -83,11 +83,11 @@ public final class GeometricSearchTopComponent extends TopComponent {
         searchTabPanel.setLayout(searchTabPanelLayout);
         searchTabPanelLayout.setHorizontalGroup(
             searchTabPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 823, Short.MAX_VALUE)
+            .addGap(0, 1179, Short.MAX_VALUE)
         );
         searchTabPanelLayout.setVerticalGroup(
             searchTabPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 500, Short.MAX_VALUE)
+            .addGap(0, 842, Short.MAX_VALUE)
         );
 
         geometricSearchTabPane.addTab(org.openide.util.NbBundle.getMessage(GeometricSearchTopComponent.class, "GeometricSearchTopComponent.searchTabPanel.TabConstraints.tabTitle"), searchTabPanel); // NOI18N
@@ -96,11 +96,11 @@ public final class GeometricSearchTopComponent extends TopComponent {
         adminTabPanel.setLayout(adminTabPanelLayout);
         adminTabPanelLayout.setHorizontalGroup(
             adminTabPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 823, Short.MAX_VALUE)
+            .addGap(0, 1179, Short.MAX_VALUE)
         );
         adminTabPanelLayout.setVerticalGroup(
             adminTabPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 500, Short.MAX_VALUE)
+            .addGap(0, 842, Short.MAX_VALUE)
         );
 
         geometricSearchTabPane.addTab(org.openide.util.NbBundle.getMessage(GeometricSearchTopComponent.class, "GeometricSearchTopComponent.adminTabPanel.TabConstraints.tabTitle"), adminTabPanel); // NOI18N
@@ -109,16 +109,14 @@ public final class GeometricSearchTopComponent extends TopComponent {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(geometricSearchTabPane, javax.swing.GroupLayout.PREFERRED_SIZE, 844, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(geometricSearchTabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 1200, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(geometricSearchTabPane, javax.swing.GroupLayout.PREFERRED_SIZE, 546, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(geometricSearchTabPane, javax.swing.GroupLayout.DEFAULT_SIZE, 888, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         geometricSearchTabPane.getAccessibleContext().setAccessibleName(org.openide.util.NbBundle.getMessage(GeometricSearchTopComponent.class, "GeometricSearchTopComponent.geometricSearchTabPane.AccessibleContext.accessibleName")); // NOI18N
@@ -170,7 +168,7 @@ public final class GeometricSearchTopComponent extends TopComponent {
         logger.info("initSearch()");
         searchTabPanel.setLayout(new BorderLayout());
         searchStartWrapper=new JPanel();
-        searchStartWrapper.setLayout(new GridLayout(7,7));
+        searchStartWrapper.setLayout(new GridLayout(18,9));
         searchStartButton=new JButton("Start");
         searchStartButton.setPreferredSize(new Dimension(100,40));
         searchStartButton.addActionListener(new ActionListener() {
@@ -185,9 +183,9 @@ public final class GeometricSearchTopComponent extends TopComponent {
                 searchPanel.refresh();
             }
         });
-        for (int r=0;r<7;r++) {
-            for (int c=0;c<7;c++) {
-                if (r==3 && c==3) {
+        for (int r=0;r<17;r++) {
+            for (int c=0;c<9;c++) {
+                if (r==8 && c==4) {
                     searchStartWrapper.add(searchStartButton);
                 } else {
                     searchStartWrapper.add(new JLabel());
