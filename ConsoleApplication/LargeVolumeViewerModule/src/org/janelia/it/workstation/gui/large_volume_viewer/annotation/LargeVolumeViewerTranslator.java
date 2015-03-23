@@ -3,9 +3,10 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import Jama.Matrix;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchoredVoxelPathListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
@@ -19,14 +20,6 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalColorChangeListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.NextParentListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationAnchorListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 
@@ -47,7 +40,8 @@ import org.janelia.it.workstation.tracing.VoxelPosition;
  * unfortunately, this class's comments and methods tends to use "anchor" and "annotation"
  * somewhat interchangeably, which can be confusing
  */
-public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener, GlobalAnnotationListener {
+public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener,
+    GlobalAnnotationListener, NeuronStyleChangeListener {
 
     private AnnotationModel annModel;
     private LargeVolumeViewer largeVolumeViewer;
@@ -55,6 +49,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private Collection<TmGeoAnnotationAnchorListener> anchorListeners = new ArrayList<>();
     private Collection<NextParentListener> nextParentListeners = new ArrayList<>();
     private Collection<GlobalColorChangeListener> colorChangeListeners = new ArrayList<>();
+    private Collection<NeuronStyleChangeListener> neuronStyleChangeListeners = new ArrayList<>();
     private ViewStateListener viewStateListener;
     
     public void addAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
@@ -88,7 +83,15 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     public void removeColorChangeListener(GlobalColorChangeListener l) {
         colorChangeListeners.remove(l);
     }
-    
+
+    public void addNeuronStyleChangeListener(NeuronStyleChangeListener l) {
+        neuronStyleChangeListeners.add(l);
+    }
+
+    public void removeNeuronStyleChangeListener(NeuronStyleChangeListener l) {
+        neuronStyleChangeListeners.remove(l);
+    }
+
     public LargeVolumeViewerTranslator(AnnotationModel annModel, LargeVolumeViewer largeVolumeViewer) {
         this.annModel = annModel;
         this.largeVolumeViewer = largeVolumeViewer;
@@ -105,6 +108,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         addTmGeoAnchorListener(skeletonController);
         addNextParentListener(skeletonController);
         addColorChangeListener(skeletonController);
+        addNeuronStyleChangeListener(skeletonController);
         skeletonController.registerForEvents(this);
     }
 
@@ -212,6 +216,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     public void globalAnnotationColorChanged(Color color) {
         // just pass through right now
         fireColorChangeEvent(color);
+    }
+
+    @Override
+    public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
+        fireNeuronStyleChangeEvent(neuron, style);
     }
 
     public void annotationSelected(Long id) {
@@ -360,6 +369,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private void fireColorChangeEvent(Color color) {
         for (GlobalColorChangeListener l: colorChangeListeners) {
             l.globalAnnotationColorChanged(color);
+        }
+    }
+    private void fireNeuronStyleChangeEvent(TmNeuron neuron, NeuronStyle style) {
+        for (NeuronStyleChangeListener l: neuronStyleChangeListeners) {
+            l.neuronStyleChanged(neuron, style);
         }
     }
     

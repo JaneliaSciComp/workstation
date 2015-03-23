@@ -7,6 +7,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
@@ -1017,6 +1018,26 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             @Override
             protected void hadSuccess() {
                 // nothing; signals will be sent
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        setter.execute();
+    }
+
+    public void setNeuronStyle(final TmNeuron neuron, final NeuronStyle style) {
+        SimpleWorker setter = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.setNeuronStyle(neuron, style);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing; listeners will update
             }
 
             @Override

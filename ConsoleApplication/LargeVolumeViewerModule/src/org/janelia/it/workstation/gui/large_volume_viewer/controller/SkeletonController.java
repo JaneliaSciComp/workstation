@@ -9,20 +9,22 @@ package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 import java.awt.Color;
 import java.util.List;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 
 /**
  * This hands off interesting driving info to skeleton.
  * @author fosterl
  */
-public class SkeletonController 
-    implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener, NextParentListener, GlobalColorChangeListener {
+public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener,
+        NextParentListener, GlobalColorChangeListener, NeuronStyleChangeListener {
     private Skeleton skeleton;
     private SkeletonActor actor;
     private SkeletonAnchorListener skeletonAnchorListener;
@@ -109,6 +111,11 @@ public class SkeletonController
     @Override
     public void setNextParent(Long id) {
         actor.setNextParentByID(id);
+    }
+
+    @Override
+    public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
+        actor.changeNeuronStyle(neuron, style);
     }
 
     //--------------------------------IMPLEMENTS GlobalColorChangeListener    

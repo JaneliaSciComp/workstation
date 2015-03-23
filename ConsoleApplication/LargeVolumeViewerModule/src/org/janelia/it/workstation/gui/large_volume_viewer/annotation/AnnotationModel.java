@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.shared.util.SWCDataConverter;
 import org.janelia.it.workstation.shared.util.SWCNode;
 import org.janelia.it.workstation.shared.util.SWCData;
@@ -19,6 +20,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -1121,6 +1123,28 @@ called from a  SimpleWorker thread.
         fireGlobalAnnotationColorChanged(color);
     }
 
+    public void setNeuronStyle(TmNeuron neuron, NeuronStyle style) throws IOException {
+        // retrieve current style map if it exists
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode rootNode;
+        String stylePref = getCurrentWorkspace().getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES);
+        if (stylePref == null) {
+            // no such preference, so start from scratch
+            rootNode = mapper.createObjectNode();
+        } else {
+            rootNode = (ObjectNode) mapper.readTree(stylePref);
+        }
+
+        // add or update entry for this neuron
+        rootNode.put(neuron.getId().toString(), style.asJSON());
+
+        // save
+        setPreference(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES, rootNode.toString());
+
+        // fire change to listeners
+        fireNeuronStyleChanged(neuron, style);
+    }
+
     public boolean automatedRefinementEnabled() {
         String automaticRefinementPref = getCurrentWorkspace().getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
         if (automaticRefinementPref != null) {
@@ -1317,6 +1341,12 @@ called from a  SimpleWorker thread.
     private void fireGlobalAnnotationColorChanged(Color color) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.globalAnnotationColorChanged(color);
+        }
+    }
+
+    private void fireNeuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.neuronStyleChanged(neuron, style);
         }
     }
     

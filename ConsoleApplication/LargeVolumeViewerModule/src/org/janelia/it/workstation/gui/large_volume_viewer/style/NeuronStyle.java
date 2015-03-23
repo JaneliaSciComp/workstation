@@ -1,8 +1,13 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.style;
 
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.awt.*;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * This class encapsulates the visual draw style for a particular neuron;
@@ -26,11 +31,8 @@ public class NeuronStyle {
         Color.yellow,
         Color.pink
     };
-
-    public NeuronStyle(Color color, boolean visible) {
-        this.color = color;
-        this.visible = visible;
-    }
+    // possibly just for testing...
+    private static int defaultColorIndex = 0;
 
     /**
      * test method: I need to set some styles w/o a UI, but also
@@ -38,6 +40,41 @@ public class NeuronStyle {
      */
     public static NeuronStyle getStyleForNeuron(Long neuronID) {
         return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true);
+    }
+
+    public static NeuronStyle getDefaultStyle() {
+        return new NeuronStyle(neuronColors[defaultColorIndex], true);
+    }
+
+    /**
+     * given a json object, return a NeuronStyle; expected to
+     * be in form {"color", [R, G, B in 0-255], "visibility": true/false}
+     *
+     * returns null if it can't parse the input JSON node
+     *
+     * @param rootNode
+     * @return
+     */
+    public static NeuronStyle fromJSON(ObjectNode rootNode) {
+        JsonNode colorNode = rootNode.path("color");
+        if (colorNode.isMissingNode() || !colorNode.isArray()) {
+            return null;
+        }
+        Color color = new Color(colorNode.get(0).asInt(), colorNode.get(1).asInt(),
+                colorNode.get(2).asInt());
+
+        JsonNode visibilityNode = rootNode.path("visible");
+        if (visibilityNode.isMissingNode() || !visibilityNode.isBoolean()) {
+            return null;
+        }
+        boolean visibility = visibilityNode.asBoolean();
+
+        return new NeuronStyle(color, visibility);
+    }
+
+    public NeuronStyle(Color color, boolean visible) {
+        this.color = color;
+        this.visible = visible;
     }
 
     public float getRedAsFloat() {
@@ -56,7 +93,7 @@ public class NeuronStyle {
         return color;
     }
 
-    public float[] getColorAsFloats() {
+    public float[] getColorAsFloatArray() {
         return new float[] {getRedAsFloat(), getGreenAsFloat(), getBlueAsFloat()};
     }
 
@@ -70,5 +107,25 @@ public class NeuronStyle {
 
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    /**
+     * returns a json node object, to be used in persisting styles
+     *
+     * @return
+     */
+    public ObjectNode asJSON() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode rootNode = mapper.createObjectNode();
+
+        ArrayNode colors = mapper.createArrayNode();
+        colors.add(getColor().getRed());
+        colors.add(getColor().getGreen());
+        colors.add(getColor().getBlue());
+        rootNode.put("color", colors);
+
+        rootNode.put("visibility", isVisible());
+
+        return rootNode;
     }
 }

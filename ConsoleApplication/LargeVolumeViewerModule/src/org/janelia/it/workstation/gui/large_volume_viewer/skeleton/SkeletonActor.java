@@ -25,6 +25,7 @@ import javax.swing.ImageIcon;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -106,6 +107,8 @@ implements GLActor
     
     private Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments = new HashMap<>();
 
+    private Map<Long, NeuronStyle> neuronStyles = new HashMap<>();
+
     // note: this initial color is now overridden by other components
     private float neuronColor[] = {0.8f,1.0f,0.3f};
     private final float blackColor[] = {0,0,0};
@@ -129,6 +132,7 @@ implements GLActor
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
         GL2 gl2 = gl.getGL2();
 
+        NeuronStyle style;
         for (Long neuronID: neuronVertices.keySet()) {
             if (!neuronLineIndices.containsKey(neuronID))
                 continue;
@@ -185,9 +189,12 @@ implements GLActor
                     0L);
             // narrower colored line
             gl.glLineWidth(1.5f);
-            // new, not final: get color based on neuron ID; soon will come from
-            //  user choice
-            lineShader.setUniform3v(gl, "baseColor", 1, NeuronStyle.getStyleForNeuron(neuronID).getColorAsFloats());
+            if (neuronStyles.containsKey(neuronID)) {
+                style = neuronStyles.get(neuronID);
+            } else {
+                style = NeuronStyle.getDefaultStyle();
+            }
+            lineShader.setUniform3v(gl, "baseColor", 1, style.getColorAsFloatArray());
             gl.glDrawElements(GL2.GL_LINES,
                     neuronLineIndices.get(neuronID).capacity(),
                     GL2.GL_UNSIGNED_INT,
@@ -357,10 +364,15 @@ implements GLActor
             for (TracedPathActor segment : neuronTracedSegments.get(neuronID).values())
                 segment.display(glDrawable);
             gl.glLineWidth(3.0f);
+            NeuronStyle style;
+            if (neuronStyles.containsKey(neuronID)) {
+                style = neuronStyles.get(neuronID);
+            } else {
+                style = NeuronStyle.getDefaultStyle();
+            }
             for (TracedPathActor segment : neuronTracedSegments.get(neuronID).values()) {
                 // neuron colored foreground
-                // new, not final
-                lineShader.setUniform3v(gl2gl3, "baseColor", 1, NeuronStyle.getStyleForNeuron(neuronID).getColorAsFloats());
+                lineShader.setUniform3v(gl2gl3, "baseColor", 1, style.getColorAsFloatArray());
                 segment.display(glDrawable);
             }
         }
@@ -427,6 +439,13 @@ implements GLActor
         updateAnchors();
     }
 
+    public void changeNeuronStyle(TmNeuron neuron, NeuronStyle style) {
+        if (neuron != null) {
+            neuronStyles.put(neuron.getId(), style);
+            updateAnchors();
+        }
+    }
+
     /**
      * update the arrays we'll send to OpenGL; this includes the
      * anchors/points (thus the name of the method), the lines
@@ -468,16 +487,21 @@ implements GLActor
         neuronIndexAnchors.clear();
         Map<Long, Integer> neuronVertexIndex = new HashMap<>();
         int currentVertexIndex;
+        NeuronStyle style;
         for (Anchor anchor: skeleton.getAnchors()) {
             Long neuronID = anchor.getNeuronID();
             Vec3 xyz = anchor.getLocation();
             neuronVertices.get(neuronID).put((float) xyz.getX());
             neuronVertices.get(neuronID).put((float) xyz.getY());
             neuronVertices.get(neuronID).put((float) xyz.getZ());
-            // new, not in final form; will eventually get colors from user choice
-            neuronColors.get(neuronID).put(NeuronStyle.getStyleForNeuron(neuronID).getRedAsFloat());
-            neuronColors.get(neuronID).put(NeuronStyle.getStyleForNeuron(neuronID).getGreenAsFloat());
-            neuronColors.get(neuronID).put(NeuronStyle.getStyleForNeuron(neuronID).getBlueAsFloat());
+            if (neuronStyles.containsKey(neuronID)) {
+                style = neuronStyles.get(neuronID);
+            } else {
+                style = NeuronStyle.getDefaultStyle();
+            }
+            neuronColors.get(neuronID).put(style.getRedAsFloat());
+            neuronColors.get(neuronID).put(style.getGreenAsFloat());
+            neuronColors.get(neuronID).put(style.getBlueAsFloat());
 
             if (neuronVertexIndex.containsKey(neuronID)) {
                 currentVertexIndex = neuronVertexIndex.get(neuronID);

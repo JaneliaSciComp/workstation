@@ -5,6 +5,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.util.Icons;
 
 import javax.swing.*;
@@ -255,6 +256,11 @@ public class AnnotationPanel extends JPanel
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
 
+        ChooseNeuronStyleAction chooseNeuronStyleAction = new ChooseNeuronStyleAction();
+        chooseNeuronStyleAction.putValue(Action.NAME, "Choose neuron style...");
+        chooseNeuronStyleAction.putValue(Action.SHORT_DESCRIPTION,
+                "Choose draw style for selected neuron");
+        neuronToolMenu.add(chooseNeuronStyleAction);
         ExportCurrentSWCAction exportCurrentSWCAction = new ExportCurrentSWCAction();
         exportCurrentSWCAction.putValue(Action.NAME, "Export SWC file...");
         exportCurrentSWCAction.putValue(Action.SHORT_DESCRIPTION,
@@ -452,7 +458,6 @@ public class AnnotationPanel extends JPanel
 
         JDialog colorDialog;
         JColorChooser colorChooser;
-        private Color currentColor;
 
         public ChooseAnnotationColorAction() {
 
@@ -489,6 +494,58 @@ public class AnnotationPanel extends JPanel
 
             // I'd like to grab the current color as the initial color,
             //  but annotation panel has no way to get it at this time
+            colorChooser.setColor(AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL);
+            colorDialog.setVisible(true);
+        }
+    }
+
+class ChooseNeuronStyleAction extends AbstractAction {
+
+        JDialog colorDialog;
+        JColorChooser colorChooser;
+
+        public ChooseNeuronStyleAction() {
+
+            ActionListener okListener = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    annotationMgr.setNeuronStyle(annotationModel.getCurrentNeuron(),
+                            new NeuronStyle(colorChooser.getColor(), true));
+                }
+            };
+            ActionListener cancelListener = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    // unused right now
+                }
+            };
+
+            // arbitrary initial color
+            colorChooser = new JColorChooser(Color.RED);
+
+            colorDialog = JColorChooser.createDialog(AnnotationPanel.this,
+                    "Set neuron color",
+                    false,
+                    colorChooser,
+                    okListener,
+                    cancelListener);
+            colorDialog.setVisible(false);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (annotationModel.getCurrentWorkspace() == null) {
+                return;
+            }
+            if (annotationModel.getCurrentNeuron() == null) {
+                annotationMgr.presentError("You must select a neuron prior to performing this action.", "No neuron selected");
+                return;
+            }
+
+            // I'd like to grab the current style to pre-populate the dialog,
+            //  but annotation panel has no way to get it at this time
+
+            //
             colorChooser.setColor(AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL);
             colorDialog.setVisible(true);
         }
