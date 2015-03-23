@@ -23,8 +23,6 @@ public abstract class ViewerToolbar extends JPanel {
     protected JButton pathButton;
     protected JButton refreshButton;
 
-    protected int currImageSize;
-
     public ViewerToolbar() {
         super(new BorderLayout());
 
@@ -124,9 +122,5 @@ public abstract class ViewerToolbar extends JPanel {
 
     public JButton getRefreshButton() {
         return refreshButton;
-    }
-
-    public int getCurrImageSize() {
-        return currImageSize;
     }
 }
