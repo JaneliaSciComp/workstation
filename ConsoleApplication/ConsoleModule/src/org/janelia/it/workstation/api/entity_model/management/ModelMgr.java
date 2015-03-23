@@ -121,8 +121,9 @@ public final class ModelMgr {
     }
     
     public void init() throws Exception {
+        log.info("Initializing model...");
         // TODO: in the future, this should not rely on SessionMgr
-        log.info("Loading workspace");
+        log.info("  Loading workspace");
         getCurrentWorkspace();
             
 //            SimpleWorker worker = new SimpleWorker() {
@@ -148,11 +149,13 @@ public final class ModelMgr {
 //
 //            worker.execute();
 
-        log.info("Preloading subjects");
+        log.info("  Preloading subjects");
         List<Subject> subjects = getSubjects();
         for(Subject subject : subjects) {
             subjectByKey.put(subject.getKey(), subject);
         }
+        
+        log.info("Ready.");
     }
 
     public void addModelMgrObserver(ModelMgrObserver mml) {

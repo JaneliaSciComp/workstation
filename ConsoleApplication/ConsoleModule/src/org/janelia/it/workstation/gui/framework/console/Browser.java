@@ -30,6 +30,7 @@ import java.awt.print.PageFormat;
 import java.awt.print.PrinterJob;
 import java.util.Collections;
 import java.util.List;
+import org.janelia.it.jacs.model.util.PermissionTemplate;
 
 /**
  * Created by IntelliJ IDEA.
@@ -45,6 +46,7 @@ public class Browser implements Cloneable {
     public static String SEARCH_HISTORY = "SEARCH_HISTORY";
     public static String ADD_TO_ROOT_HISTORY = "ADD_TO_ROOT_HISTORY";
     private static String VIEWERS_LINKED = "Browser.ViewersLinked";
+    private static String AUTO_SHARE_TEMPLATE = "Browser.AutoShareTemplate";
 
     // Used by printing mechanism to ensure capacity.
     public static final String VIEW_OUTLINES = "Outlines Section";
@@ -90,6 +92,7 @@ public class Browser implements Cloneable {
     private Image iconImage;
     private PageFormat pageFormat;
     private MaskSearchDialog arbitraryMaskSearchDialog;
+    private PermissionTemplate autoShareTemplate;
 
     /**
      * Center Window, use passed realEstatePercent (0-1.0, where 1.0 is 100% of the screen)
@@ -116,16 +119,18 @@ public class Browser implements Cloneable {
         }
     }
 
-    public ImageCache getImageCache() {
-        return imageCache;
-    }
-
     private void jbInit(BrowserModel browserModel) throws Exception {
 
+        log.info("Initializing browser...");
+        
+        this.browserModel = browserModel;
+        
         // Initialize workspace
         ModelMgr.getModelMgr().init();
         
-        viewerManager = new ViewerManager();
+        this.autoShareTemplate = (PermissionTemplate)SessionMgr.getSessionMgr().getModelProperty(AUTO_SHARE_TEMPLATE);
+        
+        this.viewerManager = new ViewerManager();
 
         boolean isViewersLinked = false;
         SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
@@ -139,7 +144,6 @@ public class Browser implements Cloneable {
             useFreeMemoryViewer(false);
         }
 
-        this.browserModel = browserModel;
         browserModel.addBrowserModelListener(new BrowserModelObserver());
         SessionMgr.getSessionMgr().addSessionModelListener(modelListener);
 
@@ -182,11 +186,8 @@ public class Browser implements Cloneable {
 
         ontologyOutline.setPreferredSize(new Dimension());
 
-        BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
-        if (null == consolePosition) {
-            consolePosition = resetBrowserPosition();
-        }
-
+        resetBrowserPosition();
+        
         // Collect the final components
         mainPanel.setLayout(layout);
         allPanelsView.setLayout(new BorderLayout());
@@ -204,6 +205,8 @@ public class Browser implements Cloneable {
                 setPerspective(Perspective.ImageBrowser);
             }
         });
+        
+        log.info("Ready.");
     }
 
     public JComponent getMainComponent() {
@@ -365,6 +368,10 @@ public class Browser implements Cloneable {
 
     }
 
+    public ImageCache getImageCache() {
+        return imageCache;
+    }
+    
     public ViewerManager getViewerManager() {
         return viewerManager;
     }
@@ -473,6 +480,15 @@ public class Browser implements Cloneable {
         SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
     }
 
+    public PermissionTemplate getAutoShareTemplate() {
+        return autoShareTemplate;
+    }
+
+    public void setAutoShareTemplate(PermissionTemplate template) {
+        this.autoShareTemplate = template;
+        SessionMgr.getSessionMgr().setModelProperty(AUTO_SHARE_TEMPLATE, template);
+    }
+    
     private void openOntologyComponent() {
         TopComponent win = WindowLocator.getByName(OntologyOutline.ONTOLOGY_COMPONENT_NAME);
         if (win != null && !win.isOpened()) {
