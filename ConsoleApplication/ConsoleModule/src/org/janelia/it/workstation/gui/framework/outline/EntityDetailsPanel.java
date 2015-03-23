@@ -57,7 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 
 
 /**
@@ -215,8 +214,6 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                             @Override
                             public void actionPerformed(ActionEvent e) {
 
-                                Utils.setWaitingCursor(EntityDetailsPanel.this);
-
                                 Object[] options = {"All subfolders", "Just this entity", "Cancel"};
                                 String message = "Remove this permission from all subfolders, or just this entity?";
                                 final int removeConfirmation = JOptionPane.showOptionDialog(EntityDetailsPanel.this, message, "Apply permissions recursively?",
@@ -249,6 +246,8 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                                         refresh();
                                     }
                                 };
+
+                                Utils.setWaitingCursor(EntityDetailsPanel.this);
                                 worker.setProgressMonitor(new IndeterminateProgressMonitor(EntityDetailsPanel.this, "Revoking permissions...", ""));
                                 worker.execute();
                             }
