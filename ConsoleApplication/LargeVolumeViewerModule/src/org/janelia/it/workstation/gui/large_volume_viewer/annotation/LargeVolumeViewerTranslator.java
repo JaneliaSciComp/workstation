@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import Jama.Matrix;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.*;
@@ -12,6 +14,7 @@ import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -261,6 +264,35 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 newColor = AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL;
             }
             fireColorChangeEvent(newColor);
+
+
+            // set styles for our neurons; if workspace has no saved styles, build an
+            //  empty style pref; if a neuron isn't in the saved or empty style pref,
+            //  use a default style
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode rootNode;
+            String stylePref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES);
+            if (stylePref == null) {
+                // no such preference, make an empty one:
+                rootNode = mapper.createObjectNode();
+            } else {
+                try {
+                    rootNode = (ObjectNode) mapper.readTree(stylePref);
+                } catch (IOException e) {
+                    // if we can't parse, go with empty one again
+                    rootNode = mapper.createObjectNode();
+                }
+            }
+            NeuronStyle style;
+            for (TmNeuron neuron: workspace.getNeuronList()) {
+                if (!rootNode.path(neuron.getId().toString()).isMissingNode()) {
+                    style = NeuronStyle.fromJSON((ObjectNode) rootNode.path(neuron.getId().toString()));
+                } else {
+                    style = NeuronStyle.getStyleForNeuron(neuron.getId());
+                }
+                fireNeuronStyleChangeEvent(neuron,style);
+            }
+
 
             // check for saved image color model
             String colorModelString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_COLOR_MODEL);

@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.awt.*;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * This class encapsulates the visual draw style for a particular neuron;
@@ -18,6 +16,10 @@ public class NeuronStyle {
 
     private Color color;
     private boolean visible = true;
+
+    // constants, because I already used "visible" instead of "visibility" once...
+    private static final String COLOR_KEY = "color";
+    private static final String VISIBILITY_KEY = "visibility";
 
     // some nice colors we can use for testing or defaults;
     //  avoid having 8 in the list, as our neuron IDs are
@@ -35,8 +37,7 @@ public class NeuronStyle {
     private static int defaultColorIndex = 0;
 
     /**
-     * test method: I need to set some styles w/o a UI, but also
-     * w/o them being strictly hard-coded
+     * get a default style for a neuron
      */
     public static NeuronStyle getStyleForNeuron(Long neuronID) {
         return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true);
@@ -56,14 +57,14 @@ public class NeuronStyle {
      * @return
      */
     public static NeuronStyle fromJSON(ObjectNode rootNode) {
-        JsonNode colorNode = rootNode.path("color");
+        JsonNode colorNode = rootNode.path(COLOR_KEY);
         if (colorNode.isMissingNode() || !colorNode.isArray()) {
             return null;
         }
         Color color = new Color(colorNode.get(0).asInt(), colorNode.get(1).asInt(),
                 colorNode.get(2).asInt());
 
-        JsonNode visibilityNode = rootNode.path("visible");
+        JsonNode visibilityNode = rootNode.path(VISIBILITY_KEY);
         if (visibilityNode.isMissingNode() || !visibilityNode.isBoolean()) {
             return null;
         }
@@ -110,9 +111,8 @@ public class NeuronStyle {
     }
 
     /**
-     * returns a json node object, to be used in persisting styles
-     *
-     * @return
+     * returns a json node object, to be used in persisting styles; the
+     * node will be aggregated with others before converting to string
      */
     public ObjectNode asJSON() {
         ObjectMapper mapper = new ObjectMapper();
@@ -122,9 +122,9 @@ public class NeuronStyle {
         colors.add(getColor().getRed());
         colors.add(getColor().getGreen());
         colors.add(getColor().getBlue());
-        rootNode.put("color", colors);
+        rootNode.put(COLOR_KEY, colors);
 
-        rootNode.put("visibility", isVisible());
+        rootNode.put(VISIBILITY_KEY, isVisible());
 
         return rootNode;
     }
