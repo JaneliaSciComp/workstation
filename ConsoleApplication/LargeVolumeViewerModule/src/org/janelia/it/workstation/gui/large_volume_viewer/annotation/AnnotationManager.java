@@ -1080,7 +1080,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         saver.execute();
     }
 
-    public String retreivePreference(final String name) {
+    public String retrievePreference(final String name) {
         return annotationModel.getPreference(name);
     }
 

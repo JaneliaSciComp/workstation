@@ -289,7 +289,7 @@ public class Snapshot3DLauncher {
 
     private void setIndependentColorFromPrefs() {
         if (annotationManager != null) {
-            String colorModelString = annotationManager.retreivePreference(AnnotationsConstants.PREF_3D_COLOR_MODEL);
+            String colorModelString = annotationManager.retrievePreference(AnnotationsConstants.PREF_3D_COLOR_MODEL);
             if (colorModelString != null) {
                 independentCM.fromString(colorModelString);
             }

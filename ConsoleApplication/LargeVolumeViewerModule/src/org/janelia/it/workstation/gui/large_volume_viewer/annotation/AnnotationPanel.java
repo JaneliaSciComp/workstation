@@ -499,7 +499,7 @@ public class AnnotationPanel extends JPanel
         }
     }
 
-class ChooseNeuronStyleAction extends AbstractAction {
+    class ChooseNeuronStyleAction extends AbstractAction {
 
         JDialog colorDialog;
         JColorChooser colorChooser;
