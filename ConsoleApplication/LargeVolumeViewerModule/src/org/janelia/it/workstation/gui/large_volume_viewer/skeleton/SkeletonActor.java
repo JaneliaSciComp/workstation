@@ -120,7 +120,11 @@ implements GLActor
         updater = new SkeletonActorStateUpdater();
 		// log.info("New SkeletonActor");
 	}
-	
+
+    public void clearStyles() {
+        neuronStyles.clear();
+    }
+
     public SkeletonActorStateUpdater getUpdater() {
         return updater;
     }

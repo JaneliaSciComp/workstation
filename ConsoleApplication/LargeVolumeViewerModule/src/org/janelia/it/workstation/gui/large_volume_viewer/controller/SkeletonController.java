@@ -104,6 +104,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void clearAnchors() {
         skeleton.clear();
+        actor.clearStyles();
 		skeletonChanged();
     }
 
