@@ -37,6 +37,10 @@ public class BulkAnnotationPermissionDialog extends ModalDialog implements Acces
 
     private static final Logger log = LoggerFactory.getLogger(BulkAnnotationPermissionDialog.class);
     
+    private static final String INFO_MESSAGE = "<html>"
+            + "Will modify permissions for the selected user on all<br>"
+            + "accessible annotations across all selected entities</html>";
+    
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
     
     private final JPanel attrPanel;
@@ -56,6 +60,8 @@ public class BulkAnnotationPermissionDialog extends ModalDialog implements Acces
         attrPanel = new JPanel(new MigLayout("wrap 2, ins 20"));
         add(attrPanel, BorderLayout.CENTER);
 
+        attrPanel.add(new JLabel(INFO_MESSAGE), "gap para, span 2");
+        
         addSeparator(attrPanel, "User");
 
         subjectCombobox = new JComboBox();

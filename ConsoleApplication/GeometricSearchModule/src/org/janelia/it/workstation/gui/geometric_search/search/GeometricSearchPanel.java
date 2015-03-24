@@ -2,17 +2,16 @@ package org.janelia.it.workstation.gui.geometric_search.search;
 
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLEventListener;
 import javax.swing.*;
 
-import org.janelia.it.workstation.gui.viewer3d.BaseRenderer;
+import org.janelia.it.workstation.gui.geometric_search.gl.DepthShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.MeshObjFileActor;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.io.File;
 
 
 /**
@@ -55,10 +54,13 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             mip3d.releaseMenuActions();
         }
         mip3d = new Mip3d();
-        mip3d.setPreferredSize(new Dimension(800, 800));
+        mip3d.setPreferredSize(new Dimension(1200, 900));
         mip3d.setVisible(true);
         mip3d.setResetFirstRedraw(true);
-        mip3d.addActor(new TestBlueTileActor());
+        //XrayMeshShader shader=new XrayMeshShader();
+        DepthShader shader=new DepthShader();
+        shader.addActor(new MeshObjFileActor(new File("/Users/murphys/compartment_62.obj")));
+        mip3d.addActor(shader);
         add(mip3d, BorderLayout.CENTER);
 
 //        if (testGLJPanel==null) {

@@ -26,8 +26,6 @@ import org.janelia.it.workstation.gui.util.SubjectComboBoxRenderer;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class AutoAnnotationPermissionDialog extends ModalDialog implements Accessibility {
-
-    public static String AUTO_SHARE_TEMPLATE = "OntologyOutline.AutoShareTemplate";
     
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
     
@@ -108,9 +106,9 @@ public class AutoAnnotationPermissionDialog extends ModalDialog implements Acces
     public boolean showAutoAnnotationConfiguration() {
         pressedOk = false;
             
+        template = SessionMgr.getBrowser().getAutoShareTemplate();
+        
         try {
-            template = (PermissionTemplate)SessionMgr.getSessionMgr().getModelProperty(AUTO_SHARE_TEMPLATE);
-
             List<Subject> subjects = new ArrayList<>(ModelMgr.getModelMgr().getSubjects());
             EntityUtils.sortSubjects(subjects);
             
@@ -165,27 +163,9 @@ public class AutoAnnotationPermissionDialog extends ModalDialog implements Acces
         String permissions = (read ? "r" : "") + (write ? "w" : "");
         template.setPermissions(permissions);
         
-        SessionMgr.getSessionMgr().setModelProperty(AUTO_SHARE_TEMPLATE, template);
+        SessionMgr.getBrowser().setAutoShareTemplate(template);
         
         setVisible(false);
-    }
-    
-    public PermissionTemplate getTemplate() {
-        return template;
-    }
-    
-    public String getSharingStatus() {
-        StringBuilder sb = new StringBuilder();
-        if (template==null) {
-            sb.append("Not auto-sharing annotations");
-        }
-        else {
-            sb.append("Auto-sharing new annotations with ");
-            sb.append(EntityUtils.getNameFromSubjectKey(template.getSubjectKey()));
-            sb.append(" with permissions '");
-            sb.append(template.getPermissions()).append("'");
-        }
-        return sb.toString();
     }
     
     @Override

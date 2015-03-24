@@ -394,7 +394,6 @@ public class EntityContextMenu extends JPopupMenu {
                                 .getActiveViewer().getSelectedEntities();
                             
                         for (RootedEntity rootedEntity : selectedEntities) {
-                            if (EntityUtils.isVirtual(rootedEntity.getEntity())) continue;
                             
                             OntologyAnnotation baseAnnotation = ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation();
                             AnnotationSession tmpSession = ModelMgr.getModelMgr().getCurrentAnnotationSession();

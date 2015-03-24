@@ -197,7 +197,7 @@ public class AnnotateAction extends OntologyElementAction {
         Entity annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
         log.info("Saved annotation as " + annotationEntity.getId());
         
-        PermissionTemplate template = SessionMgr.getBrowser().getOntologyOutline().getAutoSharingTemplate();
+        PermissionTemplate template = SessionMgr.getBrowser().getAutoShareTemplate();
         if (template!=null) {
             ModelMgr.getModelMgr().grantPermissions(annotationEntity.getId(), template.getSubjectKey(), template.getPermissions(), false);
             log.info("Auto-shared annotation with " + template.getSubjectKey());

@@ -102,7 +102,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     private final KeyListener keyListener;
     private final KeyBindDialog keyBindDialog;
     private boolean recordingKeyBinds = false;
-    private boolean autoShareAnnotations = false;
 
     private final BulkAnnotationPermissionDialog bulkAnnotationDialog;
     private final AutoAnnotationPermissionDialog autoAnnotationDialog;
@@ -450,27 +449,28 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (autoShareButton.isSelected()) {
-                    autoShareAnnotations = true;
                     boolean pressedOk = autoAnnotationDialog.showAutoAnnotationConfiguration();
-                    if (!pressedOk) {
-                        // Cancel
-                        autoShareButton.setSelected(false);
-                    }
-                    else {
-                        JOptionPane.showMessageDialog(mainFrame,
-                            "Auto-sharing annotation with "+
-                            EntityUtils.getNameFromSubjectKey(autoAnnotationDialog.getTemplate().getSubjectKey()), 
-                            "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
+                    if (pressedOk) {
+                        PermissionTemplate template = SessionMgr.getBrowser().getAutoShareTemplate();
+                        if (template!=null) {
+                            JOptionPane.showMessageDialog(mainFrame,
+                                "Auto-sharing annotation with "+
+                                EntityUtils.getNameFromSubjectKey(template.getSubjectKey()), 
+                                "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
+                        }
                     }
                 }
                 else {
-                    autoShareAnnotations = false;
+                    SessionMgr.getBrowser().setAutoShareTemplate(null);
                     JOptionPane.showMessageDialog(mainFrame,
                         "No longer auto-sharing annotations", "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
                 }
+                
+                autoShareButton.setSelected(SessionMgr.getBrowser().getAutoShareTemplate()!=null);
             }
             
         });
+        autoShareButton.setSelected(SessionMgr.getBrowser().getAutoShareTemplate()!=null);
         toolBar.add(autoShareButton);
                     
         final JButton bulkPermissionsButton = new JButton();
@@ -487,13 +487,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         toolBar.add(bulkPermissionsButton);
         
         return toolBar;
-    }
-
-    public PermissionTemplate getAutoSharingTemplate() {
-        if (autoShareAnnotations) {
-            return autoAnnotationDialog.getTemplate();
-        }
-        return null;
     }
     
     private class OntologyOutlineContextMenu extends OntologyContextMenu {

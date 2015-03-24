@@ -18,6 +18,7 @@ import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityActorPermission;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.workstation.gui.util.SubjectComboBoxRenderer;
 
@@ -104,16 +105,16 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
         add(buttonPane, BorderLayout.SOUTH);
     }
 
-    public void showForNewPermission(Entity entity) {
-        this.entity = entity;
-        showForPermission(null);
-    }
-
     private void addSeparator(JPanel panel, String text) {
         JLabel label = new JLabel(text);
         label.setFont(separatorFont);
         panel.add(label, "split 2, span, gaptop 10lp");
         panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
+    }
+
+    public void showForNewPermission(Entity entity) {
+        this.entity = entity;
+        showForPermission(null);
     }
 
     public void showForPermission(final EntityActorPermission eap) {
@@ -144,6 +145,10 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
         readCheckbox.setSelected(eap == null || eap.getPermissions().contains("r"));
         writeCheckbox.setSelected(eap != null && eap.getPermissions().contains("w"));
 
+        if (entity.getEntityTypeName().equals(EntityConstants.TYPE_ANNOTATION)) {
+            recursiveCheckbox.setEnabled(false);
+        }
+        
         packAndShow();
     }
 

@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.geometric_search.search;
+package org.janelia.it.workstation.gui.geometric_search.gl;
 
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;

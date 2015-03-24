@@ -934,7 +934,7 @@ called from a  SimpleWorker thread.
         // update and notify
         updateCurrentWorkspace();
         updateCurrentNeuron();
-        final TmNeuron updateNeuron = getCurrentNeuron();
+        final TmNeuron updateNeuron = getNeuronFromAnnotationID(newRootID);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
