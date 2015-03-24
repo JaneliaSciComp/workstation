@@ -283,6 +283,9 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                     rootNode = mapper.createObjectNode();
                 }
             }
+            // note: we currently don't clean up old styles in the prefs that belong
+            //  to deleted neurons; this is the place to do it if/when we put that in
+            //  (see FW-3100)
             NeuronStyle style;
             for (TmNeuron neuron: workspace.getNeuronList()) {
                 if (!rootNode.path(neuron.getId().toString()).isMissingNode()) {

@@ -21,11 +21,10 @@ public class NeuronStyle {
     private static final String COLOR_KEY = "color";
     private static final String VISIBILITY_KEY = "visibility";
 
-    // some nice colors we can use for testing or defaults;
-    //  avoid having 8 in the list, as our neuron IDs are
-    //  apparently all of the form 8*n+4 (neuronID % 8 == 4);
-    //  as a corollary, avoid 4 or 12 as well...maybe 6...heck,
-    //  probably better just go prime (maybe 11 or 13?)
+    // default colors; we index into this list with neuron ID;
+    //  note that our neuron IDs are all of the form 8*n+4,
+    //  so make sure the length of this list is mutually prime,
+    //  so we can maximize the color distribution
     private static Color[] neuronColors = {
         Color.red,
         Color.blue,
@@ -33,20 +32,21 @@ public class NeuronStyle {
         Color.magenta,
         Color.cyan,
         Color.yellow,
-        Color.pink
+        Color.white,
+        // I need more colors!  (1, 0.5, 0) and permutations:
+        new Color(1.0f, 0.5f, 0.0f),
+        new Color(0.0f, 0.5f, 1.0f),
+        new Color(0.0f, 1.0f, 0.5f),
+        new Color(1.0f, 0.0f, 0.5f),
+        new Color(0.5f, 0.0f, 1.0f),
+        new Color(0.5f, 1.0f, 0.0f)
     };
-    // possibly just for testing...
-    private static int defaultColorIndex = 0;
 
     /**
      * get a default style for a neuron
      */
     public static NeuronStyle getStyleForNeuron(Long neuronID) {
         return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true);
-    }
-
-    public static NeuronStyle getDefaultStyle() {
-        return new NeuronStyle(neuronColors[defaultColorIndex], true);
     }
 
     /**

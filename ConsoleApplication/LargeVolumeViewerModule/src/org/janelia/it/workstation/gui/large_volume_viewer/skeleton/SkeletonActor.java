@@ -196,7 +196,7 @@ implements GLActor
             if (neuronStyles.containsKey(neuronID)) {
                 style = neuronStyles.get(neuronID);
             } else {
-                style = NeuronStyle.getDefaultStyle();
+                style = NeuronStyle.getStyleForNeuron(neuronID);
             }
             lineShader.setUniform3v(gl, "baseColor", 1, style.getColorAsFloatArray());
             gl.glDrawElements(GL2.GL_LINES,
@@ -372,7 +372,7 @@ implements GLActor
             if (neuronStyles.containsKey(neuronID)) {
                 style = neuronStyles.get(neuronID);
             } else {
-                style = NeuronStyle.getDefaultStyle();
+                style = NeuronStyle.getStyleForNeuron(neuronID);
             }
             for (TracedPathActor segment : neuronTracedSegments.get(neuronID).values()) {
                 // neuron colored foreground
@@ -501,7 +501,7 @@ implements GLActor
             if (neuronStyles.containsKey(neuronID)) {
                 style = neuronStyles.get(neuronID);
             } else {
-                style = NeuronStyle.getDefaultStyle();
+                style = NeuronStyle.getStyleForNeuron(neuronID);
             }
             neuronColors.get(neuronID).put(style.getRedAsFloat());
             neuronColors.get(neuronID).put(style.getGreenAsFloat());
