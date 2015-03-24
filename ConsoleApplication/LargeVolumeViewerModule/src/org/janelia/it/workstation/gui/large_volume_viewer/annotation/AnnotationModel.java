@@ -57,7 +57,7 @@ to know whether methods are called in the Java EDT (event thread) or not, and
 that's important for knowing how you have to call the UI updates.  the answer 
 is that all the calls that hit the db go through modelMgr and could throw 
 exceptions.  so any call that calls modelMgr must catch Exceptions, and 
-therefore it should emit its signals on the EDT, because it's probably being 
+therefore it should do its updates on the EDT, because it's probably being
 called from a  SimpleWorker thread.
 */
 {
@@ -192,7 +192,7 @@ called from a  SimpleWorker thread.
     }
 
     // this method sets the current neuron but does not
-    //  emit the signal to update the UI
+    //  fire an event to update the UI
     public void setCurrentNeuron(TmNeuron neuron) {
             currentNeuron = neuron;
             updateCurrentNeuron();
@@ -331,9 +331,7 @@ called from a  SimpleWorker thread.
             @Override
             public void run() {
                 fireWorkspaceLoaded(workspace);
-//                workspaceLoadedSignal.emit(workspace);
                 fireNeuronSelected(neuron);
-//                neuronSelectedSignal.emit(neuron);
             }
         });
 
@@ -868,7 +866,7 @@ called from a  SimpleWorker thread.
         // if that segment had a trace, remove it
         removeAnchoredPath(annotation1, annotation2);
 
-        // updates and signals:
+        // updates:
         updateCurrentWorkspace();
         if (getCurrentNeuron() != null && neuron.getId().equals(getCurrentNeuron().getId())){
             updateCurrentNeuron();
@@ -887,9 +885,7 @@ called from a  SimpleWorker thread.
             @Override
             public void run() {
                 fireAnnotationAdded(newAnnotation);
-//                annotationAddedSignal.emit(newAnnotation);
                 fireAnnotationReparented(updateAnnotation);
-//                annotationReparentedSignal.emit(updateAnnotation);
             }
         });
     }
@@ -1135,10 +1131,8 @@ called from a  SimpleWorker thread.
             rootNode = (ObjectNode) mapper.readTree(stylePref);
         }
 
-        // add or update entry for this neuron
+        // add or update entry for this neuron, then save
         rootNode.put(neuron.getId().toString(), style.asJSON());
-
-        // save
         setPreference(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES, rootNode.toString());
 
         // fire change to listeners

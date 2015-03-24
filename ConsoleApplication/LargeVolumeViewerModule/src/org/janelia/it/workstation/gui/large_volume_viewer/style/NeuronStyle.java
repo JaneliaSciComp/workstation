@@ -23,7 +23,9 @@ public class NeuronStyle {
 
     // some nice colors we can use for testing or defaults;
     //  avoid having 8 in the list, as our neuron IDs are
-    //  apparently all of the form 8*n+4 (neuronID % 8 == 4)
+    //  apparently all of the form 8*n+4 (neuronID % 8 == 4);
+    //  as a corollary, avoid 4 or 12 as well...maybe 6...heck,
+    //  probably better just go prime (maybe 11 or 13?)
     private static Color[] neuronColors = {
         Color.red,
         Color.blue,
