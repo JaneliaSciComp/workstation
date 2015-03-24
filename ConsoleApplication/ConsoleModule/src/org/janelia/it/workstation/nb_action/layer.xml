@@ -26,10 +26,13 @@
         </folder>
     </folder>
     <folder name="Menu">
-        <folder name="GoTo">
+        <folder name="BuildProject_hidden"/>
+        <folder name="GoTo_hidden">
             <file name="SeparatorBeforeGoToLine.instance_hidden"/>
             <file name="org-openide-actions-GotoAction.shadow_hidden"/>
         </folder>
+        <folder name="Refactoring_hidden"/>
+        <folder name="Source_hidden"/>
         <folder name="Window">
             <file name="SwitchToRecentDocumentAction.shadow_hidden"/>
             <file name="Tools_hidden"/>
