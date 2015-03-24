@@ -27,7 +27,7 @@
     </folder>
     <folder name="Menu">
         <folder name="BuildProject_hidden"/>
-        <folder name="GoTo_hidden">
+        <folder name="GoTo">
             <file name="SeparatorBeforeGoToLine.instance_hidden"/>
             <file name="org-openide-actions-GotoAction.shadow_hidden"/>
         </folder>
