@@ -138,6 +138,9 @@ public class Skeleton {
         controller.addEditNoteRequested(anchor);
     }
 
+    public void changeNeuronStyle(Anchor anchor) {
+        controller.changeNeuronStyleRequested(anchor);
+    }
     public void splitNeuriteRequest(Anchor anchor) {
         controller.splitNeuriteRequested(anchor);
     }

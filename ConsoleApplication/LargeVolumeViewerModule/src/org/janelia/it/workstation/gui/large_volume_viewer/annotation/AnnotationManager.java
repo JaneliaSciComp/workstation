@@ -28,6 +28,8 @@ import org.janelia.it.workstation.tracing.VoxelPosition;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
@@ -1026,6 +1028,61 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         };
         setter.execute();
+    }
+
+    /**
+     * pop a dialog to choose neuron style; three variants work together to operate
+     * from different input sources
+     */
+    public void chooseNeuronStyle() {
+        if (annotationModel.getCurrentWorkspace() == null) {
+            return;
+        }
+        if (annotationModel.getCurrentNeuron() == null) {
+            presentError("You must select a neuron prior to performing this action.", "No neuron selected");
+        } else {
+            chooseNeuronStyle(annotationModel.getCurrentNeuron());
+        }
+    }
+
+    public void chooseNeuronStyle(Anchor anchor) {
+        chooseNeuronStyle(annotationModel.getNeuronFromAnnotationID(anchor.getGuid()));
+    }
+
+    public void chooseNeuronStyle(final TmNeuron neuron) {
+        if (annotationModel.getCurrentWorkspace() == null) {
+            return;
+        }
+        if (neuron == null) {
+            // should not happen
+            return;
+        }
+
+        // I'd like to grab the current style to pre-populate the dialog,
+        //  but annotation panel has no way to get it at this time
+        final JColorChooser colorChooser = new JColorChooser(AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL);
+
+        ActionListener okListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                setNeuronStyle(neuron, new NeuronStyle(colorChooser.getColor(), true));
+            }
+        };
+        ActionListener cancelListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                // unused right now
+            }
+        };
+
+        JDialog colorDialog = JColorChooser.createDialog(ComponentUtil.getLVVMainWindow(),
+                "Set neuron color",
+                false,
+                colorChooser,
+                okListener,
+                cancelListener);
+        colorDialog.setVisible(true);
+
     }
 
     public void setNeuronStyle(final TmNeuron neuron, final NeuronStyle style) {

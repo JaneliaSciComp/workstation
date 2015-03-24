@@ -126,7 +126,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
 
     public void annotationSelected( Long guid ) {
-        lvvTranslator.annotationSelected( guid );
+        lvvTranslator.annotationSelected(guid);
     }
     
     public void skeletonChanged() {
@@ -155,6 +155,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     public void addEditNoteRequested(Anchor anchor) {
         annoMgr.addEditNoteRequested(anchor);
+    }
+
+    public void changeNeuronStyleRequested(Anchor anchor) {
+        annoMgr.chooseNeuronStyle(anchor);
     }
     
     public void anchorAdded(AnchorSeed anchorSeed) {

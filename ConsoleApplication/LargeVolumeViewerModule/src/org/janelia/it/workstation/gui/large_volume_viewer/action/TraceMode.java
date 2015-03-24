@@ -398,6 +398,13 @@ implements MouseMode, KeyListener
                             }
                         }));
                         result.add(null); // separator
+						result.add(new JMenuItem(new AbstractAction("Change neuron style...") {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								skeleton.changeNeuronStyle(getHoverAnchor());
+							}
+						}));
+                        result.add(null); // separator
                     }
                     if (parent != null) {
                     	if (parent != hover) {
