@@ -174,9 +174,17 @@ implements MouseMode, KeyListener
 		}
 
         // closest == null means you're not on an anchor anymore
+		// but don't hover if the anchor isn't visible; hovering turns out
+		//	to be the key to all interaction with anchors (left-click,
+		//	right-click, drag), so preventing hover makes interaction with
+		//	invisible anchors impossible
 		if ((skeletonActor != null) && closest != hoverAnchor) {
-			hoverAnchor = closest;
-			skeletonActor.setHoverAnchor(hoverAnchor);
+			// test for closest == null because null will come back invisible,
+			//	and we need hover-->null to unhover
+			if (closest == null || skeletonActor.anchorIsVisible(closest)){
+				hoverAnchor = closest;
+				skeletonActor.setHoverAnchor(hoverAnchor);
+			}
 		}
 
 		checkShiftPlusCursor(event);
@@ -369,25 +377,25 @@ implements MouseMode, KeyListener
                         result.add(new JMenuItem(new AbstractAction("Delete link") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-                                skeleton.deleteLinkRequest(getHoverAnchor());
+								skeleton.deleteLinkRequest(getHoverAnchor());
                             }
                         }));
                         result.add(new JMenuItem(new AbstractAction("Split anchor") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-                                skeleton.splitAnchorRequest(getHoverAnchor());
+								skeleton.splitAnchorRequest(getHoverAnchor());
                             }
                         }));
                         result.add(new JMenuItem(new AbstractAction("Split neurite") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-                                skeleton.splitNeuriteRequest(getHoverAnchor());
+								skeleton.splitNeuriteRequest(getHoverAnchor());
                             }
                         }));
                         result.add(new JMenuItem(new AbstractAction("Set anchor as root") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-                                skeleton.rerootNeuriteRequest(getHoverAnchor());
+								skeleton.rerootNeuriteRequest(getHoverAnchor());
                             }
                         }));
                         result.add(null); // separator

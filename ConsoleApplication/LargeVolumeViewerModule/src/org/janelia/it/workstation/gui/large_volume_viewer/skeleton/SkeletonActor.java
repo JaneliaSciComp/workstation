@@ -885,6 +885,9 @@ implements GLActor
         updater.update();
 	}
 
+    /**
+     * is anything visible (ie, to be drawn)?
+     */
 	public boolean isVisible() {
 	    return bIsVisible;
 	}
@@ -895,4 +898,14 @@ implements GLActor
         updater.update();
     }
 
+    /**
+     * is the input anchor's neuron visible?
+     */
+    public boolean anchorIsVisible(Anchor anchor) {
+        if (anchor == null || anchor.getNeuronID() == null || !neuronStyles.containsKey(anchor.getNeuronID())) {
+            return false;
+        } else {
+            return neuronStyles.get(anchor.getNeuronID()).isVisible();
+        }
+    }
 }
