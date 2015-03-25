@@ -36,8 +36,8 @@ public class ImagesPanel extends JScrollPane {
     public static final int DEFAULT_TABLE_HEIGHT = 200;
     public static final int MAX_TABLE_HEIGHT = 500;
     private final AtomicBoolean loadUnloadImagesInterrupt = new AtomicBoolean(false);
-    private final HashMap<String, AnnotatedImageButton> buttons = new LinkedHashMap<String, AnnotatedImageButton>();
-    private Map<Long, List<OntologyAnnotation>> filteredAnnotationMap = new HashMap<Long, List<OntologyAnnotation>>();
+    private final HashMap<String, AnnotatedImageButton> buttons = new LinkedHashMap<>();
+    private Map<Long, List<OntologyAnnotation>> filteredAnnotationMap = new HashMap<>();
 
     private KeyListener buttonKeyListener;
     private MouseListener buttonMouseListener;
@@ -224,7 +224,7 @@ public class ImagesPanel extends JScrollPane {
     }
 
     public List<AnnotatedImageButton> getButtonsByEntityId(Long entityId) {
-        List<AnnotatedImageButton> entityButtons = new ArrayList<AnnotatedImageButton>();
+        List<AnnotatedImageButton> entityButtons = new ArrayList<>();
         for (AnnotatedImageButton button : buttons.values()) {
             if (button.getRootedEntity().getEntity().getId().equals(entityId)) {
                 entityButtons.add(button);
@@ -325,16 +325,14 @@ public class ImagesPanel extends JScrollPane {
         if (button == null) {
             return;
         }
-        JViewport viewport = getViewport();
-
-	    // This rectangle is relative to the table where the
+        // This rectangle is relative to the table where the
         // northwest corner of cell (0,0) is always (0,0).
         Rectangle rect = button.getBounds();
 
         // The location of the view relative to the table
         Rectangle viewRect = viewport.getViewRect();
 
-	    // Translate the cell location so that it is relative
+        // Translate the cell location so that it is relative
         // to the view, assuming the northwest corner of the
         // view is (0,0).
         rect.setLocation(rect.x - viewRect.x, rect.y - viewRect.y);
@@ -343,7 +341,7 @@ public class ImagesPanel extends JScrollPane {
         int centerX = (viewRect.width - rect.width) / 2;
         int centerY = (viewRect.height - rect.height) / 2;
 
-	    // Fake the location of the cell so that scrollRectToVisible
+        // Fake the location of the cell so that scrollRectToVisible
         // will move the cell to the center
         if (rect.x < centerX) {
             centerX = -centerX;
@@ -362,16 +360,15 @@ public class ImagesPanel extends JScrollPane {
         if (button == null) {
             return;
         }
-        JViewport viewport = getViewport();
 
-	    // This rectangle is relative to the table where the
+        // This rectangle is relative to the table where the
         // northwest corner of cell (0,0) is always (0,0).
         Rectangle rect = button.getBounds();
 
         // The location of the view relative to the table
         Rectangle viewRect = viewport.getViewRect();
 
-	    // Translate the cell location so that it is relative
+        // Translate the cell location so that it is relative
         // to the view, assuming the northwest corner of the
         // view is (0,0). Also make the rect as large as the view, 
         // so that the relevant portion goes to the top.
@@ -474,7 +471,7 @@ public class ImagesPanel extends JScrollPane {
     }
 
     public List<AnnotatedImageButton> getSelectedButtons() {
-        List<AnnotatedImageButton> selected = new ArrayList<AnnotatedImageButton>();
+        List<AnnotatedImageButton> selected = new ArrayList<>();
         for (AnnotatedImageButton button : buttons.values()) {
             if (button.isSelected()) {
                 selected.add(button);
@@ -487,10 +484,24 @@ public class ImagesPanel extends JScrollPane {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                log.trace("Repainting buttons panel");
                 buttonsPanel.revalidate();
                 buttonsPanel.repaint();
             }
         });
+    }
+    
+    /**
+     * Sets the image size based on a desired number of images per row. 
+     * @param numCols 
+     */
+    public synchronized void recalculateGrid(int numCols) {
+        if (numCols<1) numCols = 1;
+        int fullWidth = iconPanel.getSize().width - getVerticalScrollBar().getWidth();
+        int maxButtonWidth = (int) Math.min(Math.max(Math.floor((double) fullWidth / numCols), MIN_IMAGE_WIDTH), MAX_IMAGE_WIDTH);
+        maxButtonWidth -= 30; // Some extra padding is needed for some reason
+        log.trace("recalculateGrid for fullWidth="+fullWidth+" with numCols="+numCols+" -> "+maxButtonWidth);
+        iconPanel.getToolbar().setMaxImageSizeSlider(maxButtonWidth);
     }
 
     /**
@@ -532,6 +543,7 @@ public class ImagesPanel extends JScrollPane {
     public void loadUnloadImages() {
         loadUnloadImagesInterrupt.set(true);
         final Date queueDate = new Date();
+        log.trace("Queung loadUnloadImages {}",queueDate);
         lastQueueDate = queueDate;
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -540,7 +552,7 @@ public class ImagesPanel extends JScrollPane {
                     log.trace("Ignoring duplicate loadUnloadImages request");
                     return;
                 }
-                log.trace("Running loadUnloadImages");
+                log.trace("Running loadUnloadImages {}",queueDate);
                 loadUnloadImagesInterrupt.set(false);
                 final JViewport viewPort = getViewport();
                 Rectangle viewRect = viewPort.getViewRect();

@@ -1373,11 +1373,9 @@ public class EntityContextMenu extends JPopupMenu {
         boolean foundAtLeastOneBzippedFile = false;
 
         List<Entity> entitiesWithFilepaths = new ArrayList<>();
-        Entity targetEntity;
-        String filePath;
-        for (RootedEntity rootedEntity : rootedEntityList) {
-            targetEntity = rootedEntity.getEntity();
-            filePath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+        for (RootedEntity re : rootedEntityList) {
+            Entity targetEntity = re.getEntity();
+            String filePath = EntityUtils.getDefault3dImageFilePath(targetEntity);
             if (filePath != null) {
                 // only include .lsm or .lsm.bz2 files
                 if (filePath.endsWith(Utils.EXTENSION_LSM)) {

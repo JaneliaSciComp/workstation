@@ -6,6 +6,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.event.ActionEvent;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
@@ -23,11 +24,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import org.apache.commons.lang.StringUtils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -43,6 +49,7 @@ import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.dialogs.search.SearchParametersPanel;
 import org.janelia.it.workstation.gui.dialogs.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -65,6 +72,10 @@ public class QCViewPanel extends JPanel implements Refreshable {
     private final IconDemoPanel imageViewer;
     private final Map<String, Set<String>> filters = new HashMap<>();
     private final SearchResults searchResults = new SearchResults();
+    private final Action autoScaleAction;
+    private final JToggleButton autoScaleButton;
+    
+    private int numImagesPerRow = 1;
     
     public QCViewPanel() {
         
@@ -136,6 +147,23 @@ public class QCViewPanel extends JPanel implements Refreshable {
         toolbar.getPrevButton().setVisible(false);
         toolbar.getNextButton().setVisible(false);
         toolbar.getPathButton().setVisible(false);
+        
+        this.autoScaleAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (autoScaleButton.isSelected()) {
+                    imageViewer.getImagesPanel().recalculateGrid(numImagesPerRow);
+                }
+            }
+        };
+                        
+        autoScaleButton = new JToggleButton("Auto-size");
+        autoScaleButton.setIcon(Icons.getIcon("table.png"));
+        autoScaleButton.setFocusable(false);
+        autoScaleButton.setSelected(true);
+        autoScaleButton.setToolTipText("Auto size the rows to fit one slide code per row.");
+        autoScaleButton.addActionListener(autoScaleAction);
+        toolbar.getToolbar().add(autoScaleButton);
                 
         add(searchParamsPanel, BorderLayout.NORTH);
         add(viewerPane, BorderLayout.CENTER);
@@ -163,11 +191,19 @@ public class QCViewPanel extends JPanel implements Refreshable {
             @Override
             protected void hadSuccess() {
                 try {
-                    viewerPane.loadEntity(tempSearchRE);
-                    if (showLoading) {
-                        imageViewer.showImagePanel();
+                    if (autoScaleButton.isSelected()) {
+                        autoScaleAction.actionPerformed(null);
                     }
-                    ConcurrentUtils.invoke(success);
+                    viewerPane.loadEntity(tempSearchRE, new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            if (showLoading) {
+                                imageViewer.showImagePanel();
+                            }
+                            ConcurrentUtils.invoke(success);
+                            return null;
+                        }
+                    });
                 }
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
@@ -279,34 +315,40 @@ public class QCViewPanel extends JPanel implements Refreshable {
                 return chain.result();
             }
         });
-
-        Entity searchResultsEntity = new Entity();
-        searchResultsEntity.setId(TimebasedIdentifierGenerator.generateIdList(1).get(0));
-        searchResultsEntity.setName("Search Results");
-        searchResultsEntity.setOwnerKey(SessionMgr.getSubjectKey());
-        searchResultsEntity.setEntityTypeName(EntityConstants.TYPE_FOLDER);
-
+        
+        Entity searchResultsEntity = getPlaceholderEntity(null);
         Map<String,Map<String,EntityData>> slideCodeToLsmMap = new LinkedHashMap<>();
-
         Set<String> tilePattern = new HashSet<>();
 
+        // First pass to determine if any tiles were merged
+        boolean someMergedTiles = false;
+        All: for (Long sampleId : sortedSampleIds) {
+            Entity sample = sampleMap.get(sampleId);
+            ModelMgr.getModelMgr().loadLazyEntity(sample, false);
+            Entity supportingData = EntityUtils.getSupportingData(sample);
+            ModelMgr.getModelMgr().loadLazyEntity(supportingData, true);
+            for(Entity tileEntity : EntityUtils.getChildrenOfType(supportingData, EntityConstants.TYPE_IMAGE_TILE)) {
+                List<Entity> lsmEntities = EntityUtils.getChildrenOfType(tileEntity, EntityConstants.TYPE_LSM_STACK);
+                if (lsmEntities.size()>1) {
+                    someMergedTiles = true;
+                    break All;
+                }
+            }
+        }
+        
+        // Second pass to determine overall tile pattern
         Map<String,EntityData> slideCodeEds = null;
         String dataSetSlideCode = null;
 
         for (Long sampleId : sortedSampleIds) {
             Entity sample = sampleMap.get(sampleId);
-
             String dataSet = sampleIdToDataset.get(sample.getId());
             dataSet = dataSet==null?"":dataSet;
-
             ModelMgr.getModelMgr().loadLazyEntity(sample, false);
             Entity supportingData = EntityUtils.getSupportingData(sample);
-
             ModelMgr.getModelMgr().loadLazyEntity(supportingData, true);
 
             for(Entity tileEntity : EntityUtils.getChildrenOfType(supportingData, EntityConstants.TYPE_IMAGE_TILE)) {
-
-                String tile = tileEntity.getName();
 
                 // Really cheating here. The model is the view. But this is the only way to get things done without rewriting the IconDemoPanel.
                 Set<EntityData> mips = new HashSet<>();
@@ -319,11 +361,12 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
                 List<Entity> lsmEntities = EntityUtils.getChildrenOfType(tileEntity, EntityConstants.TYPE_LSM_STACK);
                 
+                int i = 1;
+                String patternCode = null;
                 for(Entity lsmEntity : lsmEntities) {
 
                     String lsmSlideCode = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE);
 
-        
                     String key = dataSet+"~"+lsmSlideCode;
                     if (dataSetSlideCode==null || !dataSetSlideCode.equals(key)) {
                         slideCodeEds = new LinkedHashMap<>();
@@ -333,16 +376,41 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
                     String objective = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE);
                     String qiScore = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_QI_SCORE);
+                    String nccScore = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_NCC_SCORE);
                     String genotype = lsmIdToGenotype.get(lsmEntity.getId());
                     
                     lsmSlideCode = lsmSlideCode==null?"":lsmSlideCode;
                     objective = objective==null?"":objective;
-                    qiScore = qiScore==null?"":"(qi="+qiScore+")";
                     genotype = genotype==null?"":genotype;
 
-                    String patternCode = objective+" "+tile;
-
-                    Entity virtualLsm = getVirtualEntity("<html><b>"+lsmSlideCode+"</b> - "+objective+" "+tile+"<br>"+dataSet+"<br>"+genotype+" "+qiScore+"&nbsp;</html>", lsmEntity);
+                    String tileKey = tileEntity.getName();
+                    if (someMergedTiles) {
+                        tileKey += " #"+i;
+                    }
+                    
+                    patternCode = objective;
+                    if (!StringUtils.isEmpty(patternCode)) patternCode += " ";
+                    patternCode += tileKey;
+                    
+                    StringBuilder title = new StringBuilder("<html><b>");
+                    title.append(lsmSlideCode).append("</b> - ");
+                    
+                    title.append(objective).append(" ").append(tileKey);
+                                        
+                    title.append("<br>").append(StringUtils.abbreviate(dataSet, 30));
+                    title.append("<br>").append(StringUtils.abbreviate(genotype, 20));
+                    
+                    if (qiScore!=null) {
+                        title.append(", Qi=").append(qiScore);
+                    }
+                    
+                    if (nccScore!=null) {
+                        title.append(", Ncc=").append(nccScore);
+                    }
+                    
+                    title.append("&nbsp;</html>");
+                    
+                    Entity virtualLsm = getVirtualEntity(title.toString(), lsmEntity);
                     virtualLsm.getEntityData().addAll(mips);
 
                     EntityData ed = new EntityData();
@@ -354,15 +422,57 @@ public class QCViewPanel extends JPanel implements Refreshable {
                     slideCodeEds.put(patternCode, ed);
 
                     tilePattern.add(patternCode);
+                    
+                    i++;
+                }
+                
+                if (lsmEntities.size()==1 && someMergedTiles && patternCode!=null) {
+                    // Add a dummy merged tile
+                    tilePattern.add(patternCode.replaceFirst("#1", "#2"));
                 }
             }
 
             slideCodeToLsmMap.put(dataSetSlideCode, slideCodeEds);
         }
-
+        
         List<String> sortedTilePattern = new ArrayList<>(tilePattern);
-        Collections.sort(sortedTilePattern);
+        Collections.sort(sortedTilePattern, new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                // Sort by LSM# first, so that merged LSMs can be placed on two rows
+                ComparisonChain chain = ComparisonChain.start();
+                int h1 = o1.indexOf('#');
+                int h2 = o2.indexOf('#');
+                if (h1>0 && h2>0) {
+                    Integer i1 = Integer.parseInt(o1.charAt(h1+1)+"");
+                    Integer i2 = Integer.parseInt(o2.charAt(h2+1)+"");
+                    chain = chain.compare(i1, i2, Ordering.natural().nullsFirst());
+                }
+                chain = chain.compare(o1, o2, Ordering.natural().nullsFirst());
+                return chain.result();
+            }
+        });
+        
+        numImagesPerRow = sortedTilePattern.size();
+        if (someMergedTiles) {
+            if (numImagesPerRow % 2 != 0) {
+                log.warn("Non-even number of merged tiles detected. This should never "
+                        + "happen, and indicates a bug in this algorithm! "
+                        + "Attempting to correct for the bug by adding empty tile.");
+                sortedTilePattern.add("Empty");
+                numImagesPerRow++;
+            }
+            if (numImagesPerRow>2) {
+                log.info("Some tiles were merged, so the slide code will be split onto two rows");
+                numImagesPerRow /= 2;    
+            }
+        }
 
+        log.info("numImagesPerRow="+numImagesPerRow+", patterns:");
+        for(String patternCode : sortedTilePattern) {
+            log.info("  "+patternCode);    
+        }
+        
         List<EntityData> eds = new ArrayList<>();
 
         int i = 0;
@@ -406,7 +516,11 @@ public class QCViewPanel extends JPanel implements Refreshable {
         }
 
         log.debug("Setting "+eds.size()+" children");
+        String title = eds.isEmpty()?"No results found":"Search Results";
+            
         searchResultsEntity.setEntityData(new HashSet<>(eds));
+        searchResultsEntity.setValueByAttributeName(EntityConstants.IN_MEMORY_ATTRIBUTE_TITLE, title);
+        
         return new UnrootedEntity(searchResultsEntity);
     }
     
@@ -433,7 +547,9 @@ public class QCViewPanel extends JPanel implements Refreshable {
         virtualEntity.setName("Placeholder");
         virtualEntity.setEntityTypeName(EntityConstants.IN_MEMORY_TYPE_PLACEHOLDER_ENTITY);
         virtualEntity.setOwnerKey(SessionMgr.getSubjectKey());
-        virtualEntity.setValueByAttributeName(EntityConstants.IN_MEMORY_ATTRIBUTE_TITLE, title);
+        if (title!=null) {
+            virtualEntity.setValueByAttributeName(EntityConstants.IN_MEMORY_ATTRIBUTE_TITLE, title);
+        }
         return virtualEntity;
     }
     
@@ -446,6 +562,11 @@ public class QCViewPanel extends JPanel implements Refreshable {
         virtualEntity.setCreationDate(template.getCreationDate());
         virtualEntity.setUpdatedDate(template.getUpdatedDate());
         virtualEntity.setValueByAttributeName(EntityConstants.IN_MEMORY_ATTRIBUTE_TITLE, title);
+        for(EntityData ed : template.getEntityData()) {
+            if (ed.getValue()!=null) {
+                virtualEntity.setValueByAttributeName(ed.getEntityAttrName(), ed.getValue());
+            }   
+        }
         return virtualEntity;
     }
     
