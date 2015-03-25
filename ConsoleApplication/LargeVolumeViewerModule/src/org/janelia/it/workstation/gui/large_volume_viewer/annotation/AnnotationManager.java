@@ -1061,11 +1061,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         // I'd like to grab the current style to pre-populate the dialog,
         //  but annotation panel has no way to get it at this time
         final JColorChooser colorChooser = new JColorChooser(AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL);
+        final boolean currentVisibility = getNeuronStyle(neuron).isVisible();
 
         ActionListener okListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                setNeuronStyle(neuron, new NeuronStyle(colorChooser.getColor(), true));
+                setNeuronStyle(neuron, new NeuronStyle(colorChooser.getColor(), currentVisibility));
             }
         };
         ActionListener cancelListener = new ActionListener() {
@@ -1087,9 +1088,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public void setNeuronVisibility(Anchor anchor, boolean visibility) {
         TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(anchor.getGuid());
-        NeuronStyle style = annotationModel.getNeuronStyle(neuron);
+        NeuronStyle style = getNeuronStyle(neuron);
         style.setVisible(visibility);
         setNeuronStyle(neuron, style);
+    }
+
+    public NeuronStyle getNeuronStyle(TmNeuron neuron) {
+        // simple pass through; I want get/set to look the same, and set is *not*
+        //  just a pass through
+        return annotationModel.getNeuronStyle(neuron);
     }
 
     public void setNeuronStyle(final TmNeuron neuron, final NeuronStyle style) {
