@@ -29,11 +29,13 @@
  */
 package org.janelia.horta;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -46,6 +48,7 @@ import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.scenewindow.SceneWindow;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
+import org.openide.awt.NotificationDisplayer;
 import org.openide.util.Exceptions;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
@@ -125,6 +128,8 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         if (urlStr.equals(currentSource))
             return nttc.getVolumeSource();
         URI uri;
+        // First check whether the yaml file exists at all
+        StaticVolumeBrickSource volumeSource = null;
         try {
             uri = focusUrl.toURI();
             URI yamlUri = new URI(
@@ -135,13 +140,21 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             );
             logger.info("Constructed URI: {}.", uri);
             URL yamlUrl = yamlUri.toURL();
-            InputStream stream1 = yamlUrl.openStream();
-            StaticVolumeBrickSource volumeSource = nttc.loadYaml(stream1, loader, progress);
-            return volumeSource;
-        } catch (Exception ex) {
+            try (InputStream stream1 = yamlUrl.openStream()) {
+                volumeSource = nttc.loadYaml(stream1, loader, progress);
+            }
+        } catch (IOException | URISyntaxException ex) {
+            // Something went wrong with loading the Yaml file
             Exceptions.printStackTrace(ex);
-            return null;
+            JOptionPane.showMessageDialog(nttc, 
+                    "Problem Loading Raw Tile Information from " + focusUrl.getPath() + "/" + BASE_YML_FILE
+                    + "\n  Is the render folder drive mounted?"
+                    + "\n  Does the render folder contain a YAML file?"
+                    ,
+                    "Tilebase File Problem",
+                    JOptionPane.ERROR_MESSAGE);
         }
+        return volumeSource;
     }
     
     private boolean setCameraLocation(SampleLocation sampleLocation) {
