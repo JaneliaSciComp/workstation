@@ -32,6 +32,7 @@ package org.janelia.horta;
 import Jama.Matrix;
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +74,7 @@ implements BrickInfo
     Matrix transform; // converts voxels to stage coordinates in nanometers
     private Matrix texCoord_X_stageUm; // cached transform inverse; after conversion to micrometers
     
-    public BrainTileInfo(Map<String, Object> yamlFragment, String parentPath) 
+    public BrainTileInfo(Map<String, Object> yamlFragment, String parentPath) throws ParseException 
     {
         this.parentPath = parentPath;
         Map<String, Object> aabb = (Map<String, Object>)yamlFragment.get("aabb");
@@ -90,6 +91,8 @@ implements BrickInfo
             pixelDims[i] = dims.get(i);
         intensityType = (String)shape.get("type");
         List<Double> td = (List<Double>)yamlFragment.get("transform");
+        if (td.size() != 25)
+            throw new ParseException("Unexpected raw tile transform size "+td.size(), 25);
         double[][] dd = new double[5][5];
         for (int i = 0; i < 5; ++i) {
             for (int j = 0; j < 5; ++j) {

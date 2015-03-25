@@ -60,6 +60,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Observable;
@@ -347,7 +348,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
     
     @Override
-    public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, ProgressHandle progress) throws IOException {
+    public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, ProgressHandle progress) throws IOException, ParseException
+    {
         volumeSource = new MouseLightYamlBrickSource(sourceYamlStream, progress);
         return volumeSource;
     }
@@ -707,7 +709,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         loader.loadTileAtCurrentFocus(volumeSource);
                     }
                     logger.info("Yaml files loaded!");
-                } catch (UnsupportedFlavorException | IOException ex) {
+                } catch (UnsupportedFlavorException | IOException | ParseException ex) {
                     JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading yaml file");
                     Exceptions.printStackTrace(ex);
                 } finally {

@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -55,11 +56,11 @@ implements Map<String, BrainTileInfo>, Iterable<BrainTileInfo>
         return tilebasePath;
     }
     
-    public void loadYamlFile(File f) throws IOException {
+    public void loadYamlFile(File f) throws IOException, ParseException {
         loadYamlFile(new FileInputStream(f));
     }
 
-    public void loadYamlFile(InputStream is) throws IOException {
+    public void loadYamlFile(InputStream is) throws IOException, ParseException {
         // \\dm11\mousebrainmicro\stitch\2014-04-04subset\tilebase.cache.yml.filtered
         Yaml yaml = new Yaml();
         Map<String, Object> tilebase = (Map<String, Object>)yaml.load(is);
