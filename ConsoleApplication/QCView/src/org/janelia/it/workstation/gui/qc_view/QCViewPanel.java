@@ -13,8 +13,6 @@ import org.janelia.it.workstation.gui.framework.viewer.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,12 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -87,25 +82,18 @@ public class QCViewPanel extends JPanel implements Refreshable {
         
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createLineBorder((Color) UIManager.get("windowBorder")));
-
-        this.searchParamsPanel = new SearchParametersPanel();
+        
+        this.searchParamsPanel = new SearchParametersPanel() {
+            @Override
+            public void performSearch(boolean clear) {
+                performSlideSearch(0, true);
+            }
+        };
         
         SearchConfiguration searchConfig = new SearchConfiguration();
         searchConfig.load();
         searchConfig.addConfigurationChangeListener(searchParamsPanel);
         searchParamsPanel.init(searchConfig);
-        
-        AbstractAction searchAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                performSearch(0, true);
-            }
-        };
-        
-        searchParamsPanel.getSearchButton().addActionListener(searchAction);
-
-        searchParamsPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"enterAction");
-        searchParamsPanel.getActionMap().put("enterAction", searchAction);
         
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
@@ -127,7 +115,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
             @Override
             public void refresh(final boolean invalidateCache, final Callable<Void> successCallback) {
                 try {
-                    performSearch(0, true);
+                    performSlideSearch(0, true);
                     ConcurrentUtils.invoke(successCallback);
                 }
                 catch (Exception e) {
@@ -143,21 +131,25 @@ public class QCViewPanel extends JPanel implements Refreshable {
         };
         viewerPane.setViewer(imageViewer);
         
-        searchParamsPanel.setInputFieldValue("20121204_32_A2");
-        
+        // Customize toolbar
+        IconDemoToolbar toolbar = imageViewer.getToolbar();
+        toolbar.getPrevButton().setVisible(false);
+        toolbar.getNextButton().setVisible(false);
+        toolbar.getPathButton().setVisible(false);
+                
         add(searchParamsPanel, BorderLayout.NORTH);
         add(viewerPane, BorderLayout.CENTER);
 
         ModelMgr.getModelMgr().registerOnEventBus(this);
     }
 
-    public synchronized void performSearch(final int pageNum, final boolean showLoading) {
-        performSearch(pageNum, showLoading, null);
+    public synchronized void performSlideSearch(final int pageNum, final boolean showLoading) {
+        performSlideSearch(pageNum, showLoading, null);
     }
 
-    public synchronized void performSearch(final int pageNum, final boolean showLoading, final Callable<Void> success) {
+    public synchronized void performSlideSearch(final int pageNum, final boolean showLoading, final Callable<Void> success) {
 
-        log.debug("performSearch(pageNum={},showLoading={})", pageNum, showLoading);
+        log.debug("performSlideSearch(pageNum={},showLoading={})", pageNum, showLoading);
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -165,7 +157,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
 
             @Override
             protected void doStuff() throws Exception {
-                this.tempSearchRE = performSearch(pageNum);
+                this.tempSearchRE = performSlideSearch(pageNum);
             }
 
             @Override
@@ -203,10 +195,10 @@ public class QCViewPanel extends JPanel implements Refreshable {
      * @return
      * @throws Exception 
      */
-    private RootedEntity performSearch(final int pageNum) throws Exception {
+    private RootedEntity performSlideSearch(final int pageNum) throws Exception {
         
         if (SwingUtilities.isEventDispatchThread()) {
-            throw new RuntimeException("GeneralSearchDialog.search called in the EDT");
+            throw new RuntimeException("QCViewPanel.performSlideSearch called in the EDT");
         }
         
         // Build the basic query from what the user has input
@@ -325,7 +317,9 @@ public class QCViewPanel extends JPanel implements Refreshable {
                 if (ed2!=null) mips.add(ed2);
                 if (ed3!=null) mips.add(ed3);
 
-                for(Entity lsmEntity : EntityUtils.getChildrenOfType(tileEntity, EntityConstants.TYPE_LSM_STACK)) {
+                List<Entity> lsmEntities = EntityUtils.getChildrenOfType(tileEntity, EntityConstants.TYPE_LSM_STACK);
+                
+                for(Entity lsmEntity : lsmEntities) {
 
                     String lsmSlideCode = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE);
 
@@ -457,13 +451,13 @@ public class QCViewPanel extends JPanel implements Refreshable {
     
     @Override
     public void refresh() {
-        performSearch(0, true);
+        performSlideSearch(0, true);
     }
 
     @Override
     public void totalRefresh() {
         // TODO: clear cache?
-        performSearch(0, true);
+        performSlideSearch(0, true);
     }
     
     private class UnrootedEntity extends RootedEntity {

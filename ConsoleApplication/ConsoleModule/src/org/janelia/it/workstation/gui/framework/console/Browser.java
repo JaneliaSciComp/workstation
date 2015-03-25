@@ -92,8 +92,10 @@ public class Browser implements Cloneable {
     private Image iconImage;
     private PageFormat pageFormat;
     private MaskSearchDialog arbitraryMaskSearchDialog;
+    
     private PermissionTemplate autoShareTemplate;
-
+    private List<String> searchHistory;
+    
     /**
      * Center Window, use passed realEstatePercent (0-1.0, where 1.0 is 100% of the screen)
      */
@@ -128,7 +130,9 @@ public class Browser implements Cloneable {
         // Initialize workspace
         ModelMgr.getModelMgr().init();
         
+        // Load model properties
         this.autoShareTemplate = (PermissionTemplate)SessionMgr.getSessionMgr().getModelProperty(AUTO_SHARE_TEMPLATE);
+        this.searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY);
         
         this.viewerManager = new ViewerManager();
 
@@ -173,9 +177,6 @@ public class Browser implements Cloneable {
         generalSearchConfig = new SearchConfiguration();
         generalSearchConfig.load();
         generalSearchDialog = new GeneralSearchDialog(generalSearchConfig);
-
-        List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY);
-        generalSearchDialog.setSearchHistory(searchHistory);
 
         patternSearchDialog = new PatternSearchDialog();
         giantFiberSearchDialog = new GiantFiberSearchDialog();
@@ -340,9 +341,8 @@ public class Browser implements Cloneable {
             }
 
             SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
-            if (generalSearchDialog != null) {
-                SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, generalSearchDialog.getSearchHistory());
-            }
+            SessionMgr.getSessionMgr().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
+            SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, searchHistory);
 
         }
     }
@@ -484,9 +484,20 @@ public class Browser implements Cloneable {
         return autoShareTemplate;
     }
 
-    public void setAutoShareTemplate(PermissionTemplate template) {
-        this.autoShareTemplate = template;
-        SessionMgr.getSessionMgr().setModelProperty(AUTO_SHARE_TEMPLATE, template);
+    public void setAutoShareTemplate(PermissionTemplate autoShareTemplate) {
+        this.autoShareTemplate = autoShareTemplate;
+        SessionMgr.getSessionMgr().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
+    }
+
+    public List<String> getSearchHistory() {
+        log.trace("Returning current search history: {} ",searchHistory);
+        return searchHistory;
+    }
+
+    public void setSearchHistory(List<String> searchHistory) {
+        log.trace("Saving search history: {} ",searchHistory);
+        this.searchHistory = searchHistory;
+        SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, searchHistory);
     }
     
     private void openOntologyComponent() {

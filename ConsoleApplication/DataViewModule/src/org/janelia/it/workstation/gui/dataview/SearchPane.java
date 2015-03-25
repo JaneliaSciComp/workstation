@@ -74,7 +74,6 @@ public abstract class SearchPane extends JPanel {
         solrPanel = new SearchParametersPanel() {
             @Override
             public void performSearch(boolean clear) {
-                super.performSearch(clear);
                 performSolrSearch(clear);
             }
         };
