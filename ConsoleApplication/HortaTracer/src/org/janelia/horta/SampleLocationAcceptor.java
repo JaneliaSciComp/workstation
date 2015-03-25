@@ -29,6 +29,7 @@
  */
 package org.janelia.horta;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,6 +45,8 @@ import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
+import org.janelia.horta.volume.BrickInfo;
+import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.scenewindow.SceneWindow;
 import org.netbeans.api.progress.ProgressHandle;
@@ -145,7 +148,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             }
         } catch (IOException | URISyntaxException ex) {
             // Something went wrong with loading the Yaml file
-            Exceptions.printStackTrace(ex);
+            // Exceptions.printStackTrace(ex);
             JOptionPane.showMessageDialog(nttc, 
                     "Problem Loading Raw Tile Information from " + focusUrl.getPath() + "/" + BASE_YML_FILE
                     + "\n  Is the render folder drive mounted?"
@@ -154,6 +157,28 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     "Tilebase File Problem",
                     JOptionPane.ERROR_MESSAGE);
         }
+        
+        if (null == volumeSource)
+            return volumeSource;
+        
+        // Test for location of first tile, as a sanity check
+        Double res = volumeSource.getAvailableResolutions().iterator().next();
+        BrickInfoSet bricks = volumeSource.getAllBrickInfoForResolution(res);
+        BrickInfo b = bricks.iterator().next();
+        BrainTileInfo bti = (BrainTileInfo)b;
+        String path = bti.getParentPath() + "/" + bti.getLocalPath();
+        File brickFolder = new File(bti.getParentPath(), bti.getLocalPath());
+        if (! brickFolder.exists()) {
+            JOptionPane.showMessageDialog(nttc, 
+                    "Problem Finding First Raw Tile Folder at " + brickFolder.getAbsolutePath()
+                    + "\n  Is the raw tile folder drive mounted?"
+                    + "\n  Did someone change the folder structure of the raw tiles?"
+                    ,
+                    "Raw Tile Location Problem",
+                    JOptionPane.ERROR_MESSAGE);
+            volumeSource = null; // Don't use this data source
+        }
+        
         return volumeSource;
     }
     
