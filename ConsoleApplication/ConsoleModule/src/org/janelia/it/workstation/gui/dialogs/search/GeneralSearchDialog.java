@@ -5,6 +5,8 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileWriter;
@@ -93,7 +95,6 @@ public class GeneralSearchDialog extends ModalDialog {
         paramsPanel = new SearchParametersPanel() {
             @Override
             public void performSearch(boolean clear) {
-                super.performSearch(clear);
                 resultsPanel.performSearch(clear, clear, true);
             }
         };
@@ -163,7 +164,7 @@ public class GeneralSearchDialog extends ModalDialog {
         });
         buttonPane.add(cancelButton);
 
-        add(buttonPane, BorderLayout.SOUTH);
+        add(buttonPane, BorderLayout.SOUTH);  
     }
 
     protected void init() {
@@ -195,8 +196,6 @@ public class GeneralSearchDialog extends ModalDialog {
         Component browser = SessionMgr.getMainFrame();
         setPreferredSize(new Dimension((int) (browser.getWidth() * 0.8), (int) (browser.getHeight() * 0.8)));
 
-        paramsPanel.getInputField().requestFocus();
-
         resultsPanel.performSearch(false, false, true);
 
         getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, true), "enterAction");
@@ -209,6 +208,13 @@ public class GeneralSearchDialog extends ModalDialog {
                 else {
                     paramsPanel.performSearch(true);
                 }
+            }
+        });
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                paramsPanel.getInputField().requestFocus();
             }
         });
 
@@ -227,14 +233,6 @@ public class GeneralSearchDialog extends ModalDialog {
 
     protected SearchResultContextMenu getPopupMenu(List<Entity> selectedEntities, String label) {
         return new SearchResultContextMenu(resultsPanel, selectedEntities, label);
-    }
-
-    public void setSearchHistory(List<String> searchHistory) {
-        paramsPanel.setSearchHistory(searchHistory);
-    }
-
-    public List<String> getSearchHistory() {
-        return paramsPanel.getSearchHistory();
     }
 
     protected synchronized void saveResults() {

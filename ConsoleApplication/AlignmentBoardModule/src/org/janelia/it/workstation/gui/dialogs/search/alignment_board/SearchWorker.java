@@ -14,7 +14,6 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -86,23 +85,6 @@ public class SearchWorker extends SimpleWorker {
         resultsMetaData.setSearchDuration(
                 results.getResponse().getElapsedTime()
         );
-
-        // Update search history.
-        String queryStr = queryBuilder.getSearchString();
-
-        if ( !StringUtils.isEmpty(queryStr) ) {
-            resultsMetaData.setQueryStr( queryStr );
-            List<String> searchHistory = (List<String>)
-                    SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY_MDL_PROP);
-            if ( searchHistory == null ) {
-                searchHistory = new ArrayList<>();
-            }
-            if ( ! searchHistory.contains( queryStr ) ) {
-                searchHistory.add( queryStr );
-                // To preserve history, must push it into the model.
-                SessionMgr.getSessionMgr().setModelProperty( SEARCH_HISTORY_MDL_PROP, searchHistory );
-            }
-        }
     }
 
     @Override
