@@ -6,8 +6,6 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Top component showing the QC View. 
@@ -31,25 +29,21 @@ import org.slf4j.LoggerFactory;
         preferredID = "QCViewTopComponent"
 )
 @Messages({
-    "CTL_QCViewAction=QC View",
-    "CTL_QCViewTopComponent=QC View",
-    "HINT_QCViewTopComponent=This is the quality control view"
+    "CTL_QCViewAction=Slide View",
+    "CTL_QCViewTopComponent=Slide View",
+    "HINT_QCViewTopComponent=Display LSMs with one row per slide"
 })
 public final class QCViewTopComponent extends TopComponent {
 
-    private Logger log = LoggerFactory.getLogger(QCViewTopComponent.class);
-    
     public static final String PREFERRED_ID = "QCViewTopComponent";
     
     private final QCViewPanel qcViewPanel;
     
     public QCViewTopComponent() {
-        
         this.qcViewPanel = new QCViewPanel();
         initComponents();
         setName(Bundle.CTL_QCViewTopComponent());
         setToolTipText(Bundle.HINT_QCViewTopComponent());
-
     }
     
     /**
