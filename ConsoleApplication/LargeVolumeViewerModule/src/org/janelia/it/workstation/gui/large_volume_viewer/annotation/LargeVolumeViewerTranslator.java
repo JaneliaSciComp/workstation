@@ -18,6 +18,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -266,35 +268,22 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             fireColorChangeEvent(newColor);
 
 
-            // set styles for our neurons; if workspace has no saved styles, build an
-            //  empty style pref; if a neuron isn't in the saved or empty style pref,
+            // set styles for our neurons; if a neuron isn't in the saved map,
             //  use a default style
-            ObjectMapper mapper = new ObjectMapper();
-            ObjectNode rootNode;
-            String stylePref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES);
-            if (stylePref == null) {
-                // no such preference, make an empty one:
-                rootNode = mapper.createObjectNode();
-            } else {
-                try {
-                    rootNode = (ObjectNode) mapper.readTree(stylePref);
-                } catch (IOException e) {
-                    // if we can't parse, go with empty one again
-                    rootNode = mapper.createObjectNode();
-                }
-            }
-            // note: we currently don't clean up old styles in the prefs that belong
-            //  to deleted neurons; this is the place to do it if/when we put that in
-            //  (see FW-3100)
+            Map<Long, NeuronStyle> neuronStyleMap = annModel.getNeuronStyleMap();
             NeuronStyle style;
             for (TmNeuron neuron: workspace.getNeuronList()) {
-                if (!rootNode.path(neuron.getId().toString()).isMissingNode()) {
-                    style = NeuronStyle.fromJSON((ObjectNode) rootNode.path(neuron.getId().toString()));
+                if (neuronStyleMap.containsKey(neuron.getId())) {
+                    style = neuronStyleMap.get(neuron.getId());
                 } else {
                     style = NeuronStyle.getStyleForNeuron(neuron.getId());
                 }
                 fireNeuronStyleChangeEvent(neuron,style);
             }
+            // note: we currently don't clean up old styles in the prefs that belong
+            //  to deleted neurons; this is the place to do it if/when we put that in
+            //  (see FW-3100); you would iterate over the style map and remove
+            //  any neurons not in the workspace, then save the map back
 
 
             // check for saved image color model

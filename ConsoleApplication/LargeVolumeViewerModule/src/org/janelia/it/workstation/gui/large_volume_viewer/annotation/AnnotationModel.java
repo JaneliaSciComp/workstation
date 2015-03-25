@@ -21,11 +21,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
+
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
@@ -428,7 +426,7 @@ called from a  SimpleWorker thread.
         // the null  in this call means "this is a root annotation" (would otherwise
         //  be the parent)
         final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-            null, 0, xyz.x(), xyz.y(), xyz.z(), "");
+                null, 0, xyz.x(), xyz.y(), xyz.z(), "");
 
         updateCurrentWorkspace();
         if (neuron.getId().equals(getCurrentNeuron().getId())) {
@@ -459,7 +457,7 @@ called from a  SimpleWorker thread.
 
         final TmNeuron neuron = getNeuronFromAnnotationID(parentAnn.getId());
         final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-            parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
+                parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
         updateCurrentWorkspace();
         if (neuron.getId().equals(getCurrentNeuron().getId())) {
@@ -1112,31 +1110,69 @@ called from a  SimpleWorker thread.
 
     public void setGlobalAnnotationColor(Color color) {
         setPreference(AnnotationsConstants.PREF_ANNOTATION_COLOR_GLOBAL,
-            String.format("%d:%d:%d:%d", color.getRed(), color.getGreen(),
-                color.getBlue(), color.getAlpha()));
+                String.format("%d:%d:%d:%d", color.getRed(), color.getGreen(),
+                        color.getBlue(), color.getAlpha()));
 
         // persisted, so go ahead and change it
         fireGlobalAnnotationColorChanged(color);
     }
 
     public void setNeuronStyle(TmNeuron neuron, NeuronStyle style) throws IOException {
-        // retrieve current style map if it exists
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode rootNode;
-        String stylePref = getCurrentWorkspace().getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES);
-        if (stylePref == null) {
-            // no such preference, so start from scratch
-            rootNode = mapper.createObjectNode();
-        } else {
-            rootNode = (ObjectNode) mapper.readTree(stylePref);
-        }
-
-        // add or update entry for this neuron, then save
-        rootNode.put(neuron.getId().toString(), style.asJSON());
-        setPreference(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES, rootNode.toString());
+        Map<Long, NeuronStyle> neuronStyleMap = getNeuronStyleMap();
+        neuronStyleMap.put(neuron.getId(), style);
+        setNeuronStyleMap(neuronStyleMap);
 
         // fire change to listeners
         fireNeuronStyleChanged(neuron, style);
+    }
+
+    /**
+     * retrieve the neuron ID: NeuronStyle map from preferences
+     */
+    public Map<Long, NeuronStyle> getNeuronStyleMap() {
+        Map<Long, NeuronStyle> neuronStyleMap = new HashMap<>();
+
+        String stylePref = getCurrentWorkspace().getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES);
+        if (stylePref == null) {
+            // no such preference
+            return neuronStyleMap;
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode rootNode = null;
+        try {
+            rootNode = (ObjectNode) mapper.readTree(stylePref);
+        } catch (IOException e) {
+            // can't parse, return the empty map
+            // debated what to do here, but this should never happen,
+            //  so I'll be lazy about it
+            return neuronStyleMap;
+        }
+
+        // I can't believe you can't use a regular for loop for this...
+        Iterator<Map.Entry<String, JsonNode>> nodeIterator = rootNode.fields();
+        while (nodeIterator.hasNext()) {
+            Map.Entry<String, JsonNode> entry = nodeIterator.next();
+            neuronStyleMap.put(Long.parseLong(entry.getKey()), NeuronStyle.fromJSON((ObjectNode) entry.getValue()));
+        }
+
+        return  neuronStyleMap;
+    }
+
+    /**
+     * store the neuron ID to NeuronStyle map in the preferences, overwriting
+     * previous entry
+     */
+    public void setNeuronStyleMap(Map<Long, NeuronStyle> neuronStyleMap) {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode rootNode = mapper.createObjectNode();
+
+        for (Long neuronID: neuronStyleMap.keySet()) {
+            rootNode.put(neuronID.toString(), neuronStyleMap.get(neuronID).asJSON());
+        }
+        setPreference(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES, rootNode.toString());
+
+        // no updates here!
     }
 
     public boolean automatedRefinementEnabled() {

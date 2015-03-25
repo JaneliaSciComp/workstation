@@ -138,6 +138,10 @@ implements GLActor
 
         NeuronStyle style;
         for (Long neuronID: neuronVertices.keySet()) {
+            if (!neuronStyles.get(neuronID).isVisible()) {
+                continue;
+            }
+
             if (!neuronLineIndices.containsKey(neuronID))
                 continue;
 
@@ -223,6 +227,10 @@ implements GLActor
         setupAnchorShaders(gl);
 
         for (Long neuronID: neuronVertices.keySet()) {
+            if (!neuronStyles.get(neuronID).isVisible()) {
+                continue;
+            }
+
             // setup per-neuron anchor shader settings (used to be in setupAnchorShader)
             int tempIndex;
             if (hoverAnchor != null && hoverAnchor.getNeuronID().equals(neuronID)) {
@@ -364,6 +372,10 @@ implements GLActor
         gl.glLineWidth(5.0f);
 
         for (Long neuronID: neuronTracedSegments.keySet()) {
+            if (!neuronStyles.get(neuronID).isVisible()) {
+                continue;
+            }
+
             lineShader.setUniform3v(gl2gl3, "baseColor", 1, blackColor);
             for (TracedPathActor segment : neuronTracedSegments.get(neuronID).values())
                 segment.display(glDrawable);
