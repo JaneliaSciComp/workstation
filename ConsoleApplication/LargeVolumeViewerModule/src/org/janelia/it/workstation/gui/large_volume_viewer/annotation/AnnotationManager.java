@@ -1086,8 +1086,27 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     }
 
+    /**
+     * as with chooseNeuronStyle, multiple versions allow for multiple entry points
+     */
+    public void setNeuronVisibility(boolean visibility) {
+        if (annotationModel.getCurrentWorkspace() == null) {
+            return;
+        }
+        if (annotationModel.getCurrentNeuron() == null) {
+            presentError("You must select a neuron prior to performing this action.", "No neuron selected");
+        } else {
+            setNeuronVisibility(annotationModel.getCurrentNeuron(), visibility);
+        }
+
+    }
+
     public void setNeuronVisibility(Anchor anchor, boolean visibility) {
         TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(anchor.getGuid());
+        setNeuronVisibility(neuron, visibility);
+    }
+
+    public void setNeuronVisibility(TmNeuron neuron, boolean visibility) {
         NeuronStyle style = getNeuronStyle(neuron);
         style.setVisible(visibility);
         setNeuronStyle(neuron, style);
