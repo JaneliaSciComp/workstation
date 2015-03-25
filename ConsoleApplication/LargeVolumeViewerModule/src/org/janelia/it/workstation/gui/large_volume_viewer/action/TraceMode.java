@@ -404,6 +404,18 @@ implements MouseMode, KeyListener
 								skeleton.changeNeuronStyle(getHoverAnchor());
 							}
 						}));
+						result.add(new JMenuItem(new AbstractAction("Show neuron") {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								skeleton.setNeuronVisitility(getHoverAnchor(), true);
+							}
+						}));
+						result.add(new JMenuItem(new AbstractAction("Hide neuron") {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								skeleton.setNeuronVisitility(getHoverAnchor(), false);
+							}
+						}));
                         result.add(null); // separator
                     }
                     if (parent != null) {

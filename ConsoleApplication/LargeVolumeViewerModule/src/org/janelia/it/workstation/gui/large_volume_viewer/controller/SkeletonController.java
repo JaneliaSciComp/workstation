@@ -160,6 +160,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void changeNeuronStyleRequested(Anchor anchor) {
         annoMgr.chooseNeuronStyle(anchor);
     }
+
+    public void setNeuronVisibilityRequested(Anchor anchor, boolean visibility) {
+        annoMgr.setNeuronVisibility(anchor, visibility);
+    }
     
     public void anchorAdded(AnchorSeed anchorSeed) {
         annoMgr.anchorAdded(anchorSeed);

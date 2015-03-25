@@ -1160,6 +1160,18 @@ called from a  SimpleWorker thread.
     }
 
     /**
+     * retrieve a neuron style for a neuron, whether stored or default
+     */
+    public NeuronStyle getNeuronStyle(TmNeuron neuron) {
+        Map<Long, NeuronStyle> neuronStyleMap = getNeuronStyleMap();
+        if (neuronStyleMap.containsKey(neuron.getId())) {
+            return neuronStyleMap.get(neuron.getId());
+        } else {
+            return NeuronStyle.getStyleForNeuron(neuron.getId());
+        }
+    }
+
+    /**
      * store the neuron ID to NeuronStyle map in the preferences, overwriting
      * previous entry
      */

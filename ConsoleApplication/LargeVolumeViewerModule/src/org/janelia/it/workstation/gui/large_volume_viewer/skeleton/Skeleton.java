@@ -141,6 +141,11 @@ public class Skeleton {
     public void changeNeuronStyle(Anchor anchor) {
         controller.changeNeuronStyleRequested(anchor);
     }
+
+    public void setNeuronVisitility(Anchor anchor, boolean visibility) {
+        controller.setNeuronVisibilityRequested(anchor, visibility);
+    }
+
     public void splitNeuriteRequest(Anchor anchor) {
         controller.splitNeuriteRequested(anchor);
     }

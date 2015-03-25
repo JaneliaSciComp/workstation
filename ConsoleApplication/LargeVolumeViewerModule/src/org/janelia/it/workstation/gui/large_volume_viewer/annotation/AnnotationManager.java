@@ -1085,6 +1085,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     }
 
+    public void setNeuronVisibility(Anchor anchor, boolean visibility) {
+        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(anchor.getGuid());
+        NeuronStyle style = annotationModel.getNeuronStyle(neuron);
+        style.setVisible(visibility);
+        setNeuronStyle(neuron, style);
+    }
+
     public void setNeuronStyle(final TmNeuron neuron, final NeuronStyle style) {
         SimpleWorker setter = new SimpleWorker() {
             @Override
