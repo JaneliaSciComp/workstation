@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class SessionMgr {
+public final class SessionMgr {
 
     private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
 
@@ -67,12 +67,10 @@ public class SessionMgr {
     public static String DISPLAY_RENDERER_2D = "SessionMgr.Renderer2D";
 
     public static boolean isDarkLook = false;
-    // TODO: This is a quick hack to get the data viewer to work in the new NetBeans eco-system. This needs to be replaced with group:admin controls. 
-    public static boolean rootAccess = false;
 
     private static JFrame mainFrame;
-    private static ModelMgr modelManager = ModelMgr.getModelMgr();
-    private static SessionMgr sessionManager = new SessionMgr();
+    private static final ModelMgr modelManager = ModelMgr.getModelMgr();
+    private static final SessionMgr sessionManager = new SessionMgr();
     private SessionModel sessionModel = SessionModel.getSessionModel();
     private float browserSize = .8f;
     private ImageIcon browserImageIcon;
@@ -272,10 +270,9 @@ public class SessionMgr {
                 case 1: {
                     try {
                         sessionModel.setModelProperties((TreeMap) istream.readObject());
-                        istream.close();
                     }
                     catch (Exception ex) {
-                        istream.close();
+                        log.info("Error reading settings ",ex);
                         JOptionPane.showMessageDialog(getMainFrame(), "Settings were not recovered into the session.", "ERROR!", JOptionPane.ERROR_MESSAGE);
                         File oldFile = new File(prefsFile + ".old");
                         boolean deleteSuccess = oldFile.delete();
@@ -287,6 +284,9 @@ public class SessionMgr {
                             log.error("Could not rename new settings file to old.");
                         }
                     }
+                    finally {
+                        istream.close();
+                    }
                     break;
                 }
                 default: {
@@ -294,10 +294,11 @@ public class SessionMgr {
             }
         }
         catch (EOFException eof) {
+            log.info("No settings file",eof);
             // Do nothing, there are no preferences
         }
         catch (Exception ioEx) {
-            ioEx.printStackTrace();
+            log.info("Error reading settings file",ioEx);
         } //new settingsFile
     }
 
@@ -631,17 +632,7 @@ public class SessionMgr {
     public static JFrame getMainFrame() {
         if (mainFrame == null) {
             try {
-                Runnable runnable = new Runnable() {
-                    public void run() {
-                        mainFrame = WindowLocator.getMainFrame();
-                    }
-                };
-                if (SwingUtilities.isEventDispatchThread()) {
-                    runnable.run();
-                }
-                else {
-                    SwingUtilities.invokeAndWait(runnable);
-                }
+                mainFrame = WindowLocator.getMainFrame();
             }
             catch (Exception ex) {
                 SessionMgr.getSessionMgr().handleException(ex);
@@ -878,9 +869,6 @@ public class SessionMgr {
     public static String getSubjectKey() {
         Subject subject = getSessionMgr().getSubject();
         if (subject == null) {
-            if (rootAccess) {
-                return null;
-            }
             throw new SystemError("Not logged in");
         }
         return subject.getKey();
@@ -889,9 +877,6 @@ public class SessionMgr {
     public static String getUsername() {
         Subject subject = getSessionMgr().getSubject();
         if (subject == null) {
-            if (rootAccess) {
-                return null;
-            }
             throw new SystemError("Not logged in");
         }
         return subject.getName();
@@ -900,9 +885,6 @@ public class SessionMgr {
     public static String getUserEmail() {
         Subject subject = getSessionMgr().getSubject();
         if (subject == null) {
-            if (rootAccess) {
-                return null;
-            }
             throw new SystemError("Not logged in");
         }
         return subject.getEmail();
