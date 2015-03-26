@@ -1335,8 +1335,8 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getDownloadMenu() {
 
         List<Entity> entitiesWithFilepaths = new ArrayList<>();
-        for(final RootedEntity rootedEntity : rootedEntityList) {
-            final Entity targetEntity = rootedEntity.getEntity();
+        for(final RootedEntity re : rootedEntityList) {
+            final Entity targetEntity = re.getEntity();
             final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
             if (filepath!=null) {
                 // conversion pipeline can't handle bz2 (yet), so filter them out

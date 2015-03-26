@@ -65,7 +65,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
     // Search state
     protected SearchConfiguration searchConfig;
     protected Entity searchRoot;
-    protected List<SearchCriteria> searchCriteriaList = new ArrayList<SearchCriteria>();
+    protected List<SearchCriteria> searchCriteriaList = new ArrayList<>();
     protected String searchString = "";
       
     public SearchParametersPanel() {

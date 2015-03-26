@@ -35,6 +35,7 @@ public class ImagesPanel extends JScrollPane {
     public static final int MIN_TABLE_HEIGHT = 50;
     public static final int DEFAULT_TABLE_HEIGHT = 200;
     public static final int MAX_TABLE_HEIGHT = 500;
+    
     private final AtomicBoolean loadUnloadImagesInterrupt = new AtomicBoolean(false);
     private final HashMap<String, AnnotatedImageButton> buttons = new LinkedHashMap<>();
     private Map<Long, List<OntologyAnnotation>> filteredAnnotationMap = new HashMap<>();
@@ -499,8 +500,8 @@ public class ImagesPanel extends JScrollPane {
         if (numCols<1) numCols = 1;
         int fullWidth = iconPanel.getSize().width - getVerticalScrollBar().getWidth();
         int maxButtonWidth = (int) Math.min(Math.max(Math.floor((double) fullWidth / numCols), MIN_IMAGE_WIDTH), MAX_IMAGE_WIDTH);
-        maxButtonWidth -= 30; // Some extra padding is needed for some reason
-        log.trace("recalculateGrid for fullWidth="+fullWidth+" with numCols="+numCols+" -> "+maxButtonWidth);
+        maxButtonWidth -= 30; // Some extra padding is needed for some unknown reason. This constant seems to work well.
+        log.trace("recalculateGrid for fullWidth={} with numCols={}",fullWidth,numCols);
         iconPanel.getToolbar().setMaxImageSizeSlider(maxButtonWidth);
     }
 
