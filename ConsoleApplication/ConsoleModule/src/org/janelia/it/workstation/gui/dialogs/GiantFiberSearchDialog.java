@@ -326,7 +326,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
         }
     }
 
-    public GiantFiberSearchDialog() throws Exception {
+    public GiantFiberSearchDialog() {
 
         log.info("Begin loading");
         

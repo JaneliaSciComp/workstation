@@ -49,7 +49,6 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Executor;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 
 public final class ModelMgr {
 
@@ -70,8 +69,6 @@ public final class ModelMgr {
     private final EntitySelectionModel entitySelectionModel;
     private final UserColorMapping userColorMapping;
 
-//    private Entity selectedOntology;
-//    private OntologyKeyBindings ontologyKeyBindings;
     private AnnotationSession annotationSession;
     private OntologyAnnotation currentSelectedOntologyAnnotation;
 
@@ -86,14 +83,14 @@ public final class ModelMgr {
         ModelMgr.getModelMgr().registerExceptionHandler(new PrintStackTraceHandler());
     }
     
-    private Map<String,Subject> subjectByKey = new HashMap<>();
+    private final Map<String,Subject> subjectByKey = new HashMap<>();
 
     private ModelMgr() {
         log.info("Initializing Model Manager");
         // Sync block may/may not be necessary. Problem may just be intermittent.
         //   Saw NPE on use of modelEventBus, during attempt to register against it.
         synchronized (ModelMgr.class) {
-            log.info("ModelMgr c'tor from  " + Thread.currentThread().getClass().getClassLoader() + "/" + Thread.currentThread().getContextClassLoader() + " in thread " + Thread.currentThread());
+            log.debug("ModelMgr c'tor from  " + Thread.currentThread().getClass().getClassLoader() + "/" + Thread.currentThread().getContextClassLoader() + " in thread " + Thread.currentThread());
 
             this.entityModel = new EntityModel();
             this.entitySelectionModel = new EntitySelectionModel();
@@ -113,7 +110,7 @@ public final class ModelMgr {
             });
 
         }
-        log.info("Successfully initialized");
+        log.debug("Successfully initialized");
     } //Singleton enforcement
 
     public static synchronized ModelMgr getModelMgr() {
@@ -121,41 +118,11 @@ public final class ModelMgr {
     }
     
     public void init() throws Exception {
-        log.info("Initializing model...");
-        // TODO: in the future, this should not rely on SessionMgr
-        log.info("  Loading workspace");
-        getCurrentWorkspace();
-            
-//            SimpleWorker worker = new SimpleWorker() {
-//
-//                List<Subject> subjects = null;
-//                @Override
-//                protected void doStuff() throws Exception {
-//                    subjects = getSubjects();
-//                }
-//
-//                @Override
-//                protected void hadSuccess() {
-//                    for(Subject subject : subjects) {
-//                        subjectByKey.put(subject.getKey(), subject);
-//                    }
-//                }
-//
-//                @Override
-//                protected void hadError(Throwable error) {
-//                    SessionMgr.getSessionMgr().handleException(error);
-//                }
-//            };
-//
-//            worker.execute();
-
-        log.info("  Preloading subjects");
+        log.info("Preloading subjects");
         List<Subject> subjects = getSubjects();
         for(Subject subject : subjects) {
             subjectByKey.put(subject.getKey(), subject);
         }
-        
-        log.info("Ready.");
     }
 
     public void addModelMgrObserver(ModelMgrObserver mml) {

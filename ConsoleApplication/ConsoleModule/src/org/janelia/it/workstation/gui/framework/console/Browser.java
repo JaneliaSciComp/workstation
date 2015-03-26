@@ -31,6 +31,7 @@ import java.awt.print.PrinterJob;
 import java.util.Collections;
 import java.util.List;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
  * Created by IntelliJ IDEA.
@@ -42,11 +43,11 @@ public class Browser implements Cloneable {
 
     private static final Logger log = LoggerFactory.getLogger(Browser.class);
 
-    private static String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
-    public static String SEARCH_HISTORY = "SEARCH_HISTORY";
-    public static String ADD_TO_ROOT_HISTORY = "ADD_TO_ROOT_HISTORY";
-    private static String VIEWERS_LINKED = "Browser.ViewersLinked";
-    private static String AUTO_SHARE_TEMPLATE = "Browser.AutoShareTemplate";
+    private static final String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
+    public static final String SEARCH_HISTORY = "SEARCH_HISTORY";
+    public static final String ADD_TO_ROOT_HISTORY = "ADD_TO_ROOT_HISTORY";
+    private static final String VIEWERS_LINKED = "Browser.ViewersLinked";
+    private static final String AUTO_SHARE_TEMPLATE = "Browser.AutoShareTemplate";
 
     // Used by printing mechanism to ensure capacity.
     public static final String VIEW_OUTLINES = "Outlines Section";
@@ -56,10 +57,10 @@ public class Browser implements Cloneable {
     public static final String OUTLINE_LAYERS = "Layers";
     public static final String OUTLINE_SPLIT_PICKER = "Split Picking Tool";
 
-    private static String MEMORY_EXCEEDED_PRT_SCR_MSG = "Insufficient memory to print screen";
-    private static String MEMORY_EXCEEDED_ADVISORY = "Low Memory";
-    private static int RGB_TYPE_BYTES_PER_PIXEL = 4;
-    private static int PRINT_OVERHEAD_SIZE = 1000000;
+    private static final String MEMORY_EXCEEDED_PRT_SCR_MSG = "Insufficient memory to print screen";
+    private static final String MEMORY_EXCEEDED_ADVISORY = "Low Memory";
+    private static final int RGB_TYPE_BYTES_PER_PIXEL = 4;
+    private static final int PRINT_OVERHEAD_SIZE = 1000000;
 
     private JPanel allPanelsView = new JPanel();
     private JPanel collapsedOutlineView = new JPanel();
@@ -96,18 +97,6 @@ public class Browser implements Cloneable {
     private PermissionTemplate autoShareTemplate;
     private List<String> searchHistory;
     
-    /**
-     * Center Window, use passed realEstatePercent (0-1.0, where 1.0 is 100% of the screen)
-     */
-    public Browser(float realEstatePercent, BrowserModel browserModel) {
-        try {
-            jbInit(browserModel);
-        }
-        catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
-        }
-    }
-
     /**
      * Use given coordinates of the top left point and passed realEstatePercent (0-1.0).
      * THis constructor is used only by the clone method
@@ -170,21 +159,9 @@ public class Browser implements Cloneable {
                 return roots;
             }
         };
-
-        annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
-        importDialog = new ImportDialog("Import Files");
-
-        generalSearchConfig = new SearchConfiguration();
-        generalSearchConfig.load();
-        generalSearchDialog = new GeneralSearchDialog(generalSearchConfig);
-
-        patternSearchDialog = new PatternSearchDialog();
-        giantFiberSearchDialog = new GiantFiberSearchDialog();
-        arbitraryMaskSearchDialog = new MaskSearchDialog();
-        screenEvaluationDialog = new ScreenEvaluationDialog();
-        maaSearchDialog = new MAASearchDialog(this);
-        dataSetListDialog = new DataSetListDialog();
-
+        
+        //annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
+        
         ontologyOutline.setPreferredSize(new Dimension());
 
         resetBrowserPosition();
@@ -204,8 +181,37 @@ public class Browser implements Cloneable {
                 entityOutline.activate();
                 // Ontology outline is activated by setting the perspective:
                 setPerspective(Perspective.ImageBrowser);
+
+                SimpleWorker worker = new SimpleWorker() {
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        generalSearchConfig = new SearchConfiguration();
+                        generalSearchConfig.load();
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        generalSearchDialog = new GeneralSearchDialog(generalSearchConfig);
+                        importDialog = new ImportDialog("Import Files");
+                        patternSearchDialog = new PatternSearchDialog();
+                        giantFiberSearchDialog = new GiantFiberSearchDialog();
+                        arbitraryMaskSearchDialog = new MaskSearchDialog();
+                        screenEvaluationDialog = new ScreenEvaluationDialog();
+                        maaSearchDialog = new MAASearchDialog(Browser.this);
+                        dataSetListDialog = new DataSetListDialog();
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+
+                worker.execute();
             }
         });
+
         
         log.info("Ready.");
     }

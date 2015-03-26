@@ -72,7 +72,7 @@ public final class SessionMgr {
     private static final ModelMgr modelManager = ModelMgr.getModelMgr();
     private static final SessionMgr sessionManager = new SessionMgr();
     private SessionModel sessionModel = SessionModel.getSessionModel();
-    private float browserSize = .8f;
+    
     private ImageIcon browserImageIcon;
     private ExternalListener externalHttpListener;
     private EmbeddedAxisServer axisServer;
@@ -80,7 +80,6 @@ public final class SessionMgr {
     private File settingsFile;
     private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
     private String prefsFile = prefsDir + ".JW_Settings";
-//    private Map<BrowserModel, Browser> browserModelsToBrowser = new HashMap<>();
     private Browser activeBrowser;
     private String appName, appVersion;
     private boolean isLoggedIn;
@@ -187,33 +186,32 @@ public final class SessionMgr {
         String lafName = (String) getModelProperty(DISPLAY_LOOK_AND_FEEL);
         LookAndFeel currentLaf = UIManager.getLookAndFeel();
         LookAndFeelInfo currentLafInfo = null;
-        if (lafName != null) {
-            try {
-                boolean installed = false;
-                for (LookAndFeelInfo lafInfo : installedInfos) {
-                    if (lafInfo.getClassName().equals(lafName)) {
-                        installed = true;
-                    }
-                    if (lafInfo.getName().equals(currentLaf.getName())) {
-                        currentLafInfo = lafInfo;
-                    }
+        if (lafName==null) lafName = "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel";
+        try {
+            boolean installed = false;
+            for (LookAndFeelInfo lafInfo : installedInfos) {
+                if (lafInfo.getClassName().equals(lafName)) {
+                    installed = true;
                 }
-                if (installed) {
-                    setLookAndFeel(lafName);
-                }
-                else if (currentLafInfo != null) {
-                    setLookAndFeel(currentLafInfo.getName());
-                    setModelProperty(DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
+                if (lafInfo.getName().equals(currentLaf.getName())) {
+                    currentLafInfo = lafInfo;
                 }
             }
-            catch (Exception ex) {
-                handleException(ex);
+            if (installed) {
+                setLookAndFeel(lafName);
+            }
+            else if (currentLafInfo != null) {
+                setLookAndFeel(currentLafInfo.getName());
+                setModelProperty(DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
+            }
+            else {
+                log.error("Could not set Look and Feel: {}",lafName);
             }
         }
-        else {
-            setLookAndFeel("de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
+        catch (Exception ex) {
+            handleException(ex);
         }
-
+        
         String tempLogin = (String) getModelProperty(USER_NAME);
         String tempPassword = (String) getModelProperty(USER_PASSWORD);
         if (tempLogin != null && tempPassword != null) {
@@ -318,10 +316,6 @@ public final class SessionMgr {
         return sessionModel.addExternalClient(newClientName);
     }
 
-//    public List<ExternalClient> getExternalClients() {
-//        return sessionModel.getExternalClients();
-//    }
-
     public List<ExternalClient> getExternalClientsByName(String clientName) {
         return sessionModel.getExternalClientsByName(clientName);
     }
@@ -346,28 +340,12 @@ public final class SessionMgr {
         return sessionModel.getModelProperty(key);
     }
 
-//    public void removeModelProperty(Object key) {
-//        sessionModel.removeModelProperty(key);
-//    }
-//
-//    public Iterator getModelPropertyKeys() {
-//        return sessionModel.getModelPropertyKeys();
-//    }
-//
     public void registerPreferenceInterface(Object interfaceKey, Class interfaceClass) throws Exception {
         PrefController.getPrefController().registerPreferenceInterface(interfaceKey, interfaceClass);
     }
 
-//    public void removePreferenceInterface(Object interfaceKey) throws Exception {
-//        PrefController.getPrefController().deregisterPreferenceInterface(interfaceKey);
-//    }
-//
     public void registerExceptionHandler(ExceptionHandler handler) {
         modelManager.registerExceptionHandler(handler);
-    }
-
-    public void setNewBrowserSize(float screenPercent) {
-        browserSize = screenPercent;
     }
 
     public void setApplicationName(String name) {
@@ -504,11 +482,10 @@ public final class SessionMgr {
     }
 
     public Browser newBrowser() {
-        Browser browser = new Browser(browserSize, sessionModel.addBrowserModel());
+        Browser browser = new Browser(sessionModel.addBrowserModel());
         if (browserImageIcon != null) {
             browser.setBrowserImageIcon(browserImageIcon);
         }
-//        browserModelsToBrowser.put(browser.getBrowserModel(), browser);
         activeBrowser = browser;
         return browser;
     }
@@ -557,39 +534,6 @@ public final class SessionMgr {
                     handleException(ex);
                 }
             }
-            else if (lookAndFeelClassName.toLowerCase().contains("jtattoo")) {
-                // setup the look and feel properties
-//                Properties props = new Properties();
-
-                //props.put("logoString", "my company");
-                //props.put("licenseKey", "INSERT YOUR LICENSE KEY HERE");
-//                String controlColor = "218 254 230";
-//                String buttonColor = "218 230 254"; 
-//                String foreGround = "180 240 197";
-//                String backGround = "0 0 0";
-//                props.put("selectionBackgroundColor", backGround);
-//                props.put("menuSelectionBackgroundColor", backGround);
-//
-//                props.put("controlColor", controlColor);
-//                props.put("controlColorLight", controlColor);
-//                props.put("controlColorDark", backGround);
-//
-//                props.put("buttonColor", buttonColor);
-//                props.put("buttonColorLight", "255 255 255");
-//                props.put("buttonColorDark", "244 242 232");
-//
-//                props.put("rolloverColor", controlColor);
-//                props.put("rolloverColorLight", controlColor);
-//                props.put("rolloverColorDark", backGround);
-//
-//                props.put("windowTitleForegroundColor", foreGround);
-//                props.put("windowTitleBackgroundColor", backGround);
-//                props.put("windowTitleColorLight", controlColor);
-//                props.put("windowTitleColorDark", backGround);
-//                props.put("windowBorderColor", controlColor);
-//                com.jtattoo.plaf.smart.SmartLookAndFeel.setCurrentTheme(props);
-                UIManager.setLookAndFeel(lookAndFeelClassName);
-            }
             else {
                 UIManager.setLookAndFeel(lookAndFeelClassName);
             }
@@ -597,6 +541,8 @@ public final class SessionMgr {
             // The main frame is not presented until after this time.
             //  No need to update its LaF.
             setModelProperty(DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
+
+            log.info("Configured Look and Feel: {}", lookAndFeelClassName);
         }
         catch (Exception ex) {
             handleException(ex);
@@ -647,13 +593,6 @@ public final class SessionMgr {
         }
     }
 
-//    public void stopExternalHttpListener() {
-//        if (externalHttpListener != null) {
-//            externalHttpListener.stop();
-//            externalHttpListener = null;
-//        }
-//    }
-//
     public void startAxisServer(String url) {
         try {
             if (axisServer == null) {
@@ -666,13 +605,6 @@ public final class SessionMgr {
         }
     }
 
-//    public void stopAxisServer() {
-//        if (axisServer != null) {
-//            axisServer.stop();
-//            axisServer = null;
-//        }
-//    }
-//
     public EmbeddedAxisServer getAxisServer() {
         return axisServer;
     }
@@ -689,22 +621,6 @@ public final class SessionMgr {
         }
     }
 
-//    public void stopWebServer() {
-//        if (webServer != null) {
-//            try {
-//                webServer.stop();
-//                webServer = null;
-//            }
-//            catch (Exception e) {
-//                SessionMgr.getSessionMgr().handleException(e);
-//            }
-//        }
-//    }
-//
-//    public EmbeddedWebServer getWebServer() {
-//        return webServer;
-//    }
-//
     public void saveUserSettings() {
         writeSettings();
     }
