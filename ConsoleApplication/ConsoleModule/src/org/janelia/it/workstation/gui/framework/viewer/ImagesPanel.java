@@ -16,6 +16,7 @@ import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.gui.framework.outline.EntityDetailsPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -432,7 +433,7 @@ public class ImagesPanel extends JScrollPane {
                 button.setAnnotationView(new AnnotationTagCloudPanel() {
                     @Override
                     protected void moreDoubleClicked(MouseEvent e) {
-                        new EntityDetailsDialog().showForRootedEntity(button.getRootedEntity());
+                        new EntityDetailsDialog().showForRootedEntity(button.getRootedEntity(), EntityDetailsPanel.TAB_NAME_ANNOTATIONS);
                     }
                 });
             }
