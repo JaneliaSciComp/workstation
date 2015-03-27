@@ -12,14 +12,10 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.workstation.gui.framework.viewer.ImageCache;
-import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.workstation.shared.util.PrintableComponent;
 import org.janelia.it.workstation.shared.util.PrintableImage;
 import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.openide.windows.Mode;
-import org.openide.windows.TopComponent;
-import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,7 +141,9 @@ public class Browser implements Cloneable {
         entityOutline = new EntityOutline() {
             @Override
             public List<Entity> loadRootList() throws Exception {
-            	return ModelMgr.getModelMgr().getWorkspaces();
+            	List<Entity> workspaces = ModelMgr.getModelMgr().getWorkspaces();
+                loadedWorkspaces(workspaces);
+                return workspaces;
             }
         };
 
@@ -173,47 +171,44 @@ public class Browser implements Cloneable {
         collapsedOutlineView.setLayout(new BorderLayout());
         mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
 
-        // Run this later so that the Browser has finished initializing by the time it runs
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                entityDetailsOutline.activate();
-                entityOutline.activate();
-                // Ontology outline is activated by setting the perspective:
-                setPerspective(Perspective.ImageBrowser);
-
-                SimpleWorker worker = new SimpleWorker() {
-
-                    @Override
-                    protected void doStuff() throws Exception {
-                        generalSearchConfig = new SearchConfiguration();
-                        generalSearchConfig.load();
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        generalSearchDialog = new GeneralSearchDialog(generalSearchConfig);
-                        importDialog = new ImportDialog("Import Files");
-                        patternSearchDialog = new PatternSearchDialog();
-                        giantFiberSearchDialog = new GiantFiberSearchDialog();
-                        arbitraryMaskSearchDialog = new MaskSearchDialog();
-                        screenEvaluationDialog = new ScreenEvaluationDialog();
-                        maaSearchDialog = new MAASearchDialog(Browser.this);
-                        dataSetListDialog = new DataSetListDialog();
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-
-                worker.execute();
-            }
-        });
-
+        resetView();
         
         log.info("Ready.");
+    }
+    
+    /**
+     * Once the workspaces are loaded, we can initialize other UI components.
+     * @param workspaces 
+     */
+    private void loadedWorkspaces(List<Entity> workspaces) {
+        
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                generalSearchConfig = new SearchConfiguration();
+                generalSearchConfig.load();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                generalSearchDialog = new GeneralSearchDialog(generalSearchConfig);
+                importDialog = new ImportDialog("Import Files");
+                patternSearchDialog = new PatternSearchDialog();
+                giantFiberSearchDialog = new GiantFiberSearchDialog();
+                arbitraryMaskSearchDialog = new MaskSearchDialog();
+                screenEvaluationDialog = new ScreenEvaluationDialog();
+                maaSearchDialog = new MAASearchDialog();
+                dataSetListDialog = new DataSetListDialog();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        worker.execute();
     }
 
     public JComponent getMainComponent() {
@@ -438,20 +433,23 @@ public class Browser implements Cloneable {
         return generalSearchDialog;
     }
 
-    public void setPerspective(Perspective perspective) {
-        log.info("Setting perspective: {}", perspective);
-        switch (perspective) {
-            case TaskMonitoring:
-                openOntologyComponent();
-                viewerManager.clearAllViewers();
-                break;
-            case ImageBrowser:
-            default:
-                openOntologyComponent();
-                viewerManager.clearAllViewers();
-                viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
-        }
+    public void resetView() {
+        //openOntologyComponent();
+        viewerManager.clearAllViewers();
+        viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
+        entityDetailsOutline.showNothing();
     }
+
+// TODO: this can probably be deleted, since it's not clear what function it serves that isn't provided by the default RCP behavior. 
+//    private void openOntologyComponent() {
+//        TopComponent win = WindowLocator.getByName(OntologyViewerTopComponent.COMPONENT_NAME);
+//        if (win != null && !win.isOpened()) {
+//            Mode propertiesMode = WindowManager.getDefault().findMode("properties");
+//            if (propertiesMode != null) {
+//                propertiesMode.dockInto(win);
+//            }
+//        }
+//    }
 
     public BrowserPosition resetBrowserPosition() {
 
@@ -505,15 +503,4 @@ public class Browser implements Cloneable {
         this.searchHistory = searchHistory;
         SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, searchHistory);
     }
-    
-    private void openOntologyComponent() {
-        TopComponent win = WindowLocator.getByName(OntologyOutline.ONTOLOGY_COMPONENT_NAME);
-        if (win != null && !win.isOpened()) {
-            Mode propertiesMode = WindowManager.getDefault().findMode("properties");
-            if (propertiesMode != null) {
-                propertiesMode.dockInto(win);
-            }
-        }
-    }
-
 }

@@ -92,7 +92,6 @@ import static org.janelia.it.workstation.gui.framework.outline.EntityContextMenu
  */
 public abstract class OntologyOutline extends EntityTree implements Refreshable, ActivatableView {
 
-    public static final String ONTOLOGY_COMPONENT_NAME = "OntologyViewerTopComponent";
     private static final Logger log = LoggerFactory.getLogger(OntologyOutline.class);
 
     protected List<Entity> entityRootList;
@@ -182,6 +181,18 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         });
     }
 
+    @Override
+    public void activate() {
+        log.info("Activating");
+        super.activate();
+    }
+
+    @Override
+    public void deactivate() {
+        log.info("Deactivating");
+        super.deactivate();
+    }
+    
     /**
      * Override this method to load the root list. This method will be called in
      * a worker thread.

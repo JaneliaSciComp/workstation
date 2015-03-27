@@ -1,10 +1,6 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.top_component;
 
+import java.awt.BorderLayout;
 import java.util.Properties;
 
 import org.janelia.it.workstation.gui.framework.console.Browser;
@@ -20,23 +16,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Top component which displays something.
+ * Top component which displays the data explorer. 
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.dialogs.nb//EntityExplorer//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "EntityExplorerTopComponent",
+        preferredID = EntityExplorerTopComponent.PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "explorer", openAtStartup = true)
+@TopComponent.Registration(mode = "explorer", openAtStartup = true, position = 10)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.EntityExplorerTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window", position = 10)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_EntityExplorerAction",
-        preferredID = "EntityExplorerTopComponent"
+        preferredID = EntityExplorerTopComponent.PREFERRED_ID
 )
 @Messages({
     "CTL_EntityExplorerAction=Data Explorer",
@@ -45,7 +41,10 @@ import org.slf4j.LoggerFactory;
 })
 public final class EntityExplorerTopComponent extends TopComponent implements ExplorerManager.Provider {
 
-    private Logger logger = LoggerFactory.getLogger( EntityExplorerTopComponent.class );
+    private Logger log = LoggerFactory.getLogger( EntityExplorerTopComponent.class );
+    
+    public static final String PREFERRED_ID = "EntityExplorerTopComponent";
+    
     private ExplorerManager mgr = new ExplorerManager();
     
     public EntityExplorerTopComponent() {
@@ -53,20 +52,6 @@ public final class EntityExplorerTopComponent extends TopComponent implements Ex
         setName(Bundle.CTL_EntityExplorerTopComponent());
         setToolTipText(Bundle.HINT_EntityExplorerTopComponent());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);   
-
-        final Browser browser = SessionMgr.getBrowser();
-        if (browser != null) {
-            final EntityOutline entityOutline = browser.getEntityOutline();
-            if (entityOutline != null) {
-                jPanel1.add(entityOutline);
-            } else {
-                logger.error("No entity outline located.");
-            }
-        }
-        else {
-            SessionMgr.getSessionMgr().handleException( new RuntimeException("Failed to obtain browser object for component.") );
-        }
-
     }
     
     /**
@@ -96,8 +81,22 @@ public final class EntityExplorerTopComponent extends TopComponent implements Ex
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
+    
     @Override
     public void componentOpened() {
+        final Browser browser = SessionMgr.getBrowser();
+        if (browser == null) {
+            throw new IllegalStateException("Failed to obtain browser object for component.");
+        }
+        final EntityOutline entityOutline = browser.getEntityOutline();
+        if (entityOutline == null) {
+            throw new IllegalStateException("No entity outline located.");
+        }
+        else {
+            log.debug("Activating entity outline");
+            entityOutline.activate();
+            jPanel1.add(entityOutline, BorderLayout.CENTER);
+        }
     }
 
     @Override

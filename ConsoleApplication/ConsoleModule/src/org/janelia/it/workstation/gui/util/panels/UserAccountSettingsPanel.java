@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.util.panels;
 
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.console.Perspective;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -169,9 +168,7 @@ public class UserAccountSettingsPanel extends JPanel implements PrefEditor {
             }
 
             final Browser browser = SessionMgr.getBrowser();
-            if (browser != null) {
-                browser.setPerspective(Perspective.ImageBrowser);
-            }
+            if (browser != null) browser.resetView();
 
             FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
         }

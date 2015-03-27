@@ -4,7 +4,6 @@ import net.miginfocom.swing.MigLayout;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
-import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -34,34 +33,31 @@ import java.util.concurrent.Callable;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class MAASearchDialog extends ModalDialog implements Accessibility, ActionListener {
+public class MAASearchDialog extends ModalDialog implements ActionListener {
 
     private static final Logger log = LoggerFactory.getLogger(MAASearchDialog.class);
 
-    private Map<String, List<JCheckBox>> intCheckBoxMap = new HashMap<String, List<JCheckBox>>();
-    private Map<String, List<JCheckBox>> distCheckBoxMap = new HashMap<String, List<JCheckBox>>();
-    private Map<String, JLabel> compCountLabelMap = new HashMap<String, JLabel>();
+    private final Map<String, List<JCheckBox>> intCheckBoxMap = new HashMap<>();
+    private final Map<String, List<JCheckBox>> distCheckBoxMap = new HashMap<>();
+    private final Map<String, JLabel> compCountLabelMap = new HashMap<>();
 
-    private Map<String, Entity> compEntityMap = new LinkedHashMap<String, Entity>();
+    private final Map<String, Entity> compEntityMap = new LinkedHashMap<>();
     private Map<String, Integer> countMap;
     private Map<String, Entity> folderMap;
-    private Map<String, List<Long>> cachedSampleEvals = new HashMap<String, List<Long>>();
+    private final Map<String, List<Long>> cachedSampleEvals = new HashMap<>();
 
-    private JScrollPane scrollPane;
-    private JPanel scorePanel;
-    private JLabel selectionLabel;
-    private JButton resetButton;
-    private JTextField folderNameField;
-    private JButton okButton;
+    private final JScrollPane scrollPane;
+    private final JPanel scorePanel;
+    private final JLabel selectionLabel;
+    private final JButton resetButton;
+    private final JTextField folderNameField;
+    private final JButton okButton;
 
     private RootedEntity outputFolder;
-    private Browser browser;
     private RootedEntity saveFolder;
     private boolean returnInsteadOfSaving = false;
 
-    public MAASearchDialog(Browser browser) {
-
-        this.browser = browser;
+    public MAASearchDialog() {
 
         setTitle("MAA Screen Search");
         setPreferredSize(new Dimension(800, 800));
@@ -128,20 +124,12 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
     public void showDialog() {
 
-        if (!isAccessible()) {
-            return;
-        }
-
         this.outputFolder = null;
         this.returnInsteadOfSaving = false;
         packAndShow();
     }
 
     public RootedEntity showDialog(RootedEntity outputFolder) {
-
-        if (!isAccessible()) {
-            return null;
-        }
 
         this.outputFolder = outputFolder;
         this.saveFolder = null;
@@ -152,20 +140,17 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
     public List<Long> showDialog(boolean returnInsteadOfSaving) {
 
-        if (!isAccessible()) {
-            return new ArrayList<Long>();
-        }
-
         this.outputFolder = null;
         this.saveFolder = null;
         this.returnInsteadOfSaving = true;
         packAndShow();
         try {
+            // TODO: this blocks the UI for far too long
             return getSelectedSamples();
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
-            return new ArrayList<Long>();
+            return new ArrayList<>();
         }
     }
 
@@ -173,7 +158,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
         return folderNameField.getText();
     }
 
-    public void init() {
+    private void init() {
 
         log.info("Begin loading");
 
@@ -211,7 +196,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
                     JLabel label = new JLabel(compartment);
                     scorePanel.add(label);
 
-                    List<JCheckBox> intCheckBoxes = new ArrayList<JCheckBox>();
+                    List<JCheckBox> intCheckBoxes = new ArrayList<>();
                     JPanel intCheckboxPanel = new JPanel();
                     for (int i = 0; i <= 5; i++) {
                         JCheckBox checkBox = new JCheckBox("" + i);
@@ -223,7 +208,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
                     scorePanel.add(intCheckboxPanel);
                     intCheckBoxMap.put(compartment, intCheckBoxes);
 
-                    List<JCheckBox> distCheckBoxes = new ArrayList<JCheckBox>();
+                    List<JCheckBox> distCheckBoxes = new ArrayList<>();
                     JPanel distCheckboxPanel = new JPanel();
                     for (int d = 0; d <= 5; d++) {
                         JCheckBox checkBox = new JCheckBox("" + d);
@@ -258,8 +243,8 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
         SimpleWorker worker = new SimpleWorker() {
 
-            private Map<String, Integer> countMap = new HashMap<String, Integer>();
-            private Map<String, Entity> folderMap = new HashMap<String, Entity>();
+            private Map<String, Integer> countMap = new HashMap<>();
+            private Map<String, Entity> folderMap = new HashMap<>();
 
             @Override
             protected void doStuff() throws Exception {
@@ -432,10 +417,10 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
     private List<Long> getSelectedSamples() throws Exception {
 
-        Set<Long> consensus = new HashSet<Long>();
+        Set<Long> consensus = new HashSet<>();
 
         for (String compartment : compEntityMap.keySet()) {
-            Set<Long> compSampleIds = new LinkedHashSet<Long>();
+            Set<Long> compSampleIds = new LinkedHashSet<>();
             boolean compChecked = false;
 
             List<JCheckBox> intCheckboxes = intCheckBoxMap.get(compartment);
@@ -489,7 +474,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
             }
         }
 
-        return new ArrayList<Long>(new LinkedHashSet<Long>(consensus));
+        return new ArrayList<>(new LinkedHashSet<>(consensus));
     }
 
     private List<Long> getSampleEvals(String key) throws Exception {
@@ -497,17 +482,17 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
         List<Long> samples = cachedSampleEvals.get(key);
 
         if (samples == null) {
-            samples = new ArrayList<Long>();
+            samples = new ArrayList<>();
 
             Entity distFolder = folderMap.get(key);
-            List<Long> maskIds = new ArrayList<Long>();
+            List<Long> maskIds = new ArrayList<>();
             for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(distFolder)) {
                 maskIds.add(ed.getChildEntity().getId());
             }
 
             if (!maskIds.isEmpty()) {
-                List<String> upMapping = new ArrayList<String>();
-                List<String> downMapping = new ArrayList<String>();
+                List<String> upMapping = new ArrayList<>();
+                List<String> downMapping = new ArrayList<>();
                 upMapping.add(EntityConstants.TYPE_FOLDER);
 				// TODO: this will be necessary (along with other changes) once Sean's entity restructuring is complete
                 //upMapping.add(EntityConstants.TYPE_FOLDER);
@@ -529,7 +514,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
         return samples;
     }
 
-    public boolean isAccessible() {
+    public static boolean isAccessible() {
         return "user:jenetta".equals(SessionMgr.getSubjectKey());
     }
 }

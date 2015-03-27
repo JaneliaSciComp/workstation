@@ -1,12 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.top_component;
 
 import java.awt.BorderLayout;
 import java.util.Properties;
+import org.janelia.it.workstation.gui.framework.console.Browser;
 
 import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -18,27 +14,25 @@ import org.openide.util.NbBundle.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.GroupLayout;
-import javax.swing.JPanel;
 
 /**
- * Top component which displays something.
+ * Top component for displaying the ontology tree. 
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.top_component//OntologyViewer//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = OntologyOutline.ONTOLOGY_COMPONENT_NAME,
+        preferredID = OntologyViewerTopComponent.PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "properties", openAtStartup = true, position = 100)
+@TopComponent.Registration(mode = "properties", openAtStartup = true, position = 0)
 @ActionID(category = "Window", id = "OntologyViewerTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window", position = 40)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_OntologyViewerAction",
-        preferredID = OntologyOutline.ONTOLOGY_COMPONENT_NAME
+        preferredID = OntologyViewerTopComponent.PREFERRED_ID
 )
 @Messages({
     "CTL_OntologyViewerAction=Ontology Editor",
@@ -47,12 +41,15 @@ import javax.swing.JPanel;
 })
 public final class OntologyViewerTopComponent extends TopComponent {
 
-    private Logger logger = LoggerFactory.getLogger( OntologyViewerTopComponent.class );
+    private Logger log = LoggerFactory.getLogger( OntologyViewerTopComponent.class );
+    
+    public static final String PREFERRED_ID = "OntologyViewerTopComponent";
+    
     public OntologyViewerTopComponent() {
         initComponents();
         setName(Bundle.CTL_OntologyViewerTopComponent());
         setToolTipText(Bundle.HINT_OntologyViewerTopComponent());
-        putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
+//        putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
 
     }
@@ -87,20 +84,23 @@ public final class OntologyViewerTopComponent extends TopComponent {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
+    
     @Override
     public void componentOpened() {
-        final OntologyOutline ontologyOutline =
-                SessionMgr.getBrowser().getOntologyOutline();
-        if ( ontologyOutline == null ) {
-            logger.error("Null ontology outline.");
+        final Browser browser = SessionMgr.getBrowser();
+        if (browser == null) {
+            throw new IllegalStateException("Failed to obtain browser object for component.");
+        }
+        final OntologyOutline ontologyOutline = browser.getOntologyOutline();
+        if (ontologyOutline == null) {
+            throw new IllegalStateException("No ontology outline located.");
         }
         else {
+            log.debug("Activating ontology outline");
             ontologyOutline.activate();
+            jPanel1.add(ontologyOutline, BorderLayout.CENTER);
         }
-        jPanel1.add( ontologyOutline, BorderLayout.CENTER );
-
     }
-
 
     @Override
     public void componentClosed() {

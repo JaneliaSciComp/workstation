@@ -126,7 +126,7 @@ public final class ModelMgr {
     }
 
     public void addModelMgrObserver(ModelMgrObserver mml) {
-        if (null != mml) {
+        if (null != mml && !modelMgrObservers.contains(mml)) {
             modelMgrObservers.add(mml);
         }
     }

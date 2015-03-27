@@ -19,6 +19,17 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.security.ProtectionDomain;
+import org.janelia.it.workstation.gui.dialogs.DataSetListDialog;
+import org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog;
+import org.janelia.it.workstation.gui.dialogs.ImportDialog;
+import org.janelia.it.workstation.gui.dialogs.MAASearchDialog;
+import org.janelia.it.workstation.gui.dialogs.MaskSearchDialog;
+import org.janelia.it.workstation.gui.dialogs.PatternSearchDialog;
+import org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog;
+import org.janelia.it.workstation.gui.dialogs.search.GeneralSearchDialog;
+import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
  * Created by IntelliJ IDEA.
@@ -56,11 +67,8 @@ public class ConsoleApp {
             final boolean internal = (versionString != null) && (versionString.toLowerCase().contains("internal"));
 
             sessionMgr.setApplicationName(ConsoleProperties.getString("console.Title"));
-            sessionMgr.setApplicationVersion(ConsoleProperties.getString("console.versionNumber"));
+            sessionMgr.setApplicationVersion(versionString);
             sessionMgr.setNewBrowserImageIcon(Utils.getClasspathImage("workstation_128_icon.png"));
-            sessionMgr.startExternalHttpListener(30000);
-            sessionMgr.startAxisServer(ConsoleProperties.getString("console.WebServiceURL"));
-            sessionMgr.startWebServer(ConsoleProperties.getInt("console.WebServer.port"));
             sessionMgr.setModelProperty("ShowInternalDataSourceInDialogs", internal);
             sessionMgr.setModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY, false);
             sessionMgr.setModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY, false);
@@ -116,9 +124,32 @@ public class ConsoleApp {
             modelMgr.initErrorOntology();
             modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
                         
-            Component mainFrame = SessionMgr.getMainFrame();
             sessionMgr.newBrowser();
-            mainFrame.setVisible(true);
+            
+            log.info("Displaying main frame");
+            SessionMgr.getMainFrame().setVisible(true);
+
+            // Once the main frame is visible, we can do some things in the background
+            SimpleWorker worker = new SimpleWorker() {
+
+                @Override
+                protected void doStuff() throws Exception {
+                    //sessionMgr.startExternalHttpListener(30000);
+                    sessionMgr.startAxisServer(ConsoleProperties.getString("console.WebServiceURL"));
+                    sessionMgr.startWebServer(ConsoleProperties.getInt("console.WebServer.port"));
+                }
+
+                @Override
+                protected void hadSuccess() {
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+
+            worker.execute();
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);

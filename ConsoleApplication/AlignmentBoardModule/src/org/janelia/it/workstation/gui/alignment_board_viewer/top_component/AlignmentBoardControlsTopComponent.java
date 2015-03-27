@@ -1,15 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.alignment_board_viewer.top_component;
 
 import java.awt.BorderLayout;
 import java.util.Properties;
-import javax.swing.GroupLayout;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.LayersPanel;
@@ -30,16 +23,16 @@ import org.slf4j.LoggerFactory;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "AlignmentBoardControlsTopComponent",
+        preferredID = AlignmentBoardControlsTopComponent.PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "properties", openAtStartup = false)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position = 201)
 @ActionID(category = "Window", id = "AlignmentBoardControlsTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window", position = 201)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AlignmentBoardControlsAction",
-        preferredID = "AlignmentBoardControlsTopComponent"
+        preferredID = AlignmentBoardControlsTopComponent.PREFERRED_ID
 )
 @Messages({
     "CTL_AlignmentBoardControlsAction=Alignment Board Controls",
@@ -49,6 +42,9 @@ import org.slf4j.LoggerFactory;
 public final class AlignmentBoardControlsTopComponent extends TopComponent {
 
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsTopComponent.class );
+    
+    public static final String PREFERRED_ID = "AlignmentBoardControlsTopComponent";
+    
     private AlignmentBoardControlsPanel cPanel;
     private JSplitPane splitPane;
             
