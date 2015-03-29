@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.alignment_board_viewer.top_component;
 
 import com.google.common.eventbus.Subscribe;
@@ -35,16 +30,16 @@ import org.slf4j.LoggerFactory;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "AlignmentBoardTopComponent",
+        preferredID = AlignmentBoardTopComponent.PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 300)
+@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 200)
 @ActionID(category = "Window", id = "AlignmentBoardTopComponent")
-@ActionReference(path = "Menu/Window", position = 300 )
+@ActionReference(path = "Menu/Window", position = 200 )
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AlignmentBoardAction",
-        preferredID = "AlignmentBoardTopComponent"
+        preferredID = AlignmentBoardTopComponent.PREFERRED_ID
 )
 @Messages({
     "CTL_AlignmentBoardAction=Alignment Board",
@@ -53,9 +48,12 @@ import org.slf4j.LoggerFactory;
 })
 public final class AlignmentBoardTopComponent extends TopComponent {
 
-    private AlignmentBoardPanel alignmentBoardPanel;
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardTopComponent.class );
-            
+
+    public static final String PREFERRED_ID = "AlignmentBoardTopComponent";
+    
+    private AlignmentBoardPanel alignmentBoardPanel;
+    
     public AlignmentBoardTopComponent() {
         initComponents();
         alignmentBoardPanel = new AlignmentBoardPanel();

@@ -12,7 +12,6 @@ import java.util.List;
 import javax.swing.*;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
@@ -32,7 +31,7 @@ import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DataSetListDialog extends ModalDialog implements Accessibility, Refreshable {
+public class DataSetListDialog extends ModalDialog implements Refreshable {
 
     private JLabel loadingLabel;
     private JPanel mainPanel;
@@ -299,9 +298,5 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, Ref
 
     public void totalRefresh() {
     	throw new UnsupportedOperationException();
-    }
-    
-    public boolean isAccessible() {
-    	return true;
     }
 }

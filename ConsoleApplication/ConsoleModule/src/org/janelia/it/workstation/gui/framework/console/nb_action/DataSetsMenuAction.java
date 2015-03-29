@@ -38,15 +38,12 @@ public final class DataSetsMenuAction extends AbstractAction implements Presente
     public JMenuItem getMenuPresenter() {
         Browser browser = SessionMgr.getBrowser();
         final DataSetListDialog dataSetListDialog = browser.getDataSetListDialog();
-        if (dataSetListDialog.isAccessible()) {
-            JMenuItem menuItem = new JMenuItem(DATA_SETS_ITEM);
-            menuItem.addActionListener( new ActionListener() {
-                public void actionPerformed( ActionEvent ae ) {
-                    new ServicesActionDelegate().presentDataSetListDialog();
-                }
-            });
-            return menuItem;
-        }
-        return null;
+        JMenuItem menuItem = new JMenuItem(DATA_SETS_ITEM);
+        menuItem.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent ae ) {
+                SessionMgr.getBrowser().getDataSetListDialog().showDialog();
+            }
+        });
+        return menuItem;
     }
 }

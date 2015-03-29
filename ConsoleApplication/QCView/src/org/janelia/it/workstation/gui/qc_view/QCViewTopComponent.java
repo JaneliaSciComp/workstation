@@ -21,12 +21,12 @@ import org.openide.util.NbBundle.Messages;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = false)
+@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 100)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.qc_view.QCViewTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window", position = 400)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_QCViewAction",
-        preferredID = "QCViewTopComponent"
+        preferredID = QCViewTopComponent.PREFERRED_ID
 )
 @Messages({
     "CTL_QCViewAction=Slide View",

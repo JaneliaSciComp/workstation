@@ -54,6 +54,8 @@ public abstract class IconPanel extends Viewer {
         this.labelSizeLimitedByImageSize = labelSizeLimitedByImageSize;
     }
 
+    public abstract IconDemoToolbar getToolbar();
+
     /**
      * Clear the view.
      */

@@ -92,8 +92,7 @@ public class LocalFileCache {
         this.weigher = new Weigher<URL, CachedFile>() {
 
             @Override
-            public int weigh(URL key,
-                             CachedFile value) {
+            public int weigh(URL key, CachedFile value) {
 
                 long kiloBytes = value.getKilobytes();
 

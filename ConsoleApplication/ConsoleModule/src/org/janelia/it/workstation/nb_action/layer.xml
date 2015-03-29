@@ -60,6 +60,7 @@
     </folder>
     <folder name="Windows2">
         <folder name="Modes">
+            <file name="explorer.wsmode" url="Modes/explorer.wsmode"/>
             <file name="appExplorerBtm.wsmode" url="Modes/appExplorerBtm.wsmode"/>
         </folder>
     </folder>

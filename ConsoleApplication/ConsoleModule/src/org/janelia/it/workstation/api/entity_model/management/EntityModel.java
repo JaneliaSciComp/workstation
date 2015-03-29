@@ -1060,7 +1060,7 @@ public class EntityModel {
     public List<Entity> getWorkspaces() throws Exception {
         synchronized (this) {
             if (workspaceCache.isEmpty()) {
-                log.info("Getting workspaces from database");
+                log.debug("Getting workspaces from database");
                 for (Entity workspace : entityFacade.getWorkspaces()) {
                     loadLazyEntity(workspace, false);
                     Entity cachedRoot = putOrUpdate(workspace, false);

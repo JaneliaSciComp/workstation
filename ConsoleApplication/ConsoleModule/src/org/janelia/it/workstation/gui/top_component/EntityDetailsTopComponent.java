@@ -1,12 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.top_component;
 
 import java.awt.BorderLayout;
 import java.util.Properties;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.outline.EntityDetailsOutline;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -14,25 +11,27 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Top component which displays something.
+ * Top component which displays the data inspector.
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.dialogs.nb//EntityDetails//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "EntityDetailsTopComponent",
+        preferredID = EntityDetailsTopComponent.PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = true, position = 100)
+@TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = true, position = 20)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.EntityDetailsTopComponent")
-@ActionReference(path = "Menu/Window", position = 100 )
+@ActionReference(path = "Menu/Window", position = 20)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_EntityDetailsAction",
-        preferredID = "EntityDetailsTopComponent"
+        preferredID = EntityDetailsTopComponent.PREFERRED_ID
 )
 @Messages({
     "CTL_EntityDetailsAction=Data Inspector",
@@ -41,11 +40,14 @@ import org.openide.util.NbBundle.Messages;
 })
 public final class EntityDetailsTopComponent extends TopComponent {
 
+    private Logger log = LoggerFactory.getLogger( EntityDetailsTopComponent.class );
+    
+    public static final String PREFERRED_ID = "EntityDetailsTopComponent";
+    
     public EntityDetailsTopComponent() {
         initComponents();
         setName(Bundle.CTL_EntityDetailsTopComponent());
         setToolTipText(Bundle.HINT_EntityDetailsTopComponent());
-        jPanel1.add( SessionMgr.getBrowser().getEntityDetailsOutline(), BorderLayout.CENTER );
     }
 
     /**
@@ -75,9 +77,22 @@ public final class EntityDetailsTopComponent extends TopComponent {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
+    
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        final Browser browser = SessionMgr.getBrowser();
+        if (browser == null) {
+            throw new IllegalStateException("Failed to obtain browser object for component.");
+        }
+        final EntityDetailsOutline entityDetailsOutline = browser.getEntityDetailsOutline();
+        if (entityDetailsOutline == null) {
+            throw new IllegalStateException("No entity details outline located.");
+        }
+        else {
+            log.debug("Activating entity details outline");
+            entityDetailsOutline.activate();
+            jPanel1.add(entityDetailsOutline, BorderLayout.CENTER);
+        }
     }
 
     @Override

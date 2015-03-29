@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
-import org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog;
-import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -35,17 +33,19 @@ public final class ScreenEvaluationMenuAction extends AbstractAction implements 
 
     @Override
     public JMenuItem getMenuPresenter() {
-        Browser browser = SessionMgr.getBrowser();
-        final ScreenEvaluationDialog screenEvaluationDialog = browser.getScreenEvaluationDialog();
-        if (screenEvaluationDialog.isAccessible()) {
+        if (true || isAccessible()) {
             JMenuItem menuItem = new JMenuItem(SCREEN_EVAL_ITEM);
             menuItem.addActionListener( new ActionListener() {
                 public void actionPerformed( ActionEvent ae ) {
-                    new ServicesActionDelegate().presentScreenEvalDialog();
+                    SessionMgr.getBrowser().getScreenEvaluationDialog().showDialog();
                 }
             });
             return menuItem;
         }
         return null;
+    }
+
+    public static boolean isAccessible() {
+        return "user:jenetta".equals(SessionMgr.getSubjectKey());
     }
 }

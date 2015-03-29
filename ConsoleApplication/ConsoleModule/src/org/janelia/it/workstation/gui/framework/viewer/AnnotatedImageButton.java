@@ -287,7 +287,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         height *= lines;
         if (lines>1) {
             // Some extra padding for multiline titles
-            height += lines;
+            height += lines*2;
         }
         return height;
     }

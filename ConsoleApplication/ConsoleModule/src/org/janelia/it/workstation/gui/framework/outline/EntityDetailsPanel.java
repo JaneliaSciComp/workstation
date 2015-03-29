@@ -34,7 +34,6 @@ import org.janelia.it.workstation.gui.dialogs.EntityActorPermissionDialog;
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration.AttrGroup;
-import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
@@ -64,7 +63,7 @@ import com.google.common.collect.ComparisonChain;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class EntityDetailsPanel extends JPanel implements Accessibility, Refreshable {
+public class EntityDetailsPanel extends JPanel implements Refreshable {
 
     private static final Logger log = LoggerFactory.getLogger(EntityDetailsPanel.class);
 
@@ -650,11 +649,6 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
     @Override
     public void totalRefresh() {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isAccessible() {
-        return true;
     }
 
     private class AttributeValue {

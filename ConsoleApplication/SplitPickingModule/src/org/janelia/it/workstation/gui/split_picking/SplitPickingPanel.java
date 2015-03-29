@@ -418,7 +418,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         log.info("Refreshing split picker");
 
         MAASearchDialog maaSearchDialog = getMAASearchDialog();
-        maaSearchButton.setVisible(maaSearchDialog != null && maaSearchDialog.isAccessible());
+        maaSearchButton.setVisible(maaSearchDialog != null && MAASearchDialog.isAccessible());
 
         final IconDemoPanel mainViewer = getMainViewer();
         final IconDemoPanel secViewer = getSecondaryViewer();

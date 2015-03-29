@@ -8,8 +8,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.net.URI;
 import java.util.ArrayList;
@@ -27,7 +25,6 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.PopupMenuEvent;
@@ -68,7 +65,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
     // Search state
     protected SearchConfiguration searchConfig;
     protected Entity searchRoot;
-    protected List<SearchCriteria> searchCriteriaList = new ArrayList<SearchCriteria>();
+    protected List<SearchCriteria> searchCriteriaList = new ArrayList<>();
     protected String searchString = "";
       
     public SearchParametersPanel() {
