@@ -15,63 +15,62 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This action accepts all computational annotations on an entity or multiple entities, "curating" them into normal annotations. 
+ * This action accepts all computational annotations on an entity or multiple entities, "curating" them into normal annotations.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class AcceptComputationalAnnotationsAction implements Action {
 
-	private List<String> selectedEntities;
+    private final List<String> selectedEntities;
 
     public AcceptComputationalAnnotationsAction() {
-        selectedEntities = new ArrayList<String>(
+        selectedEntities = new ArrayList<>(
                 ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
                         SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectionCategory()));
     }
 
     @Override
     public String getName() {
-    	return selectedEntities.size()>1?"  Accept All Computational Annotations on "+selectedEntities.size()+" Items":"  Accept All Computational Annotations on This Item";
+        return selectedEntities.size() > 1 ? "  Accept All Computational Annotations on " + selectedEntities.size() + " Items" : "  Accept All Computational Annotations on This Item";
     }
-	
+
     @Override
     public void doAction() {
 
-    	if (selectedEntities.size()>1) {
+        if (selectedEntities.size() > 1) {
             int acceptConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to accept all computational annotations on all selected entities?", "Accept Annotations", JOptionPane.YES_NO_OPTION);
             if (acceptConfirmation != 0) {
                 return;
             }
-    	}
+        }
 
         try {
-        	
-        	// TODO: this should really use the ModelMgr
-        	final Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewer();
-        	if (viewer instanceof IconDemoPanel) {
-        		IconDemoPanel iconDemoPanel = (IconDemoPanel)viewer;
-            	final Annotations annotations = iconDemoPanel.getAnnotations();
+            // TODO: this should really use the ModelMgr
+            final Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewer();
+            if (viewer instanceof IconDemoPanel) {
+                IconDemoPanel iconDemoPanel = (IconDemoPanel) viewer;
+                final Annotations annotations = iconDemoPanel.getAnnotations();
                 final Map<Long, List<OntologyAnnotation>> annotationMap = annotations.getFilteredAnnotationMap();
-                
+
                 SimpleWorker worker = new SimpleWorker() {
 
                     @Override
                     protected void doStuff() throws Exception {
-                        int i=1;
-            			for(String selectedId : selectedEntities) {
-            				RootedEntity rootedEntity = viewer.getRootedEntityById(selectedId);
+                        int i = 1;
+                        for (String selectedId : selectedEntities) {
+                            RootedEntity rootedEntity = viewer.getRootedEntityById(selectedId);
                             List<OntologyAnnotation> entityAnnotations = annotationMap.get(rootedEntity.getEntity().getId());
-                            if (entityAnnotations==null) {
-                            	continue;
+                            if (entityAnnotations == null) {
+                                continue;
                             }
-                    		ModelMgr.getModelMgr().acceptComputationAnnotation(rootedEntity.getEntity().getId(), entityAnnotations);
-        		            setProgress(i++, selectedEntities.size());
-                    	}
+                            ModelMgr.getModelMgr().acceptComputationAnnotation(rootedEntity.getEntity().getId(), entityAnnotations);
+                            setProgress(i++, selectedEntities.size());
+                        }
                     }
 
                     @Override
                     protected void hadSuccess() {
-        				// No need to do anything
+                        // No need to do anything
                     }
 
                     @Override
@@ -82,11 +81,11 @@ public class AcceptComputationalAnnotationsAction implements Action {
 
                 worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Accepting Annotations", "", 0, 100));
                 worker.execute();
-        	}
+            }
         }
         catch (Exception ex) {
-        	SessionMgr.getSessionMgr().handleException(ex);
+            SessionMgr.getSessionMgr().handleException(ex);
         }
-    	
+
     }
 }

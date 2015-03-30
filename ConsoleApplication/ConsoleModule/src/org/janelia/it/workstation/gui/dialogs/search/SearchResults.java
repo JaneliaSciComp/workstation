@@ -15,11 +15,11 @@ public class SearchResults {
 
     private static final Logger log = LoggerFactory.getLogger(SearchResults.class);
 
-    protected final List<ResultPage> pages = new ArrayList<ResultPage>();
-    protected final Set<Long> allResultIds = new HashSet<Long>();
-    protected final Set<Long> allMappedIds = new HashSet<Long>();
-    protected final Map<Long, Integer> resultIdToRowIndex = new HashMap<Long, Integer>();
-    protected final Map<Long, Integer> mappedIdToRowIndex = new HashMap<Long, Integer>();
+    protected final List<ResultPage> pages = new ArrayList<>();
+    protected final Set<Long> allResultIds = new HashSet<>();
+    protected final Set<Long> allMappedIds = new HashSet<>();
+    protected final Map<Long, Integer> resultIdToRowIndex = new HashMap<>();
+    protected final Map<Long, Integer> mappedIdToRowIndex = new HashMap<>();
 
     protected ResultTreeMapping resultTreeMapping;
     protected int numLoaded = 0;

@@ -32,7 +32,7 @@ import org.janelia.it.workstation.api.entity_model.management.EntitySelectionMod
  */
 public class AnnotateAction extends OntologyElementAction {
 	
-	private static final Logger log = LoggerFactory.getLogger(AnnotateAction.class);
+    private static final Logger log = LoggerFactory.getLogger(AnnotateAction.class);
 	
     private Callable<Void> doSuccess = null;
 

@@ -19,7 +19,7 @@ import org.janelia.it.workstation.gui.framework.outline.EntityTree;
  */
 public class MultiTreeEntityChooser extends AbstractChooser<EntityData> {
 
-    private final List<String> uniqueIds = new ArrayList<String>();
+    private final List<String> uniqueIds = new ArrayList<>();
     private final JTabbedPane tabbedPane;
     
     public MultiTreeEntityChooser(String title, List<EntityTree> entityTrees) {
@@ -36,8 +36,9 @@ public class MultiTreeEntityChooser extends AbstractChooser<EntityData> {
         addChooser(tabbedPane);
     }
 
+    @Override
     protected List<EntityData> choosePressed() {
-    	List<EntityData> chosen = new ArrayList<EntityData>();
+    	List<EntityData> chosen = new ArrayList<>();
     	EntityTree entityTree = getSelectedTree();
         if (entityTree==null) return chosen;
     	TreePath[] selectionPaths = entityTree.getDynamicTree().getTree().getSelectionPaths();
