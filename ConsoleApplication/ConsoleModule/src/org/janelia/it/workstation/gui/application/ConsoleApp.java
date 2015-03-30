@@ -17,18 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import java.awt.*;
 import java.security.ProtectionDomain;
-import org.janelia.it.workstation.gui.dialogs.DataSetListDialog;
-import org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog;
-import org.janelia.it.workstation.gui.dialogs.ImportDialog;
-import org.janelia.it.workstation.gui.dialogs.MAASearchDialog;
-import org.janelia.it.workstation.gui.dialogs.MaskSearchDialog;
-import org.janelia.it.workstation.gui.dialogs.PatternSearchDialog;
-import org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog;
-import org.janelia.it.workstation.gui.dialogs.search.GeneralSearchDialog;
-import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
-import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
