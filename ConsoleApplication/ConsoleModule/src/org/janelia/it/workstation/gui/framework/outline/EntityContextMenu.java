@@ -57,6 +57,7 @@ import org.janelia.it.workstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
+import org.janelia.it.workstation.gui.framework.actions.GoToRelatedEntityAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
@@ -536,17 +537,30 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple) return null;
         
         JMenu relatedMenu = new JMenu("  Go To Related");
-        Entity entity = rootedEntity.getEntity();
+        final Entity entity = rootedEntity.getEntity();
         String type = entity.getEntityTypeName();
-        if (type.equals(EntityConstants.TYPE_NEURON_FRAGMENT) || type.equals(EntityConstants.TYPE_LSM_STACK)
-                || type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)
-                || type.equals(EntityConstants.TYPE_CURATED_NEURON)
-                || type.equals(EntityConstants.TYPE_CURATED_NEURON_COLLECTION)) {
-            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT,
-                                EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT));
+        
+        if (EntityConstants.TYPE_NEURON_FRAGMENT.equals(type)
+                || EntityConstants.TYPE_LSM_STACK.equals(type)
+                // TODO: this should be more specific, but right now we're only using virtual entities to represent LSMs
+                || EntityConstants.IN_MEMORY_TYPE_VIRTUAL_ENTITY.equals(type) 
+                || EntityConstants.TYPE_PIPELINE_RUN.equals(type) 
+                || EntityConstants.TYPE_SAMPLE_PROCESSING_RESULT.equals(type) 
+                || EntityConstants.TYPE_ALIGNMENT_RESULT.equals(type) 
+                || EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT.equals(type)
+                || EntityConstants.TYPE_CURATED_NEURON.equals(type)
+                || EntityConstants.TYPE_CURATED_NEURON_COLLECTION.equals(type)
+                || EntityConstants.TYPE_CELL_COUNTING_RESULT.equals(type)) {
             add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SAMPLE, EntityConstants.TYPE_SAMPLE));
         }
-        else if (entity.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
+        
+        if (EntityConstants.TYPE_NEURON_FRAGMENT.equals(type)
+                || EntityConstants.TYPE_CURATED_NEURON.equals(type)
+                || EntityConstants.TYPE_CURATED_NEURON_COLLECTION.equals(type)) {
+            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT,
+                                EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT));
+        }
+        else if (EntityConstants.TYPE_FLY_LINE.equals(type)) {
             add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE));
             add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE));
             add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_BALANCED_FLYLINE));
@@ -558,9 +572,17 @@ public class EntityContextMenu extends JPopupMenu {
         else if (EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)) {
             add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_FLY_LINE, EntityConstants.TYPE_FLY_LINE));
         }
-        else if (EntityConstants.TYPE_CELL_COUNTING_RESULT.equals(type)) {
-            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SAMPLE, EntityConstants.TYPE_SAMPLE));
-        }
+        
+        JMenuItem showAllPathsItem = new JMenuItem("  Show All Paths...");
+        showAllPathsItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                GoToRelatedEntityAction action = new GoToRelatedEntityAction(entity, null);
+                action.doAction();
+            }
+        });
+        relatedMenu.add(showAllPathsItem);
+        
         return relatedMenu;
     }
 

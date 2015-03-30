@@ -49,6 +49,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Executor;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 public final class ModelMgr {
 
@@ -1267,4 +1268,41 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, dimensions);
     }
 
+    public List<List<Object>> getRootPaths(Entity entity, Set<Long> visited) throws Exception {
+
+        List<List<Object>> rootPaths = new ArrayList<>();
+        if (!EntityConstants.TYPE_WORKSPACE.equals(entity.getEntityTypeName()) && visited.contains(entity.getId())) {
+            return rootPaths;
+        }
+        visited.add(entity.getId());
+
+        List<EntityData> parents = ModelMgr.getModelMgr().getParentEntityDatas(entity.getId());
+
+        if (parents.isEmpty()) {
+            List<Object> path = new ArrayList<>();
+            path.add(entity);
+            rootPaths.add(path);
+            return rootPaths;
+        }
+
+        for (EntityData parentEd : parents) {
+            Entity parent = parentEd.getParentEntity();
+
+            if (EntityUtils.isHidden(parentEd)) {
+                // Skip this path, because it should be hidden from the user
+                log.debug("Skipping path becuase it's hidden: " + parent.getName() + "-(" + parentEd.getEntityAttrName() + ")->" + entity.getName());
+                continue;
+            }
+
+            parent = ModelMgr.getModelMgr().getEntityById(parent.getId());
+            List<List<Object>> parentPaths = getRootPaths(parent, visited);
+            for (List<Object> parentPath : parentPaths) {
+                parentPath.add(parentEd);
+                parentPath.add(entity);
+                rootPaths.add(parentPath);
+            }
+        }
+
+        return rootPaths;
+    }
 }
