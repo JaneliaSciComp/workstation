@@ -329,7 +329,16 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
 
                 switch (criteria.getOp()) {
                     case CONTAINS:
-                        aux.append(value1);
+                        if (sa.getDataType().equals(DataType.DATE)) {
+                            aux.append("[");
+                            aux.append(value1);
+                            aux.append(" TO ");
+                            aux.append(value1);
+                            aux.append("+1DAY]");
+                        }
+                        else {
+                            aux.append(value1);    
+                        }                        
                         break;
                     case BETWEEN:
                         aux.append("[");
@@ -392,7 +401,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         model.insertElementAt(searchString, 0);
         inputField.setSelectedItem(searchString);
         
-        List<String> searchHistory = new ArrayList<String>();
+        List<String> searchHistory = new ArrayList<>();
         for (int i = 0; i < model.getSize(); i++) {
             searchHistory.add((String) model.getElementAt(i));
         }        
