@@ -1117,7 +1117,11 @@ called from a  SimpleWorker thread.
         fireGlobalAnnotationColorChanged(color);
     }
 
-    public void setNeuronStyle(TmNeuron neuron, NeuronStyle style) throws IOException {
+    /**
+     * change the style for a neuron; synchronized because it could be
+     * called from multiple threads, and the update is not atomic
+     */
+    public synchronized void setNeuronStyle(TmNeuron neuron, NeuronStyle style) throws IOException {
         Map<Long, NeuronStyle> neuronStyleMap = getNeuronStyleMap();
         neuronStyleMap.put(neuron.getId(), style);
         setNeuronStyleMap(neuronStyleMap);
@@ -1173,9 +1177,10 @@ called from a  SimpleWorker thread.
 
     /**
      * store the neuron ID to NeuronStyle map in the preferences, overwriting
-     * previous entry
+     * previous entry; private because we want it only being access via the
+     * synchronized method setNeuronStyle in this class
      */
-    public void setNeuronStyleMap(Map<Long, NeuronStyle> neuronStyleMap) {
+    private void setNeuronStyleMap(Map<Long, NeuronStyle> neuronStyleMap) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
 

@@ -273,6 +273,18 @@ public class AnnotationPanel extends JPanel
                 annotationMgr.setNeuronVisibility(false);
             }
         });
+        neuronToolMenu.add(new AbstractAction("Show all neurons") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                annotationMgr.setAllNeuronVisibility(true);
+            }
+        });
+        neuronToolMenu.add(new AbstractAction("Hide all neurons") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                annotationMgr.setAllNeuronVisibility(false);
+            }
+        });
         ExportCurrentSWCAction exportCurrentSWCAction = new ExportCurrentSWCAction();
         exportCurrentSWCAction.putValue(Action.NAME, "Export SWC file...");
         exportCurrentSWCAction.putValue(Action.SHORT_DESCRIPTION,

@@ -1086,6 +1086,20 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     }
 
+    public void setAllNeuronVisibility(boolean visibility) {
+        // feels like I should get the full NeuronStyle map here, but then I'd
+        //  have to worry about missing entries, etc.; so go simple at the
+        //  expense of a few more db calls
+        NeuronStyle style;
+        for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+            style = getNeuronStyle(neuron);
+            if (style.isVisible() != visibility) {
+                style.setVisible(visibility);
+                setNeuronStyle(neuron, style);
+            }
+        }
+    }
+
     /**
      * as with chooseNeuronStyle, multiple versions allow for multiple entry points
      */

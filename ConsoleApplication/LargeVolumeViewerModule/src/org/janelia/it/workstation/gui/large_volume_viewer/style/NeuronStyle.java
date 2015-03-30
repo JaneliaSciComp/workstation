@@ -130,4 +130,9 @@ public class NeuronStyle {
 
         return rootNode;
     }
+
+    @Override
+    public String toString() {
+        return "NeuronStyle(" + color + ", visibility: " + visible + ")";
+    }
 }
