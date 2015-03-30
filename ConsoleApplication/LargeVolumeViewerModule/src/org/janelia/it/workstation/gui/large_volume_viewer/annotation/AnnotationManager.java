@@ -1018,7 +1018,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
         if (annotationModel.getCurrentNeuron() == null) {
-            presentError("You must select a neuron prior to performing this action.", "No neuron selected");
+            presentError("You must select a neuron to set its style.", "No neuron selected");
         } else {
             chooseNeuronStyle(annotationModel.getCurrentNeuron());
         }
@@ -1087,7 +1087,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
         if (annotationModel.getCurrentNeuron() == null) {
-            presentError("You must select a neuron prior to performing this action.", "No neuron selected");
+            presentError("You must select a neuron to hide or show it.", "No neuron selected");
         } else {
             setNeuronVisibility(annotationModel.getCurrentNeuron(), visibility);
         }
@@ -1132,7 +1132,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void saveColorModel() {
-        savePreference(AnnotationsConstants.PREF_COLOR_MODEL, quadViewUi.imageColorModelAsString());
+        if (annotationModel.getCurrentWorkspace() == null) {
+            presentError("You must create a workspace to be able to save the color model!", "No workspace");
+        } else {
+            savePreference(AnnotationsConstants.PREF_COLOR_MODEL, quadViewUi.imageColorModelAsString());
+        }
     }
 
     public void setAutomaticRefinement(final boolean state) {
