@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.dataview;
 
 import org.janelia.it.workstation.nb_action.EntityAcceptor;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.Group;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;

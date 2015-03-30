@@ -221,7 +221,7 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
             protected void doStuff() throws Exception {
                 fullEntity = ModelMgr.getModelMgr().getEntityById(entity.getId());
                 titleLabel.setText("Entity: " + entity.getEntityTypeName() + " (" + entity.getName() + ")");
-                List<Entity> entities = new ArrayList<Entity>();
+                List<Entity> entities = new ArrayList<>();
                 entities.add(fullEntity);
                 setEntities(entities);
             }

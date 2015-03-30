@@ -1367,13 +1367,11 @@ public class IconDemoPanel extends IconPanel {
                     public void run() {
                         if (rootedEntity.getEntity() == null) {
                             clear();
-                            if (success != null) {
-                                try {
-                                    success.call();
-                                }
-                                catch (Exception e) {
-                                    hadError(e);
-                                }
+                            try {
+                                success.call();
+                            }
+                            catch (Exception e) {
+                                hadError(e);
                             }
                         }
                         else {

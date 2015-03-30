@@ -48,14 +48,14 @@ public class EmbeddedAxisServer implements ModelMgrObserver {
 
     @Override
     public void ontologySelected(long rootId) {
-        Map<String, Object> parameters = new LinkedHashMap<String, Object>();
+        Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("rootId", rootId);
         SessionMgr.getSessionMgr().sendMessageToExternalClients("ontologySelected", parameters);
     }
 
     @Override
     public void ontologyChanged(long rootId) {
-        Map<String, Object> parameters = new LinkedHashMap<String, Object>();
+        Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("rootId", rootId);
         SessionMgr.getSessionMgr().sendMessageToExternalClients("ontologyChanged", parameters);
     }
@@ -79,56 +79,56 @@ public class EmbeddedAxisServer implements ModelMgrObserver {
 
     @Override
     public void entityChanged(long entityId) {
-        Map<String, Object> parameters = new LinkedHashMap<String, Object>();
+        Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("entityId", entityId);
         SessionMgr.getSessionMgr().sendMessageToExternalClients("entityChanged", parameters);
     }
 
     @Override
     public void entityChildrenChanged(long entityId) {
-        Map<String, Object> parameters = new LinkedHashMap<String, Object>();
+        Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("entityId", entityId);
         SessionMgr.getSessionMgr().sendMessageToExternalClients("entityChildrenChanged", parameters);
     }
 
     @Override
     public void entityRemoved(long entityId) {
-        Map<String, Object> parameters = new LinkedHashMap<String, Object>();
+        Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("entityId", entityId);
         SessionMgr.getSessionMgr().sendMessageToExternalClients("entityRemoved", parameters);
     }
 
     @Override
     public void entityDataRemoved(long entityDataId) {
-        Map<String, Object> parameters = new LinkedHashMap<String, Object>();
+        Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("entityDataId", entityDataId);
         SessionMgr.getSessionMgr().sendMessageToExternalClients("entityDataRemoved", parameters);
     }
 
     @Override
     public void entityViewRequested(long entityId) {
-        Map<String, Object> parameters = new LinkedHashMap<String, Object>();
+        Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("entityId", entityId);
         SessionMgr.getSessionMgr().sendMessageToExternalClients("entityViewRequested", parameters);
     }
 
     @Override
     public void annotationsChanged(long entityId) {
-        Map<String, Object> parameters = new LinkedHashMap<String, Object>();
+        Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("entityId", entityId);
         SessionMgr.getSessionMgr().sendMessageToExternalClients("annotationsChanged", parameters);
     }
 
     @Override
     public void sessionSelected(long sessionId) {
-        Map<String, Object> parameters = new LinkedHashMap<String, Object>();
+        Map<String, Object> parameters = new LinkedHashMap<>();
         parameters.put("sessionId", sessionId);
         SessionMgr.getSessionMgr().sendMessageToExternalClients("sessionSelected", parameters);
     }
 
     @Override
     public void sessionDeselected() {
-        Map<String, Object> parameters = new LinkedHashMap<String, Object>();
+        Map<String, Object> parameters = new LinkedHashMap<>();
         SessionMgr.getSessionMgr().sendMessageToExternalClients("sessionDeselected", parameters);
     }
 

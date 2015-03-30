@@ -29,7 +29,6 @@ import org.janelia.it.workstation.gui.util.WindowLocator;
  */
 public class EntityTypePane extends JScrollPane {
 
-    private SimpleWorker loadTask;
     private final JTree tree;
 
     public EntityTypePane() {
@@ -152,7 +151,7 @@ public class EntityTypePane extends JScrollPane {
 
     public void refresh() {
 
-        loadTask = new SimpleWorker() {
+        SimpleWorker loadTask = new SimpleWorker() {
 
             private TreeModel model;
 
@@ -160,7 +159,7 @@ public class EntityTypePane extends JScrollPane {
             protected void doStuff() throws Exception {
 
                 List<EntityType> entityTypes = ModelMgr.getModelMgr().getEntityTypes();
-                TreeMap<String, EntityType> sortedCollection = new TreeMap<String, EntityType>();
+                TreeMap<String, EntityType> sortedCollection = new TreeMap<>();
                 for (EntityType entityType : entityTypes) {
                     sortedCollection.put(entityType.getName(), entityType);
                 }

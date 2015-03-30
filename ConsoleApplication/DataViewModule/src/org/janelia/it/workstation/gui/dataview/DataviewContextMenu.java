@@ -134,8 +134,8 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 
     private void deleteSelectedTrees(final boolean unlink) {
 
-        final List<Entity> toDelete = new ArrayList<Entity>();
-        final List<Boolean> needSuArray = new ArrayList<Boolean>();
+        final List<Entity> toDelete = new ArrayList<>();
+        final List<Boolean> needSuArray = new ArrayList<>();
 
         for (Entity entity : getSelectedElements()) {
             if (SessionMgr.getSubjectKey() == null || !SessionMgr.getSubjectKey().equals(entity.getOwnerKey())) {
@@ -155,9 +155,9 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 
         SimpleWorker deleteTask = new SimpleWorker() {
 
-            private List<Long> numAnnotated = new ArrayList<Long>();
-            private List<Entity> toDeleteForReal = new ArrayList<Entity>();
-            final List<Boolean> needSuForReal = new ArrayList<Boolean>();
+            private List<Long> numAnnotated = new ArrayList<>();
+            private List<Entity> toDeleteForReal = new ArrayList<>();
+            final List<Boolean> needSuForReal = new ArrayList<>();
 
             @Override
             protected void doStuff() throws Exception {

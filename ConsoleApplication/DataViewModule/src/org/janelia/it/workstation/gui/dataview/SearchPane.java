@@ -84,7 +84,7 @@ public abstract class SearchPane extends JPanel {
         groovyExamples = new JTextArea(5, 10);
         groovyExamples.setEditable(false);
 
-        StringBuffer examples = new StringBuffer();
+        StringBuilder examples = new StringBuilder();
         examples.append("Ex1: a.getEntity(id)\n");
         examples.append("Ex1: a.getEntityTree(id)\n");
 

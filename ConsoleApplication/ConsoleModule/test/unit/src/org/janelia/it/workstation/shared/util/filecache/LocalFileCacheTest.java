@@ -61,7 +61,7 @@ public class LocalFileCacheTest {
         }
 
         singleFileKilobytes = 50;
-        testRemoteFiles = new ArrayList<File>();
+        testRemoteFiles = new ArrayList<>();
 
         testRemoteFiles.add(
                 CachedFileTest.createFile(nestedRemoteDirectory,
@@ -83,10 +83,10 @@ public class LocalFileCacheTest {
                 (singleFileKilobytes + 1) * maxNumberOfCachedFiles;
         cache = new LocalFileCache(cacheRootParentDirectory, cacheKilobytes, mockClient, null);
 
-        filesToDeleteDuringTearDown = new ArrayList<File>();
+        filesToDeleteDuringTearDown = new ArrayList<>();
         filesToDeleteDuringTearDown.addAll(testRemoteFiles);
 
-        directoriesToDeleteDuringTearDown = new ArrayList<File>();
+        directoriesToDeleteDuringTearDown = new ArrayList<>();
         directoriesToDeleteDuringTearDown.add(cacheRootParentDirectory);
         directoriesToDeleteDuringTearDown.add(cache.getRootDirectory());
         directoriesToDeleteDuringTearDown.add(cache.getActiveDirectory());
@@ -138,7 +138,7 @@ public class LocalFileCacheTest {
         final long singleFileBytes = singleFileKilobytes * 1024;
 
         File testRemoteFile;
-        List<File> localFiles = new ArrayList<File>();
+        List<File> localFiles = new ArrayList<>();
         File localFile;
 
         int numberOfAdds;

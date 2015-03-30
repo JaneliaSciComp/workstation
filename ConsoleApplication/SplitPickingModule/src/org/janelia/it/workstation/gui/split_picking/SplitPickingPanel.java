@@ -95,7 +95,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     private List<Entity> crosses;
 
     private Timer refreshTimer;
-    private Set<Long> runningTasks = Collections.synchronizedSet(new HashSet<Long>());
+    private final Set<Long> runningTasks = Collections.synchronizedSet(new HashSet<Long>());
 
     public SplitPickingPanel() {
 
@@ -283,7 +283,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
         SimpleWorker worker = new SimpleWorker() {
 
-            private List<Entity> crosses = new ArrayList<Entity>();
+            private List<Entity> crosses = new ArrayList<>();
             private Integer nextSuffix = 1;
 
             @Override
@@ -359,7 +359,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
                                     return;
                                 }
 
-                                Set<Long> doneTasks = new HashSet<Long>();
+                                Set<Long> doneTasks = new HashSet<>();
                                 for (Long taskId : runningTasks) {
                                     try {
                                         Task task = ModelMgr.getModelMgr().getTaskById(taskId);
@@ -544,8 +544,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
                 getProgressMonitor().setNote("Grouping representative samples");
 
-                List<Entity> repAd = new ArrayList<Entity>();
-                List<Entity> repDbd = new ArrayList<Entity>();
+                List<Entity> repAd = new ArrayList<>();
+                List<Entity> repDbd = new ArrayList<>();
                 for (Entity rep : represented) {
                     String splitPart = rep.getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
                     if ("AD".equals(splitPart)) {
@@ -595,8 +595,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         final List<String> mainSelectionIds = esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_MAIN_VIEW);
         final List<String> secSelectionIds = esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_SEC_VIEW);
 
-        final List<Entity> samples1 = new ArrayList<Entity>();
-        final List<Entity> samples2 = new ArrayList<Entity>();
+        final List<Entity> samples1 = new ArrayList<>();
+        final List<Entity> samples2 = new ArrayList<>();
 
         Viewer mainViewer = getMainViewer();
         for (RootedEntity rootedEntity : mainViewer.getRootedEntities()) {
@@ -649,7 +649,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
         SimpleWorker worker = new SimpleWorker() {
 
-            final Set<String> existingCrosses = new HashSet<String>();
+            final Set<String> existingCrosses = new HashSet<>();
 
             @Override
             protected void doStuff() throws Exception {
@@ -705,9 +705,9 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
                         Entity parent = getCrossFolder().getEntity();
 
-                        List<Long> sampleIds1 = new ArrayList<Long>();
-                        List<Long> sampleIds2 = new ArrayList<Long>();
-                        List<Long> outputIds = new ArrayList<Long>();
+                        List<Long> sampleIds1 = new ArrayList<>();
+                        List<Long> sampleIds2 = new ArrayList<>();
+                        List<Long> outputIds = new ArrayList<>();
 
                         log.info("Processing " + numCrosses + " crosses");
 
@@ -727,7 +727,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
                                 Entity cross = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS, crossName);
                                 ModelMgr.getModelMgr().setOrUpdateValue(cross, EntityConstants.ATTRIBUTE_CROSS_LABEL, createNextCrossLabel());
 
-                                List<Long> childrenIds = new ArrayList<Long>();
+                                List<Long> childrenIds = new ArrayList<>();
                                 childrenIds.add(sample1.getId());
                                 childrenIds.add(sample2.getId());
                                 ModelMgr.getModelMgr().addChildren(cross.getId(), childrenIds, EntityConstants.ATTRIBUTE_ENTITY);
@@ -806,7 +806,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         String method = "" + INTERSECTION_METHOD;//methodField.getText();
         String kernelSize = "" + KERNEL_SIZE;//blurField.getText();
 
-        HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+        HashSet<TaskParameter> taskParameters = new HashSet<>();
         taskParameters.add(new TaskParameter("screen sample 1 id list", idList1Str, null));
         taskParameters.add(new TaskParameter("screen sample 2 id list", idList2Str, null));
         taskParameters.add(new TaskParameter("output entity id_list", idList3Str, null));
@@ -1121,7 +1121,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
     public List<Entity> getRepresentedFlylines(List<Entity> screenSamples) throws Exception {
 
-        List<Long> entityIds = new ArrayList<Long>();
+        List<Long> entityIds = new ArrayList<>();
         for (Entity screenSample : screenSamples) {
             Set<Long> parentIds = ModelMgr.getModelMgr().getParentIdsForAttribute(screenSample.getId(), EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
             if (!parentIds.isEmpty()) {
@@ -1218,7 +1218,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
             protected void doStuff() throws Exception {
                 FileWriter writer = new FileWriter(destFile);
 
-                StringBuffer buf = new StringBuffer();
+                StringBuilder buf = new StringBuilder();
                 for (String column : exportColumns) {
                     buf.append(column);
                     buf.append("\t");
@@ -1272,7 +1272,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
                         String balancedAdRobotId = balancedAd == null ? "" : balancedAd.getValueByAttributeName(EntityConstants.ATTRIBUTE_ROBOT_ID);
                         String balancedDbdRobotId = balancedDbd == null ? "" : balancedDbd.getValueByAttributeName(EntityConstants.ATTRIBUTE_ROBOT_ID);
 
-                        StringBuffer buf2 = new StringBuffer();
+                        StringBuilder buf2 = new StringBuilder();
 
                         // 3 standard columns for FlyStore import
                         buf2.append(adRobotId == null ? "" : adRobotId);
@@ -1398,7 +1398,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     }
 
     private String commafy(List<Long> list) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (Long l : list) {
             if (sb.length() > 0) {
                 sb.append(",");
