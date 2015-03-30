@@ -1079,7 +1079,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         //  for Mac and Windows, we need to guess the mount point of the
         //  shared disk and alter the path accordingly
 
-        File testFile = new File(canonicalLinuxPath);
+        File testFile = new File(canonicalLinuxPath); // Maybe it just works...
         if (!testFile.exists()) {
             // must be on Mac or Windows; but first, which of the
             //  possible Linux prefixes are we looking at?
@@ -1093,7 +1093,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     linuxPrefix = new File(testPrefix).toPath();
                 }
             }
-            Path partialPath = testFile.toPath().subpath(linuxPrefix.getNameCount(), testFile.toPath().getNameCount());
+            int pathPrefixDepth = 0;
+            if (linuxPrefix != null) // Avoid NPE
+                pathPrefixDepth = linuxPrefix.getNameCount();
+            Path partialPath = testFile.toPath().subpath(pathPrefixDepth, testFile.toPath().getNameCount());           
             // System.out.println("linuxPrefix = " + linuxPrefix);
             // System.out.println("partialPath = " + partialPath);
 

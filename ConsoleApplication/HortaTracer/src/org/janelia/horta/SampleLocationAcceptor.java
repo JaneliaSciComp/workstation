@@ -29,11 +29,15 @@
  */
 package org.janelia.horta;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.text.ParseException;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -42,10 +46,13 @@ import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
+import org.janelia.horta.volume.BrickInfo;
+import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.scenewindow.SceneWindow;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
+import org.openide.awt.NotificationDisplayer;
 import org.openide.util.Exceptions;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
@@ -125,6 +132,8 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         if (urlStr.equals(currentSource))
             return nttc.getVolumeSource();
         URI uri;
+        // First check whether the yaml file exists at all
+        StaticVolumeBrickSource volumeSource = null;
         try {
             uri = focusUrl.toURI();
             URI yamlUri = new URI(
@@ -135,13 +144,49 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             );
             logger.info("Constructed URI: {}.", uri);
             URL yamlUrl = yamlUri.toURL();
-            InputStream stream1 = yamlUrl.openStream();
-            StaticVolumeBrickSource volumeSource = nttc.loadYaml(stream1, loader, progress);
-            return volumeSource;
-        } catch (Exception ex) {
-            Exceptions.printStackTrace(ex);
-            return null;
+            try (InputStream stream1 = yamlUrl.openStream()) {
+                volumeSource = nttc.loadYaml(stream1, loader, progress);
+            } catch (ParseException ex) {
+                JOptionPane.showMessageDialog(nttc, 
+                        "Problem Loading Raw Tile Information from " + focusUrl.getPath() + "/" + BASE_YML_FILE
+                        + "\n  Does the transform contain barycentric coordinates?"
+                        ,
+                        "Tilebase File Problem",
+                        JOptionPane.ERROR_MESSAGE);            }
+        } catch (IOException | URISyntaxException ex) {
+            // Something went wrong with loading the Yaml file
+            // Exceptions.printStackTrace(ex);
+            JOptionPane.showMessageDialog(nttc, 
+                    "Problem Loading Raw Tile Information from " + focusUrl.getPath() + "/" + BASE_YML_FILE
+                    + "\n  Is the render folder drive mounted?"
+                    + "\n  Does the render folder contain a YAML file?"
+                    ,
+                    "Tilebase File Problem",
+                    JOptionPane.ERROR_MESSAGE);
         }
+        
+        if (null == volumeSource)
+            return volumeSource;
+        
+        // Test for location of first tile, as a sanity check
+        Double res = volumeSource.getAvailableResolutions().iterator().next();
+        BrickInfoSet bricks = volumeSource.getAllBrickInfoForResolution(res);
+        BrickInfo b = bricks.iterator().next();
+        BrainTileInfo bti = (BrainTileInfo)b;
+        String path = bti.getParentPath() + "/" + bti.getLocalPath();
+        File brickFolder = new File(bti.getParentPath(), bti.getLocalPath());
+        if (! brickFolder.exists()) {
+            JOptionPane.showMessageDialog(nttc, 
+                    "Problem Finding First Raw Tile Folder at " + brickFolder.getAbsolutePath()
+                    + "\n  Is the raw tile folder drive mounted?"
+                    + "\n  Did someone change the folder structure of the raw tiles?"
+                    ,
+                    "Raw Tile Location Problem",
+                    JOptionPane.ERROR_MESSAGE);
+            volumeSource = null; // Don't use this data source
+        }
+        
+        return volumeSource;
     }
     
     private boolean setCameraLocation(SampleLocation sampleLocation) {

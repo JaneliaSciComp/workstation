@@ -35,6 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -57,7 +58,7 @@ implements StaticVolumeBrickSource
     private final Map<Double, BrickInfoSet> resMap = new HashMap<>();
     private final Box3 boundingBox = new Box3();
     
-    public MouseLightYamlBrickSource(InputStream yamlStream, ProgressHandle progress) {
+    public MouseLightYamlBrickSource(InputStream yamlStream, ProgressHandle progress) throws ParseException {
         progress.switchToDeterminate(100);
         progress.progress(5);
         Yaml yaml = new Yaml();

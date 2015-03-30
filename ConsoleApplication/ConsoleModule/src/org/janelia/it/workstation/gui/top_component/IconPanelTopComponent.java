@@ -1,12 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.top_component;
 
 import java.awt.BorderLayout;
 import java.util.Properties;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.console.ViewerManager;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -14,25 +11,27 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Top component which displays something.
+ * Top component which displays the icon demo panel viewers.
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.dialogs.nb//IconPanel//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = IconPanelTopComponent.TC_NAME,
+        preferredID = IconPanelTopComponent.PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = true)
+@TopComponent.Registration(mode = "editor", openAtStartup = true, position = 0)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.IconPanelTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window", position = 0)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_IconPanelAction",
-        preferredID = IconPanelTopComponent.TC_NAME
+        preferredID = IconPanelTopComponent.PREFERRED_ID
 )
 @Messages({
     "CTL_IconPanelAction=Browser",
@@ -40,7 +39,10 @@ import org.openide.util.NbBundle.Messages;
     "HINT_IconPanelTopComponent=Data shown as an array of graphical icons"
 })
 public final class IconPanelTopComponent extends TopComponent {
-    public static final String TC_NAME = "IconPanelTopComponent";
+    
+    private Logger log = LoggerFactory.getLogger( EntityDetailsTopComponent.class );
+    
+    public static final String PREFERRED_ID = "IconPanelTopComponent";
 
     public IconPanelTopComponent() {
         initComponents();
@@ -49,13 +51,6 @@ public final class IconPanelTopComponent extends TopComponent {
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);
-        //ViewerManager vmgr = SessionMgr.getBrowser().getViewerManager();
-        //        new IconDemoPanel( vmgr.getMainViewerPane() ),
-        jPanel1.add( 
-                SessionMgr.getBrowser().getMainComponent(),
-                BorderLayout.CENTER
-        );
-
     }
 
     /**
@@ -85,9 +80,20 @@ public final class IconPanelTopComponent extends TopComponent {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
+    
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        final Browser browser = SessionMgr.getBrowser();
+        if (browser == null) {
+            throw new IllegalStateException("Failed to obtain browser object for component.");
+        }
+        final ViewerManager viewerManager = browser.getViewerManager();
+        if (viewerManager == null) {
+            throw new IllegalStateException("No viewer manager located.");
+        }
+        else {
+            jPanel1.add(viewerManager.getViewerContainer(), BorderLayout.CENTER);
+        }
     }
 
     @Override

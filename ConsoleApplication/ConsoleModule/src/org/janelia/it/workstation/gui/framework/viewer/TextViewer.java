@@ -270,14 +270,14 @@ public abstract class TextViewer extends Viewer {
 
     @Override
     public List<RootedEntity> getRootedEntities() {
-        List<RootedEntity> rootedEntities = new ArrayList<RootedEntity>();
+        List<RootedEntity> rootedEntities = new ArrayList<>();
         rootedEntities.add(contextRootedEntity);
         return rootedEntities;
     }
 
     @Override
     public List<RootedEntity> getSelectedEntities() {
-        List<RootedEntity> rootedEntities = new ArrayList<RootedEntity>();
+        List<RootedEntity> rootedEntities = new ArrayList<>();
         rootedEntities.add(contextRootedEntity);
         return rootedEntities;
     }
@@ -294,7 +294,7 @@ public abstract class TextViewer extends Viewer {
     
     @Override
     public EntityViewerState saveViewerState() {
-        Set<String> selectedIds = new HashSet<String>();
+        Set<String> selectedIds = new HashSet<>();
         return new EntityViewerState(getClass(), contextRootedEntity, selectedIds);
     }
     

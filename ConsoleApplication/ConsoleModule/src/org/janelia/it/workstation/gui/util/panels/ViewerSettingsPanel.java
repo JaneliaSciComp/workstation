@@ -18,11 +18,11 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
     private boolean settingsChanged = false;
 
     public static final String DISABLE_IMAGE_DRAG_PROPERTY = "SessionMgr.DisableImageDragProperty";
-    public static final String ONLY_SESSION_ANNOTATIONS_PROPERTY = "SessionMgr.OnlySessionAnnotationsProperty";
-    public static final String HIDE_ANNOTATED_PROPERTY = "SessionMgr.HideAnnotatedProperty";
     public static final String SHOW_ANNOTATION_TABLES_PROPERTY = "SessionMgr.ShowAnnotationTablesProperty";
     public static final String ANNOTATION_TABLES_HEIGHT_PROPERTY = "SessionMgr.AnnotationTablesHeightProperty";
-
+    public static final String HIDE_ANNOTATED_PROPERTY = "SessionMgr.HideAnnotatedProperty";
+    public static final String ONLY_SESSION_ANNOTATIONS_PROPERTY = "SessionMgr.OnlySessionAnnotationsProperty";
+    
     JCheckBox disableImageDrag = new JCheckBox();
     JCheckBox onlySessionAnnotations = new JCheckBox();
     JCheckBox hideAnnotatedImages = new JCheckBox();

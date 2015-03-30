@@ -12,7 +12,6 @@ import javax.swing.*;
 import net.miginfocom.swing.MigLayout;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
@@ -33,7 +32,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class BulkAnnotationPermissionDialog extends ModalDialog implements Accessibility {
+public class BulkAnnotationPermissionDialog extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(BulkAnnotationPermissionDialog.class);
     
@@ -242,10 +241,5 @@ public class BulkAnnotationPermissionDialog extends ModalDialog implements Acces
             }
         }
         return found;
-    }
-    
-    @Override
-    public boolean isAccessible() {
-        return true;
     }
 }

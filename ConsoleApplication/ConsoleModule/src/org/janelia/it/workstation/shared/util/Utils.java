@@ -185,7 +185,7 @@ public class Utils {
                         int responseCode = client.executeMethod(get);
                         log.trace("readImage: GET " + responseCode + ", path=" + path);
                         if (responseCode != 200) {
-                            throw new FileNotFoundException();
+                            throw new FileNotFoundException("Response code "+responseCode+" returned for call to "+path);
                         }
                         stream = get.getResponseBodyAsStream();
                     }

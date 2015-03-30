@@ -180,9 +180,11 @@ public final class GeometricSearchTopComponent extends TopComponent {
                 searchTabPanel.add(searchPanel, BorderLayout.CENTER);
                 searchPanel.setVisible(true);
                 searchPanel.displayReady();
-                searchPanel.refresh();
+                searchPanel.refresh
+                        ();
             }
         });
+        // Goofy stuff to position start button in center of panel
         for (int r=0;r<17;r++) {
             for (int c=0;c<9;c++) {
                 if (r==8 && c==4) {

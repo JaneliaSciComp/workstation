@@ -21,12 +21,12 @@ public class MockWebDavClient extends WebDavClient {
     private Map<URL, List<WebDavFile>> urlToFileList;
 
     public MockWebDavClient() {
-        urlToFileList = new HashMap<URL, List<WebDavFile>>();
+        urlToFileList = new HashMap<>();
     }
 
     public void mapFileUsingDefaultUrl(File file) {
         WebDavFile webDavFile = new WebDavFile(null, file);
-        List<WebDavFile> list = new ArrayList<WebDavFile>();
+        List<WebDavFile> list = new ArrayList<>();
         list.add(webDavFile);
         urlToFileList.put(webDavFile.getUrl(), list);
     }
@@ -42,7 +42,7 @@ public class MockWebDavClient extends WebDavClient {
                                  List<File> fileList) {
         if (fileList.size() > 0) {
             List<WebDavFile> webDavFileList =
-                    new ArrayList<WebDavFile>(fileList.size());
+                    new ArrayList<>(fileList.size());
             for (File file : fileList) {
                 webDavFileList.add(new WebDavFile(null, file));
             }
@@ -86,7 +86,7 @@ public class MockWebDavClient extends WebDavClient {
     @Override
     public void createDirectory(URL directoryUrl)
             throws WebDavException {
-        List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>();
+        List<WebDavFile> webDavFileList = new ArrayList<>();
         webDavFileList.add(new WebDavFile(null, new File(directoryUrl.getPath())));
         urlToFileList.put(directoryUrl, webDavFileList);
     }
@@ -94,7 +94,7 @@ public class MockWebDavClient extends WebDavClient {
     @Override
     public void saveFile(URL url,
                          File file) {
-        List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>();
+        List<WebDavFile> webDavFileList = new ArrayList<>();
         webDavFileList.add(new WebDavFile(null, file));
         urlToFileList.put(url, webDavFileList);
     }
@@ -102,7 +102,7 @@ public class MockWebDavClient extends WebDavClient {
     private List<WebDavFile> getFiles(URL url,
                                       boolean addAll) {
 
-        List<WebDavFile> list = new ArrayList<WebDavFile>();
+        List<WebDavFile> list = new ArrayList<>();
 
         final String directoryPath = url.getPath();
         String path;

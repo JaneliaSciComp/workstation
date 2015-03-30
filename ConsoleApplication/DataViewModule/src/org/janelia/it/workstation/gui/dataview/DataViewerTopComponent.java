@@ -24,7 +24,7 @@ import org.openide.util.lookup.Lookups;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_NEVER
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = false)
+@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 1000)
 @Messages({
     "CTL_DataViewerAction=Data Viewer",
     "CTL_DataViewerTopComponent=Data Viewer",

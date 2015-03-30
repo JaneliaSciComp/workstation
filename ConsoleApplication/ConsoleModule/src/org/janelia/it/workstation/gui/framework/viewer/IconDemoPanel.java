@@ -758,8 +758,8 @@ public class IconDemoPanel extends IconPanel {
 
             @Override
             protected void currImageSizeChanged(int imageSize) {
+                log.trace("currImageSizeChanged: {}",imageSize);
                 imagesPanel.setMaxImageWidth(imageSize);
-                imagesPanel.recalculateGrid();
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -1367,13 +1367,11 @@ public class IconDemoPanel extends IconPanel {
                     public void run() {
                         if (rootedEntity.getEntity() == null) {
                             clear();
-                            if (success != null) {
-                                try {
-                                    success.call();
-                                }
-                                catch (Exception e) {
-                                    hadError(e);
-                                }
+                            try {
+                                success.call();
+                            }
+                            catch (Exception e) {
+                                hadError(e);
                             }
                         }
                         else {

@@ -315,7 +315,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             titleMenuItem.setEnabled(false);
             popupMenu.add(titleMenuItem);
 
-            final List<OntologyAnnotation> toDeleteList = new ArrayList<OntologyAnnotation>();
+            final List<OntologyAnnotation> toDeleteList = new ArrayList<>();
             for (int i : table.getSelectedRows()) {
                 int mi = table.convertRowIndexToModel(i);
                 toDeleteList.add(annotations.get(mi));

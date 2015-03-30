@@ -11,7 +11,6 @@ import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
 
-import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
@@ -25,7 +24,7 @@ import org.janelia.it.workstation.gui.util.SubjectComboBoxRenderer;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AutoAnnotationPermissionDialog extends ModalDialog implements Accessibility {
+public class AutoAnnotationPermissionDialog extends ModalDialog {
     
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
     
@@ -166,10 +165,5 @@ public class AutoAnnotationPermissionDialog extends ModalDialog implements Acces
         SessionMgr.getBrowser().setAutoShareTemplate(template);
         
         setVisible(false);
-    }
-    
-    @Override
-    public boolean isAccessible() {
-        return true;
     }
 }

@@ -23,12 +23,10 @@ import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
-import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -40,7 +38,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SetSortCriteriaDialog extends ModalDialog implements Accessibility {
+public class SetSortCriteriaDialog extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(SetSortCriteriaDialog.class);
 
@@ -54,12 +52,13 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
     private static final String[] intrinsicFields = {EntityConstants.VALUE_SC_GUID, EntityConstants.VALUE_SC_NAME, EntityConstants.VALUE_SC_DATE_CREATED, EntityConstants.VALUE_SC_DATE_UPDATED};
     private static final String DEFAULT_SORT_VALUE = "Default";
 
-    private JPanel attrPanel;
-    private JLabel targetLabel;
-    private JComboBox sortingFieldCombobox;
-    private JComboBox sortingOrderCombobox;
-    private DefaultComboBoxModel sortingFieldModel;
-    private DefaultComboBoxModel sortingOrderModel;
+    private final JPanel attrPanel;
+    private final JLabel targetLabel;
+    private final JComboBox sortingFieldCombobox;
+    private final JComboBox sortingOrderCombobox;
+    private final DefaultComboBoxModel sortingFieldModel;
+    private final DefaultComboBoxModel sortingOrderModel;
+    
     private Entity entity;
 
     public SetSortCriteriaDialog() {
@@ -216,9 +215,5 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
         worker.execute();
 
         setVisible(false);
-    }
-
-    public boolean isAccessible() {
-        return true;
     }
 }

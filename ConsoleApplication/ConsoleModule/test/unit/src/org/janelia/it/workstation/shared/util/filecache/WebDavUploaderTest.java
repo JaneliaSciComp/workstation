@@ -50,7 +50,7 @@ public class WebDavUploaderTest {
             throw new IllegalStateException("failed to create " + path);
         }
 
-        testFiles = new ArrayList<File>();
+        testFiles = new ArrayList<>();
         testFiles.add(CachedFileTest.createFile(testRootParentDirectory, 1));
         testFiles.add(CachedFileTest.createFile(testRootParentDirectory, 1));
         testFiles.add(CachedFileTest.createFile(testNestedDirectory, 1));
@@ -123,7 +123,7 @@ public class WebDavUploaderTest {
                 "/remote/upload/123/g/"
         };
 
-        List<String> relativePaths = new ArrayList<String>();
+        List<String> relativePaths = new ArrayList<>();
         for (String unixPath : relativeUnixPaths) {
             if (isUnix) {
                 relativePaths.add(unixPath);
@@ -132,14 +132,14 @@ public class WebDavUploaderTest {
             }
         }
 
-        List<String> localFilePaths = new ArrayList<String>();
+        List<String> localFilePaths = new ArrayList<>();
         for (String relativePath : relativePaths) {
             localFilePaths.add(localRoot + relativePath);
         }
 
         // use LHM to preserve order
-        Map<String, File> remotePathToFileMap = new LinkedHashMap<String, File>();
-        List<String> orderedDirectoryPaths = new ArrayList<String>();
+        Map<String, File> remotePathToFileMap = new LinkedHashMap<>();
+        List<String> orderedDirectoryPaths = new ArrayList<>();
 
         uploader.derivePaths(localRootPathWithTrailingSeparator,
                              localFilePaths,
@@ -193,7 +193,7 @@ public class WebDavUploaderTest {
 
         assertEquals("invalid number of files created under " + url, testFiles.size(), list.size());
 
-        Set<String> parentPathSet = new HashSet<String>();
+        Set<String> parentPathSet = new HashSet<>();
         File file;
         for (WebDavFile webDavFile : list) {
             file = new File(webDavFile.getUrl().toURI().getPath());

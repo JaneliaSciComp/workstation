@@ -57,10 +57,18 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         mip3d.setPreferredSize(new Dimension(1200, 900));
         mip3d.setVisible(true);
         mip3d.setResetFirstRedraw(true);
+
         //XrayMeshShader shader=new XrayMeshShader();
-        DepthShader shader=new DepthShader();
-        shader.addActor(new MeshObjFileActor(new File("/Users/murphys/compartment_62.obj")));
-        mip3d.addActor(shader);
+        //DepthShader shader=new DepthShader();
+        //shader.addActor(new MeshObjFileActor(new File("/Users/murphys/compartment_62.obj")));
+
+
+        //mip3d.addActor(shader);
+
+        MeshObjFileActor meshActor =  new MeshObjFileActor(new File("/Users/murphys/simple_cube.obj"));
+        meshActor.setDrawLines(false);
+        mip3d.addActor(meshActor);
+
         add(mip3d, BorderLayout.CENTER);
 
 //        if (testGLJPanel==null) {

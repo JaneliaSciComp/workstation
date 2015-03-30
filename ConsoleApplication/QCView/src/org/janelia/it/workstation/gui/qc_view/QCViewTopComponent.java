@@ -6,8 +6,6 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Top component showing the QC View. 
@@ -23,33 +21,29 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = false)
+@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 100)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.qc_view.QCViewTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window", position = 400)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_QCViewAction",
-        preferredID = "QCViewTopComponent"
+        preferredID = QCViewTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_QCViewAction=QC View",
-    "CTL_QCViewTopComponent=QC View",
-    "HINT_QCViewTopComponent=This is the quality control view"
+    "CTL_QCViewAction=Slide View",
+    "CTL_QCViewTopComponent=Slide View",
+    "HINT_QCViewTopComponent=Display LSMs with one row per slide"
 })
 public final class QCViewTopComponent extends TopComponent {
 
-    private Logger log = LoggerFactory.getLogger(QCViewTopComponent.class);
-    
     public static final String PREFERRED_ID = "QCViewTopComponent";
     
     private final QCViewPanel qcViewPanel;
     
     public QCViewTopComponent() {
-        
         this.qcViewPanel = new QCViewPanel();
         initComponents();
         setName(Bundle.CTL_QCViewTopComponent());
         setToolTipText(Bundle.HINT_QCViewTopComponent());
-
     }
     
     /**
@@ -88,18 +82,11 @@ public final class QCViewTopComponent extends TopComponent {
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
     }
 
     void writeProperties(java.util.Properties p) {
-        // better to version settings since initial version as advocated at
-        // http://wiki.apidesign.org/wiki/PropertyFiles
-        p.setProperty("version", "1.0");
-        // TODO store your settings
     }
 
     void readProperties(java.util.Properties p) {
-        String version = p.getProperty("version");
-        // TODO read your settings according to their version
     }
 }

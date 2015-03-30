@@ -18,7 +18,7 @@ import org.openide.util.NbBundle.Messages;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "properties", openAtStartup = false, position=600)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position=1000)
 @Messages({
     "CTL_DataModelingAction=Data Modeling",
     "CTL_DataModelingTopComponent=Data Modeling",
