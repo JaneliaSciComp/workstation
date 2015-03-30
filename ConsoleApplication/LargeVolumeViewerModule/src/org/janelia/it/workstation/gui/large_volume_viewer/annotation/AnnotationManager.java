@@ -1009,27 +1009,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         creator.execute();
     }
 
-    public void setGlobalAnnotationColor(final Color color) {
-
-        SimpleWorker setter = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.setGlobalAnnotationColor(color);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing; signals will be sent
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        setter.execute();
-    }
-
     /**
      * pop a dialog to choose neuron style; three variants work together to operate
      * from different input sources

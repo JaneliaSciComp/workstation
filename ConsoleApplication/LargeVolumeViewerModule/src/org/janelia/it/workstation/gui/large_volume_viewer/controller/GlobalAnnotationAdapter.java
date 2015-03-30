@@ -6,7 +6,6 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
-import java.awt.Color;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -24,9 +23,6 @@ public abstract class GlobalAnnotationAdapter implements GlobalAnnotationListene
 
     @Override
     public void neuronSelected(TmNeuron neuron) {}
-
-    @Override
-    public void globalAnnotationColorChanged(Color color) {}
 
     @Override
     public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {}

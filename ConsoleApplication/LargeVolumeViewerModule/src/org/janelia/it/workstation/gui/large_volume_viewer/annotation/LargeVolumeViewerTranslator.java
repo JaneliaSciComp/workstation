@@ -1,8 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import Jama.Matrix;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.*;
@@ -14,7 +12,6 @@ import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import java.awt.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -53,7 +50,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<>();
     private Collection<TmGeoAnnotationAnchorListener> anchorListeners = new ArrayList<>();
     private Collection<NextParentListener> nextParentListeners = new ArrayList<>();
-    private Collection<GlobalColorChangeListener> colorChangeListeners = new ArrayList<>();
     private Collection<NeuronStyleChangeListener> neuronStyleChangeListeners = new ArrayList<>();
     private ViewStateListener viewStateListener;
     
@@ -81,14 +77,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         nextParentListeners.remove(l);
     }
     
-    public void addColorChangeListener(GlobalColorChangeListener l) {
-        colorChangeListeners.add(l);
-    }
-    
-    public void removeColorChangeListener(GlobalColorChangeListener l) {
-        colorChangeListeners.remove(l);
-    }
-
     public void addNeuronStyleChangeListener(NeuronStyleChangeListener l) {
         neuronStyleChangeListeners.add(l);
     }
@@ -112,7 +100,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         addAnchoredVoxelPathListener(skeletonController);
         addTmGeoAnchorListener(skeletonController);
         addNextParentListener(skeletonController);
-        addColorChangeListener(skeletonController);
         addNeuronStyleChangeListener(skeletonController);
         skeletonController.registerForEvents(this);
     }
@@ -216,13 +203,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         unmoveAnnotation(annotation);
     }
 
-    //-----------------------IMPLEMENTS GlobalAnnotationListener
-    @Override
-    public void globalAnnotationColorChanged(Color color) {
-        // just pass through right now
-        fireColorChangeEvent(color);
-    }
-
     @Override
     public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
         fireNeuronStyleChangeEvent(neuron, style);
@@ -257,16 +237,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 }
             }
             
-            // retrieve global color if present; if not, revert to default
-            String globalColorString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_COLOR_GLOBAL);
-            Color newColor;
-            if (globalColorString != null) {
-                newColor = prefColorToColor(globalColorString);
-            } else {
-                newColor = AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL;
-            }
-            fireColorChangeEvent(newColor);
-
+            // (we used to retrieve global color here; replaced by styles)
 
             // set styles for our neurons; if a neuron isn't in the saved map,
             //  use a default style
@@ -390,11 +361,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             l.clearAnchors();
         }
     }
-    private void fireColorChangeEvent(Color color) {
-        for (GlobalColorChangeListener l: colorChangeListeners) {
-            l.globalAnnotationColorChanged(color);
-        }
-    }
     private void fireNeuronStyleChangeEvent(TmNeuron neuron, NeuronStyle style) {
         for (NeuronStyleChangeListener l: neuronStyleChangeListeners) {
             l.neuronStyleChanged(neuron, style);
@@ -485,16 +451,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         };
 
         return voxelPath;
-    }
-
-    private Color prefColorToColor(String colorString) {
-        // form R:G:B:A to proper Color
-        String items[] = colorString.split(":");
-
-        return new Color(Integer.parseInt(items[0]),
-            Integer.parseInt(items[1]),
-            Integer.parseInt(items[2]),
-            Integer.parseInt(items[3]));
     }
 
     private TileFormat getTileFormat() {

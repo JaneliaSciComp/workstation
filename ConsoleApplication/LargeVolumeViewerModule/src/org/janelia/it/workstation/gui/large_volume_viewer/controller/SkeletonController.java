@@ -6,7 +6,6 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
-import java.awt.Color;
 import java.util.List;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
@@ -24,7 +23,7 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
  * @author fosterl
  */
 public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener,
-        NextParentListener, GlobalColorChangeListener, NeuronStyleChangeListener {
+        NextParentListener, NeuronStyleChangeListener {
     private Skeleton skeleton;
     private SkeletonActor actor;
     private SkeletonAnchorListener skeletonAnchorListener;
@@ -117,12 +116,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
         actor.changeNeuronStyle(neuron, style);
-    }
-
-    //--------------------------------IMPLEMENTS GlobalColorChangeListener    
-    @Override
-    public void globalAnnotationColorChanged(Color color) {
-        actor.changeNeuronColor(color);
     }
 
     public void annotationSelected( Long guid ) {

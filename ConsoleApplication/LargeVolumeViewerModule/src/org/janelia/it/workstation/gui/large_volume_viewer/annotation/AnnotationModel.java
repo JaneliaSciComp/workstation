@@ -18,7 +18,6 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -1108,15 +1107,6 @@ called from a  SimpleWorker thread.
         });
     }
 
-    public void setGlobalAnnotationColor(Color color) {
-        setPreference(AnnotationsConstants.PREF_ANNOTATION_COLOR_GLOBAL,
-                String.format("%d:%d:%d:%d", color.getRed(), color.getGreen(),
-                        color.getBlue(), color.getAlpha()));
-
-        // persisted, so go ahead and change it
-        fireGlobalAnnotationColorChanged(color);
-    }
-
     /**
      * change the style for a neuron; synchronized because it could be
      * called from multiple threads, and the update is not atomic
@@ -1382,12 +1372,6 @@ called from a  SimpleWorker thread.
     private void fireNeuronSelected(TmNeuron neuron) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronSelected(neuron);
-        }
-    }
-
-    private void fireGlobalAnnotationColorChanged(Color color) {
-        for (GlobalAnnotationListener l: globalAnnotationListeners) {
-            l.globalAnnotationColorChanged(color);
         }
     }
 

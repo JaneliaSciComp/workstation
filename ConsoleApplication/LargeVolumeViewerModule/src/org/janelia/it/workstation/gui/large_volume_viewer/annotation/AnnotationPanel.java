@@ -5,7 +5,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.util.Icons;
 
 import javax.swing.*;
@@ -215,12 +214,6 @@ public class AnnotationPanel extends JPanel
         importSWCAction.putValue(Action.SHORT_DESCRIPTION,
                 "Import an SWC file into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCAction));
-
-        ChooseAnnotationColorAction changeGlobalAnnotationColorAction = new ChooseAnnotationColorAction();
-        changeGlobalAnnotationColorAction.putValue(Action.NAME, "Set global annotation color...");
-        changeGlobalAnnotationColorAction.putValue(Action.SHORT_DESCRIPTION,
-                "Change global color of annotations");
-        workspaceToolMenu.add(new JMenuItem(changeGlobalAnnotationColorAction));
 
         workspaceToolMenu.add(new JMenuItem(new AbstractAction("Save color model") {
             @Override
@@ -474,52 +467,6 @@ public class AnnotationPanel extends JPanel
         public int getDownsampleModulo() { return downsampleModulo; }
         public void setDownsampleModulo(int downsampleModulo) {
             this.downsampleModulo = downsampleModulo;
-        }
-    }
-    
-    class ChooseAnnotationColorAction extends AbstractAction {
-        // adapted from ChannelColorAction in ColorChannelWidget
-
-        JDialog colorDialog;
-        JColorChooser colorChooser;
-
-        public ChooseAnnotationColorAction() {
-
-            ActionListener okListener = new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent actionEvent) {
-                    annotationMgr.setGlobalAnnotationColor(colorChooser.getColor());
-                }
-            };
-            ActionListener cancelListener = new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent actionEvent) {
-                    // unused right now
-                }
-            };
-
-            // arbitrary initial color
-            colorChooser = new JColorChooser(Color.RED);
-
-            colorDialog = JColorChooser.createDialog(AnnotationPanel.this,
-                    "Set global annotation color",
-                    false,
-                    colorChooser,
-                    okListener,
-                    cancelListener);
-            colorDialog.setVisible(false);
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (annotationModel.getCurrentWorkspace() == null) {
-                return;
-            }
-
-            // I'd like to grab the current color as the initial color,
-            //  but annotation panel has no way to get it at this time
-            colorChooser.setColor(AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL);
-            colorDialog.setVisible(true);
         }
     }
 
