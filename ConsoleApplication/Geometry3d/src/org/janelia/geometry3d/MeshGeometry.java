@@ -29,17 +29,10 @@
  */
 package org.janelia.geometry3d;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Set;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
+
+import java.util.*;
 
 /**
  *
@@ -49,15 +42,15 @@ public class MeshGeometry
 implements Collection<Vertex>, ObservableInterface
 {
 
-    protected final List<Vertex> vertices = new ArrayList<Vertex>();
+    protected final List<Vertex> vertices = new ArrayList<>();
     
     // Vertex attributes: colors, normals
     // private final List<Color> colors;
     // private final List<Vector3> normals;
     //
-    private final List<Face> faces = new ArrayList<Face>();
-    private final List<Triangle> triangles = new ArrayList<Triangle>();
-    private final Set<Edge> edges = new LinkedHashSet<Edge>(); // unique edges
+    private final List<Face> faces = new ArrayList<>();
+    private final List<Triangle> triangles = new ArrayList<>();
+    private final Set<Edge> edges = new LinkedHashSet<>(); // unique edges
     
     private final Collection[] collections = {vertices, edges, faces, triangles};
     
@@ -91,9 +84,9 @@ implements Collection<Vertex>, ObservableInterface
             return null;
     }
     
-    public int addFace(Integer[] indices) {
-        return addFace(new Face(indices));
-    }
+//    public int addFace(Integer[] indices) {
+//        return addFace(new Face(indices));
+//    }
     
     public int addFace(int[] indices) {
         return addFace(new Face(indices));
@@ -128,10 +121,10 @@ implements Collection<Vertex>, ObservableInterface
     
     /**
      * Computes normal of a triangle consisting of three vertices.
-     * @param vi1
-     * @param vi2
-     * @param vi3
-     * @return 
+     * @param vi1 - vertex 1
+     * @param vi2 - vertex 2
+     * @param vi3 - vertex 3
+     * @return Vector3 object
      */
     public Vector3 computeTriangleNormal(int vi1, int vi2, int vi3) {
         Vector3 v1 = vertices.get(vi1).getPosition();
@@ -139,8 +132,7 @@ implements Collection<Vertex>, ObservableInterface
         Vector3 v3 = vertices.get(vi3).getPosition();
         Vector3 v21 = new Vector3(v2).sub(v1);
         Vector3 v23 = new Vector3(v2).sub(v3);
-        Vector3 normal = v23.cross(v21).normalize();
-        return normal;
+        return v23.cross(v21).normalize();
     }
     
     public void computeTriangleNormals() {
@@ -220,11 +212,11 @@ implements Collection<Vertex>, ObservableInterface
     //     return normals;
     // }
     
-    public boolean hasFaceColors() {
-        if (faces.size() < 1) return false;
-        Face face = faces.iterator().next();
-        return face.getColor() != null;
-    }
+//    public boolean hasFaceColors() {
+//        if (faces.size() < 1) return false;
+//        Face face = faces.iterator().next();
+//        return face.getColor() != null;
+//    }
 
     public boolean hasTriangleNormals() {
         if (triangles.size() < 1) return false;
@@ -233,9 +225,7 @@ implements Collection<Vertex>, ObservableInterface
     }
 
     public boolean hasVertexNormals() {
-        if (vertices.size() < 1)
-            return false;
-        return vertices.get(0).hasAttribute("normal");
+        return vertices.size() >= 1 && vertices.get(0).hasAttribute("normal");
     }
     
     // public boolean hasVertexColors() {
@@ -246,62 +236,62 @@ implements Collection<Vertex>, ObservableInterface
      * Creates a now MeshGeometry, with the order of face vertices reversed.
      * This is useful for transforming the original Utah teapot to 
      * CCW convention.
-     * @return 
+     *
      */
-    public MeshGeometry reverseFaces() {
-        MeshGeometry result = new MeshGeometry();
-        for (Vertex v : vertices)
-            result.getVertices().add(new Vertex(v.getPosition()));
-        for (Face f : faces) {
-            List<Integer> ix = f.getVertices();
-            ArrayList rev = new ArrayList(ix);
-            Collections.reverse(rev);
-            result.addFace(new Face(rev));
-        }
-        result.notifyObservers();
-        return result;
-    }
+//    public MeshGeometry reverseFaces() {
+//        MeshGeometry result = new MeshGeometry();
+//        for (Vertex v : vertices)
+//            result.getVertices().add(new Vertex(v.getPosition()));
+//        for (Face f : faces) {
+//            List<Integer> ix = f.getVertices();
+//            ArrayList rev = new ArrayList(ix);
+//            Collections.reverse(rev);
+//            result.addFace(new Face(rev));
+//        }
+//        result.notifyObservers();
+//        return result;
+//    }
     
     // Reverse vertex order of faces and triangles that do not match their 
     // vertices normal directions
-    public void correctFaceOrders() {
-        if (! hasVertexNormals())
-            return;
-        for (Face f : faces) {
-            Vector3 vnorm = new Vector3(0,0,0); // normal based on vertex normals
-            for (int vi : f.getVertices())
-                vnorm.add((Vector3)vertices.get(vi).getVectorAttribute("normal"));
-            Vector3 fnorm = new Vector3(0,0,0); // normal based on ordered face vertices
-            // sum contibutions from triangles that make up this face
-            for (int fvi = 2; fvi < f.getVertices().size(); ++fvi) {
-                fnorm.add(computeTriangleNormal(
-                        f.getVertices().get(0), 
-                        f.getVertices().get(fvi-1), 
-                        f.getVertices().get(fvi)));
-            }
-            if (fnorm.dot(vnorm) < 0) // normal directions disagree
-                Collections.reverse(f.getVertices());
-        }
-    }
+//    public void correctFaceOrders() {
+//        if (! hasVertexNormals())
+//            return;
+//        for (Face f : faces) {
+//            Vector3 vnorm = new Vector3(0,0,0); // normal based on vertex normals
+//            for (int vi : f.getVertices())
+//                vnorm.add((Vector3)vertices.get(vi).getVectorAttribute("normal"));
+//            Vector3 fnorm = new Vector3(0,0,0); // normal based on ordered face vertices
+//            // sum contibutions from triangles that make up this face
+//            for (int fvi = 2; fvi < f.getVertices().size(); ++fvi) {
+//                fnorm.add(computeTriangleNormal(
+//                        f.getVertices().get(0),
+//                        f.getVertices().get(fvi-1),
+//                        f.getVertices().get(fvi)));
+//            }
+//            if (fnorm.dot(vnorm) < 0) // normal directions disagree
+//                Collections.reverse(f.getVertices());
+//        }
+//    }
     
     // Reverse vertex order of faces and triangles that do not match their 
     // vertices normal directions
-    public void correctTriangleOrders() {
-        if (! hasVertexNormals())
-            return;
-        for (Triangle t : triangles) {
-            Vector3 vnorm = new Vector3(0,0,0); // normal based on vertex normals
-            int[] a = t.asArray();
-            for (int vi : a)
-                vnorm.add((Vector3)vertices.get(vi).getVectorAttribute("normal"));
-            Vector3 fnorm = computeTriangleNormal(a[0], a[1], a[2]);
-            if (fnorm.dot(vnorm) < 0) { // normal directions disagree, so flip
-                int[] rev = {a[2], a[1], a[0]};
-                for (int i = 0; i < 3; ++i)
-                    a[i] = rev[i];
-            }
-        }
-    }
+//    public void correctTriangleOrders() {
+//        if (! hasVertexNormals())
+//            return;
+//        for (Triangle t : triangles) {
+//            Vector3 vnorm = new Vector3(0,0,0); // normal based on vertex normals
+//            int[] a = t.asArray();
+//            for (int vi : a)
+//                vnorm.add((Vector3)vertices.get(vi).getVectorAttribute("normal"));
+//            Vector3 fnorm = computeTriangleNormal(a[0], a[1], a[2]);
+//            if (fnorm.dot(vnorm) < 0) { // normal directions disagree, so flip
+//                int[] rev = {a[2], a[1], a[0]};
+//                for (int i = 0; i < 3; ++i)
+//                    a[i] = rev[i];
+//            }
+//        }
+//    }
 
     public Box3 getBoundingBox() {
         if (boundingBoxIsDirty) {
