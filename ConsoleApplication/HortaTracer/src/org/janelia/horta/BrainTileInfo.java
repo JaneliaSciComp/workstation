@@ -30,6 +30,13 @@
 package org.janelia.horta;
 
 import Jama.Matrix;
+import org.janelia.geometry3d.Box3;
+import org.janelia.geometry3d.ConstVector3;
+import org.janelia.geometry3d.Vector3;
+import org.janelia.gltools.texture.Texture3d;
+import org.janelia.horta.volume.BrickInfo;
+import org.janelia.horta.volume.VoxelIndex;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -37,13 +44,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.janelia.horta.volume.BrickInfo;
-import org.janelia.horta.volume.VoxelIndex;
-import org.janelia.geometry3d.Box3;
-import org.janelia.geometry3d.ConstVector3;
-import org.janelia.geometry3d.Vector3;
-import org.janelia.gltools.texture.Texture3d;
-import org.netbeans.api.progress.ProgressHandle;
 
 /**
  * Represents Mouse Brain tile information entry from tilebase.cache.yml file.
@@ -287,25 +287,17 @@ implements BrickInfo
             return false;
         }
         final BrainTileInfo other = (BrainTileInfo) obj;
-        if (!Objects.equals(this.localPath, other.localPath)) {
-            return false;
-        }
-        return true;
+        return Objects.equals(this.localPath, other.localPath);
     }
 
     @Override
-    public boolean isSameBrick(BrickInfo other)
-    {
-        if (! (other instanceof BrainTileInfo)) {
+    public boolean isSameBrick(BrickInfo other) {
+        if (!(other instanceof BrainTileInfo)) {
             return false;
         }
         BrainTileInfo rhs = (BrainTileInfo) other;
-        if ( ! rhs.parentPath.equals(parentPath))
-            return false;
-        if ( ! rhs.localPath.equals(localPath))
-            return false;
-        
-        return true;
+        return rhs.parentPath.equals(parentPath) && rhs.localPath.equals(localPath);
+
     }
     
     

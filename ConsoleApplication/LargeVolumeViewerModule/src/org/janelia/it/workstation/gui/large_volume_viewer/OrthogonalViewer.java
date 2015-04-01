@@ -1,10 +1,31 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.geom.Rotation3d;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLCapabilitiesChooser;
+import javax.media.opengl.GLContext;
+import javax.media.opengl.awt.GLJPanel;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -13,41 +34,6 @@ import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Vector;
-
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLCapabilitiesChooser;
-import javax.media.opengl.GLContext;
-import javax.media.opengl.awt.GLJPanel;
-import javax.swing.AbstractAction;
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.KeyStroke;
-
-import org.janelia.it.workstation.geom.CoordinateAxis;
-import org.janelia.it.workstation.geom.Rotation3d;
-import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.PanMode;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.TraceMode;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ZScanMode;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomMode;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.MouseHandler;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Intended replacement class for LargeVolumeViewer,
@@ -152,7 +138,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                 List<JMenuItem> systemMenuItems = systemMenuItemGenerator.getMenus(e);
                 if ((modeItems.size() == 0) && (systemMenuItems.size() == 0))
                     return;
-                if ((modeItems != null) && (modeItems.size() > 0)) {
+                if (modeItems.size() > 0) {
                     for (JMenuItem item : modeItems) {
                         if (item == null)
                             popupMenu.addSeparator();
@@ -317,9 +303,9 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
 
-	public AwtActor getReticle() {
-		return reticleActor;
-	}
+//	public AwtActor getReticle() {
+//		return reticleActor;
+//	}
 
 	@Override
 	public Rotation3d getViewerInGround() {
@@ -468,7 +454,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 			super(-1, viewer);
 			putValue(NAME, "Previous "+viewer.sliceAxis.getName()+" Slice");
 			putValue(SMALL_ICON, Icons.getIcon("z_stack_up.png"));
-			putValue(MNEMONIC_KEY, (int)KeyEvent.VK_PAGE_UP);
+			putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_UP);
 			KeyStroke accelerator = KeyStroke.getKeyStroke(
 				KeyEvent.VK_PAGE_UP, 0);
 			putValue(ACCELERATOR_KEY, accelerator);
@@ -484,7 +470,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 			super(1, viewer);
 			putValue(NAME, "Next "+viewer.sliceAxis.getName()+" Slice");
 			putValue(SMALL_ICON, Icons.getIcon("z_stack_down.png"));
-			putValue(MNEMONIC_KEY, (int)KeyEvent.VK_PAGE_DOWN);
+			putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_DOWN);
 			KeyStroke accelerator = KeyStroke.getKeyStroke(
 				KeyEvent.VK_PAGE_DOWN, 0);
 			putValue(ACCELERATOR_KEY, accelerator);

@@ -6,6 +6,8 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteRequestedListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,8 +16,6 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteRequestedListener;
 
 /**
  * this class displays notes placed on annotations in a clickable list
@@ -26,8 +26,7 @@ public class NoteListPanel extends JPanel {
 
     private TmWorkspace workspace;
 
-    private JList noteListBox;
-    private DefaultListModel noteListModel;
+    private DefaultListModel<NoteProxy> noteListModel;
     private CameraPanToListener panListener;
     private EditNoteRequestedListener editNoteRequestListener;
 
@@ -50,7 +49,7 @@ public class NoteListPanel extends JPanel {
     }
 
     /**
-     * @return the panListener
+     * Method to set the panListener
      */
     public void setPanListener(CameraPanToListener panListener) {
         this.panListener = panListener;
@@ -71,8 +70,8 @@ public class NoteListPanel extends JPanel {
         c.insets = new Insets(10, 0, 0, 0);
         add(new JLabel("Notes", JLabel.LEADING), c);
 
-        noteListModel = new DefaultListModel();
-        noteListBox = new JList(noteListModel);
+        noteListModel = new DefaultListModel<>();
+        JList noteListBox = new JList(noteListModel);
         JScrollPane noteScrollPane = new JScrollPane(noteListBox);
         noteListBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
@@ -86,9 +85,9 @@ public class NoteListPanel extends JPanel {
                 int index = list.locationToIndex(evt.getPoint());
                 NoteProxy selectedNote;
                 if (index >= 0) {
-                    selectedNote = (NoteProxy) noteListModel.getElementAt(index);
+                    selectedNote = noteListModel.getElementAt(index);
                     TmNeuron foundNeuron = null;
-                    for (TmNeuron neuron: workspace.getNeuronList()) {
+                    for (TmNeuron neuron : workspace.getNeuronList()) {
                         if (neuron.getId().equals(selectedNote.neuronID)) {
                             foundNeuron = neuron;
                         }

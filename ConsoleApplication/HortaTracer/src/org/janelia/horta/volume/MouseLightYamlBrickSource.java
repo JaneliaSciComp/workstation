@@ -30,22 +30,19 @@
 
 package org.janelia.horta.volume;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import org.janelia.geometry3d.Box3;
+import org.janelia.horta.BrainTileInfo;
+import org.janelia.horta.OsFilePathRemapper;
+import org.netbeans.api.progress.ProgressHandle;
+import org.yaml.snakeyaml.Yaml;
+
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.janelia.horta.BrainTileInfo;
-import org.janelia.geometry3d.Box3;
-import org.janelia.horta.OsFilePathRemapper;
-import org.netbeans.api.progress.ProgressHandle;
-import org.openide.util.Exceptions;
-import org.yaml.snakeyaml.Yaml;
 
 /**
  *
@@ -54,7 +51,6 @@ import org.yaml.snakeyaml.Yaml;
 public class MouseLightYamlBrickSource 
 implements StaticVolumeBrickSource
 {
-    private final String tilebasePath;
     private final Map<Double, BrickInfoSet> resMap = new HashMap<>();
     private final Box3 boundingBox = new Box3();
     
@@ -75,8 +71,8 @@ implements StaticVolumeBrickSource
         if (! new File(parentPath).exists()) {
             throw new RuntimeException("No such folder " + parentPath);
         }
-        
-        tilebasePath = parentPath;
+
+        String tilebasePath = parentPath;
         
         progress.progress(25);
         List<Map<String, Object>> tiles = (List<Map<String, Object>>) tilebase.get("tiles");
@@ -86,7 +82,7 @@ implements StaticVolumeBrickSource
         for (Map<String, Object> tile : tiles) {
             String tilePath = (String) tile.get("path");
             
-            BrickInfo tileInfo = new BrainTileInfo(tile, this.tilebasePath);
+            BrickInfo tileInfo = new BrainTileInfo(tile, tilebasePath);
 
             // Update bounding box
             boundingBox.include(tileInfo.getBoundingBox());
