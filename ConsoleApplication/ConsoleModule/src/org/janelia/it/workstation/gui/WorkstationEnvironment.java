@@ -24,6 +24,8 @@ public class WorkstationEnvironment {
 
         // Assuming that the user has entered the login/password information, now validate
         String username = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+        String password = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD);
+        String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
         String email = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
 
         if (username==null || email==null) {
@@ -38,7 +40,8 @@ public class WorkstationEnvironment {
             }
         }
 
-        SessionMgr.getSessionMgr().loginSubject();
+        SessionMgr.getSessionMgr().loginSubject(username, password);
+        SessionMgr.getSessionMgr().setRunAsUser(runAsUser);
         SessionMgr.getSessionMgr().newBrowser();
     }
 }

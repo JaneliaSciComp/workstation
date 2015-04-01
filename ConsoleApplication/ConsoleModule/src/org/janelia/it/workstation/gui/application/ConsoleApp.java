@@ -5,7 +5,6 @@ import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManage
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.gui.framework.exception_handlers.ExitHandler;
 import org.janelia.it.workstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
-import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.workstation.gui.util.panels.UserAccountSettingsPanel;
@@ -16,8 +15,8 @@ import org.janelia.it.workstation.shared.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.security.ProtectionDomain;
+import org.janelia.it.workstation.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
@@ -78,44 +77,36 @@ public class ConsoleApp {
 
             // Assuming that the user has entered the login/password information, now validate
             String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+            String password = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD);
+            String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
             String email = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
+
+            SessionMgr.getSessionMgr().loginSubject(username, password);
             
-            if (username==null || email==null) {
-                Object[] options = {"Enter Login", "Exit Program"};
-                final int answer = JOptionPane.showOptionDialog(null, "Please enter your login and email information.", "Information Required",
-                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-                if (answer == 0) {
-                    PrefController.getPrefController().getPrefInterface(UserAccountSettingsPanel.class, null);
-                }
-                else {
-                    SessionMgr.getSessionMgr().systemExit();
-                }
+            if (!SessionMgr.getSessionMgr().isLoggedIn() || email==null) {
+                LoginDialog loginDialog = new LoginDialog();
+                loginDialog.showDialog();
             }
             
-            SessionMgr.getSessionMgr().loginSubject();
+            email = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
             
-            if (!SessionMgr.getSessionMgr().isLoggedIn()) {
-                Object[] options = {"Enter Login", "Exit Program"};
-                final int answer = JOptionPane.showOptionDialog(null, "Please enter your login information.", "Information Required",
-                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-                if (answer == 0) {
-                    PrefController.getPrefController().getPrefInterface(UserAccountSettingsPanel.class, null);
-                }
-                else {
-                    SessionMgr.getSessionMgr().systemExit();
-                }
-            }
-            else {
-            	log.info("Successfully logged in user "+SessionMgr.getUsername());
+            if (!SessionMgr.getSessionMgr().isLoggedIn() || email==null) {
+                log.warn("User closed login window without successfully logging in, exiting program.");
+                SessionMgr.getSessionMgr().systemExit();
             }
             
-            // Init data 
-            modelMgr.initErrorOntology();
-            modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
-                        
+            log.info("Successfully logged in user "+SessionMgr.getUsername());
+            
+            try {
+                SessionMgr.getSessionMgr().setRunAsUser(runAsUser);
+            }
+            catch (Exception e) {
+                sessionMgr.setModelProperty(SessionMgr.RUN_AS_USER, "");
+                SessionMgr.getSessionMgr().handleException(e);
+            }
+            
             sessionMgr.newBrowser();
-            
-            log.info("Displaying main frame");
+            log.debug("Displaying main frame");
             SessionMgr.getMainFrame().setVisible(true);
 
             // Once the main frame is visible, we can do some things in the background
@@ -123,9 +114,10 @@ public class ConsoleApp {
 
                 @Override
                 protected void doStuff() throws Exception {
-                    //sessionMgr.startExternalHttpListener(30000);
+                    modelMgr.initErrorOntology();
                     sessionMgr.startAxisServer(ConsoleProperties.getString("console.WebServiceURL"));
                     sessionMgr.startWebServer(ConsoleProperties.getInt("console.WebServer.port"));
+                    modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
                 }
 
                 @Override

@@ -182,6 +182,8 @@ public class Browser implements Cloneable {
      */
     private void loadedWorkspaces(List<Entity> workspaces) {
         
+        log.debug("Workspaces loaded. Initializing dialogs...");
+        
         SimpleWorker worker = new SimpleWorker() {
 
             @Override

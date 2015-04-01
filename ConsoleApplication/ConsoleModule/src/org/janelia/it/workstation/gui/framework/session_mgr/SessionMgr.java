@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import org.janelia.it.jacs.model.user_data.Group;
 
 public final class SessionMgr {
 
@@ -58,6 +59,7 @@ public final class SessionMgr {
     public static String JACS_PIPELINE_SERVER_PROPERTY = "SessionMgr.JacsPipelineServerProperty";
     public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
+    public static String REMEMBER_PASSWORD = LoginProperties.REMEMBER_PASSWORD;
     public static String USER_EMAIL = "UserEmail";
     public static String FILE_CACHE_DISABLED_PROPERTY = "console.localCache.disabled";
     public static String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
@@ -643,7 +645,7 @@ public final class SessionMgr {
         }
     }
 
-    public boolean loginSubject() {
+    public boolean loginSubject(String username, String password) {
         try {
             boolean relogin = false;
 
@@ -655,49 +657,70 @@ public final class SessionMgr {
 
             findAndRemoveWindowsSplashFile();
             // Login and start the session
-            authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject();
+            authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject(username, password);
             if (null != authenticatedSubject) {
-                isLoggedIn = true;
-
-                String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
-                loggedInSubject = StringUtils.isEmpty(runAsUser) ? authenticatedSubject : ModelMgr.getModelMgr().getSubjectWithPreferences(runAsUser);
-
-                if (loggedInSubject == null) {
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Cannot run as non-existent subject " + runAsUser, "Error", JOptionPane.ERROR_MESSAGE);
-                    loggedInSubject = authenticatedSubject;
-                }
-
-                if (!authenticatedSubject.getId().equals(loggedInSubject.getId())) {
-                    log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), loggedInSubject.getId());
-                }
-                else {
-                    log.info("Authenticated as {}", authenticatedSubject.getKey());
-                }
+                isLoggedIn = true;                
+                loggedInSubject = authenticatedSubject;
+                log.info("Authenticated as {}", authenticatedSubject.getKey());
 
                 FacadeManager.getFacadeManager().getComputeFacade().beginSession();
-
                 if (relogin) {
-                    log.info("Clearing entity model");
-                    ModelMgr.getModelMgr().reset();
-                    if (SessionMgr.getBrowser() != null) {
-                        log.info("Refreshing all views");
-                        SessionMgr.getBrowser().getEntityOutline().refresh();
-                        SessionMgr.getBrowser().getOntologyOutline().refresh();
-                        SessionMgr.getBrowser().getViewerManager().clearAllViewers();
-                    }
+                    resetSession();
                 }
             }
 
             return isLoggedIn;
         }
         catch (Exception e) {
-            log.error("loginUser: exception caught", e);
             isLoggedIn = false;
             log.error("Error logging in", e);
             throw new FatalCommError("Cannot authenticate login. The server may be down. Please try again later.");
         }
     }
 
+    public boolean setRunAsUser(String runAsUser) {
+        
+        if (!SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME) && !StringUtils.isEmpty(runAsUser)) {
+            throw new IllegalStateException("Non-admin user cannot run as another user");
+        }
+        
+        try {
+            if (!StringUtils.isEmpty(runAsUser)) {
+                Subject runAsSubject = ModelMgr.getModelMgr().getSubjectWithPreferences(runAsUser);
+                if (runAsSubject==null) {
+                    return false;
+                }
+                loggedInSubject = runAsSubject;
+            }
+            else {
+                loggedInSubject = authenticatedSubject;
+            }
+
+            if (!authenticatedSubject.getId().equals(loggedInSubject.getId())) {
+                log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), loggedInSubject.getId());
+            }
+                
+            resetSession();
+            return true;
+        }
+        catch (Exception e) {
+            loggedInSubject = authenticatedSubject;
+            handleException(e);
+            return false;
+        }
+    }
+    
+    private void resetSession() {
+        final Browser browser = SessionMgr.getBrowser();
+        if (browser != null) {
+            log.info("Refreshing all views");
+            browser.resetView();
+        }
+        log.info("Clearing entity model");
+        ModelMgr.getModelMgr().reset();
+        FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
+    }
+    
     public void logoutUser() {
         try {
             if (loggedInSubject != null) {

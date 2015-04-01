@@ -12,21 +12,21 @@ import java.awt.event.ActionListener;
 
 @ActionID(
         category = "Edit/Preferences",
-        id = "ApplicationSettingsAction"
+        id = "UserAccountSettingsAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_ApplicationSettingsAction"
+        displayName = "#CTL_UserAccountSettingsAction"
 )
 @ActionReferences({
     @ActionReference(path = "Menu/Edit/Preferences", position = 100),
-    @ActionReference(path = "Shortcuts", name = "M-F3")
+    @ActionReference(path = "Shortcuts", name = "M-F4")
 })
-@Messages("CTL_ApplicationSettingsAction=Application Settings...")
-public final class ApplicationSettingsAction implements ActionListener {
+@Messages("CTL_UserAccountSettingsAction=User Account Settings...")
+public final class UserAccountSettingsAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
         new EditingActionDelegate()
-                .establishPrefController(PrefController.APPLICATION_EDITOR);
+                .establishPrefController(PrefController.USER_ACCOUNT_EDITOR);
     }
 }

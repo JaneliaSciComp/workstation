@@ -1,16 +1,11 @@
 package org.janelia.it.workstation.gui.util.panels;
 
-import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.PropertyConfigurator;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.util.text_component.StandardTextField;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.user_data.Group;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +16,6 @@ import javax.swing.text.DefaultFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 
@@ -30,10 +23,10 @@ public class UserAccountSettingsPanel extends JPanel implements PrefEditor {
     
     private static final Logger log = LoggerFactory.getLogger(UserAccountSettingsPanel.class);
     
-    private String userLogin = "";
-    private String userPassword = "";
-    private String userEmail = "";
-    private String runAsUser = "";
+//    private String userLogin = "";
+//    private String userPassword = "";
+//    private String userEmail = "";
+//    private String runAsUser = "";
     private Boolean cacheDisabled;
     private Integer cacheCapacity;
     private String downloadsDir = "";
@@ -41,18 +34,18 @@ public class UserAccountSettingsPanel extends JPanel implements PrefEditor {
     
     private JLabel requiredField = new JLabel("* indicates a required field");
     
-    private JPanel loginPanel = new JPanel();
-    private JPasswordField passwordTextField;
-    private JLabel passwordLabel = new JLabel("* Password:");
-    private JLabel loginLabel = new JLabel("* User Name:");
-    private JTextField loginTextField;
-    private JPanel runAsPanel;
-    private JLabel runAsLabel = new JLabel("Run As User:");
-    private JTextField runAsTextField;
-
-    private JPanel emailPanel;
-    private JLabel emailLabel = new JLabel("* Email Address:");
-    private JTextField emailTextField;
+//    private JPanel loginPanel = new JPanel();
+//    private JPasswordField passwordTextField;
+//    private JLabel passwordLabel = new JLabel("* Password:");
+//    private JLabel loginLabel = new JLabel("* User Name:");
+//    private JTextField loginTextField;
+//    private JPanel runAsPanel;
+//    private JLabel runAsLabel = new JLabel("Run As User:");
+//    private JTextField runAsTextField;
+//
+//    private JPanel emailPanel;
+//    private JLabel emailLabel = new JLabel("* Email Address:");
+//    private JTextField emailTextField;
 
     private JRadioButton fileCacheEnabledRadioButton;
     private JRadioButton fileCacheDisabledRadioButton;
@@ -67,13 +60,13 @@ public class UserAccountSettingsPanel extends JPanel implements PrefEditor {
                                     JFrame parentFrame) {
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
-            userLogin = (String) getModelProperty(SessionMgr.USER_NAME, "");
-            userPassword = (String) getModelProperty(SessionMgr.USER_PASSWORD, "");
-            userEmail = (String) getModelProperty(SessionMgr.USER_EMAIL, "");
+//            userLogin = (String) getModelProperty(SessionMgr.USER_NAME, "");
+//            userPassword = (String) getModelProperty(SessionMgr.USER_PASSWORD, "");
+//            userEmail = (String) getModelProperty(SessionMgr.USER_EMAIL, "");
             cacheDisabled = (Boolean) getModelProperty(SessionMgr.FILE_CACHE_DISABLED_PROPERTY, false);
             cacheCapacity = (Integer) getModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
                                                    SessionMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY);
-            runAsUser = (String) getModelProperty(SessionMgr.RUN_AS_USER, "");
+//            runAsUser = (String) getModelProperty(SessionMgr.RUN_AS_USER, "");
             downloadsDir = SystemInfo.getDownloadsDir().getAbsolutePath();
             jbInit();
         }
@@ -87,7 +80,7 @@ public class UserAccountSettingsPanel extends JPanel implements PrefEditor {
     }
 
     public String getPanelGroup() {
-        return PrefController.APPLICATION_EDITOR;
+        return PrefController.USER_ACCOUNT_EDITOR;
     }
 
     public String getDescription() {
@@ -99,22 +92,22 @@ public class UserAccountSettingsPanel extends JPanel implements PrefEditor {
      * the Controller frame.
      */
     public void cancelChanges() {
-        if (userLogin == null || userPassword == null || userEmail == null) {
-            PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_NAME, "NoUserLogin");
-            PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_PASSWORD, "NoUserPassword");
-            PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_EMAIL, "NoUserEmail");
-            PropertyConfigurator.getProperties().setProperty(SessionMgr.RUN_AS_USER, "NoRunAsUser");
-        }
+//        if (userLogin == null || userPassword == null || userEmail == null) {
+//            PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_NAME, "NoUserLogin");
+//            PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_PASSWORD, "NoUserPassword");
+//            PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_EMAIL, "NoUserEmail");
+//            PropertyConfigurator.getProperties().setProperty(SessionMgr.RUN_AS_USER, "NoRunAsUser");
+//        }
         settingsChanged = false;
     }
 
     public boolean hasChanged() {
         // If not equal to original values, they have changed.
-        if (!userLogin.equals(loginTextField.getText().trim()) ||
-            !userPassword.equals(new String(passwordTextField.getPassword())) ||
-            !userEmail.equals(emailTextField.getText().trim()) ||
-            !runAsUser.equals(runAsTextField.getText().trim()) ||
-            !cacheDisabled.equals(fileCacheDisabledRadioButton.isSelected()) ||
+//        if (!userLogin.equals(loginTextField.getText().trim()) ||
+//            !userPassword.equals(new String(passwordTextField.getPassword())) ||
+//            !userEmail.equals(emailTextField.getText().trim()) ||
+//            !runAsUser.equals(runAsTextField.getText().trim()) ||
+        if (!cacheDisabled.equals(fileCacheDisabledRadioButton.isSelected()) ||
             !cacheCapacity.equals(fileCacheSpinner.getValue()) || 
             !downloadsDir.equals(downloadsDirField.getText().trim()))
             settingsChanged = true;
@@ -126,10 +119,10 @@ public class UserAccountSettingsPanel extends JPanel implements PrefEditor {
      * pressed in the Controller frame.
      */
     public String[] applyChanges() {
-        userLogin = loginTextField.getText().trim();
-        userPassword = new String(passwordTextField.getPassword());
-        userEmail = emailTextField.getText().trim();
-        runAsUser = runAsTextField.getText().trim();
+//        userLogin = loginTextField.getText().trim();
+//        userPassword = new String(passwordTextField.getPassword());
+//        userEmail = emailTextField.getText().trim();
+//        runAsUser = runAsTextField.getText().trim();
         cacheDisabled = fileCacheDisabledRadioButton.isSelected();
         cacheCapacity = (Integer) fileCacheSpinner.getValue();
         downloadsDir = downloadsDirField.getText().trim();
@@ -148,30 +141,30 @@ public class UserAccountSettingsPanel extends JPanel implements PrefEditor {
             sessionMgr.setFileCacheGigabyteCapacity(cacheCapacity);
         }
 
-        if ((!userLogin.equals(sessionMgr.getModelProperty(SessionMgr.USER_NAME))) ||
-            (!userPassword.equals(sessionMgr.getModelProperty(SessionMgr.USER_PASSWORD))) ||
-            (!userEmail.equals(sessionMgr.getModelProperty(SessionMgr.USER_EMAIL))) ||
-            (!runAsUser.equals(sessionMgr.getModelProperty(SessionMgr.RUN_AS_USER)))) {
-            // If the login has changed then wipe out the runAs field and value.
-            if ((!userLogin.equals(sessionMgr.getModelProperty(SessionMgr.USER_NAME)))) {
-                runAsTextField.setText("");
-                runAsUser="";
-            }
-            log.info("Setting properties in model...");
-            sessionMgr.setModelProperty(SessionMgr.RUN_AS_USER, runAsUser);
-            sessionMgr.setModelProperty(SessionMgr.USER_NAME, userLogin);
-            sessionMgr.setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
-            sessionMgr.setModelProperty(SessionMgr.USER_EMAIL, userEmail);
-            boolean loginSuccess = SessionMgr.getSessionMgr().loginSubject();
-            if (loginSuccess) {
-                runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME));
-            }
-
-            final Browser browser = SessionMgr.getBrowser();
-            if (browser != null) browser.resetView();
-
-            FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
-        }
+//        if ((!userLogin.equals(sessionMgr.getModelProperty(SessionMgr.USER_NAME))) ||
+//            (!userPassword.equals(sessionMgr.getModelProperty(SessionMgr.USER_PASSWORD))) ||
+//            (!userEmail.equals(sessionMgr.getModelProperty(SessionMgr.USER_EMAIL))) ||
+//            (!runAsUser.equals(sessionMgr.getModelProperty(SessionMgr.RUN_AS_USER)))) {
+//            // If the login has changed then wipe out the runAs field and value.
+//            if ((!userLogin.equals(sessionMgr.getModelProperty(SessionMgr.USER_NAME)))) {
+//                runAsTextField.setText("");
+//                runAsUser="";
+//            }
+//            log.info("Setting properties in model...");
+//            sessionMgr.setModelProperty(SessionMgr.RUN_AS_USER, runAsUser);
+//            sessionMgr.setModelProperty(SessionMgr.USER_NAME, userLogin);
+//            sessionMgr.setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
+//            sessionMgr.setModelProperty(SessionMgr.USER_EMAIL, userEmail);
+//            boolean loginSuccess = SessionMgr.getSessionMgr().loginSubject(userLogin, userPassword, runAsUser);
+//            if (loginSuccess) {
+//                runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME));
+//            }
+//
+//            final Browser browser = SessionMgr.getBrowser();
+//            if (browser != null) browser.resetView();
+//
+//            FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
+//        }
 
         if (cacheDisabledChanged || cacheCapacityChanged) {
             updateFileCacheComponents(true);
@@ -191,83 +184,82 @@ public class UserAccountSettingsPanel extends JPanel implements PrefEditor {
 
     private void jbInit() throws Exception {
         this.setPreferredSize(new Dimension(300,300));
-        passwordTextField = new JPasswordField(userPassword, 40);
-        passwordTextField.setPreferredSize(new Dimension(60, 30));
-        passwordTextField.setSize(100, 20);
-        passwordTextField.addFocusListener(new FocusListener() {
-            public void focusGained(FocusEvent e) {
-                if (e.getSource() == passwordTextField) passwordTextField.selectAll();
-            }
-
-            public void focusLost(FocusEvent e) {
-            }
-        });
-        loginTextField = new StandardTextField(userLogin, 40);
-        loginTextField.setPreferredSize(new Dimension(60, 30));
-        loginTextField.addFocusListener(new FocusListener() {
-            public void focusGained(FocusEvent e) {
-                if (e.getSource() == loginTextField) loginTextField.selectAll();
-            }
-
-            public void focusLost(FocusEvent e) {
-            }
-        });
-        emailTextField = new StandardTextField(userEmail, 40);
-        emailTextField.setPreferredSize(new Dimension(80, 30));
-        emailTextField.addFocusListener(new FocusListener() {
-            public void focusGained(FocusEvent e) {
-                if (e.getSource() == emailTextField) emailTextField.selectAll();
-            }
-
-            public void focusLost(FocusEvent e) {
-            }
-        });
-        
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        
-        loginPanel.setBorder(new TitledBorder("Workstation Login Information"));
-        loginPanel.setLayout(new BoxLayout(loginPanel, BoxLayout.Y_AXIS));
-        loginPanel.setMaximumSize(new Dimension(600, 100));
-        JPanel userPassPanel = new JPanel();
-        userPassPanel.setLayout(new BoxLayout(userPassPanel, BoxLayout.X_AXIS));
-        userPassPanel.add(loginLabel);
-        userPassPanel.add(Box.createHorizontalStrut(10));
-        userPassPanel.add(loginTextField);
-        userPassPanel.add(Box.createHorizontalStrut(30));
-        userPassPanel.add(passwordLabel);
-        userPassPanel.add(Box.createHorizontalStrut(5));
-        userPassPanel.add(passwordTextField);
-        loginPanel.add(Box.createVerticalStrut(10));
-        loginPanel.add(userPassPanel);
-        loginPanel.add(Box.createVerticalStrut(10));
-
-        runAsTextField = new StandardTextField(runAsUser, 40);
-        runAsTextField.setPreferredSize(new Dimension(80, 30));
-        
-        runAsPanel = new JPanel();
-        runAsPanel.setLayout(new BoxLayout(runAsPanel, BoxLayout.X_AXIS));
-        runAsPanel.add(runAsLabel);
-        runAsPanel.add(Box.createHorizontalStrut(10));
-        runAsPanel.add(runAsTextField);
-        
-        if (SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME)) {
-            loginPanel.add(runAsPanel);
-            loginPanel.add(Box.createVerticalStrut(10));
-        }
-
-        emailPanel = new JPanel();
-        emailPanel.setBorder(new TitledBorder("Email Address"));
-        emailPanel.setLayout(new BoxLayout(emailPanel, BoxLayout.X_AXIS));
-        emailPanel.setMaximumSize(new Dimension(600, 100));
-        JPanel userEmailPanel = new JPanel();
-        userEmailPanel.setLayout(new BoxLayout(userEmailPanel, BoxLayout.X_AXIS));
-        userEmailPanel.add(emailLabel);
-        userEmailPanel.add(Box.createHorizontalStrut(10));
-        userEmailPanel.add(emailTextField);
-        userEmailPanel.add(Box.createHorizontalStrut(30));
-        emailPanel.add(Box.createVerticalStrut(10));
-        emailPanel.add(userEmailPanel);
-        emailPanel.add(Box.createVerticalStrut(10));
+//        passwordTextField = new JPasswordField(userPassword, 40);
+//        passwordTextField.setPreferredSize(new Dimension(60, 30));
+//        passwordTextField.setSize(100, 20);
+//        passwordTextField.addFocusListener(new FocusListener() {
+//            public void focusGained(FocusEvent e) {
+//                if (e.getSource() == passwordTextField) passwordTextField.selectAll();
+//            }
+//
+//            public void focusLost(FocusEvent e) {
+//            }
+//        });
+//        loginTextField = new StandardTextField(userLogin, 40);
+//        loginTextField.setPreferredSize(new Dimension(60, 30));
+//        loginTextField.addFocusListener(new FocusListener() {
+//            public void focusGained(FocusEvent e) {
+//                if (e.getSource() == loginTextField) loginTextField.selectAll();
+//            }
+//
+//            public void focusLost(FocusEvent e) {
+//            }
+//        });
+//        emailTextField = new StandardTextField(userEmail, 40);
+//        emailTextField.setPreferredSize(new Dimension(80, 30));
+//        emailTextField.addFocusListener(new FocusListener() {
+//            public void focusGained(FocusEvent e) {
+//                if (e.getSource() == emailTextField) emailTextField.selectAll();
+//            }
+//
+//            public void focusLost(FocusEvent e) {
+//            }
+//        });
+//        
+//        loginPanel.setBorder(new TitledBorder("Workstation Login Information"));
+//        loginPanel.setLayout(new BoxLayout(loginPanel, BoxLayout.Y_AXIS));
+//        loginPanel.setMaximumSize(new Dimension(600, 100));
+//        JPanel userPassPanel = new JPanel();
+//        userPassPanel.setLayout(new BoxLayout(userPassPanel, BoxLayout.X_AXIS));
+//        userPassPanel.add(loginLabel);
+//        userPassPanel.add(Box.createHorizontalStrut(10));
+//        userPassPanel.add(loginTextField);
+//        userPassPanel.add(Box.createHorizontalStrut(30));
+//        userPassPanel.add(passwordLabel);
+//        userPassPanel.add(Box.createHorizontalStrut(5));
+//        userPassPanel.add(passwordTextField);
+//        loginPanel.add(Box.createVerticalStrut(10));
+//        loginPanel.add(userPassPanel);
+//        loginPanel.add(Box.createVerticalStrut(10));
+//
+//        runAsTextField = new StandardTextField(runAsUser, 40);
+//        runAsTextField.setPreferredSize(new Dimension(80, 30));
+//        
+//        runAsPanel = new JPanel();
+//        runAsPanel.setLayout(new BoxLayout(runAsPanel, BoxLayout.X_AXIS));
+//        runAsPanel.add(runAsLabel);
+//        runAsPanel.add(Box.createHorizontalStrut(10));
+//        runAsPanel.add(runAsTextField);
+//        
+//        if (SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME)) {
+//            loginPanel.add(runAsPanel);
+//            loginPanel.add(Box.createVerticalStrut(10));
+//        }
+//
+//        emailPanel = new JPanel();
+//        emailPanel.setBorder(new TitledBorder("Email Address"));
+//        emailPanel.setLayout(new BoxLayout(emailPanel, BoxLayout.X_AXIS));
+//        emailPanel.setMaximumSize(new Dimension(600, 100));
+//        JPanel userEmailPanel = new JPanel();
+//        userEmailPanel.setLayout(new BoxLayout(userEmailPanel, BoxLayout.X_AXIS));
+//        userEmailPanel.add(emailLabel);
+//        userEmailPanel.add(Box.createHorizontalStrut(10));
+//        userEmailPanel.add(emailTextField);
+//        userEmailPanel.add(Box.createHorizontalStrut(30));
+//        emailPanel.add(Box.createVerticalStrut(10));
+//        emailPanel.add(userEmailPanel);
+//        emailPanel.add(Box.createVerticalStrut(10));
 
         JPanel fileCachePanel = buildFileCachePanel();
 
@@ -321,10 +313,10 @@ public class UserAccountSettingsPanel extends JPanel implements PrefEditor {
         dirsPanel.setMaximumSize(new Dimension(600, 100));
         
         add(Box.createVerticalStrut(10));
-        add(loginPanel);
-        add(Box.createVerticalStrut(10));
-        add(emailPanel);
-        add(Box.createVerticalStrut(10));
+//        add(loginPanel);
+//        add(Box.createVerticalStrut(10));
+//        add(emailPanel);
+//        add(Box.createVerticalStrut(10));
         add(fileCachePanel);
         add(Box.createVerticalStrut(10));
         add(dirsPanel);

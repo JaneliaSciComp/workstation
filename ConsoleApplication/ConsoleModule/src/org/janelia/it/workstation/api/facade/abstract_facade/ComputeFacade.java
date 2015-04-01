@@ -39,9 +39,9 @@ public interface ComputeFacade {
 
     public void removePreferenceCategory(String preferenceCategory) throws Exception;
 
-	public void stopContinuousExecution(Long taskId) throws Exception;
+    public void stopContinuousExecution(Long taskId) throws Exception;
 
-    public Subject loginSubject() throws Exception;
+    public Subject loginSubject(String username, String password) throws Exception;
     
     public void beginSession();
     
