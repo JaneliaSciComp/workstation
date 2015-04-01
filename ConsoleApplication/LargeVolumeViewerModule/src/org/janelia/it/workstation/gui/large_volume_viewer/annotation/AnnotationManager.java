@@ -25,6 +25,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceLi
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.tracing.VoxelPosition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -54,6 +56,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 {
 
     ModelMgr modelMgr;
+
+    private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
 
     // annotation model object
     private AnnotationModel annotationModel;
@@ -565,7 +569,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not split anchor!",
-                        "Error");
+                        "Error",
+                        error);
             }
         };
         splitter.execute();
@@ -591,7 +596,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not reroot neurite!",
-                        "Error");
+                        "Error",
+                        error);
             }
         };
         rerooter.execute();
@@ -626,7 +632,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not split neurite!",
-                        "Error");
+                        "Error",
+                        error);
             }
         };
         splitter.execute();
@@ -658,7 +665,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not add anchored path!",
-                        "Error");
+                        "Error",
+                        error);
             }
         };
         adder.execute();
@@ -727,7 +735,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 protected void hadError(Throwable error) {
                     presentError(
                             "Could not set note!",
-                            "Error");
+                            "Error",
+                            error);
                 }
             };
             setter.execute();
@@ -749,7 +758,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     protected void hadError(Throwable error) {
                         presentError(
                                 "Could not remove note!",
-                                "Error");
+                                "Error",
+                                error);
                     }
                 };
                 deleter.execute();
@@ -788,7 +798,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not create neuron!",
-                        "Error");
+                        "Error",
+                        error);
             }
         };
         creator.execute();
@@ -822,7 +833,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 protected void hadError(Throwable error) {
                     presentError(
                             "Could not delete current neuron!",
-                            "Error");
+                            "Error",
+                            error);
                 }
             };
             deleter.execute();
@@ -870,7 +882,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not rename neuron!",
-                        "Error");
+                        "Error",
+                        error);
             }
         };
         renamer.execute();
@@ -1306,6 +1319,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 message,
                 title,
                 JOptionPane.ERROR_MESSAGE);
+    }
+
+    /**
+     * usual error dialog is hiding too much info when it pops within
+     * a SimpleWorker's error clause; log those errors!
+     */
+    public void presentError(String message, String title, Throwable error) throws HeadlessException {
+        log.error(message, error);
+        presentError(message, title);
     }
 
 }
