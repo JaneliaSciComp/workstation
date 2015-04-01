@@ -39,6 +39,7 @@
         <folder name="Edit">
             <file name="Separator1.instance_hidden"/>
             <file name="Separator2.instance_hidden"/>
+            <file name="WhereUsedAction.shadow_hidden"/>
             <file name="clipboard-history.shadow_hidden"/>
             <file name="org-netbeans-modules-editor-MainMenuAction$FindNextAction.instance_hidden"/>
             <file name="org-netbeans-modules-editor-MainMenuAction$FindPreviousAction.instance_hidden"/>
