@@ -136,10 +136,31 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         
         // check distance and other restrictions
         if (closest != null && canMergeNeurite(anchor.getGuid(), anchorVoxelLocation, closest.getId())) {
-            // System.out.println("merging " + anchor.getGuid() + " to " + anchor.getLocation());
-            mergeNeurite(anchor.getGuid(), closest.getId());
+            // check if user wants to merge (expensive to undo) or move (near something that
+            //  is valid to merge with), or nothing (undo drag)
+            Object[] options = {"Merge", "Move, don't merge", "Cancel"};
+            int ans = JOptionPane.showOptionDialog(
+                    ComponentUtil.getLVVMainWindow(),
+                    String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
+                            annotationModel.getNeuronFromAnnotationID(anchor.getGuid()),
+                            annotationModel.getNeuronFromAnnotationID(closest.getId())),
+                    "Merge neurites?",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    options,
+                    options[2]
+            );
+            if (ans == JOptionPane.CANCEL_OPTION) {
+                annotationModel.fireAnnotationNotMoved(annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
+                return;
+            } else if (ans == JOptionPane.YES_OPTION) {
+                mergeNeurite(anchor.getGuid(), closest.getId());
+            } else {
+                // move, don't merge
+                moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
+            }
         } else {
-            // System.out.println("moving " + anchor.getGuid() + " to " + anchor.getLocation());
             moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
         }
     }
@@ -491,22 +512,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             presentError(
                     "You can't merge a neurite with itself!",
                     "Can't merge!!");
-            annotationModel.fireAnnotationNotMoved(sourceAnnotation);
-            return;
-        }
-
-        // Message goes before title. Why?  
-        // Because there are several overrides, all of which use the message as 
-        // the first string param. The title is optional. Confusing if not used
-        // often, however.
-        int ans = JOptionPane.showConfirmDialog(
-                ComponentUtil.getLVVMainWindow(),
-                String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
-                        annotationModel.getNeuronFromAnnotationID(sourceAnnotationID),
-                        annotationModel.getNeuronFromAnnotationID(targetAnnotationID)),
-                "Merge neurites?",
-                JOptionPane.OK_CANCEL_OPTION);
-        if (ans != JOptionPane.OK_OPTION) {
             annotationModel.fireAnnotationNotMoved(sourceAnnotation);
             return;
         }
