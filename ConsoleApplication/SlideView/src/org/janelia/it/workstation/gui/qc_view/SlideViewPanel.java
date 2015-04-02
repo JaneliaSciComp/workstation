@@ -4,6 +4,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
+import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
@@ -42,6 +43,9 @@ import org.janelia.it.jacs.shared.solr.EntityDocument;
 import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.workstation.gui.dialogs.search.ResultPage;
 import org.janelia.it.workstation.gui.dialogs.search.ResultTreeMapping;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
@@ -137,6 +141,21 @@ public class SlideViewPanel extends JPanel implements Refreshable {
             @Override
             public boolean isLabelSizeLimitedByImageSize() {
                 return false;
+            }
+            
+            @Subscribe
+            public void entityChanged(EntityChangeEvent event) {
+                // TODO: implement this for virtual entities
+            }
+            
+            @Subscribe
+            public void entityRemoved(EntityRemoveEvent event) {
+                // TODO: implement this for virtual entities
+            }
+            
+            @Subscribe
+            public void entityInvalidated(EntityInvalidationEvent event) {
+                // TODO: implement this for virtual entities
             }
         };
         viewerPane.setViewer(imageViewer);
@@ -353,9 +372,11 @@ public class SlideViewPanel extends JPanel implements Refreshable {
         }
         
         // Second pass to determine overall tile pattern
-        Map<String,EntityData> slideCodeEds = null;
         String dataSetSlideCode = null;
+        Map<String,EntityData> slideCodeEds = null;
 
+        log.info("Got {} samples",sortedSampleIds.size());
+        
         for (Long sampleId : sortedSampleIds) {
             Entity sample = sampleMap.get(sampleId);
             String dataSet = sampleIdToDataset.get(sample.getId());
@@ -450,7 +471,9 @@ public class SlideViewPanel extends JPanel implements Refreshable {
                     ed.setParentEntity(searchResultsEntity);
                     ed.setChildEntity(virtualLsm);
                     log.debug("   Adding "+patternCode);
-                    slideCodeEds.put(patternCode, ed);
+                    if (slideCodeEds!=null) {
+                        slideCodeEds.put(patternCode, ed);
+                    }
 
                     tilePattern.add(patternCode);
                     
@@ -463,7 +486,9 @@ public class SlideViewPanel extends JPanel implements Refreshable {
                 }
             }
 
-            slideCodeToLsmMap.put(dataSetSlideCode, slideCodeEds);
+            if (dataSetSlideCode!=null && slideCodeEds!=null) {
+                slideCodeToLsmMap.put(dataSetSlideCode, slideCodeEds);    
+            }
         }
         
         List<String> sortedTilePattern = new ArrayList<>(tilePattern);
@@ -518,6 +543,8 @@ public class SlideViewPanel extends JPanel implements Refreshable {
         // Walk through each slide code and find all the necessary LSMs to fill
         // out the display. If an LSM for a given objective/tile is not found, 
         // fill it in with a placeholder. 
+        
+        log.debug("Got {} slide codes",slideCodeToLsmMap.size());
         
         int i = 0;
         for(String key : slideCodeToLsmMap.keySet()) {

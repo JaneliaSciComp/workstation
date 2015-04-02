@@ -141,7 +141,11 @@ public class EntityModel {
             log.warn("putOrUpdate: entity permissions are uninitialized");
             return null;
         }
-
+        if (EntityConstants.IN_MEMORY_TYPE_VIRTUAL_ENTITY.equals(entity.getEntityTypeName()) 
+                || EntityConstants.IN_MEMORY_TYPE_PLACEHOLDER_ENTITY.equals(entity.getEntityTypeName())) {
+            // Virtual entities can't make it into the cache
+            return null;
+        }
         synchronized (this) {
             Entity canonicalEntity = entityCache.getIfPresent(entity.getId());
             if (canonicalEntity != null) {
@@ -541,7 +545,7 @@ public class EntityModel {
         if (recurse) {
             loadLazyEntity(retEntity, new HashSet<Long>());
         }
-        else {
+        else if (retEntity!=null) {
             if (!EntityUtils.areLoaded(retEntity.getEntityData())) {
                 refreshChildren(retEntity);
             }
