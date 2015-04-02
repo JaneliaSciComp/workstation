@@ -80,6 +80,11 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.Subscribe;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
@@ -148,11 +153,14 @@ public class IconDemoPanel extends IconPanel {
     protected KeyListener keyListener = new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {
-
+            
             if (KeymapUtil.isModifier(e)) {
                 return;
             }
             if (e.getID() != KeyEvent.KEY_PRESSED) {
+                return;
+            }
+            if (e.isConsumed()) {
                 return;
             }
 
@@ -278,6 +286,7 @@ public class IconDemoPanel extends IconPanel {
             if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
                 return;
             }
+            hud.setKeyListener(keyListener);
             buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
         }
     };
@@ -404,7 +413,6 @@ public class IconDemoPanel extends IconPanel {
         SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
 
         hud = Hud.getSingletonInstance();
-        hud.addKeyListener(keyListener);
 
         logoPanel = new JLabel(Icons.getIcon("workstation_logo_white.png"));
         add(logoPanel);
@@ -573,7 +581,7 @@ public class IconDemoPanel extends IconPanel {
                 imagesPanel.recalculateGrid();
             }
         });
-
+        
         annotations.setFilter(new AnnotationFilter() {
             @Override
             public boolean accept(OntologyAnnotation annotation) {
@@ -635,7 +643,7 @@ public class IconDemoPanel extends IconPanel {
             @Override
             public void browserAdded(BrowserModel browserModel) {
             }
-        });
+        });        
     }
 
     @Subscribe

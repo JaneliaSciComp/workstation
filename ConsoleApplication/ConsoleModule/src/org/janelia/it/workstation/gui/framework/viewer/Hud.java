@@ -14,6 +14,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
@@ -35,11 +36,11 @@ public class Hud extends ModalDialog {
     private JCheckBox render3DCheckbox;
     private final JMenu rgbMenu = new JMenu("RGB Controls");
     private Hud3DController hud3DController;
+    private KeyListener keyListener;
 
     private static Hud instance;
 
     public enum COLOR_CHANNEL {
-
         RED,
         GREEN,
         BLUE
@@ -67,6 +68,7 @@ public class Hud extends ModalDialog {
     }
 
     public void toggleDialog() {
+        log.debug("toggleDialog");
         if (isVisible()) {
             hideDialog();
         }
@@ -78,15 +80,32 @@ public class Hud extends ModalDialog {
     }
 
     public void hideDialog() {
+        log.debug("hideDialog");
         setVisible(false);
     }
 
     public void setEntityAndToggleDialog(Entity entity) {
+        log.debug("setEntityAndToggleDialog({})",entity);
         setEntityAndToggleDialog(entity, true);
     }
 
     public void setEntity(Entity entity) {
+        log.debug("setEntity({})",entity);
         setEntityAndToggleDialog(entity, false);
+    }
+    
+    /**
+     * The HUD should only have one listener at a time. Clients should use this
+     * method instead of addKeyListener. 
+     * @param keyListener 
+     */
+    public void setKeyListener(KeyListener keyListener) {
+        if (this.keyListener == keyListener) return;
+        this.keyListener = keyListener;
+        for(KeyListener l : getKeyListeners()) {
+            removeKeyListener(l);
+        }
+        addKeyListener(keyListener);
     }
 
     /**
@@ -132,6 +151,9 @@ public class Hud extends ModalDialog {
         this.entity = entity;
         if (entity == null) {
             dirtyEntityFor3D = false;
+            if (toggle) {
+                toggleDialog();
+            }
         }
         else {
             log.debug("HUD: entity type is {}", entity.getEntityTypeName());
@@ -181,9 +203,10 @@ public class Hud extends ModalDialog {
 
             // Ensure we have an image and that it is cached.
             if (image == null) {
-                log.info("In HUD: must load image.");
+                log.info("Must load image.");
                 final File imageFile = SessionMgr.getCachedFile(imagePath, false);
                 if (imageFile != null) {
+                    // TODO: This should happen in a background thread
                     image = Utils.readImage(imageFile.getAbsolutePath());
                     if (ic != null) {
                         ic.put(imagePath, image);
