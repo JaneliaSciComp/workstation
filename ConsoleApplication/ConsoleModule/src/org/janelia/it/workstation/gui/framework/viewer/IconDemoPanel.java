@@ -229,7 +229,6 @@ public class IconDemoPanel extends IconPanel {
                     if (button != null) {
                         ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), clearAll);
                         imagesPanel.scrollEntityToCenter(rootedEntity);
-                        button.requestFocus();
                         updateHud(false);
                     }
                 }
