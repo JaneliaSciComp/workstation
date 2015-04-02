@@ -58,9 +58,9 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class QCViewPanel extends JPanel implements Refreshable {
+public class SlideViewPanel extends JPanel implements Refreshable {
 
-    private static final Logger log = LoggerFactory.getLogger(QCViewPanel.class);
+    private static final Logger log = LoggerFactory.getLogger(SlideViewPanel.class);
     
     private static final Color DISABLED_COLOR = (Color)UIManager.get("Label.disabledForeground");
     protected static final int PAGE_SIZE = 50;
@@ -76,7 +76,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
     
     private int numImagesPerRow = 1;
     
-    public QCViewPanel() {
+    public SlideViewPanel() {
         
         if (DISABLED_COLOR!=null) {
             String rgb = Integer.toHexString(DISABLED_COLOR.getRGB());
@@ -235,7 +235,7 @@ public class QCViewPanel extends JPanel implements Refreshable {
     private RootedEntity performSlideSearch(final int pageNum) throws Exception {
         
         if (SwingUtilities.isEventDispatchThread()) {
-            throw new RuntimeException("QCViewPanel.performSlideSearch called in the EDT");
+            throw new RuntimeException("SlideViewPanel.performSlideSearch called in the EDT");
         }
         
         // Build the basic query from what the user has input

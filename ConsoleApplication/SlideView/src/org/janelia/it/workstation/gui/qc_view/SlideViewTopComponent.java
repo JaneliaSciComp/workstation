@@ -8,42 +8,42 @@ import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 
 /**
- * Top component showing the QC View. 
+ * Top component showing the Slide View. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ConvertAsProperties(
-        dtd = "-//org.janelia.it.workstation.gui.qc_view//QCView//EN",
+        dtd = "-//org.janelia.it.workstation.gui.qc_view//SlideView//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = QCViewTopComponent.PREFERRED_ID,
+        preferredID = SlideViewTopComponent.PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false, position = 100)
-@ActionID(category = "Window", id = "org.janelia.it.workstation.gui.qc_view.QCViewTopComponent")
+@ActionID(category = "Window", id = "org.janelia.it.workstation.gui.qc_view.SlideViewTopComponent")
 @ActionReference(path = "Menu/Window", position = 400)
 @TopComponent.OpenActionRegistration(
-        displayName = "#CTL_QCViewAction",
-        preferredID = QCViewTopComponent.PREFERRED_ID
+        displayName = "#CTL_SlideViewAction",
+        preferredID = SlideViewTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_QCViewAction=Slide View",
-    "CTL_QCViewTopComponent=Slide View",
-    "HINT_QCViewTopComponent=Display LSMs with one row per slide"
+    "CTL_SlideViewAction=Slide View",
+    "CTL_SlideViewTopComponent=Slide View",
+    "HINT_SlideViewTopComponent=Display LSMs with one row per slide"
 })
-public final class QCViewTopComponent extends TopComponent {
+public final class SlideViewTopComponent extends TopComponent {
 
-    public static final String PREFERRED_ID = "QCViewTopComponent";
+    public static final String PREFERRED_ID = "SlideViewTopComponent";
     
-    private final QCViewPanel qcViewPanel;
+    private final SlideViewPanel slideViewPanel;
     
-    public QCViewTopComponent() {
-        this.qcViewPanel = new QCViewPanel();
+    public SlideViewTopComponent() {
+        this.slideViewPanel = new SlideViewPanel();
         initComponents();
-        setName(Bundle.CTL_QCViewTopComponent());
-        setToolTipText(Bundle.HINT_QCViewTopComponent());
+        setName(Bundle.CTL_SlideViewTopComponent());
+        setToolTipText(Bundle.HINT_SlideViewTopComponent());
     }
     
     /**
@@ -77,7 +77,7 @@ public final class QCViewTopComponent extends TopComponent {
     
     @Override
     public void componentOpened() {
-        mainPanel.add(qcViewPanel, BorderLayout.CENTER);
+        mainPanel.add(slideViewPanel, BorderLayout.CENTER);
     }
 
     @Override
