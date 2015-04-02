@@ -3,10 +3,13 @@ package org.janelia.it.workstation.gui.dialogs;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
@@ -63,6 +66,13 @@ public class RunAsUserDialog extends ModalDialog {
 
         add(mainPanel, BorderLayout.CENTER);
         add(buttonPane, BorderLayout.SOUTH);
+        
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                usernameField.selectAll();
+            }
+        });
     }
 
     public void showDialog() {
