@@ -80,11 +80,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.Subscribe;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import javax.swing.event.AncestorEvent;
-import javax.swing.event.AncestorListener;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
@@ -870,6 +865,7 @@ public class IconDemoPanel extends IconPanel {
         log.debug("selecting {} in {} viewer", entityId, getSelectionCategory());
         imagesPanel.setSelection(entityId, true, clearAll);
         updateStatusBar();
+        updateHud(false);
     }
 
     public void entityDeselected(String entityId) {
