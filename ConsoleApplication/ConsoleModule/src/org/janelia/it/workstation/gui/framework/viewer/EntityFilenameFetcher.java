@@ -24,7 +24,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
  */
 public class EntityFilenameFetcher {
 	
-	private static final Logger log = LoggerFactory.getLogger(EntityFilenameFetcher.class);
+    private static final Logger log = LoggerFactory.getLogger(EntityFilenameFetcher.class);
 	
     public enum FilenameType {IMAGE_FAST_3d, NEURON_FRAGMENT_3d, MASK_FILE}
 

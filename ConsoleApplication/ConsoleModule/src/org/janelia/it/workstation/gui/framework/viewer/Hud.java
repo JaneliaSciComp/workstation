@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.framework.viewer;
 
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -108,7 +107,6 @@ public class Hud extends ModalDialog {
                 // In this case, 2D exists.  Need to reset the checkbox for 2D use, for now.
                 render3DCheckbox.setSelected(false);
             }
-
         }
     }
 
@@ -136,7 +134,7 @@ public class Hud extends ModalDialog {
             dirtyEntityFor3D = false;
         }
         else {
-            log.info("HUD: entity type is {}", entity.getEntityTypeName());
+            log.debug("HUD: entity type is {}", entity.getEntityTypeName());
             boolean imageEstablished = false;
             try {
                 imageEstablished = establishImage();
@@ -176,7 +174,6 @@ public class Hud extends ModalDialog {
         else {
 
             BufferedImage image = null;
-            SessionMgr sessionMgr = SessionMgr.getSessionMgr();
             ImageCache ic = SessionMgr.getBrowser().getImageCache();
             if (ic != null) {
                 image = ic.get(imagePath);
