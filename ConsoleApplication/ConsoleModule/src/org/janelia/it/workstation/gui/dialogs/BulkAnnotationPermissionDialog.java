@@ -121,6 +121,12 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
 
         entityIds.clear();
         
+        if (esm.getActiveCategory()==null) {
+            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+                    "Select some items to bulk-edit permissions", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        } 
+        
         try {
             List<String> uniqueIds = esm.getSelectedEntitiesIds(esm.getActiveCategory());
 
