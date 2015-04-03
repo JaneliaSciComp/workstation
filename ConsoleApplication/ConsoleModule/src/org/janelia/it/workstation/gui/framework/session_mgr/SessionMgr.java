@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.framework.session_mgr;
 
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
+import org.janelia.it.jacs.model.user_data.Group;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
@@ -42,7 +43,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import org.janelia.it.jacs.model.user_data.Group;
 
 public final class SessionMgr {
 
@@ -674,7 +674,8 @@ public final class SessionMgr {
         catch (Exception e) {
             isLoggedIn = false;
             log.error("Error logging in", e);
-            throw new FatalCommError("Cannot authenticate login. The server may be down. Please try again later.");
+            throw new FatalCommError(ConsoleProperties.getInstance().getProperty("interactive.server.url"),
+                    "Cannot authenticate login. The server may be down. Please try again later.");
         }
     }
 
