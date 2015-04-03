@@ -1055,10 +1055,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        // I'd like to grab the current style to pre-populate the dialog,
-        //  but annotation panel has no way to get it at this time
-        final JColorChooser colorChooser = new JColorChooser(AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL);
-        final boolean currentVisibility = getNeuronStyle(neuron).isVisible();
+        // note this is set up assuming dialog chooses color, visibility taken from
+        //  current style; eventually dialog will be passed current style and give
+        //  changed style in return
+        NeuronStyle currentStyle = getNeuronStyle(neuron);
+        final boolean currentVisibility = currentStyle.isVisible();
+        final JColorChooser colorChooser = new JColorChooser(currentStyle.getColor());
 
         ActionListener okListener = new ActionListener() {
             @Override
