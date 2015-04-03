@@ -217,7 +217,8 @@ public class ScreenEvaluationDialog extends ModalDialog {
             @Override
             public void annotationsChanged(final long entityId) {
 
-                if (!ModelMgr.getModelMgr().getCurrentOntology().getName().equals(ScreenEvalConstants.SCORE_ONTOLOGY_NAME)) {
+                if (ModelMgr.getModelMgr().getCurrentOntology()!=null 
+                        && !ModelMgr.getModelMgr().getCurrentOntology().getName().equals(ScreenEvalConstants.SCORE_ONTOLOGY_NAME)) {
                     return;
                 }
 
