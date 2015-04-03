@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-OpenIDE-Module: org.janelia.console.viewerapi
+OpenIDE-Module: org.janelia.console.viewerapi/1
 OpenIDE-Module-Localizing-Bundle: org/janelia/console/viewerapi/Bundle.properties
-OpenIDE-Module-Specification-Version: 1.0
+OpenIDE-Module-Specification-Version: 1.8
 
