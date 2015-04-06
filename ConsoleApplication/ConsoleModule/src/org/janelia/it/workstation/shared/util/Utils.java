@@ -467,25 +467,21 @@ public class Utils {
      * From http://netbeans-org.1045718.n5.nabble.com/Setting-wait-cursor-td3026613.html
      */
     private static void setMainFrameCursorWaitStatus(final boolean isWaiting) {
-        Mutex.EVENT.writeAccess(new Runnable() {
-            public void run() {
-                try {
-                    JFrame mainFrame = (JFrame) WindowManager.getDefault().getMainWindow();
-                    Component glassPane = mainFrame.getGlassPane();
-                    if (isWaiting) {
-                        glassPane.setVisible(true);
-                        glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                    }
-                    else {
-                        glassPane.setVisible(false);
-                        glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                    }
-                }
-                catch (Exception e) {
-                    log.error("Error changing main frame cursor wait status",e);
-                }
+        try {
+            JFrame mainFrame = (JFrame) WindowManager.getDefault().getMainWindow();
+            Component glassPane = mainFrame.getGlassPane();
+            if (isWaiting) {
+                glassPane.setVisible(true);
+                glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             }
-        });
+            else {
+                glassPane.setVisible(false);
+                glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            }
+        }
+        catch (Exception e) {
+            log.error("Error changing main frame cursor wait status",e);
+        }
     }
     
     public static void queueWaitingCursor(final Component component) {
