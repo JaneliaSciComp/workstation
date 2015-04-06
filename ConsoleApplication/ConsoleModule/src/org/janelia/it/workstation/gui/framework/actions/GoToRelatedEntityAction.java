@@ -109,7 +109,7 @@ public class GoToRelatedEntityAction implements Action {
                     }
 
                     String selected = sb.toString();
-                    log.debug("Wil select " + selected);
+                    log.debug("Will select " + selected);
                     expansion.setSelectedUniqueId(selected);
 
                     EntityTree tree = new EntityTree();
