@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.style;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.*;
 
 /**
@@ -11,20 +13,74 @@ import javax.swing.*;
  */
 public class NeuronStyleDialog extends JDialog {
 
-    public NeuronStyleDialog(Frame parent) {
+    private NeuronStyle inputStyle;
+    private NeuronStyle chosenStyle;
+
+    // did the user choose a style or cancel?
+    private boolean success = false;
+
+
+    public NeuronStyleDialog(Frame parent, final NeuronStyle inputStyle) {
 
         super(parent, "Choose style", true);
 
+        this.inputStyle = inputStyle;
 
-        // not in use yet!  currently we're just using a color picker dialog;
-        //  eventually, this dialog will allow choosing color and visibility
-        //  for a neuron; maybe we can show a preview, too?
+
+        // set up the UI
+        setLayout(new GridBagLayout());
+
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+
+        final JColorChooser chooser = new JColorChooser(inputStyle.getColor());
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        add(chooser, constraints);
+
+
+        // buttons
+        JButton acceptButton = new JButton("Accept");
+        acceptButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                // test:
+                chosenStyle = new NeuronStyle(chooser.getColor(), inputStyle.isVisible());
+
+                success = true;
+                dispose();
+            }
+        });
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                success = false;
+                dispose();
+            }
+        });
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(acceptButton);
+
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        add(buttonPanel, constraints);
+
+        pack();
+        setLocationRelativeTo(parent);
 
 
     }
 
+    public NeuronStyle getChosenStyle() {
+        return chosenStyle;
+    }
 
-
-
+    public boolean styleChosen() {
+        return success;
+    }
 
 }

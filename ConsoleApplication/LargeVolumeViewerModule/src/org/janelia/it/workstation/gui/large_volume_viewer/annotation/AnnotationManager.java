@@ -8,6 +8,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleDialog;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
@@ -1055,34 +1056,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        // note this is set up assuming dialog chooses color, visibility taken from
-        //  current style; eventually dialog will be passed current style and give
-        //  changed style in return
-        NeuronStyle currentStyle = getNeuronStyle(neuron);
-        final boolean currentVisibility = currentStyle.isVisible();
-        final JColorChooser colorChooser = new JColorChooser(currentStyle.getColor());
-
-        ActionListener okListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                setNeuronStyle(neuron, new NeuronStyle(colorChooser.getColor(), currentVisibility));
-            }
-        };
-        ActionListener cancelListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                // unused right now
-            }
-        };
-
-        JDialog colorDialog = JColorChooser.createDialog(ComponentUtil.getLVVMainWindow(),
-                "Set neuron color",
-                false,
-                colorChooser,
-                okListener,
-                cancelListener);
-        colorDialog.setVisible(true);
-
+        NeuronStyleDialog dialog = new NeuronStyleDialog(
+                (Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
+                getNeuronStyle(neuron));
+        dialog.setVisible(true);
+        if (dialog.styleChosen()) {
+            setNeuronStyle(neuron, dialog.getChosenStyle());
+        }
     }
 
     public void setAllNeuronVisibility(boolean visibility) {
