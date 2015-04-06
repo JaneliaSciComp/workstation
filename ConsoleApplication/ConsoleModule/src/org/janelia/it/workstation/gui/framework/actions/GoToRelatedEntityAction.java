@@ -20,6 +20,8 @@ import org.janelia.it.workstation.gui.framework.outline.EntityTree;
 import org.janelia.it.workstation.gui.framework.outline.EntityTreeCellRenderer;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tree.ExpansionState;
+import org.janelia.it.workstation.gui.top_component.IconPanelTopComponent;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -177,6 +179,8 @@ public class GoToRelatedEntityAction implements Action {
                             }
                             selectedUniqueId = selectedUniqueIds.get(0);
                         }
+                        
+                        WindowLocator.activateAndGet(IconPanelTopComponent.PREFERRED_ID, "editor");
                         SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(selectedUniqueId);
                         ConcurrentUtils.invokeAndHandleExceptions(doSuccess);
                     }

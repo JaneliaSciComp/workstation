@@ -56,6 +56,11 @@ public class EntitySelectionModel {
             latestGlobalSelection.clear();
         }
     }
+    
+    public boolean isSelected(String category, String identifier) {
+        List<String> selected = getCategory(category);
+        return selected.contains(identifier);
+    }
 
     public void selectEntity(String category, String identifier, boolean clearAll) {
         if (!CATEGORY_OUTLINE.equals(category) && !CATEGORY_ONTOLOGY.equals(category)) {

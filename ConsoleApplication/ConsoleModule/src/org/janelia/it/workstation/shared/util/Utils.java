@@ -464,7 +464,7 @@ public class Utils {
     }
 
     /**
-     * From http://netbeans-org.1045718.n5.nabble.com/Setting-wait-cursor-td3026613.html
+     * Adapted from http://netbeans-org.1045718.n5.nabble.com/Setting-wait-cursor-td3026613.html
      */
     private static void setMainFrameCursorWaitStatus(final boolean isWaiting) {
         try {
