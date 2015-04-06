@@ -450,6 +450,24 @@ public class Utils {
     public static void setDefaultCursor(Component component) {
         component.setCursor(Cursor.getDefaultCursor());
     }
+    
+    public static void queueWaitingCursor(final Component component) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                setWaitingCursor(component);
+            }
+        });
+    }
+
+    public static void queueDefaultCursor(final Component component) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                setDefaultCursor(component);
+            }
+        });
+    }
 
     /**
      * Copy the input stream to the output stream, using a buffer of the given size. This method uses the old-style
