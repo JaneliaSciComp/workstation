@@ -3,6 +3,8 @@ package org.janelia.it.workstation.gui.util;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.top_component.IconPanelTopComponent;
+import org.openide.windows.Mode;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 
@@ -64,6 +66,26 @@ public class WindowLocator {
             SessionMgr.getSessionMgr().handleException(ex);
         }
         return component[ 0 ];
+    }
+    
+    /**
+     * Activate the given top component in the given mode, and return it. 
+     * @param frameName
+     * @param modeName
+     * @return 
+     */
+    public static TopComponent activateAndGet(final String frameName, final String modeName) {
+        TopComponent win = WindowLocator.getByName(IconPanelTopComponent.PREFERRED_ID);
+        if (win!=null) {
+            if (!win.isOpened()) {
+                Mode mode = WindowManager.getDefault().findMode(modeName);
+                if (mode != null) {
+                    mode.dockInto(win);
+                }
+            }
+            win.requestActive();
+        }
+        return win;
     }
 
 }

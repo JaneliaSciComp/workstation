@@ -300,7 +300,6 @@ public class IconDemoPanel extends IconPanel {
         }
         JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
         ((EntityContextMenu) popupMenu).addMenuItems();
-
         return popupMenu;
     }
 
