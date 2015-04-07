@@ -924,7 +924,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 }
             }
         }
-        return String.format("New_neuron_%d", maximum + 1);
+        return String.format("Neuron %d", maximum + 1);
     }
 
     /**
