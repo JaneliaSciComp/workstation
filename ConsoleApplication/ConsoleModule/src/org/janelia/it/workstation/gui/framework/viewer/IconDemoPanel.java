@@ -253,7 +253,7 @@ public class IconDemoPanel extends IconPanel {
             AnnotatedImageButton button = getButtonAncestor(e.getComponent());
             // Select the button first
             RootedEntity rootedEntity = button.getRootedEntity();
-            if (!button.isSelected()) {
+            if (!ModelMgr.getModelMgr().getEntitySelectionModel().isSelected(getSelectionCategory(), rootedEntity.getId())) {
                 ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), true);
             }
             getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
@@ -300,7 +300,6 @@ public class IconDemoPanel extends IconPanel {
         }
         JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
         ((EntityContextMenu) popupMenu).addMenuItems();
-
         return popupMenu;
     }
 
