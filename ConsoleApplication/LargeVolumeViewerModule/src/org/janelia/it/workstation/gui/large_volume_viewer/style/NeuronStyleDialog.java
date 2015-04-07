@@ -33,20 +33,30 @@ public class NeuronStyleDialog extends JDialog {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.HORIZONTAL;
 
+
+        // color chooser
         final JColorChooser chooser = new JColorChooser(inputStyle.getColor());
         constraints.gridx = 0;
         constraints.gridy = 0;
         add(chooser, constraints);
 
 
-        // buttons
+        // visibility
+        final JCheckBox visibility = new JCheckBox("Show");
+        visibility.setSelected(inputStyle.isVisible());
+        constraints.gridx = 0;
+        constraints.gridy = 1;
+        add(visibility, constraints);
+
+
+        // accept/cancel buttons
         JButton acceptButton = new JButton("Accept");
         acceptButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
 
                 // test:
-                chosenStyle = new NeuronStyle(chooser.getColor(), inputStyle.isVisible());
+                chosenStyle = new NeuronStyle(chooser.getColor(), visibility.isSelected());
 
                 success = true;
                 dispose();
@@ -66,7 +76,7 @@ public class NeuronStyleDialog extends JDialog {
         buttonPanel.add(acceptButton);
 
         constraints.gridx = 0;
-        constraints.gridy = 1;
+        constraints.gridy = 2;
         add(buttonPanel, constraints);
 
         pack();
