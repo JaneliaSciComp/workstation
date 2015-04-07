@@ -905,7 +905,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         // go through existing neuron names; try to parse against
         //  standard template; create list of integers found
         ArrayList<Long> intList = new ArrayList<Long>();
-        Pattern pattern = Pattern.compile("New[ _]neuron[ _]([0-9]+)");
+        Pattern pattern = Pattern.compile("Neuron[ _]([0-9]+)");
         for (TmNeuron neuron : workspace.getNeuronList()) {
             Matcher matcher = pattern.matcher(neuron.getName());
             if (matcher.matches()) {
