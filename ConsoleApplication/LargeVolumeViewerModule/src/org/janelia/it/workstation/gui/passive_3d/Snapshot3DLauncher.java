@@ -279,7 +279,7 @@ public class Snapshot3DLauncher {
         }
         String colorModelSerializeString = independentCM.asString();
         if ( annotationManager != null && colorModelSerializeString != null ) {
-            logger.info("Saving color model {}.", colorModelSerializeString);
+            logger.debug("Saving color model {}.", colorModelSerializeString);
             annotationManager.savePreference(
                     AnnotationsConstants.PREF_3D_COLOR_MODEL,
                     colorModelSerializeString
