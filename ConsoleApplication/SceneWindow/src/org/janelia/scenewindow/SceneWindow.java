@@ -31,6 +31,7 @@ package org.janelia.scenewindow;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Observable;
 import java.util.Observer;
@@ -39,6 +40,7 @@ import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesImmutable;
 import javax.media.opengl.GLProfile;
 import javax.swing.JComponent;
+import javax.swing.SwingUtilities;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.CompositeObject3d;
@@ -47,6 +49,7 @@ import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.scenewindow.SceneRenderer.CameraType;
 import org.janelia.scenewindow.stereo.HardwareRenderer;
+import org.openide.util.Exceptions;
 
 /**
  *
@@ -103,6 +106,15 @@ public class SceneWindow implements GLJComponent, Scene {
         return glCanvas.getGLAutoDrawable();
     }
 
+    // immediate blocking repainting
+    public boolean redrawNow() {
+        GLAutoDrawable glad = getGLAutoDrawable();
+        glad.getContext().makeCurrent();
+        glad.display();
+        glad.getContext().release();
+        return true;
+    }
+    
     public AbstractCamera getCamera() {
         return renderer.getCamera();
     }

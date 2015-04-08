@@ -368,13 +368,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                     public void mouseEntered(MouseEvent event) {
                         super.mouseEntered(event);
                         crossHairActor.setVisible(true);
-                        sceneWindow.getGLAutoDrawable().display();
+                        sceneWindow.redrawNow();
                     }
                     @Override
                     public void mouseExited(MouseEvent event) {
                         super.mouseExited(event);
                         crossHairActor.setVisible(false);
-                        sceneWindow.getGLAutoDrawable().display();
+                        sceneWindow.redrawNow();
                     }
                     
                     // Click to center on position
@@ -450,7 +450,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             if (vantage.setRotationInGround(new Rotation().setFromQuaternion(mid))) {
                 didMove = true;
                 vantage.notifyObservers();
-                sceneWindow.getGLAutoDrawable().display();
+                sceneWindow.redrawNow();
             }
         }
         // never skip the final frame
@@ -459,7 +459,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
         if (didMove) {
             vantage.notifyObservers();
-            sceneWindow.getGLAutoDrawable().display();
+            sceneWindow.redrawNow();
         }
     }
 
@@ -780,7 +780,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         {
                             volumeState.projectionMode = 0;
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.getGLAutoDrawable().display();
+                            sceneWindow.redrawNow();
                         }
                     }));
                 
@@ -797,7 +797,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             volumeState.projectionMode = 1;
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.getGLAutoDrawable().display();
+                            sceneWindow.redrawNow();
                         }
                     }));
                     
@@ -813,7 +813,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             volumeState.projectionMode = 2;
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.getGLAutoDrawable().display();
+                            sceneWindow.redrawNow();
                         }
                     }));
                                         
@@ -832,7 +832,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             volumeState.filteringOrder = 0;
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.getGLAutoDrawable().display();
+                            sceneWindow.redrawNow();
                         }
                     }));
 
@@ -848,7 +848,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             volumeState.filteringOrder = 1;
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.getGLAutoDrawable().display();
+                            sceneWindow.redrawNow();
                         }
                     }));
 
@@ -863,7 +863,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             volumeState.filteringOrder = 3;
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.getGLAutoDrawable().display();
+                            sceneWindow.redrawNow();
                         }
                     }));
                 }
@@ -886,7 +886,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.MONO);
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.getGLAutoDrawable().display();
+                            sceneWindow.redrawNow();
                         }
                     }));
                     
@@ -904,7 +904,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.RED_CYAN);
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.getGLAutoDrawable().display();
+                            sceneWindow.redrawNow();
                         }
                     }));
                     
@@ -922,7 +922,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.GREEN_MAGENTA);
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.getGLAutoDrawable().display();
+                            sceneWindow.redrawNow();
                         }
                     }));
                     
@@ -1139,7 +1139,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             logger.info("undistort");
         }
         v.notifyObservers();
-        sceneWindow.getGLAutoDrawable().display();
+        sceneWindow.redrawNow();
         
         return true;
     }
