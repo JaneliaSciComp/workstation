@@ -30,6 +30,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 import javax.swing.ProgressMonitor;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -65,6 +66,8 @@ import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.workstation.gui.framework.viewer.Hud;
+import org.janelia.it.workstation.gui.top_component.IconPanelTopComponent;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.nb_action.EntityAcceptor;
@@ -119,9 +122,6 @@ public class EntityContextMenu extends JPopupMenu {
         this.rootedEntityList = rootedEntityList;
         this.rootedEntity = rootedEntityList.size() == 1 ? rootedEntityList.get(0) : null;
         this.multiple = rootedEntityList.size() > 1;
-        if (!multiple) {
-            checkNotNull(rootedEntity, "Rooted entity cannot be null");
-        }
         for(RootedEntity re : rootedEntityList) {
             if (re.getEntityData()!=null && EntityUtils.isVirtual(re.getEntity())) {
                 virtual = true;
@@ -131,6 +131,14 @@ public class EntityContextMenu extends JPopupMenu {
     }
     
     public void addMenuItems() {
+        
+        if (rootedEntityList.isEmpty()) {
+            JMenuItem titleMenuItem = new JMenuItem("Nothing selected");
+            titleMenuItem.setEnabled(false);
+            add(titleMenuItem);
+            return;
+        }
+        
         add(getTitleItem());
         add(getCopyNameToClipboardItem());
         add(getCopyIdToClipboardItem());
@@ -139,7 +147,6 @@ public class EntityContextMenu extends JPopupMenu {
         add(getPermissionItem());
         add(getSetSortCriteriaItem());
         add(getGotoRelatedItem());
-        add(getShowReferencesItem());
         
         setNextAddRequiresSeparator(true);
         add(getNewFolderItem());
@@ -290,64 +297,6 @@ public class EntityContextMenu extends JPopupMenu {
         }
 
         return toggleHudMI;
-    }
-
-    private void gotoEntity(final Entity entity, final String ancestorType) {
-
-        Utils.setWaitingCursor(SessionMgr.getMainFrame());
-
-        SimpleWorker worker = new SimpleWorker() {
-
-            private Entity targetEntity = entity;
-            private String uniqueId;
-
-            @Override
-            protected void doStuff() throws Exception {
-                if (ancestorType != null) {
-                    targetEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, ancestorType);
-                }
-
-                final String currUniqueId = rootedEntity.getUniqueId();
-                final String targetId = targetEntity.getId().toString();
-                if (currUniqueId.contains(targetId)) {
-                    // A little optimization, if you're already in the right
-                    // subtree
-                    this.uniqueId = currUniqueId.substring(0, currUniqueId.indexOf(targetId) + targetId.length());
-                } else {
-                    // Find the best context to show the entity in
-                    List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(targetEntity.getId());
-                    List<EntityDataPath> paths = new ArrayList<>();
-                    for (List<EntityData> path : edPaths) {
-                        EntityDataPath edp = new EntityDataPath(path);
-                        if (!edp.isHidden()) {
-                            paths.add(edp);
-                        }
-                    }
-                    sortPathsByPreference(paths);
-
-                    if (paths.isEmpty()) {
-                        throw new Exception("Could not find the related entity");
-                    }
-
-                    EntityDataPath chosen = paths.get(0);
-                    this.uniqueId = chosen.getUniqueId();
-                }
-            }
-
-            @Override
-            protected void hadSuccess() {
-                browser.getEntityOutline().selectEntityByUniqueId(uniqueId);
-                Utils.setDefaultCursor(mainFrame);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                Utils.setDefaultCursor(mainFrame);
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-
-        worker.execute();
     }
 
     private void sortPathsByPreference(List<EntityDataPath> paths) {
@@ -573,7 +522,16 @@ public class EntityContextMenu extends JPopupMenu {
             add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_FLY_LINE, EntityConstants.TYPE_FLY_LINE));
         }
         
-        JMenuItem showAllPathsItem = new JMenuItem("  Show All Paths...");
+        JMenuItem showAllRefsItem = new JMenuItem("Show All References");
+        showAllRefsItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gotoReference(rootedEntity);
+            }
+        });
+        relatedMenu.add(showAllRefsItem);
+        
+        JMenuItem showAllPathsItem = new JMenuItem("Show All Paths...");
         showAllPathsItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -584,60 +542,6 @@ public class EntityContextMenu extends JPopupMenu {
         relatedMenu.add(showAllPathsItem);
         
         return relatedMenu;
-    }
-
-    protected JMenuItem getShowReferencesItem() {
-        if (multiple) return null;
-        if (virtual) return null;
-        
-        JMenuItem copyMenuItem = new JMenuItem("  Show References");
-        copyMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-                SimpleWorker worker = new SimpleWorker() {
-                    
-                    RootedEntity tempSearchRE;
-                    
-                    @Override
-                    protected void doStuff() throws Exception {
-                        List<EntityData> parentEds = ModelMgr.getModelMgr().getAllParentEntityDatas(rootedEntity.getEntityId());
-                        Entity entity = new Entity();
-                        entity.setId(TimebasedIdentifierGenerator.generateIdList(1).get(0));
-                        entity.setName("Entities referencing "+rootedEntity.getName());
-                        entity.setEntityTypeName(EntityConstants.TYPE_FOLDER);
-                        
-                        HashSet<EntityData> eds = new HashSet<>();
-                        for(EntityData parentEd : parentEds) {
-                            EntityData ed = new EntityData();
-                            ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
-                            ed.setParentEntity(entity);
-                            Entity childEntity = ModelMgr.getModelMgr().getEntityById(parentEd.getParentEntity().getId());
-                            ed.setChildEntity(childEntity);
-                            eds.add(ed);
-                        }
-                        
-                        log.info("Setting "+eds.size()+" children");
-                        entity.setEntityData(eds);
-                        entity.setOwnerKey(SessionMgr.getSubjectKey());
-                        this.tempSearchRE = new RootedEntity(entity);
-                    }
-                    
-                    @Override
-                    protected void hadSuccess() {
-                        browser.getViewerManager().showEntityInActiveViewer(tempSearchRE);
-                    }
-                    
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-                
-                worker.execute();
-            }
-        });
-        return copyMenuItem;
     }
     
     private JMenuItem getChildEntityItem(Entity entity, String attributeName) {
@@ -659,6 +563,120 @@ public class EntityContextMenu extends JPopupMenu {
         return relatedMenuItem;
     }
 
+    private void gotoReference(final RootedEntity rootedEntity) {
+
+        log.trace("Showing references of {}",rootedEntity.getName());
+        
+        Utils.setWaitingCursor(mainFrame);
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            RootedEntity tempSearchRE;
+
+            @Override
+            protected void doStuff() throws Exception {
+                List<EntityData> parentEds = ModelMgr.getModelMgr().getAllParentEntityDatas(rootedEntity.getEntityId());
+                Entity entity = new Entity();
+                entity.setId(TimebasedIdentifierGenerator.generateIdList(1).get(0));
+                entity.setName("Entities referencing "+rootedEntity.getName());
+                entity.setEntityTypeName(EntityConstants.TYPE_FOLDER);
+
+                HashSet<EntityData> eds = new HashSet<>();
+                for(EntityData parentEd : parentEds) {
+                    EntityData ed = new EntityData();
+                    ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
+                    ed.setParentEntity(entity);
+                    Entity childEntity = ModelMgr.getModelMgr().getEntityById(parentEd.getParentEntity().getId());
+                    ed.setChildEntity(childEntity);
+                    eds.add(ed);
+                }
+
+                log.info("Setting "+eds.size()+" children");
+                entity.setEntityData(eds);
+                entity.setOwnerKey(SessionMgr.getSubjectKey());
+                this.tempSearchRE = new RootedEntity(entity);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                WindowLocator.activateAndGet(IconPanelTopComponent.PREFERRED_ID, "editor");
+                browser.getViewerManager().showEntityInActiveViewer(tempSearchRE);
+                Utils.queueDefaultCursor(mainFrame);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+                Utils.setDefaultCursor(mainFrame);
+            }
+        };
+
+        worker.execute();
+    }
+    
+    private void gotoEntity(final Entity entity, final String ancestorType) {
+
+        log.trace("Navigating to ancestor {} of entity {}",ancestorType,entity);
+        
+        Utils.setWaitingCursor(mainFrame);
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            private Entity targetEntity = entity;
+            private String uniqueId;
+
+            @Override
+            protected void doStuff() throws Exception {
+                if (ancestorType != null) {
+                    targetEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, ancestorType);
+                }
+
+                final String currUniqueId = rootedEntity.getUniqueId();
+                final String targetId = targetEntity.getId().toString();
+                if (currUniqueId.contains(targetId)) {
+                    // A little optimization, if you're already in the right
+                    // subtree
+                    this.uniqueId = currUniqueId.substring(0, currUniqueId.indexOf(targetId) + targetId.length());
+                }
+                else {
+                    // Find the best context to show the entity in
+                    List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(targetEntity.getId());
+                    List<EntityDataPath> paths = new ArrayList<>();
+                    for (List<EntityData> path : edPaths) {
+                        EntityDataPath edp = new EntityDataPath(path);
+                        if (!edp.isHidden()) {
+                            paths.add(edp);
+                        }
+                    }
+                    sortPathsByPreference(paths);
+
+                    if (paths.isEmpty()) {
+                        throw new Exception("Could not find the related entity");
+                    }
+
+                    EntityDataPath chosen = paths.get(0);
+                    this.uniqueId = chosen.getUniqueId();
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+                WindowLocator.activateAndGet(IconPanelTopComponent.PREFERRED_ID, "editor");
+                log.info("Selecting {}",uniqueId);
+                browser.getEntityOutline().selectEntityByUniqueId(uniqueId);
+                Utils.queueDefaultCursor(mainFrame);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                Utils.setDefaultCursor(mainFrame);
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        worker.execute();
+    }
+    
     protected JMenuItem getCopyNameToClipboardItem() {
         if (multiple) return null;
         
