@@ -17,7 +17,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.SavedSearch;
@@ -25,6 +24,7 @@ import org.janelia.it.jacs.model.domain.gui.search.filters.AttributeFilter;
 import org.janelia.it.jacs.model.domain.gui.search.filters.Filter;
 import org.janelia.it.jacs.model.domain.gui.search.filters.FullTextFilter;
 import org.janelia.it.jacs.model.domain.gui.search.filters.SetFilter;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -389,7 +389,7 @@ public class DomainFilterEditorPanel extends JPanel {
         SolrQueryBuilder builder = getQueryBuilder();
         
         String sortCriteria = savedSearch.getSortCriteria();
-        if (StringUtils.isEmpty(sortCriteria)) {
+        if (!StringUtils.isEmpty(sortCriteria)) {
             builder.setSortField(sortCriteria.substring(1));
             builder.setAscending(!sortCriteria.startsWith("-"));
         }

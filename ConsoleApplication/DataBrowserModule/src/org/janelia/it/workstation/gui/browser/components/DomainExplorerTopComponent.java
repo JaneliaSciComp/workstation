@@ -136,9 +136,11 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                             currWorkspace = wrapper;
                         }
                     }
-                    model.setSelectedItem(currWorkspace);
-                    workspaceCombo.setModel(model);
-                    loadWorkspace(currWorkspace.getWorkspace());
+                    if (currWorkspace!=null) {
+                        model.setSelectedItem(currWorkspace);
+                        workspaceCombo.setModel(model);
+                        loadWorkspace(currWorkspace.getWorkspace());
+                    }
                 }
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
