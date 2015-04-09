@@ -210,7 +210,7 @@ public class SystemInfo {
         String value = (String)props.get( DEFAULT_OPTIONS_PROP );
         if ( value == null ) {
             //Last-ditch effort to save settings.
-            value = "\"--branding janeliaws -J-Dapple.awt.brushMetalLook=false -J-XX:PermSize=192m -J-XX:MaxPermSize=1024m -J-Xms1024m -J-Xmx8192-J-Dnetbeans.exception.report.min.level=9999 -J-Dnb.forceui=de.javasoft.synthetica.netbeans.SyntheticaLFCustoms\"";
+            value = "\"--branding janeliaws -J-Dapple.awt.brushMetalLook=false -J-XX:PermSize=192m -J-XX:MaxPermSize=1024m -J-Xms1024m -J-Xmx8192 -J-Dnetbeans.exception.report.min.level=9999 -J-Dnb.forceui=de.javasoft.synthetica.netbeans.SyntheticaLFCustoms\"";
             log.warn("Using local-constant version of settings, '{}'.  Unable to find old memory setting.", value);
         }
         int optStart = value.indexOf(MEMORY_SETTING_PREFIX) + MEMORY_SETTING_PREFIX.length();
