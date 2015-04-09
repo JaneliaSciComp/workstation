@@ -14,6 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Skeleton {
+    
+    public static final String SKELETON_LOOKUP_PATH = "Skeleton/Node";
+    
 	@SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(Skeleton.class);
 

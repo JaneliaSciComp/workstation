@@ -8,6 +8,11 @@ package org.janelia.it.workstation.gui.full_skeleton_view.top_component;
 import java.awt.BorderLayout;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -79,7 +84,27 @@ public final class AnnotationSkeletalViewTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
+        //SkeletonActor skeleton = new AnnotationSkeletonViewLauncher().getSkeletonActor();
         skelPanel = new AnnotationSkeletonPanel( new AnnotationSkeletonDataSourceI() {
+            private Skeleton cachedSkeleton;
+            
+            @Override
+            public Skeleton getSkeleton() {
+                if (cachedSkeleton == null) {
+                    // Strategy: get the Large Volume Viewer View.
+                    LargeVolumeViewerTopComponent tc
+                            = (LargeVolumeViewerTopComponent) WindowLocator.getByName(
+                                    LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID
+                            );
+                    if (tc != null) {
+                        QuadViewUi ui = tc.getLvvv().getQuadViewUi();
+                        if (ui != null) {
+                            cachedSkeleton = ui.getSkeleton();
+                        }
+                    }
+                }
+                return cachedSkeleton;
+            }
         });
         viewPanel.add( skelPanel, BorderLayout.CENTER );
     }

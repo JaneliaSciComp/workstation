@@ -61,7 +61,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	protected Viewport viewport = renderer.getViewport();
 	protected RubberBand rubberBand = new RubberBand();
 	protected SkeletonActor skeletonActor = new SkeletonActor();
-	
 
 	SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
 	protected TileServer tileServer = new TileServer(sharedVolumeImage);
@@ -125,7 +124,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         renderer.addActor(skeletonActor);
         SkeletonActorStateUpdater sasUpdater = skeletonActor.getUpdater();
         sasUpdater.addListener(this);
-        skeletonActor.setZThicknessInPixels(viewport.getDepth());
+        skeletonActor.setZThicknessInPixels(viewport.getDepth());        
 		//
         // PopupMenu
         addMouseListener(new MouseHandler() {
@@ -350,7 +349,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		mouseMode.setCamera(camera);
 		wheelMode.setCamera(camera);
 		pointComputer.setCamera(camera);
-		skeletonActor.setCamera(camera);
+        skeletonActor.setCamera(camera);
 	}
     public CameraListenerAdapter cameraListener;
 	

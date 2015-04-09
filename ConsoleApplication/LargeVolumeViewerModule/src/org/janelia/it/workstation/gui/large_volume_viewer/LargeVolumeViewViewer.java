@@ -144,7 +144,14 @@ public class LargeVolumeViewViewer extends JPanel {
     public void setLocation(SampleLocation sampleLocation) {
         viewUI.setSampleLocation(sampleLocation);
     }
-	
+    
+    public QuadViewUi getQuadViewUi() {
+        if (viewUI == null) {
+            refresh();
+        }
+        return viewUI;
+    }
+    
     public void close() {
         logger.info("Closing");
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
@@ -171,7 +178,7 @@ public class LargeVolumeViewViewer extends JPanel {
     public void totalRefresh() {
         refresh();
     }
-
+    
     //------------------------------Private Methods
     private void establishObserver() {
         modelMgrObserver = new ModelMgrListener( this, sliceSample);

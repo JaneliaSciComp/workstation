@@ -181,7 +181,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private AnnotationSkeletonViewLauncher annotationSkeletonViewLauncher;
     private PathTraceRequestListener pathTraceListener;
     private WorkspaceClosureListener wsCloseListener;
-
+    
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
 		@Override
@@ -337,7 +337,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
-        sharedSkeletonActor.setSkeleton(largeVolumeViewer.getSkeleton());
         quadViewController.registerForEvents(imageColorModel);
         quadViewController.unregisterOrthPanels();        
         quadViewController.registerAsOrthPanelForRepaint(seViewer); // Must do separately.
@@ -412,6 +411,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         if (pathTraceListener != null) {
             pathTraceListener.pathTrace(request);
         }
+    }
+    
+    public Skeleton getSkeleton() {
+        return skeleton;
     }
     
 	public void clearCache() {
