@@ -79,7 +79,7 @@ public class BaseballCardPanelTest extends JFrame {
 
     private void initCardPanel() {
         // Adding mock data to the panel.
-        List<RootedEntity> rEntities = new ArrayList<RootedEntity>();
+        List<RootedEntity> rEntities = new ArrayList<>();
         Long[] guids = {
                 1870583260875063394L,
                 1930003161519489192L,
@@ -124,7 +124,7 @@ public class BaseballCardPanelTest extends JFrame {
         int i = 0;
         for ( Long guid: guids ) {
             EntityData entityData = getEntityData( "aName", "fosterl", "Something");
-            Set<EntityData> dataSet = new HashSet<EntityData>();
+            Set<EntityData> dataSet = new HashSet<>();
             dataSet.add( entityData );
             Entity entity = new Entity( guid, "Neuron " + i, "fosterl", EntityConstants.TYPE_NEURON_FRAGMENT, new Date(), new Date(), dataSet );
             RootedEntity re = new RootedEntity( entity );

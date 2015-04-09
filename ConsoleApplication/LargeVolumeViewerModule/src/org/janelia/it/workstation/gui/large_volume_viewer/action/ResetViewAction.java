@@ -34,7 +34,7 @@ extends AbstractAction
 		if (widgets.size() < 1)
 			return;
 		// First center...
-		Camera3d camera = widgets.iterator().next().getCamera();
+		Camera3d camera = widgets.iterator().next().getCamera();        
 		if (! camera.setFocus(volumeImage.getVoxelCenter()))
 			return;
 		// ...then scale.

@@ -6,21 +6,17 @@
 
 package org.janelia.it.workstation.gui.util.panels;
 
-import java.awt.Component;
-import java.awt.HeadlessException;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.io.IOException;
-import javax.swing.BoxLayout;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.openide.LifecycleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.io.IOException;
 
 /**
  * This panel holds the memory settings widgets, including the action
@@ -55,10 +51,10 @@ public class MemorySettingPanel extends JPanel {
         try {
             Integer memorySetting = Integer.parseInt(memorySettingStr.trim());
             Integer totalAvailableGb = (int) (SystemInfo.getTotalSystemMemory() / ONE_GIG);
-            if (memorySetting > totalAvailableGb) {
+            if (memorySetting<=0 || memorySetting > totalAvailableGb) {
                 JOptionPane.showMessageDialog(
                         WindowLocator.getMainFrame(),
-                        "Unacceptable value " + memorySettingStr + ".  The system has only " + totalAvailableGb + "Gb.",
+                        "Unacceptable value " + memorySettingStr + ".  The system has " + totalAvailableGb + "GB to work with.",
                         "Please Re-Enter",
                         JOptionPane.ERROR_MESSAGE,
                         null
@@ -125,7 +121,8 @@ public class MemorySettingPanel extends JPanel {
 
         try {
             existingMemorySetting = getMemorySetting();
-        } catch ( IOException ioe ) {
+        }
+        catch ( IOException ioe ) {
             logger.error("IOException " + ioe + " while gathering memory setting");
             existingMemorySetting = "-1";
         }

@@ -29,7 +29,6 @@ import org.janelia.it.workstation.gui.util.WindowLocator;
  */
 public class EntityTypePane extends JScrollPane {
 
-    private SimpleWorker loadTask;
     private final JTree tree;
 
     public EntityTypePane() {
@@ -110,7 +109,7 @@ public class EntityTypePane extends JScrollPane {
                     SearchPane searchPane = entityPane.getSearchPane();
                     SearchResultsPanel searchResultsPanel = entityPane.getSearchResultsPanel();
                     searchPane.setTabIndex(1);
-                    searchPane.getSolrPanel().setSearchString("+entity_type:\"" + entityType.getName() + "\"");
+                    searchPane.getSolrPanel().setInputFieldValue("+entity_type:\"" + entityType.getName() + "\"");
                     searchPane.performSolrSearch(true);
                 }
             });
@@ -129,7 +128,7 @@ public class EntityTypePane extends JScrollPane {
                     SearchResultsPanel searchResultsPanel = entityPane.getSearchResultsPanel();
                     searchPane.setTabIndex(1);
                     String attrName = SolrUtils.getDynamicFieldName(entityAttr.getName());
-                    searchPane.getSolrPanel().setSearchString("+" + attrName + ":*");
+                    searchPane.getSolrPanel().setInputFieldValue("+" + attrName + ":*");
                     searchResultsPanel.setColumnVisibility(attrName, true);
                     searchPane.performSolrSearch(true);
                 }
@@ -152,7 +151,7 @@ public class EntityTypePane extends JScrollPane {
 
     public void refresh() {
 
-        loadTask = new SimpleWorker() {
+        SimpleWorker loadTask = new SimpleWorker() {
 
             private TreeModel model;
 
@@ -160,7 +159,7 @@ public class EntityTypePane extends JScrollPane {
             protected void doStuff() throws Exception {
 
                 List<EntityType> entityTypes = ModelMgr.getModelMgr().getEntityTypes();
-                TreeMap<String, EntityType> sortedCollection = new TreeMap<String, EntityType>();
+                TreeMap<String, EntityType> sortedCollection = new TreeMap<>();
                 for (EntityType entityType : entityTypes) {
                     sortedCollection.put(entityType.getName(), entityType);
                 }

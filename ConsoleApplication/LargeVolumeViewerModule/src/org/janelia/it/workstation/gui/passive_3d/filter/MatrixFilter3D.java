@@ -7,6 +7,11 @@
 package org.janelia.it.workstation.gui.passive_3d.filter;
 
 import java.nio.ByteOrder;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import javax.swing.ProgressMonitor;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +25,9 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class MatrixFilter3D {
+    // On MacPro with 64Gb, seeing load of 256x taking 17s with 30 threads. 
+    // At 20 threads: 21s.  At 15 threads: 24s.  At 10 threads: 26s. LLF
+    private static final int NUM_THREADS = 30;
     private static final double AVG_VAL = 1.0/27.0; 
     public static double[] AVG_MATRIX_3_3_3 = new double[] {
         AVG_VAL, AVG_VAL, AVG_VAL,
@@ -33,36 +41,6 @@ public class MatrixFilter3D {
         AVG_VAL, AVG_VAL, AVG_VAL,
         AVG_VAL, AVG_VAL, AVG_VAL,
         AVG_VAL, AVG_VAL, AVG_VAL,
-    };
-    
-    private static final double ROUND_VAL = 1.0/3.0;
-    public static double[] ROUND_MATRIX_3_3_3 = new double[] {
-        0,         0,         0,
-        0,         ROUND_VAL/3, 0,
-        0,         0,         0,
-
-        0,         ROUND_VAL/3, 0,
-        ROUND_VAL/3, ROUND_VAL, ROUND_VAL/3,
-        0,         ROUND_VAL/3, 0,
-
-        0,         0,         0,
-        0,         ROUND_VAL/3, 0,
-        0,         0,         0,
-    };
-    
-    public static double[] TRIVIAL_3_3_3 = new double[] {
-        0,         0,         0,
-        0,         0,         0,
-        0,         0,         0,
-
-        0,         0,         0,
-        0,         1,         0,
-        0,         0,         0,
-
-        
-        0,         0,         0,
-        0,         0,         0,
-        0,         0,         0,
     };
     
     private static final double ROUND_DIVISOR = 82.0;
@@ -166,6 +144,7 @@ public class MatrixFilter3D {
     private final int matrixCubicDim;
     private ByteOrder byteOrder;
     private int[] shiftDistance;
+    private ProgressMonitor progressMonitor;
     
     private static final Logger logger = LoggerFactory.getLogger( MatrixFilter3D.class );
     
@@ -176,6 +155,10 @@ public class MatrixFilter3D {
             throw new IllegalArgumentException( "Matrix size not a cube." );
         }
         this.byteOrder = byteOrder;
+    }
+    
+    public void setProgressMonitor( ProgressMonitor progressMonitor ) {
+        this.progressMonitor = progressMonitor;
     }
     
     /**
@@ -189,7 +172,8 @@ public class MatrixFilter3D {
      * @param sz length of z.
      * @return filtered version of original.
      */
-    public byte[] filter( byte[] inputBytes, int bytesPerCell, int channelCount, int sx, int sy, int sz ) {
+    public byte[] filter( byte[] inputBytes, final int bytesPerCell, int channelCount, int sx, int sy, int sz ) {
+        logger.info("Starting the filter run.");
         // one-time precalculate some values used in filtering operation.
         shiftDistance = new int[ bytesPerCell ];
         if ( byteOrder == ByteOrder.BIG_ENDIAN ) {
@@ -203,8 +187,8 @@ public class MatrixFilter3D {
             }
         }
 
-        byte[] outputBytes = new byte[ inputBytes.length ];
-        FilteringParameter param = new FilteringParameter();
+        final byte[] outputBytes = new byte[ inputBytes.length ];
+        final FilteringParameter param = new FilteringParameter();
         param.setExtentX(matrixCubicDim);
         param.setExtentY(matrixCubicDim);
         param.setExtentZ(matrixCubicDim);
@@ -215,25 +199,80 @@ public class MatrixFilter3D {
         param.setChannelCount(channelCount);
         param.setVolumeData(inputBytes);
         
-        int lineSize = sx * param.getStride();
-        int sheetSize = sy * lineSize;
+        final int lineSize = sx * param.getStride();
+        final int sheetSize = sy * lineSize;
         
+        // First, let's change the bytes going into the neighborhoods, to
+        // all long values.  One pass, rather than repeating that operation.
+        final long[] inputLongs = convertToLong( param );  
+        
+        final ExecutorService executorService = Executors.newFixedThreadPool( NUM_THREADS);
         for (int ch = 0; ch < channelCount; ch++) {
             for (int z = 0; z < sz; z++) {
-                for (int y = 0; y < sy; y++) {
-                    for (int x = 0; x < sx; x++) {
-                        long[] neighborhood = getNeighborhood(param, x, y, z, ch);
-                        long filtered = applyFilter(neighborhood);
-                        byte[] value = getArrayEquiv(filtered, bytesPerCell);
-                        for (int voxByte = 0; voxByte < bytesPerCell; voxByte++) {
-                            outputBytes[ z * sheetSize + y * lineSize + (x * param.getStride()) + (ch * param.getVoxelBytes()) + voxByte ] = value[ voxByte ];
+                // Need final variables to pass into worker.
+                final int zF = z;
+                final int chF = ch;
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            filterZ(param, inputLongs, zF, chF, outputBytes, sheetSize, lineSize);
+                        } catch (Exception ex) {
+                            // Exception implies useless output.
+                            executorService.shutdownNow();
+                            SessionMgr.getSessionMgr().handleException(ex);
                         }
                     }
+                };
+                executorService.submit(runnable);
+                
+                if (progressMonitor != null && progressMonitor.isCanceled()) {
+                    // If user bails, the executor should go away.
+                    executorService.shutdownNow();
+                    return inputBytes;
                 }
             }
         }
-
+        try {
+            // Now that everything has been queued, can send the shutdown
+            // signal.  Then await termination, which in turn waits for all
+            // the loads to complete.
+            executorService.shutdown();
+            boolean completed = executorService.awaitTermination(5, TimeUnit.MINUTES);
+            if ( !completed ) {
+                throw new RuntimeException("Timed out while attempting to smooth data.  Original 3D data shown.");
+            }
+        } catch ( InterruptedException | RuntimeException ex ) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
+        logger.info("Ending the filter run.");
         return outputBytes;
+    }
+
+    /**
+     * Convenience method for bearing the loads for multi-threaded smoothing
+     * operation.
+     * 
+     * @param param has various things that apply to whole filter operation.
+     * @param inputLongs pre-digested long versions of raw byte array.
+     * @param z which "sheet" we will be working on.
+     * @param ch which channel we will be working on.
+     * @param outputBytes
+     * @param sheetSize
+     * @param lineSize 
+     */
+    private void filterZ(FilteringParameter param, long[] inputLongs, int z, int ch, byte[] outputBytes, int sheetSize, int lineSize) {
+        int bytesPerCell = param.getVoxelBytes();
+        for (int y = 0; y < param.getSy(); y++ ) {
+            for (int x = 0; x < param.getSx(); x++ ) {
+                long[] neighborhood = getNeighborhood(param, inputLongs, x, y, z, ch);
+                long filtered = applyFilter(neighborhood);
+                byte[] value = getArrayEquiv(filtered, bytesPerCell);
+                for (int voxByte = 0; voxByte < bytesPerCell; voxByte++) {
+                    outputBytes[ z * sheetSize + y * lineSize + (x * param.getStride()) + (ch * param.getVoxelBytes()) + voxByte] = value[ voxByte ];
+                }
+            }
+        }
     }
     
     private long applyFilter( long[] neighborhood ) {
@@ -250,6 +289,28 @@ public class MatrixFilter3D {
         }
         return rtnVal;
     }
+    
+    /**
+     * Turns the entire byte array into a long array of equivalent values.
+     * 
+     * @param fparam all info required.
+     * @return array of longs, to hold volume specified in fparam.
+     */
+    private long[] convertToLong(FilteringParameter fparam) {
+        long[] returnValue = new long[ fparam.getSx() * fparam.getSy() * fparam.getSz() * fparam.getChannelCount() ];
+
+        byte[] byteVolume = fparam.getVolume();
+        byte[] voxelVal = new byte[fparam.getVoxelBytes()];
+        int k = 0;
+        for ( int i = 0; i < byteVolume.length; i += fparam.getVoxelBytes() ) {
+            for ( int j = 0; j < fparam.getVoxelBytes(); j++ ) {
+                voxelVal[ j ] = byteVolume[ i + j ];
+            }
+            long equivalentValue = getIntEquiv(voxelVal);
+            returnValue[ k++ ] = equivalentValue;
+        }
+        return returnValue;
+    }
 
     /**
      * Finds the neighborhood surrounding the input point (x,y,z), as unsigned
@@ -264,7 +325,7 @@ public class MatrixFilter3D {
      * @return computed value: all bytes of the voxel.
      */
     private long[] getNeighborhood(
-            FilteringParameter fparam, int x, int y, int z, int channel
+            FilteringParameter fparam, long[] inputVol, int x, int y, int z, int channel
     ) {
 
         // Neighborhood starts at the x,y,z values of the loops.  There will be one
@@ -284,45 +345,31 @@ public class MatrixFilter3D {
             if (zNbh < 0) {// Edge case: at beginning->partial neighborhood.
                 continue;
             }
-            long nbhZOffset = (sy * sx * zNbh) * fparam.getStride();
+            long nbhZOffset = (sy * sx * zNbh) * fparam.getChannelCount();
 
             for ( int yNbh = startY; yNbh < startY + extentY && yNbh < sy; yNbh ++ ) {
                 if (yNbh < 0) {// Edge case: at beginning->partial neighborhood.
                     continue;
                 }
-                long nbhYOffset = nbhZOffset + (sx * yNbh * fparam.getStride());
+                long nbhYOutOffs = nbhZOffset + (sx * yNbh * fparam.getChannelCount());
 
                 for ( int xNbh = startX; xNbh < startX + extentX && xNbh < sx; xNbh++ ) {
                     if (xNbh < 0) {// Edge case: at beginning->partial neighborhood.
                         continue;
                     }
-                    byte[] voxelVal = new byte[ fparam.getVoxelBytes() ];
-                    long arrayCopyLoc = nbhYOffset + (xNbh * fparam.getStride()) + channel * fparam.getVoxelBytes();
-                    try {
-                        byte[] volume = fparam.getVolume();
-                        for ( int i = 0; i < (fparam.getVoxelBytes()); i++ ) {
-                            voxelVal[ i ] = volume[ (int)(i + arrayCopyLoc) ];
-                        }
-                    } catch ( Exception ex ) {
-                        logger.error(
-                                "Exception while trying to copy to {} with max of {}.",
-                                arrayCopyLoc,
-                                fparam.getVolume().length
-                        );
-                        logger.info( "Expected dimensions are " + sx + " x " + sy + " x " + sz );
-                        ex.printStackTrace();
-                        throw new RuntimeException(ex);
+                    // No need of the full stride, which includes the voxel bytes, against the input long array.
+                    int arrayCopyLoc = (int)( nbhYOutOffs + ( xNbh * fparam.getChannelCount() ) + channel );
+                    if (arrayCopyLoc >= inputVol.length) {
+                        logger.error("Out of bounds.");
                     }
 
-                    if ( isZero( voxelVal ) ) {
-                        continue;  // Highest freq non-zero is kept.
-                    }
-                    long equivalentValue = getIntEquiv( voxelVal );
+                    long equivalentValue = inputVol[ arrayCopyLoc ];
+                    
                     final int outputOffset = (zNbh-startZ)*(extentY*extentX) + (yNbh-startY) * extentX + (xNbh-startX);
                     if (logger.isDebugEnabled()) {
                         logger.debug("Output location for " + xNbh + "," + yNbh + "," + zNbh + " is " + outputOffset);
                     }
-                    if (outputOffset > returnValue.length) {
+                    if (outputOffset >= returnValue.length) {
                         logger.error("Out of bounds.");
                     }
                     returnValue[ outputOffset ] = equivalentValue;

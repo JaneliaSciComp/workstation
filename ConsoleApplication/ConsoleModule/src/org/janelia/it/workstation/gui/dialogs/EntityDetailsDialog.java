@@ -1,20 +1,17 @@
 package org.janelia.it.workstation.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.*;
-
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.outline.EntityDetailsPanel;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * A dialog for viewing details about an entity.
@@ -28,7 +25,7 @@ public class EntityDetailsDialog extends ModalDialog {
     
     public EntityDetailsDialog() {
 
-        setModalityType(ModalityType.MODELESS);
+        setModalityType(ModalityType.APPLICATION_MODAL);
 
         this.entityDetailsPanel = new EntityDetailsPanel();
         add(entityDetailsPanel, BorderLayout.CENTER);

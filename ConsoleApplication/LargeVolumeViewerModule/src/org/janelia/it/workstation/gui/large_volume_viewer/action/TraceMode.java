@@ -7,9 +7,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.KeyListener;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
@@ -23,15 +21,15 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
-import org.janelia.it.workstation.signal.Slot1;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TraceMode extends BasicMouseMode 
 implements MouseMode, KeyListener
 {
 	private Skeleton skeleton;
 	private SkeletonActor skeletonActor;
-	private int currentHover = -1;
-	// private Anchor hoverAnchor = null;
+	private Anchor hoverAnchor = null;
 	private Vec3 popupXyz = null;
 	// Sometimes users move an anchor with the mouse
 	private Anchor dragAnchor = null;
@@ -46,25 +44,12 @@ implements MouseMode, KeyListener
 	// private Anchor nextParent = null;
 	private boolean autoFocusNextAnchor = false;
 	
-	public Slot1<Anchor> focusOnAnchorSlot = new Slot1<Anchor>() {
-		@Override
-		public void execute(Anchor anchor) {
-			if (! autoFocusNextAnchor)
-				return;
-			skeletonActor.setNextParent(anchor);
-			skeleton.getHistory().push(anchor);
-			camera.setFocus(anchor.getLocation());
-			// One at a time
-			autoFocusNextAnchor = false;
-		}
-	};
-	
 	public TraceMode(Skeleton skeleton) {
 		this.skeleton = skeleton;
 		setHoverCursor(penCursor);
 		setDragCursor(crossCursor);
 		// Center on new anchors, and mark them with a "P"
-		skeleton.anchorAddedSignal.connect(focusOnAnchorSlot);
+		skeleton.skeletonChanged();
 	}
 
 	@Override 
@@ -88,24 +73,22 @@ implements MouseMode, KeyListener
 	
 	@Override
 	public void mouseClicked(MouseEvent event) {
-		super.mouseClicked(event);
-		// Java swing mouseClicked() requires zero motion and is therefore stupid.
-		// onMouseActuallyClicked(event);
-		// 
-		// But this will have to do for double clicking...
-		// Double click to center; on anchor or on slice point
-		if (event.getClickCount() == 2) {
-            if (currentHover >= 0) {
-                Anchor hoverAnchor = skeletonActor.getAnchorAtIndex(currentHover);
+        super.mouseClicked(event);
+        // Java swing mouseClicked() requires zero motion and is therefore stupid.
+        // onMouseActuallyClicked(event);
+        //
+        // But this will have to do for double clicking...
+        // Double click to center; on anchor or on slice point
+        if (event.getClickCount() == 2) {
+            if (hoverAnchor != null) {
                 camera.setFocus(hoverAnchor.getLocation());
                 skeleton.getHistory().push(hoverAnchor);
+            } else {
+                // center on slice point
+                camera.setFocus(worldFromPixel(event.getPoint()));
             }
-            else {
-				// center on slice point
-				camera.setFocus(worldFromPixel(event.getPoint()));
-			}
-		}
-	}
+        }
+    }
 	
 	private void appendAnchor(Vec3 xyz) {
 		autoFocusNextAnchor = true; // center on new position
@@ -124,13 +107,14 @@ implements MouseMode, KeyListener
 			// Place new anchor
 			Vec3 xyz = worldFromPixel(event.getPoint());
 			// System.out.println("Trace click "+xyz);
+            
+            // TODO - nudge location to voxel center
+            
 			appendAnchor(xyz);
 		}
 		else if (event.getButton() == MouseEvent.BUTTON1) {
-			if (currentHover >= 0) {
-				Anchor anchor = skeletonActor.getAnchorAtIndex(currentHover);
-				skeletonActor.setNextParent(anchor);
-				// System.out.println("select parent anchor "+currentHover);
+			if (hoverAnchor != null) {
+				skeletonActor.setNextParent(hoverAnchor);
 			}
 		}
 	}
@@ -188,16 +172,21 @@ implements MouseMode, KeyListener
 			minDist2 = d2;
 			closest = a;
 		}
-		int ix = -1;
-		if ((closest != null) && (skeletonActor != null))
-			ix = skeletonActor.getIndexForAnchor(closest);
-		if (ix != currentHover) {
-			if (ix >= 0) {
-				// System.out.println("Hover anchor "+ix);
+
+        // closest == null means you're not on an anchor anymore
+		// but don't hover if the anchor isn't visible; hovering turns out
+		//	to be the key to all interaction with anchors (left-click,
+		//	right-click, drag), so preventing hover makes interaction with
+		//	invisible anchors impossible
+		if ((skeletonActor != null) && closest != hoverAnchor) {
+			// test for closest == null because null will come back invisible,
+			//	and we need hover-->null to unhover
+			if (closest == null || skeletonActor.anchorIsVisible(closest)){
+				hoverAnchor = closest;
+				skeletonActor.setHoverAnchor(hoverAnchor);
 			}
-			currentHover = ix;
-			skeletonActor.setHoverAnchorIndex(ix);
 		}
+
 		checkShiftPlusCursor(event);
 	}
 
@@ -208,12 +197,12 @@ implements MouseMode, KeyListener
 		if (event.getButton() == MouseEvent.BUTTON1) 
 		{
 			// start dragging anchor position
-			if (currentHover < 0) {
+			if (hoverAnchor == null) {
 				dragAnchor = null;
 				dragStart = null;
 			}
 			else {
-				dragAnchor = skeletonActor.getAnchorAtIndex(currentHover);
+				dragAnchor = hoverAnchor;
 				dragStart = event.getPoint();
 			}
 		}
@@ -278,9 +267,7 @@ implements MouseMode, KeyListener
 	}
 
 	private Anchor getHoverAnchor() {
-        if (currentHover >= 0)
-            return skeletonActor.getAnchorAtIndex(currentHover);
-		return null;
+        return hoverAnchor;
 	}
 	
 	@Override
@@ -390,25 +377,25 @@ implements MouseMode, KeyListener
                         result.add(new JMenuItem(new AbstractAction("Delete link") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-                                skeleton.deleteLinkRequest(getHoverAnchor());
+								skeleton.deleteLinkRequest(getHoverAnchor());
                             }
                         }));
                         result.add(new JMenuItem(new AbstractAction("Split anchor") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-                                skeleton.splitAnchorRequest(getHoverAnchor());
+								skeleton.splitAnchorRequest(getHoverAnchor());
                             }
                         }));
                         result.add(new JMenuItem(new AbstractAction("Split neurite") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-                                skeleton.splitNeuriteRequest(getHoverAnchor());
+								skeleton.splitNeuriteRequest(getHoverAnchor());
                             }
                         }));
                         result.add(new JMenuItem(new AbstractAction("Set anchor as root") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-                                skeleton.rerootNeuriteRequest(getHoverAnchor());
+								skeleton.rerootNeuriteRequest(getHoverAnchor());
                             }
                         }));
                         result.add(null); // separator
@@ -418,6 +405,19 @@ implements MouseMode, KeyListener
                                 skeleton.addEditNoteRequest(getHoverAnchor());
                             }
                         }));
+                        result.add(null); // separator
+						result.add(new JMenuItem(new AbstractAction("Change neuron style...") {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								skeleton.changeNeuronStyle(getHoverAnchor());
+							}
+						}));
+						result.add(new JMenuItem(new AbstractAction("Hide neuron") {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								skeleton.setNeuronVisitility(getHoverAnchor(), false);
+							}
+						}));
                         result.add(null); // separator
                     }
                     if (parent != null) {
@@ -481,7 +481,7 @@ implements MouseMode, KeyListener
 	}
 
 	private void checkShiftPlusCursor(InputEvent event) {
-		if (currentHover >= 0) // no adding points while hovering over another point
+		if (hoverAnchor != null) // no adding points while hovering over another point
 			checkCursor(penCursor);
 		else if (event.isShiftDown()) // display addable cursor
 			checkCursor(penPlusCursor);

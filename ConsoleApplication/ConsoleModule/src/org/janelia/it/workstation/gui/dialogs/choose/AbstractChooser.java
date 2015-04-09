@@ -29,7 +29,7 @@ public abstract class AbstractChooser<T> extends ModalDialog {
 
     private int returnValue = ERROR_OPTION;
 
-    private final List<T> chosenElements = new ArrayList<T>();
+    private final List<T> chosenElements = new ArrayList<>();
 
     public AbstractChooser() {
         this("Choose", "Choose the selected elements");

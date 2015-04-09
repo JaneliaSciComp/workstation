@@ -13,6 +13,8 @@ import javax.swing.event.ChangeListener;
 
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Toolbar for icon panels.
@@ -21,6 +23,8 @@ import org.janelia.it.workstation.gui.util.MouseForwarder;
  */
 public abstract class IconDemoToolbar extends ViewerToolbar {
 
+    private static final Logger log = LoggerFactory.getLogger(IconDemoToolbar.class);
+    
     protected JToggleButton showTitlesButton;
     protected JButton imageRoleButton;
     protected JToggleButton showTagsButton;
@@ -103,6 +107,7 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
             public void stateChanged(ChangeEvent e) {
                 JSlider source = (JSlider) e.getSource();
                 int imageSize = source.getValue();
+                setMaxImageSizeSlider(imageSize);
                 if (currImageSize == imageSize) {
                     return;
                 }
@@ -110,6 +115,18 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
                 currImageSizeChanged(currImageSize);
             }
         });
+    }
+    
+    public void setMaxImageSizeSlider(int imageSize) {
+        if (imageSize<ImagesPanel.MIN_IMAGE_WIDTH) {
+            log.warn("Cannot set image size below min image width: {}<{}",imageSize,ImagesPanel.MIN_IMAGE_WIDTH);
+            return;
+        }
+        if (imageSize>ImagesPanel.MAX_IMAGE_WIDTH) {
+            log.warn("Cannot set image size above max image width: {}>{}",imageSize,ImagesPanel.MAX_IMAGE_WIDTH);
+            return;
+        }
+        imageSizeSlider.setValue(imageSize);
     }
 
     protected abstract void showTitlesButtonPressed();

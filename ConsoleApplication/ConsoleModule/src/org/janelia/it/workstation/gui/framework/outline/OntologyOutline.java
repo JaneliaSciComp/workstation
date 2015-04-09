@@ -23,7 +23,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.swing.AbstractAction;
 import javax.swing.DropMode;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -34,7 +33,6 @@ import javax.swing.JSeparator;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
-import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
@@ -81,6 +79,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.util.PermissionTemplate;
+import org.janelia.it.workstation.gui.dialogs.AutoAnnotationPermissionDialog;
+import org.janelia.it.workstation.gui.dialogs.BulkAnnotationPermissionDialog;
+import static org.janelia.it.workstation.gui.framework.outline.EntityContextMenu.mainFrame;
 
 /**
  * The right-hand ontology panel which displays all the ontologies that a user has access to.
@@ -89,7 +92,6 @@ import com.google.common.eventbus.Subscribe;
  */
 public abstract class OntologyOutline extends EntityTree implements Refreshable, ActivatableView {
 
-    public static final String ONTOLOGY_COMPONENT_NAME = "OntologyViewerTopComponent";
     private static final Logger log = LoggerFactory.getLogger(OntologyOutline.class);
 
     protected List<Entity> entityRootList;
@@ -98,12 +100,17 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
 
     private final KeyListener keyListener;
     private final KeyBindDialog keyBindDialog;
-
     private boolean recordingKeyBinds = false;
 
-    private final Map<String, Action> ontologyActionMap = new HashMap<String, Action>();
+    private final BulkAnnotationPermissionDialog bulkAnnotationDialog;
+    private final AutoAnnotationPermissionDialog autoAnnotationDialog;
+    
+    private final Map<String, Action> ontologyActionMap = new HashMap<>();
 
     public OntologyOutline() {
+        
+        bulkAnnotationDialog = new BulkAnnotationPermissionDialog();
+        autoAnnotationDialog = new AutoAnnotationPermissionDialog();
 
         // Create input listeners which will be added to the DynamicTree later
         keyListener = new KeyAdapter() {
@@ -174,6 +181,18 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         });
     }
 
+    @Override
+    public void activate() {
+        log.info("Activating");
+        super.activate();
+    }
+
+    @Override
+    public void deactivate() {
+        log.info("Deactivating");
+        super.deactivate();
+    }
+    
     /**
      * Override this method to load the root list. This method will be called in
      * a worker thread.
@@ -202,7 +221,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         
         Entity selectedEntityRoot = null;
 
-        this.entityRootList = new ArrayList<Entity>();
+        this.entityRootList = new ArrayList<>();
         for (Entity entityRoot : entityRootList) {
             if (entityRoot.getId().equals(selectedId)) {
                 selectedEntityRoot = entityRoot;
@@ -224,17 +243,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         super.initializeTree(rootEntity);
 
         getDynamicTree().add(getToolbar(), BorderLayout.PAGE_END);
-
-//        if (selectedTree.getToolbar()!=null) {
-//            decorateToolbar(selectedTree.getToolbar().getJToolBar());
-//        }
-        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, true), "enterAction");
-        getActionMap().put("enterAction", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // TODO: apply annotation?
-            }
-        });
     }
 
     /**
@@ -253,12 +261,12 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                     selectedEntityRoot = entityRoot;
                 }
             }
+        }
 
-            if (selectedEntityRoot == null) {
-                log.error("Ontology {} was not found in the ontology root list", rootId);
-                initializeTree(null);
-                return;
-            }
+        if (selectedEntityRoot == null) {
+            log.error("Ontology {} was not found in the ontology root list", rootId);
+            initializeTree(null);
+            return;
         }
 
         log.debug("Loading ontology {}", rootId);
@@ -361,14 +369,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         toolBar.setFloatable(false);
         toolBar.setRollover(true);
 
-        decorateToolbar(toolBar);
-
-        return toolBar;
-
-    }
-
-    protected void decorateToolbar(JToolBar jToolBar) {
-
         if (entityRootList != null) {
             final JButton ontologyButton = new JButton("Open ontology...");
             ontologyButton.setIcon(Icons.getIcon("open_action.png"));
@@ -379,14 +379,17 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                 public void actionPerformed(ActionEvent e) {
 
                     final JScrollPopupMenu ontologyListMenu = new JScrollPopupMenu();
-                    ontologyListMenu.setMaximumVisibleRows(20);
+                    ontologyListMenu.setMaximumVisibleRows(50);
 
                     for (final Entity entityRoot : entityRootList) {
-                        String owner = entityRoot.getOwnerKey();
-                        if (owner.contains(":")) {
-                            owner = owner.substring(owner.indexOf(':') + 1);
+                        Subject subject = null;
+                        try {
+                            subject = ModelMgr.getModelMgr().getSubjectByKey(entityRoot.getOwnerKey());
                         }
-
+                        catch (Exception ex) {
+                            log.error("Error getting subject: "+entityRoot.getOwnerKey(),ex);
+                        }
+                        String owner = subject==null?entityRoot.getOwnerKey():subject.getFullName();
                         JMenuItem roleMenuItem = new JCheckBoxMenuItem(entityRoot.getName() + " (" + owner + ")", root != null && entityRoot.getId().equals(root.getId()));
                         roleMenuItem.setIcon(Icons.getIcon(entityRoot));
                         roleMenuItem.addActionListener(new ActionListener() {
@@ -422,11 +425,11 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                     ontologyListMenu.show(ontologyButton, 0, ontologyButton.getHeight());
                 }
             });
-            ontologyButton.addMouseListener(new MouseForwarder(jToolBar, "ImageRoleButton->JToolBar"));
-            jToolBar.add(ontologyButton);
+            ontologyButton.addMouseListener(new MouseForwarder(toolBar, "OntologyButton->JToolBar"));
+            toolBar.add(ontologyButton);
         }
 
-        final JToggleButton keyBindButton = new JToggleButton("Set Shortcuts");
+        final JToggleButton keyBindButton = new JToggleButton();
         keyBindButton.setIcon(Icons.getIcon("keyboard_add.png"));
         keyBindButton.setToolTipText("Enter key binding mode");
         keyBindButton.addActionListener(new ActionListener() {
@@ -447,9 +450,56 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                 }
             }
         });
-        jToolBar.add(keyBindButton);
+        toolBar.add(keyBindButton);
+        
+        final JToggleButton autoShareButton = new JToggleButton();
+        autoShareButton.setIcon(Icons.getIcon("group_gear.png"));
+        autoShareButton.setToolTipText("Configure annotation auto-sharing");
+        autoShareButton.setFocusable(false);
+        autoShareButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (autoShareButton.isSelected()) {
+                    boolean pressedOk = autoAnnotationDialog.showAutoAnnotationConfiguration();
+                    if (pressedOk) {
+                        PermissionTemplate template = SessionMgr.getBrowser().getAutoShareTemplate();
+                        if (template!=null) {
+                            JOptionPane.showMessageDialog(mainFrame,
+                                "Auto-sharing annotation with "+
+                                EntityUtils.getNameFromSubjectKey(template.getSubjectKey()), 
+                                "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    }
+                }
+                else {
+                    SessionMgr.getBrowser().setAutoShareTemplate(null);
+                    JOptionPane.showMessageDialog(mainFrame,
+                        "No longer auto-sharing annotations", "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
+                }
+                
+                autoShareButton.setSelected(SessionMgr.getBrowser().getAutoShareTemplate()!=null);
+            }
+            
+        });
+        autoShareButton.setSelected(SessionMgr.getBrowser().getAutoShareTemplate()!=null);
+        toolBar.add(autoShareButton);
+                    
+        final JButton bulkPermissionsButton = new JButton();
+        bulkPermissionsButton.setIcon(Icons.getIcon("group_edit.png"));
+        bulkPermissionsButton.setToolTipText("Bulk-edit permissions for annotations on selected entities");
+        bulkPermissionsButton.setFocusable(false);
+        bulkPermissionsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                bulkAnnotationDialog.showForSelectedEntities();
+            }
+            
+        });
+        toolBar.add(bulkPermissionsButton);
+        
+        return toolBar;
     }
-
+    
     private class OntologyOutlineContextMenu extends OntologyContextMenu {
 
         public OntologyOutlineContextMenu(DefaultMutableTreeNode node, String uniqueId) {
@@ -612,7 +662,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             log.debug("Ontology was deleted: '{}'", entity.getName());
 
             if (entityRootList != null) {
-                Set<Entity> toRemove = new HashSet<Entity>();
+                Set<Entity> toRemove = new HashSet<>();
                 for (Entity entityRoot : entityRootList) {
                     if (entityRoot.getId().equals(entity.getId())) {
                         // An ontology root was changed
@@ -704,7 +754,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     }
 
     private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
-    private Queue<Callable<Void>> callbacks = new ConcurrentLinkedQueue<Callable<Void>>();
+    private Queue<Callable<Void>> callbacks = new ConcurrentLinkedQueue<>();
 
     private synchronized void executeCallBacks() {
         synchronized (this) {

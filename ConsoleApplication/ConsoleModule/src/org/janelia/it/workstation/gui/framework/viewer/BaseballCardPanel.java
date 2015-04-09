@@ -70,7 +70,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     ) {
         this.rootedEntities = rootedEntities;
         this.solrResultsMetaData = solrResultsMetaData;
-        cards = new ArrayList<BaseballCard>();
+        cards = new ArrayList<>();
         for ( nextEntityNum = 0; nextEntityNum < rowsPerPage  &&  nextEntityNum < rootedEntities.size(); nextEntityNum ++ ) {
             RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
             cards.add( new BaseballCard( rootedEntity.getEntity() ) );
@@ -113,7 +113,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
 
     /** Everything checked can be returned from here. */
     public List<BaseballCard> getSelectedCards() {
-        List<BaseballCard> returnList = new ArrayList<BaseballCard>();
+        List<BaseballCard> returnList = new ArrayList<>();
         List<Object> selectedObjects = cardTable.getSelectedObjects();
         for ( Object o: selectedObjects ) {
             if (o instanceof BaseballCard) {
@@ -224,8 +224,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         Dimension imageSize = new Dimension(
                 BaseballCard.IMAGE_WIDTH, BaseballCard.IMAGE_HEIGHT
         );
-        for ( int i = 0; i < cards.size(); i++ ) {
-            BaseballCard card = cards.get( i );
+        for (BaseballCard card : cards) {
             addCardToTable(detailsSize, imageSize, card);
         }
         cardTable.setMaxColWidth( Math.max( detailsSize.width, imageSize.width ) );

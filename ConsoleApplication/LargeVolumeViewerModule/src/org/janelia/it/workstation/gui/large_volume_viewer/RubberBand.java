@@ -5,9 +5,10 @@ import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
 
 import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
-import org.janelia.it.workstation.signal.Signal;
+//import org.janelia.it.workstation.signal.Signal;
 
 public class RubberBand
 implements AwtActor
@@ -25,8 +26,10 @@ implements AwtActor
 	protected Point startPoint = new Point(10, 10);
 	protected Point endPoint = new Point(30, 30);
 	boolean visible = false;
+    
+    private RepaintListener repaintListener;
 
-	public Signal changed = new Signal();
+//	public Signal changed = new Signal();
 	
 	public Point getStartPoint() {
 		return startPoint;
@@ -36,8 +39,10 @@ implements AwtActor
 		if (this.startPoint == startPoint)
 			return;
 		this.startPoint = startPoint;
-		if (this.visible)
-			changed.emit();
+		if (this.visible) {
+//			changed.emit();
+            fireRepaint();
+        }
 	}
 
 	public Point getEndPoint() {
@@ -49,22 +54,28 @@ implements AwtActor
 		if (this.endPoint == endPoint)
 			return;
 		this.endPoint = endPoint;
-		if (this.isVisible())
-			changed.emit();
+		if (this.isVisible()) {
+            fireRepaint();
+//			changed.emit();
+        }
 	}
 
+    @Override
 	public boolean isVisible() {
 		return visible;
 	}
 
+    @Override
 	public void setVisible(boolean visible) {
 		//log.info("setVisible "+visible);
 		if (this.visible == visible)
 			return;
 		this.visible = visible;
-		changed.emit();
+        fireRepaint();
+//		changed.emit();
 	}
 
+    @Override
 	public void paint(Graphics2D g) 
 	{
 		//log.info("paint");
@@ -95,4 +106,18 @@ implements AwtActor
 		g.setStroke(dashed);
 		g.drawRect(x, y, w, h);
 	}
+    
+    /**
+     * @param repaintListener the repaintListener to set
+     */
+    public void setRepaintListener(RepaintListener repaintListener) {
+        this.repaintListener = repaintListener;
+    }
+
+    private void fireRepaint() {
+        if (repaintListener != null) {
+            repaintListener.repaint();
+        }
+    }
+
 }

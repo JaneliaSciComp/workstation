@@ -14,16 +14,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.solr.common.SolrDocument;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
-import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataStore;
-import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
 import org.janelia.it.jacs.shared.solr.SageTerm;
 import org.janelia.it.jacs.shared.solr.SolrUtils;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataStore;
+import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -84,12 +84,12 @@ public class SearchConfiguration {
     protected static final boolean[] columnIsInEntity = {true, true, true, true, true, true, false, false};
 
     // Data
-    protected final Map<AttrGroup, List<SearchAttribute>> attributeGroups = new LinkedHashMap<AttrGroup, List<SearchAttribute>>();
-    protected final Map<String, SearchAttribute> attrByName = new HashMap<String, SearchAttribute>();
-    protected List<SearchAttribute> attributes = new ArrayList<SearchAttribute>();
+    protected final Map<AttrGroup, List<SearchAttribute>> attributeGroups = new LinkedHashMap<>();
+    protected final Map<String, SearchAttribute> attrByName = new HashMap<>();
+    protected List<SearchAttribute> attributes = new ArrayList<>();
     protected Map<String, SageTerm> vocab;
 
-    protected List<SearchConfigurationListener> listeners = new ArrayList<SearchConfigurationListener>();
+    protected List<SearchConfigurationListener> listeners = new ArrayList<>();
     protected boolean ready = false;
 
     public enum AttrGroup {
@@ -122,7 +122,7 @@ public class SearchConfiguration {
             @Override
             protected void doStuff() throws Exception {
 
-                List<SearchAttribute> attrListBasic = new ArrayList<SearchAttribute>();
+                List<SearchAttribute> attrListBasic = new ArrayList<>();
                 attributeGroups.put(AttrGroup.BASIC, attrListBasic);
                 for (int i = 0; i < columnFields.length; i++) {
                     String name = columnFields[i];
@@ -142,7 +142,7 @@ public class SearchConfiguration {
                     }
                 });
 
-                List<SearchAttribute> attrListExt = new ArrayList<SearchAttribute>();
+                List<SearchAttribute> attrListExt = new ArrayList<>();
                 attributeGroups.put(AttrGroup.EXT, attrListExt);
                 for (EntityAttribute entityAttr : attrs) {
                     String name = SolrUtils.getDynamicFieldName(entityAttr.getName());
@@ -153,8 +153,8 @@ public class SearchConfiguration {
                     attrByName.put(attr.getName(), attr);
                 }
 
-                vocab = ModelMgr.getModelMgr().getFlyLightVocabulary();
-                List<SageTerm> terms = new ArrayList<SageTerm>(vocab.values());
+                vocab = ModelMgr.getModelMgr().getImageVocabulary();
+                List<SageTerm> terms = new ArrayList<>(vocab.values());
                 Collections.sort(terms, new Comparator<SageTerm>() {
                     @Override
                     public int compare(SageTerm o1, SageTerm o2) {
@@ -162,11 +162,11 @@ public class SearchConfiguration {
                     }
                 });
 
-                List<SearchAttribute> attrListSage = new ArrayList<SearchAttribute>();
+                List<SearchAttribute> attrListSage = new ArrayList<>();
                 attributeGroups.put(AttrGroup.SAGE, attrListSage);
                 for (SageTerm sageTerm : terms) {
                     String name = SolrUtils.getSageFieldName(sageTerm);
-                    String label = sageTerm.getDisplayName();
+                    String label = sageTerm.getDisplayName()+" ("+ sageTerm.getCv()+")";
                     SearchAttribute attr = new SearchAttribute(name, label, sageTerm.getDefinition(), "date_time".equals(sageTerm.getDataType()) ? DataType.DATE : DataType.STRING, DataStore.SOLR, true);
                     attrListSage.add(attr);
                     attributes.add(attr);
@@ -228,7 +228,7 @@ public class SearchConfiguration {
      * @return
      */
     public String getValue(Object userObject, String fieldName) {
-        Entity entity = null;
+        Entity entity;
         SolrDocument doc = null;
         if (userObject instanceof EntityDocument) {
             EntityDocument entityDoc = (EntityDocument) userObject;
@@ -246,7 +246,7 @@ public class SearchConfiguration {
             throw new IllegalArgumentException("Entity may not be null in user object=" + userObject);
         }
         ;
-        Object value = null;
+        Object value;
         if ("id".equals(fieldName)) {
             value = entity.getId();
         }
@@ -257,7 +257,7 @@ public class SearchConfiguration {
             value = entity.getEntityTypeName();
         }
         else if ("username".equals(fieldName)) {
-            value = ModelMgrUtils.getNameFromSubjectKey(entity.getOwnerKey());
+            value = EntityUtils.getNameFromSubjectKey(entity.getOwnerKey());
         }
         else if ("creation_date".equals(fieldName)) {
             value = entity.getCreationDate();
@@ -269,7 +269,7 @@ public class SearchConfiguration {
             if ("annotations".equals(fieldName)) {
                 StringBuffer sb = new StringBuffer();
                 for (String subjectKey : SessionMgr.getSubjectKeys()) {
-                    String owner = subjectKey.contains(":") ? subjectKey.split(":")[1] : subjectKey;
+                    String owner = EntityUtils.getNameFromSubjectKey(subjectKey);
                     Object v = doc.getFieldValues(owner + "_annotations");
                     if (v != null) {
                         if (sb.length() > 0) {
@@ -314,17 +314,17 @@ public class SearchConfiguration {
         }
 
         // Convert to collection
-        Collection<Object> coll = null;
+        Collection<Object> coll;
         if (value instanceof Collection) {
             coll = (Collection) value;
         }
         else {
-            coll = new ArrayList<Object>();
+            coll = new ArrayList<>();
             coll.add(value);
         }
 
         // Format every value in the collection
-        List<String> formattedValues = new ArrayList<String>();
+        List<String> formattedValues = new ArrayList<>();
         for (Object v : coll) {
             String formattedValue = v.toString();
             if (v instanceof Date) {
@@ -335,11 +335,6 @@ public class SearchConfiguration {
             }
             else if (v instanceof Double) {
                 formattedValue = decFormat.format((Double) v);
-            }
-            else {
-                if ("tiling_pattern_txt".equals(fieldName)) {
-                    formattedValue = StringUtils.underscoreToTitleCase(formattedValue);
-                }
             }
             formattedValues.add(formattedValue);
         }

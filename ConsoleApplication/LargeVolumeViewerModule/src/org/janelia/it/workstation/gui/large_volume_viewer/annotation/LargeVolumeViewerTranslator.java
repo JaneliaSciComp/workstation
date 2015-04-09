@@ -1,22 +1,29 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-
+import Jama.Matrix;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
-import org.janelia.it.workstation.octree.ZoomLevel;
-import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
-import org.janelia.it.workstation.signal.Signal;
-import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot1;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.tracing.VoxelPosition;
 
 
 /**
@@ -29,113 +36,54 @@ import java.util.List;
  * a neuron", and the LargeVolumeViewer proper, which only wants to be told what to draw.
  * this class *only* handles the viewer, not the other traditional UI elements.
  *
- * this class's slots generally connect to the AnnotationModel, while its signals go
+ * this class generally observes the AnnotationModel, while its events go
  * out to various UI elements.
  *
  * unfortunately, this class's comments and methods tends to use "anchor" and "annotation"
  * somewhat interchangeably, which can be confusing
  */
-public class LargeVolumeViewerTranslator {
+public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener,
+    GlobalAnnotationListener, NeuronStyleChangeListener {
 
     private AnnotationModel annModel;
     private LargeVolumeViewer largeVolumeViewer;
+    private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<>();
+    private Collection<TmGeoAnnotationAnchorListener> anchorListeners = new ArrayList<>();
+    private Collection<NextParentListener> nextParentListeners = new ArrayList<>();
+    private Collection<NeuronStyleChangeListener> neuronStyleChangeListeners = new ArrayList<>();
+    private ViewStateListener viewStateListener;
+    
+    public void addAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
+        avpListeners.add(l);
+    }
+    
+    public void removeAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
+        avpListeners.remove(l);
+    }
+    
+    public void addTmGeoAnchorListener(TmGeoAnnotationAnchorListener l) {
+        anchorListeners.add(l);
+    }
+    
+    public void removeTmGeoAnchorListener(TmGeoAnnotationAnchorListener l) {
+        anchorListeners.remove(l);
+    }
+    
+    public void addNextParentListener(NextParentListener l) {
+        nextParentListeners.add(l);
+    }
+    
+    public void removeNextParentListener(NextParentListener l) {
+        nextParentListeners.remove(l);
+    }
+    
+    public void addNeuronStyleChangeListener(NeuronStyleChangeListener l) {
+        neuronStyleChangeListeners.add(l);
+    }
 
-    // ----- slots
-    public Slot1<TmWorkspace> loadWorkspaceSlot = new Slot1<TmWorkspace>() {
-        @Override
-        public void execute(TmWorkspace workspace) {
-            workspaceLoaded(workspace);
-        }
-    };
-
-    public Slot1<TmNeuron> selectNeuronSlot = new Slot1<TmNeuron>() {
-        @Override
-        public void execute(TmNeuron neuron) {
-            neuronSelected(neuron);
-        }
-    };
-
-    public Slot1<TmGeoAnnotation> addAnnotationSlot = new Slot1<TmGeoAnnotation>() {
-        @Override
-        public void execute(TmGeoAnnotation annotation) {
-            addAnnotation(annotation);
-        }
-    };
-
-    public Slot1<List<TmGeoAnnotation>> deleteAnnotationsSlot = new Slot1<List<TmGeoAnnotation>>() {
-        @Override
-        public void execute(List<TmGeoAnnotation> annotationList) {
-            deleteAnnotations(annotationList);
-        }
-    };
-
-    public Slot1<TmGeoAnnotation> reparentAnnotationSlot = new Slot1<TmGeoAnnotation>() {
-        @Override
-        public void execute(TmGeoAnnotation annotation) {
-            reparentAnnotation(annotation);
-        }
-    };
-
-    public Slot1<TmGeoAnnotation> unmoveAnnotationSlot = new Slot1<TmGeoAnnotation>() {
-        @Override
-        public void execute(TmGeoAnnotation annotation) {
-            unmoveAnnotation(annotation);
-        }
-    };
-
-    public Slot1<TmAnchoredPath> addAnchoredPathSlot = new Slot1<TmAnchoredPath>() {
-        @Override
-        public void execute(TmAnchoredPath path) {
-            addAnchoredPath(path);
-        }
-    };
-
-    public Slot1<List<TmAnchoredPath>> removeAnchoredPathsSlot = new Slot1<List<TmAnchoredPath>>() {
-        @Override
-        public void execute(List<TmAnchoredPath> pathList) {
-            removeAnchoredPaths(pathList);
-        }
-    };
-
-    public Slot1<TmGeoAnnotation> annotationClickedSlot = new Slot1<TmGeoAnnotation>() {
-        @Override
-        public void execute(TmGeoAnnotation annotation) {
-            setNextParentSignal.emit(annotation.getId());
-        }
-    };
-
-    public Slot1<Vec3> cameraPanToSlot = new Slot1<Vec3>() {
-        @Override
-        public void execute(Vec3 location) {
-            cameraPanToSignal.emit(location);
-        }
-    };
-
-    public Slot1<Color> globalAnnotationColorChangedSlot = new Slot1<Color>() {
-        @Override
-        public void execute(Color color) {
-            // just pass through right now
-            changeGlobalColorSignal.emit(color);
-        }
-    };
-
-    // ----- signals
-    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
-
-    public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
-    public Signal1<List<TmGeoAnnotation>> anchorsAddedSignal = new Signal1<List<TmGeoAnnotation>>();
-    public Signal1<TmGeoAnnotation> anchorDeletedSignal = new Signal1<TmGeoAnnotation>();
-    public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<TmGeoAnnotation>();
-    public Signal1<TmGeoAnnotation> anchorMovedBackSignal = new Signal1<TmGeoAnnotation>();
-    public Signal clearSkeletonSignal = new Signal();
-    public Signal1<Long> setNextParentSignal = new Signal1<Long>();
-
-    public Signal1<AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<AnchoredVoxelPath>();
-    public Signal1<List<AnchoredVoxelPath>> anchoredPathsAddedSignal = new Signal1<List<AnchoredVoxelPath>>();
-    public Signal1<AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<AnchoredVoxelPath>();
-
-    public Signal1<Color> changeGlobalColorSignal = new Signal1<Color>();
-    public Signal1<String> loadColorModelSignal = new Signal1<String>();
+    public void removeNeuronStyleChangeListener(NeuronStyleChangeListener l) {
+        neuronStyleChangeListeners.remove(l);
+    }
 
     public LargeVolumeViewerTranslator(AnnotationModel annModel, LargeVolumeViewer largeVolumeViewer) {
         this.annModel = annModel;
@@ -144,36 +92,29 @@ public class LargeVolumeViewerTranslator {
         setupSignals();
     }
 
-    public void connectSkeletonSignals(Skeleton skeleton) {
-        anchorAddedSignal.connect(skeleton.addAnchorSlot);
-        anchorsAddedSignal.connect(skeleton.addAnchorsSlot);
-        anchorDeletedSignal.connect(skeleton.deleteAnchorSlot);
-        anchorReparentedSignal.connect(skeleton.reparentAnchorSlot);
-        anchorMovedBackSignal.connect(skeleton.moveAnchorBackSlot);
-        clearSkeletonSignal.connect(skeleton.clearSlot);
+    public void setViewStateListener( ViewStateListener viewStateListener ) {
+        this.viewStateListener = viewStateListener;
+    }
+    
+    public void connectSkeletonSignals(Skeleton skeleton, SkeletonController skeletonController) {
+        addAnchoredVoxelPathListener(skeletonController);
+        addTmGeoAnchorListener(skeletonController);
+        addNextParentListener(skeletonController);
+        addNeuronStyleChangeListener(skeletonController);
+        skeletonController.registerForEvents(this);
+    }
 
-        setNextParentSignal.connect(largeVolumeViewer.getSkeletonActor().setNextParentSlot);
-
-        anchoredPathAddedSignal.connect(skeleton.addAnchoredPathSlot);
-        anchoredPathsAddedSignal.connect(skeleton.addAnchoredPathsSlot);
-        anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
-
-        changeGlobalColorSignal.connect(largeVolumeViewer.getSkeletonActor().changeGlobalColorSlot);
+    public void cameraPanTo(Vec3 location) {
+        TileFormat tileFormat = getTileFormat();
+        viewStateListener.setCameraFocus(
+                tileFormat.micronVec3ForVoxelVec3Centered(location)
+        );
     }
 
     private void setupSignals() {
-        annModel.workspaceLoadedSignal.connect(loadWorkspaceSlot);
-        annModel.neuronSelectedSignal.connect(selectNeuronSlot);
-
-        annModel.annotationAddedSignal.connect(addAnnotationSlot);
-        annModel.annotationsDeletedSignal.connect(deleteAnnotationsSlot);
-        annModel.annotationReparentedSignal.connect(reparentAnnotationSlot);
-        annModel.annotationNotMovedSignal.connect(unmoveAnnotationSlot);
-
-        annModel.anchoredPathAddedSignal.connect(addAnchoredPathSlot);
-        annModel.anchoredPathsRemovedSignal.connect(removeAnchoredPathsSlot);
-
-        annModel.globalAnnotationColorChangedSignal.connect(globalAnnotationColorChangedSlot);
+        annModel.addGlobalAnnotationListener(this);
+        annModel.addTmGeoAnnotationModListener(this);
+        annModel.addTmAnchoredPathListener(this);
     }
 
     /**
@@ -181,13 +122,175 @@ public class LargeVolumeViewerTranslator {
      */
     public void addAnnotation(TmGeoAnnotation annotation) {
         if (annotation != null) {
-            anchorAddedSignal.emit(annotation);
+            fireAnchorAdded(annotation);
         }
     }
 
     /**
+     * called by the model when it deletes annotations
+     */
+    public void deleteAnnotations(List<TmGeoAnnotation> annotationList) {
+        // remove all the individual annotations from 2D view
+
+        for (TmGeoAnnotation ann: annotationList) {
+            fireAnchorDeleted(ann);
+        }
+    }
+
+    /**
+     * called by the model when it changes the parent of an annotation
+     */
+    public void reparentAnnotation(TmGeoAnnotation annotation) {
+        // pretty much a pass-through to the skeleton
+        fireAnchorReparented(annotation);
+    }
+
+    /**
+     * called by the model when it needs an annotation's anchor moved, whether
+     * because we moved it, or because the UI moved it and the operation failed,
+     * and we want it moved back
+     */
+    public void unmoveAnnotation(TmGeoAnnotation annotation) {
+        fireAnchorMovedBack(annotation);
+    }
+
+    //-----------------------------IMPLEMENTS TmAnchoredPathListener
+    //  This listener functions as a value-remarshalling relay to next listener.
+    @Override
+    public void addAnchoredPath(TmAnchoredPath path) {
+        for (AnchoredVoxelPathListener l: avpListeners) {
+            l.addAnchoredVoxelPath(TAP2AVP(path));
+        }
+    }
+
+    @Override
+    public void removeAnchoredPaths(List<TmAnchoredPath> pathList) {
+        for (TmAnchoredPath path: pathList) {
+            for (AnchoredVoxelPathListener l: avpListeners) {
+                l.removeAnchoredVoxelPath(TAP2AVP(path));
+            }
+        }
+    }
+
+    public void addAnchoredPaths(List<TmAnchoredPath> pathList) {
+        List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
+        for (TmAnchoredPath path: pathList) {
+            voxelPathList.add(TAP2AVP(path));
+        }
+        for (AnchoredVoxelPathListener l: avpListeners) {
+            l.addAnchoredVoxelPaths(voxelPathList);
+        }
+    }
+    
+    //--------------------------IMPLEMENTS TmGeoAnnotationModListener
+    @Override
+    public void annotationAdded(TmGeoAnnotation annotation) {
+        addAnnotation(annotation);
+    }
+
+    @Override
+    public void annotationsDeleted(List<TmGeoAnnotation> annotations) {
+        deleteAnnotations(annotations);
+    }
+
+    @Override
+    public void annotationReparented(TmGeoAnnotation annotation) {
+        reparentAnnotation(annotation);
+    }
+
+    @Override
+    public void annotationNotMoved(TmGeoAnnotation annotation) {
+        unmoveAnnotation(annotation);
+    }
+
+    @Override
+    public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
+        fireNeuronStyleChangeEvent(neuron, style);
+    }
+
+    public void annotationSelected(Long id) {
+        fireNextParentEvent(id);
+    }
+    
+    /**
+     * called by the model when it loads a new workspace
+     */
+    @Override
+    public void workspaceLoaded(TmWorkspace workspace) {
+        // clear existing
+        fireClearAnchors();
+
+        if (workspace != null) {
+            // See about things to add to the Tile Format.
+            // These must be collected from the workspace, because they
+            // require knowledge of the sample ID, rather than file path.
+            TileFormat tileFormat = getTileFormat();
+            if (tileFormat != null) {
+                Matrix micronToVoxMatrix = workspace.getMicronToVoxMatrix();
+                Matrix voxToMicronMatrix = workspace.getVoxToMicronMatrix();
+                if (micronToVoxMatrix != null  &&  voxToMicronMatrix != null) {                    
+                    tileFormat.setMicronToVoxMatrix(micronToVoxMatrix);
+                    tileFormat.setVoxToMicronMatrix(voxToMicronMatrix);
+                }
+                else {
+                    addMatrices(workspace, tileFormat);
+                }
+            }
+            
+            // (we used to retrieve global color here; replaced by styles)
+
+            // set styles for our neurons; if a neuron isn't in the saved map,
+            //  use a default style
+            Map<Long, NeuronStyle> neuronStyleMap = annModel.getNeuronStyleMap();
+            NeuronStyle style;
+            for (TmNeuron neuron: workspace.getNeuronList()) {
+                if (neuronStyleMap.containsKey(neuron.getId())) {
+                    style = neuronStyleMap.get(neuron.getId());
+                } else {
+                    style = NeuronStyle.getStyleForNeuron(neuron.getId());
+                }
+                fireNeuronStyleChangeEvent(neuron,style);
+            }
+            // note: we currently don't clean up old styles in the prefs that belong
+            //  to deleted neurons; this is the place to do it if/when we put that in
+            //  (see FW-3100); you would iterate over the style map and remove
+            //  any neurons not in the workspace, then save the map back
+
+
+            // check for saved image color model
+            String colorModelString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_COLOR_MODEL);
+            if (colorModelString != null  &&  viewStateListener != null) {
+                viewStateListener.loadColorModel(colorModelString);
+            }
+
+            // note that we must add annotations in parent-child sequence
+            //  so lines get drawn correctly; we must send this as one big
+            //  list so the anchor update routine is run once will all anchors
+            //  present rather than piecemeal (which will cause problems in
+            //  some cases on workspace reloads)
+            List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
+            for (TmNeuron neuron: workspace.getNeuronList()) {
+                for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+                    addedAnchorList.addAll(neuron.getSubTreeList(root));
+                }
+            }
+            fireAnchorsAdded(addedAnchorList);
+
+            // draw anchored paths, too, after all the anchors are drawn
+            List<TmAnchoredPath> annList = new ArrayList<>();
+            for (TmNeuron neuron: workspace.getNeuronList()) {
+                for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
+                    annList.add(path);
+                }
+            }
+            addAnchoredPaths(annList);
+        }
+    }
+    
+    /**
      * called when the model changes the current neuron
      */
+    @Override
     public void neuronSelected(TmNeuron neuron) {
         if (neuron == null) {
             return;
@@ -201,7 +304,7 @@ public class LargeVolumeViewerTranslator {
 
         // if neuron has no annotations, clear old one anyway
         if (neuron.getGeoAnnotationMap().size() == 0) {
-            setNextParentSignal.emit(null);
+            fireNextParentEvent(null);
             return;
         }
 
@@ -210,101 +313,96 @@ public class LargeVolumeViewerTranslator {
         TmGeoAnnotation firstRoot = neuron.getRootAnnotations().get(0);
         for (TmGeoAnnotation link: neuron.getSubTreeList(firstRoot)) {
             if (link.getChildIds().size() == 0) {
-                setNextParentSignal.emit(link.getId());
+                fireNextParentEvent(link.getId());
                 return;
             }
         }
 
     }
 
-    /**
-     * called by the model when it deletes annotations
-     */
-    public void deleteAnnotations(List<TmGeoAnnotation> annotationList) {
-        // remove all the individual annotations from 2D view
-
-        for (TmGeoAnnotation ann: annotationList) {
-            anchorDeletedSignal.emit(ann);
+    //------------------------------FIRING EVENTS.
+    public void fireNextParentEvent(Long id) {
+        for (NextParentListener l: nextParentListeners) {
+            l.setNextParent(id);
         }
     }
-
-    /**
-     * called by the model when it changes the parent of an annotation
-     */
-    public void reparentAnnotation(TmGeoAnnotation annotation) {
-        // pretty much a pass-through to the skeleton
-        anchorReparentedSignal.emit(annotation);
-    }
-
-    /**
-     * called by the model when it needs an annotation's anchor moved, whether
-     * because we moved it, or because the UI moved it and the operation failed,
-     * and we want it moved back
-     */
-    public void unmoveAnnotation(TmGeoAnnotation annotation) {
-        anchorMovedBackSignal.emit(annotation);
-    }
-
-    public void addAnchoredPath(TmAnchoredPath path) {
-        anchoredPathAddedSignal.emit(TAP2AVP(path));
-    }
-
-    public void addAnchoredPaths(List<TmAnchoredPath> pathList) {
-        List<AnchoredVoxelPath> voxelPathList = new ArrayList<AnchoredVoxelPath>();
-        for (TmAnchoredPath path: pathList) {
-            voxelPathList.add(TAP2AVP(path));
-        }
-        anchoredPathsAddedSignal.emit(voxelPathList);
-    }
-
-    public void removeAnchoredPaths(List<TmAnchoredPath> pathList) {
-        for (TmAnchoredPath path: pathList) {
-        anchoredPathRemovedSignal.emit(TAP2AVP(path));
+    private void fireAnchorsAdded(List<TmGeoAnnotation> anchors) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.anchorsAdded(anchors);
         }
     }
-
+    private void fireAnchorAdded(TmGeoAnnotation anchor) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.anchorAdded(anchor);
+        }
+        // center new anchors
+        TileFormat tileFormat = getTileFormat();
+        viewStateListener.setCameraFocus(
+                tileFormat.micronVec3ForVoxelVec3Centered(new Vec3(anchor.getX(),
+                        anchor.getY(), anchor.getZ())));
+    }
+    private void fireAnchorDeleted(TmGeoAnnotation anchor) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.anchorDeleted(anchor);
+        }
+    }
+    private void fireAnchorReparented(TmGeoAnnotation anchor) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.anchorReparented(anchor);
+        }
+    }
+    private void fireAnchorMovedBack(TmGeoAnnotation anchor) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.anchorMovedBack(anchor);
+        }
+    }
+    private void fireClearAnchors() {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.clearAnchors();
+        }
+    }
+    private void fireNeuronStyleChangeEvent(TmNeuron neuron, NeuronStyle style) {
+        for (NeuronStyleChangeListener l: neuronStyleChangeListeners) {
+            l.neuronStyleChanged(neuron, style);
+        }
+    }
+    
     /**
-     * called by the model when it loads a new workspace
+     * This is a lazy-add of matrices. These matrices support translation
+     * between coordinate systems.
      */
-    public void workspaceLoaded(TmWorkspace workspace) {
-        // clear existing
-        clearSkeletonSignal.emit();
-
-        if (workspace != null) {
-            // retrieve global color if present; if not, revert to default
-            String globalColorString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_COLOR_GLOBAL);
-            Color newColor;
-            if (globalColorString != null) {
-                newColor = prefColorToColor(globalColorString);
-            } else {
-                newColor = AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL;
-            }
-            changeGlobalColorSignal.emit(newColor);
-
-            // check for saved image color model
-            String colorModelString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_COLOR_MODEL);
-            if (colorModelString != null) {
-                loadColorModelSignal.emit(colorModelString);
-            }
-
-            // note that we must add annotations in parent-child sequence
-            //  so lines get drawn correctly
-            for (TmNeuron neuron: workspace.getNeuronList()) {
-                for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-                    // first step in optimization; could conceivably aggregate these
-                    //  lists into one big list and send signal once:
-                    anchorsAddedSignal.emit(neuron.getSubTreeList(root));
+    private void addMatrices(TmWorkspace workspace, TileFormat tileFormat) {
+        Matrix micronToVoxMatrix;
+        Matrix voxToMicronMatrix;
+        // If null, the tile format can be used to construct its
+        // own versions of these matrices, and saved.
+        try {
+            final Entity sample = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID());
+            micronToVoxMatrix = tileFormat.getMicronToVoxMatrix();
+            voxToMicronMatrix = tileFormat.getVoxToMicronMatrix();
+            final String micronToVoxString = workspace.serializeMatrix(micronToVoxMatrix, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX);
+            final String voxToMicronString = workspace.serializeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX);
+            SimpleWorker sw = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX, micronToVoxString);
+                    ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX, voxToMicronString);
                 }
-            }
 
-            // draw anchored paths, too, after all the anchors are drawn
-            List<TmAnchoredPath> annList = new ArrayList<TmAnchoredPath>();
-            for (TmNeuron neuron: workspace.getNeuronList()) {
-                for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
-                    annList.add(path);
+                @Override
+                protected void hadSuccess() {
                 }
-            }
-            addAnchoredPaths(annList);
+
+                @Override
+                protected void hadError(Throwable error) {
+                    ModelMgr.getModelMgr().handleException(error);
+                }
+                
+            };
+            sw.execute();
+            
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -320,15 +418,21 @@ public class LargeVolumeViewerTranslator {
         final SegmentIndex inputSegmentIndex = new SegmentIndex(endpoints.getAnnotationID1(),
                 endpoints.getAnnotationID2());
 
-        final ArrayList<ZoomedVoxelIndex> inputPath = new ArrayList<ZoomedVoxelIndex>();
+        final ArrayList<VoxelPosition> inputPath = new ArrayList<>();
+        final CoordinateAxis axis = CoordinateAxis.Z;
+        final int depthAxis = axis.index();
+        final int heightAxis = axis.index() - 1 % 3;
+        final int widthAxis = axis.index() - 2 % 3;
         for (List<Integer> point: path.getPointList()) {
-            inputPath.add(new ZoomedVoxelIndex(new ZoomLevel(0), point.get(0), point.get(1), point.get(2)));
+            inputPath.add(
+                new VoxelPosition(point.get(widthAxis),point.get(heightAxis),point.get(depthAxis))
+            );
         }
 
         // do a quick implementation of the interface:
         AnchoredVoxelPath voxelPath = new AnchoredVoxelPath() {
             SegmentIndex segmentIndex;
-            List<ZoomedVoxelIndex> path;
+            List<VoxelPosition> path;
 
             {
                 this.segmentIndex = inputSegmentIndex;
@@ -341,7 +445,7 @@ public class LargeVolumeViewerTranslator {
             }
 
             @Override
-            public List<ZoomedVoxelIndex> getPath() {
+            public List<VoxelPosition> getPath() {
                 return path;
             }
         };
@@ -349,14 +453,13 @@ public class LargeVolumeViewerTranslator {
         return voxelPath;
     }
 
-    private Color prefColorToColor(String colorString) {
-        // form R:G:B:A to proper Color
-        String items[] = colorString.split(":");
-
-        return new Color(Integer.parseInt(items[0]),
-            Integer.parseInt(items[1]),
-            Integer.parseInt(items[2]),
-            Integer.parseInt(items[3]));
+    private TileFormat getTileFormat() {
+        if (largeVolumeViewer == null ||
+            largeVolumeViewer.getTileServer() == null || 
+            largeVolumeViewer.getTileServer().getLoadAdapter() == null) {
+            return null;
+        }
+        return largeVolumeViewer.getTileServer().getLoadAdapter().getTileFormat();
     }
 
 }

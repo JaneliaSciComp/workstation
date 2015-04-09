@@ -1,9 +1,12 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.console.viewerapi.model.ChannelColorModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
@@ -18,9 +21,6 @@ import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
-import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot;
-import org.janelia.it.workstation.signal.Slot1;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesChooser;
@@ -38,13 +38,16 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
 import java.util.List;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorStateUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class LargeVolumeViewer
 extends GLJPanel
-implements MouseModalWidget, TileConsumer
+implements MouseModalWidget, TileConsumer, RepaintListener
 {
 	private static final Logger log = LoggerFactory.getLogger(LargeVolumeViewer.class);
 
@@ -67,36 +70,12 @@ implements MouseModalWidget, TileConsumer
 	private ImageColorModel imageColorModel;
 	private BasicMouseMode pointComputer = new BasicMouseMode();
 	
+    private MessageListener messageListener;
+    
 	// Popup menu
 	MenuItemGenerator systemMenuItemGenerator;
-	MenuItemGenerator modeMenuItemGenerator;
+	MenuItemGenerator modeMenuItemGenerator;    
 	
-	public Signal1<String> statusMessageChanged = new Signal1<String>();
-	
-	protected Slot repaintSlot = new Slot() {
-		@Override
-		public void execute() {
-			// System.out.println("repaint slot");
-			repaint();
-		}
-	};
-	
-	public Slot1<MouseMode.Mode> setMouseModeSlot =
-	    new Slot1<MouseMode.Mode>() {
-            @Override
-            public void execute(MouseMode.Mode modeId) {
-                LargeVolumeViewer.this.setMouseMode(modeId);
-            }
-	};
-	
-    public Slot1<WheelMode.Mode> setWheelModeSlot =
-        new Slot1<WheelMode.Mode>() {
-            @Override
-            public void execute(WheelMode.Mode modeId) {
-                LargeVolumeViewer.this.setWheelMode(modeId);
-            }
-    };
-    
 	public LargeVolumeViewer(GLCapabilities capabilities,
                              GLCapabilitiesChooser chooser,
                              GLContext sharedContext,
@@ -106,6 +85,13 @@ implements MouseModalWidget, TileConsumer
 		init(camera);
 	}
 	
+    /**
+     * @param messageListener the messageListener to set
+     */
+    public void setMessageListener(MessageListener messageListener) {
+        this.messageListener = messageListener;
+    }
+
 	private void init(ObservableCamera3d camera) {
         addMouseListener(this);
         addMouseMotionListener(this);
@@ -128,7 +114,7 @@ implements MouseModalWidget, TileConsumer
 		// black background for production
 		renderer.setBackgroundColor(Color.black);
         setPreferredSize( new Dimension( 600, 600 ) );
-        rubberBand.changed.connect(repaintSlot);
+        rubberBand.setRepaintListener(this);
         // setToolTipText("Double click to center on a point.");
         renderer.addActor(sliceActor);
         // renderer.addActor(new TileOutlineActor(viewTileManager));
@@ -137,7 +123,8 @@ implements MouseModalWidget, TileConsumer
 		pointComputer.setWidget(this, false);
 		//
         renderer.addActor(skeletonActor);
-        skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
+        SkeletonActorStateUpdater sasUpdater = skeletonActor.getUpdater();
+        sasUpdater.addListener(this);
         skeletonActor.setZThicknessInPixels(viewport.getDepth());
 		//
         // PopupMenu
@@ -224,6 +211,7 @@ implements MouseModalWidget, TileConsumer
 		return bb;
 	}
 
+    @Override
 	public ObservableCamera3d getCamera() {
 		return camera;
 	}
@@ -237,10 +225,6 @@ implements MouseModalWidget, TileConsumer
 		double dx = point.getX() - getWidth() / 2.0;
 		double dy = point.getY() - getHeight() / 2.0;
 		return new Point2D.Double(dx, dy);
-	}
-
-	public Slot getRepaintSlot() {
-		return repaintSlot;
 	}
 
 	public RubberBand getRubberBand() {
@@ -272,7 +256,9 @@ implements MouseModalWidget, TileConsumer
 				+ ", " + fmt.format(xyz.getY())
 				+ ", " + fmt.format(xyz.getZ())
 				+ "] \u00B5m"; // micrometers. Maybe I should use pixels (also?)?
-		statusMessageChanged.emit(msg);
+        if (messageListener != null) {
+            messageListener.message(msg);
+        }
 		// System.out.println(xyz);
 	}
 
@@ -300,6 +286,7 @@ implements MouseModalWidget, TileConsumer
 		rubberBand.paint(g2);
 	}
 	
+    //------------------------IMPLEMENTS MouseWheelModeListener
     @Override
     public void setMouseMode(MouseMode.Mode modeId) {
         if (modeId == this.mouseModeId)
@@ -327,21 +314,7 @@ implements MouseModalWidget, TileConsumer
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
     
-	public void setCamera(ObservableCamera3d camera) {
-		if (camera == null)
-			return;
-		if (camera == this.camera)
-			return;
-		this.camera = camera;
-		// Update image whenever camera changes
-		camera.getViewChangedSignal().connect(repaintSlot);
-		renderer.setCamera(camera);
-		mouseMode.setCamera(camera);
-		wheelMode.setCamera(camera);
-		pointComputer.setCamera(camera);
-		skeletonActor.setCamera(camera);
-	}
-	
+    @Override
 	public void setWheelMode(WheelMode.Mode wheelModeId) {
 	    if (this.wheelModeId == wheelModeId)
 	        return;
@@ -356,6 +329,31 @@ implements MouseModalWidget, TileConsumer
 		this.wheelMode.setCamera(camera);
 	}
 
+	public void setCamera(ObservableCamera3d camera) {
+		if (camera == null)
+			return;
+		if (camera == this.camera)
+			return;
+        if (this.camera != null  &&  cameraListener != null) {
+            this.camera.removeCameraListener(cameraListener);
+        }
+		this.camera = camera;
+        this.cameraListener = new CameraListenerAdapter() {
+            @Override
+            public void viewChanged() {
+                repaint();
+            }
+        };
+		// Update image whenever camera changes
+        this.camera.addCameraListener(cameraListener);
+		renderer.setCamera(camera);
+		mouseMode.setCamera(camera);
+		wheelMode.setCamera(camera);
+		pointComputer.setCamera(camera);
+		skeletonActor.setCamera(camera);
+	}
+    public CameraListenerAdapter cameraListener;
+	
 	public TileServer getTileServer() {
 		return tileServer;
 	}
@@ -364,7 +362,6 @@ implements MouseModalWidget, TileConsumer
 		if (this.imageColorModel == imageColorModel)
 			return;
 		this.imageColorModel = imageColorModel;
-        imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
 		sliceActor.setImageColorModel(imageColorModel);
 	}
 	

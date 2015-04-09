@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import java.awt.event.ActionEvent;
@@ -18,13 +13,15 @@ import org.openide.util.actions.BooleanStateAction;
         id = "PropertiesToggleAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_PropertiesToggleAction"
+        displayName = "#CTL_PropertiesToggleAction",
+        lazy = true
 )
 @ActionReference(path = "Menu/View", position = 50)
-@Messages("CTL_PropertiesToggleAction=Properties Panel")
+@Messages("CTL_PropertiesToggleAction=Right Panel")
 public final class PropertiesToggleAction extends BooleanStateAction {
 
-    private static final String PROPERTIES_PANEL_SHOWN = "Properties";
+    private static final String PROPERTIES_PANEL_SHOWN = "Right Panel";
+    
     public PropertiesToggleAction() {
         setBooleanState( true );
     }

@@ -14,9 +14,9 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
+import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,14 +66,13 @@ implements GLActor
         vertexByteBuffer.order(ByteOrder.nativeOrder());
         FloatBuffer vertices = vertexByteBuffer.asFloatBuffer();
         vertices.rewind();
-        for (ZoomedVoxelIndex zv : segment.getPath()) {
-            TileFormat.VoxelXyz vx = tileFormat.voxelXyzForZoomedVoxelIndex(zv, CoordinateAxis.Z);
-            TileFormat.MicrometerXyz umXyz = tileFormat.micrometerXyzForVoxelXyz(vx, CoordinateAxis.Z);
-            Vec3 v = new Vec3(
-                    // Translate from upper left front corner of voxel to center of voxel
-                    umXyz.getX() + 0.5 * tileFormat.getVoxelMicrometers()[0],
-                    umXyz.getY() + 0.5 * tileFormat.getVoxelMicrometers()[1],
-                    umXyz.getZ() - 0.5 * tileFormat.getVoxelMicrometers()[2]); // Minus? Really? TODO
+        double[] voxelMicrons = tileFormat.getVoxelMicrometers();
+        for (VoxelPosition vp : segment.getPath()) {
+            TileFormat.MicrometerXyz microns = tileFormat.micrometerXyzForVoxelXyz(
+                    new TileFormat.VoxelXyz(vp.getX(), vp.getY(), vp.getZ()),
+                    CoordinateAxis.Z
+            );
+            Vec3 v = tileFormat.centerJustifyMicrometerCoordsAsVec3(microns);
             boundingBox.include(v);
             vertices.put((float)v.getX());
             vertices.put((float)v.getY());

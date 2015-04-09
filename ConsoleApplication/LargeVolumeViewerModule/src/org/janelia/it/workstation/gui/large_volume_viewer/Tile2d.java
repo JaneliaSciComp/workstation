@@ -180,9 +180,12 @@ implements GLActor
         GL2 gl = glDrawable.getGL().getGL2();
 		bestTexture.init(gl);
 		PyramidTexture texture = bestTexture.getTexture();
-		assert(texture != null);
-		if (texture == null)
-			return;
+		if (texture == null) {
+            if (log.isDebugEnabled()) {
+                new Exception("Texture is null").printStackTrace();
+            }
+            return;
+        }
 		if (! bestTexture.getIndex().equals(getIndex())) {
 			// log.info("using imperfect texture "+bestTexture.getIndex()+" for tile "+getIndex());
 		}
@@ -196,6 +199,7 @@ implements GLActor
 			// draw quad
 	        Vec3 corners[] = computeCornerPositions(camera);
 	        Point2D texCoords[] = computeTextureCoordinates();
+            //dumpPoints(corners, texCoords, camera);            
 	        int cornerOrder[] = {0, 1, 2, 3};
 	        for (int c : cornerOrder) {
 		        gl.glTexCoord2d(texCoords[c].getX(), texCoords[c].getY());
@@ -315,7 +319,7 @@ implements GLActor
         // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
 		// Z index does not change with scale; XY do
         double z = (getIndex().getCoordinate(whdToXyz[2])+0.5) * tileFormat.getVoxelMicrometers()[whdToXyz[2]];
-        double x0 = getIndex().getCoordinate(whdToXyz[0]) * tileFormat.getTileSize()[whdToXyz[0]] * zoomScale * tileFormat.getVoxelMicrometers()[whdToXyz[0]];
+        double x0 = calculateCoord(whdToXyz, 0, zoomScale);
         double x1 = x0 + tileWidth;
         if ((whdToXyz[0] == 1) && (yMax != 0)) {
         	x0 = yMax - x0;
@@ -323,7 +327,7 @@ implements GLActor
         }
         // Raveler tile index has origin at BOTTOM left, unlike TOP left for images and
         // our coordinate system
-        double y0 = getIndex().getCoordinate(whdToXyz[1]) * tileFormat.getTileSize()[whdToXyz[1]] * zoomScale * tileFormat.getVoxelMicrometers()[whdToXyz[1]];
+        double y0 = calculateCoord(whdToXyz, 1, zoomScale);
         double y1 = y0 + tileHeight; // y inverted in OpenGL relative to image convention
         if ((whdToXyz[1] == 1) && (yMax != 0)) {
         	y0 = yMax - y0;
@@ -336,6 +340,18 @@ implements GLActor
         result.include(permutedVertex3d(x1, y1, z+dz, whdToXyz));
 		return result;
 	}
+
+    private double calculateCoord(int[] whdToXyz, int coordNum, int zoomScale) {
+        final int offset = whdToXyz[coordNum];
+        double coordAddend = 0.0;
+        if (offset == 0) {
+            coordAddend = (tileFormat.getOrigin()[offset] * tileFormat.getVoxelMicrometers()[offset]);
+        }
+        final double coord = 
+                getIndex().getCoordinate(offset) * tileFormat.getTileSize()[offset] * zoomScale * tileFormat.getVoxelMicrometers()[offset] +
+                coordAddend;
+        return coord;
+    }
 	
 	private Vec3[] computeCornerPositions(Camera3d camera) {
 		// Permute coordinates for tiles that have non-Z orientations.
@@ -400,5 +416,29 @@ implements GLActor
 			return null;
 		return bestTexture.getBrightnessStats();
 	}
+
+    @SuppressWarnings("unused")
+    private void dumpPoints(Vec3[] corners, Point2D[] tex, Camera3d camera) {
+        System.out.println("======================================");
+        System.out.println("Tile2D ID=" + System.identityHashCode(this));
+        System.out.println("Vertex Coordinates");
+        System.out.println("Camera Focus: " + camera.getFocus());
+        System.out.println("--------------------------------------");
+        System.out.println("Top-Left: " + corners[0]);
+        System.out.println("Top-Right: " + corners[1]);
+        System.out.println("Bottom-Right: " + corners[2]);
+        System.out.println("Bottom-Left: " + corners[3]);
+        System.out.println();
+        System.out.println("Texture Coordinates");
+        System.out.println("Camera Focus: " + camera.getFocus());
+        System.out.println("--------------------------------------");
+        System.out.println("Top-Left: " + tex[0]);
+        System.out.println("Top-Right: " + tex[1]);
+        System.out.println("Bottom-Right: " + tex[2]);
+        System.out.println("Bottom-Left: " + tex[3]);
+        System.out.println();
+        System.out.println("Tile Index: " + index);
+    }
+
 
 }

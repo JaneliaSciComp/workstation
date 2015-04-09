@@ -137,6 +137,24 @@
                 <package>ch.qos.logback.core.status</package>
                 <package>ch.qos.logback.core.subst</package>
                 <package>ch.qos.logback.core.util</package>
+                <package>ch.systemsx.cisd.args4j</package>
+                <package>ch.systemsx.cisd.args4j.spi</package>
+                <package>ch.systemsx.cisd.base</package>
+                <package>ch.systemsx.cisd.base.annotation</package>
+                <package>ch.systemsx.cisd.base.convert</package>
+                <package>ch.systemsx.cisd.base.exceptions</package>
+                <package>ch.systemsx.cisd.base.image</package>
+                <package>ch.systemsx.cisd.base.io</package>
+                <package>ch.systemsx.cisd.base.mdarray</package>
+                <package>ch.systemsx.cisd.base.namedthread</package>
+                <package>ch.systemsx.cisd.base.tests</package>
+                <package>ch.systemsx.cisd.base.unix</package>
+                <package>ch.systemsx.cisd.base.utilities</package>
+                <package>ch.systemsx.cisd.hdf5</package>
+                <package>ch.systemsx.cisd.hdf5.cleanup</package>
+                <package>ch.systemsx.cisd.hdf5.h5ar</package>
+                <package>ch.systemsx.cisd.hdf5.hdf5lib</package>
+                <package>ch.systemsx.cisd.hdf5.io</package>
                 <package>client</package>
                 <package>color</package>
                 <package>com.clarkparsia.owlapi.explanation</package>
@@ -232,56 +250,6 @@
                 <package>com.jgoodies.forms.factories</package>
                 <package>com.jgoodies.forms.layout</package>
                 <package>com.jgoodies.forms.util</package>
-                <package>com.jogamp.common</package>
-                <package>com.jogamp.common.jvm</package>
-                <package>com.jogamp.common.net</package>
-                <package>com.jogamp.common.net.asset</package>
-                <package>com.jogamp.common.nio</package>
-                <package>com.jogamp.common.os</package>
-                <package>com.jogamp.common.type</package>
-                <package>com.jogamp.common.util</package>
-                <package>com.jogamp.common.util.awt</package>
-                <package>com.jogamp.common.util.cache</package>
-                <package>com.jogamp.common.util.locks</package>
-                <package>com.jogamp.gluegen.runtime</package>
-                <package>com.jogamp.gluegen.runtime.opengl</package>
-                <package>com.jogamp.graph.curve</package>
-                <package>com.jogamp.graph.curve.opengl</package>
-                <package>com.jogamp.graph.curve.tess</package>
-                <package>com.jogamp.graph.font</package>
-                <package>com.jogamp.graph.geom</package>
-                <package>com.jogamp.graph.geom.opengl</package>
-                <package>com.jogamp.nativewindow</package>
-                <package>com.jogamp.nativewindow.awt</package>
-                <package>com.jogamp.nativewindow.egl</package>
-                <package>com.jogamp.nativewindow.macosx</package>
-                <package>com.jogamp.nativewindow.swt</package>
-                <package>com.jogamp.nativewindow.windows</package>
-                <package>com.jogamp.nativewindow.x11</package>
-                <package>com.jogamp.newt</package>
-                <package>com.jogamp.newt.awt</package>
-                <package>com.jogamp.newt.awt.applet</package>
-                <package>com.jogamp.newt.event</package>
-                <package>com.jogamp.newt.event.awt</package>
-                <package>com.jogamp.newt.opengl</package>
-                <package>com.jogamp.newt.swt</package>
-                <package>com.jogamp.newt.util</package>
-                <package>com.jogamp.opengl</package>
-                <package>com.jogamp.opengl.math</package>
-                <package>com.jogamp.opengl.math.geom</package>
-                <package>com.jogamp.opengl.swt</package>
-                <package>com.jogamp.opengl.util</package>
-                <package>com.jogamp.opengl.util.av</package>
-                <package>com.jogamp.opengl.util.awt</package>
-                <package>com.jogamp.opengl.util.gl2</package>
-                <package>com.jogamp.opengl.util.glsl</package>
-                <package>com.jogamp.opengl.util.glsl.fixedfunc</package>
-                <package>com.jogamp.opengl.util.glsl.sdk</package>
-                <package>com.jogamp.opengl.util.packrect</package>
-                <package>com.jogamp.opengl.util.texture</package>
-                <package>com.jogamp.opengl.util.texture.awt</package>
-                <package>com.jogamp.opengl.util.texture.spi</package>
-                <package>com.jogamp.opengl.util.texture.spi.awt</package>
                 <package>com.kenai.jaffl</package>
                 <package>com.kenai.jaffl.annotations</package>
                 <package>com.kenai.jaffl.byref</package>
@@ -514,6 +482,7 @@
                 <package>de.uulm.ecs.ai.owlapi.krssrenderer</package>
                 <package>delaunay</package>
                 <package>distance</package>
+                <package>edu.wlu.cs.levy.CG</package>
                 <package>events</package>
                 <package>features</package>
                 <package>groovy.beans</package>
@@ -616,14 +585,6 @@
                 <package>javax.media.jai.tilecodec</package>
                 <package>javax.media.jai.util</package>
                 <package>javax.media.jai.widget</package>
-                <package>javax.media.nativewindow</package>
-                <package>javax.media.nativewindow.util</package>
-                <package>javax.media.opengl</package>
-                <package>javax.media.opengl.awt</package>
-                <package>javax.media.opengl.fixedfunc</package>
-                <package>javax.media.opengl.glu</package>
-                <package>javax.media.opengl.glu.gl2</package>
-                <package>javax.media.opengl.glu.gl2es1</package>
                 <package>javax.servlet</package>
                 <package>javax.servlet.annotation</package>
                 <package>javax.servlet.descriptor</package>
@@ -660,74 +621,6 @@
                 <package>javax.xml.ws.wsaddressing</package>
                 <package>jline</package>
                 <package>jnr.netdb</package>
-                <package>jogamp.common</package>
-                <package>jogamp.common.jvm</package>
-                <package>jogamp.common.os</package>
-                <package>jogamp.common.os.elf</package>
-                <package>jogamp.common.util.locks</package>
-                <package>jogamp.graph.curve.opengl</package>
-                <package>jogamp.graph.curve.opengl.shader</package>
-                <package>jogamp.graph.curve.tess</package>
-                <package>jogamp.graph.curve.text</package>
-                <package>jogamp.graph.font</package>
-                <package>jogamp.graph.font.typecast</package>
-                <package>jogamp.graph.font.typecast.ot</package>
-                <package>jogamp.graph.font.typecast.ot.mac</package>
-                <package>jogamp.graph.font.typecast.ot.table</package>
-                <package>jogamp.graph.font.typecast.t2</package>
-                <package>jogamp.graph.font.typecast.tt.engine</package>
-                <package>jogamp.graph.geom.plane</package>
-                <package>jogamp.nativewindow</package>
-                <package>jogamp.nativewindow.awt</package>
-                <package>jogamp.nativewindow.jawt</package>
-                <package>jogamp.nativewindow.jawt.macosx</package>
-                <package>jogamp.nativewindow.jawt.windows</package>
-                <package>jogamp.nativewindow.jawt.x11</package>
-                <package>jogamp.nativewindow.macosx</package>
-                <package>jogamp.nativewindow.windows</package>
-                <package>jogamp.nativewindow.x11</package>
-                <package>jogamp.nativewindow.x11.awt</package>
-                <package>jogamp.newt</package>
-                <package>jogamp.newt.awt</package>
-                <package>jogamp.newt.awt.event</package>
-                <package>jogamp.newt.driver</package>
-                <package>jogamp.newt.driver.awt</package>
-                <package>jogamp.newt.driver.bcm.vc.iv</package>
-                <package>jogamp.newt.driver.linux</package>
-                <package>jogamp.newt.driver.macosx</package>
-                <package>jogamp.newt.driver.windows</package>
-                <package>jogamp.newt.driver.x11</package>
-                <package>jogamp.newt.event</package>
-                <package>jogamp.newt.swt</package>
-                <package>jogamp.newt.swt.event</package>
-                <package>jogamp.opengl</package>
-                <package>jogamp.opengl.awt</package>
-                <package>jogamp.opengl.egl</package>
-                <package>jogamp.opengl.es1</package>
-                <package>jogamp.opengl.es3</package>
-                <package>jogamp.opengl.gl2</package>
-                <package>jogamp.opengl.gl4</package>
-                <package>jogamp.opengl.glu</package>
-                <package>jogamp.opengl.glu.error</package>
-                <package>jogamp.opengl.glu.gl2.nurbs</package>
-                <package>jogamp.opengl.glu.mipmap</package>
-                <package>jogamp.opengl.glu.nurbs</package>
-                <package>jogamp.opengl.glu.registry</package>
-                <package>jogamp.opengl.glu.tessellator</package>
-                <package>jogamp.opengl.macosx.cgl</package>
-                <package>jogamp.opengl.macosx.cgl.awt</package>
-                <package>jogamp.opengl.openal.av</package>
-                <package>jogamp.opengl.util</package>
-                <package>jogamp.opengl.util.av</package>
-                <package>jogamp.opengl.util.av.impl</package>
-                <package>jogamp.opengl.util.glsl</package>
-                <package>jogamp.opengl.util.glsl.fixedfunc</package>
-                <package>jogamp.opengl.util.jpeg</package>
-                <package>jogamp.opengl.util.pngj</package>
-                <package>jogamp.opengl.util.pngj.chunks</package>
-                <package>jogamp.opengl.windows.wgl</package>
-                <package>jogamp.opengl.windows.wgl.awt</package>
-                <package>jogamp.opengl.x11.glx</package>
                 <package>landmarks</package>
                 <package>leica</package>
                 <package>loci.common</package>
@@ -759,6 +652,10 @@
                 <package>loci.plugins.util</package>
                 <package>magicofcalculus</package>
                 <package>math3d</package>
+                <package>ncsa.hdf.hdf5lib</package>
+                <package>ncsa.hdf.hdf5lib.callbacks</package>
+                <package>ncsa.hdf.hdf5lib.exceptions</package>
+                <package>ncsa.hdf.hdf5lib.structs</package>
                 <package>net.jpountz.lz4</package>
                 <package>net.jpountz.util</package>
                 <package>net.jpountz.xxhash</package>
@@ -1146,7 +1043,28 @@
                 <package>org.apache.commons.io.comparator</package>
                 <package>org.apache.commons.io.filefilter</package>
                 <package>org.apache.commons.io.input</package>
+                <package>org.apache.commons.io.monitor</package>
                 <package>org.apache.commons.io.output</package>
+                <package>org.apache.commons.lang</package>
+                <package>org.apache.commons.lang.builder</package>
+                <package>org.apache.commons.lang.enums</package>
+                <package>org.apache.commons.lang.exception</package>
+                <package>org.apache.commons.lang.math</package>
+                <package>org.apache.commons.lang.mutable</package>
+                <package>org.apache.commons.lang.text</package>
+                <package>org.apache.commons.lang.time</package>
+                <package>org.apache.commons.lang3</package>
+                <package>org.apache.commons.lang3.builder</package>
+                <package>org.apache.commons.lang3.concurrent</package>
+                <package>org.apache.commons.lang3.event</package>
+                <package>org.apache.commons.lang3.exception</package>
+                <package>org.apache.commons.lang3.math</package>
+                <package>org.apache.commons.lang3.mutable</package>
+                <package>org.apache.commons.lang3.reflect</package>
+                <package>org.apache.commons.lang3.text</package>
+                <package>org.apache.commons.lang3.text.translate</package>
+                <package>org.apache.commons.lang3.time</package>
+                <package>org.apache.commons.lang3.tuple</package>
                 <package>org.apache.commons.logging</package>
                 <package>org.apache.commons.logging.impl</package>
                 <package>org.apache.html.dom</package>
@@ -1618,6 +1536,17 @@
                 <package>org.jaxen.util</package>
                 <package>org.jaxen.xom</package>
                 <package>org.jdesktop.beans</package>
+                <package>org.jdesktop.beansbinding</package>
+                <package>org.jdesktop.beansbinding.ext</package>
+                <package>org.jdesktop.el</package>
+                <package>org.jdesktop.el.impl</package>
+                <package>org.jdesktop.el.impl.lang</package>
+                <package>org.jdesktop.el.impl.parser</package>
+                <package>org.jdesktop.el.impl.util</package>
+                <package>org.jdesktop.observablecollections</package>
+                <package>org.jdesktop.swingbinding</package>
+                <package>org.jdesktop.swingbinding.adapters</package>
+                <package>org.jdesktop.swingbinding.impl</package>
                 <package>org.jdesktop.swingx</package>
                 <package>org.jdesktop.swingx.action</package>
                 <package>org.jdesktop.swingx.auth</package>
@@ -1933,8 +1862,8 @@
                 <binary-origin>release/modules/ext/loci_plugins.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jogl-all-natives-windows-i586.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jogl-all-natives-windows-i586.jar</binary-origin>
+                <runtime-relative-path>ext/commons-io-2.4.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-io-2.4.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jai_codec.jar</runtime-relative-path>
@@ -1947,10 +1876,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jetty-http-8.1.8.v20121106.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jetty-http-8.1.8.v20121106.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/gluegen-rt-natives-linux-i586.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/gluegen-rt-natives-linux-i586.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/wstx-asl-3.2.9.jar</runtime-relative-path>
@@ -2025,6 +1950,10 @@
                 <binary-origin>release/modules/ext/commons-fileupload-1.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/neethi-2.0.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/neethi-2.0.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlueIce.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaBlueIce.jar</binary-origin>
             </class-path-extension>
@@ -2081,10 +2010,6 @@
                 <binary-origin>release/modules/ext/asm.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jogl-all-natives-linux-i586.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jogl-all-natives-linux-i586.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/de-javasoft-synthetica-netbeans.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/de-javasoft-synthetica-netbeans.jar</binary-origin>
             </class-path-extension>
@@ -2113,20 +2038,20 @@
                 <binary-origin>release/modules/ext/syntheticaAluOxide.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/commons-logging-1.1.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/ffmpeg.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/ffmpeg.jar</binary-origin>
+                <runtime-relative-path>ext/commons-logging-1.1.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jogl-all-natives-linux-amd64.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jogl-all-natives-linux-amd64.jar</binary-origin>
+                <runtime-relative-path>ext/commons-lang3-3.3.2-javadoc.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-lang3-3.3.2-javadoc.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/ffmpeg.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ffmpeg.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/ome-xml.jar</runtime-relative-path>
@@ -2151,6 +2076,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/bson4jackson-2.4.0.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/bson4jackson-2.4.0.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/sis-jhdf5-batteries_included.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/sis-jhdf5-batteries_included.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/logback-classic-1.0.13.jar</runtime-relative-path>
@@ -2193,10 +2122,6 @@
                 <binary-origin>release/modules/ext/perf4j-0.9.16-logbackonly.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/gluegen-rt-natives-windows-i586.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/gluegen-rt-natives-windows-i586.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/vecmath.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/vecmath.jar</binary-origin>
             </class-path-extension>
@@ -2225,6 +2150,10 @@
                 <binary-origin>release/modules/ext/javacpp.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/commons-lang3-3.3.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-lang3-3.3.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/logback-core-1.0.13.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/logback-core-1.0.13.jar</binary-origin>
             </class-path-extension>
@@ -2251,10 +2180,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaSimple2D.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaSimple2D.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/commons-io-1.4.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/commons-io-1.4.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaSkyMetallic.jar</runtime-relative-path>
@@ -2317,12 +2242,12 @@
                 <binary-origin>release/modules/ext/ehcache-core-2.5.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/geronimo-saaj_1.3_spec-1.0.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/geronimo-saaj_1.3_spec-1.0.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/axis2-kernel-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-kernel-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/geronimo-saaj_1.3_spec-1.0.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/geronimo-saaj_1.3_spec-1.0.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/miglayout-4.0-swing.jar</runtime-relative-path>
@@ -2331,10 +2256,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaSilverMoon.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaSilverMoon.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/ffmpeg-windows-x86.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/ffmpeg-windows-x86.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlueLight.jar</runtime-relative-path>
@@ -2357,16 +2278,16 @@
                 <binary-origin>release/modules/ext/jackson-annotations-2.4.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/kd.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/kd.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/saaj-impl-1.3.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/saaj-impl-1.3.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-transport-local-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-transport-local-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/gluegen-rt-natives-windows-amd64.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/gluegen-rt-natives-windows-amd64.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jywidgets.jar</runtime-relative-path>
@@ -2415,10 +2336,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-transport-http-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-transport-http-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jogl-all-natives-macosx-universal.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jogl-all-natives-macosx-universal.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-jaxbri-1.5.5.jar</runtime-relative-path>
@@ -2489,6 +2406,10 @@
                 <binary-origin>release/modules/ext/javassist.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/beansbinding-1.2.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/beansbinding-1.2.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/axis2-json-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-json-1.5.5.jar</binary-origin>
             </class-path-extension>
@@ -2541,6 +2462,10 @@
                 <binary-origin>release/modules/ext/gluegen-rt.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/jackson-databind-2.2.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-databind-2.2.3.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/axis2-xmlbeans-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-xmlbeans-1.5.5.jar</binary-origin>
             </class-path-extension>
@@ -2565,10 +2490,6 @@
                 <binary-origin>release/modules/ext/jaxen-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jogl-all.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jogl-all.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaWhiteVision.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaWhiteVision.jar</binary-origin>
             </class-path-extension>
@@ -2577,16 +2498,8 @@
                 <binary-origin>release/modules/ext/hibernate-annotations.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/gluegen-rt-natives-linux-amd64.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/gluegen-rt-natives-linux-amd64.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/log4j-1.2.15.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/log4j-1.2.15.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jogl-all-natives-windows-amd64.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jogl-all-natives-windows-amd64.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/mail-1.4.jar</runtime-relative-path>

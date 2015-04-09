@@ -16,9 +16,15 @@ public class AnnotationsConstants {
     // in the entity, it's stored as R:G:B:A string, each channel 0-255 int
     public static final String PREF_ANNOTATION_COLOR_GLOBAL = "annotation-color-global";
 
+    // stores map of neuron ID to neuron style
+    public static final String PREF_ANNOTATION_NEURON_STYLES = "annotation-neuron-styles";
 
     // stores color model string; see code or wiki for format (long and ugly)
     public static final String PREF_COLOR_MODEL = "preference-colormodel";
+
+
+    // stores color model string for 3d independent model; see code or wiki for format (long and ugly)
+    public static final String PREF_3D_COLOR_MODEL = "preference-3d-colormodel";
 
 
     // trace paths automatically?

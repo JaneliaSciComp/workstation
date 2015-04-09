@@ -6,8 +6,8 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot1;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteRequestedListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -26,31 +26,12 @@ public class NoteListPanel extends JPanel {
 
     private TmWorkspace workspace;
 
-    private JList noteListBox;
-    private DefaultListModel noteListModel;
+    private DefaultListModel<NoteProxy> noteListModel;
+    private CameraPanToListener panListener;
+    private EditNoteRequestedListener editNoteRequestListener;
 
     private int width;
     private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
-
-    // ----- slots
-    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
-        @Override
-        public void execute(TmWorkspace workspace) {
-            loadWorkspace(workspace);
-        }
-    };
-
-    public Slot1<TmWorkspace> notesUpdatedSlot = new Slot1<TmWorkspace>() {
-        @Override
-        public void execute(TmWorkspace workspace) {
-            loadWorkspace(workspace);
-        }
-    };
-
-    // ----- signals
-    public Signal1<Vec3> cameraPanToSignal = new Signal1<>();
-    public Signal1<TmGeoAnnotation> editNoteRequestedSignal = new Signal1<>();
-
 
     public NoteListPanel(int width) {
         this.width = width;
@@ -65,6 +46,13 @@ public class NoteListPanel extends JPanel {
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(width, height);
+    }
+
+    /**
+     * Method to set the panListener
+     */
+    public void setPanListener(CameraPanToListener panListener) {
+        this.panListener = panListener;
     }
 
     private void setupUI() {
@@ -82,8 +70,8 @@ public class NoteListPanel extends JPanel {
         c.insets = new Insets(10, 0, 0, 0);
         add(new JLabel("Notes", JLabel.LEADING), c);
 
-        noteListModel = new DefaultListModel();
-        noteListBox = new JList(noteListModel);
+        noteListModel = new DefaultListModel<>();
+        JList noteListBox = new JList(noteListModel);
         JScrollPane noteScrollPane = new JScrollPane(noteListBox);
         noteListBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
@@ -97,9 +85,9 @@ public class NoteListPanel extends JPanel {
                 int index = list.locationToIndex(evt.getPoint());
                 NoteProxy selectedNote;
                 if (index >= 0) {
-                    selectedNote = (NoteProxy) noteListModel.getElementAt(index);
+                    selectedNote = noteListModel.getElementAt(index);
                     TmNeuron foundNeuron = null;
-                    for (TmNeuron neuron: workspace.getNeuronList()) {
+                    for (TmNeuron neuron : workspace.getNeuronList()) {
                         if (neuron.getId().equals(selectedNote.neuronID)) {
                             foundNeuron = neuron;
                         }
@@ -110,11 +98,15 @@ public class NoteListPanel extends JPanel {
                     }
                     if (evt.getClickCount() == 1) {
                         if (ann != null) {
-                            cameraPanToSignal.emit(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                            if (panListener != null) {
+                                panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                            }
                         }
                     } else if (evt.getClickCount() == 2) {
                         if (ann != null) {
-                            editNoteRequestedSignal.emit(ann);
+                            if (editNoteRequestListener != null) {
+                                editNoteRequestListener.editNote(ann);
+                            }
                         }
                     }
                 }
@@ -162,6 +154,13 @@ public class NoteListPanel extends JPanel {
                 noteListModel.addElement(np);
             }
         }
+    }
+
+    /**
+     * @param editNoteRequestListener the editNoteRequestListener to set
+     */
+    public void setEditNoteRequestListener(EditNoteRequestedListener editNoteRequestListener) {
+        this.editNoteRequestListener = editNoteRequestListener;
     }
 
 }

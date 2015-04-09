@@ -28,7 +28,7 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 		// Identify slice boundaries
 		TileIndex ix1 = tileSet.iterator().next().getIndex();
 		int axisIx = ix1.getSliceAxis().index();
-		int sliceMin = tileFormat.getOrigin()[axisIx];
+		int sliceMin = 0;//tileFormat.getOrigin()[axisIx];
 		int sliceMax = sliceMin + tileFormat.getVolumeSize()[axisIx] - 1;
 		// Choose one tile to initialize search area in slice
 		PreviousSliceGenerator down = new PreviousSliceGenerator(ix1, sliceMin);

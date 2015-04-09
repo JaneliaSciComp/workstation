@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import javax.swing.BoundedRangeModel;
 import javax.swing.JSlider;
 

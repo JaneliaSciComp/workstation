@@ -70,9 +70,9 @@ public class EntityTree extends JPanel implements ActivatableView {
     private boolean showToolbar = true;
     private boolean isLazyLoading = true;
 
-    private Multimap<Long, DefaultMutableTreeNode> entityDataIdToNodeMap = HashMultimap.<Long, DefaultMutableTreeNode>create();
-    private Multimap<Long, DefaultMutableTreeNode> entityIdToNodeMap = HashMultimap.<Long, DefaultMutableTreeNode>create();
-    private Map<String, DefaultMutableTreeNode> uniqueIdToNodeMap = new HashMap<String, DefaultMutableTreeNode>();
+    private final Multimap<Long, DefaultMutableTreeNode> entityDataIdToNodeMap = HashMultimap.<Long, DefaultMutableTreeNode>create();
+    private final Multimap<Long, DefaultMutableTreeNode> entityIdToNodeMap = HashMultimap.<Long, DefaultMutableTreeNode>create();
+    private final Map<String, DefaultMutableTreeNode> uniqueIdToNodeMap = new HashMap<>();
 
     public EntityTree() {
         super(new BorderLayout());
@@ -155,8 +155,8 @@ public class EntityTree extends JPanel implements ActivatableView {
             }
 
             protected void hadError(Throwable error) {
-                error.printStackTrace();
-                JOptionPane.showMessageDialog(EntityTree.this, "Error loading folders", "Folder Load Error", JOptionPane.ERROR_MESSAGE);
+                log.error("Error initializing tree",error);
+                JOptionPane.showMessageDialog(EntityTree.this, "Error initializing tree", "Tree load error", JOptionPane.ERROR_MESSAGE);
                 showNothing();
             }
 
@@ -203,7 +203,7 @@ public class EntityTree extends JPanel implements ActivatableView {
             return;
         }
 
-        final Collection<DefaultMutableTreeNode> affectedNodes = new HashSet<DefaultMutableTreeNode>();
+        final Collection<DefaultMutableTreeNode> affectedNodes = new HashSet<>();
 
         Collection<Entity> invalidated = event.getInvalidatedEntities();
         for (Entity entity : invalidated) {
@@ -216,7 +216,7 @@ public class EntityTree extends JPanel implements ActivatableView {
             return;
         }
 
-        List<DefaultMutableTreeNode> sortedAffectedNodes = new ArrayList<DefaultMutableTreeNode>(affectedNodes);
+        List<DefaultMutableTreeNode> sortedAffectedNodes = new ArrayList<>(affectedNodes);
         Collections.sort(sortedAffectedNodes, new Comparator<DefaultMutableTreeNode>() {
             @Override
             public int compare(DefaultMutableTreeNode o1, DefaultMutableTreeNode o2) {
@@ -270,7 +270,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 
         log.debug("Entity affecting {} nodes was changed: {}", nodes.size(), EntityUtils.identify(entity));
 
-        for (final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+        for (final DefaultMutableTreeNode node : new HashSet<>(nodes)) {
             Entity treeEntity = getEntity(node);
             if (entity != treeEntity) {
                 log.warn("entityChanged: Instance mismatch: " + entity.getName()
@@ -295,7 +295,7 @@ public class EntityTree extends JPanel implements ActivatableView {
         }
         log.debug("Entity affecting {} nodes was removed: {}", nodes.size(), EntityUtils.identify(entity));
 
-        for (DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+        for (DefaultMutableTreeNode node : new HashSet<>(nodes)) {
             DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
             Entity parent = getEntity(parentNode);
             EntityData entityData = getEntityData(node);
@@ -319,7 +319,7 @@ public class EntityTree extends JPanel implements ActivatableView {
         }
         log.debug("Entity affecting {} nodes had children loaded: {}", nodes.size(), EntityUtils.identify(entity));
 
-        for (final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+        for (final DefaultMutableTreeNode node : new HashSet<>(nodes)) {
             Entity treeEntity = getEntity(node);
             log.trace("treeEntity {}, has {} children ", treeEntity.getName(), treeEntity.getChildren().size());
             if (entity != treeEntity) {
@@ -460,7 +460,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 
                 List<EntityData> edList = ModelUtils.getSortedEntityDatas(entity);
 
-                List<DefaultMutableTreeNode> childNodes = new ArrayList<DefaultMutableTreeNode>();
+                List<DefaultMutableTreeNode> childNodes = new ArrayList<>();
                 for (int i = 0; i < node.getChildCount(); i++) {
                     DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
                     childNodes.add(childNode);
@@ -621,7 +621,7 @@ public class EntityTree extends JPanel implements ActivatableView {
      */
     public Set<Entity> getEntitiesById(Long entityId) {
         Collection<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entityId);
-        Set<Entity> entities = new HashSet<Entity>();
+        Set<Entity> entities = new HashSet<>();
         if (nodes == null) {
             return entities;
         }
@@ -639,7 +639,7 @@ public class EntityTree extends JPanel implements ActivatableView {
      */
     public Set<EntityData> getEntityDatasById(Long entityDataId) {
         Collection<DefaultMutableTreeNode> nodes = entityDataIdToNodeMap.get(entityDataId);
-        Set<EntityData> entityDatas = new HashSet<EntityData>();
+        Set<EntityData> entityDatas = new HashSet<>();
         if (nodes == null) {
             return entityDatas;
         }
@@ -744,7 +744,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 
         // Get children
         List<EntityData> dataList = ModelUtils.getSortedEntityDatas(entity);
-        List<EntityData> childDataList = new ArrayList<EntityData>();
+        List<EntityData> childDataList = new ArrayList<>();
 
         boolean allHidden = true;
 
@@ -845,7 +845,7 @@ public class EntityTree extends JPanel implements ActivatableView {
     }
 
     public void removeChildren(DefaultMutableTreeNode node) {
-        List<DefaultMutableTreeNode> childNodes = new ArrayList<DefaultMutableTreeNode>();
+        List<DefaultMutableTreeNode> childNodes = new ArrayList<>();
         for (int i = 0; i < node.getChildCount(); i++) {
             DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
             childNodes.add(childNode);

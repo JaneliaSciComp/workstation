@@ -12,8 +12,10 @@ import javax.media.opengl.GL2;
 import org.janelia.it.jacs.shared.img_3d_loader.AbstractVolumeFileLoader;
 import org.janelia.it.jacs.shared.img_3d_loader.ByteArrayLoader;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
+
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.viewer3d.loader.TifTextureBuilder;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
@@ -26,6 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RawTiffVolumeSource implements MonitoredVolumeSource {
     public static final int DEPT_STD_GRAPH_CARD_MAX_DEPTH = 172;
+    public static final int UNSET_DIMENSION = -1;
     private static final Double[] SPIN_ABOUT_Z = new Double[] {
         -1.0,    0.0,    0.0,
         0.0,    -1.0,    0.0,
@@ -33,11 +36,14 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
     };
     private static final int MATRIX_SQUARE_DIM = 3; //5, if from yaml
 
+    private TileFormat tileFormat;
     private final Camera3d camera;
     private final String baseDirectoryPath;
     private IndeterminateNoteProgressMonitor progressMonitor;
     private final Logger logger = LoggerFactory.getLogger( RawTiffVolumeSource.class );
-    private int cubicDimension = -1;
+    private int[] dimensions = new int[] {
+        UNSET_DIMENSION, UNSET_DIMENSION, UNSET_DIMENSION 
+    };
     
     /**
      * Seed this object with all it needs to fetch the volume.
@@ -46,6 +52,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
      * @param baseDirectoryPath info for finding specific data set.
      */
     public RawTiffVolumeSource(
+            TileFormat tileFormat,
             Camera3d camera,
             String baseDirectoryPath
     ) {
@@ -55,6 +62,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         iterationCamera.setPixelsPerSceneUnit(camera.getPixelsPerSceneUnit());
         iterationCamera.setRotation(camera.getRotation());
         
+        this.tileFormat = tileFormat;
         this.camera = iterationCamera;
         this.baseDirectoryPath = baseDirectoryPath;
     }
@@ -66,36 +74,34 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
 
     @Override
     public void getVolume(VolumeAcceptor volumeListener) throws Exception {
-        int[] viewerCoord = {
-            (int)camera.getFocus().getX(),
-            (int)camera.getFocus().getY(),
-            (int)camera.getFocus().getZ()
-        };
+        TileFormat.VoxelXyz voxelCoords =
+                tileFormat.voxelXyzForMicrometerXyz(
+                        new TileFormat.MicrometerXyz(
+                                camera.getFocus().getX(), 
+                                camera.getFocus().getY(),
+                                camera.getFocus().getZ()
+                        )
+                );
+
+        int[] voxelizedCoords = {
+            voxelCoords.getX(),
+            voxelCoords.getY(),
+            voxelCoords.getZ()
+        };        
         
-//        progressMonitor.setNote("Fetching raw file paths.");
-//        RawFileInfo rawFileInfo =
-//                ModelMgr.getModelMgr().getNearestFileInfo(baseDirectoryPath, viewerCoord);
-//        if ( rawFileInfo == null ) {
-//            throw new Exception("Failed to find any tiff files in " + baseDirectoryPath + "." );
-//        }
         progressMonitor.setNote("Reading volume data.");
-        Map<Integer,byte[]> byteBuffers = ModelMgr.getModelMgr().getTextureBytes(baseDirectoryPath, viewerCoord, cubicDimension);
+        Map<Integer,byte[]> byteBuffers = ModelMgr.getModelMgr().getTextureBytes(baseDirectoryPath, voxelizedCoords, dimensions);
         
         progressMonitor.setNote("Loading volume data.");        
         TifTextureBuilder tifTextureBuilder = new TifTextureBuilder();
-//        final TifVolumeFileLoader tifVolumeFileLoader = new TifVolumeFileLoader();
-//        if ( cubicDimension > -1 ) {
-//            tifVolumeFileLoader.setCubicOutputDimension( cubicDimension );
-//        }
-//        tifVolumeFileLoader.setConversionCharacteristics( rawFileInfo.getTransformMatrix(), rawFileInfo.getInvertedTransform(), rawFileInfo.getMinCorner(), rawFileInfo.getExtent(), rawFileInfo.getQueryMicroscopeCoords() );
 
         progressMonitor.setNote("Starting data load...");
         Double[] spinAboutZTransform = SPIN_ABOUT_Z;
         ByteArrayLoader loader = new ByteArrayLoader();
         AbstractVolumeFileLoader baseLoader = (AbstractVolumeFileLoader)loader;
-        baseLoader.setSx(cubicDimension);
-        baseLoader.setSy(cubicDimension);
-        baseLoader.setSz(cubicDimension);
+        baseLoader.setSx(dimensions[0]);
+        baseLoader.setSy(dimensions[1]);
+        baseLoader.setSz(dimensions[2]);
         baseLoader.setChannelCount(1);
         baseLoader.setPixelBytes(2);
         tifTextureBuilder.setVolumeFileLoader( loader );
@@ -114,10 +120,10 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
             );
     }
     
-    public void setCubicDimension( int cubicDimension ) {
-        this.cubicDimension = cubicDimension;
+    public void setDimensions( int[] dimensions ) {
+        this.dimensions = dimensions;
     }
-
+    
     private void loadChannel(int displayNum, byte[] inputBuffer, Double[] transformMatrix, TifTextureBuilder textureBuilder, ByteArrayLoader loader, VolumeAcceptor volumeListener) throws Exception {
         TextureDataI textureData;
         textureBuilder.loadVolumeFile("Byte-Array-" + displayNum);        
@@ -135,27 +141,6 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         volumeListener.accept(textureData);
         progressMonitor.setNote("Ending load for raw file " + displayNum);
     }
-
-//    private void loadChannel(int displayNum, FileResolver resolver, File rawFile, Double[] transformMatrix, TifTextureBuilder textureBuilder, VolumeAcceptor volumeListener) throws Exception {
-//        TextureDataI textureData;
-//        progressMonitor.setNote("Caching channel " + displayNum);
-//        String resolvedFilename = resolver.getResolvedFilename(rawFile.getAbsolutePath());
-//        progressMonitor.setNote("Loading channel " + displayNum);
-//        textureBuilder.loadVolumeFile(resolvedFilename);
-//        progressMonitor.setNote("Building texture data from channel " + displayNum);
-//        logger.info("Loading" + rawFile + " as " + resolvedFilename);
-//        textureData = textureBuilder.buildTextureData(true);        
-//        // Presets known to work with this data type.
-//        textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE16);
-//        textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE);
-//        textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_SHORT);
-//        textureData.setPixelByteCount(2);
-//        if ( transformMatrix != null ) {
-//            setTransformMatrix(transformMatrix, MATRIX_SQUARE_DIM, textureData);
-//        }
-//        volumeListener.accept(textureData);
-//        progressMonitor.setNote("Ending load for raw file " + displayNum);
-//    }
 
     /**
      * If this has been set, it will be used to transform every point in the coordinate set.

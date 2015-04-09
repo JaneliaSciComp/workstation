@@ -18,7 +18,8 @@ public abstract class IconPanel extends Viewer {
     private static final Logger log = LoggerFactory.getLogger(IconPanel.class);
 
     private String currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
-
+    private boolean labelSizeLimitedByImageSize = true;
+    
     protected ImagesPanel imagesPanel;
 
     protected IconPanel(ViewerPane viewerPane) {
@@ -44,6 +45,16 @@ public abstract class IconPanel extends Viewer {
     public boolean areTagsVisible() {
         return true;
     }
+
+    public boolean isLabelSizeLimitedByImageSize() {
+        return labelSizeLimitedByImageSize;
+    }
+
+    public void setLabelSizeLimitedByImageSize(boolean labelSizeLimitedByImageSize) {
+        this.labelSizeLimitedByImageSize = labelSizeLimitedByImageSize;
+    }
+
+    public abstract IconDemoToolbar getToolbar();
 
     /**
      * Clear the view.

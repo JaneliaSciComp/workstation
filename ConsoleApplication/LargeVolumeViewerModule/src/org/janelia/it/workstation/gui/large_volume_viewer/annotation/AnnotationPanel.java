@@ -6,8 +6,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.signal.Signal;
-import org.janelia.it.workstation.signal.Slot1;
 
 import javax.swing.*;
 
@@ -22,6 +20,8 @@ import java.io.File;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 
 
 /**
@@ -49,6 +49,7 @@ public class AnnotationPanel extends JPanel
     private JCheckBoxMenuItem automaticTracingMenuItem;
     private JCheckBoxMenuItem automaticRefinementMenuItem;
     private NoteListPanel noteListPanel;
+    private ViewStateListener viewStateListener;
     private LVVDevPanel lvvDevPanel;
 
     // other UI stuff
@@ -56,7 +57,6 @@ public class AnnotationPanel extends JPanel
 
     private static final boolean defaultAutomaticTracing = false;
     private static final boolean defaultAutomaticRefinement = false;
-
 
     // ----- actions
     private final Action createNeuronAction = new AbstractAction() {
@@ -81,35 +81,11 @@ public class AnnotationPanel extends JPanel
             }
         };
 
-    // ----- signals & slots
-    public Signal centerAnnotationSignal = new Signal();
+    // ----- Actions
     private final Action centerAnnotationAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            centerAnnotationSignal.emit();
-        }
-    };
-
-    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
-        @Override
-        public void execute(TmWorkspace workspace) {
-            if (workspace != null) {
-                boolean state;
-                String automaticRefinementPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
-                if (automaticRefinementPref != null) {
-                    state = Boolean.parseBoolean(automaticRefinementPref);
-                } else {
-                    state = false;
-                }
-                automaticRefinementMenuItem.setSelected(state);
-                String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
-                if (automaticTracingPref != null) {
-                    state = Boolean.parseBoolean(automaticTracingPref);
-                } else {
-                    state = false;
-                }
-                automaticTracingMenuItem.setSelected(state);
-            }
+            viewStateListener.centerNextParent();
         }
     };
 
@@ -127,6 +103,30 @@ public class AnnotationPanel extends JPanel
 
     }
 
+    public void setViewStateListener(ViewStateListener listener) {
+        this.viewStateListener = listener;        
+    }
+    
+    public void loadWorkspace(TmWorkspace workspace) {
+        if (workspace != null) {
+            boolean state;
+            String automaticRefinementPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
+            if (automaticRefinementPref != null) {
+                state = Boolean.parseBoolean(automaticRefinementPref);
+            } else {
+                state = false;
+            }
+            automaticRefinementMenuItem.setSelected(state);
+            String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
+            if (automaticTracingPref != null) {
+                state = Boolean.parseBoolean(automaticTracingPref);
+            } else {
+                state = false;
+            }
+            automaticTracingMenuItem.setSelected(state);
+        }
+    }
+    
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(width, 0);
@@ -134,25 +134,10 @@ public class AnnotationPanel extends JPanel
 
     private void setupSignals() {
         // outgoing from the model:
-        annotationModel.neuronSelectedSignal.connect(neuriteTreePanel.neuronSelectedSlot);
-        annotationModel.neuronSelectedSignal.connect(workspaceNeuronList.neuronSelectedSlot);
-
-        annotationModel.workspaceLoadedSignal.connect(workspaceLoadedSlot);
-        annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.workspaceLoadedSlot);
-        annotationModel.workspaceLoadedSignal.connect(workspaceNeuronList.workspaceLoadedSlot);
-        annotationModel.workspaceLoadedSignal.connect(noteListPanel.workspaceLoadedSlot);
-        annotationModel.notesUpdatedSignal.connect(noteListPanel.notesUpdatedSlot);
-
-        // us to model:
-        workspaceNeuronList.neuronClickedSignal.connect(annotationModel.neuronClickedSlot);
-
-        // us to graphics UI
-        neuriteTreePanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
-        neuriteTreePanel.annotationClickedSignal.connect(largeVolumeViewerTranslator.annotationClickedSlot);
-        workspaceNeuronList.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
-        noteListPanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
-        noteListPanel.editNoteRequestedSignal.connect(annotationMgr.editNoteRequestedSlot);
-
+        PanelController panelController = new PanelController(this, noteListPanel, neuriteTreePanel, workspaceNeuronList, largeVolumeViewerTranslator);
+        panelController.registerForEvents(annotationModel);
+        panelController.registerForEvents(annotationMgr);
+        panelController.registerForEvents(workspaceInfoPanel);
     }
 
     private void setupUI() {
@@ -230,12 +215,6 @@ public class AnnotationPanel extends JPanel
                 "Import an SWC file into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCAction));
 
-        ChooseAnnotationColorAction changeGlobalAnnotationColorAction = new ChooseAnnotationColorAction();
-        changeGlobalAnnotationColorAction.putValue(Action.NAME, "Set global annotation color...");
-        changeGlobalAnnotationColorAction.putValue(Action.SHORT_DESCRIPTION,
-                "Change global color of annotations");
-        workspaceToolMenu.add(new JMenuItem(changeGlobalAnnotationColorAction));
-
         workspaceToolMenu.add(new JMenuItem(new AbstractAction("Save color model") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -269,7 +248,36 @@ public class AnnotationPanel extends JPanel
 
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
-
+        neuronToolMenu.add(new AbstractAction("Choose neuron style...") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                annotationMgr.chooseNeuronStyle();
+            }
+        });
+        neuronToolMenu.add(new AbstractAction("Show neuron") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                annotationMgr.setNeuronVisibility(true);
+            }
+        });
+        neuronToolMenu.add(new AbstractAction("Hide neuron") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                annotationMgr.setNeuronVisibility(false);
+            }
+        });
+        neuronToolMenu.add(new AbstractAction("Show all neurons") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                annotationMgr.setAllNeuronVisibility(true);
+            }
+        });
+        neuronToolMenu.add(new AbstractAction("Hide all neurons") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                annotationMgr.setAllNeuronVisibility(false);
+            }
+        });
         ExportCurrentSWCAction exportCurrentSWCAction = new ExportCurrentSWCAction();
         exportCurrentSWCAction.putValue(Action.NAME, "Export SWC file...");
         exportCurrentSWCAction.putValue(Action.SHORT_DESCRIPTION,
@@ -343,6 +351,7 @@ public class AnnotationPanel extends JPanel
         // ----- neuron information; show name, whatever attributes, list of neurites
         add(Box.createRigidArea(new Dimension(0, 20)), cVert);
         neuriteTreePanel = new NeuriteTreePanel(width);
+        neuriteTreePanel.setAnnotationManager(annotationMgr);
         add(neuriteTreePanel, cVert);
 
         // buttons for acting on annotations or neurites (which are in the list immediately above):
@@ -458,53 +467,6 @@ public class AnnotationPanel extends JPanel
         public int getDownsampleModulo() { return downsampleModulo; }
         public void setDownsampleModulo(int downsampleModulo) {
             this.downsampleModulo = downsampleModulo;
-        }
-    }
-    
-    class ChooseAnnotationColorAction extends AbstractAction {
-        // adapted from ChannelColorAction in ColorChannelWidget
-
-        JDialog colorDialog;
-        JColorChooser colorChooser;
-        private Color currentColor;
-
-        public ChooseAnnotationColorAction() {
-
-            ActionListener okListener = new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent actionEvent) {
-                    annotationMgr.setGlobalAnnotationColor(colorChooser.getColor());
-                }
-            };
-            ActionListener cancelListener = new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent actionEvent) {
-                    // unused right now
-                }
-            };
-
-            // arbitrary initial color
-            colorChooser = new JColorChooser(Color.RED);
-
-            colorDialog = JColorChooser.createDialog(AnnotationPanel.this,
-                    "Set global annotation color",
-                    false,
-                    colorChooser,
-                    okListener,
-                    cancelListener);
-            colorDialog.setVisible(false);
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (annotationModel.getCurrentWorkspace() == null) {
-                return;
-            }
-
-            // I'd like to grab the current color as the initial color,
-            //  but annotation panel has no way to get it at this time
-            colorChooser.setColor(AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL);
-            colorDialog.setVisible(true);
         }
     }
 

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import org.janelia.it.workstation.gui.dialogs.DataSetListDialog;
@@ -23,11 +18,13 @@ import java.awt.event.ActionListener;
         id = "DataSetsMenuAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_DataSetsMenuAction"
+        displayName = "#CTL_DataSetsMenuAction",
+        lazy = false
 )
 @ActionReference(path = "Menu/Services", position = 100)
 @Messages("CTL_DataSetsMenuAction=Data Sets")
 public final class DataSetsMenuAction extends AbstractAction implements Presenter.Menu {
+    
     public static final String DATA_SETS_ITEM = "Data Sets";
 
     public DataSetsMenuAction() {
@@ -41,15 +38,12 @@ public final class DataSetsMenuAction extends AbstractAction implements Presente
     public JMenuItem getMenuPresenter() {
         Browser browser = SessionMgr.getBrowser();
         final DataSetListDialog dataSetListDialog = browser.getDataSetListDialog();
-        if (dataSetListDialog.isAccessible()) {
-            JMenuItem menuItem = new JMenuItem(DATA_SETS_ITEM);
-            menuItem.addActionListener( new ActionListener() {
-                public void actionPerformed( ActionEvent ae ) {
-                    new ServicesActionDelegate().presentDataSetListDialog();
-                }
-            });
-            return menuItem;
-        }
-        return null;
+        JMenuItem menuItem = new JMenuItem(DATA_SETS_ITEM);
+        menuItem.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent ae ) {
+                SessionMgr.getBrowser().getDataSetListDialog().showDialog();
+            }
+        });
+        return menuItem;
     }
 }

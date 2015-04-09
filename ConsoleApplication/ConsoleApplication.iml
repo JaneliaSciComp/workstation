@@ -11,6 +11,14 @@
       <sourceFolder url="file://$MODULE_DIR$/SplitPickingModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/GeometricSearchModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/generated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Geometry3d/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ConsoleWrapper/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/GLViewerTools/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/QCView/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ViewerAPI/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SceneWindow/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/HortaTracer/src" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -45,4 +53,3 @@
     </orderEntry>
   </component>
 </module>
-

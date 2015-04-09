@@ -28,7 +28,7 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 
 	public UmbrellaSliceGenerator(TileFormat tileFormat, TileSet tileSet) {
 		// Identify slice boundaries
-		int sliceMin = tileFormat.getOrigin()[2];
+		int sliceMin = 0;//tileFormat.getOrigin()[2];
 		int sliceMax = sliceMin + tileFormat.getVolumeSize()[2] - 1;
 		// Choose one tile to initialize search area in Z
 		TileIndex ix1 = tileSet.iterator().next().getIndex();

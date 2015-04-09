@@ -1,8 +1,40 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.eventbus.Subscribe;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -23,7 +55,11 @@ import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
-import org.janelia.it.workstation.gui.framework.outline.*;
+import org.janelia.it.workstation.gui.framework.outline.AnnotationFilter;
+import org.janelia.it.workstation.gui.framework.outline.Annotations;
+import org.janelia.it.workstation.gui.framework.outline.EntityContextMenu;
+import org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory;
+import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
@@ -41,13 +77,9 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
@@ -116,11 +148,14 @@ public class IconDemoPanel extends IconPanel {
     protected KeyListener keyListener = new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {
-
+            
             if (KeymapUtil.isModifier(e)) {
                 return;
             }
             if (e.getID() != KeyEvent.KEY_PRESSED) {
+                return;
+            }
+            if (e.isConsumed()) {
                 return;
             }
 
@@ -197,7 +232,6 @@ public class IconDemoPanel extends IconPanel {
                     if (button != null) {
                         ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), clearAll);
                         imagesPanel.scrollEntityToCenter(rootedEntity);
-                        button.requestFocus();
                         updateHud(false);
                     }
                 }
@@ -219,7 +253,7 @@ public class IconDemoPanel extends IconPanel {
             AnnotatedImageButton button = getButtonAncestor(e.getComponent());
             // Select the button first
             RootedEntity rootedEntity = button.getRootedEntity();
-            if (!button.isSelected()) {
+            if (!ModelMgr.getModelMgr().getEntitySelectionModel().isSelected(getSelectionCategory(), rootedEntity.getId())) {
                 ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), true);
             }
             getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
@@ -247,6 +281,7 @@ public class IconDemoPanel extends IconPanel {
             if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
                 return;
             }
+            hud.setKeyListener(keyListener);
             buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
         }
     };
@@ -265,7 +300,6 @@ public class IconDemoPanel extends IconPanel {
         }
         JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
         ((EntityContextMenu) popupMenu).addMenuItems();
-
         return popupMenu;
     }
 
@@ -373,7 +407,6 @@ public class IconDemoPanel extends IconPanel {
         SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
 
         hud = Hud.getSingletonInstance();
-        hud.addKeyListener(keyListener);
 
         logoPanel = new JLabel(Icons.getIcon("workstation_logo_white.png"));
         add(logoPanel);
@@ -542,7 +575,7 @@ public class IconDemoPanel extends IconPanel {
                 imagesPanel.recalculateGrid();
             }
         });
-
+        
         annotations.setFilter(new AnnotationFilter() {
             @Override
             public boolean accept(OntologyAnnotation annotation) {
@@ -604,7 +637,7 @@ public class IconDemoPanel extends IconPanel {
             @Override
             public void browserAdded(BrowserModel browserModel) {
             }
-        });
+        });        
     }
 
     @Subscribe
@@ -726,8 +759,8 @@ public class IconDemoPanel extends IconPanel {
 
             @Override
             protected void currImageSizeChanged(int imageSize) {
+                log.trace("currImageSizeChanged: {}",imageSize);
                 imagesPanel.setMaxImageWidth(imageSize);
-                imagesPanel.recalculateGrid();
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -770,8 +803,8 @@ public class IconDemoPanel extends IconPanel {
                 allUsersMenuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         if (hiddenUsers.isEmpty()) {
-                            for (String username : savedUsers) {
-                                hiddenUsers.add(username);
+                            for (String subjectKey : savedUsers) {
+                                hiddenUsers.add(subjectKey);
                             }
                         }
                         else {
@@ -784,16 +817,17 @@ public class IconDemoPanel extends IconPanel {
 
                 userListMenu.addSeparator();
 
-                for (final String username : savedUsers) {
-                    JMenuItem userMenuItem = new JCheckBoxMenuItem(username, !hiddenUsers.contains(username));
-                    userMenuItem.setBackground(userColors.getColor(username));
+                for (final String subjectKey : savedUsers) {
+                    String name = EntityUtils.getNameFromSubjectKey(subjectKey);
+                    JMenuItem userMenuItem = new JCheckBoxMenuItem(name, !hiddenUsers.contains(subjectKey));
+                    userMenuItem.setBackground(userColors.getColor(subjectKey));
                     userMenuItem.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent e) {
-                            if (hiddenUsers.contains(username)) {
-                                hiddenUsers.remove(username);
+                            if (hiddenUsers.contains(subjectKey)) {
+                                hiddenUsers.remove(subjectKey);
                             }
                             else {
-                                hiddenUsers.add(username);
+                                hiddenUsers.add(subjectKey);
                             }
                             refreshAnnotations(null);
                         }
@@ -830,6 +864,7 @@ public class IconDemoPanel extends IconPanel {
         log.debug("selecting {} in {} viewer", entityId, getSelectionCategory());
         imagesPanel.setSelection(entityId, true, clearAll);
         updateStatusBar();
+        updateHud(false);
     }
 
     public void entityDeselected(String entityId) {
@@ -1250,9 +1285,8 @@ public class IconDemoPanel extends IconPanel {
         // Refresh all user list
         allUsers.clear();
         for (OntologyAnnotation annotation : annotations.getAnnotations()) {
-            String name = ModelMgrUtils.getNameFromSubjectKey(annotation.getOwner());
-            if (!allUsers.contains(name)) {
-                allUsers.add(name);
+            if (!allUsers.contains(annotation.getOwner())) {
+                allUsers.add(annotation.getOwner());
             }
         }
         Collections.sort(allUsers);
@@ -1335,13 +1369,11 @@ public class IconDemoPanel extends IconPanel {
                     public void run() {
                         if (rootedEntity.getEntity() == null) {
                             clear();
-                            if (success != null) {
-                                try {
-                                    success.call();
-                                }
-                                catch (Exception e) {
-                                    hadError(e);
-                                }
+                            try {
+                                success.call();
+                            }
+                            catch (Exception e) {
+                                hadError(e);
                             }
                         }
                         else {

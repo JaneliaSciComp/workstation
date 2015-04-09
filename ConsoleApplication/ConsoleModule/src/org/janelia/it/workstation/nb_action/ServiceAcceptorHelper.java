@@ -26,7 +26,7 @@ public class ServiceAcceptorHelper {
         Collection<T> candidates
                 = Lookups.forPath(path).lookupAll(clazz);
 
-        Collection<T> rtnVal = new ArrayList<T>(); 
+        Collection<T> rtnVal = new ArrayList<>();
         for (T nextAcceptor : candidates) {
             if (nextAcceptor.isCompatible(criterion)) {
                 rtnVal.add(nextAcceptor);

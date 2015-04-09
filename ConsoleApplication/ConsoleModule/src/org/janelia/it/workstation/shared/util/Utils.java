@@ -37,6 +37,8 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
+import org.openide.util.Mutex;
+import org.openide.windows.WindowManager;
 
 /**
  * Common utilities for loading images, copying files, testing strings, etc.
@@ -185,7 +187,7 @@ public class Utils {
                         int responseCode = client.executeMethod(get);
                         log.trace("readImage: GET " + responseCode + ", path=" + path);
                         if (responseCode != 200) {
-                            throw new FileNotFoundException();
+                            throw new FileNotFoundException("Response code "+responseCode+" returned for call to "+path);
                         }
                         stream = get.getResponseBodyAsStream();
                     }
@@ -444,11 +446,60 @@ public class Utils {
     }
 
     public static void setWaitingCursor(Component component) {
+        JFrame mainFrame = (JFrame)WindowManager.getDefault().getMainWindow(); 
+        if (component==mainFrame) {
+            setMainFrameCursorWaitStatus(true);
+            return;
+        }
         component.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     }
 
     public static void setDefaultCursor(Component component) {
+        JFrame mainFrame = (JFrame) WindowManager.getDefault().getMainWindow();
+        if (component == mainFrame) {
+            setMainFrameCursorWaitStatus(false);
+            return;
+        }
         component.setCursor(Cursor.getDefaultCursor());
+    }
+
+    /**
+     * Adapted from http://netbeans-org.1045718.n5.nabble.com/Setting-wait-cursor-td3026613.html
+     */
+    private static void setMainFrameCursorWaitStatus(final boolean isWaiting) {
+        try {
+            JFrame mainFrame = (JFrame) WindowManager.getDefault().getMainWindow();
+            Component glassPane = mainFrame.getGlassPane();
+            if (isWaiting) {
+                glassPane.setVisible(true);
+                glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            }
+            else {
+                glassPane.setVisible(false);
+                glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            }
+        }
+        catch (Exception e) {
+            log.error("Error changing main frame cursor wait status",e);
+        }
+    }
+    
+    public static void queueWaitingCursor(final Component component) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                setWaitingCursor(component);
+            }
+        });
+    }
+
+    public static void queueDefaultCursor(final Component component) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                setDefaultCursor(component);
+            }
+        });
     }
 
     /**

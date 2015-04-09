@@ -23,6 +23,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import org.janelia.it.jacs.model.entity.ForbiddenEntity;
 
 /**
  * A panel for displaying entity data objects.
@@ -249,7 +250,12 @@ public class EntityDataPane extends JPanel {
                 rowData.add((entityData.getParentEntity() == null) ? "" : (entityData.getParentEntity().getName() == null) ? "(unnamed)" : entityData.getParentEntity().getName().toString());
             }
             if (showChild) {
-                rowData.add((entityData.getChildEntity() == null) ? "" : (entityData.getChildEntity().getName() == null) ? "(unnamed)" : entityData.getChildEntity().getName().toString());
+                if (entityData.getChildEntity() instanceof ForbiddenEntity) {
+                    rowData.add("(Forbidden entity)");
+                }
+                else {
+                    rowData.add((entityData.getChildEntity() == null) ? "" : (entityData.getChildEntity().getName() == null) ? "(unnamed)" : entityData.getChildEntity().getName().toString());
+                }
             }
             rowData.add(entityData.getValue());
             data.add(rowData);

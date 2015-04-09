@@ -46,7 +46,7 @@ public class ConsoleDataServiceImpl {
         client.init(endpointUrl);
         log.info("Initialized client on port " + port + " with endpoint " + endpointUrl);
 
-        Map<String, Object> parameters = new HashMap<String, Object>();
+        Map<String, Object> parameters = new HashMap<>();
 
         if (ModelMgr.getModelMgr().getCurrentOntology() != null) {
             parameters.clear();

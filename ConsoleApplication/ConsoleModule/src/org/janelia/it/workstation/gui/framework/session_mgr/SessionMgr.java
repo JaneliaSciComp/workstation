@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.framework.session_mgr;
 
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
+import org.janelia.it.jacs.model.user_data.Group;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
@@ -9,6 +10,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
+import org.janelia.it.workstation.api.stub.data.FatalCommError;
 import org.janelia.it.workstation.api.stub.data.SystemError;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.external_listener.ExternalListener;
@@ -42,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class SessionMgr {
+public final class SessionMgr {
 
     private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
 
@@ -57,6 +59,7 @@ public class SessionMgr {
     public static String JACS_PIPELINE_SERVER_PROPERTY = "SessionMgr.JacsPipelineServerProperty";
     public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
+    public static String REMEMBER_PASSWORD = LoginProperties.REMEMBER_PASSWORD;
     public static String USER_EMAIL = "UserEmail";
     public static String FILE_CACHE_DISABLED_PROPERTY = "console.localCache.disabled";
     public static String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
@@ -66,14 +69,12 @@ public class SessionMgr {
     public static String DISPLAY_RENDERER_2D = "SessionMgr.Renderer2D";
 
     public static boolean isDarkLook = false;
-    // TODO: This is a quick hack to get the data viewer to work in the new NetBeans eco-system. This needs to be replaced with group:admin controls. 
-    public static boolean rootAccess = false;
 
     private static JFrame mainFrame;
-    private static ModelMgr modelManager = ModelMgr.getModelMgr();
-    private static SessionMgr sessionManager = new SessionMgr();
+    private static final ModelMgr modelManager = ModelMgr.getModelMgr();
+    private static final SessionMgr sessionManager = new SessionMgr();
     private SessionModel sessionModel = SessionModel.getSessionModel();
-    private float browserSize = .8f;
+    
     private ImageIcon browserImageIcon;
     private ExternalListener externalHttpListener;
     private EmbeddedAxisServer axisServer;
@@ -81,7 +82,6 @@ public class SessionMgr {
     private File settingsFile;
     private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
     private String prefsFile = prefsDir + ".JW_Settings";
-//    private Map<BrowserModel, Browser> browserModelsToBrowser = new HashMap<>();
     private Browser activeBrowser;
     private String appName, appVersion;
     private boolean isLoggedIn;
@@ -188,33 +188,32 @@ public class SessionMgr {
         String lafName = (String) getModelProperty(DISPLAY_LOOK_AND_FEEL);
         LookAndFeel currentLaf = UIManager.getLookAndFeel();
         LookAndFeelInfo currentLafInfo = null;
-        if (lafName != null) {
-            try {
-                boolean installed = false;
-                for (LookAndFeelInfo lafInfo : installedInfos) {
-                    if (lafInfo.getClassName().equals(lafName)) {
-                        installed = true;
-                    }
-                    if (lafInfo.getName().equals(currentLaf.getName())) {
-                        currentLafInfo = lafInfo;
-                    }
+        if (lafName==null) lafName = "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel";
+        try {
+            boolean installed = false;
+            for (LookAndFeelInfo lafInfo : installedInfos) {
+                if (lafInfo.getClassName().equals(lafName)) {
+                    installed = true;
                 }
-                if (installed) {
-                    setLookAndFeel(lafName);
-                }
-                else if (currentLafInfo != null) {
-                    setLookAndFeel(currentLafInfo.getName());
-                    setModelProperty(DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
+                if (lafInfo.getName().equals(currentLaf.getName())) {
+                    currentLafInfo = lafInfo;
                 }
             }
-            catch (Exception ex) {
-                handleException(ex);
+            if (installed) {
+                setLookAndFeel(lafName);
+            }
+            else if (currentLafInfo != null) {
+                setLookAndFeel(currentLafInfo.getName());
+                setModelProperty(DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
+            }
+            else {
+                log.error("Could not set Look and Feel: {}",lafName);
             }
         }
-        else {
-            setLookAndFeel("de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
+        catch (Exception ex) {
+            handleException(ex);
         }
-
+        
         String tempLogin = (String) getModelProperty(USER_NAME);
         String tempPassword = (String) getModelProperty(USER_PASSWORD);
         if (tempLogin != null && tempPassword != null) {
@@ -271,10 +270,9 @@ public class SessionMgr {
                 case 1: {
                     try {
                         sessionModel.setModelProperties((TreeMap) istream.readObject());
-                        istream.close();
                     }
                     catch (Exception ex) {
-                        istream.close();
+                        log.info("Error reading settings ",ex);
                         JOptionPane.showMessageDialog(getMainFrame(), "Settings were not recovered into the session.", "ERROR!", JOptionPane.ERROR_MESSAGE);
                         File oldFile = new File(prefsFile + ".old");
                         boolean deleteSuccess = oldFile.delete();
@@ -286,6 +284,9 @@ public class SessionMgr {
                             log.error("Could not rename new settings file to old.");
                         }
                     }
+                    finally {
+                        istream.close();
+                    }
                     break;
                 }
                 default: {
@@ -293,10 +294,11 @@ public class SessionMgr {
             }
         }
         catch (EOFException eof) {
+            log.info("No settings file",eof);
             // Do nothing, there are no preferences
         }
         catch (Exception ioEx) {
-            ioEx.printStackTrace();
+            log.info("Error reading settings file",ioEx);
         } //new settingsFile
     }
 
@@ -315,10 +317,6 @@ public class SessionMgr {
     public int addExternalClient(String newClientName) {
         return sessionModel.addExternalClient(newClientName);
     }
-
-//    public List<ExternalClient> getExternalClients() {
-//        return sessionModel.getExternalClients();
-//    }
 
     public List<ExternalClient> getExternalClientsByName(String clientName) {
         return sessionModel.getExternalClientsByName(clientName);
@@ -344,28 +342,12 @@ public class SessionMgr {
         return sessionModel.getModelProperty(key);
     }
 
-//    public void removeModelProperty(Object key) {
-//        sessionModel.removeModelProperty(key);
-//    }
-//
-//    public Iterator getModelPropertyKeys() {
-//        return sessionModel.getModelPropertyKeys();
-//    }
-//
     public void registerPreferenceInterface(Object interfaceKey, Class interfaceClass) throws Exception {
         PrefController.getPrefController().registerPreferenceInterface(interfaceKey, interfaceClass);
     }
 
-//    public void removePreferenceInterface(Object interfaceKey) throws Exception {
-//        PrefController.getPrefController().deregisterPreferenceInterface(interfaceKey);
-//    }
-//
     public void registerExceptionHandler(ExceptionHandler handler) {
         modelManager.registerExceptionHandler(handler);
-    }
-
-    public void setNewBrowserSize(float screenPercent) {
-        browserSize = screenPercent;
     }
 
     public void setApplicationName(String name) {
@@ -502,11 +484,10 @@ public class SessionMgr {
     }
 
     public Browser newBrowser() {
-        Browser browser = new Browser(browserSize, sessionModel.addBrowserModel());
+        Browser browser = new Browser(sessionModel.addBrowserModel());
         if (browserImageIcon != null) {
             browser.setBrowserImageIcon(browserImageIcon);
         }
-//        browserModelsToBrowser.put(browser.getBrowserModel(), browser);
         activeBrowser = browser;
         return browser;
     }
@@ -528,6 +509,7 @@ public class SessionMgr {
         // System-exit is now handled by NetBeans framework.
         //  System.exit(errorlevel);
         findAndRemoveWindowsSplashFile();
+        System.exit(errorlevel);
     }
 
     public void addSessionModelListener(SessionModelListener sessionModelListener) {
@@ -554,39 +536,6 @@ public class SessionMgr {
                     handleException(ex);
                 }
             }
-            else if (lookAndFeelClassName.toLowerCase().contains("jtattoo")) {
-                // setup the look and feel properties
-//                Properties props = new Properties();
-
-                //props.put("logoString", "my company");
-                //props.put("licenseKey", "INSERT YOUR LICENSE KEY HERE");
-//                String controlColor = "218 254 230";
-//                String buttonColor = "218 230 254"; 
-//                String foreGround = "180 240 197";
-//                String backGround = "0 0 0";
-//                props.put("selectionBackgroundColor", backGround);
-//                props.put("menuSelectionBackgroundColor", backGround);
-//
-//                props.put("controlColor", controlColor);
-//                props.put("controlColorLight", controlColor);
-//                props.put("controlColorDark", backGround);
-//
-//                props.put("buttonColor", buttonColor);
-//                props.put("buttonColorLight", "255 255 255");
-//                props.put("buttonColorDark", "244 242 232");
-//
-//                props.put("rolloverColor", controlColor);
-//                props.put("rolloverColorLight", controlColor);
-//                props.put("rolloverColorDark", backGround);
-//
-//                props.put("windowTitleForegroundColor", foreGround);
-//                props.put("windowTitleBackgroundColor", backGround);
-//                props.put("windowTitleColorLight", controlColor);
-//                props.put("windowTitleColorDark", backGround);
-//                props.put("windowBorderColor", controlColor);
-//                com.jtattoo.plaf.smart.SmartLookAndFeel.setCurrentTheme(props);
-                UIManager.setLookAndFeel(lookAndFeelClassName);
-            }
             else {
                 UIManager.setLookAndFeel(lookAndFeelClassName);
             }
@@ -594,6 +543,8 @@ public class SessionMgr {
             // The main frame is not presented until after this time.
             //  No need to update its LaF.
             setModelProperty(DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
+
+            log.info("Configured Look and Feel: {}", lookAndFeelClassName);
         }
         catch (Exception ex) {
             handleException(ex);
@@ -629,17 +580,7 @@ public class SessionMgr {
     public static JFrame getMainFrame() {
         if (mainFrame == null) {
             try {
-                Runnable runnable = new Runnable() {
-                    public void run() {
-                        mainFrame = WindowLocator.getMainFrame();
-                    }
-                };
-                if (SwingUtilities.isEventDispatchThread()) {
-                    runnable.run();
-                }
-                else {
-                    SwingUtilities.invokeAndWait(runnable);
-                }
+                mainFrame = WindowLocator.getMainFrame();
             }
             catch (Exception ex) {
                 SessionMgr.getSessionMgr().handleException(ex);
@@ -654,13 +595,6 @@ public class SessionMgr {
         }
     }
 
-//    public void stopExternalHttpListener() {
-//        if (externalHttpListener != null) {
-//            externalHttpListener.stop();
-//            externalHttpListener = null;
-//        }
-//    }
-//
     public void startAxisServer(String url) {
         try {
             if (axisServer == null) {
@@ -673,13 +607,6 @@ public class SessionMgr {
         }
     }
 
-//    public void stopAxisServer() {
-//        if (axisServer != null) {
-//            axisServer.stop();
-//            axisServer = null;
-//        }
-//    }
-//
     public EmbeddedAxisServer getAxisServer() {
         return axisServer;
     }
@@ -696,22 +623,6 @@ public class SessionMgr {
         }
     }
 
-//    public void stopWebServer() {
-//        if (webServer != null) {
-//            try {
-//                webServer.stop();
-//                webServer = null;
-//            }
-//            catch (Exception e) {
-//                SessionMgr.getSessionMgr().handleException(e);
-//            }
-//        }
-//    }
-//
-//    public EmbeddedWebServer getWebServer() {
-//        return webServer;
-//    }
-//
     public void saveUserSettings() {
         writeSettings();
     }
@@ -734,7 +645,7 @@ public class SessionMgr {
         }
     }
 
-    public boolean loginSubject() {
+    public boolean loginSubject(String username, String password) {
         try {
             boolean relogin = false;
 
@@ -744,50 +655,73 @@ public class SessionMgr {
                 relogin = true;
             }
 
+            findAndRemoveWindowsSplashFile();
             // Login and start the session
-            authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject();
+            authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject(username, password);
             if (null != authenticatedSubject) {
-                isLoggedIn = true;
-
-                String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
-                loggedInSubject = StringUtils.isEmpty(runAsUser) ? authenticatedSubject : ModelMgr.getModelMgr().getSubject(runAsUser);
-
-                if (loggedInSubject == null) {
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Cannot run as non-existent subject " + runAsUser, "Error", JOptionPane.ERROR_MESSAGE);
-                    loggedInSubject = authenticatedSubject;
-                }
-
-                if (!authenticatedSubject.getId().equals(loggedInSubject.getId())) {
-                    log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), loggedInSubject.getId());
-                }
-                else {
-                    log.info("Authenticated as {}", authenticatedSubject.getKey());
-                }
+                isLoggedIn = true;                
+                loggedInSubject = authenticatedSubject;
+                log.info("Authenticated as {}", authenticatedSubject.getKey());
 
                 FacadeManager.getFacadeManager().getComputeFacade().beginSession();
-
                 if (relogin) {
-                    log.info("Clearing entity model");
-                    ModelMgr.getModelMgr().reset();
-                    if (SessionMgr.getBrowser() != null) {
-                        log.info("Refreshing all views");
-                        SessionMgr.getBrowser().getEntityOutline().refresh();
-                        SessionMgr.getBrowser().getOntologyOutline().refresh();
-                        SessionMgr.getBrowser().getViewerManager().clearAllViewers();
-                    }
+                    resetSession();
                 }
             }
 
             return isLoggedIn;
         }
         catch (Exception e) {
-            log.error("loginUser: exception caught", e);
             isLoggedIn = false;
             log.error("Error logging in", e);
-            throw new SystemError("Cannot authenticate login. The server may be down. Please try again later.");
+            throw new FatalCommError(ConsoleProperties.getInstance().getProperty("interactive.server.url"),
+                    "Cannot authenticate login. The server may be down. Please try again later.");
         }
     }
 
+    public boolean setRunAsUser(String runAsUser) {
+        
+        if (!SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME) && !StringUtils.isEmpty(runAsUser)) {
+            throw new IllegalStateException("Non-admin user cannot run as another user");
+        }
+        
+        try {
+            if (!StringUtils.isEmpty(runAsUser)) {
+                Subject runAsSubject = ModelMgr.getModelMgr().getSubjectWithPreferences(runAsUser);
+                if (runAsSubject==null) {
+                    return false;
+                }
+                loggedInSubject = runAsSubject;
+            }
+            else {
+                loggedInSubject = authenticatedSubject;
+            }
+
+            if (!authenticatedSubject.getId().equals(loggedInSubject.getId())) {
+                log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), loggedInSubject.getId());
+            }
+                
+            resetSession();
+            return true;
+        }
+        catch (Exception e) {
+            loggedInSubject = authenticatedSubject;
+            handleException(e);
+            return false;
+        }
+    }
+    
+    private void resetSession() {
+        final Browser browser = SessionMgr.getBrowser();
+        if (browser != null) {
+            log.info("Refreshing all views");
+            browser.resetView();
+        }
+        log.info("Clearing entity model");
+        ModelMgr.getModelMgr().reset();
+        FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
+    }
+    
     public void logoutUser() {
         try {
             if (loggedInSubject != null) {
@@ -875,9 +809,6 @@ public class SessionMgr {
     public static String getSubjectKey() {
         Subject subject = getSessionMgr().getSubject();
         if (subject == null) {
-            if (rootAccess) {
-                return null;
-            }
             throw new SystemError("Not logged in");
         }
         return subject.getKey();
@@ -886,9 +817,6 @@ public class SessionMgr {
     public static String getUsername() {
         Subject subject = getSessionMgr().getSubject();
         if (subject == null) {
-            if (rootAccess) {
-                return null;
-            }
             throw new SystemError("Not logged in");
         }
         return subject.getName();
@@ -897,9 +825,6 @@ public class SessionMgr {
     public static String getUserEmail() {
         Subject subject = getSessionMgr().getSubject();
         if (subject == null) {
-            if (rootAccess) {
-                return null;
-            }
             throw new SystemError("Not logged in");
         }
         return subject.getEmail();

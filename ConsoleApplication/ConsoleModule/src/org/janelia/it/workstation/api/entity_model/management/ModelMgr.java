@@ -49,6 +49,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Executor;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 public final class ModelMgr {
 
@@ -69,14 +70,12 @@ public final class ModelMgr {
     private final EntitySelectionModel entitySelectionModel;
     private final UserColorMapping userColorMapping;
 
-//    private Entity selectedOntology;
-//    private OntologyKeyBindings ontologyKeyBindings;
     private AnnotationSession annotationSession;
     private OntologyAnnotation currentSelectedOntologyAnnotation;
 
     public Entity ERROR_ONTOLOGY = null;
 
-    private final List<ModelMgrObserver> modelMgrObservers = new ArrayList<ModelMgrObserver>();
+    private final List<ModelMgrObserver> modelMgrObservers = new ArrayList<>();
 
     private Long currWorkspaceId;
 
@@ -84,13 +83,15 @@ public final class ModelMgr {
         // Register an exception handler.
         ModelMgr.getModelMgr().registerExceptionHandler(new PrintStackTraceHandler());
     }
+    
+    private final Map<String,Subject> subjectByKey = new HashMap<>();
 
     private ModelMgr() {
         log.info("Initializing Model Manager");
         // Sync block may/may not be necessary. Problem may just be intermittent.
         //   Saw NPE on use of modelEventBus, during attempt to register against it.
         synchronized (ModelMgr.class) {
-            log.info("ModelMgr c'tor from  " + Thread.currentThread().getClass().getClassLoader() + "/" + Thread.currentThread().getContextClassLoader() + " in thread " + Thread.currentThread());
+            log.debug("ModelMgr c'tor from  " + Thread.currentThread().getClass().getClassLoader() + "/" + Thread.currentThread().getContextClassLoader() + " in thread " + Thread.currentThread());
 
             this.entityModel = new EntityModel();
             this.entitySelectionModel = new EntitySelectionModel();
@@ -108,8 +109,9 @@ public final class ModelMgr {
                     }
                 }
             });
+
         }
-        log.info("Successfully initialized");
+        log.debug("Successfully initialized");
     } //Singleton enforcement
 
     public static synchronized ModelMgr getModelMgr() {
@@ -117,12 +119,15 @@ public final class ModelMgr {
     }
     
     public void init() throws Exception {
-        // TODO: in the future, this should not rely on SessionMgr
-        getCurrentWorkspace();
+        log.info("Preloading subjects");
+        List<Subject> subjects = getSubjects();
+        for(Subject subject : subjects) {
+            subjectByKey.put(subject.getKey(), subject);
+        }
     }
 
     public void addModelMgrObserver(ModelMgrObserver mml) {
-        if (null != mml) {
+        if (null != mml && !modelMgrObservers.contains(mml)) {
             modelMgrObservers.add(mml);
         }
     }
@@ -134,7 +139,7 @@ public final class ModelMgr {
     }
 
     public List<ModelMgrObserver> getModelMgrObservers() {
-        return new ArrayList<ModelMgrObserver>(modelMgrObservers);
+        return new ArrayList<>(modelMgrObservers);
     }
 
     public void registerExceptionHandler(ExceptionHandler handler) {
@@ -224,7 +229,7 @@ public final class ModelMgr {
     }
 
     public TreeSet<String> getOntologyTermSet(Entity ontologyRoot) {
-        TreeSet<String> ontologyElementTreeSet = new TreeSet<String>();
+        TreeSet<String> ontologyElementTreeSet = new TreeSet<>();
         List<Entity> list = ModelMgrUtils.getAccessibleChildren(ontologyRoot);
         list = ontologyWalker(list);
         for (Entity entity : list) {
@@ -234,7 +239,7 @@ public final class ModelMgr {
     }
 
     public List<Entity> ontologyWalker(List<Entity> list) {
-        List<Entity> finalList = new ArrayList<Entity>();
+        List<Entity> finalList = new ArrayList<>();
         finalList.addAll(list);
         for (Entity entity : list) {
             List<Entity> accessible = ModelMgrUtils.getAccessibleChildren(entity);
@@ -258,7 +263,7 @@ public final class ModelMgr {
     }
 
     public void saveSortCriteria(Long entityId, String sortCriteria) throws Exception {
-        Subject subject = ModelMgr.getModelMgr().getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
+        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
         if (StringUtils.isEmpty(sortCriteria)) {
             subject.getPreferenceMap().remove(CATEGORY_SORT_CRITERIA + ":" + entityId);
             log.debug("Removed user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId);
@@ -273,7 +278,7 @@ public final class ModelMgr {
 
     public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
-        Subject subject = ModelMgr.getModelMgr().getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
+        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
         Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(category);
 
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(subject.getKey(), ontologyId);
@@ -287,7 +292,7 @@ public final class ModelMgr {
     public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
 
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
-        Subject subject = ModelMgr.getModelMgr().getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
+        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
 
         // First delete all keybinds for this ontology
         for (String key : subject.getCategoryPreferences(category).keySet()) {
@@ -680,10 +685,8 @@ public final class ModelMgr {
                     return;
                 }
                 EntityData computationalEd = annotationEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_IS_COMPUTATIONAL);
-                if (annotationEntity!=null) {
-                	entityModel.deleteEntityData(computationalEd);
-                }
-        	}
+                entityModel.deleteEntityData(computationalEd);
+            }
         }
         notifyAnnotationsChanged(entityId);
     }
@@ -890,6 +893,11 @@ public final class ModelMgr {
         return newEntity;
     }
 
+    public EntityData saveOrUpdateEntityData(EntityData entityData) throws Exception {
+        EntityData newEntityData = entityModel.saveEntityData(entityData);
+        return newEntityData;
+    }
+    
     public Entity saveOrUpdateAnnotation(Entity annotatedEntity, Entity annotation) throws Exception {
         Entity newAnnotation = entityModel.saveEntity(annotation);
         if (newAnnotation != null) {
@@ -948,7 +956,7 @@ public final class ModelMgr {
     }
 
     public Task submitJob(String processDefName, String displayName) throws Exception {
-        HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+        HashSet<TaskParameter> taskParameters = new HashSet<>();
         return submitJob(processDefName, displayName, taskParameters);
     }
 
@@ -985,7 +993,15 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getComputeFacade().getSubject();
     }
 
-    public Subject getSubject(String nameOrKey) throws Exception {
+    public Subject getSubjectByKey(String key) throws Exception {
+        Subject subject = subjectByKey.get(key);
+        if (subject!=null) return subject;
+        subject = FacadeManager.getFacadeManager().getComputeFacade().getSubject(key);
+        subjectByKey.put(subject.getKey(), subject);
+        return subject;
+    }
+    
+    public Subject getSubjectWithPreferences(String nameOrKey) throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().getSubject(nameOrKey);
     }
 
@@ -1015,9 +1031,8 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query, mapToEntities);
     }
     
-    //todo "Flylight"? Maybe we can refctor out this explicit project knowledge?  Is there a nice, clean abstraction for this?
-    public Map<String, SageTerm> getFlyLightVocabulary() throws Exception {
-        return FacadeManager.getFacadeManager().getSolrFacade().getFlyLightVocabulary();
+    public Map<String, SageTerm> getImageVocabulary() throws Exception {
+        return FacadeManager.getFacadeManager().getSolrFacade().getImageVocabulary();
     }
 
     public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
@@ -1250,12 +1265,49 @@ public final class ModelMgr {
         FacadeManager.getFacadeManager().getEntityFacade().deleteStructuredTextAnnotation(annID);
     }
 
-    public RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getNearestFileInfo(basePath, viewerCoord);
+    public CoordinateToRawTransform getCoordToRawTransform(String basePath) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getLvvCoordToRawTransform(basePath);
     }
 
-    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int cubicDim ) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, cubicDim);
+    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, dimensions);
     }
 
+    public List<List<Object>> getRootPaths(Entity entity, Set<Long> visited) throws Exception {
+
+        List<List<Object>> rootPaths = new ArrayList<>();
+        if (!EntityConstants.TYPE_WORKSPACE.equals(entity.getEntityTypeName()) && visited.contains(entity.getId())) {
+            return rootPaths;
+        }
+        visited.add(entity.getId());
+
+        List<EntityData> parents = ModelMgr.getModelMgr().getParentEntityDatas(entity.getId());
+
+        if (parents.isEmpty()) {
+            List<Object> path = new ArrayList<>();
+            path.add(entity);
+            rootPaths.add(path);
+            return rootPaths;
+        }
+
+        for (EntityData parentEd : parents) {
+            Entity parent = parentEd.getParentEntity();
+
+            if (EntityUtils.isHidden(parentEd)) {
+                // Skip this path, because it should be hidden from the user
+                log.debug("Skipping path becuase it's hidden: " + parent.getName() + "-(" + parentEd.getEntityAttrName() + ")->" + entity.getName());
+                continue;
+            }
+
+            parent = ModelMgr.getModelMgr().getEntityById(parent.getId());
+            List<List<Object>> parentPaths = getRootPaths(parent, visited);
+            for (List<Object> parentPath : parentPaths) {
+                parentPath.add(parentEd);
+                parentPath.add(entity);
+                rootPaths.add(parentPath);
+            }
+        }
+
+        return rootPaths;
+    }
 }

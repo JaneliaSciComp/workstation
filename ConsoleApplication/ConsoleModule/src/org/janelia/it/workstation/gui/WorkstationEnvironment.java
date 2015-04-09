@@ -4,7 +4,7 @@ import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManage
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.panels.DataSourceSettingsPanel;
+import org.janelia.it.workstation.gui.util.panels.UserAccountSettingsPanel;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 
 import javax.swing.*;
@@ -24,6 +24,8 @@ public class WorkstationEnvironment {
 
         // Assuming that the user has entered the login/password information, now validate
         String username = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+        String password = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD);
+        String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
         String email = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
 
         if (username==null || email==null) {
@@ -31,14 +33,15 @@ public class WorkstationEnvironment {
             final int answer = JOptionPane.showOptionDialog(null, "Please enter your login and email information.", "Information Required",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
             if (answer == 0) {
-                PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, null);
+                PrefController.getPrefController().getPrefInterface(UserAccountSettingsPanel.class, null);
             }
             else {
                 SessionMgr.getSessionMgr().systemExit();
             }
         }
 
-        SessionMgr.getSessionMgr().loginSubject();
+        SessionMgr.getSessionMgr().loginSubject(username, password);
+        SessionMgr.getSessionMgr().setRunAsUser(runAsUser);
         SessionMgr.getSessionMgr().newBrowser();
     }
 }

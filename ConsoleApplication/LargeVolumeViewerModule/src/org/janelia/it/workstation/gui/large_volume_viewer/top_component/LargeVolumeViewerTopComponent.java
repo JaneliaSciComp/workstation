@@ -7,12 +7,14 @@ package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
 import java.awt.BorderLayout;
 import javax.swing.JComponent;
+import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.*;
+import org.openide.util.lookup.Lookups;
 import org.openide.windows.WindowManager;
 
 /**
@@ -43,11 +45,19 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     
     private final LargeVolumeViewerTopComponentDynamic state = new LargeVolumeViewerTopComponentDynamic();
     
-    public LargeVolumeViewerTopComponent() {
+    public static final LargeVolumeViewerTopComponent findThisTopComponent() {
+        return (LargeVolumeViewerTopComponent)WindowManager.getDefault().findTopComponent(LVV_PREFERRED_ID);
+    }
+    
+    public static JComponent findThisComponent() {
+        return findThisTopComponent();
+    }
+
+   public LargeVolumeViewerTopComponent() {
         initComponents();
         setName(Bundle.CTL_LargeVolumeViewerTopComponent());
         setToolTipText(Bundle.HINT_LargeVolumeViewerTopComponent());
-
+        establishLocationProvider();
     }
 
     public void openLargeVolumeViewer( Long entityId ) throws Exception {
@@ -92,10 +102,10 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         state.close();
     }
     
-    public static JComponent findThisComponent() {
-        return WindowManager.getDefault().findTopComponent(LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID);
+    public LargeVolumeViewViewer getLvvv() {
+        return state.getLvvv();
     }
-
+    
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
@@ -107,4 +117,11 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
     }
+
+    protected void establishLocationProvider() {
+        LargeVolumeViewerLocationProvider locProvider = 
+                new LargeVolumeViewerLocationProvider(state.getLvvv());
+        this.associateLookup( Lookups.singleton( locProvider ) );
+    }
+    
 }

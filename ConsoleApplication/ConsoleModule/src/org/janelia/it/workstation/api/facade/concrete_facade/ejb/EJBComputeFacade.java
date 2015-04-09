@@ -12,6 +12,9 @@ import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.util.List;
+import org.janelia.it.workstation.gui.application.ConsoleApp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -21,6 +24,8 @@ import java.util.List;
  */
 public class EJBComputeFacade implements ComputeFacade {
 
+    private static final Logger log = LoggerFactory.getLogger(EJBComputeFacade.class);
+    
     @Override
     public Task saveOrUpdateTask(Task task) throws Exception {
     	if (task == null) throw new IllegalArgumentException("Task may not be null");
@@ -93,22 +98,21 @@ public class EJBComputeFacade implements ComputeFacade {
     }
 
     @Override
-    public Subject loginSubject() throws Exception {
-        final SessionMgr mgr = SessionMgr.getSessionMgr();
-        final String userName = (String) mgr.getModelProperty(SessionMgr.USER_NAME);
-        final String password = (String) mgr.getModelProperty(SessionMgr.USER_PASSWORD);
+    public Subject loginSubject(final String username, final String password) throws Exception {
         final ComputeBeanRemote compute = EJBFactory.getRemoteComputeBean();
-        final Subject loggedInSubject = compute.login(userName, password);
+        final Subject loggedInSubject = compute.login(username, password);
 
         // set default authenticator for all http requests
         if (null!=loggedInSubject) {
+            log.info("Setting default authenticator");
             Authenticator.setDefault(new Authenticator() {
+                @Override
                 protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(userName,
+                    return new PasswordAuthentication(username,
                                                       password.toCharArray());
                 }
             });
-            WebDavClient webDavClient = mgr.getWebDavClient();
+            WebDavClient webDavClient = SessionMgr.getSessionMgr().getWebDavClient();
             webDavClient.setCredentialsUsingAuthenticator();
         }
 

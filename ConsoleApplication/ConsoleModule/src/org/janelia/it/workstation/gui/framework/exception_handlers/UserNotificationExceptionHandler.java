@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.framework.exception_handlers;
 
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.facade.concrete_facade.xml.InvalidXmlException;
 import org.janelia.it.workstation.api.facade.facade_mgr.ConnectionStatusException;
@@ -7,7 +8,10 @@ import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.workstation.api.stub.data.FatalCommError;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.MailDialogueBox;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.util.text_component.StandardTextArea;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.naming.AuthenticationException;
 import javax.swing.*;
@@ -17,12 +21,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class UserNotificationExceptionHandler implements ExceptionHandler {
 
@@ -72,13 +72,13 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     private void displayFatalComm(Throwable throwable) {
         Object[] messages = new String[5];
         if (((FatalCommError) throwable).getMachineName()!=null) {
-            messages[0] = "There has been a problem communicating with the Application Server.";
+            messages[0] = "There has been a problem communicating with the server.";
             messages[1] = "Please try again in several minutes. ";
-            messages[2] = "If the problem persists, please contact your Workstation Administrator.";
-            messages[3] = "Please tell the administrator that: "+((FatalCommError) throwable).getMachineName()+" is not responding.";
+            messages[2] = "If the problem persists, please contact your Workstation Administrator ";
+            messages[3] = "and tell them that \""+((FatalCommError) throwable).getMachineName()+"\" is not responding.";
         }
         else {
-            messages[0] = "The Application Server has had difficulty handling your request.";
+            messages[0] = "The server has had difficulty handling your request.";
             messages[1] = "If the problem persists, please contact your Workstation Administrator.";
             messages[2] = "The server message is: "+throwable.getMessage();
         }

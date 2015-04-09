@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import org.openide.awt.ActionID;
@@ -14,20 +9,26 @@ import org.openide.util.actions.Presenter;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
 import java.net.URI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ActionID(
         category = "Help",
         id = "UserManualMenuAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_UserGuideMenuAction"
+        displayName = "#CTL_UserGuideMenuAction",
+        lazy = true
 )
 @ActionReference(path = "Menu/Help", position = 120)
-@Messages("CTL_UserGuideMenuAction=User Guide")
+@Messages("CTL_UserGuideMenuAction=User Manual")
 public final class UserManualMenuAction extends AbstractAction implements Presenter.Menu {
 
-    JMenuItem userManual = new JMenuItem("User Manual");
+    private static final Logger log = LoggerFactory.getLogger(UserManualMenuAction.class);
+    
+    private final JMenuItem userManual = new JMenuItem("User Manual");
 
     public UserManualMenuAction() {
         userManual.addActionListener(this);
@@ -38,10 +39,10 @@ public final class UserManualMenuAction extends AbstractAction implements Presen
         Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
         if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
             try {
-                desktop.browse(URI.create("http://wiki.int.janelia.org/wiki/display/JW/Janelia+Workstation+User+Manual"));
+                desktop.browse(URI.create("http://wiki.int.janelia.org/wiki/display/JW/Introduction"));
             }
-            catch (Exception ex) {
-                ex.printStackTrace();
+            catch (IOException ex) {
+                log.error("Could not open user manual URL",ex);
             }
         }
     }

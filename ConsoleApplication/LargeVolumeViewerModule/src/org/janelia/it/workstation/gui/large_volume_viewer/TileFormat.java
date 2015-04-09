@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import Jama.Matrix;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -11,7 +12,10 @@ import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
  */
 public class TileFormat 
 {
-
+    private static final int X_OFFS = 0;
+    private static final int Y_OFFS = 1;
+    private static final int Z_OFFS = 2;
+    
 	private int[] origin = {0,0,0}; // in voxel
 	private int[] volumeSize = {0,0,0}; // in voxels
 	private int[] tileSize = {1024, 1024, 1}; // in voxels (possibly)
@@ -27,6 +31,8 @@ public class TileFormat
 	private boolean hasZSlices = true;
 	private boolean hasXSlices = false;
 	private boolean hasYSlices = false;
+    private Matrix micronToVoxMatrix;
+    private Matrix voxToMicronMatrix;
 
 	public TileFormat() 
 	{
@@ -72,16 +78,36 @@ public class TileFormat
     }
 
 	public BoundingBox3d calcBoundingBox() {
-		double sv[] = getVoxelMicrometers();
-		int s0[] = getOrigin();
-		int s1[] = getVolumeSize();
-		Vec3 b0 = new Vec3(sv[0]*s0[0], sv[1]*s0[1], sv[2]*s0[2]);
-		Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
+		Vec3 b0 = new Vec3(calcLowerBBCoord(X_OFFS), calcLowerBBCoord(Y_OFFS), calcLowerBBCoord(Z_OFFS));
+		Vec3 b1 = new Vec3(calcUpperBBCoord(X_OFFS), calcUpperBBCoord(Y_OFFS), calcUpperBBCoord(Z_OFFS));
 		BoundingBox3d result = new BoundingBox3d();
 		result.setMin(b0);
 		result.setMax(b1);
 		return result;
 	}
+    
+// Refactored for standard calculations.    
+//    public BoundingBox3d calcBoundingBox() {
+//        double sv[] = getVoxelMicrometers();
+//		int s0[] = getOrigin();
+//		int s1[] = getVolumeSize();
+//        
+//        MicrometerXyz mmxMin = micrometerXyzForVoxelXyz(
+//                new VoxelXyz(s0), CoordinateAxis.Z
+//        );
+//		MicrometerXyz mmxMax = micrometerXyzForVoxelXyz(
+//                new VoxelXyz(
+//                        s0[0] + s1[0],
+//                        s0[1] + s1[1],
+//                        s0[2] + s1[2]
+//                ),
+//                CoordinateAxis.Z
+//        );
+//		BoundingBox3d result = new BoundingBox3d();
+//		result.setMin(mmxMin.getX(), mmxMin.getY(), mmxMin.getZ());
+//		result.setMax(mmxMax.getX(), mmxMax.getY(), mmxMax.getZ());
+//		return result;
+//	}
 	
 	public int zoomLevelForCameraZoom(double pixelsPerSceneUnit) 
 	{
@@ -89,7 +115,7 @@ public class TileFormat
 		final double zoomOffset = 0.5;
 		// 
 		double[] vm = getVoxelMicrometers();
-		double maxRes = Math.min(vm[0], Math.min(vm[1], vm[2]));
+		double maxRes = Math.min(vm[X_OFFS], Math.min(vm[Y_OFFS], vm[Z_OFFS]));
 		double voxelsPerPixel = 1.0 / (pixelsPerSceneUnit * maxRes);
 		int zoomMax = getZoomLevelCount() - 1;
 		int zoom = zoomMax; // default to very coarse zoom
@@ -103,6 +129,117 @@ public class TileFormat
 		return zoom;
 	}
 	
+    public TileBoundingBox viewBoundsToTileBounds(int[] xyzFromWhd, ViewBoundingBox screenBounds0, int zoom) {
+
+        double zoomFactor = Math.pow(2.0, zoom);
+		// get tile pixel size 1024 from loadAdapter
+        double resolution0 = getVoxelMicrometers()[xyzFromWhd[0]];
+        double resolution1 = getVoxelMicrometers()[xyzFromWhd[1]];
+		double tileWidth = tileSize[xyzFromWhd[0]] * zoomFactor * resolution0;
+		double tileHeight = tileSize[xyzFromWhd[1]] * zoomFactor * resolution1;
+
+        // Local copy of micrometer bounds before flipping
+        BoundingBox3d bb = calcBoundingBox();
+        double xMinViewUnit = screenBounds0.getwFMin() - bb.getMinX();
+        double xMaxViewUnit = screenBounds0.getwFMax() - bb.getMinX();
+        double yMinViewUnit = screenBounds0.gethFMin() - bb.getMinY();
+        double yMaxViewUnit = screenBounds0.gethFMax() - bb.getMinY();
+        
+        // Invert Y for target coordinate system.
+        double bottomY = bb.getMax().getY() - bb.getMinY();
+        
+		// Correct for bottom Y origin of Raveler tile coordinate system
+		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
+		if (xyzFromWhd[X_OFFS] == Y_OFFS) { // Y axis left-right
+			double temp = xMinViewUnit;
+			xMinViewUnit = bottomY - xMaxViewUnit;
+			xMaxViewUnit = bottomY - temp;
+		}
+		else if (xyzFromWhd[Y_OFFS] == Y_OFFS) { // Y axis top-bottom
+			double temp = yMinViewUnit;
+			yMinViewUnit = bottomY - yMaxViewUnit;
+			yMaxViewUnit = bottomY - temp;
+		}
+		else {
+			// TODO - invert slice axis? (already inverted above)
+		}
+
+		int wMin = (int)Math.floor(xMinViewUnit / tileWidth);
+		int wMax = (int)Math.floor(xMaxViewUnit / tileWidth);
+
+		int hMin = (int)Math.floor(yMinViewUnit / tileHeight);
+		int hMax = (int)Math.floor(yMaxViewUnit / tileHeight);
+        
+        TileBoundingBox tileUnits = new TileBoundingBox();
+        tileUnits.sethMax(hMax);
+        tileUnits.sethMin(hMin);
+        tileUnits.setwMax(wMax);
+        tileUnits.setwMin(wMin);
+        
+        return tileUnits;
+    }
+    
+    /**
+     * This will use the meaningful intersection of the bounding box and
+     * the view, and take 1/2-unit-over-boundary into consideration.  It will
+     * produce a set of width and height bounds that contain the focus
+     * point, within the stated width and height.
+     * Output includes view-width and view-height sized rectangle, with focus as
+     * near to center as possible
+     * 
+     * @param viewWidth how wide to make surrounding view in wide axis.
+     * @param viewHeight how wide to make surrounding view in high axis.
+     * @param focus output must include (ideally, centered) this point.
+     * @param pixelsPerViewUnit used for calculating surrounding rectangle.
+     * @param xyzFromWhd indirection for axial sequence numbers.
+     * @return min/max-delimiting box.
+     */
+    public ViewBoundingBox findViewBounds(
+            int viewWidth, int viewHeight, Vec3 focus, double pixelsPerViewUnit, int[] xyzFromWhd 
+    ) {
+        BoundingBox3d bb = calcBoundingBox();
+        // bb = originAdjustBoundingBox(bb, xyzFromWhd);
+        // focus = originAdjustCameraFocus(focus, xyzFromWhd);
+        
+		// Clip to bounded space  
+        double xMinView = focus.get(xyzFromWhd[X_OFFS]) - 0.5*viewWidth/pixelsPerViewUnit;
+        double xMaxView = focus.get(xyzFromWhd[X_OFFS]) + 0.5*viewWidth/pixelsPerViewUnit;
+        
+		double yMinView = focus.get(xyzFromWhd[Y_OFFS]) - 0.5*viewHeight/pixelsPerViewUnit;
+		double yMaxView = focus.get(xyzFromWhd[Y_OFFS]) + 0.5*viewHeight/pixelsPerViewUnit;
+
+		// Subtract one half pixel to avoid loading an extra layer of tiles
+		double dw = 0.25 * getVoxelMicrometers()[xyzFromWhd[X_OFFS]];
+		double dh = 0.25 * getVoxelMicrometers()[xyzFromWhd[Y_OFFS]];
+
+        // Clip to bounding box
+        double xMinViewUnit = Math.max(xMinView, bb.getMin().get(xyzFromWhd[X_OFFS]) + dw);
+		double yMinViewUnit = Math.max(yMinView, bb.getMin().get(xyzFromWhd[Y_OFFS]) + dh);
+        
+		double xMaxViewUnit = Math.min(xMaxView, bb.getMax().get(xyzFromWhd[X_OFFS]) - dw);
+		double yMaxViewUnit = Math.min(yMaxView, bb.getMax().get(xyzFromWhd[Y_OFFS]) - dh);
+
+        ViewBoundingBox viewBoundaries = new ViewBoundingBox();
+        viewBoundaries.sethFMax(yMaxViewUnit);
+        viewBoundaries.sethFMin(yMinViewUnit);
+        
+        viewBoundaries.setwFMax(xMaxViewUnit);
+        viewBoundaries.setwFMin(xMinViewUnit);
+        return viewBoundaries;
+    }
+    
+    
+    public int calcRelativeTileDepth(int[] xyzFromWhd, double focusDepth, BoundingBox3d bb) {
+        // Bounding box is actually 0.5 voxels bigger than number of slices at each end
+        int dMin = (int)(bb.getMin().get(xyzFromWhd[Z_OFFS])/getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] + 0.5);
+        int dMax = (int)(bb.getMax().get(xyzFromWhd[Z_OFFS])/getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] - 0.5);
+        int absoluteTileDepth = (int)Math.round(focusDepth / getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] - 0.5);
+        absoluteTileDepth = Math.max(absoluteTileDepth, dMin);
+        absoluteTileDepth = Math.min(absoluteTileDepth, dMax);
+        int relativeTileDepth = absoluteTileDepth - getOrigin()[xyzFromWhd[Z_OFFS]];
+        return relativeTileDepth;
+    }
+
 	public TileIndex.IndexStyle getIndexStyle() {
 		return indexStyle;
 	}
@@ -206,11 +343,57 @@ public class TileFormat
 	}
 
 	public void setVolumeSize(int[] volumeSize) {
+        // In case somewhere, the original array is being passed around
+        // and used directly, prior to having been reset from defaults.
+        if (this.volumeSize != null) {
+            for (int i = 0; i < volumeSize.length; i++) {
+                this.volumeSize[i] = volumeSize[i];
+            }
+        }
 		this.volumeSize = volumeSize;
 	}
 
+    /**
+     * @return the micronToVoxMatrix
+     */
+    public Matrix getMicronToVoxMatrix() {
+        establishConversionMatrices();
+        return micronToVoxMatrix;
+    }
+
+    /**
+     * @param micronToVoxMatrix the micronToVoxMatrix to set
+     */
+    public void setMicronToVoxMatrix(Matrix micronToVoxMatrix) {
+        this.micronToVoxMatrix = micronToVoxMatrix;
+    }
+
+    /**
+     * @return the voxToMicronMatrix
+     */
+    public Matrix getVoxToMicronMatrix() {
+        establishConversionMatrices();
+        return voxToMicronMatrix;
+    }
+
+    /**
+     * @param voxToMicronMatrix the voxToMicronMatrix to set
+     */
+    public void setVoxToMicronMatrix(Matrix voxToMicronMatrix) {
+        this.voxToMicronMatrix = voxToMicronMatrix;
+    }
+	
 	public void setTileSize(int[] tileSize) {
-		this.tileSize = tileSize;
+        // In case somewhere, the original array is being passed around
+        // and used directly, prior to having been reset from defaults.
+        if (this.tileSize != null) {
+            for (int i = 0; i < tileSize.length; i++) {
+                this.tileSize[i] = tileSize[i];
+            }
+        }
+        else {
+    		this.tileSize = tileSize;
+        }
 	}
 
 	public void setVoxelMicrometers(double[] voxelMicrometers) {
@@ -262,7 +445,7 @@ public class TileFormat
 			tileSize[i] = 512; // X, Y, but not Z...
 			voxelMicrometers[i] = 1.0;
 		}
-		tileSize[2] = 1; // tiles are 512x512x1
+		tileSize[Z_OFFS] = 1; // tiles are 512x512x1
 		setZoomLevelCount(1); // like small images
 		bitDepth = 8;
 		channelCount = 3; // rgb
@@ -279,8 +462,8 @@ public class TileFormat
 	}
 
 	public int getTileBytes() {
-		int w = getTileSize()[0];
-		int h = getTileSize()[1];
+		int w = getTileSize()[X_OFFS];
+		int h = getTileSize()[Y_OFFS];
 		int bpp = getChannelCount() * getBitDepth() / 8;
 		return w * h * bpp;
 	}
@@ -326,23 +509,51 @@ public class TileFormat
 	public MicrometerXyz micrometerXyzForVoxelXyz(VoxelXyz v, CoordinateAxis sliceDirection) {
 		// return point at upper-left corner of voxel, but centered in slice direction
 		double xyz[] = {
-				v.getX() + origin[0],
-				v.getY() + origin[1],
-				v.getZ() + origin[2],
+				v.getX() + origin[X_OFFS],
+				v.getY() + origin[Y_OFFS],
+				v.getZ() + origin[Z_OFFS],
 		};
 		xyz[sliceDirection.index()] += 0.5;
 		return new MicrometerXyz(
-				xyz[0] * getVoxelMicrometers()[0],
-				xyz[1]  * getVoxelMicrometers()[1],				
-				xyz[2]  * getVoxelMicrometers()[2]);
+				xyz[0] * getVoxelMicrometers()[X_OFFS],
+				xyz[1] * getVoxelMicrometers()[Y_OFFS],				
+				xyz[2] * getVoxelMicrometers()[Z_OFFS]);
 	}
-	public VoxelXyz voxelXyzForMicrometerXyz(MicrometerXyz m) {
+
+    public MicrometerXyz micrometerXyzForVoxelXyzMatrix(VoxelXyz v, CoordinateAxis sliceDirection) {
+        establishConversionMatrices();
+        double[] rawVoxels = new double[] {
+            v.getX(), v.getY(), v.getZ(), 1.0
+        };
+        rawVoxels[sliceDirection.index()] += 0.5;
+        Matrix voxels = new Matrix(rawVoxels, 4);
+        Matrix result = getVoxToMicronMatrix().times(voxels);
+        double[][] resultArr = result.getArray();
+        MicrometerXyz m = new MicrometerXyz( 
+                resultArr[X_OFFS][0],
+                resultArr[Y_OFFS][0], 
+                resultArr[Z_OFFS][0] 
+        );
+        return m;
+    }
+
+	public VoxelXyz voxelXyzForMicrometerXyz(MicrometerXyz m) {        
 		return new VoxelXyz(
-				(int)Math.floor(m.getX() / getVoxelMicrometers()[0]) - origin[0],
-				(int)Math.floor(m.getY() / getVoxelMicrometers()[1]) - origin[1],
-				(int)Math.floor(m.getZ() / getVoxelMicrometers()[2]) - origin[2]);
+				(int)Math.floor(m.getX() / getVoxelMicrometers()[X_OFFS]) - origin[X_OFFS],
+				(int)Math.floor(m.getY() / getVoxelMicrometers()[Y_OFFS]) - origin[Y_OFFS],
+				(int)Math.floor(m.getZ() / getVoxelMicrometers()[Z_OFFS]) - origin[Z_OFFS]);
 	}
-	
+    
+    public VoxelXyz voxelXyzForMicrometerXyzMatrix(MicrometerXyz m) {
+        establishConversionMatrices();
+        double[] rawMicrons = new double[] {
+            m.getX(), m.getY(), m.getZ(), 1.0
+        };
+        Matrix microns = new Matrix(rawMicrons, 4);
+        Matrix result = getMicronToVoxMatrix().times(microns);
+        return new VoxelXyz( (int)result.get(0, 0), (int)result.get(1, 0), (int)result.get(2, 0) );
+    }
+    
 	public VoxelXyz voxelXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis) {
 		int zoomFactor = z.getZoomLevel().getZoomOutFactor();
 		int xyz[] = {z.getX(), z.getY(), z.getZ()};
@@ -352,8 +563,30 @@ public class TileFormat
 				continue; // don't zoom on slice axis in quadtree mode
 			xyz[i] *= zoomFactor;
 		}
-		return new VoxelXyz(xyz[0], xyz[1], xyz[2]);
+		return new VoxelXyz(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
+    
+    public Vec3 voxelVec3ForMicronVec3(Vec3 micronVec3) {
+        MicrometerXyz micrometerXyz = new MicrometerXyz(micronVec3.getX(), micronVec3.getY(), micronVec3.getZ());
+        VoxelXyz vox = voxelXyzForMicrometerXyz(micrometerXyz);
+        return new Vec3( vox.getX(), vox.getY(), vox.getZ() );
+    }
+    
+    public TileFormat.MicrometerXyz micrometerXyzForZoomedVoxelIndex( ZoomedVoxelIndex zv, CoordinateAxis axis ) {
+        TileFormat.VoxelXyz vx = voxelXyzForZoomedVoxelIndex(zv, axis);
+        return micrometerXyzForVoxelXyz(vx, axis);
+    }
+    
+    public Vec3 micronVec3ForVoxelVec3Cornered( Vec3 voxelVec3 ) {
+        TileFormat.VoxelXyz vox = new TileFormat.VoxelXyz(voxelVec3);
+        TileFormat.MicrometerXyz micron = micrometerXyzForVoxelXyz(vox, CoordinateAxis.Z);
+        return new Vec3( micron.getX(), micron.getY(), micron.getZ() );
+    }
+    
+    public Vec3 micronVec3ForVoxelVec3Centered( Vec3 voxelVec3 ) {
+        return micronVec3ForVoxelVec3Cornered( voxelVec3 ).plus( new Vec3( 0.5*voxelMicrometers[0], 0.5*voxelMicrometers[1], -0.5*voxelMicrometers[2] ));
+    }
+    
 	public ZoomedVoxelIndex zoomedVoxelIndexForVoxelXyz(VoxelXyz v, ZoomLevel zoomLevel, CoordinateAxis sliceAxis) 
 	{
 		int zoomFactor = zoomLevel.getZoomOutFactor();
@@ -364,7 +597,7 @@ public class TileFormat
 				continue; // don't zoom on slice axis in quadtree mode
 			xyz[i] /= zoomFactor;
 		}
-		return new ZoomedVoxelIndex(zoomLevel, xyz[0], xyz[1], xyz[2]);
+		return new ZoomedVoxelIndex(zoomLevel, xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
 	
 	/**
@@ -384,10 +617,10 @@ public class TileFormat
 		}
 		// Invert Y axis to convert to Raveler convention from image convention.
 		int zoomFactor = zoomLevel.getZoomOutFactor();
-		int maxZoomVoxelY = volumeSize[1] / zoomFactor;
-		xyz[1] = maxZoomVoxelY - xyz[1] - getTileSize()[1];
+		int maxZoomVoxelY = volumeSize[Y_OFFS] / zoomFactor;
+		xyz[1] = maxZoomVoxelY - xyz[Y_OFFS] - getTileSize()[Y_OFFS];
 		//
-		return new ZoomedVoxelIndex(zoomLevel, xyz[0], xyz[1], xyz[2]);
+		return new ZoomedVoxelIndex(zoomLevel, xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
 	/**
 	 * TileIndex xyz containing ZoomedVoxel
@@ -400,7 +633,7 @@ public class TileFormat
 		int xyz[] = {z.getX(), z.getY(), z.getZ()};
 		// Invert Y axis to convert to Raveler convention from image convention.
 		int zoomFactor = z.getZoomLevel().getZoomOutFactor();
-		int maxZoomVoxelY = volumeSize[1] / zoomFactor - 1;
+		int maxZoomVoxelY = volumeSize[Y_OFFS] / zoomFactor - 1;
 		xyz[1] = maxZoomVoxelY - xyz[1];
 		int depthAxis = sliceAxis.index();
 		for (int i = 0; i < 3; ++i) {
@@ -409,9 +642,22 @@ public class TileFormat
 			else
 				xyz[i] = xyz[i]/getTileSize()[i]; // scale horizontal and vertical
 		}
-		return new TileXyz(xyz[0], xyz[1], xyz[2]);
+		return new TileXyz(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
-	
+    
+    /** 
+     * convenience: return a centered-up version of the micrometer value.
+     * Use this whenever micrometer values need to be pushed onto the screen.
+     */
+    public Vec3 centerJustifyMicrometerCoordsAsVec3(MicrometerXyz microns) {
+        Vec3 v = new Vec3(
+                // Translate from upper left front corner of voxel to center of voxel
+                microns.getX() + 0.5 * voxelMicrometers[0],
+                microns.getY() + 0.5 * voxelMicrometers[1],
+                microns.getZ() - 0.5 * voxelMicrometers[2]);
+        return v;
+    }
+
 	// Volume units can be one of 4 interconvertible types
 	// These classes are intended to enforce type safety between different unit types
 	public static interface Unit {}; // Base unit
@@ -426,19 +672,19 @@ public class TileFormat
 		private int data[] = new int[3];
 		
 		public UnittedVec3Int(int x, int y, int z) {
-			data[0] = x;
-			data[1] = y;
-			data[2] = z;
+			data[X_OFFS] = x;
+			data[Y_OFFS] = y;
+			data[Z_OFFS] = z;
 		}
 		
 		@Override
 		public UnittedVec3Int<U> clone() {
-			return new UnittedVec3Int<U>(data[0], data[1], data[2]);
+			return new UnittedVec3Int<U>(data[X_OFFS], data[1], data[2]);
 		}
 		
-		public int getX() {return data[0];}
-		public int getY() {return data[1];}
-		public int getZ() {return data[2];}
+		public int getX() {return data[X_OFFS];}
+		public int getY() {return data[Y_OFFS];}
+		public int getZ() {return data[Z_OFFS];}
 	}; 
 	
 	public static class UnittedVec3Double<U extends Unit> 
@@ -447,19 +693,19 @@ public class TileFormat
 		private double data[] = new double[3];
 		
 		public UnittedVec3Double(double x, double y, double z) {
-			data[0] = x;
-			data[1] = y;
-			data[2] = z;
+			data[X_OFFS] = x;
+			data[Y_OFFS] = y;
+			data[Z_OFFS] = z;
 		}
 		
 		@Override
 		public UnittedVec3Double<U> clone() {
-			return new UnittedVec3Double<U>(data[0], data[1], data[2]);
+			return new UnittedVec3Double<U>(data[X_OFFS], data[Y_OFFS], data[Z_OFFS]);
 		}
 		
-		public double getX() {return data[0];}
-		public double getY() {return data[1];}
-		public double getZ() {return data[2];}
+		public double getX() {return data[X_OFFS];}
+		public double getY() {return data[Y_OFFS];}
+		public double getZ() {return data[Z_OFFS];}
 	}; 
 	
 	// Base
@@ -470,7 +716,9 @@ public class TileFormat
 	
 	public static class VoxelXyz extends UnittedVec3Int<VoxelUnit> 
 	{
+		public VoxelXyz(Vec3 coords) {super((int)coords.getX(), (int)coords.getY(), (int)coords.getZ());}
 		public VoxelXyz(int x, int y, int z) {super(x, y, z);}
+        public VoxelXyz(int[] xyz) {super(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);}
 	}; // 2
 	
 	/* OBSOLETED in favor of ...octree.ZoomedVoxelIndex
@@ -485,4 +733,45 @@ public class TileFormat
 		public TileXyz(int x, int y, int z) {super(x, y, z);}		
 	} // 4
 
+    @SuppressWarnings("unused")
+    private void bbToScreenScenarioDump(ViewBoundingBox screenBoundaries, BoundingBox3d bb, int viewWidth, int viewHeight) {
+        System.out.println("================================================");
+        System.out.println("SCENARIO: TileFormat.boundingBoxToScreenBounds()");
+        System.out.println("View width=" + viewWidth + ", View Height=" + viewHeight);
+        System.out.println( screenBoundaries );
+        System.out.println( bb.toString() );
+    }
+    
+    private double calcLowerBBCoord(int index) {
+        //sv[1]*s0[1]
+        return getVoxelMicrometers()[index] * getOrigin()[index];
+    }
+    
+    private double calcUpperBBCoord(int index) {
+        //double sv[] = getVoxelMicrometers();
+		//int s0[] = getOrigin();
+		//int s1[] = getVolumeSize();
+        //sv[1]*(s0[1]+s1[1])
+        return getVoxelMicrometers()[index] * (getOrigin()[index] + getVolumeSize()[index]);
+    }
+    
+    /** Lazily initialize matrices to move between voxel and stage/micron. */
+    private void establishConversionMatrices() {
+        if (this.micronToVoxMatrix == null  &&  ( origin[X_OFFS] > 0.00001 )) {
+            double[][] voxToMicronArr = new double[][] {
+                {voxelMicrometers[X_OFFS], 0.0, 0.0, origin[X_OFFS] * voxelMicrometers[X_OFFS]},
+                {0.0, voxelMicrometers[Y_OFFS], 0.0, origin[Y_OFFS] * voxelMicrometers[Y_OFFS]},
+                {0.0, 0.0, voxelMicrometers[Z_OFFS], origin[Z_OFFS] * voxelMicrometers[Z_OFFS]},
+                {0.0, 0.0, 0.0, 1.0}
+            };
+            setVoxToMicronMatrix(new Matrix(voxToMicronArr));
+            double[][] micronToVoxArr = new double[][]{
+                {1.0 / voxelMicrometers[X_OFFS], 0.0, 0.0, -origin[X_OFFS]},
+                {0.0, 1.0 / voxelMicrometers[Y_OFFS], 0.0, -origin[Y_OFFS]},
+                {0.0, 0.0, 1.0 / voxelMicrometers[Z_OFFS], -origin[Z_OFFS]},
+                {0.0, 0.0, 0.0, 1.0}
+            };
+            setMicronToVoxMatrix(new Matrix(micronToVoxArr));
+        }
+    }
 }

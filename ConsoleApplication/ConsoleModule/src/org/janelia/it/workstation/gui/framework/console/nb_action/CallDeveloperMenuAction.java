@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import org.openide.awt.ActionID;
@@ -19,13 +14,14 @@ import java.awt.event.ActionEvent;
         id = "CallDeveloperMenuAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_CallDeveloperMenuAction"
+        displayName = "#CTL_CallDeveloperMenuAction",
+        lazy = false
 )
 @ActionReference(path = "Menu/Help", position = 100)
 @Messages("CTL_CallDeveloperMenuAction=Contact A Developer")
 public final class CallDeveloperMenuAction extends AbstractAction implements Presenter.Menu {
 
-    private JMenu subMenu = new JMenu("Contact A Developer");
+    private final JMenu subMenu = new JMenu("Contact A Developer");
     
     public CallDeveloperMenuAction() {
         subMenu.add(new JMenuItem("Call Christopher - x4662"));

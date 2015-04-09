@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.framework.actions;
 
+import java.util.ArrayList;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
@@ -11,7 +12,6 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -21,6 +21,9 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.util.List;
 import java.util.concurrent.Callable;
+import org.janelia.it.jacs.model.util.PermissionTemplate;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 
 /**
  * This action creates and saves an annotation, and adds a corresponding tag to the currently selected item in an IconDemoPanel.
@@ -29,7 +32,7 @@ import java.util.concurrent.Callable;
  */
 public class AnnotateAction extends OntologyElementAction {
 	
-	private static final Logger log = LoggerFactory.getLogger(AnnotateAction.class);
+    private static final Logger log = LoggerFactory.getLogger(AnnotateAction.class);
 	
     private Callable<Void> doSuccess = null;
 
@@ -55,14 +58,26 @@ public class AnnotateAction extends OntologyElementAction {
         }
         
         ontologyOutline.navigateToOntologyElement(element);
-        final List<RootedEntity> selectedEntities = SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectedEntities();
         
-        if (selectedEntities.isEmpty()) {
+        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
+        final List<String> selectedEntityIds = esm.getSelectedEntitiesIds(esm.getActiveCategory());
+        
+        if (selectedEntityIds.isEmpty()) {
             // Cannot annotate nothing
             log.warn("AnnotateAction called without an entity being selected");
             return;
         }
 
+        final List<Entity> selectedEntities = new ArrayList<>();
+        for(String selectedEntityId : selectedEntityIds) {
+            try {
+                selectedEntities.add(ModelMgr.getModelMgr().getEntityById(EntityUtils.getEntityIdFromUniqueId(selectedEntityId)));    
+            }
+            catch (Exception e) {
+                SessionMgr.getSessionMgr().handleException(e);
+            }
+        }
+        
         final OntologyElementType type = element.getType();
 
         if (type instanceof Category || type instanceof Enum) {
@@ -119,29 +134,29 @@ public class AnnotateAction extends OntologyElementAction {
         
         final OntologyElement finalTerm = element;
         final Object finalValue = value;
-        
+
         SimpleWorker worker = new SimpleWorker() {
 
-			@Override
-			protected void doStuff() throws Exception {
-				int i=1;
-		        for(RootedEntity rootedEntity : selectedEntities) {
-		        	Entity entity = rootedEntity.getEntity();
-		        	doAnnotation(entity, finalTerm, finalValue);
-		            setProgress(i++, selectedEntities.size());
-		        }
-			}
+            @Override
+            protected void doStuff() throws Exception {
+                int i = 1;
+                for (Entity entity : selectedEntities) {
+                    if (EntityUtils.isVirtual(entity)) continue;
+                    doAnnotation(entity, finalTerm, finalValue);
+                    setProgress(i++, selectedEntities.size());
+                }
+            }
 
-			@Override
-			protected void hadSuccess() {
-			    ConcurrentUtils.invokeAndHandleExceptions(doSuccess);
-			}
+            @Override
+            protected void hadSuccess() {
+                ConcurrentUtils.invokeAndHandleExceptions(doSuccess);
+            }
 
-			@Override
-			protected void hadError(Throwable error) {
-				SessionMgr.getSessionMgr().handleException(error);
-			}
-        	
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+
         };
 
         worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Adding annotations", "", 0, 100));
@@ -168,13 +183,24 @@ public class AnnotateAction extends OntologyElementAction {
         AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
         Long sessionId = (null != session) ? session.getId() : null;
 
-        Long keyEntityId = (keyEntity == null) ? null : keyEntity.getId();
+        Long keyEntityId = keyEntity.getId();
         Long valueEntityId = (valueEntity == null) ? null : valueEntity.getId();
 
         final OntologyAnnotation annotation = new OntologyAnnotation(
         		sessionId, targetEntity.getId(), keyEntityId, keyString, valueEntityId, valueString);
 
+        createAndShareAnnotation(annotation);
+    }
+    
+    private void createAndShareAnnotation(OntologyAnnotation annotation) throws Exception {
+        
         Entity annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
         log.info("Saved annotation as " + annotationEntity.getId());
+        
+        PermissionTemplate template = SessionMgr.getBrowser().getAutoShareTemplate();
+        if (template!=null) {
+            ModelMgr.getModelMgr().grantPermissions(annotationEntity.getId(), template.getSubjectKey(), template.getPermissions(), false);
+            log.info("Auto-shared annotation with " + template.getSubjectKey());
+        }
     }
 }

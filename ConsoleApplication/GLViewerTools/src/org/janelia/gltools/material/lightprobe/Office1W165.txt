@@ -1,0 +1,2 @@
+Both LightProbe and Diffuse images are normalized to have a maximum (16-bit) intensity near 65535.
+But the true maximum brightness in the LightProbe image is 34.8 times brighter than the maximum brightness of the Diffuse image.

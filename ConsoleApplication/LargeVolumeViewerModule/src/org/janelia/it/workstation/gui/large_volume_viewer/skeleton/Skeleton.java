@@ -5,23 +5,21 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.HistoryStack;
-import org.janelia.it.workstation.signal.Signal;
-import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot;
-import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Skeleton {
 	@SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(Skeleton.class);
-	
+
 	/**
 	 * AnchorSeed holds enough data to nucleate a new Anchor.
-	 * So I can send multiple values in a single argument for Signal1/Slot1.
+	 * So I can send multiple values in a single argument to events.
 	 * @author brunsc
 	 *
 	 */
@@ -29,8 +27,20 @@ public class Skeleton {
 		private Vec3 location;
 		private Anchor parent;
 
-		public AnchorSeed(Vec3 location, Anchor parent) {
-			this.location = location;
+		public AnchorSeed(Vec3 locationInMicrometers, Anchor parent) {
+            TileFormat.VoxelXyz locationInVoxels = 
+                tileFormat.voxelXyzForMicrometerXyz(
+                    new TileFormat.MicrometerXyz(
+                            locationInMicrometers.getX(),
+                            locationInMicrometers.getY(),
+                            locationInMicrometers.getZ()
+                    )
+            );
+			this.location = new Vec3( 
+                    locationInVoxels.getX(), 
+                    locationInVoxels.getY(), 
+                    locationInVoxels.getZ() 
+            );
 			this.parent = parent;
 		}
 		
@@ -45,176 +55,22 @@ public class Skeleton {
 		}
 	};
 	
-	private Set<Anchor> anchors = new LinkedHashSet<Anchor>();
+    private SkeletonController controller;
+    private TileFormat tileFormat;
+
+	private Set<Anchor> anchors = new LinkedHashSet<>();
 	
 	private Map<SegmentIndex, AnchoredVoxelPath> tracedSegments =
-			new ConcurrentHashMap<SegmentIndex, AnchoredVoxelPath>();
+			new ConcurrentHashMap<>();
 	
-	private Map<Long, Anchor> anchorsByGuid = new HashMap<Long, Anchor>();
+	private Map<Long, Anchor> anchorsByGuid = new HashMap<>();
 	// TODO - anchor browsing history should maybe move farther back
-	private HistoryStack<Anchor> anchorHistory = new HistoryStack<Anchor>();
+	private HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
 
-	public Signal skeletonChangedSignal = new Signal();
-	public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
-    public Signal1<Anchor> addEditNoteRequestedSignal = new Signal1<>();
-
-	// API for synchronizing with back end database
-	// after discussion with Don Olbris July 8, 2013
-	// 
-	///// ADD
-	public Signal1<AnchorSeed> addAnchorRequestedSignal = 
-			new Signal1<AnchorSeed>();
-	// Response from database
-	public Slot1<TmGeoAnnotation> addAnchorSlot = new Slot1<TmGeoAnnotation>() {
-		@Override
-		public void execute(TmGeoAnnotation tga) {
-			Vec3 location = new Vec3(tga.getX(), tga.getY(), tga.getZ());
-			Anchor parentAnchor = anchorsByGuid.get(tga.getParentId());
-			Anchor anchor = new Anchor(location, parentAnchor);
-			anchor.setGuid(tga.getId());
-			addAnchor(anchor);
-		}
-	};
-    /**
-     * add multiple anchors at once; in the input list, every annotation must
-     * appear later in the list than its parent, or the connecting lines won't
-     * be drawn correctly
-     */
-    public Slot1<List<TmGeoAnnotation>> addAnchorsSlot = new Slot1<List<TmGeoAnnotation>>() {
-        @Override
-        public void execute(List<TmGeoAnnotation> annotationList) {
-            List<Anchor> anchorList = new ArrayList<Anchor>();
-            Map<Long, Anchor> tempAnchorsByGuid = new HashMap<Long, Anchor>();
-            for (TmGeoAnnotation ann: annotationList) {
-                Vec3 location = new Vec3(ann.getX(), ann.getY(), ann.getZ());
-
-                // anchorsByGuid isn't populated until the next call, so we
-                //  need to check for parents in the batch we're adding as
-                //  well; this is a bit redundant, but it maintatins the
-                //  separation; this slot only prepares a list, it doesn't
-                //  write to any of Skeleton's data structures
-                Anchor parentAnchor = anchorsByGuid.get(ann.getParentId());
-                if (parentAnchor == null) {
-                    // check our batch, too
-                    parentAnchor = tempAnchorsByGuid.get(ann.getParentId());
-                }
-
-                Anchor anchor = new Anchor(location, parentAnchor);
-                anchor.setGuid(ann.getId());
-                tempAnchorsByGuid.put(anchor.getGuid(), anchor);
-                anchorList.add(anchor);
-            }
-            addAnchors(anchorList);
-        }
-    };
-	// AFTER anchor has already been added (not simply requested)
-	public Signal1<Anchor> anchorAddedSignal = new Signal1<Anchor>();
-
-	///// DELETE
-	// Anchor deletion
-    public Signal1<Anchor> linkDeleteRequestedSignal = new Signal1<Anchor>();
-	public Signal1<Anchor> subtreeDeleteRequestedSignal =
-			new Signal1<Anchor>();
-	public Slot1<TmGeoAnnotation> deleteAnchorSlot = new Slot1<TmGeoAnnotation>() {
-		@Override
-		public void execute(TmGeoAnnotation tga) {
-			Anchor anchor = anchorsByGuid.get(tga.getId());
-			if (anchor == null)
-				return;
-			delete(anchor);
-		}
-	};
-    public Slot1<TmGeoAnnotation> reparentAnchorSlot = new Slot1<TmGeoAnnotation>() {
-        @Override
-        public void execute(TmGeoAnnotation annotation) {
-            Anchor anchor = anchorsByGuid.get(annotation.getId());
-            HashSet<Long> annotationNeighbors = new HashSet<Long>(annotation.getChildIds().size() + 1);
-            for (Long childId: annotation.getChildIds()) {
-                annotationNeighbors.add(childId);
-            }
-            // might be reparented to have no parent:
-            if (!annotation.isRoot()) {
-                annotationNeighbors.add(annotation.getParentId());
-            }
-
-            updateNeighbors(anchor, annotationNeighbors);
-        }
-    };
-	public Slot1<Anchor> deleteAnchorShortCircuitSlot = new Slot1<Anchor>() {
-		@Override
-		public void execute(Anchor anchor) {delete(anchor);}
-	};
-	public Signal1<Anchor> anchorDeletedSignal = new Signal1<Anchor>();
-    public Signal1<Anchor> anchorReparentedSignal = new Signal1<Anchor>();
-    public Signal1<Anchor> anchorNeighborsUpdatedSignal = new Signal1<Anchor>();
-
-    ///// split anchor
-    public Signal1<Anchor> splitAnchorRequestedSignal = new Signal1<Anchor>();
-
-    ///// reroot
-    public Signal1<Anchor> rerootNeuriteRequestedSignal = new Signal1<Anchor>();
-
-    ///// split neurite
-    public Signal1<Anchor> splitNeuriteRequestedSignal = new Signal1<Anchor>();
-
-	///// CLEAR
-	public Slot clearSlot = new Slot() {
-		@Override
-		public void execute() {
-			clear();
-		}
-	};
-	public Signal clearedSignal = new Signal();
-
-	///// MOVE
-	public Signal1<Anchor> anchorMovedSignal = new Signal1<Anchor>();
-	public Signal1<Anchor> anchorMovedSilentSignal = new Signal1<Anchor>();
-	public Slot1<TmGeoAnnotation> moveAnchorBackSlot = new Slot1<TmGeoAnnotation>() {
-		@Override
-		public void execute(TmGeoAnnotation tga) {
-			Anchor anchor = anchorsByGuid.get(tga.getId());
-			if (anchor == null)
-				return;
-			anchor.setLocationSilent(new Vec3(tga.getX(), tga.getY(), tga.getZ()));
-		}
-	};
-
-    public Slot1<AnchoredVoxelPath> addAnchoredPathSlot = new Slot1<AnchoredVoxelPath>() {
-        @Override
-        public void execute(AnchoredVoxelPath path) {
-            addTracedSegment(path);
-        }
-    };
-
-    public Slot1<List<AnchoredVoxelPath>> addAnchoredPathsSlot = new Slot1<List<AnchoredVoxelPath>>() {
-        @Override
-        public void execute(List<AnchoredVoxelPath> pathList) {
-            addTracedSegments(pathList);
-        }
-    };
-
-    public Slot1<AnchoredVoxelPath> removeAnchoredPathSlot = new Slot1<AnchoredVoxelPath>() {
-        @Override
-        public void execute(AnchoredVoxelPath path) {
-            removeTracedSegment(path);
-        }
-    };
-
-	public Skeleton() {
-		// Don't make this connection when using workstation database
-		// addAnchorRequestedSignal.connect(addShortCircuitAnchorSlot);
-		// subtreeDeleteRequestedSignal.connect(deleteAnchorShortCircuitSlot); // TODO remove
-		//
-		// once anchor changes are persisted in db, we get signals:
-		anchorAddedSignal.connect(skeletonChangedSignal);
-		anchorDeletedSignal.connect(skeletonChangedSignal);
-        anchorReparentedSignal.connect(skeletonChangedSignal);
-        anchorNeighborsUpdatedSignal.connect(skeletonChangedSignal);
-		anchorMovedSignal.connect(skeletonChangedSignal);
-		anchorMovedSilentSignal.connect(skeletonChangedSignal);
-		// log.info("Skeleton constructor");
-	}
-	
+    public void setController(SkeletonController controller) {
+        this.controller = controller;
+    }
+    
 	public Anchor addAnchor(Anchor anchor) {
 		if (anchors.contains(anchor))
 			return anchor;
@@ -222,15 +78,19 @@ public class Skeleton {
 		Long guid = anchor.getGuid();
 		if (guid != null)
 			anchorsByGuid.put(guid, anchor);
-		anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
-		anchor.anchorMovedSignal.connect(this.anchorMovedSignal);
-		anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
-		anchor.anchorMovedSilentSignal.connect(this.anchorMovedSilentSignal);
 		anchorHistory.push(anchor);
-		anchorAddedSignal.emit(anchor);
+        controller.annotationSelected(guid);
+
 		return anchor;
 	}
 
+    /**
+     * @param tileFormat the tileFormat to set
+     */
+    public void setTileFormat(TileFormat tileFormat) {
+        this.tileFormat = tileFormat;
+    }
+	
 	public void addAnchors(List<Anchor> anchorList) {
         for (Anchor anchor: anchorList) {
             if (anchors.contains(anchor))
@@ -239,33 +99,14 @@ public class Skeleton {
             Long guid = anchor.getGuid();
             if (guid != null)
                 anchorsByGuid.put(guid, anchor);
-            anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
-            anchor.anchorMovedSignal.connect(this.anchorMovedSignal);
-            anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
-            anchor.anchorMovedSilentSignal.connect(this.anchorMovedSilentSignal);
             anchorHistory.push(anchor);
         }
-        // this is a bit of a cheat; I send one anchor knowing that it's
-        //  never used--the whole skeleton gets updated, and that's what
-        //  I want since I've potentially added many anchors
-        anchorAddedSignal.emit(anchorList.get(0));
 	}
 
 	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {
-		addAnchorRequestedSignal.emit(new AnchorSeed(xyz, parent));
+        controller.anchorAdded(new AnchorSeed(xyz, parent));
 	}
 
-	public void clear() {
-		if (anchors.size() == 0) {
-			return; // no change
-		}
-		anchors.clear();
-		anchorsByGuid.clear();
-		anchorHistory.clear();
-		clearedSignal.emit();
-		skeletonChangedSignal.emit();
-	}
-	
 	public boolean connect(Anchor anchor1, Anchor anchor2) {
 		if (! anchors.contains(anchor1))
 			return false;
@@ -273,32 +114,40 @@ public class Skeleton {
 			return false;
 		if (! anchor1.addNeighbor(anchor2))
 			return false;
-		skeletonChangedSignal.emit();
+        controller.skeletonChanged();
 		return true;
 	}
-
+    
     public void deleteLinkRequest(Anchor anchor) {
-        linkDeleteRequestedSignal.emit(anchor);
+        controller.deleteLinkRequested(anchor);
     }
 
-    public void deleteSubtreeRequest(Anchor anchor){
-        subtreeDeleteRequestedSignal.emit(anchor);
+    public void deleteSubtreeRequest(Anchor anchor){        
+        controller.deleteSubtreeRequested(anchor);
     }
 
     public void splitAnchorRequest(Anchor anchor) {
-        splitAnchorRequestedSignal.emit(anchor);
+        controller.splitAnchorRequested(anchor);
     }
 
     public void rerootNeuriteRequest(Anchor anchor) {
-        rerootNeuriteRequestedSignal.emit(anchor);
+        controller.rerootNeuriteRequested(anchor);
     }
 
     public void addEditNoteRequest(Anchor anchor) {
-        addEditNoteRequestedSignal.emit(anchor);
+        controller.addEditNoteRequested(anchor);
+    }
+
+    public void changeNeuronStyle(Anchor anchor) {
+        controller.changeNeuronStyleRequested(anchor);
+    }
+
+    public void setNeuronVisitility(Anchor anchor, boolean visibility) {
+        controller.setNeuronVisibilityRequested(anchor, visibility);
     }
 
     public void splitNeuriteRequest(Anchor anchor) {
-        splitNeuriteRequestedSignal.emit(anchor);
+        controller.splitNeuriteRequested(anchor);
     }
 
 	public boolean delete(Anchor anchor) {
@@ -316,13 +165,90 @@ public class Skeleton {
 			anchorsByGuid.remove(guid);
 		//
 		anchorHistory.remove(anchor);
-		//
-		anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
-		anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
-		anchorDeletedSignal.emit(anchor);
 		return true;
 	}
 
+    /** Relay from external callers. */
+    public void skeletonChanged() {
+        controller.skeletonChanged();
+    }
+
+    //---------------------Servicing TmGeoAnnotation anchor changes
+    public Anchor addTmGeoAnchor(TmGeoAnnotation tga) {
+        Vec3 location = new Vec3(tga.getX(), tga.getY(), tga.getZ());
+        Anchor parentAnchor = anchorsByGuid.get(tga.getParentId());
+        Anchor anchor = new Anchor(location, parentAnchor, tga.getNeuronId(), tileFormat);
+        anchor.setGuid(tga.getId());
+        addAnchor(anchor);
+        return anchor;
+    }
+    
+    public List<Anchor> addTmGeoAnchors(List<TmGeoAnnotation> annotationList) {
+        List<Anchor> anchorList = new ArrayList<Anchor>();
+        Map<Long, Anchor> tempAnchorsByGuid = new HashMap<Long, Anchor>();
+        for (TmGeoAnnotation ann : annotationList) {
+            Vec3 location = new Vec3(ann.getX(), ann.getY(), ann.getZ());
+
+            // anchorsByGuid isn't populated until the next call, so we
+            //  need to check for parents in the batch we're adding as
+            //  well; this is a bit redundant, but it maintatins the
+            //  separation; this observer only prepares a list, it doesn't
+            //  write to any of Skeleton's data structures
+            Anchor parentAnchor = anchorsByGuid.get(ann.getParentId());
+            if (parentAnchor == null) {
+                // check our batch, too
+                parentAnchor = tempAnchorsByGuid.get(ann.getParentId());
+            }
+
+            Anchor anchor = new Anchor(location, parentAnchor, ann.getNeuronId(), tileFormat);
+            anchor.setGuid(ann.getId());
+            tempAnchorsByGuid.put(anchor.getGuid(), anchor);
+            anchorList.add(anchor);
+        }
+        addAnchors(anchorList);
+        return anchorList;
+    }
+    
+    public void deleteTmGeoAnchor(TmGeoAnnotation tga) {
+        Anchor anchor = anchorsByGuid.get(tga.getId());
+        if (anchor == null) {
+            return;
+        }
+        delete(anchor);
+    }
+    
+    public void reparentTmGeoAnchor(TmGeoAnnotation annotation) {
+        Anchor anchor = anchorsByGuid.get(annotation.getId());
+        HashSet<Long> annotationNeighbors = new HashSet<Long>(annotation.getChildIds().size() + 1);
+        for (Long childId : annotation.getChildIds()) {
+            annotationNeighbors.add(childId);
+        }
+        // might be reparented to have no parent:
+        if (!annotation.isRoot()) {
+            annotationNeighbors.add(annotation.getParentId());
+        }
+
+        updateNeighbors(anchor, annotationNeighbors);
+    }
+    
+    public void moveTmGeoAnchorBack(TmGeoAnnotation tga) {
+        Anchor anchor = anchorsByGuid.get(tga.getId());
+        if (anchor == null) {
+            return;
+        }
+        final Vec3 voxelVec3 = new Vec3(tga.getX(), tga.getY(), tga.getZ());
+        anchor.setLocationSilent(tileFormat.micronVec3ForVoxelVec3Centered(voxelVec3));
+    }
+    
+	public void clear() {
+		if (anchors.size() == 0) {
+			return; // no change
+		}
+		anchors.clear();
+		anchorsByGuid.clear();
+		anchorHistory.clear();
+	}
+	
     /** given an anchor, update its neighbors to match the input set of
      * IDs; intended to keep an anchor's hierarchy in sync with the
      * annotations in the db; note that the update is bidirectional,
@@ -359,14 +285,16 @@ public class Skeleton {
             removeAnchor.getNeighbors().remove(anchor);
         }
 
-        anchorNeighborsUpdatedSignal.emit(anchor);
-
     }
 
 	public Set<Anchor> getAnchors() {
 		return anchors;
 	}
-	
+
+    public Anchor getAnchorByID(Long anchorID) {
+        return anchorsByGuid.get(anchorID);
+    }
+
 	public HistoryStack<Anchor> getHistory() {
 		return anchorHistory;
 	}
@@ -381,7 +309,7 @@ public class Skeleton {
             // no parent
             return;
 
-        pathTraceRequestedSignal.emit(anchor.getGuid());
+        controller.pathTraceRequested(anchor.getGuid());
     }
 
 	public void addTracedSegment(AnchoredVoxelPath path)
@@ -389,7 +317,6 @@ public class Skeleton {
 	    SegmentIndex ix = path.getSegmentIndex();
 		tracedSegments.put(ix, path);
 		// log.info("tracedSegments.size() [300] = "+tracedSegments.size());
-		skeletonChangedSignal.emit();
 	}
 
     public void addTracedSegments(List<AnchoredVoxelPath> pathList) {
@@ -397,13 +324,11 @@ public class Skeleton {
             SegmentIndex ix = path.getSegmentIndex();
             tracedSegments.put(ix, path);
         }
-        skeletonChangedSignal.emit();
     }
 
     public void removeTracedSegment(AnchoredVoxelPath path) {
         SegmentIndex ix = path.getSegmentIndex();
         tracedSegments.remove(ix);
-        skeletonChangedSignal.emit();
     }
 
 	public Collection<AnchoredVoxelPath> getTracedSegments() {

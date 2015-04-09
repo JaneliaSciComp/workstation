@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tracks the state of entity selections in a set of different viewers. All entities are referred to by a String,
@@ -13,6 +15,8 @@ import java.util.Map;
  */
 public class EntitySelectionModel {
 
+    private static final Logger log = LoggerFactory.getLogger(EntitySelectionModel.class);
+    
     public static final String CATEGORY_OUTLINE = "outline";
     public static final String CATEGORY_MAIN_VIEW = "mainViewer";
     public static final String CATEGORY_SEC_VIEW = "secViewer";
@@ -22,7 +26,8 @@ public class EntitySelectionModel {
 
     private final Map<String, List<String>> selectionModels = new HashMap<>();
     private final List<String> latestGlobalSelection = new ArrayList<>();
-
+    private String activeCategory;
+    
     public EntitySelectionModel() {
         selectionModels.put(CATEGORY_OUTLINE, new ArrayList<String>());
         selectionModels.put(CATEGORY_MAIN_VIEW, new ArrayList<String>());
@@ -40,6 +45,10 @@ public class EntitySelectionModel {
         return selected;
     }
 
+    public String getActiveCategory() {
+        return activeCategory;
+    }
+    
     public void deselectAll(String category) {
         List<String> selected = getCategory(category);
         selected.clear();
@@ -47,8 +56,16 @@ public class EntitySelectionModel {
             latestGlobalSelection.clear();
         }
     }
+    
+    public boolean isSelected(String category, String identifier) {
+        List<String> selected = getCategory(category);
+        return selected.contains(identifier);
+    }
 
     public void selectEntity(String category, String identifier, boolean clearAll) {
+        if (!CATEGORY_OUTLINE.equals(category) && !CATEGORY_ONTOLOGY.equals(category)) {
+            this.activeCategory = category;
+        }
         List<String> selected = getCategory(category);
         if (clearAll) {
             selected.clear();
@@ -75,7 +92,7 @@ public class EntitySelectionModel {
     public List<String> getSelectedEntitiesIds(String category) {
         return getCategory(category);
     }
-
+    
     public String getLastSelectedEntityIdByCategory(String category) {
         List<String> selected = getCategory(category);
         if (selected.isEmpty()) {

@@ -365,24 +365,22 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception {
-        RawFileInfo rawInfo = null;
-        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
-        if ( remoteTiledMicroscopeBean != null ) {
-            rawInfo = remoteTiledMicroscopeBean.getNearestFileInfo(basePath, viewerCoord);
-        }
-        
-        return rawInfo;
-    }
-
-    @Override
-    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int cubicDim ) throws Exception {
+    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception {
         Map<Integer,byte[]> rtnVal = null;
         final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
         if ( remoteTiledMicroscopeBean != null ) {
-            rtnVal = remoteTiledMicroscopeBean.getTextureBytes( basePath, viewerCoord, cubicDim );
+            rtnVal = remoteTiledMicroscopeBean.getTextureBytes( basePath, viewerCoord, dimensions );
         }
         return rtnVal;
     }
 
+    @Override
+    public CoordinateToRawTransform getLvvCoordToRawTransform( String basePath ) throws Exception {
+        CoordinateToRawTransform rtnVal = null;
+        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
+        if ( remoteTiledMicroscopeBean != null ) {
+            rtnVal = remoteTiledMicroscopeBean.getTransform(basePath);
+        }
+        return rtnVal;
+    }
 }

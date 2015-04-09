@@ -15,22 +15,26 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Special swing-worker for HUD 3D image load. */
 public class Hud3DController implements ActionListener {
 
-    private Hud hud;
-    private Mip3d mip3d;
+    private static final Logger log = LoggerFactory.getLogger(Hud3DController.class);
+    
+    private final Hud hud;
+    private final Mip3d mip3d;
+    private final EntityFilenameFetcher entityFilenameFetcher;
 
     private String filename;
     private JLabel busyLabel;
-    private EntityFilenameFetcher entityFilenameFetcher;
     private Load3dSwingWorker load3dSwingWorker;
 
     public Hud3DController(Hud hud, Mip3d mip3d) {
         this.hud = hud;
         this.mip3d = mip3d;
-        entityFilenameFetcher = new EntityFilenameFetcher();
+        this.entityFilenameFetcher = new EntityFilenameFetcher();
     }
 
     @Override
@@ -85,9 +89,10 @@ public class Hud3DController implements ActionListener {
             };
             try {
                 SwingUtilities.invokeAndWait( r );
-            } catch ( Exception ex ) {
+            } 
+            catch ( Exception ex ) {
                 // Showing the exception.  Not alerting user that set-to-busy actually failed.
-                ex.printStackTrace();
+                log.error("Error marking the UI as busy",ex);
             }
         }
     }

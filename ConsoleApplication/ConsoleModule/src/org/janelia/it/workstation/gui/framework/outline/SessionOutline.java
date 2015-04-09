@@ -38,6 +38,8 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 /**
  * Provides a list of Annotation Sessions and allows for their selection, deselection, editing, and deletion. 
  * 
+ * @deprecated The concept of "Annotation Sessions" is no longer supported
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class SessionOutline extends JPanel implements Refreshable, ActivatableView {

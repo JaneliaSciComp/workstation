@@ -10,10 +10,10 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.octree.ZoomLevel;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
-import org.janelia.it.workstation.signal.Signal1;
 
 import java.util.List;
 import java.util.Vector;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
 
 /**
  * this worker traces a detailed path given a request; adapted from PathTraceWorker,
@@ -24,12 +24,10 @@ import java.util.Vector;
 public class PathTraceToParentWorker extends BackgroundWorker {
 
     private PathTraceToParentRequest request;
+    private PathTraceListener pathTraceListener;
 
     // timeout in seconds
     private double timeout = 10.0;
-
-    // public Signal1<TracedPathSegment> pathTracedSignal = new Signal1<TracedPathSegment>();
-    public Signal1<AnchoredVoxelPath> pathTracedSignal = new Signal1<>();
 
     public PathTraceToParentWorker(PathTraceToParentRequest request) {
         this.request = request;
@@ -40,6 +38,10 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         this.timeout = timeout;
     }
 
+    public void setPathTraceListener(PathTraceListener l) {
+        pathTraceListener = l;
+    }
+    
     @Override
     public String getName() {
         return "trace path to parent of anchor";
@@ -54,17 +56,16 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         setStatus("Retrieving data");
         TileFormat tileFormat = request.getImageVolume().getLoadAdapter().getTileFormat();
         // A series of conversions to get to ZoomedVoxelIndex
-        Vec3 vec3_1 = request.getXyz1();
-        Vec3 vec3_2 = request.getXyz2();
-        TileFormat.MicrometerXyz um1 = new TileFormat.MicrometerXyz(vec3_1.getX(), vec3_1.getY(), vec3_1.getZ());
-        TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(vec3_2.getX(), vec3_2.getY(), vec3_2.getZ());
-        TileFormat.VoxelXyz vox1 = tileFormat.voxelXyzForMicrometerXyz(um1);
-        TileFormat.VoxelXyz vox2 = tileFormat.voxelXyzForMicrometerXyz(um2);
+        
         ZoomLevel zoomLevel = new ZoomLevel(0);
-        ZoomedVoxelIndex zv1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
-                vox1, zoomLevel, CoordinateAxis.Z);
-        ZoomedVoxelIndex zv2 = tileFormat.zoomedVoxelIndexForVoxelXyz(
-                vox2, zoomLevel, CoordinateAxis.Z);
+        Vec3 vec3_1 = request.getXyz1();
+        ZoomedVoxelIndex zv1 = zoomedVoxelIndexForVoxelVec3(
+                vec3_1, tileFormat, zoomLevel);
+
+        Vec3 vec3_2 = request.getXyz2();
+        ZoomedVoxelIndex zv2 = zoomedVoxelIndexForVoxelVec3(
+                vec3_2, tileFormat, zoomLevel);
+
         // Create some padding around the neurite ends.
         final int padPixels = 10;
         ZoomedVoxelIndex v1pad = new ZoomedVoxelIndex(
@@ -81,6 +82,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         Subvolume subvolume = new Subvolume(v1pad, v2pad, request.getImageVolume(),
                 request.getTextureCache());
         AStar astar = new AStar(subvolume);
+        astar.setVoxelSizes(tileFormat.getVoxelMicrometers());
 
         setStatus("Tracing");
         List<ZoomedVoxelIndex> path = astar.trace(zv1, zv2, timeout); // This is the slow part
@@ -90,16 +92,16 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             setStatus("Timed out");
         } else {
             //DEBUG System.out.println("Original path length: " + path.size());
-            final List<ZoomedVoxelIndex> reducedPath = simplifyPath(path);
-            if ( ! reducedPath.contains( path.get(0) ) ) {
-                reducedPath.add( 0, path.get(0) ); 
+            final List<VoxelPosition> reducedPath = simplifyPath(path);
+            if ( ! reducedPath.contains( zviToVoxel(path.get(0)) ) ) {
+                reducedPath.add( 0, zviToVoxel(path.get(0)) ); 
             }
-            if ( ! reducedPath.contains( path.get(path.size()-1) ) ) {
-                reducedPath.add( path.get(path.size()-1) );
+            if ( ! reducedPath.contains( zviToVoxel(path.get(path.size()-1)) ) ) {
+                reducedPath.add( zviToVoxel(path.get(path.size()-1)) );
             }
             //DEBUG System.out.println("Simplified path length: " + reducedPath.size());
             List<Integer> intensities = new Vector<>();
-            for (ZoomedVoxelIndex p : reducedPath) {
+            for (VoxelPosition p : reducedPath) {
                 int intensity = subvolume.getIntensityGlobal(p, 0);
                 intensities.add(intensity);
             }
@@ -111,10 +113,19 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             PathTraceRequest simpleRequest = new PathTraceRequest(request.getXyz1(),
                     request.getXyz2(), request.getAnchorGuid1(), request.getAnchorGuid2());
             TracedPathSegment result = new TracedPathSegment(simpleRequest, reducedPath, intensities);
-            pathTracedSignal.emit(result);
+            if (pathTraceListener != null) {
+                pathTraceListener.pathTraced(result);
+            }
 
             setStatus("Done");
         }
+    }
+
+    private ZoomedVoxelIndex zoomedVoxelIndexForVoxelVec3(Vec3 vec3, TileFormat tileFormat, ZoomLevel zoomLevel) {
+        TileFormat.VoxelXyz vox = new TileFormat.VoxelXyz(vec3);
+        ZoomedVoxelIndex zv = tileFormat.zoomedVoxelIndexForVoxelXyz(
+                vox, zoomLevel, CoordinateAxis.Z);
+        return zv;
     }
     
     @SuppressWarnings("Unused")
@@ -129,8 +140,8 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         }
     }
     
-    private List<ZoomedVoxelIndex> simplifyPath(Collection<ZoomedVoxelIndex> path) {
-        List<ZoomedVoxelIndex> rtnVal = new ArrayList<>();
+    private List<VoxelPosition> simplifyPath(Collection<ZoomedVoxelIndex> path) {
+        List<VoxelPosition> rtnVal = new ArrayList<>();
         
         // Doing checks: along same lines?
         Vec3 prevNormal = null;
@@ -141,16 +152,23 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             if ( prevIndex != null ) {
                 Vec3 normal = calcNormal( prevIndex, index );
                 if ( sameLine( prevNormal, normal ) ) {
-                    rtnVal.remove(prevIndex);
+                    rtnVal.remove(zviToVoxel(prevIndex));
                 }
                 prevNormal = normal;
             }
-            rtnVal.add(index);            
+            rtnVal.add(zviToVoxel(index));
             prevIndex = index;
         }
-        rtnVal.add(prevIndex); // Ensure that end point is in the return.
+        rtnVal.add(zviToVoxel(prevIndex));   // Ensure that end point is in the return.
         
         return rtnVal;
+    }
+    
+    private VoxelPosition zviToVoxel( ZoomedVoxelIndex zvi ) {
+        if (zvi.getZoomLevel().getZoomOutFactor() != 1) {
+            throw new IllegalArgumentException("Cannot deal with non-closest-zoom.");
+        }
+        return new VoxelPosition(zvi.getX(), zvi.getY(), zvi.getZ());
     }
     
     private boolean sameLine( Vec3 prevNormal, Vec3 normal ) {

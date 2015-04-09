@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import java.awt.event.ActionEvent;
@@ -12,15 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import javax.swing.AbstractAction;
-import javax.swing.JFrame;
 import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolInfo;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
-import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -35,19 +27,21 @@ import org.slf4j.LoggerFactory;
         id = "ToolsMenuAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_ToolsMenuAction"
+        displayName = "#CTL_ToolsMenuAction",
+        lazy = false
 )
 @ActionReference(path = "Menu/Tools", position = 100)
 @Messages("CTL_ToolsMenuAction=Tools")
 public final class ToolsMenuAction extends AbstractAction implements Presenter.Menu {
 
-    private Logger logger = LoggerFactory.getLogger( ToolsMenuAction.class );
-    private JMenu subMenu;
+    private static final Logger log = LoggerFactory.getLogger(ToolsMenuAction.class);
     
+    private final JMenu subMenu;
+
     public ToolsMenuAction() {
         subMenu = new JMenu("Configured Tools");
     }
-    
+
     @Override
     public void actionPerformed(ActionEvent e) {
         // TODO implement action body
@@ -56,6 +50,7 @@ public final class ToolsMenuAction extends AbstractAction implements Presenter.M
     @Override
     public JMenuItem getMenuPresenter() {
         List<JMenuItem> newItems = createMenuItems();
+        subMenu.removeAll();
         if (newItems != null) {
             for (JMenuItem item : newItems) {
                 subMenu.add(item);
@@ -65,15 +60,13 @@ public final class ToolsMenuAction extends AbstractAction implements Presenter.M
     }
 
     private List<JMenuItem> createMenuItems() {
-        JFrame frame = WindowLocator.getMainFrame();
-        JMenuBar menuBar = frame.getJMenuBar();
         Set keySet = ToolMgr.getTools().keySet();
         return createMenuItems(keySet);
 
     }
 
     private List<JMenuItem> createMenuItems(Set keySet) {
-        List<JMenuItem> newItems = new ArrayList<JMenuItem>();
+        List<JMenuItem> newItems = new ArrayList<>();
         for (final Object o : keySet) {
             JMenuItem tmpMenuItem = null;
             ToolInfo tmpTool = ToolMgr.getTool((String) o);
@@ -86,20 +79,23 @@ public final class ToolsMenuAction extends AbstractAction implements Presenter.M
                     public void actionPerformed(ActionEvent e) {
                         try {
                             ToolMgr.runTool((String) o);
-                        } catch (Exception e1) {
+                        }
+                        catch (Exception e1) {
+                            log.error("Could launch tool: "+o,e1);
                             JOptionPane.showMessageDialog(
                                     SessionMgr.getMainFrame(),
                                     "Could not launch this tool. "
-                                            + "Please choose the appropriate file path from the Tools->Configure Tools area",
+                                    + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                     "ToolInfo Launch ERROR",
                                     JOptionPane.ERROR_MESSAGE
                             );
                         }
                     }
                 });
-                
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+
+            }
+            catch (FileNotFoundException e) {
+                log.error("Could not create tool menu item: {}",o,e);
             }
         }
         return newItems;
