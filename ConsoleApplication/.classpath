@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+    <classpathentry kind="src" path="AlignmentBoardModule/src"/>
 	<classpathentry kind="src" path="DataBrowserModule/build/classes-generated"/>
 	<classpathentry kind="src" path="DataBrowserModule/src"/>
 	<classpathentry kind="src" path="ConsoleModule/build/classes-generated"/>
+    <classpathentry kind="src" path="AlignmentBoardModule/build/classes-generated"/>
+    <classpathentry kind="src" path="AlignmentBoardModule/test/unit/src"/>
 	<classpathentry kind="src" path="ConsoleModule/src"/>
 	<classpathentry kind="src" path="ConsoleModule/test/unit/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
