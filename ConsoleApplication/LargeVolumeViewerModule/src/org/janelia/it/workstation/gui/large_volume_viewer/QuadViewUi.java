@@ -53,6 +53,7 @@ import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
+import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
@@ -177,6 +178,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private TileFormat tileFormat;
     
     private Snapshot3DLauncher snapshot3dLauncher;
+    private AnnotationSkeletonViewLauncher annotationSkeletonViewLauncher;
     private PathTraceRequestListener pathTraceListener;
     private WorkspaceClosureListener wsCloseListener;
 
@@ -351,7 +353,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     List<JMenuItem> result = new Vector<>();
                     result.add(addFileMenuItem());
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
-                    result.add(addViewMenuItem());
+                    result.addAll(annotationSkeletonViewLauncher.getMenuItems());
+                    result.add(addViewMenuItem());                    
                     
                     // Add menus/items for relocating per other views.
                     SynchronizationHelper helper = new SynchronizationHelper();
@@ -1161,6 +1164,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 imageColorModel
         );
         snapshot3dLauncher.setAnnotationManager(annotationMgr);
+        annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
         volumeImage.setRemoteBasePath(canonicalLinuxPath);
         return loadURL(url);
     }
