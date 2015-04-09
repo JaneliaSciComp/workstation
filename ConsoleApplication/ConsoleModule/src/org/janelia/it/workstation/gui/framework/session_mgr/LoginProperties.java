@@ -6,4 +6,5 @@ package org.janelia.it.workstation.gui.framework.session_mgr;
 public interface LoginProperties {
     public static String SERVER_LOGIN_NAME = "console.serverLogin";
     public static String SERVER_LOGIN_PASSWORD = "console.serverPassword";
+    public static String REMEMBER_PASSWORD = "console.rememberPassword";
 }

@@ -4,21 +4,17 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolInfo;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolListener;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -30,7 +26,7 @@ import org.slf4j.LoggerFactory;
  * Time: 3:47 PM
  */
 public class ToolsMenuModifier implements ToolListener {
-    private final Map<JMenuItem,JMenu> itemVsMenu = new HashMap<JMenuItem,JMenu>();
+    private final Map<JMenuItem,JMenu> itemVsMenu = new HashMap<>();
     private Logger logger = LoggerFactory.getLogger( ToolsMenuModifier.class );
     
     public ToolsMenuModifier() {
@@ -40,7 +36,6 @@ public class ToolsMenuModifier implements ToolListener {
     public void rebuildMenu() {
         this.removeAll();
         changeToolsMenu();
-
     }
 
     @Override
@@ -81,8 +76,9 @@ public class ToolsMenuModifier implements ToolListener {
     /**
      * Possibly add a menu menu item to the tools menu.
      * 
-     * @param item what to add
-     * @return same as added
+     * @param items items to add
+     * @param menu to add items to
+     * @param menuBar menuBar to add menus to
      */
     private void add( final List<JMenuItem>items, final JMenu menu, final JMenuBar menuBar ) {
         SimpleWorker worker = new SimpleWorker() {
@@ -116,7 +112,6 @@ public class ToolsMenuModifier implements ToolListener {
     /**
      * By whatever means, find the tools menu.
      * 
-     * @return menu by the name of "tools" as appears on screen.
      */
     private void changeToolsMenu() {
         ToolMenuWorker worker = new ToolMenuWorker();
@@ -124,7 +119,7 @@ public class ToolsMenuModifier implements ToolListener {
     }
     
     private void addMenuItems() {
-        JFrame frame = (JFrame) WindowLocator.getMainFrame();
+        JFrame frame = WindowLocator.getMainFrame();
         JMenuBar menuBar = frame.getJMenuBar();
         if (menuBar != null) {
             JMenu toolsMenu = null;
@@ -148,9 +143,9 @@ public class ToolsMenuModifier implements ToolListener {
     }
 
     private List<JMenuItem> createMenuItems(Set keySet) {
-        List<JMenuItem> newItems = new ArrayList<JMenuItem>();
+        List<JMenuItem> newItems = new ArrayList<>();
         for (final Object o : keySet) {
-            JMenuItem tmpMenuItem = null;
+            JMenuItem tmpMenuItem;
             ToolInfo tmpTool = ToolMgr.getTool((String) o);
             try {
                 tmpMenuItem = new JMenuItem(tmpTool.getName(),

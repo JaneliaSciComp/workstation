@@ -15,7 +15,6 @@ import loci.plugins.config.SpringUtilities;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
-import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.outline.Annotations;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -29,7 +28,7 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.screen.ScreenEvalConstants;
 import org.janelia.it.jacs.shared.screen.ScreenEvalUtils;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.gui.framework.console.nb_action.ScreenEvaluationMenuAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +40,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ScreenEvaluationDialog extends ModalDialog implements Accessibility {
+public class ScreenEvaluationDialog extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(ScreenEvaluationDialog.class);
 
@@ -64,10 +63,6 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
     private Set<Long> dirtyEntities = new HashSet<Long>();
 
     public ScreenEvaluationDialog() {
-
-        if (!isAccessible()) {
-            return;
-        }
 
         setModalityType(ModalityType.MODELESS);
 
@@ -222,7 +217,8 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
             @Override
             public void annotationsChanged(final long entityId) {
 
-                if (!ModelMgr.getModelMgr().getCurrentOntology().getName().equals(ScreenEvalConstants.SCORE_ONTOLOGY_NAME)) {
+                if (ModelMgr.getModelMgr().getCurrentOntology()!=null 
+                        && !ModelMgr.getModelMgr().getCurrentOntology().getName().equals(ScreenEvalConstants.SCORE_ONTOLOGY_NAME)) {
                     return;
                 }
 
@@ -443,9 +439,5 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 
     public boolean isAutoMoveAfterNavigation() {
         return autoMoveAfterNavigationRadioButton.isSelected();
-    }
-
-    public boolean isAccessible() {
-        return "user:jenetta".equals(SessionMgr.getSubjectKey());
     }
 }

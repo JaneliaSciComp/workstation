@@ -18,6 +18,8 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 /**
  * Wrapper for AnnotationSessionTask which keeps track of associated entities.
  *
+ * @deprecated The concept of "Annotation Sessions" is no longer supported
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @XmlAccessorType(XmlAccessType.PROPERTY)

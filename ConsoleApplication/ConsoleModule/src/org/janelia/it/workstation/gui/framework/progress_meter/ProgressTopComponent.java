@@ -24,12 +24,12 @@ import org.openide.util.NbBundle.Messages;
         //iconBase = "images/cog_small_anim.gif",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, position=100)
+@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, position=30)
 @ActionID(category = "Window", id = "ProgressTopComponent")
-@ActionReference(path = "Menu/Window", position = 333)
+@ActionReference(path = "Menu/Window", position = 30)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_ProgressTopComponentAction",
-        preferredID = "ProgressTopComponentTopComponent"
+        preferredID = ProgressTopComponent.PREFERRED_ID
 )
 @Messages({
     "CTL_ProgressTopComponentAction=Background Tasks",

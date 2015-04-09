@@ -6,7 +6,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Point;
 import java.util.Collection;
-import java.util.List;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
@@ -59,7 +58,6 @@ import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.model.domain.AlignmentContext;
 import org.janelia.it.workstation.model.viewer.AlignedItem;
-import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -307,7 +305,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             //throw new RuntimeException( msg );
         }
         else {
-            boolean isMac = SystemInfo.OS_NAME.contains("mac");
+            boolean isMac = SystemInfo.OS_NAME_LC.contains("mac");
             if ( isMac ) {
                 // Enforce opaque, transparent ordering of actors.
                 mip3d.addActor( volumeBrickActor );

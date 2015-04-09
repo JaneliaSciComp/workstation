@@ -1,7 +1,21 @@
 package org.janelia.it.workstation.gui.dialogs.search.alignment_board;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.solr.client.solrj.SolrQuery;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
+import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.viewer.RootedEntityReceiver;
 import org.janelia.it.workstation.gui.framework.viewer.search.SolrResultsMetaData;
@@ -11,16 +25,8 @@ import org.janelia.it.workstation.model.domain.Sample;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
-import org.janelia.it.jacs.shared.solr.SolrResults;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 
 /**
  * This "fields" requests to search, and deposits the results back into the param's receiver.
@@ -58,8 +64,8 @@ public class SearchWorker extends SimpleWorker {
             queryBuilder.setRootId( param.getSearchRootId() );
         }
 
-        Map<String,Set<String>> filters = new HashMap<String,Set<String>>();
-        Set<String> filterValues = new HashSet<String>();
+        Map<String,Set<String>> filters = new HashMap<>();
+        Set<String> filterValues = new HashSet<>();
         filterValues.add( EntityConstants.TYPE_SAMPLE );
         filterValues.add( EntityConstants.TYPE_NEURON_FRAGMENT );
         filters.put( "entity_type", filterValues );
@@ -79,23 +85,6 @@ public class SearchWorker extends SimpleWorker {
         resultsMetaData.setSearchDuration(
                 results.getResponse().getElapsedTime()
         );
-
-        // Update search history.
-        String queryStr = queryBuilder.getSearchString();
-
-        if ( !StringUtils.isEmpty(queryStr) ) {
-            resultsMetaData.setQueryStr( queryStr );
-            List<String> searchHistory = (List<String>)
-                    SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY_MDL_PROP);
-            if ( searchHistory == null ) {
-                searchHistory = new ArrayList<String>();
-            }
-            if ( ! searchHistory.contains( queryStr ) ) {
-                searchHistory.add( queryStr );
-                // To preserve history, must push it into the model.
-                SessionMgr.getSessionMgr().setModelProperty( SEARCH_HISTORY_MDL_PROP, searchHistory );
-            }
-        }
     }
 
     @Override
@@ -123,9 +112,9 @@ public class SearchWorker extends SimpleWorker {
      */
     private List<RootedEntity> getCompatibleRootedEntities( Collection<Entity> entities ) throws Exception {
         logger.info("Found {} raw entities.", entities.size());
-        List<RootedEntity> rtnVal = new ArrayList<RootedEntity>();
+        List<RootedEntity> rtnVal = new ArrayList<>();
 
-        List<Long> guids = new ArrayList<Long>();
+        List<Long> guids = new ArrayList<>();
         for ( Entity entity: entities ) {
             guids.add( entity.getId() );
         }
@@ -136,43 +125,42 @@ public class SearchWorker extends SimpleWorker {
         int nonCompatibleNeuronCount = 0;
         int nonCompatibleSampleCount = 0;
         int incorrectTypeCount = 0;
-        Set<String> incorrectTypes = new HashSet<String>();
+        Set<String> incorrectTypes = new HashSet<>();
         // Next, walk each entity's tree looking for proper info.
-        MAX_OUT:
         for ( Entity entity: entities ) {
             try {
                 // Now, to "prowl" the trees of the result list, to find out what can be added, here.
-                if ( entity.getEntityTypeName().equals( EntityConstants.TYPE_SAMPLE ) ) {
-                    RootedEntity rootedEntity = null;
-                    Entity childEntity = ModelMgrUtils.getAccessibleChildren(entity).iterator().next();
-                    rootedEntity =
-                            new RootedEntity( ModelMgr.getModelMgr().getAncestorWithType( childEntity, EntityConstants.TYPE_SAMPLE ) );
+                switch (entity.getEntityTypeName()) {
+                    case EntityConstants.TYPE_SAMPLE:
+                        RootedEntity rootedEntity;
+                        Entity childEntity = ModelMgrUtils.getAccessibleChildren(entity).iterator().next();
+                        rootedEntity =
+                                new RootedEntity(ModelMgr.getModelMgr().getAncestorWithType(childEntity, EntityConstants.TYPE_SAMPLE));
 
-                    if ( rootedEntity == null ) {
-                        logger.warn( "Did not find child/parent.  Instead wrapping with new rooted entity.");
-                        rootedEntity = new RootedEntity( entity );
-                    }
+                        if (rootedEntity == null) {
+                            logger.warn("Did not find child/parent.  Instead wrapping with new rooted entity.");
+                            rootedEntity = new RootedEntity(entity);
+                        }
 
-                    if ( isSampleCompatible( param.getContext(), rootedEntity) ) {
-                        rtnVal.add( rootedEntity );
-                    }
-                    else {
-                        nonCompatibleSampleCount ++;
-                    }
-                }
-                else if ( entity.getEntityTypeName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
-                    // Find ancestor to figure out if it is compatible.
-                    if ( isNeuronCompatible(entity, compatibleList) ) {
-                        rtnVal.add( new RootedEntity( entity ) );
-                    }
-                    else {
-                        nonCompatibleNeuronCount ++;
-                    }
+                        if (isSampleCompatible(param.getContext(), rootedEntity)) {
+                            rtnVal.add(rootedEntity);
+                        } else {
+                            nonCompatibleSampleCount++;
+                        }
+                        break;
+                    case EntityConstants.TYPE_NEURON_FRAGMENT:
+                        // Find ancestor to figure out if it is compatible.
+                        if (isNeuronCompatible(entity, compatibleList)) {
+                            rtnVal.add(new RootedEntity(entity));
+                        } else {
+                            nonCompatibleNeuronCount++;
+                        }
 
-                }
-                else {
-                    incorrectTypes.add( entity.getEntityTypeName() );
-                    incorrectTypeCount ++;
+                        break;
+                    default:
+                        incorrectTypes.add(entity.getEntityTypeName());
+                        incorrectTypeCount++;
+                        break;
                 }
 
             } catch ( Exception ex ) {
@@ -182,7 +170,7 @@ public class SearchWorker extends SimpleWorker {
 
             if ( rtnVal.size() >= MAX_RESULT_ROWS ) {
                 logger.info("Hit maximum of {}.", MAX_RESULT_ROWS);
-                break MAX_OUT;
+                break;
             }
         }
 

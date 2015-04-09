@@ -21,7 +21,7 @@ import java.util.*;
  */
 public class EntityTypeSet extends AbstractSet implements Serializable {
 
-    private static Map nameToEntityTypeSet = new HashMap();
+    private static Map<String, EntityTypeSet> nameToEntityTypeSet = new HashMap<>();
 
     private static final long serialVersionUID = 1;
 
@@ -31,12 +31,12 @@ public class EntityTypeSet extends AbstractSet implements Serializable {
         String resourceValue;
         StringTokenizer tokenizer;
         EntityTypeSet newSet;
-        List typeList = new ArrayList();
+        List<EntityTypeMapping> typeList = new ArrayList<>();
         try {
             for (Enumeration e = bundle.getKeys(); e.hasMoreElements(); ) {
                 setName = (String) e.nextElement();
                 resourceValue = bundle.getString(setName);
-                if (resourceValue.indexOf(",") == -1) {
+                if (!resourceValue.contains(",")) {
                     newSet = new EntityTypeSet(setName, new EntityTypeMapping[]{EntityTypeMapping.getEntityTypeMappingForName(resourceValue)});
                     nameToEntityTypeSet.put(setName, newSet);
                 }
@@ -46,7 +46,7 @@ public class EntityTypeSet extends AbstractSet implements Serializable {
                     while (tokenizer.hasMoreTokens()) {
                         typeList.add(EntityTypeMapping.getEntityTypeMappingForName(tokenizer.nextToken()));
                     }
-                    newSet = new EntityTypeSet(setName, (EntityTypeMapping[]) typeList.toArray(new EntityTypeMapping[0]));
+                    newSet = new EntityTypeSet(setName, typeList.toArray(new EntityTypeMapping[typeList.size()]));
                     nameToEntityTypeSet.put(setName, newSet);
                 }
             }
@@ -56,42 +56,37 @@ public class EntityTypeSet extends AbstractSet implements Serializable {
         }
     } // End static initializer
 
-    public static EntityTypeSet[] getEntityTypeSets() {
-        ArrayList sets = new ArrayList();
-        Set keySet = nameToEntityTypeSet.keySet();
-        for (Iterator it = keySet.iterator(); it.hasNext(); ) {
-            sets.add(nameToEntityTypeSet.get(it.next()));
-        }
-        return (EntityTypeSet[]) sets.toArray(new EntityTypeSet[0]);
-    }
-
-    public static String[] getEntityTypeSetNames() {
-        ArrayList names = new ArrayList();
-        Set keySet = nameToEntityTypeSet.keySet();
-        for (Iterator it = keySet.iterator(); it.hasNext(); ) {
-            names.add(it.next());
-        }
-        return (String[]) names.toArray(new String[0]);
-    }
-
-    public static EntityTypeSet getEntityTypeSet(String setName) {
-        return (EntityTypeSet) nameToEntityTypeSet.get(setName);
-    }
+//    public static EntityTypeSet[] getEntityTypeSets() {
+//        ArrayList sets = new ArrayList();
+//        Set keySet = nameToEntityTypeSet.keySet();
+//        for (Object aKeySet : keySet) {
+//            sets.add(nameToEntityTypeSet.get(aKeySet));
+//        }
+//        return (EntityTypeSet[]) sets.toArray(new EntityTypeSet[0]);
+//    }
+//
+//    public static String[] getEntityTypeSetNames() {
+//        ArrayList names = new ArrayList();
+//        Set keySet = nameToEntityTypeSet.keySet();
+//        for (Iterator it = keySet.iterator(); it.hasNext(); ) {
+//            names.add(it.next());
+//        }
+//        return (String[]) names.toArray(new String[0]);
+//    }
+//
+//    public static EntityTypeSet getEntityTypeSet(String setName) {
+//        return (EntityTypeSet) nameToEntityTypeSet.get(setName);
+//    }
 
     //private ArrayList entityTypes=new ArrayList();
-    private Set entityTypes = new HashSet();
+    private Set<EntityTypeMapping> entityTypes = new HashSet<>();
     private String name;
 
-    public EntityTypeSet() {
-    }
-
-    ;
-
+//    public EntityTypeSet() {
+//    }
 
     public EntityTypeSet(String setName, EntityTypeMapping[] entityTypes) {
-        for (int i = 0; i < entityTypes.length; i++) {
-            this.entityTypes.add(entityTypes[i]);
-        }
+        Collections.addAll(this.entityTypes, entityTypes);
         nameToEntityTypeSet.put(setName, this);
         name = setName;
     }
@@ -100,12 +95,12 @@ public class EntityTypeSet extends AbstractSet implements Serializable {
      * Creates a more temporary EntityTypeSet that cannot be retrieved by
      * name at a later date.
      */
-    public EntityTypeSet(EntityTypeMapping[] entityTypes) {
-        for (int i = 0; i < entityTypes.length; i++) {
-            this.entityTypes.add(entityTypes[i]);
-        }
-        name = "";
-    }
+//    public EntityTypeSet(EntityTypeMapping[] entityTypes) {
+//        for (int i = 0; i < entityTypes.length; i++) {
+//            this.entityTypes.add(entityTypes[i]);
+//        }
+//        name = "";
+//    }
 
 
     public int size() {
@@ -120,9 +115,9 @@ public class EntityTypeSet extends AbstractSet implements Serializable {
         return "Entity Type Set: " + name;
     }
 
-    public EntityTypeMapping[] getEntityTypes() {
-        return (EntityTypeMapping[]) entityTypes.toArray(new EntityTypeMapping[0]);
-    }
+//    public EntityTypeMapping[] getEntityTypes() {
+//        return (EntityTypeMapping[]) entityTypes.toArray(new EntityTypeMapping[0]);
+//    }
 
     public boolean equals(Object other) {
         if ((other != null) && (other instanceof EntityTypeSet)) {
@@ -138,7 +133,7 @@ public class EntityTypeSet extends AbstractSet implements Serializable {
         if (!(o instanceof EntityTypeMapping))
             throw new IllegalArgumentException("Entity Type Set can only contain EntityTypes");
         name = "";
-        return entityTypes.add(o);
+        return entityTypes.add((EntityTypeMapping)o);
     }
 
 

@@ -7,10 +7,32 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
@@ -19,6 +41,11 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.FacetField.Count;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.solr.EntityDocument;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
+import org.janelia.it.jacs.shared.solr.SolrResults;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataStore;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration.AttrGroup;
@@ -31,11 +58,6 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.panels.ScrollablePanel;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.shared.solr.EntityDocument;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
-import org.janelia.it.jacs.shared.solr.SolrResults;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +78,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     /**
      * Fields on which to calculate facet counts
      */
-    protected String[] facets = {"entity_type", "tiling_pattern_txt", "username"};
+    protected String[] facets = {"entity_type", "username"};
 
     // UI Settings
     protected Font groupFont = new Font("Sans Serif", Font.BOLD, 11);
@@ -371,6 +393,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     private JPopupMenu createPopupMenu(MouseEvent e) {
 
         JTable target = (JTable) e.getSource();
+        if (null==target || 0>target.getSelectedRow() || 0>target.getSelectedColumn()) {return null;}
         final String value = target.getValueAt(target.getSelectedRow(), target.getSelectedColumn()).toString();
 
         List<Entity> selectedEntities = new ArrayList<Entity>();
@@ -500,6 +523,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         query.setStart(pageSize * page);
         query.setRows(pageSize);
 
+        log.info("Searching SOLR: " + query.getQuery());
         return ModelMgr.getModelMgr().searchSolr(query);
     }
 
@@ -753,6 +777,10 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 
             for (final Count count : ff.getValues()) {
 
+                if (count==null) {
+                    log.warn("Got null count value for facet field "+ff.getName());
+                    continue;
+                }
                 final SearchAttribute attr = searchConfig.getAttributeByName(ff.getName());
                 final String name = attr == null ? null : attr.getName();
                 final String label = searchConfig.getFormattedFieldValue(count.getName(), name) + " (" + count.getCount() + ")";
@@ -852,10 +880,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
      * @return
      */
     protected String getFieldLabel(String fieldName) {
-        if ("tiling_pattern_txt".equals(fieldName)) {
-            return "Tiling Pattern";
-        }
-        else if ("entity_type".equals(fieldName)) {
+        if ("entity_type".equals(fieldName)) {
             return "Result Type";
         }
         else if ("username".equals(fieldName)) {

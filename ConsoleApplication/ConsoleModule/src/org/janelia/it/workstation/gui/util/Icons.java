@@ -144,7 +144,9 @@ public class Icons {
     	if (imageCache.containsKey(type)) {
     		return imageCache.get(type);
     	}
-    	BufferedImage bi = Utils.toBufferedImage(getIcon(entity, true).getImage());
+        ImageIcon icon = getIcon(entity, true);
+        if (icon==null) return null;
+    	BufferedImage bi = Utils.toBufferedImage(icon.getImage());
     	imageCache.put(type, bi);
     	return bi;
     }
@@ -290,6 +292,12 @@ public class Icons {
         }
         else if (EntityConstants.TYPE_ALIGNED_ITEM.equals(type)) {
             return getIcon(large ? "file_large.png" : "shape_handles.png");
+        }
+        else if (EntityConstants.IN_MEMORY_TYPE_VIRTUAL_ENTITY.equals(type)) {
+            return getIcon(large ? "file_large.png" : "images.png");
+        }
+        else if (EntityConstants.IN_MEMORY_TYPE_PLACEHOLDER_ENTITY.equals(type)) {
+            return null;
         }
         
         return getIcon(large ? "error_large.png" : "bullet_error.png");

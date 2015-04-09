@@ -16,14 +16,14 @@ import java.util.*;
 
 public class SessionModel extends GenericModel {
     private static SessionModel sessionModel = new SessionModel();
-    private Vector browserModels = new Vector(10);
+    private List<BrowserModel> browserModels = new ArrayList<>();
     private static KeyBindings bindings;
-    private List<ExternalClient> externalClients = new ArrayList<ExternalClient>();
+    private List<ExternalClient> externalClients = new ArrayList<>();
     private int portCounter = 30020;
 
     private SessionModel() {
         super();
-        browserModels = new Vector(10);
+        browserModels = new ArrayList<>();
         // Load Key Bindings
         bindings = new KeyBindings();
     }  //Singleton pattern enforcement --PED 5/13
@@ -34,51 +34,46 @@ public class SessionModel extends GenericModel {
 
     public BrowserModel addBrowserModel() {
         BrowserModel browserModel = new BrowserModel();
-        browserModels.addElement(browserModel);
+        browserModels.add(browserModel);
         fireBrowserAdded(browserModel);
         return browserModel;
     }
 
-    void addBrowserModel(BrowserModel browserModel) {
-        browserModels.addElement(browserModel);
-        fireBrowserAdded(browserModel);
-    }
-
+//    void addBrowserModel(BrowserModel browserModel) {
+//        browserModels.add(browserModel);
+//        fireBrowserAdded(browserModel);
+//    }
+//
     /**
      * Exit the application if the last browserModel is removed
      */
 
-    public void removeBrowserModel(BrowserModel browserModel) {
-        browserModels.removeElement(browserModel);
-        browserModel.dispose();
-        fireBrowserRemoved(browserModel);
-        if (browserModels.isEmpty()) SessionMgr.getSessionMgr().systemExit();
-    }
+//    public void removeBrowserModel(BrowserModel browserModel) {
+//        browserModels.remove(browserModel);
+//        browserModel.dispose();
+//        fireBrowserRemoved(browserModel);
+//        if (browserModels.isEmpty()) SessionMgr.getSessionMgr().systemExit();
+//    }
 
     /**
      * Exit the application with full notification
      */
     public void removeAllBrowserModels() {
-        BrowserModel browserModel;
-        for (Enumeration e = browserModels.elements(); e.hasMoreElements(); ) {
-            browserModel = (BrowserModel) e.nextElement();
+        for (BrowserModel browserModel : browserModels) {
             browserModel.dispose();
             fireBrowserRemoved(browserModel);
         }
     }
 
     public void addSessionListener(SessionModelListener sessionModelListener) {
-        for (Enumeration e = browserModels.elements(); e.hasMoreElements(); )
-            sessionModelListener.browserAdded((BrowserModel) e.nextElement());
+        for (BrowserModel browserModel : browserModels) {
+            sessionModelListener.browserAdded(browserModel);
+        }
         if (!modelListeners.contains(sessionModelListener)) modelListeners.add(sessionModelListener);
     }
 
     public void removeSessionListener(SessionModelListener sessionModelListener) {
         modelListeners.remove(sessionModelListener);
-    }
-
-    public int getNumberOfBrowserModels() {
-        return this.browserModels.size();
     }
 
     /**
@@ -93,7 +88,7 @@ public class SessionModel extends GenericModel {
     }
 
     public List<ExternalClient> getExternalClientsByName(String clientName){
-        List<ExternalClient> returnList = new ArrayList<ExternalClient>();
+        List<ExternalClient> returnList = new ArrayList<>();
         for (ExternalClient externalClient : externalClients) {
             if (externalClient.getName().equals(clientName)) { returnList.add(externalClient); }
         }
@@ -121,10 +116,10 @@ public class SessionModel extends GenericModel {
         if (null!=targetClient) { externalClients.remove(targetClient); }
     }
 
-    public List<ExternalClient> getExternalClients() {
-        return externalClients;
-    }
-    
+//    public List<ExternalClient> getExternalClients() {
+//        return externalClients;
+//    }
+//
     public void sendMessageToExternalClients(String operationName, Map<String,Object> parameters) {
         for (ExternalClient externalClient : externalClients) {
         	try {

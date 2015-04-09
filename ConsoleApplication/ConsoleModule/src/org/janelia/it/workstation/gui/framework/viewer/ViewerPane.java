@@ -207,12 +207,12 @@ public class ViewerPane extends JPanel {
 
         ancestorLoadingWorker = new SimpleWorker() {
 
-            private List<RootedEntity> ancestors = new ArrayList<RootedEntity>();
+            private List<RootedEntity> ancestors = new ArrayList<>();
 
             @Override
             protected void doStuff() throws Exception {
                 List<String> uniqueIds = EntityUtils.getPathFromUniqueId(contextRootedEntity.getUniqueId());
-                List<Long> entityIds = new ArrayList<Long>();
+                List<Long> entityIds = new ArrayList<>();
                 for (String uniqueId : uniqueIds) {
                     Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
                     entityIds.add(entityId);

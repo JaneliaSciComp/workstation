@@ -1,7 +1,20 @@
 package org.janelia.it.workstation.gui.dataview;
 
-import java.awt.BorderLayout;
-import java.awt.Toolkit;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
@@ -10,21 +23,7 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.MouseHandler;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.janelia.it.jacs.model.entity.ForbiddenEntity;
 
 /**
  * A panel for displaying entity data objects.
@@ -35,7 +34,7 @@ public class EntityDataPane extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(EntityDataPane.class);
 
-    private final List<String> staticColumns = new ArrayList<String>();
+    private final List<String> staticColumns = new ArrayList<>();
     private final String title;
     private boolean showParent;
     private boolean showChild;
@@ -147,7 +146,7 @@ public class EntityDataPane extends JPanel {
     /**
      * Override this method to provide double click behavior.
      *
-     * @param entityData
+     * @param entityData the data that goes with the click
      */
     protected void doubleClick(EntityData entityData) {
     }
@@ -233,15 +232,15 @@ public class EntityDataPane extends JPanel {
         datas = dataSet;
 
         // Data formatted for the JTable
-        Vector<String> columnNames = new Vector<String>();
-        Vector<Vector<String>> data = new Vector<Vector<String>>();
+        Vector<String> columnNames = new Vector<>();
+        Vector<Vector<String>> data = new Vector<>();
 
         // Prepend the static columns
         columnNames.addAll(staticColumns);
 
         // Build the data in column order
         for (EntityData entityData : datas) {
-            Vector<String> rowData = new Vector<String>();
+            Vector<String> rowData = new Vector<>();
             rowData.add((entityData.getEntityAttrName() == null) ? "" : entityData.getEntityAttrName());
             rowData.add(entityData.getId().toString());
             rowData.add((entityData.getOwnerKey() == null) ? "" : entityData.getOwnerKey());
@@ -251,7 +250,12 @@ public class EntityDataPane extends JPanel {
                 rowData.add((entityData.getParentEntity() == null) ? "" : (entityData.getParentEntity().getName() == null) ? "(unnamed)" : entityData.getParentEntity().getName().toString());
             }
             if (showChild) {
-                rowData.add((entityData.getChildEntity() == null) ? "" : (entityData.getChildEntity().getName() == null) ? "(unnamed)" : entityData.getChildEntity().getName().toString());
+                if (entityData.getChildEntity() instanceof ForbiddenEntity) {
+                    rowData.add("(Forbidden entity)");
+                }
+                else {
+                    rowData.add((entityData.getChildEntity() == null) ? "" : (entityData.getChildEntity().getName() == null) ? "(unnamed)" : entityData.getChildEntity().getName().toString());
+                }
             }
             rowData.add(entityData.getValue());
             data.add(rowData);

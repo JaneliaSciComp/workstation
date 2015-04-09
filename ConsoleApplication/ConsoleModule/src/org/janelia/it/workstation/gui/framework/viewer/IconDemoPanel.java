@@ -99,7 +99,7 @@ public class IconDemoPanel extends IconPanel {
     protected final static int PAGE_SIZE = 500;
 
     // Main components
-    protected JLabel splashPanel;
+    protected JLabel logoPanel;
     protected IconDemoToolbar iconDemoToolbar;
 
     // Status bar
@@ -119,18 +119,18 @@ public class IconDemoPanel extends IconPanel {
     // These members deal with the context and entities within it
     protected RootedEntity contextRootedEntity;
     protected List<RootedEntity> allRootedEntities;
-    protected Multimap<String, RootedEntity> allRootedEntitiesByPathId = HashMultimap.<String, RootedEntity>create();
-    protected Multimap<Long, RootedEntity> allRootedEntitiesByEntityId = HashMultimap.<Long, RootedEntity>create();
+    protected Multimap<String, RootedEntity> allRootedEntitiesByPathId = HashMultimap.create();
+    protected Multimap<Long, RootedEntity> allRootedEntitiesByEntityId = HashMultimap.create();
     protected int numPages;
 
     // These members deal with entities on the current page only
     protected int currPage;
     protected List<RootedEntity> pageRootedEntities;
     protected final Annotations annotations = new Annotations();
-    protected final List<String> allUsers = new ArrayList<String>();
-    protected final Set<String> hiddenUsers = new HashSet<String>();
+    protected final List<String> allUsers = new ArrayList<>();
+    protected final Set<String> hiddenUsers = new HashSet<>();
     protected int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
-    protected final List<String> allImageRoles = new ArrayList<String>();
+    protected final List<String> allImageRoles = new ArrayList<>();
 
     // Tracking of loading operations
     protected AtomicBoolean entityLoadInProgress = new AtomicBoolean(false);
@@ -148,11 +148,14 @@ public class IconDemoPanel extends IconPanel {
     protected KeyListener keyListener = new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {
-
+            
             if (KeymapUtil.isModifier(e)) {
                 return;
             }
             if (e.getID() != KeyEvent.KEY_PRESSED) {
+                return;
+            }
+            if (e.isConsumed()) {
                 return;
             }
 
@@ -229,7 +232,6 @@ public class IconDemoPanel extends IconPanel {
                     if (button != null) {
                         ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), clearAll);
                         imagesPanel.scrollEntityToCenter(rootedEntity);
-                        button.requestFocus();
                         updateHud(false);
                     }
                 }
@@ -251,7 +253,7 @@ public class IconDemoPanel extends IconPanel {
             AnnotatedImageButton button = getButtonAncestor(e.getComponent());
             // Select the button first
             RootedEntity rootedEntity = button.getRootedEntity();
-            if (!button.isSelected()) {
+            if (!ModelMgr.getModelMgr().getEntitySelectionModel().isSelected(getSelectionCategory(), rootedEntity.getId())) {
                 ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), true);
             }
             getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
@@ -279,13 +281,14 @@ public class IconDemoPanel extends IconPanel {
             if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
                 return;
             }
+            hud.setKeyListener(keyListener);
             buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
         }
     };
 
     protected JPopupMenu getButtonPopupMenu() {
         List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
-        List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
+        List<RootedEntity> rootedEntityList = new ArrayList<>();
         for (String entityId : selectionIds) {
             RootedEntity re = getRootedEntityById(entityId);
             if (re == null) {
@@ -297,7 +300,6 @@ public class IconDemoPanel extends IconPanel {
         }
         JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
         ((EntityContextMenu) popupMenu).addMenuItems();
-
         return popupMenu;
     }
 
@@ -405,10 +407,9 @@ public class IconDemoPanel extends IconPanel {
         SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
 
         hud = Hud.getSingletonInstance();
-        hud.addKeyListener(keyListener);
 
-        splashPanel = new JLabel(Icons.getIcon("workstation_logo_white.png"));
-        add(splashPanel);
+        logoPanel = new JLabel(Icons.getIcon("workstation_logo_white.png"));
+        add(logoPanel);
 
         iconDemoToolbar = createToolbar();
         iconDemoToolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
@@ -574,7 +575,7 @@ public class IconDemoPanel extends IconPanel {
                 imagesPanel.recalculateGrid();
             }
         });
-
+        
         annotations.setFilter(new AnnotationFilter() {
             @Override
             public boolean accept(OntologyAnnotation annotation) {
@@ -636,7 +637,7 @@ public class IconDemoPanel extends IconPanel {
             @Override
             public void browserAdded(BrowserModel browserModel) {
             }
-        });
+        });        
     }
 
     @Subscribe
@@ -679,7 +680,7 @@ public class IconDemoPanel extends IconPanel {
             goParent();
         }
         else {
-            for (RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
+            for (RootedEntity rootedEntity : new ArrayList<>(pageRootedEntities)) {
                 if (rootedEntity.getEntityId().equals(entity.getId())) {
                     removeRootedEntity(rootedEntity);
                     return;
@@ -706,7 +707,7 @@ public class IconDemoPanel extends IconPanel {
                     break;
                 }
                 else {
-                    for (final RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
+                    for (final RootedEntity rootedEntity : new ArrayList<>(pageRootedEntities)) {
                         if (rootedEntity.getEntityId().equals(entity.getId())) {
                             affected = true;
                             break;
@@ -758,8 +759,8 @@ public class IconDemoPanel extends IconPanel {
 
             @Override
             protected void currImageSizeChanged(int imageSize) {
+                log.trace("currImageSizeChanged: {}",imageSize);
                 imagesPanel.setMaxImageWidth(imageSize);
-                imagesPanel.recalculateGrid();
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -796,14 +797,14 @@ public class IconDemoPanel extends IconPanel {
 
                 // Save the list of users so that when the function actually runs, the
                 // users it affects are the same users that were displayed
-                final List<String> savedUsers = new ArrayList<String>(allUsers);
+                final List<String> savedUsers = new ArrayList<>(allUsers);
 
                 JMenuItem allUsersMenuItem = new JCheckBoxMenuItem("All Users", hiddenUsers.isEmpty());
                 allUsersMenuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         if (hiddenUsers.isEmpty()) {
-                            for (String username : savedUsers) {
-                                hiddenUsers.add(username);
+                            for (String subjectKey : savedUsers) {
+                                hiddenUsers.add(subjectKey);
                             }
                         }
                         else {
@@ -816,16 +817,17 @@ public class IconDemoPanel extends IconPanel {
 
                 userListMenu.addSeparator();
 
-                for (final String username : savedUsers) {
-                    JMenuItem userMenuItem = new JCheckBoxMenuItem(username, !hiddenUsers.contains(username));
-                    userMenuItem.setBackground(userColors.getColor(username));
+                for (final String subjectKey : savedUsers) {
+                    String name = EntityUtils.getNameFromSubjectKey(subjectKey);
+                    JMenuItem userMenuItem = new JCheckBoxMenuItem(name, !hiddenUsers.contains(subjectKey));
+                    userMenuItem.setBackground(userColors.getColor(subjectKey));
                     userMenuItem.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent e) {
-                            if (hiddenUsers.contains(username)) {
-                                hiddenUsers.remove(username);
+                            if (hiddenUsers.contains(subjectKey)) {
+                                hiddenUsers.remove(subjectKey);
                             }
                             else {
-                                hiddenUsers.add(username);
+                                hiddenUsers.add(subjectKey);
                             }
                             refreshAnnotations(null);
                         }
@@ -841,7 +843,7 @@ public class IconDemoPanel extends IconPanel {
             protected JPopupMenu getPopupImageRoleMenu() {
 
                 final JPopupMenu imageRoleListMenu = new JPopupMenu();
-                final List<String> imageRoles = new ArrayList<String>(allImageRoles);
+                final List<String> imageRoles = new ArrayList<>(allImageRoles);
 
                 for (final String imageRole : imageRoles) {
                     JMenuItem roleMenuItem = new JCheckBoxMenuItem(imageRole, imageRole.equals(getCurrImageRole()));
@@ -862,6 +864,7 @@ public class IconDemoPanel extends IconPanel {
         log.debug("selecting {} in {} viewer", entityId, getSelectionCategory());
         imagesPanel.setSelection(entityId, true, clearAll);
         updateStatusBar();
+        updateHud(false);
     }
 
     public void entityDeselected(String entityId) {
@@ -984,7 +987,7 @@ public class IconDemoPanel extends IconPanel {
         log.debug("loadEntity {} (@{})", entity.getName(), System.identityHashCode(entity));
 
         List<EntityData> eds = ModelUtils.getSortedEntityDatas(entity);
-        List<EntityData> children = new ArrayList<EntityData>();
+        List<EntityData> children = new ArrayList<>();
         for (EntityData ed : eds) {
             Entity child = ed.getChildEntity();
             if (!EntityUtils.isHidden(ed) && child != null && !(child instanceof ForbiddenEntity)) {
@@ -992,7 +995,7 @@ public class IconDemoPanel extends IconPanel {
             }
         }
 
-        List<RootedEntity> lazyRootedEntities = new ArrayList<RootedEntity>();
+        List<RootedEntity> lazyRootedEntities = new ArrayList<>();
         for (EntityData ed : children) {
             String childId = ModelUtils.getChildUniqueId(rootedEntity.getUniqueId(), ed);
             lazyRootedEntities.add(new RootedEntity(childId, ed));
@@ -1067,7 +1070,7 @@ public class IconDemoPanel extends IconPanel {
 
         entityLoadingWorker = new SimpleWorker() {
 
-            private List<RootedEntity> loadedRootedEntities = new ArrayList<RootedEntity>();
+            private List<RootedEntity> loadedRootedEntities = new ArrayList<>();
 
             @Override
             protected void doStuff() throws Exception {
@@ -1102,7 +1105,7 @@ public class IconDemoPanel extends IconPanel {
 
             @Override
             protected void doStuff() throws Exception {
-                List<Long> entityIds = new ArrayList<Long>();
+                List<Long> entityIds = new ArrayList<>();
                 for (RootedEntity rootedEntity : pageEntities) {
                     entityIds.add(rootedEntity.getEntityId());
                 }
@@ -1191,6 +1194,14 @@ public class IconDemoPanel extends IconPanel {
 
                 // Finally, we're done, we can call the success callback
                 ConcurrentUtils.invokeAndHandleExceptions(success);
+                
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                    	// Fix FW-2859: Recalculate one more time, to pack buttons correctly when they have long annotations. 
+                        imagesPanel.recalculateGrid();
+                    }
+                });
             }
         });
     }
@@ -1274,9 +1285,8 @@ public class IconDemoPanel extends IconPanel {
         // Refresh all user list
         allUsers.clear();
         for (OntologyAnnotation annotation : annotations.getAnnotations()) {
-            String name = ModelMgrUtils.getNameFromSubjectKey(annotation.getOwner());
-            if (!allUsers.contains(name)) {
-                allUsers.add(name);
+            if (!allUsers.contains(annotation.getOwner())) {
+                allUsers.add(annotation.getOwner());
             }
         }
         Collections.sort(allUsers);
@@ -1323,7 +1333,7 @@ public class IconDemoPanel extends IconPanel {
 
         log.debug("Starting a refresh");
 
-        final List<String> selectedIds = new ArrayList<String>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
+        final List<String> selectedIds = new ArrayList<>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
         final Callable<Void> success = new Callable<Void>() {
             @Override
             public Void call() throws Exception {
@@ -1359,13 +1369,11 @@ public class IconDemoPanel extends IconPanel {
                     public void run() {
                         if (rootedEntity.getEntity() == null) {
                             clear();
-                            if (success != null) {
-                                try {
-                                    success.call();
-                                }
-                                catch (Exception e) {
-                                    hadError(e);
-                                }
+                            try {
+                                success.call();
+                            }
+                            catch (Exception e) {
+                                hadError(e);
                             }
                         }
                         else {
@@ -1397,7 +1405,7 @@ public class IconDemoPanel extends IconPanel {
 
         getViewerPane().setTitle(" ");
         removeAll();
-        add(splashPanel, BorderLayout.CENTER);
+        add(logoPanel, BorderLayout.CENTER);
 
         getViewerPane().revalidate();
         getViewerPane().repaint();
@@ -1454,7 +1462,7 @@ public class IconDemoPanel extends IconPanel {
     private synchronized void setRootedEntities(List<RootedEntity> rootedEntities) {
         this.pageRootedEntities = rootedEntities;
 
-        Set<String> imageRoles = new HashSet<String>();
+        Set<String> imageRoles = new HashSet<>();
         for (RootedEntity rootedEntity : rootedEntities) {
             for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatas(rootedEntity.getEntity())) {
                 if (EntityUtils.hasImageRole(ed)) {
@@ -1487,7 +1495,7 @@ public class IconDemoPanel extends IconPanel {
 
     @Override
     public List<RootedEntity> getSelectedEntities() {
-        List<RootedEntity> selectedEntities = new ArrayList<RootedEntity>();
+        List<RootedEntity> selectedEntities = new ArrayList<>();
         if (pageRootedEntities == null) {
             return selectedEntities;
         }
@@ -1518,7 +1526,7 @@ public class IconDemoPanel extends IconPanel {
     }
 
     private List<RootedEntity> getRootedEntitiesById(String id) {
-        List<RootedEntity> res = new ArrayList<RootedEntity>();
+        List<RootedEntity> res = new ArrayList<>();
         // Assume these are path ids
         res.addAll(allRootedEntitiesByPathId.get(id));
         if (res.isEmpty()) {
@@ -1557,7 +1565,7 @@ public class IconDemoPanel extends IconPanel {
     public EntityViewerState saveViewerState() {
         // We could get this from the EntitySelectionModel, but sometimes that 
         // doesn't have the latest select the user is currently making.
-        Set<String> selectedIds = new HashSet<String>();
+        Set<String> selectedIds = new HashSet<>();
         for(AnnotatedImageButton button : imagesPanel.getSelectedButtons()) {
             selectedIds.add(button.getRootedEntity().getId());
         }

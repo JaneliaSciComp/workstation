@@ -21,6 +21,7 @@ public class DynamicImageButton extends AnnotatedImageButton {
         super(rootedEntity, iconPanel);
     }
 
+    @Override
     public JComponent init(final RootedEntity rootedEntity) {
 
         String imageRole = iconPanel.getCurrImageRole();

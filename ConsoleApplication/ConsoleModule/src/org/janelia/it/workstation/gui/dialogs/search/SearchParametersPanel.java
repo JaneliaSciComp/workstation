@@ -1,20 +1,40 @@
 package org.janelia.it.workstation.gui.dialogs.search;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import javax.swing.AbstractAction;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 
-import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
-import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
+import org.janelia.it.jacs.shared.solr.SolrUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 
@@ -41,31 +61,51 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
     protected final JPanel criteriaPanel;
     protected final JButton searchButton;
     protected final JButton clearButton;
-
+    
     // Search state
     protected SearchConfiguration searchConfig;
     protected Entity searchRoot;
-    protected List<SearchCriteria> searchCriteriaList = new ArrayList<SearchCriteria>();
+    protected List<SearchCriteria> searchCriteriaList = new ArrayList<>();
     protected String searchString = "";
-
+      
     public SearchParametersPanel() {
 
         titleLabel = new JLabel("Search for ");
         titleLabel2 = new JLabel();
-
+                
         inputField = new JComboBox();
         inputField.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
         inputField.setEditable(true);
         inputField.setToolTipText("Enter search terms...");
 
-        searchButton = new JButton("Search");
-        searchButton.addActionListener(new ActionListener() {
+        inputField.addPopupMenuListener(new PopupMenuListener() {
+
             @Override
-            public void actionPerformed(ActionEvent e) {
-                performSearch(true);
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                loadSearchHistory();
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
             }
         });
 
+        AbstractAction mySearchAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                performSearchInternal(true);
+            }
+        };
+        searchButton = new JButton("Search");
+        searchButton.addActionListener(mySearchAction);
+        
+        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
+        getActionMap().put("enterAction", mySearchAction);
+        
         clearButton = new JButton("Clear");
         clearButton.addActionListener(new ActionListener() {
             @Override
@@ -80,10 +120,9 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
             @Override
             public void actionPerformed(ActionEvent e) {
                 setSearchRoot(null);
-                performSearch(false);
+                performSearchInternal(false);
             }
         });
-        deleteContextButton.setVisible(false);
 
         JPanel searchBox = new JPanel();
         searchBox.setLayout(new BoxLayout(searchBox, BoxLayout.LINE_AXIS));
@@ -154,6 +193,8 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
             }
         });
 
+        setSearchRoot(null);
+        
         JPanel infoPanel = new JPanel(new BorderLayout());
         infoPanel.add(infoButton, BorderLayout.EAST);
 
@@ -210,16 +251,20 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         init(evt.getSearchConfig());
     }
 
+    public SolrQueryBuilder getQueryBuilder() {
+        SolrQueryBuilder builder = new SolrQueryBuilder();
+        return getQueryBuilder(builder);
+    }
+    
     /**
      * Returns a query builder for the current search parameters.
      *
      * @return
      */
-    public SolrQueryBuilder getQueryBuilder() {
+    public SolrQueryBuilder getQueryBuilder(SolrQueryBuilder builder) {
 
-        searchString = (String) inputField.getSelectedItem();
+        this.searchString = getSearchString();
 
-        SolrQueryBuilder builder = new SolrQueryBuilder();
         for (String subjectKey : SessionMgr.getSubjectKeys()) {
             builder.addOwnerKey(subjectKey);
         }
@@ -233,6 +278,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         if (advancedSearchCheckbox.isSelected()) {
 
             StringBuilder aux = new StringBuilder();
+            StringBuilder auxAnnot = new StringBuilder();
 
             for (SearchCriteria criteria : searchCriteriaList) {
 
@@ -245,10 +291,10 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
                 }
 
                 if (sa.getDataType().equals(DataType.DATE)) {
-                    Calendar startCal = (Calendar) criteria.getValue1();
-                    Calendar endCal = (Calendar) criteria.getValue2();
-                    value1 = startCal == null ? "*" : SolrUtils.formatDate(startCal.getTime());
-                    value2 = endCal == null ? "*" : SolrUtils.formatDate(endCal.getTime());
+                    Date startCal = (Date) criteria.getValue1();
+                    Date endCal = (Date) criteria.getValue2();
+                    value1 = startCal == null ? "*" : SolrUtils.formatDate(startCal);
+                    value2 = endCal == null ? "*" : SolrUtils.formatDate(endCal);
                 }
                 else {
                     value1 = (String) criteria.getValue1();
@@ -259,6 +305,21 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
                     continue;
                 }
 
+                if ("annotations".equals(sa.getName())) {
+                    if (auxAnnot.length()>1) {
+                        auxAnnot.append(" ");
+                    }
+                    switch (criteria.getOp()) {
+                        case NOT_NULL:
+                            auxAnnot.append("*");
+                            break;
+                        default:
+                            auxAnnot.append(value1);
+                            break;
+                    }
+                    continue;
+                }
+                
                 if (aux.length() > 0) {
                     aux.append(" ");
                 }
@@ -268,7 +329,16 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
 
                 switch (criteria.getOp()) {
                     case CONTAINS:
-                        aux.append(value1);
+                        if (sa.getDataType().equals(DataType.DATE)) {
+                            aux.append("[");
+                            aux.append(value1);
+                            aux.append(" TO ");
+                            aux.append(value1);
+                            aux.append("+1DAY]");
+                        }
+                        else {
+                            aux.append(value1);    
+                        }                        
                         break;
                     case BETWEEN:
                         aux.append("[");
@@ -284,46 +354,92 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
             }
 
             builder.setAuxString(aux.toString());
+            builder.setAuxAnnotationQueryString(auxAnnot.toString());
         }
 
         return builder;
     }
+    
+    /**
+     * Override this method to provide custom search history persistence. The
+     * global search history is used by default. 
+     * @return Current search history. May be null or empty if there is no history.
+     */
+    protected List<String> getSearchHistory() {
+        return SessionMgr.getBrowser().getSearchHistory();
+    }
+    
+    /**
+     * Override this method to provide custom search history persistence. The
+     * global search history is used by default.
+     * @param searchHistory The search history to persist. May be empty or null
+     * if there is no history.
+     */
+    protected void setSearchHistory(List<String> searchHistory) {
+        SessionMgr.getBrowser().setSearchHistory(searchHistory);
+    }
 
-    protected void populateHistory() {
+    private void addCurrentSearchTermToHistory() {
 
+        String searchString = getSearchString();
+        if (StringUtils.isEmpty(searchString)) return;
+        
         DefaultComboBoxModel model = (DefaultComboBoxModel) inputField.getModel();
 
-        // Check if the current search term is already recorded in the history
-        if (model.getSize() > 0 && model.getElementAt(0) != null && model.getElementAt(0).equals(searchString)) {
-            return;
-        }
-
-        // Update the model
+        // Trim history
         while (model.getSize() >= MAX_HISTORY_LENGTH) {
             model.removeElementAt(model.getSize() - 1);
         }
+        
+        // Remove any current instance of the search term
+        int currIndex = model.getIndexOf(searchString);
+        if (currIndex>=0) {
+            model.removeElementAt(currIndex);
+        }
+        
+        // Add it to the front
         model.insertElementAt(searchString, 0);
-    }
-
-    public void setSearchHistory(List<String> searchHistory) {
-        if (searchHistory == null) {
-            return;
-        }
-        DefaultComboBoxModel model = (DefaultComboBoxModel) inputField.getModel();
-        model.removeAllElements();
-        for (String s : searchHistory) {
-            model.addElement(s);
-        }
-        inputField.setSelectedItem("");
-    }
-
-    public List<String> getSearchHistory() {
-        DefaultComboBoxModel model = (DefaultComboBoxModel) inputField.getModel();
-        List<String> searchHistory = new ArrayList<String>();
+        inputField.setSelectedItem(searchString);
+        
+        List<String> searchHistory = new ArrayList<>();
         for (int i = 0; i < model.getSize(); i++) {
             searchHistory.add((String) model.getElementAt(i));
+        }        
+        
+        setSearchHistory(searchHistory);
+    }
+
+    private void loadSearchHistory() {
+        
+        String searchString = getSearchString();
+        
+        List<String> searchHistory = getSearchHistory();
+        
+        DefaultComboBoxModel model = (DefaultComboBoxModel) inputField.getModel();
+        model.removeAllElements();
+        
+        if (searchHistory == null || searchHistory.isEmpty()) {
+            return;
         }
-        return searchHistory;
+        
+        boolean selectedInHistory = false;
+        
+        for (String s : searchHistory) {
+            if (s.equals(searchString)) {
+                selectedInHistory = true;
+            }
+            model.addElement(s);
+        }
+        
+        if (!StringUtils.isEmpty(searchString)) {
+            if (!selectedInHistory) {
+                model.insertElementAt(searchString, 0);
+            }
+            inputField.setSelectedItem(searchString);
+        }
+        else {
+            inputField.setSelectedItem("");
+        }
     }
 
     private void addSearchCriteria(boolean enableDelete) {
@@ -352,7 +468,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
             deleteContextButton.setVisible(true);
         }
     }
-
+    
     public Entity getSearchRoot() {
         return searchRoot;
     }
@@ -361,15 +477,33 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         return searchCriteriaList;
     }
 
+    /**
+     * The default implementation sets the current search string to the 
+     * input field value every time this method is called. You can override
+     * this method to provide alternate behavior, such as post-processing of the 
+     * search string. 
+     * @return 
+     */
     public String getSearchString() {
+        this.searchString = getInputFieldValue();
+        if (searchString!=null) {
+            this.searchString = searchString.trim();
+        }
         return searchString;
     }
 
     public void setSearchString(String searchString) {
         this.searchString = searchString;
+    }
+    
+    public String getInputFieldValue() {
+        return (String)inputField.getSelectedItem();
+    }
+    
+    public void setInputFieldValue(String searchString) {
         inputField.setSelectedItem(searchString);
     }
-
+        
     public JLabel getTitleLabel() {
         return titleLabel;
     }
@@ -409,7 +543,16 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         advancedSearchCheckbox.setSelected(false);
     }
 
+    private void performSearchInternal(boolean clear) {
+        addCurrentSearchTermToHistory();
+        performSearch(clear);
+    }
+    
+    /**
+     * Override this method to provide search behavior. 
+     * @param clear
+     */
     public void performSearch(boolean clear) {
-        populateHistory();
+        
     }
 }

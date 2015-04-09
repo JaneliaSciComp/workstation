@@ -29,7 +29,7 @@ import java.util.concurrent.Callable;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 200)
+@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 300)
 @Messages({
     "CTL_SplitPickingLanesAction=Split Picking Lanes",
     "CTL_SplitPickingLanesTopComponent=Split Picking Tool",

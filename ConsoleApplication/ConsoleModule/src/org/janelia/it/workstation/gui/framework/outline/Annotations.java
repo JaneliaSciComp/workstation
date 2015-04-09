@@ -14,48 +14,52 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * Annotations about the entities which the user is currently interacting with.
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class Annotations {
-	
-    protected List<OntologyAnnotation> annotations = new ArrayList<OntologyAnnotation>();
+
+    protected List<OntologyAnnotation> annotations = new ArrayList<>();
     protected AnnotationFilter filter;
-    
-	public Annotations() {
-	}
-    
-	public synchronized void clear() {
-    	annotations.clear();
-	}
-	
+
+    public Annotations() {
+    }
+
+    public synchronized void clear() {
+        annotations.clear();
+    }
+
     public synchronized void init(List<Long> entityIds) {
-    	
-    	if (SwingUtilities.isEventDispatchThread()) throw new RuntimeException("Method must run outside of the EDT");
-    	
+
+        if (SwingUtilities.isEventDispatchThread()) {
+            throw new RuntimeException("Method must run outside of the EDT");
+        }
+
         try {
-        	clear();
-            for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntities(entityIds)) {
-            	OntologyAnnotation annotation = new OntologyAnnotation();
-            	annotation.init(entityAnnot);
-            	annotations.add(annotation);
+            clear();
+            for (Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntities(entityIds)) {
+                OntologyAnnotation annotation = new OntologyAnnotation();
+                annotation.init(entityAnnot);
+                annotations.add(annotation);
             }
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
-	
+
     public synchronized void init(Long parentId) {
-    	
-    	if (SwingUtilities.isEventDispatchThread()) throw new RuntimeException("Method must run outside of the EDT");
-    	
+
+        if (SwingUtilities.isEventDispatchThread()) {
+            throw new RuntimeException("Method must run outside of the EDT");
+        }
+
         try {
-        	clear();
-            for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForChildren(parentId)) {
-            	OntologyAnnotation annotation = new OntologyAnnotation();
-            	annotation.init(entityAnnot);
-            	annotations.add(annotation);
+            clear();
+            for (Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForChildren(parentId)) {
+                OntologyAnnotation annotation = new OntologyAnnotation();
+                annotation.init(entityAnnot);
+                annotations.add(annotation);
             }
         }
         catch (Exception e) {
@@ -65,32 +69,34 @@ public class Annotations {
 
     public void reload(Long entityId) {
 
-    	if (SwingUtilities.isEventDispatchThread()) throw new RuntimeException("Method must run outside of the EDT");
+        if (SwingUtilities.isEventDispatchThread()) {
+            throw new RuntimeException("Method must run outside of the EDT");
+        }
 
-		synchronized(this) {
-	    	// Remove all the annotations for this entity			
-	    	if (annotations!=null) {
-		    	List<OntologyAnnotation> copy = new ArrayList<OntologyAnnotation>(annotations);
-		    	for(OntologyAnnotation annotation : copy) {
-		    		if (annotation.getTargetEntityId()!=null && annotation.getTargetEntityId().equals(entityId)) {
-		    			annotations.remove(annotation);
-		    		}
-		    	}
-	    	}
-	    	else {
-	    		this.annotations = new ArrayList<OntologyAnnotation>();
-	    	}
-		}
-    	
-    	// Reload them
+        synchronized (this) {
+            // Remove all the annotations for this entity			
+            if (annotations != null) {
+                List<OntologyAnnotation> copy = new ArrayList<>(annotations);
+                for (OntologyAnnotation annotation : copy) {
+                    if (annotation.getTargetEntityId() != null && annotation.getTargetEntityId().equals(entityId)) {
+                        annotations.remove(annotation);
+                    }
+                }
+            }
+            else {
+                this.annotations = new ArrayList<>();
+            }
+        }
+
+        // Reload them
         try {
-            for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntity(entityId)) {
-            	OntologyAnnotation annotation = new OntologyAnnotation();
-            	annotation.init(entityAnnot);
-                if(annotation.getTargetEntityId()!=null) {
-                	synchronized(this) {
-                		annotations.add(annotation);
-                	}
+            for (Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntity(entityId)) {
+                OntologyAnnotation annotation = new OntologyAnnotation();
+                annotation.init(entityAnnot);
+                if (annotation.getTargetEntityId() != null) {
+                    synchronized (this) {
+                        annotations.add(annotation);
+                    }
                 }
             }
         }
@@ -98,38 +104,42 @@ public class Annotations {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
-    
+
     public synchronized void setFilter(AnnotationFilter filter) {
-		this.filter = filter;
-	}
-    
-	public synchronized List<OntologyAnnotation> getAnnotations() {
-		if (annotations==null) return new ArrayList<OntologyAnnotation>();
-    	// Copy to avoid concurrent modification issues
-    	return new ArrayList<OntologyAnnotation>(annotations);
-	}
-    
-	public synchronized List<OntologyAnnotation> getFilteredAnnotations() {
-    	List<OntologyAnnotation> filtered = new ArrayList<OntologyAnnotation>();
-        for(OntologyAnnotation annotation : annotations) {
-        	if (filter!=null && !filter.accept(annotation)) continue;
-        	filtered.add(annotation);
+        this.filter = filter;
+    }
+
+    public synchronized List<OntologyAnnotation> getAnnotations() {
+        if (annotations == null) {
+            return new ArrayList<>();
+        }
+        // Copy to avoid concurrent modification issues
+        return new ArrayList<>(annotations);
+    }
+
+    public synchronized List<OntologyAnnotation> getFilteredAnnotations() {
+        List<OntologyAnnotation> filtered = new ArrayList<>();
+        for (OntologyAnnotation annotation : annotations) {
+            if (filter != null && !filter.accept(annotation)) {
+                continue;
+            }
+            filtered.add(annotation);
         }
         return filtered;
     }
 
     public synchronized Map<Long, List<OntologyAnnotation>> getFilteredAnnotationMap() {
-    	Map<Long, List<OntologyAnnotation>> filteredMap = new HashMap<Long, List<OntologyAnnotation>>();
-    	
+        Map<Long, List<OntologyAnnotation>> filteredMap = new HashMap<>();
+
         for (OntologyAnnotation annotation : getFilteredAnnotations()) {
             List<OntologyAnnotation> oas = filteredMap.get(annotation.getTargetEntityId());
             if (oas == null) {
-                oas = new ArrayList<OntologyAnnotation>();
+                oas = new ArrayList<>();
                 filteredMap.put(annotation.getTargetEntityId(), oas);
             }
             oas.add(annotation);
         }
-        
+
         return filteredMap;
     }
 }

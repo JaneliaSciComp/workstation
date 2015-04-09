@@ -20,6 +20,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
+import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
 
 /**
  * Created with IntelliJ IDEA.
@@ -1065,26 +1066,6 @@ public class AlignmentBoardControls {
     }
 
     //-------------------------------------------------INNER CLASSES/INTERFACES
-
-    class StateDrivenIconToggleButton extends JToggleButton {
-        private final Icon setIcon;
-        private final Icon unsetIcon;
-        public StateDrivenIconToggleButton( Icon setIcon, Icon unsetIcon ) {
-            this.setIcon = setIcon;
-            this.unsetIcon = unsetIcon;
-        }
-
-        @Override
-        public Icon getIcon() {
-            if ( this.isSelected() ) {
-                return setIcon;
-            }
-            else {
-                return unsetIcon;
-            }
-        }
-    }
-
     /** Simple list-and-map-driven combo box model. */
     class ABSDComboBoxModel implements ComboBoxModel {
 

@@ -6,11 +6,8 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
 import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
 
 /**
@@ -368,14 +365,22 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception {
-        RawFileInfo rawInfo = null;
+    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception {
+        Map<Integer,byte[]> rtnVal = null;
         final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
         if ( remoteTiledMicroscopeBean != null ) {
-            rawInfo = remoteTiledMicroscopeBean.getNearestFileInfo(basePath, viewerCoord);
+            rtnVal = remoteTiledMicroscopeBean.getTextureBytes( basePath, viewerCoord, dimensions );
         }
-        
-        return rawInfo;
+        return rtnVal;
     }
 
+    @Override
+    public CoordinateToRawTransform getLvvCoordToRawTransform( String basePath ) throws Exception {
+        CoordinateToRawTransform rtnVal = null;
+        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
+        if ( remoteTiledMicroscopeBean != null ) {
+            rtnVal = remoteTiledMicroscopeBean.getTransform(basePath);
+        }
+        return rtnVal;
+    }
 }

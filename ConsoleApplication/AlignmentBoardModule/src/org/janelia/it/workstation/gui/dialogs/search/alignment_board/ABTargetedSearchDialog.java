@@ -17,10 +17,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.util.*;
 import java.util.List;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
+import static org.janelia.it.workstation.gui.dialogs.search.alignment_board.SearchWorker.SEARCH_HISTORY_MDL_PROP;
 
 /**
  * Created with IntelliJ IDEA.
@@ -88,11 +87,6 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
     /** Simple parameter GUI. */
     private JPanel initParamGui() {
-        searchParamsPanel = new SearchParametersPanel();
-        SearchConfiguration searchConfig = new SearchConfiguration();
-        searchConfig.load();
-        searchConfig.addConfigurationChangeListener(searchParamsPanel);
-        searchParamsPanel.init(searchConfig);
         SearchWorker.SearchErrorHandler errorHandler = new SearchWorker.SearchErrorHandler() {
             @Override
             public void handleError(Throwable th) {
@@ -100,29 +94,32 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 SessionMgr.getSessionMgr().handleException( th );
             }
         };
-        QueryLaunchAction searchAction = new QueryLaunchAction(
+        final QueryLaunchAction searchAction = new QueryLaunchAction(
                 errorHandler,
-                searchParamsPanel,
                 "Search",
                 baseballCardPanel,
                 context,
                 searchRoot == null ? null : searchRoot.getId()
         );
-        searchParamsPanel.getSearchButton().addActionListener(
-                searchAction
-        );
-
-        searchParamsPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"enterAction");
-        searchParamsPanel.getActionMap().put("enterAction", searchAction);
-
-
-        List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty( SearchWorker.SEARCH_HISTORY_MDL_PROP );
-        if ( searchHistory == null ) {
-            searchHistory = new ArrayList<String>();
-        }
-        searchParamsPanel.setSearchHistory( searchHistory );
+        searchParamsPanel = new SearchParametersPanel() {
+            @Override
+            public void performSearch(boolean clear) {
+                searchAction.actionPerformed(null);
+            }
+            @Override
+            protected List<String> getSearchHistory() {
+                return (List<String>) SessionMgr.getSessionMgr().getModelProperty(SearchWorker.SEARCH_HISTORY_MDL_PROP);
+            }
+            @Override
+            protected void setSearchHistory(List<String> searchHistory) {
+                SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY_MDL_PROP, searchHistory);
+            }
+        };
+        SearchConfiguration searchConfig = new SearchConfiguration();
+        searchConfig.load();
+        searchConfig.addConfigurationChangeListener(searchParamsPanel);
+        searchParamsPanel.init(searchConfig);
         return searchParamsPanel;
-
     }
 
     private JPanel initDisposeGui() {
@@ -195,23 +192,20 @@ public class ABTargetedSearchDialog extends ModalDialog {
         return new BaseballCardPanel( true, dialogWidth, DEFAULT_ROWS_PER_PAGE, controlCallback );
     }
 
-    private static class QueryLaunchAction extends AbstractAction {
+    private class QueryLaunchAction extends AbstractAction {
         private BaseballCardPanel baseballCardPanel;
         private Long searchRootId;
         private AlignmentBoardContext context;
-        private SearchParametersPanel queryBuilderSource;
         private SearchWorker.SearchErrorHandler errorHandler;
 
         public QueryLaunchAction(
                 SearchWorker.SearchErrorHandler errorHandler,
-                SearchParametersPanel queryBuilderSource,
                 String actionName,
                 BaseballCardPanel baseballCardPanel,
                 AlignmentBoardContext context,
                 Long searchRootId
         ) {
             super( actionName );
-            this.queryBuilderSource = queryBuilderSource;
             this.baseballCardPanel = baseballCardPanel;
             this.searchRootId = searchRootId;
             this.context = context;
@@ -231,7 +225,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
             param.setSearchRootId(searchRootId);
             param.setErrorHandler(errorHandler);
             param.setStartingRow( 0 );
-            SimpleWorker worker = new SearchWorker( param, queryBuilderSource.getQueryBuilder(), context );
+            SimpleWorker worker = new SearchWorker( param, searchParamsPanel.getQueryBuilder(), context );
             worker.execute();
 
         }

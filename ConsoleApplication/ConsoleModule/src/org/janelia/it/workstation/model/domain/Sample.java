@@ -210,10 +210,6 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
         return getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_CHANNEL_SPECIFICATION);
     }
 
-    public String getTilingPattern() {
-        return getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_TILING_PATTERN);
-    }
-
     @Override
     public String get2dImageFilepath() {
         return getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);

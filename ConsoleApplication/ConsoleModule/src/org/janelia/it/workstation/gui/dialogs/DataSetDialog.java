@@ -28,7 +28,6 @@ import javax.swing.text.JTextComponent;
 import net.miginfocom.swing.MigLayout;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -46,7 +45,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DataSetDialog extends ModalDialog implements Accessibility {
+public class DataSetDialog extends ModalDialog {
     
     private static final String SLIDE_CODE_PATTERN = "{Slide Code}";
 	private static final String DEFAULT_SAMPLE_NAME_PATTERN = "{Line}-"+SLIDE_CODE_PATTERN;
@@ -325,9 +324,5 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     	}
     	
     	return sb.toString();
-    }
-    
-    public boolean isAccessible() {
-    	return true;
     }
 }

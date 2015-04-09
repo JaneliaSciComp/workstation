@@ -29,12 +29,12 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "properties", openAtStartup = false, position=400)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position = 300)
 @ActionID(category = "Window", id = "SplitPickingTopComponent")
-@ActionReference(path = "Menu/Window", position = 400)
+@ActionReference(path = "Menu/Window", position = 300)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_SplitPickingAction",
-        preferredID = "SplitPickingTopComponent"
+        preferredID = SplitPickingTopComponent.PREFERRED_ID
 )
 @Messages({
     "CTL_SplitPickingAction=Split Picking Tool",

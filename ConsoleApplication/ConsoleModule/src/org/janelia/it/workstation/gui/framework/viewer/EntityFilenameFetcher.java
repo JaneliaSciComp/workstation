@@ -24,22 +24,22 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
  */
 public class EntityFilenameFetcher {
 	
-	private static final Logger log = LoggerFactory.getLogger(EntityFilenameFetcher.class);
+    private static final Logger log = LoggerFactory.getLogger(EntityFilenameFetcher.class);
 	
     public enum FilenameType {IMAGE_FAST_3d, NEURON_FRAGMENT_3d, MASK_FILE}
 
-    private static Map<String,String> entityTypeToFileTypeMapping;
+    private final static Map<String,String> entityTypeToFileTypeMapping;
     static {
-        entityTypeToFileTypeMapping = new HashMap<String,String>();
+        entityTypeToFileTypeMapping = new HashMap<>();
         entityTypeToFileTypeMapping.put( EntityConstants.TYPE_NEURON_FRAGMENT, EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE );
         entityTypeToFileTypeMapping.put( EntityConstants.TYPE_CURATED_NEURON, EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE );
         entityTypeToFileTypeMapping.put( EntityConstants.TYPE_SAMPLE, EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE );
         entityTypeToFileTypeMapping.put( EntityConstants.TYPE_IMAGE_3D, EntityConstants.ATTRIBUTE_REFERENCE_MIP_IMAGE ); //todo change
     }
 
-    private static Map<FilenameType,String> fetchTypeToFileType;
+    private final static Map<FilenameType,String> fetchTypeToFileType;
     static {
-        fetchTypeToFileType = new HashMap<FilenameType,String>();
+        fetchTypeToFileType = new HashMap<>();
         fetchTypeToFileType.put( FilenameType.IMAGE_FAST_3d, EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE );
         fetchTypeToFileType.put( FilenameType.NEURON_FRAGMENT_3d, EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE );
         fetchTypeToFileType.put( FilenameType.MASK_FILE, EntityConstants.ATTRIBUTE_FILE_PATH );
@@ -87,31 +87,16 @@ public class EntityFilenameFetcher {
         return entityTypeToFileTypeMapping.get( entityType );
     }
 
-//    public String getEntityConstantFileType(FilenameType type) {
-//        return fetchTypeToFileType.get( type );
-//    }
-//
-//    public String getMaskEntityConstantFileType(String entityType) {
-//        //        fetchTypeToFileType.put(FilenameType.MASK_FILE, ); //todo change
-//        if ( entityType.equals(EntityConstants.TYPE_IMAGE_3D ) ) {   //??????????????????????????
-//            return EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE;
-//        }
-//        else {
-//            return null;
-//        }
-//    }
-
     public String getFilepathForEntityAndRole(Entity entity, String imageRole) {
         String imageFilePath;
         imageFilePath = EntityUtils.getImageFilePath(entity, imageRole);
         log.debug( "For entity {}, got file {}", entity.getId(), imageFilePath );
 
         if ( imageFilePath != null ) {
-            // TODO: LocalFileCache - get Les to verify that the converted path is not needed here once VolumeLoader is updated to use SessionMgr.getFile
-//            imageFilePath = PathTranslator.convertPath(imageFilePath);
             log.debug( "The 3D image is at " + imageFilePath);
         }
         return imageFilePath;
+        //return "/Volumes/jacs/jacsShare/H264SamplesForReview/C1-tile-2033803516857811042.v3dpbd.v3draw.avi.mp4";
     }
 
     /** If this is not called, lazy-loaded entities won't have child entities available for searching, later. */

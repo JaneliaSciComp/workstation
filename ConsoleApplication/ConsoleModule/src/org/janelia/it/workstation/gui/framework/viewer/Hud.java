@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.framework.viewer;
 
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -15,8 +14,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
  * A persistent heads-up display for a synchronized image.
@@ -29,30 +32,35 @@ public class Hud extends ModalDialog {
 
     public static final String THREE_D_CONTROL = "3D";
 
+    private static Hud instance;
+    
+    private final Cursor defCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
+    private final Cursor hndCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
+    private final Point pp = new Point();
+    
     private Entity entity;
     private boolean dirtyEntityFor3D;
+    private final JScrollPane scrollPane;
     private final JLabel previewLabel;
     private Mip3d mip3d;
     private JCheckBox render3DCheckbox;
     private final JMenu rgbMenu = new JMenu("RGB Controls");
     private Hud3DController hud3DController;
-
-    private static Hud instance;
+    private KeyListener keyListener;
 
     public enum COLOR_CHANNEL {
-
         RED,
         GREEN,
         BLUE
     }
-
+    
     public static Hud getSingletonInstance() {
         if (instance == null) {
             instance = new Hud();
         }
         return instance;
     }
-
+    
     private Hud() {
         dirtyEntityFor3D = true;
         setModalityType(ModalityType.MODELESS);
@@ -60,14 +68,43 @@ public class Hud extends ModalDialog {
         previewLabel = new JLabel(new ImageIcon());
         previewLabel.setFocusable(false);
         previewLabel.setRequestFocusEnabled(false);
+        scrollPane = new JScrollPane();
+        scrollPane.setViewportView(previewLabel);
+
+        MouseAdapter mouseAdapter = new MouseAdapter() {
+            public void mouseDragged(final MouseEvent e) {
+                JViewport vport = (JViewport) e.getSource();
+                Point cp = e.getPoint();
+                Point vp = vport.getViewPosition();
+                vp.translate(pp.x - cp.x, pp.y - cp.y);
+                previewLabel.scrollRectToVisible(new Rectangle(vp, vport.getSize()));
+                pp.setLocation(cp);
+            }
+
+            public void mousePressed(MouseEvent e) {
+                previewLabel.setCursor(hndCursor);
+                pp.setLocation(e.getPoint());
+            }
+
+            public void mouseReleased(MouseEvent e) {
+                previewLabel.setCursor(defCursor);
+                previewLabel.repaint();
+            }
+        };
+        
+        scrollPane.getViewport().addMouseMotionListener(mouseAdapter);
+        scrollPane.getViewport().addMouseListener(mouseAdapter);
+        
+        this.add(scrollPane, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
         init3dGui();
-        add(previewLabel, BorderLayout.CENTER);
         if (mip3d != null) {
             mip3d.setDoubleBuffered(true);
         }
     }
 
     public void toggleDialog() {
+        log.debug("toggleDialog");
         if (isVisible()) {
             hideDialog();
         }
@@ -79,15 +116,32 @@ public class Hud extends ModalDialog {
     }
 
     public void hideDialog() {
+        log.debug("hideDialog");
         setVisible(false);
     }
 
     public void setEntityAndToggleDialog(Entity entity) {
+        log.debug("setEntityAndToggleDialog({})",entity);
         setEntityAndToggleDialog(entity, true);
     }
 
     public void setEntity(Entity entity) {
+        log.debug("setEntity({})",entity);
         setEntityAndToggleDialog(entity, false);
+    }
+    
+    /**
+     * The HUD should only have one listener at a time. Clients should use this
+     * method instead of addKeyListener. 
+     * @param keyListener 
+     */
+    public void setKeyListener(KeyListener keyListener) {
+        if (this.keyListener == keyListener) return;
+        this.keyListener = keyListener;
+        for(KeyListener l : getKeyListeners()) {
+            removeKeyListener(l);
+        }
+        addKeyListener(keyListener);
     }
 
     /**
@@ -108,7 +162,6 @@ public class Hud extends ModalDialog {
                 // In this case, 2D exists.  Need to reset the checkbox for 2D use, for now.
                 render3DCheckbox.setSelected(false);
             }
-
         }
     }
 
@@ -123,96 +176,100 @@ public class Hud extends ModalDialog {
         }
         else {
             this.remove(mip3d);
-            this.add(previewLabel, BorderLayout.CENTER);
+            this.add(scrollPane, BorderLayout.CENTER);
         }
         rgbMenu.setEnabled(is3D);
         this.validate();
         this.repaint();
     }
 
-    public void setEntityAndToggleDialog(Entity entity, boolean toggle) {
+    public void setEntityAndToggleDialog(final Entity entity, final boolean toggle) {
         this.entity = entity;
         if (entity == null) {
             dirtyEntityFor3D = false;
+            if (toggle) {
+                toggleDialog();
+            }
+            return;
         }
         else {
-            log.info("HUD: entity type is {}", entity.getEntityTypeName());
-            boolean imageEstablished = false;
-            try {
-                imageEstablished = establishImage();
-            }
-            catch (Exception ex) {
-                log.error("Failed to establish image", ex);
-            }
-
-            if (imageEstablished) {
-                dirtyEntityFor3D = true;
-                if (render3DCheckbox != null) {
-                    render3DCheckbox.setSelected(false);
-                    hud3DController.entityUpdate();
-                }
-                setAllColorsOn();
-                setTitle(entity.getName());
-
-                if (toggle) {
-                    toggleDialog();
-                }
-            }
-            else {
-                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Sorry, no image to display.");
-                log.info("No image established for {}:{}", entity.getName(), entity.getEntityTypeName());
-            }
+            log.debug("HUD: entity type is {}", entity.getEntityTypeName());
         }
-        mip3d.repaint();
-    }
-
-    private boolean establishImage() throws Exception {
-        boolean rtnVal = true;
-        String imagePath = EntityUtils.getImageFilePath(entity, EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
+        
+        final String imagePath = EntityUtils.getImageFilePath(entity, EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
         if (imagePath == null) {
             log.info("No image path for {}:{}", entity.getName(), entity.getId());
-            rtnVal = false;
         }
         else {
+            
+            SimpleWorker worker = new SimpleWorker() {
 
-            BufferedImage image = null;
-            SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-            ImageCache ic = SessionMgr.getBrowser().getImageCache();
-            if (ic != null) {
-                image = ic.get(imagePath);
-            }
-
-            // Ensure we have an image and that it is cached.
-            if (image == null) {
-                log.info("In HUD: must load image.");
-                final File imageFile = SessionMgr.getCachedFile(imagePath, false);
-                if (imageFile != null) {
-                    image = Utils.readImage(imageFile.getAbsolutePath());
+                private BufferedImage image = null;
+                
+                @Override
+                protected void doStuff() throws Exception {
+                    
+                    ImageCache ic = SessionMgr.getBrowser().getImageCache();
                     if (ic != null) {
-                        ic.put(imagePath, image);
+                        image = ic.get(imagePath);
+                    }
+
+                    // Ensure we have an image and that it is cached.
+                    if (image == null) {
+                        log.info("Must load image.");
+                        final File imageFile = SessionMgr.getCachedFile(imagePath, false);
+                        if (imageFile != null) {
+                            image = Utils.readImage(imageFile.getAbsolutePath());
+                            if (ic != null) {
+                                ic.put(imagePath, image);
+                            }
+                        }
+                    }
+
+                    // No image loaded or cached.  Do nada.
+                    if (image == null) {
+                        log.info("No image read for {}:{}", entity.getId(), imagePath);
+                    }
+
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    
+                    if (image!=null) {
+                        previewLabel.setIcon(image == null ? null : new ImageIcon(image));
+                        dirtyEntityFor3D = true;
+                        if (render3DCheckbox != null) {
+                            render3DCheckbox.setSelected(false);
+                            hud3DController.entityUpdate();
+                        }
+                        setAllColorsOn();
+                        setTitle(entity.getName());
+                        
+                        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                        int width = (int)Math.round((double)screenSize.width*0.9);
+                        int height = (int)Math.round((double)screenSize.height*0.9);
+                        width = Math.min(image.getWidth()+50, width);
+                        height = Math.min(image.getHeight()+100, height);
+                        setPreferredSize(new Dimension(width, height));
+                        setSize(new Dimension(width, height));
+                    }
+
+                    if (toggle) {
+                        toggleDialog();
                     }
                 }
-            }
 
-            // No image loaded or cached.  Do nada.
-            if (image == null) {
-                log.info("No image read for {}:{}", entity.getId(), imagePath);
-                rtnVal = false;
-            }
-            else {
-                // Force the image to be on the screen
-                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-                if (image.getHeight() > screenSize.height) {
-                    double scalingFactor = image.getHeight() / screenSize.height * 0.8;
-                    image = Utils.getScaledImage(image, scalingFactor);
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
                 }
-                ImageIcon imageIcon = new ImageIcon(image);
-                previewLabel.setIcon(image == null ? null : imageIcon);
-
-            }
-
+            };
+                    
+            worker.execute();
+            
         }
-        return rtnVal;
+        mip3d.repaint();
     }
 
     private void render() {
@@ -222,8 +279,15 @@ public class Hud extends ModalDialog {
         packAndShow();
     }
 
+    @Override
+    protected void packAndShow() {
+        SwingUtilities.updateComponentTreeUI(this);
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+    
     private void renderIn3D() {
-        this.remove(previewLabel);
+        this.remove(scrollPane);
         if (dirtyEntityFor3D) {
             try {
                 if (hud3DController != null) {

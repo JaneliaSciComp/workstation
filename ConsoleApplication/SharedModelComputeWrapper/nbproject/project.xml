@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.3</specification-version>
+                        <specification-version>1.10</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>
@@ -71,6 +71,7 @@
                 <package>org.janelia.it.jacs.model.tasks.tic</package>
                 <package>org.janelia.it.jacs.model.tasks.tools</package>
                 <package>org.janelia.it.jacs.model.tasks.utility</package>
+                <package>org.janelia.it.jacs.model.tasks.validation</package>
                 <package>org.janelia.it.jacs.model.tasks.zlatic</package>
                 <package>org.janelia.it.jacs.model.user_data</package>
                 <package>org.janelia.it.jacs.model.user_data.ap16s</package>
@@ -104,6 +105,7 @@
                 <package>org.janelia.it.jacs.model.user_data.tic</package>
                 <package>org.janelia.it.jacs.model.user_data.tiledMicroscope</package>
                 <package>org.janelia.it.jacs.model.user_data.tools</package>
+                <package>org.janelia.it.jacs.model.user_data.validation</package>
                 <package>org.janelia.it.jacs.model.user_data.zlatic</package>
                 <package>org.janelia.it.jacs.model.util</package>
                 <package>org.janelia.it.jacs.model.vo</package>
@@ -113,10 +115,13 @@
                 <package>org.janelia.it.jacs.shared.blast.blastxmlparser.jaxb</package>
                 <package>org.janelia.it.jacs.shared.export</package>
                 <package>org.janelia.it.jacs.shared.fasta</package>
+                <package>org.janelia.it.jacs.shared.ffmpeg</package>
                 <package>org.janelia.it.jacs.shared.file_chooser</package>
                 <package>org.janelia.it.jacs.shared.genomics</package>
                 <package>org.janelia.it.jacs.shared.geometric_search</package>
                 <package>org.janelia.it.jacs.shared.hibernate</package>
+                <package>org.janelia.it.jacs.shared.image.stream</package>
+                <package>org.janelia.it.jacs.shared.img_3d_loader</package>
                 <package>org.janelia.it.jacs.shared.lucene</package>
                 <package>org.janelia.it.jacs.shared.lucene.data_retrievers</package>
                 <package>org.janelia.it.jacs.shared.lucene.searchers</package>

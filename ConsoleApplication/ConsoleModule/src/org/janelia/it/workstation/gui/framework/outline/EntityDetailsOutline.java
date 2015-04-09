@@ -51,10 +51,8 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
             }
 
             @Override
-            public void entityDeselected(String category, String entityId) {
-                if (entity != null && entity.getId().equals(entityId)) {
-                    SessionMgr.getBrowser().getViewerManager().showEntityInInspector(null);
-                }
+            public void entityDeselected(String category, String uniqueId) {
+                // Do nothing
             }
         };
         add(entityDetailsPanel, BorderLayout.CENTER);
@@ -63,7 +61,11 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
     public void showLoadingIndicator() {
         entityDetailsPanel.showLoadingIndicator();
     }
-
+    
+    public void showNothing() {
+        entityDetailsPanel.showNothing();;
+    }
+    
     public void loadEntity(Entity entity) {
         if (entity == null) {
             return;

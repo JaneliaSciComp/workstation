@@ -1,53 +1,54 @@
 package org.janelia.it.workstation.shared.util;
 
-import de.javasoft.io.FileUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.modules.InstalledFileLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.Date;
 import java.util.Properties;
-import java.util.Random;
 
 /**
  * Adapted from IDEA code base.
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class SystemInfo {
 
     private static final Logger log = LoggerFactory.getLogger(SystemInfo.class);
-    
+
     private static final String NETBEANS_IDE_SETTING_NAME_PREFIX = "netbeans_";
     public static final String MEMORY_SETTING_PREFIX = "-J-Xmx";
     public static final String DEFAULT_OPTIONS_PROP = "default_options";
     public static final String ETC_SUBPATH = "etc";
 
-    public static final String OS_NAME = System.getProperty("os.name").toLowerCase();
-    public static final String OS_VERSION = System.getProperty("os.version").toLowerCase();
+    public static final String OS_NAME = System.getProperty("os.name");
+    public static final String OS_VERSION = System.getProperty("os.version");
+    public static final String OS_NAME_LC = OS_NAME.toLowerCase();
+    public static final String OS_VERSION_LC = OS_VERSION.toLowerCase();
     public static final String OS_ARCH = System.getProperty("os.arch");
-    public static final String JAVA_VERSION = System.getProperty("java.version");
-    public static final String JAVA_RUNTIME_VERSION = System.getProperty("java.runtime.version");
+    public static final String JAVA_NAME = System.getProperty("java.name", "Java");
+    public static final String JAVA_VERSION = System.getProperty("java.version", "unknown");
+    public static final String JAVA_RUNTIME_NAME = System.getProperty("java.runtime.name", "Java");
+    public static final String JAVA_RUNTIME_VERSION = System.getProperty("java.runtime.version", "unknown");
     public static final String ARCH_DATA_MODEL = System.getProperty("sun.arch.data.model");
     public static final String SUN_DESKTOP = System.getProperty("sun.desktop");
 
     public static final String DOWNLOADS_FINAL_PATH_DIR = "Downloads/";
     public static final String USERHOME_SYSPROP_NAME = "user.home";
 
-    public static final boolean isWindows = OS_NAME.startsWith("windows");
-    public static final boolean isWindowsNT = OS_NAME.startsWith("windows nt");
-    public static final boolean isWindows2000 = OS_NAME.startsWith("windows 2000");
-    public static final boolean isWindows2003 = OS_NAME.startsWith("windows 2003");
-    public static final boolean isWindowsXP = OS_NAME.startsWith("windows xp");
-    public static final boolean isWindowsVista = OS_NAME.startsWith("windows vista");
-    public static final boolean isWindows7 = OS_NAME.startsWith("windows 7");
-    public static final boolean isWindows9x = OS_NAME.startsWith("windows 9") || OS_NAME.startsWith("windows me");
-    public static final boolean isOS2 = OS_NAME.startsWith("os/2") || OS_NAME.startsWith("os2");
-    public static final boolean isMac = OS_NAME.startsWith("mac");
-    public static final boolean isFreeBSD = OS_NAME.startsWith("freebsd");
-    public static final boolean isLinux = OS_NAME.startsWith("linux");
+    public static final boolean isWindows = OS_NAME_LC.startsWith("windows");
+    public static final boolean isWindowsNT = OS_NAME_LC.startsWith("windows nt");
+    public static final boolean isWindows2000 = OS_NAME_LC.startsWith("windows 2000");
+    public static final boolean isWindows2003 = OS_NAME_LC.startsWith("windows 2003");
+    public static final boolean isWindowsXP = OS_NAME_LC.startsWith("windows xp");
+    public static final boolean isWindowsVista = OS_NAME_LC.startsWith("windows vista");
+    public static final boolean isWindows7 = OS_NAME_LC.startsWith("windows 7");
+    public static final boolean isWindows9x = OS_NAME_LC.startsWith("windows 9") || OS_NAME_LC.startsWith("windows me");
+    public static final boolean isOS2 = OS_NAME_LC.startsWith("os/2") || OS_NAME_LC.startsWith("os2");
+    public static final boolean isMac = OS_NAME_LC.startsWith("mac");
+    public static final boolean isFreeBSD = OS_NAME_LC.startsWith("freebsd");
+    public static final boolean isLinux = OS_NAME_LC.startsWith("linux");
     public static final boolean isUnix = !isWindows && !isOS2;
 
     public static final boolean isKDE = SUN_DESKTOP != null && SUN_DESKTOP.toLowerCase().contains("kde");
@@ -103,7 +104,7 @@ public class SystemInfo {
     public static boolean X11PasteEnabledSystem = isUnix && !isMac;
 
     private static boolean isTiger() {
-        return isMac && !OS_VERSION.startsWith("10.0") && !OS_VERSION.startsWith("10.1") && !OS_VERSION.startsWith("10.2") && !OS_VERSION.startsWith("10.3");
+        return isMac && !OS_VERSION_LC.startsWith("10.0") && !OS_VERSION_LC.startsWith("10.1") && !OS_VERSION_LC.startsWith("10.2") && !OS_VERSION_LC.startsWith("10.3");
     }
 
     private static boolean isIntelMac() {
@@ -111,47 +112,37 @@ public class SystemInfo {
     }
 
     private static boolean isLeopard() {
-        return isMac && isTiger() && !OS_VERSION.startsWith("10.4");
+        return isMac && isTiger() && !OS_VERSION_LC.startsWith("10.4");
     }
 
     private static boolean isSnowLeopard() {
-        return isMac && isLeopard() && !OS_VERSION.startsWith("10.5");
+        return isMac && isLeopard() && !OS_VERSION_LC.startsWith("10.5");
     }
-    
+
     public static void setDownloadsDir(String downloadsDir) {
         SessionMgr.getSessionMgr().setModelProperty(SessionMgr.DOWNLOADS_DIR, downloadsDir);
     }
-    
+
     public static File getDownloadsDir() {
         String downloadsDir = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DOWNLOADS_DIR);
-        File downloadsDirFile = null;
-        if (downloadsDir==null) {
-            if (SystemInfo.isMac) {
-                downloadsDirFile = new File(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
-            }
-            else if (SystemInfo.isLinux) {
-                String userHome = System.getProperty(USERHOME_SYSPROP_NAME);
-                String[] userHomePathParts = userHome.split( System.getProperty("file.separator" ) );
-                String usernameFromPath = "";
-                if ( userHomePathParts.length > 0 ) {
-                    usernameFromPath = userHomePathParts[ userHomePathParts.length - 1 ];                
-                }
-                else {
-                    usernameFromPath += new Random( new Date().getTime() ).nextInt();
-                    log.warn("Using random temp path for downloads: {}.", usernameFromPath);
-                }
-                downloadsDirFile = new File("/tmp/"+ usernameFromPath +"/" + DOWNLOADS_FINAL_PATH_DIR);
-            }
-            else if (SystemInfo.isWindows) {
-                downloadsDirFile = new File(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
-            }
-            else {
-                throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME);
-            }
-            setDownloadsDir(downloadsDirFile.getAbsolutePath());
+        File downloadsDirFile;
+        // Check for existence and clear out references to tmp
+        if (null==downloadsDir || downloadsDir.startsWith("/tmp")) {
+            downloadsDirFile = new File(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
         }
         else {
             downloadsDirFile = new File(downloadsDir);
+        }
+        try {
+            if (!downloadsDirFile.exists()) {
+                boolean success = downloadsDirFile.mkdir();
+                if (success) {
+                    log.debug("Created Download dir: "+downloadsDirFile.getAbsolutePath());
+                }
+            }
+        }
+        catch (Exception e) {
+            log.error("Error trying to test and create a Downloads directory.");
         }
         return downloadsDirFile;
     }
@@ -161,7 +152,7 @@ public class SystemInfo {
         com.sun.management.OperatingSystemMXBean sunmxbean = (com.sun.management.OperatingSystemMXBean) mxbean;
         return sunmxbean;
     }
-    
+
     public static Long getTotalSystemMemory() {
         try {
             return getOSMXBean().getTotalPhysicalMemorySize();
@@ -171,7 +162,7 @@ public class SystemInfo {
             return null;
         }
     }
-    
+
     public static Long getFreeSystemMemory() {
         try {
             return getOSMXBean().getFreePhysicalMemorySize();
@@ -181,7 +172,7 @@ public class SystemInfo {
             return null;
         }
     }
-    
+
     /**
      * Gets the -Xmx setting in current use.
      * @return gigs being requested at launch.
@@ -193,7 +184,7 @@ public class SystemInfo {
         if ( javaMemoryOption == null ) {
             return -1;
         }
-        
+
         final int numberEndPt = javaMemoryOption.length() - 1;
         char rangeIndicator = javaMemoryOption.charAt( numberEndPt );
         final int numberStartPt = MEMORY_SETTING_PREFIX.length();
@@ -204,11 +195,11 @@ public class SystemInfo {
         }
         else {
             // Stored as megabytes. Presented to user as gigabytes.
-            rtnVal = Integer.parseInt( javaMemoryOption.substring( numberStartPt, numberEndPt ) ) / 1024;        
+            rtnVal = Integer.parseInt( javaMemoryOption.substring( numberStartPt, numberEndPt ) ) / 1024;
         }
         return rtnVal;
     }
-    
+
     /**
      * Sets the ultimate -Xmx allocation setting.
      * @param memoryInGb how many gigs to use.
@@ -224,20 +215,20 @@ public class SystemInfo {
         }
         int optStart = value.indexOf(MEMORY_SETTING_PREFIX) + MEMORY_SETTING_PREFIX.length();
         int optEnd = value.indexOf( " ", optStart );
-        
+
         String newDefaultOpts = value.substring( 0, optStart ) + memoryInGb * 1024 + "m" + value.substring( optEnd );
         reWriteProperty( brandingConfig, DEFAULT_OPTIONS_PROP, newDefaultOpts );
     }
-    
+
     /**
      * Returns the user's copy of the branding configuration file,
      * but creates one by copying it from the main one, if it does
      * not yet exist.
-     * 
-     * @return 
+     *
+     * @return
      */
     private static File getOrCreateBrandingConfigFile() throws IOException {
-        String appnameToken ="JaneliaWorkstation";  //todo This needs o be programmatically set and retrieved
+        String appnameToken ="JaneliaWorkstation";  //todo This needs to be programmatically set and retrieved
         File userSettingsDir = new File( System.getProperty("netbeans.user") );
         if ( ! userSettingsDir.toString().contains("testuserdir") ) {
             userSettingsDir = new File( userSettingsDir.toString(), ETC_SUBPATH );
@@ -274,28 +265,28 @@ public class SystemInfo {
                                 String inline = null;
                                 while ( null != ( inline = infileReader.readLine() ) ) {
                                     if ( inline.startsWith( NETBEANS_IDE_SETTING_NAME_PREFIX ) ) {
-                                        inline = inline.substring( NETBEANS_IDE_SETTING_NAME_PREFIX.length() );                                        
+                                        inline = inline.substring( NETBEANS_IDE_SETTING_NAME_PREFIX.length() );
                                     }
                                     outfileWriter.println( inline );
                                 }
                             }
                         }
-                        
+
                     }
                     else {
                         log.error("Failed to save config file changes.  Config file used was {}.", sysWideConfig);
                     }
                 }
             }
-            
+
         }
         else {
             log.info("Found the {} file. No need to copy new one.", fqBrandingConfig);
         }
-        
+
         return fqBrandingConfig;
     }
-    
+
     private static String getJavaMemOption( String[] defaultOptions ) {
         String rtnVal = null;
         for ( String defaultOption: defaultOptions ) {
@@ -306,7 +297,7 @@ public class SystemInfo {
         }
         return rtnVal;
     }
-    
+
     private static String[] getDefaultOptions( File infile ) throws IOException {
         Properties props = loadNbConfig( infile );
         String value = (String)props.get( DEFAULT_OPTIONS_PROP );
@@ -317,7 +308,7 @@ public class SystemInfo {
             return new String[0];
         }
     }
-    
+
     private static Properties loadNbConfig( File infile ) throws IOException {
         Properties props = new Properties();
         if ( infile.exists() ) {
@@ -325,7 +316,7 @@ public class SystemInfo {
         }
         return props;
     }
-    
+
     private synchronized static void reWriteProperty( File outFile, String propName, String propValue ) throws IOException {
         Properties oldProps = loadNbConfig( outFile );
         oldProps.setProperty( propName, propValue );
@@ -337,5 +328,22 @@ public class SystemInfo {
             throw ioe;
         }
     }
-    
+
+    public static String getOSInfo() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(OS_NAME).append(" ").append(OS_VERSION).append(" (").append(OS_ARCH).append(")");
+        return sb.toString();
+    }
+
+    public static String getJavaInfo() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(JAVA_NAME).append(" ").append(JAVA_VERSION);
+        return sb.toString();
+    }
+
+    public static String getRuntimeJavaInfo() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(JAVA_RUNTIME_NAME).append(" ").append(JAVA_RUNTIME_VERSION);
+        return sb.toString();
+    }
 }

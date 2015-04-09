@@ -1,22 +1,14 @@
 package org.janelia.it.workstation.gui.split_picking;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
+
 import org.janelia.it.workstation.nb_action.EntityAcceptor;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.user_data.Group;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.WindowManager;
 
@@ -47,8 +39,8 @@ public class Launcher implements EntityAcceptor  {
 
     private void addToSplitFolder(Entity commonRoot, RootedEntity re) throws Exception {
 
-        final List<Long> ads = new ArrayList<Long>();
-        final List<Long> dbds = new ArrayList<Long>();
+        final List<Long> ads = new ArrayList<>();
+        final List<Long> dbds = new ArrayList<>();
 
         String splitPart = re.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
         if ("AD".equals(splitPart)) {
