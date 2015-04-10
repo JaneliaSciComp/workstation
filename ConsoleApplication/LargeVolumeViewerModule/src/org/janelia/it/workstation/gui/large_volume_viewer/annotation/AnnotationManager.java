@@ -682,6 +682,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * pop a dialog to add, edit, or delete note at the given annotation
      */
     public void addEditNote(final Long annotationID) {
+        String noteText = getNote(annotationID);
+        /*
         TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
 
         // get annotation if it exists, and its note value, if it exists
@@ -694,6 +696,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 noteText = noteNode.asText();
             }
         }
+        */
 
         // pop dialog, with (possibly) pre-existing text
         Object[] options = {"Set note",
@@ -724,7 +727,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
 
         if (noteText.length() > 0) {
+            setNote(annotationID, noteText);
 
+            /*
             final String setText = noteText;
             SimpleWorker setter = new SimpleWorker() {
                 @Override
@@ -746,8 +751,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 }
             };
             setter.execute();
+            */
 
         } else {
+            // no note text means delete note if it exists
+            clearNote(annotationID);
+
+            /*
             if (textAnnotation != null) {
                 SimpleWorker deleter = new SimpleWorker() {
                     @Override
@@ -770,8 +780,77 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 };
                 deleter.execute();
             }
+            */
         }
 
+    }
+
+    public void clearNote(Long annotationID) {
+        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
+        final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
+        if (textAnnotation != null) {
+            SimpleWorker deleter = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.removeNote(textAnnotation);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // nothing to see
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    presentError(
+                            "Could not remove note!",
+                            "Error",
+                            error);
+                }
+            };
+            deleter.execute();
+        }
+    }
+
+    /**
+     * returns the note attached to a given annotation; returns empty
+     * string if there is no note; you'll get an exception if the
+     * annotation ID doesn't exist
+     */
+    public String getNote(Long annotationID) {
+        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
+        final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
+        if (textAnnotation != null) {
+            JsonNode rootNode = textAnnotation.getData();
+            JsonNode noteNode = rootNode.path("note");
+            if (!noteNode.isMissingNode()) {
+                return noteNode.asText();
+            }
+        }
+        return "";
+    }
+
+    public void setNote(final Long annotationID, final String noteText) {
+        SimpleWorker setter = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.setNote(annotationModel.getGeoAnnotationFromID(annotationID), noteText);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                presentError(
+                        "Could not set note!",
+                        "Error",
+                        error);
+            }
+        };
+        setter.execute();
     }
 
     /**
