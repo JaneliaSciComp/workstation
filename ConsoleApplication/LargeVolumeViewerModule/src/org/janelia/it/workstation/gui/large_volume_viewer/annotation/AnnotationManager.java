@@ -683,20 +683,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      */
     public void addEditNote(final Long annotationID) {
         String noteText = getNote(annotationID);
-        /*
-        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
-
-        // get annotation if it exists, and its note value, if it exists
-        final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
-        String noteText = new String("");
-        if (textAnnotation != null) {
-            JsonNode rootNode = textAnnotation.getData();
-            JsonNode noteNode = rootNode.path("note");
-            if (!noteNode.isMissingNode()) {
-                noteText = noteNode.asText();
-            }
-        }
-        */
 
         // pop dialog, with (possibly) pre-existing text
         Object[] options = {"Set note",
@@ -728,61 +714,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         if (noteText.length() > 0) {
             setNote(annotationID, noteText);
-
-            /*
-            final String setText = noteText;
-            SimpleWorker setter = new SimpleWorker() {
-                @Override
-                protected void doStuff() throws Exception {
-                    annotationModel.setNote(annotationModel.getGeoAnnotationFromID(annotationID), setText);
-                }
-
-                @Override
-                protected void hadSuccess() {
-                    // nothing here
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    presentError(
-                            "Could not set note!",
-                            "Error",
-                            error);
-                }
-            };
-            setter.execute();
-            */
-
         } else {
             // no note text means delete note if it exists
             clearNote(annotationID);
-
-            /*
-            if (textAnnotation != null) {
-                SimpleWorker deleter = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        annotationModel.removeNote(textAnnotation);
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        // nothing to see
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        presentError(
-                                "Could not remove note!",
-                                "Error",
-                                error);
-                    }
-                };
-                deleter.execute();
-            }
-            */
         }
-
     }
 
     public void clearNote(Long annotationID) {
