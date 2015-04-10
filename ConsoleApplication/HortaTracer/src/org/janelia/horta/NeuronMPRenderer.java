@@ -63,19 +63,22 @@ extends MultipassRenderer
     private final float[] clearColor4 = new float[] {0,0,0,0};
     private final int[] clearColor4i = new int[] {0,0,0,0};
     private final GLAutoDrawable drawable;
+    private final ColorBackgroundActor backgroundActor;
     
     public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel) 
     {
         this.drawable = drawable;
         
+        Color topColor = new Color(0.02f, 0.01f, 0.00f, 0.0f);
+        Color bottomColor = new Color(0.10f, 0.06f, 0.00f, 0.0f);
+        backgroundActor = new ColorBackgroundActor(
+                topColor, 
+                bottomColor);
+        
         // 1) First pass: paint background
         add(new RenderPass(null) { // render to screen
                     {
-                        Color topColor = new Color(0.02f, 0.01f, 0.00f, 0.0f);
-                        Color bottomColor = new Color(0.10f, 0.06f, 0.00f, 0.0f);
-                        addActor(new ColorBackgroundActor(
-                                topColor, 
-                                bottomColor));
+                        addActor(backgroundActor);
                     }
         });
         
@@ -237,6 +240,10 @@ extends MultipassRenderer
     Iterable<GL3Actor> getVolumeActors()
     {
         return hdrPass.getActors();
+    }
+    
+    public void setBackgroundColor(Color topColor, Color bottomColor) {
+        backgroundActor.setColor(topColor, bottomColor);
     }
 
 }

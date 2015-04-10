@@ -42,26 +42,15 @@ public class ScreenQuadMesh extends MeshGeometry
     
     public ScreenQuadMesh() {
         initialize(Color.BLACK);
-        notifyObservers();
     }
 
     public ScreenQuadMesh(Color color) {
         initialize(color);
-        notifyObservers();
     }
 
     public ScreenQuadMesh(Color topColor, Color bottomColor) {
         initialize(topColor);
-        // recolor bottom vertices
-        for (int ix : new int[] {0, 1}) {
-            Vertex vtx = vertices.get(ix);
-            Vector4 col = (Vector4)vtx.getVectorAttribute("color");
-            col.set(0, bottomColor.getRed()/255.0f);
-            col.set(1, bottomColor.getGreen()/255.0f);
-            col.set(2, bottomColor.getBlue()/255.0f);
-            col.set(3, bottomColor.getAlpha()/255.0f);
-        }
-        notifyObservers();
+        setBottomColor(bottomColor);
     }
 
     private void initialize(Color color) {
@@ -89,6 +78,30 @@ public class ScreenQuadMesh extends MeshGeometry
         v.setAttribute("texCoord", new Vector2(0, 1));
         
         addFace(new int[] {0, 1, 2, 3});
+    }
+    
+    public void setBottomColor(Color color) {
+        for (int ix : new int[] {0, 1}) {
+            Vertex vtx = vertices.get(ix);
+            Vector4 col = (Vector4)vtx.getVectorAttribute("color");
+            col.set(0, color.getRed()/255.0f);
+            col.set(1, color.getGreen()/255.0f);
+            col.set(2, color.getBlue()/255.0f);
+            col.set(3, color.getAlpha()/255.0f);
+        }
+        setChanged();        
+    }
+    
+    public void setTopColor(Color color) {
+        for (int ix : new int[] {2, 3}) {
+            Vertex vtx = vertices.get(ix);
+            Vector4 col = (Vector4)vtx.getVectorAttribute("color");
+            col.set(0, color.getRed()/255.0f);
+            col.set(1, color.getGreen()/255.0f);
+            col.set(2, color.getBlue()/255.0f);
+            col.set(3, color.getAlpha()/255.0f);
+        }
+        setChanged();
     }
     
     public void setColor(Color color) 

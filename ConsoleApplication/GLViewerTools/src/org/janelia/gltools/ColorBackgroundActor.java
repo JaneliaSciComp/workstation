@@ -68,5 +68,22 @@ public class ColorBackgroundActor extends MeshActor
     
     public void setColor(Color color) {
         mesh.setColor(color);
+        mesh.notifyObservers();
+    }
+    
+    public void setColor(Color topColor, Color bottomColor) {
+        mesh.setTopColor(topColor);
+        mesh.setBottomColor(bottomColor);
+        mesh.notifyObservers();
+    }
+    
+    public void setBottomColor(Color color) {
+        mesh.setBottomColor(color);
+        mesh.notifyObservers();
+    }
+    
+    public void setTopColor(Color color) {
+        mesh.setTopColor(color);
+        mesh.notifyObservers();
     }
 }
