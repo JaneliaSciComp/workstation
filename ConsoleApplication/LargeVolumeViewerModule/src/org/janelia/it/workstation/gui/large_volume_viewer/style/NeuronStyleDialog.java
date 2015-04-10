@@ -54,10 +54,7 @@ public class NeuronStyleDialog extends JDialog {
         acceptButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
-                // test:
                 chosenStyle = new NeuronStyle(chooser.getColor(), visibility.isSelected());
-
                 success = true;
                 dispose();
             }

@@ -1053,7 +1053,7 @@ called from a  SimpleWorker thread.
     /**
      * add or update a note on a geomentric annotation
      */
-    public void setNote(TmGeoAnnotation geoAnnotation, String noteString) throws Exception {
+    public synchronized void setNote(TmGeoAnnotation geoAnnotation, String noteString) throws Exception {
         TmNeuron neuron = getNeuronFromAnnotationID(geoAnnotation.getId());
         if (neuron == null) {
             throw new Exception("can't find neuron for annotation with ID " + geoAnnotation.getId());

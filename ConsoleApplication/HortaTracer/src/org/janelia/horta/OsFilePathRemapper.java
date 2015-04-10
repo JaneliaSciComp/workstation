@@ -44,9 +44,9 @@ public class OsFilePathRemapper
     private static final Map<String,String> sWinPrefixMappings = new HashMap<>();
     private static final Map<String,String> sMacPrefixMappings = new HashMap<>();
     static {
-        sWinPrefixMappings.put("/nobackup/mousebrainmicro/", "\\\\fxt\\nobackup\\mousebrainmicro\\"); // Windows
-        sWinPrefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "\\\\dm11\\mousebrainmicro\\");
-        sWinPrefixMappings.put("/tier2/mousebrainmicro/mousebrainmicro/", "\\\\tier2\\mousebrainmicro\\mousebrainmicro\\");
+        sWinPrefixMappings.put("/nobackup/mousebrainmicro/", "//fxt/nobackup/mousebrainmicro/"); // Windows
+        sWinPrefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "//dm11/mousebrainmicro/");
+        sWinPrefixMappings.put("/tier2/mousebrainmicro/mousebrainmicro/", "//tier2/mousebrainmicro/mousebrainmicro/");
         //prefixMappings.put("/tier2/", "//tier2/"); // Windows
         //prefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "//dm11/mousebrainmicro/"); // Windows
 
