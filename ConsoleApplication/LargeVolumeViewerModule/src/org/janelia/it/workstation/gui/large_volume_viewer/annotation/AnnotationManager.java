@@ -684,39 +684,23 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void addEditNote(final Long annotationID) {
         String noteText = getNote(annotationID);
 
-        // pop dialog, with (possibly) pre-existing text
-        Object[] options = {"Set note",
-            "Delete note",
-            "Cancel"};
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Enter note text:"));
-        JTextField textField = new JTextField(40);
-        textField.setText(noteText);
-        panel.add(textField);
-        int ans = JOptionPane.showOptionDialog(
-                ComponentUtil.getLVVMainWindow(),
-                panel,
-                "Add, edit, or delete note",
-                JOptionPane.YES_NO_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                options,
-                options[0]);
-
-        if (ans == JOptionPane.CANCEL_OPTION) {
+        AddEditNoteDialog testDialog = new AddEditNoteDialog(
+            (Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
+            noteText,
+            annotationModel.getNeuronFromAnnotationID(annotationID),
+            annotationID);
+        testDialog.setVisible(true);
+        if (testDialog.isSuccess()) {
+            String resultText = testDialog.getOutputText().trim();
+            if (resultText.length() > 0) {
+                setNote(annotationID, resultText);
+            } else {
+                // empty string means delete note
+                clearNote(annotationID);
+            }
+        } else {
+            // canceled
             return;
-        } else if (ans == JOptionPane.NO_OPTION) {
-            // no option = delete note, which we signal by empty note text
-            noteText = "";
-        } else {
-            noteText = textField.getText().trim();
-        }
-
-        if (noteText.length() > 0) {
-            setNote(annotationID, noteText);
-        } else {
-            // no note text means delete note if it exists
-            clearNote(annotationID);
         }
     }
 
