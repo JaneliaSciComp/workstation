@@ -66,6 +66,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         //mip3d.addActor(shader);
 
         MeshObjFileActor meshActor =  new MeshObjFileActor(new File("/Users/murphys/simple_cube.obj"));
+        //MeshObjFileActor meshActor =  new MeshObjFileActor(new File("/Users/murphys/compartment_62.obj"));
         meshActor.setDrawLines(false);
         mip3d.addActor(meshActor);
 

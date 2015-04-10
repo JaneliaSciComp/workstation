@@ -26,8 +26,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationM
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationsConstants;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
-import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -279,7 +279,7 @@ public class Snapshot3DLauncher {
         }
         String colorModelSerializeString = independentCM.asString();
         if ( annotationManager != null && colorModelSerializeString != null ) {
-            logger.info("Saving color model {}.", colorModelSerializeString);
+            logger.debug("Saving color model {}.", colorModelSerializeString);
             annotationManager.savePreference(
                     AnnotationsConstants.PREF_3D_COLOR_MODEL,
                     colorModelSerializeString
@@ -297,8 +297,7 @@ public class Snapshot3DLauncher {
     }
     
     private void makeViewerVisible(Snapshot3d snapshotViewer) {
-        Snapshot3dTopComponent snapshotTopComponent =
-                findComponent();
+        Snapshot3dTopComponent snapshotTopComponent = findComponent(); 
         if ( snapshotTopComponent != null ) {
             if ( ! snapshotTopComponent.isOpened() ) {
                 snapshotTopComponent.open();
@@ -312,12 +311,9 @@ public class Snapshot3DLauncher {
     }
 
     private static Snapshot3dTopComponent findComponent() {
-        Snapshot3dTopComponent snapshotTopComponent =
-                (Snapshot3dTopComponent)WindowManager.getDefault()
-                        .findTopComponent(
-                                Snapshot3dTopComponent.SNAPSHOT3D_TOP_COMPONENT_PREFERRED_ID
-                        );
-        return snapshotTopComponent;
+        return (Snapshot3dTopComponent) WindowLocator.getByName(
+            Snapshot3dTopComponent.SNAPSHOT3D_TOP_COMPONENT_PREFERRED_ID
+        );
     }
 
     private String labelTextFor3d(int[] dimensions) {

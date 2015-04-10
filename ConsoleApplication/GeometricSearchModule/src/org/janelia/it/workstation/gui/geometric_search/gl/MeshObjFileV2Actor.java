@@ -11,18 +11,17 @@ import javax.media.opengl.GLAutoDrawable;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 /**
- * Created by murphys on 3/16/15.
+ * Created by murphys on 4/9/15.
  */
-public class MeshObjFileActor implements GLActor
+public class MeshObjFileV2Actor implements GLActor
 {
-    private final Logger logger = LoggerFactory.getLogger(MeshObjFileActor.class);
+    private final Logger logger = LoggerFactory.getLogger(MeshObjFileV2Actor.class);
     File objFile;
     boolean loaded=false;
     boolean loadError=false;
@@ -56,7 +55,7 @@ public class MeshObjFileActor implements GLActor
     List<fGroup> fList=new ArrayList<>();
 
 
-    public MeshObjFileActor(File objFile) {
+    public MeshObjFileV2Actor(File objFile) {
         this.objFile=objFile;
     }
 
@@ -111,7 +110,7 @@ public class MeshObjFileActor implements GLActor
         float[] rgba = { 0.3f, 0.5f, 1f };
         gl2.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, rgba, 0);
         gl2.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, rgba, 0);
-        gl2.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, FloatBuffer.wrap(new float[] { 0.5f }));
+        gl2.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, FloatBuffer.wrap(new float[]{0.5f}));
 
         drawTrianglesAndLines(gl2);
 
