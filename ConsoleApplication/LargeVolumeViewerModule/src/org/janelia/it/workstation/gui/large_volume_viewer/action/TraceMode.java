@@ -475,6 +475,13 @@ implements MouseMode, KeyListener
 			// System.out.println("next");
 			historyAnchor = skeleton.getHistory().next();
 			break;
+		case KeyEvent.VK_A:
+			// add/edit note dialog
+			Anchor nextParent = skeletonActor.getNextParent();
+			if (nextParent != null) {
+				skeleton.addEditNoteRequest(nextParent);
+			}
+			break;
 		}
 		if (historyAnchor != null)
 			camera.setFocus(historyAnchor.getLocation());
