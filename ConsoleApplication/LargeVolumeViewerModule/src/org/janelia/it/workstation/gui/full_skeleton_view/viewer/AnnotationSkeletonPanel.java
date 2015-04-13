@@ -53,8 +53,18 @@ public class AnnotationSkeletonPanel extends JPanel {
             actor.setTileFormat(dataSource.getTileFormat());
             actor.setZThicknessInPixels( 29000 - 15000 );
             actor.updateAnchors();
-            mip3d.addActor(actor);            
+            mip3d.addActor(actor);    
+            mip3d.setResetFirstRedraw(true);
             this.add(mip3d, BorderLayout.CENTER);
+            validate();
+            repaint();
+        }
+    }
+    
+    public void close() {
+        if (mip3d != null ) {
+            mip3d.clear();
+            mip3d = null;
         }
     }
     

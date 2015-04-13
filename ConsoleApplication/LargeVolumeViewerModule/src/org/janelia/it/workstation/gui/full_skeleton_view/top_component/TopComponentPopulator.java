@@ -36,8 +36,11 @@ public class TopComponentPopulator {
     }
     
     public void depopulate(JPanel panel) {
+        System.out.println("Depopulating the skeleton panel.");
         if (panel != null && skeletonPanel != null) {
             panel.remove(skeletonPanel);
+            skeletonPanel.close();
+            skeletonPanel = null;
         }
     }
     

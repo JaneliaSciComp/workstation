@@ -82,13 +82,15 @@ public final class AnnotationSkeletalViewTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
+        populator.depopulate(viewPanel);
         populator.populate(viewPanel, tileFormat);
     }
 
     @Override
     public void componentClosed() {
         populator.depopulate(viewPanel);
-    }
+        tileFormat = null;
+    }        
 
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at

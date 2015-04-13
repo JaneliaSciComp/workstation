@@ -34,6 +34,9 @@ public class AnnotationSkeletonViewLauncher {
             public void actionPerformed(ActionEvent e) {
                 AnnotationSkeletalViewTopComponent topComponent = (AnnotationSkeletalViewTopComponent)
                         WindowLocator.makeVisibleAndGet(AnnotationSkeletalViewTopComponent.PREFERRED_ID);
+                // This exchange will refresh contents of viewer.
+                topComponent.componentClosed();
+                topComponent.componentOpened();
                 topComponent.setTileFormat(tileFormat);
             }
         };
