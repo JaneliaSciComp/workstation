@@ -138,7 +138,7 @@ implements GLActor
 
         NeuronStyle style;
         for (Long neuronID: neuronVertices.keySet()) {
-            if (!neuronStyles.get(neuronID).isVisible()) {
+            if (neuronStyles.get(neuronID) != null  &&  !neuronStyles.get(neuronID).isVisible()) {
                 continue;
             }
 
@@ -227,7 +227,7 @@ implements GLActor
         setupAnchorShaders(gl);
 
         for (Long neuronID: neuronVertices.keySet()) {
-            if (!neuronStyles.get(neuronID).isVisible()) {
+            if (neuronStyles.get(neuronID) != null  &&  !neuronStyles.get(neuronID).isVisible()) {
                 continue;
             }
 
@@ -372,7 +372,7 @@ implements GLActor
         gl.glLineWidth(5.0f);
 
         for (Long neuronID: neuronTracedSegments.keySet()) {
-            if (!neuronStyles.get(neuronID).isVisible()) {
+            if (neuronStyles.get(neuronID) != null  &&  !neuronStyles.get(neuronID).isVisible()) {
                 continue;
             }
 

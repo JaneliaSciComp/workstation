@@ -1168,6 +1168,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         snapshot3dLauncher.setAnnotationManager(annotationMgr);
         annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
+        annotationSkeletonViewLauncher.setTileFormat(this.tileFormat);
         volumeImage.setRemoteBasePath(canonicalLinuxPath);
         return loadURL(url);
     }

@@ -13,6 +13,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenuItem;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 
 /**
@@ -21,6 +22,8 @@ import org.janelia.it.workstation.gui.util.WindowLocator;
  * @author fosterl
  */
 public class AnnotationSkeletonViewLauncher {
+    private TileFormat tileFormat;
+    
     public List<JMenuItem> getMenuItems() {
         List<JMenuItem> menuItems = new ArrayList<>();
         Action launchAction = new AbstractAction() {
@@ -29,11 +32,27 @@ public class AnnotationSkeletonViewLauncher {
             }
             @Override
             public void actionPerformed(ActionEvent e) {
-                WindowLocator.makeVisibleAndGet(AnnotationSkeletalViewTopComponent.PREFERRED_ID);
+                AnnotationSkeletalViewTopComponent topComponent = (AnnotationSkeletalViewTopComponent)
+                        WindowLocator.makeVisibleAndGet(AnnotationSkeletalViewTopComponent.PREFERRED_ID);
+                topComponent.setTileFormat(tileFormat);
             }
         };
         menuItems.add(new JMenuItem(launchAction));
         return menuItems;
+    }
+
+    /**
+     * @return the tileFormat
+     */
+    public TileFormat getTileFormat() {
+        return tileFormat;
+    }
+
+    /**
+     * @param tileFormat the tileFormat to set
+     */
+    public void setTileFormat(TileFormat tileFormat) {
+        this.tileFormat = tileFormat;
     }
     
 }
