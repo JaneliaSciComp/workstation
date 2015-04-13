@@ -15,7 +15,9 @@ public class ResultItem extends HashMap<String,Object> {
     }
             
     public ResultItem(Map<String,Object> map) {
-        putAll(map);
+        for(String key : map.keySet()) {
+            put(key, map.get(key));
+        }
     }
     
     public Long getId() {
