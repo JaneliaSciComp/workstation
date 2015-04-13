@@ -1022,12 +1022,12 @@ public final class ModelMgr {
     }
 
     public SolrResults searchSolr(SolrQuery query) throws Exception {
-        log.debug("Searching SOLR: " + query.getQuery() + " start=" + query.getStart() + " rows=" + query.getRows());
+        log.info("Searching SOLR: " + query.getQuery() + " start=" + query.getStart() + " rows=" + query.getRows());
         return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
     }
 
     public SolrResults searchSolr(SolrQuery query, boolean mapToEntities) throws Exception {
-        log.debug("Searching SOLR: " + query.getQuery() + " start=" + query.getStart() + " rows=" + query.getRows());
+        log.info("Searching SOLR: " + query.getQuery() + " start=" + query.getStart() + " rows=" + query.getRows());
         return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query, mapToEntities);
     }
     
