@@ -226,6 +226,36 @@ public class DomainDAO {
     }
 
     /**
+     * Get the domain objects referenced by the given ObjectSet/
+     */
+    public List<DomainObject> getDomainObjects(String subjectKey, ObjectSet objectSet) {
+    	
+        List<DomainObject> domainObjects = new ArrayList<DomainObject>();
+        if (objectSet.getMembers()==null || objectSet.getMembers().isEmpty()) return domainObjects;
+        
+        List<Long> members = objectSet.getMembers();
+        
+        log.trace("getDomainObjects(subjectKey="+subjectKey+",references.size="+members.size()+")");
+  
+        Multimap<String,Long> referenceMap = ArrayListMultimap.<String,Long>create();
+        for(Long member : members) {
+            if (member==null) {
+                log.warn("Requested null member id");
+                continue;
+            }
+            referenceMap.put(objectSet.getTargetType(), member);
+        }
+        
+        for(String type : referenceMap.keySet()) {
+            List<DomainObject> objs = getDomainObjects(subjectKey, type, referenceMap.get(type));
+            //log.info("Found {} objects of type {}",objs.size(),type);
+            domainObjects.addAll(objs);
+        }
+        
+        return domainObjects;
+    }
+
+    /**
      * Get the domain objects of the given type and ids.
      */
     public List<DomainObject> getDomainObjects(String subjectKey, String type, Collection<Long> ids) {

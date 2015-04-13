@@ -15,7 +15,6 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.screen.FlyLine;
 import org.janelia.it.jacs.model.domain.screen.ScreenSample;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.model.DeadReference;
@@ -27,9 +26,7 @@ import org.janelia.it.workstation.gui.browser.nodes.NeuronFragmentNode;
 import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
 import org.janelia.it.workstation.gui.browser.nodes.SampleNode;
 import org.janelia.it.workstation.gui.browser.nodes.ScreenSampleNode;
-import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,42 +35,43 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
+public class ObjectSetChildFactory extends TreeNodeChildFactory {
 
-    private final static Logger log = LoggerFactory.getLogger(TreeNodeChildFactory.class);
+    private final static Logger log = LoggerFactory.getLogger(ObjectSetChildFactory.class);
     
-    private final WeakReference<TreeNode> treeNodeRef;
+    private final WeakReference<ObjectSet> objectSetRef;
     
-    public TreeNodeChildFactory(TreeNode treeNode) {
-        this.treeNodeRef = new WeakReference<TreeNode>(treeNode);
+    public ObjectSetChildFactory(ObjectSet objectSet) {
+        super(null);
+        this.objectSetRef = new WeakReference<ObjectSet>(objectSet);
     }
     
     @Override
     protected boolean createKeys(List<DomainObject> list) {
-        TreeNode treeNode = treeNodeRef.get();
-        if (treeNode==null) return false;
-        log.trace("Creating children keys for {}",treeNode.getName());   
+        ObjectSet objectSet = objectSetRef.get();
+        if (objectSet==null) return false;
+        log.trace("Creating children keys for {}",objectSet.getName());   
         
         DomainDAO dao = DomainExplorerTopComponent.getDao();
-        List<DomainObject> children = dao.getDomainObjects(SessionMgr.getSubjectKey(), treeNode.getChildren());
-        if (children.size()!=treeNode.getNumChildren()) {
-            log.info("Got {} children but expected {}",children.size(),treeNode.getNumChildren());   
+        List<DomainObject> members = dao.getDomainObjects(SessionMgr.getSubjectKey(), objectSet);
+        if (members.size()!=objectSet.getNumMembers()) {
+            log.info("Got {} children but expected {}",members.size(),objectSet.getNumMembers());   
         }
         
         Map<Long,DomainObject> map = new HashMap<Long,DomainObject>();
-        for (DomainObject obj : children) {
+        for (DomainObject obj : members) {
             map.put(obj.getId(), obj);
         }
         
         List<DomainObject> temp = new ArrayList<DomainObject>();
-        if (treeNode.getChildren()!=null) {
-            for(Reference reference : treeNode.getChildren()) {
-                DomainObject obj = map.get(reference.getTargetId());
+        if (objectSet.getMembers()!=null) {
+            for(Long memberId : objectSet.getMembers()) {
+                DomainObject obj = map.get(memberId);
                 if (obj!=null) {
                     temp.add(obj);
                 }
                 else {
-                    temp.add(new DeadReference(reference));
+                    temp.add(new DeadReference(new Reference(objectSet.getTargetType(), memberId)));
                 }
             }
         }
@@ -87,9 +85,6 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         try {
             // TODO: would be nice to do this dynamically, 
             // or at least with some sort of annotation
-            if (TreeNode.class.isAssignableFrom(key.getClass())) {
-                return new TreeNodeNode(this, (TreeNode)key);
-            }
             if (ObjectSet.class.isAssignableFrom(key.getClass())) {
                 return new ObjectSetNode(this, (ObjectSet)key);
             }
@@ -125,84 +120,53 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     }
     
     public void refresh() {
-        TreeNode treeNode = treeNodeRef.get();
-        log.warn("refreshing {}",treeNode.getName());
+        ObjectSet objectSet = objectSetRef.get();
+        log.warn("refreshing {}",objectSet.getName());
         refresh(true);
     }
     
-    public void addChild(final DomainObject domainObject) {
-        final TreeNode treeNode = treeNodeRef.get();
-        if (treeNode==null) {
-            log.warn("Cannot add child to unloaded treeNode");
-            return;
-        }   
-        log.info("Adding child {} to {}",domainObject.getId(),treeNode.getName());
-        
-        DomainDAO dao = DomainExplorerTopComponent.getDao();
-        try {
-            dao.addChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
-        }
-        catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
-        }
-        
-        refresh();
-
-//            SimpleWorker worker = new SimpleWorker() {
-//                @Override
-//                protected void doStuff() throws Exception {
-//                }
-//                @Override
-//                protected void hadSuccess() {
-//                    refresh();
-//                }
-//                @Override
-//                protected void hadError(Throwable error) {
-//                    SessionMgr.getSessionMgr().handleException(error);
-//                }
-//            };
-//            worker.execute();
-    }
-
-    public void removeChild(final DomainObject domainObject) {
-        final TreeNode treeNode = treeNodeRef.get();
-        if (treeNode==null) {
-            log.warn("Cannot remove child from unloaded treeNode");
-            return;
-        }
-        
-        try {
-            log.info("removing child {} from {}", domainObject.getId(), treeNode.getName());
-            DomainDAO dao = DomainExplorerTopComponent.getDao();
-            if (domainObject instanceof DeadReference) {
-                dao.removeReference(SessionMgr.getSubjectKey(), treeNode, ((DeadReference) domainObject).getReference());
-            }
-            else {
-                dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
-            }
-        }
-        catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
-        }
-        
-        refresh();
-                
-//        SimpleWorker worker = new SimpleWorker() {
-//            @Override
-//            protected void doStuff() throws Exception {
+//    public void addChild(final DomainObject domainObject) {
+//        final ObjectSet objectSet = objectSetRef.get();
+//        if (objectSet==null) {
+//            log.warn("Cannot add child to unloaded objectSet");
+//            return;
+//        }   
+//        log.info("Adding child {} to {}",domainObject.getId(),objectSet.getName());
+//        
+//        DomainDAO dao = DomainExplorerTopComponent.getDao();
+//        try {
+//            dao.addChild(SessionMgr.getSubjectKey(), objectSet, domainObject);
+//        }
+//        catch (Exception e) {
+//            SessionMgr.getSessionMgr().handleException(e);
+//        }
+//        
+//        refresh();
+//    }
+//
+//    public void removeChild(final DomainObject domainObject) {
+//        final ObjectSet objectSet = objectSetRef.get();
+//        if (objectSet==null) {
+//            log.warn("Cannot remove child from unloaded treeNode");
+//            return;
+//        }
+//        
+//        try {
+//            log.info("removing child {} from {}", domainObject.getId(), objectSet.getName());
+//            DomainDAO dao = DomainExplorerTopComponent.getDao();
+//            if (domainObject instanceof DeadReference) {
+//                dao.removeReference(SessionMgr.getSubjectKey(), objectSet, ((DeadReference) domainObject).getReference());
 //            }
-//            @Override
-//            protected void hadSuccess() {
-//                log.info("refreshing view after removing child");
-//                refresh();
+//            else {
+//                dao.removeChild(SessionMgr.getSubjectKey(), objectSet, domainObject);
 //            }
-//            @Override
-//            protected void hadError(Throwable error) {
-//                SessionMgr.getSessionMgr().handleException(error);
-//            }
-//        };
-//        worker.execute();
-    }
+//        }
+//        catch (Exception e) {
+//            SessionMgr.getSessionMgr().handleException(e);
+//        }
+//        
+//        refresh();
+//    }
 
 
 }
