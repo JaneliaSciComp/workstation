@@ -229,7 +229,7 @@ public class DomainDAO {
      * Get the domain objects referenced by the given ObjectSet/
      */
     public List<DomainObject> getDomainObjects(String subjectKey, ObjectSet objectSet) {
-    	
+
         List<DomainObject> domainObjects = new ArrayList<DomainObject>();
         if (objectSet.getMembers()==null || objectSet.getMembers().isEmpty()) return domainObjects;
         
