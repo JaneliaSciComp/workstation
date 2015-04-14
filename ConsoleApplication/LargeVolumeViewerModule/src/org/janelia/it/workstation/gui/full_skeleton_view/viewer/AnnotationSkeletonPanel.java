@@ -11,6 +11,7 @@ import java.awt.Graphics;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.JPanel;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
@@ -45,14 +46,15 @@ public class AnnotationSkeletonPanel extends JPanel {
 //                    super.updateAnchors();
 //                }
 //            };
-            final BoundingBox3d boundingBox = dataSource.getTileFormat().calcBoundingBox();
+            TileFormat tileFormat = dataSource.getSkeleton().getTileFormat();
+            final BoundingBox3d boundingBox = tileFormat.calcBoundingBox();
             actor.getBoundingBox3d().setMax( boundingBox.getMax() );
             actor.getBoundingBox3d().setMin( boundingBox.getMin() );
             mip3d = new Mip3d();
             actor.setSkeleton(dataSource.getSkeleton());
             actor.setCamera(mip3d.getVolumeModel().getCamera3d());
             actor.setAnchorsVisible(false);
-            actor.setTileFormat(dataSource.getTileFormat());
+            actor.setTileFormat(tileFormat);
             actor.setZThicknessInPixels( 29000 - 15000 );
             actor.updateAnchors();
             mip3d.addActor(actor);    

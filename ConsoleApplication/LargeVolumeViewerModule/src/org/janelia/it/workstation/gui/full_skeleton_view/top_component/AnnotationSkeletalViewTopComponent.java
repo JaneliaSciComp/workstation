@@ -40,7 +40,6 @@ public final class AnnotationSkeletalViewTopComponent extends TopComponent {
 
     public static final String PREFERRED_ID = "AnnotationSkeletalViewTopComponent";
     private final TopComponentPopulator populator = new TopComponentPopulator();
-    private TileFormat tileFormat;
     
     public AnnotationSkeletalViewTopComponent() {
         initComponents();
@@ -49,10 +48,6 @@ public final class AnnotationSkeletalViewTopComponent extends TopComponent {
 
     }
     
-    public void setTileFormat(TileFormat tileFormat) {
-        this.tileFormat = tileFormat;
-    }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -83,13 +78,12 @@ public final class AnnotationSkeletalViewTopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         populator.depopulate(viewPanel);
-        populator.populate(viewPanel, tileFormat);
+        populator.populate(viewPanel);
     }
 
     @Override
     public void componentClosed() {
         populator.depopulate(viewPanel);
-        tileFormat = null;
     }        
 
     void writeProperties(java.util.Properties p) {

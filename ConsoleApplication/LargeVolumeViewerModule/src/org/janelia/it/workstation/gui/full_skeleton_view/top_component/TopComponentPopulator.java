@@ -27,10 +27,10 @@ import org.janelia.it.workstation.gui.util.WindowLocator;
 public class TopComponentPopulator {
     private AnnotationSkeletonPanel skeletonPanel;
     
-    public void populate(JPanel panel, TileFormat tileFormat) {
+    public void populate(JPanel panel) {
         depopulate(panel);
         if (skeletonPanel == null) {
-            skeletonPanel = new AnnotationSkeletonPanel( new SkeletonDataSource(tileFormat) );
+            skeletonPanel = new AnnotationSkeletonPanel( new SkeletonDataSource() );
         }
         panel.add(skeletonPanel, BorderLayout.CENTER);
     }
@@ -47,10 +47,8 @@ public class TopComponentPopulator {
     private static class SkeletonDataSource implements AnnotationSkeletonDataSourceI {
 
         private Skeleton cachedSkeleton;
-        private TileFormat tileFormat;
 
-        public SkeletonDataSource( TileFormat tileFormat ) {
-            this.tileFormat = tileFormat;
+        public SkeletonDataSource() {
         }
         
         @Override
@@ -69,11 +67,6 @@ public class TopComponentPopulator {
                 }
             }
             return cachedSkeleton;
-        }
-        
-        @Override
-        public TileFormat getTileFormat() {
-            return tileFormat;
         }
         
     }

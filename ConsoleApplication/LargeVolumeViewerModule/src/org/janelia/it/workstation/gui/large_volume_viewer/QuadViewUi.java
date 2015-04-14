@@ -1199,12 +1199,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         	rtnVal = volumeImage.loadURL(url);
             this.setLoadedUrl(url);
 
-            // Set this late, to avoid NPEs.
-            annotationSkeletonViewLauncher.setTileFormat(
-                    volumeImage.getLoadAdapter().getTileFormat()
-//                    tileServer.getLoadAdapter().getTileFormat()
-            );
-
     	} catch (IOException exc) {
             throw new RuntimeException(
                     "Error opening folder " + url

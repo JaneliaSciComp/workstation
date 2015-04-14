@@ -13,7 +13,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenuItem;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 
 /**
@@ -22,7 +21,6 @@ import org.janelia.it.workstation.gui.util.WindowLocator;
  * @author fosterl
  */
 public class AnnotationSkeletonViewLauncher {
-    private TileFormat tileFormat;
     
     public List<JMenuItem> getMenuItems() {
         List<JMenuItem> menuItems = new ArrayList<>();
@@ -36,7 +34,6 @@ public class AnnotationSkeletonViewLauncher {
                         WindowLocator.makeVisibleAndGet(AnnotationSkeletalViewTopComponent.PREFERRED_ID);
                 // This exchange will refresh contents of viewer.
                 topComponent.componentClosed();
-                topComponent.setTileFormat(tileFormat);
                 topComponent.componentOpened();
             }
         };
@@ -44,21 +41,4 @@ public class AnnotationSkeletonViewLauncher {
         return menuItems;
     }
 
-    /**
-     * @return the tileFormat
-     */
-    public TileFormat getTileFormat() {
-        return tileFormat;
-    }
-
-    /**
-     * @param tileFormat the tileFormat to set
-     */
-    public void setTileFormat(TileFormat tileFormat) {
-        if (tileFormat == null) {
-            throw new IllegalArgumentException("Tile Format must not be null.");
-        }
-        this.tileFormat = tileFormat;
-    }
-    
 }

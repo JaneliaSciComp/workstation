@@ -93,6 +93,10 @@ public class Skeleton {
     public void setTileFormat(TileFormat tileFormat) {
         this.tileFormat = tileFormat;
     }
+    
+    public TileFormat getTileFormat() {
+        return tileFormat;
+    }
 	
 	public void addAnchors(List<Anchor> anchorList) {
         for (Anchor anchor: anchorList) {
