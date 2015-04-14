@@ -32,11 +32,25 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     private LargeVolumeViewerTranslator lvvTranslator;
     private QuadViewController qvController;
     
-    public SkeletonController(Skeleton skeleton, AnnotationManager annoMgr) {
+    private static SkeletonController instance = new SkeletonController();
+    
+    private SkeletonController() {
+    }
+    
+    public static SkeletonController getInstance() {
+        return instance;
+    }
+    
+    /** In a "driving" client that would normally construct, call this instead. */
+    public void reestablish(Skeleton skeleton, AnnotationManager annotationMgr) {
         this.skeleton = skeleton;
-        this.annoMgr = annoMgr;
+        this.annoMgr = annotationMgr;
         skeletonAnchorListener = new ControllerSkeletonAnchorListener();
         this.skeleton.setController(this);
+
+        actors.clear();
+        lvvTranslator = null;
+        qvController = null;
     }
 
     public void registerForEvents(SkeletonActor actor) {

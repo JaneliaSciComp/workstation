@@ -178,6 +178,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private TileFormat tileFormat;
     
     private Snapshot3DLauncher snapshot3dLauncher;
+    private SkeletonController skeletonController;
     private AnnotationSkeletonViewLauncher annotationSkeletonViewLauncher;
     private PathTraceRequestListener pathTraceListener;
     private WorkspaceClosureListener wsCloseListener;
@@ -301,9 +302,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }
         });
 
-        SkeletonController skeletonController = new SkeletonController(
-                skeleton, annotationMgr
-        );
+        skeletonController = SkeletonController.getInstance();
+        skeletonController.reestablish(skeleton, annotationMgr);
         skeletonController.registerForEvents(largeVolumeViewer.getSkeletonActor());
         largeVolumeViewerTranslator.connectSkeletonSignals(skeleton, skeletonController);
 

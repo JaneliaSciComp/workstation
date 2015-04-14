@@ -12,6 +12,7 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.swing.JPanel;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
@@ -34,6 +35,10 @@ public class AnnotationSkeletonPanel extends JPanel {
     public void establish3D() {
         if (mip3d == null  &&  dataSource.getSkeleton() != null) {
             SkeletonActor actor = new SkeletonActor();
+            SkeletonController controller = SkeletonController.getInstance();
+            controller.registerForEvents(actor);
+            controller.skeletonChanged();
+            
 //            {
 //                //Override, so can selectively breakpoint only this instance.
 //                @Override

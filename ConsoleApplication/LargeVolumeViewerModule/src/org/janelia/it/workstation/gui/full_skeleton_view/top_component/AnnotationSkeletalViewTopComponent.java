@@ -5,7 +5,6 @@
  */
 package org.janelia.it.workstation.gui.full_skeleton_view.top_component;
 
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -85,7 +84,7 @@ public final class AnnotationSkeletalViewTopComponent extends TopComponent {
     public void componentClosed() {
         populator.depopulate(viewPanel);
     }        
-
+    
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
