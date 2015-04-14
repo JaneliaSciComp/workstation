@@ -48,8 +48,6 @@ public class AnnotationSkeletonPanel extends JPanel {
             final BoundingBox3d boundingBox = dataSource.getTileFormat().calcBoundingBox();
             actor.getBoundingBox3d().setMax( boundingBox.getMax() );
             actor.getBoundingBox3d().setMin( boundingBox.getMin() );
-//            actor.getBoundingBox3d().setMin( 70000, 43000, 15000 );
-//            actor.getBoundingBox3d().setMax( 79000, 50000, 29000 );            
             mip3d = new Mip3d();
             actor.setSkeleton(dataSource.getSkeleton());
             actor.setCamera(mip3d.getVolumeModel().getCamera3d());

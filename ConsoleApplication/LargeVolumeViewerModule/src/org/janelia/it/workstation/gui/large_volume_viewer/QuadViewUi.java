@@ -302,8 +302,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         });
 
         SkeletonController skeletonController = new SkeletonController(
-                skeleton, largeVolumeViewer.getSkeletonActor(), annotationMgr
+                skeleton, annotationMgr
         );
+        skeletonController.registerForEvents(largeVolumeViewer.getSkeletonActor());
         largeVolumeViewerTranslator.connectSkeletonSignals(skeleton, skeletonController);
 
 		// must come after setupUi() (etc), since it triggers UI changes:
