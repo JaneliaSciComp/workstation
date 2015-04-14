@@ -36,8 +36,8 @@ public class AnnotationSkeletonViewLauncher {
                         WindowLocator.makeVisibleAndGet(AnnotationSkeletalViewTopComponent.PREFERRED_ID);
                 // This exchange will refresh contents of viewer.
                 topComponent.componentClosed();
-                topComponent.componentOpened();
                 topComponent.setTileFormat(tileFormat);
+                topComponent.componentOpened();
             }
         };
         menuItems.add(new JMenuItem(launchAction));
@@ -55,6 +55,9 @@ public class AnnotationSkeletonViewLauncher {
      * @param tileFormat the tileFormat to set
      */
     public void setTileFormat(TileFormat tileFormat) {
+        if (tileFormat == null) {
+            throw new IllegalArgumentException("Tile Format must not be null.");
+        }
         this.tileFormat = tileFormat;
     }
     
