@@ -35,6 +35,7 @@ public class AnnotationSkeletonPanel extends JPanel {
     public void establish3D() {
         if (mip3d == null  &&  dataSource.getSkeleton() != null) {
             SkeletonActor actor = new SkeletonActor();
+            actor.setNeuronStyleModel(dataSource.getNeuronStyleModel());
             SkeletonController controller = SkeletonController.getInstance();
             controller.registerForEvents(actor);
             controller.skeletonChanged();

@@ -12,6 +12,7 @@ import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationS
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic;
 import org.janelia.it.workstation.gui.util.WindowLocator;
@@ -45,27 +46,41 @@ public class TopComponentPopulator {
     
     private static class SkeletonDataSource implements AnnotationSkeletonDataSourceI {
 
-        private Skeleton cachedSkeleton;
+        private Skeleton skeleton;
+        private NeuronStyleModel neuronStyleModel;
 
         public SkeletonDataSource() {
         }
         
         @Override
         public Skeleton getSkeleton() {
-            if (cachedSkeleton == null) {
-                // Strategy: get the Large Volume Viewer View.
-                LargeVolumeViewerTopComponent tc
-                        = (LargeVolumeViewerTopComponent) WindowLocator.getByName(
-                                LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID
-                        );
-                if (tc != null) {
-                    QuadViewUi ui = tc.getLvvv().getQuadViewUi();
-                    if (ui != null) {
-                        cachedSkeleton = ui.getSkeleton();
-                    }
+            if (skeleton == null) {
+                cacheValues();
+            }
+            return skeleton;
+        }
+        
+        @Override
+        public NeuronStyleModel getNeuronStyleModel() {
+            if (neuronStyleModel == null) {
+                cacheValues();
+            }
+            return neuronStyleModel;
+        }
+
+        private void cacheValues() {
+            // Strategy: get the Large Volume Viewer View.
+            LargeVolumeViewerTopComponent tc
+                    = (LargeVolumeViewerTopComponent) WindowLocator.getByName(
+                            LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID
+                    );
+            if (tc != null) {
+                QuadViewUi ui = tc.getLvvv().getQuadViewUi();
+                if (ui != null) {
+                    skeleton = ui.getSkeleton();
+                    neuronStyleModel = ui.getNeuronStyleModel();
                 }
             }
-            return cachedSkeleton;
         }
         
     }

@@ -29,6 +29,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
@@ -107,7 +108,7 @@ implements GLActor
     
     private Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments = new HashMap<>();
 
-    private Map<Long, NeuronStyle> neuronStyles = new HashMap<>();
+    private NeuronStyleModel neuronStyles;
 
     // note: this initial color is now overridden by other components
     private float neuronColor[] = {0.8f,1.0f,0.3f};
@@ -123,6 +124,10 @@ implements GLActor
 
     public void clearStyles() {
         neuronStyles.clear();
+    }
+    
+    public void setNeuronStyleModel( NeuronStyleModel nsModel ) {
+        this.neuronStyles = nsModel;
     }
 
     public SkeletonActorStateUpdater getUpdater() {
