@@ -68,7 +68,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	protected VolumeImage3d volumeImage = sharedVolumeImage;
 	protected SliceActor sliceActor;
 	private ImageColorModel imageColorModel;
-    private NeuronStyleModel neuronStyles;
 	private BasicMouseMode pointComputer = new BasicMouseMode();
 	
     private MessageListener messageListener;
@@ -367,7 +366,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	}
     
     public void setNeuronStyleModel(NeuronStyleModel nsModel) {
-        this.neuronStyles = nsModel;
         skeletonActor.setNeuronStyleModel(nsModel);
     }
 	
