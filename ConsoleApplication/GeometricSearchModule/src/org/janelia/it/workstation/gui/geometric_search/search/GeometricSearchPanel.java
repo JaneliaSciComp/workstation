@@ -55,6 +55,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         }
         mip3d = new Mip3d();
         mip3d.setPreferredSize(new Dimension(1200, 900));
+
         mip3d.setVisible(true);
         mip3d.setResetFirstRedraw(true);
 

@@ -23,7 +23,7 @@ public class GL3Model {
     private int[] voxelDimensions;
     private boolean showAxes = DEFAULT_SHOWING_AXES;
 
-    public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 20.0;
+    public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 1.0;
 
 
     public interface UpdateListener {
