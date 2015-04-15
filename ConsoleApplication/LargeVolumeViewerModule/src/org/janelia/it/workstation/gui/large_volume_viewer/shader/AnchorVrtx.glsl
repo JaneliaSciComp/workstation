@@ -4,6 +4,7 @@
 // Sometimes one anchor gets highlighted, when the mouse hovers over it.
 uniform int highlightAnchorIndex = -1;
 uniform int parentAnchorIndex = -1;
+uniform int isDiscardNonParent = -1;
 uniform float zThickness = 100.0;
 uniform vec3 focus = vec3(0,0,0);
 
@@ -38,4 +39,8 @@ void main(void)
     isParent = 0;
     if (parentAnchorIndex == gl_VertexID)
         isParent = 1;
+
+    // Can setup to discard anything that is not a parent.
+    if (isParent == 0 && isDiscardNonParent >= 1)
+        fog = 1;
 }

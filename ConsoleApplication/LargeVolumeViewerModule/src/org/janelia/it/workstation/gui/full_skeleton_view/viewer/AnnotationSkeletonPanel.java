@@ -8,7 +8,6 @@ package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 
 import java.awt.BorderLayout;
 import java.awt.Graphics;
-import javax.media.opengl.GLAutoDrawable;
 import javax.swing.JPanel;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
@@ -36,22 +35,8 @@ public class AnnotationSkeletonPanel extends JPanel {
         if (mip3d == null  &&  dataSource.getSkeleton() != null) {
             SkeletonActor actor = new SkeletonActor();
             actor.setNeuronStyleModel(dataSource.getNeuronStyleModel());
-            SkeletonController controller = SkeletonController.getInstance();
-            controller.registerForEvents(actor);
-            controller.skeletonChanged();
-            
-//            {
-//                //Override, so can selectively breakpoint only this instance.
-//                @Override
-//                public void display(GLAutoDrawable glDrawable) {
-//                    super.display(glDrawable);
-//                } 
-//                
-//                @Override
-//                public void updateAnchors() {
-//                    super.updateAnchors();
-//                }
-//            };
+            actor.setShowOnlyParentAnchors(true);
+            actor.setAnchorsVisible(true);
             TileFormat tileFormat = dataSource.getSkeleton().getTileFormat();
             final BoundingBox3d boundingBox = tileFormat.calcBoundingBox();
             actor.getBoundingBox3d().setMax( boundingBox.getMax() );
@@ -59,10 +44,15 @@ public class AnnotationSkeletonPanel extends JPanel {
             mip3d = new Mip3d();
             actor.setSkeleton(dataSource.getSkeleton());
             actor.setCamera(mip3d.getVolumeModel().getCamera3d());
-            actor.setAnchorsVisible(false);
             actor.setTileFormat(tileFormat);
             actor.setZThicknessInPixels( 29000 - 15000 );
             actor.updateAnchors();
+
+            // This should be done after establishing the skeleton.
+            SkeletonController controller = SkeletonController.getInstance();
+            controller.registerForEvents(actor);
+//            controller.skeletonChanged();
+
             mip3d.addActor(actor);    
             mip3d.setResetFirstRedraw(true);
             this.add(mip3d, BorderLayout.CENTER);

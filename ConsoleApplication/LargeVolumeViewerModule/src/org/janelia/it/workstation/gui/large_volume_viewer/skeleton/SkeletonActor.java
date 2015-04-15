@@ -53,10 +53,6 @@ import org.slf4j.LoggerFactory;
 public class SkeletonActor 
 implements GLActor
 {
-    // NOTE: for future ref-I had caused this actor to be a skeleton change
-    //  listener. However, I realized that the SkeletonController filled the
-    //  same function, and undid this. I have tried to test to ensure no ill
-    //  effects, but leaving this note just in case. LLF
 	private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
 	
 	// semantic constants for allocating byte arrays
@@ -94,15 +90,13 @@ implements GLActor
 	private BufferedImage anchorImage;
 	private int anchorTextureId = -1;
 	private BufferedImage parentAnchorImage;
-	private int parentAnchorTextureId = -1;
+    private int discardNonParent = 0; //Emphasize default value.
+    private int parentAnchorTextureId = -1;
 	//
 	private Skeleton skeleton;
     private SkeletonActorStateUpdater updater;
 	private Camera3d camera;
 	private float zThicknessInPixels = 100;
-	//
-    private Anchor hoverAnchor = null;
-    private Anchor nextParent = null;
 	//
     private boolean bIsVisible = true;
     
@@ -238,18 +232,22 @@ implements GLActor
 
             // setup per-neuron anchor shader settings (used to be in setupAnchorShader)
             int tempIndex;
+            Anchor hoverAnchor = skeleton.getHoverAnchor();
             if (hoverAnchor != null && hoverAnchor.getNeuronID().equals(neuronID)) {
                 tempIndex = getIndexForAnchor(hoverAnchor);
             } else {
                 tempIndex = -1;
             }
             anchorShader.setUniform(gl, "highlightAnchorIndex", tempIndex);
+            Anchor nextParent = skeleton.getNextParent();
             if (nextParent != null && nextParent.getNeuronID().equals(neuronID)) {
                 tempIndex = getIndexForAnchor(nextParent);
             } else {
                 tempIndex = -1;
             }
             anchorShader.setUniform(gl, "parentAnchorIndex", tempIndex);
+System.out.println("Anchor shader setting discardNonParent=" + discardNonParent + ", with tempIndex="+tempIndex);            
+            anchorShader.setUniform(gl, "isDiscardNonParent", discardNonParent);
 
             // TODO - crashes unless glBufferData called every time.
             // if (verticesNeedCopy) {
@@ -447,6 +445,10 @@ implements GLActor
 		this.anchorsVisible = anchorsVisible;
         updater.update();
 	}
+    
+    public void setShowOnlyParentAnchors(boolean showOnlyParent) {
+        this.discardNonParent = showOnlyParent ? 1 : 0;
+    }
 
 	public void setZThicknessInPixels(float zThicknessInPixels) {
 		this.zThicknessInPixels = zThicknessInPixels;
@@ -834,20 +836,23 @@ implements GLActor
 	}
 
     public synchronized  void setHoverAnchor(Anchor anchor) {
-        if (anchor == hoverAnchor) {
+        if (anchor == skeleton.getHoverAnchor()) {
             return;
         }
-        hoverAnchor = anchor;
+        skeleton.setHoverAnchor(anchor);
         updater.update();
     }
 
 	public Anchor getNextParent() {
-		return nextParent;
+		return skeleton.getNextParent();
 	}
 
     public boolean setNextParentByID(Long annotationID) {
         // find the anchor corresponding to this annotation ID and pass along
         Anchor foundAnchor = null;
+        if (getSkeleton() == null) {
+            return false;
+        }
         for (Anchor testAnchor: getSkeleton().getAnchors()) {
             if (testAnchor.getGuid().equals(annotationID)) {
                 foundAnchor = testAnchor;
@@ -860,13 +865,13 @@ implements GLActor
     }
 
 	public boolean setNextParent(Anchor parent) {
-		if (parent == nextParent)
+		if (parent == skeleton.getNextParent())
 			return false;
-		nextParent = parent;
+		skeleton.setNextParent(parent);
         // first signal is for drawing the marker, second is for notifying
         //  components that want to, eg, select the enclosing neuron
         updater.update();
-        updater.update(nextParent);
+        updater.update(skeleton.getNextParent());
 		return true;
 	}
 

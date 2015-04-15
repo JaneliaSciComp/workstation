@@ -34,6 +34,8 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     
     private static SkeletonController instance = new SkeletonController();
     
+    private long nextParentId = -1;
+    
     private SkeletonController() {
     }
     
@@ -55,6 +57,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     public void registerForEvents(SkeletonActor actor) {
         this.actors.add(actor);
+        actor.setNextParentByID(nextParentId);
     }
     
     public void registerForEvents(LargeVolumeViewerTranslator lvvTranslator) {
@@ -130,6 +133,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     //--------------------------------IMPLEMENTS NextParentListener    
     @Override
     public void setNextParent(Long id) {
+        nextParentId = id;
         for (SkeletonActor actor: actors) {
             actor.setNextParentByID(id);
         }
