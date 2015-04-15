@@ -1,53 +1,64 @@
 package org.janelia.it.workstation.gui.browser.search;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import java.util.*;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.shared.solr.SolrResults;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * One page of results, treated as a unit for performance reasons.
+ * One page of annotated results, treated as a unit for performance reasons.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ResultPage {
+public class ResultPage implements AnnotatedDomainObjectList {
 
     private static final Logger log = LoggerFactory.getLogger(ResultPage.class);
 
-    private SolrResults solrResults;
-    private Map<Long, DomainObject> domainObjectById = new HashMap<Long, DomainObject>();
-    private List<ResultItem> resultItems;
+    private final List<DomainObject> domainObjects = new ArrayList<>();
+    private final ListMultimap<Long,Annotation> annotationsByDomainObjectId = ArrayListMultimap.<Long,Annotation>create();
+    private final int numTotalResults;
     
-    public ResultPage(SolrResults solrResults) {
-        // TODO: only keep what we need from the SolrResults and discard it
-        this.solrResults = solrResults;
+    private Map<Long, DomainObject> domainObjectById;
+    
+    public ResultPage(List<DomainObject> domainObjects, List<Annotation> annotations, int totalNumResults) {
+        this.domainObjects.addAll(domainObjects);
+        for(Annotation annotation : annotations) {
+            annotationsByDomainObjectId.put(annotation.getTarget().getTargetId(), annotation);
+        }
+        this.numTotalResults = totalNumResults;
     }
 
-    public long getTotalNumItems() {
-        return solrResults.getResponse().getResults().getNumFound();
+    public int getNumTotalResults() {
+        return numTotalResults;
     }
     
-    public long getNumItems() {
-        return solrResults.getResponse().getResults().size();
+    public int getNumPageResults() {
+        return domainObjects.size();
     }
     
-    public DomainObject getDomainObject(Long id) {
-        return domainObjectById.get(id);
+    @Override
+    public List<DomainObject> getDomainObjects() {
+        return domainObjects;
     }
-
-    public List<ResultItem> getResultItems() {
-        if (resultItems==null) {
-            resultItems = new ArrayList<ResultItem>();
-            SolrDocumentList docList = solrResults.getResponse().getResults();
-            for(Iterator iterator=docList.iterator(); iterator.hasNext(); ) {
-                SolrDocument doc = (SolrDocument)iterator.next();
-                resultItems.add(new ResultItem(doc.getFieldValueMap()));
+    
+    @Override
+    public List<Annotation> getAnnotations(Long domainObjectId) {
+        return annotationsByDomainObjectId.get(domainObjectId);
+    }
+    
+    @Override
+    public DomainObject getDomainObject(Long domainObjectId) {
+        if (domainObjectById==null) {
+            this.domainObjectById = new HashMap<>();
+            for(DomainObject domainObject : domainObjects) {
+                domainObjectById.put(domainObject.getId(), domainObject);
             }
         }
-        return resultItems;
+        return domainObjectById.get(domainObjectId);
     }
 }

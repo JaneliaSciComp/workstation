@@ -1,0 +1,1318 @@
+package org.janelia.it.workstation.gui.browser.components.icongrid;
+
+import org.janelia.it.workstation.gui.browser.icongrid.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
+import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.UserColorMapping;
+import org.janelia.it.workstation.gui.framework.outline.Annotations;
+import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.MouseForwarder;
+import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
+import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+
+/**
+ * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
+ * functionality on top of it, such as:
+ * 1) Asynchronous entity loading
+ * 2) Entity selection and navigation
+ * 3) Toolbar with various features
+ * 4) HUD display for currently selected image
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
+public abstract class IconGridViewer<T> extends IconPanel<T> {
+
+    private static final Logger log = LoggerFactory.getLogger(IconGridViewer.class);
+
+    // Main components
+    protected IconDemoToolbar iconDemoToolbar;
+
+    private String currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
+
+    protected ImagesPanel<T> imagesPanel;
+    
+    // These members deal with the context and entities within it
+    protected List<T> imageObjects;
+    protected Multimap<String, T> imageObjectByPathId = HashMultimap.<String, T>create();
+    protected Multimap<Long, T> imageObjectByUniqueId = HashMultimap.<Long, T>create();
+    protected final Annotations annotations = new Annotations();
+    protected final List<String> allUsers = new ArrayList<>();
+    protected final Set<String> hiddenUsers = new HashSet<>();
+    protected int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
+    protected final List<String> allImageRoles = new ArrayList<>();
+
+    // Listeners
+    protected SessionModelListener sessionModelListener;
+    protected ModelMgrObserver modelMgrObserver;
+
+//    // Listen for key strokes and execute the appropriate key bindings
+//    // TODO: we should replace this with an action map in the future
+//    protected KeyListener keyListener = new KeyAdapter() {
+//        @Override
+//        public void keyPressed(KeyEvent e) {
+
+//            if (KeymapUtil.isModifier(e)) {
+//                return;
+//            }
+//            if (e.getID() != KeyEvent.KEY_PRESSED) {
+//                return;
+//            }
+//
+//            KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
+//            if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
+//
+//                // No keybinds matched, use the default behavior
+//                // Ctrl-A or Meta-A to select all
+//                if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
+//                    for (RootedEntity rootedEntity : pageRootedEntities) {
+//                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
+//                    }
+//                    if (pageRootedEntities.size() < allRootedEntities.size()) {
+//                        selectionButtonContainer.setVisible(true);
+//                    }
+//                    return;
+//                }
+//
+//                // Space on a single entity triggers a preview 
+//                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+//                    updateHud(true);
+//                    e.consume();
+//                    return;
+//                }
+//
+//                // Enter with a single entity selected triggers an outline
+//                // navigation
+//                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+//                    List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
+//                    if (selectedIds.size() != 1) {
+//                        return;
+//                    }
+//                    String selectedId = selectedIds.get(0);
+//                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, selectedId, true);
+//                    return;
+//                }
+//
+//                // Delete triggers deletion
+//                if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+//                    List<RootedEntity> selected = getSelectedEntities();
+//                    if (selected.isEmpty()) {
+//                        return;
+//                    }
+//                    final Action action = new RemoveEntityAction(selected, true, false);
+//                    action.doAction();
+//                    e.consume();
+//                    return;
+//                }
+//
+//                // Tab and arrow navigation to page through the images
+//                boolean clearAll = false;
+//                RootedEntity rootedEntity = null;
+//                if (e.getKeyCode() == KeyEvent.VK_TAB) {
+//                    clearAll = true;
+//                    if (e.isShiftDown()) {
+//                        rootedEntity = getPreviousEntity();
+//                    }
+//                    else {
+//                        rootedEntity = getNextEntity();
+//                    }
+//                }
+//                else {
+//                    clearAll = true;
+//                    if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+//                        rootedEntity = getPreviousEntity();
+//                    }
+//                    else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+//                        rootedEntity = getNextEntity();
+//                    }
+//                }
+//
+//                if (rootedEntity != null) {
+//                    AnnotatedImageButton button = imagesPanel.getButtonById(rootedEntity.getId());
+//                    if (button != null) {
+//                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), clearAll);
+//                        imagesPanel.scrollEntityToCenter(rootedEntity);
+//                        button.requestFocus();
+//                        updateHud(false);
+//                    }
+//                }
+//            }
+//
+//            revalidate();
+//            repaint();
+//        }
+//    };
+//
+    // Listener for clicking on buttons
+    protected MouseListener buttonMouseListener = new MouseHandler() {
+
+        @Override
+        protected void popupTriggered(MouseEvent e) {
+//            if (e.isConsumed()) {
+//                return;
+//            }
+//            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+//            // Select the button first
+//            RootedEntity rootedEntity = button.getRootedEntity();
+//            if (!button.isSelected()) {
+//                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), true);
+//            }
+//            getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
+//            e.consume();
+        }
+
+        @Override
+        protected void doubleLeftClicked(MouseEvent e) {
+            if (e.isConsumed()) {
+                return;
+            }
+            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+            buttonDrillDown(button);
+            // Double-clicking an image in gallery view triggers an outline selection
+            e.consume();
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            super.mouseReleased(e);
+            if (e.isConsumed()) {
+                return;
+            }
+            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+            if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
+                return;
+            }
+            buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
+        }
+    };
+
+//    protected JPopupMenu getButtonPopupMenu() {
+//        return null;
+//        List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
+//        List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
+//        for (String entityId : selectionIds) {
+//            RootedEntity re = getRootedEntityById(entityId);
+//            if (re == null) {
+//                log.warn("Could not locate selected entity with id {}", entityId);
+//            }
+//            else {
+//                rootedEntityList.add(re);
+//            }
+//        }
+//        JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
+//        ((EntityContextMenu) popupMenu).addMenuItems();
+//
+//        return popupMenu;
+//    }
+//
+    /**
+     * This is a separate method so that it can be overridden to accommodate other behavior patterns.
+     */
+    protected abstract void buttonDrillDown(AnnotatedImageButton button);
+
+    Set<T> selected = new HashSet<>();
+    private T lastSelected = null;
+    
+    protected void buttonSelection(AnnotatedImageButton button, boolean multiSelect, boolean rangeSelect) {
+        
+        T imageObject = (T)button.getImageObject();
+        
+        // TODO: tell the parent?
+//        selectionButtonContainer.setVisible(false);
+                
+        if (multiSelect) {
+            // With the meta key we toggle items in the current
+            // selection without clearing it
+            if (!button.isSelected()) {
+                selected.add(imageObject);
+                lastSelected = imageObject;
+            }
+            else {
+                selected.remove(imageObject);
+                lastSelected = null;
+            }
+        }
+        else {        
+            // With shift, we select ranges
+            if (rangeSelect && lastSelected != null) {
+                // Walk through the buttons and select everything between the last and current selections
+                boolean selecting = false;
+                for (T otherImageObject : imageObjects) {
+                    if (otherImageObject.equals(lastSelected) || otherImageObject.equals(imageObject)) {
+                        if (otherImageObject.equals(imageObject)) {
+                            // Always select the button that was clicked
+                            selected.add(otherImageObject);
+                        }
+                        if (selecting) {
+                            break;
+                        }
+                        selecting = true; // Start selecting
+                        continue; // Skip selection of the first and last items, which should already be selected
+                    }
+                    if (selecting) {
+                        selected.add(otherImageObject);
+                    }
+                }
+            }
+            else {
+                selected.clear();
+                selected.add(imageObject);
+            }
+            lastSelected = imageObject;
+        }
+        
+//        try {
+//            manager.setSelectedNodes(selected.toArray(new Node[selected.size()]));
+//        }
+//        catch (PropertyVetoException e) {
+//            log.warn("Could not select node", e);
+//        }
+
+        button.requestFocus();
+    }
+    
+    private AnnotatedImageButton getButtonAncestor(Component component) {
+        Component c = component;
+        while (!(c instanceof AnnotatedImageButton)) {
+            c = c.getParent();
+        }
+        return (AnnotatedImageButton) c;
+    }
+
+    public IconGridViewer() {
+
+        setBorder(BorderFactory.createEmptyBorder());
+        setLayout(new BorderLayout());
+        setFocusable(true);
+
+        sessionModelListener = new SessionModelListener() {
+            @Override
+            public void browserAdded(BrowserModel browserModel) {
+            }
+
+            @Override
+            public void browserRemoved(BrowserModel browserModel) {
+            }
+
+            @Override
+            public void sessionWillExit() {
+            }
+
+            @Override
+            public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
+                if (key == "console.serverLogin") {
+                    IconGridViewer.this.clear();
+                }
+            }
+        };
+        SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
+
+
+        iconDemoToolbar = createToolbar();
+        iconDemoToolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
+
+        imagesPanel = new ImagesPanel<>(this);
+        
+//        imagesPanel.setButtonKeyListener(keyListener);
+        imagesPanel.setButtonMouseListener(buttonMouseListener);
+        imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
+
+//        addKeyListener(keyListener);
+
+        modelMgrObserver = new ModelMgrAdapter() {
+
+//            @Override
+//            public void annotationsChanged(final long entityId) {
+//                if (pageRootedEntities != null) {
+//                    SwingUtilities.invokeLater(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            reloadAnnotations(entityId);
+//                            filterEntities();
+//                        }
+//                    });
+//                }
+//            }
+
+            @Override
+            public void entitySelected(String category, String entityId, boolean clearAll) {
+                if (category.equals(getSelectionCategory())) {
+                    IconGridViewer.this.entitySelected(entityId, clearAll);
+                }
+            }
+
+            @Override
+            public void entityDeselected(String category, String entityId) {
+                if (category.equals(getSelectionCategory())) {
+                    IconGridViewer.this.entityDeselected(entityId);
+                }
+            }
+        };
+//        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+//        ModelMgr.getModelMgr().registerOnEventBus(this);
+
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                imagesPanel.recalculateGrid();
+            }
+        });
+
+//        annotations.setFilter(new AnnotationFilter() {
+//            @Override
+//            public boolean accept(OntologyAnnotation annotation) {
+//
+//                // Hidden by user?
+//                if (hiddenUsers.contains(annotation.getOwner())) {
+//                    return false;
+//                }
+//                AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
+//
+//                // Hidden by session?
+//                Boolean onlySession = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
+//                        ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY);
+//                if ((onlySession != null && !onlySession) || session == null) {
+//                    return true;
+//                }
+//
+//                // At this point we know there is a current session, and we have to match it
+//                return (annotation.getSessionId() != null && annotation.getSessionId().equals(session.getId()));
+//            }
+//        });
+
+        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
+
+            @Override
+            public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
+
+                if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
+                    refreshAnnotations(null);
+                }
+                else if (ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY.equals(key)) {
+//                    filterEntities();
+                }
+                else if (ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
+                    refresh();
+                }
+                else if (ViewerSettingsPanel.ANNOTATION_TABLES_HEIGHT_PROPERTY.equals(key)) {
+                    int tableHeight = (Integer) newValue;
+                    if (currTableHeight == tableHeight) {
+                        return;
+                    }
+                    currTableHeight = tableHeight;
+                    imagesPanel.resizeTables(tableHeight);
+                    imagesPanel.setMaxImageWidth(iconDemoToolbar.getCurrImageSize());
+                    imagesPanel.recalculateGrid();
+                    imagesPanel.scrollSelectedEntitiesToCenter();
+                    imagesPanel.loadUnloadImages();
+                }
+            }
+
+            @Override
+            public void sessionWillExit() {
+            }
+
+            @Override
+            public void browserRemoved(BrowserModel browserModel) {
+            }
+
+            @Override
+            public void browserAdded(BrowserModel browserModel) {
+            }
+        });
+    }
+
+    public ImagesPanel<T> getImagesPanel() {
+        return imagesPanel;
+    }
+
+    public String getCurrImageRole() {
+        return currImageRole;
+    }
+
+    public void setCurrImageRole(String currImageRole) {
+        this.currImageRole = currImageRole;
+    }
+
+    public String getSelectionCategory() {
+        return EntitySelectionModel.CATEGORY_MAIN_VIEW;
+    }
+    
+    
+//    @Subscribe
+//    public void entityChanged(EntityChangeEvent event) {
+//        Entity entity = event.getEntity();
+//        if (contextRootedEntity == null) {
+//            return;
+//        }
+//        if (contextRootedEntity.getEntity().getId().equals(entity.getId())) {
+//            log.debug("({}) Reloading because context entity was changed: '{}'", getSelectionCategory(), entity.getName());
+//            //loadEntity(contextRootedEntity, null);
+//        }
+//        else {
+//            for (AnnotatedImageButton button : imagesPanel.getButtonsByEntityId(entity.getId())) {
+//                log.debug("({}) Refreshing button because entity was changed: '{}'", getSelectionCategory(), entity.getName());
+//
+//                RootedEntity rootedEntity = button.getRootedEntity();
+//                if (rootedEntity != null) {
+//                    Entity buttonEntity = rootedEntity.getEntity();
+//                    if (entity != buttonEntity) {
+//                        log.warn("({}) entityChanged: Instance mismatch: " + entity.getName()
+//                                + " (cached=" + System.identityHashCode(entity) + ") vs (this=" + System.identityHashCode(buttonEntity) + ")", getSelectionCategory());
+//                        rootedEntity.setEntity(entity);
+//                    }
+//
+//                    button.refresh(rootedEntity);
+//                    imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
+//                }
+//            }
+//        }
+//    }
+//
+//    @Subscribe
+//    public void entityRemoved(EntityRemoveEvent event) {
+//        Entity entity = event.getEntity();
+//        if (contextRootedEntity == null) {
+//            return;
+//        }
+//        if (contextRootedEntity.getEntity() != null && contextRootedEntity.getEntityId().equals(entity.getId())) {
+//            goParent();
+//        }
+//        else {
+//            for (RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
+//                if (rootedEntity.getEntityId().equals(entity.getId())) {
+//                    removeRootedEntity(rootedEntity);
+//                    return;
+//                }
+//            }
+//        }
+//    }
+//
+//    @Subscribe
+//    public void entityInvalidated(EntityInvalidationEvent event) {
+//
+//        if (contextRootedEntity == null) {
+//            return;
+//        }
+//        boolean affected = false;
+//
+//        if (event.isTotalInvalidation()) {
+//            affected = true;
+//        }
+//        else {
+//            for (Entity entity : event.getInvalidatedEntities()) {
+//                if (contextRootedEntity.getEntity() != null && contextRootedEntity.getEntityId().equals(entity.getId())) {
+//                    affected = true;
+//                    break;
+//                }
+//                else {
+//                    for (final RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
+//                        if (rootedEntity.getEntityId().equals(entity.getId())) {
+//                            affected = true;
+//                            break;
+//                        }
+//                    }
+//                    if (affected) {
+//                        break;
+//                    }
+//                }
+//            }
+//        }
+//
+//        if (affected) {
+//            log.debug("({}) Some entities were invalidated so we're refreshing the viewer", getSelectionCategory());
+//            refresh(false, null);
+//        }
+//    }
+
+    protected IconDemoToolbar createToolbar() {
+
+        return new IconDemoToolbar() {
+
+            @Override
+            protected void refresh() {
+                IconGridViewer.this.totalRefresh();
+            }
+
+            @Override
+            protected void showTitlesButtonPressed() {
+                imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
+                imagesPanel.recalculateGrid();
+            }
+
+            @Override
+            protected void showTagsButtonPressed() {
+                imagesPanel.setTagVisbility(showTagsButton.isSelected());
+                imagesPanel.recalculateGrid();
+            }
+
+            @Override
+            protected void currImageSizeChanged(int imageSize) {
+                imagesPanel.setMaxImageWidth(imageSize);
+                imagesPanel.recalculateGrid();
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        imagesPanel.scrollSelectedEntitiesToCenter();
+                    }
+                });
+            }
+
+            @Override
+            protected JPopupMenu getPopupUserMenu() {
+                final JPopupMenu userListMenu = new JPopupMenu();
+                UserColorMapping userColors = ModelMgr.getModelMgr().getUserColorMapping();
+
+                // Save the list of users so that when the function actually runs, the
+                // users it affects are the same users that were displayed
+                final List<String> savedUsers = new ArrayList<String>(allUsers);
+
+                JMenuItem allUsersMenuItem = new JCheckBoxMenuItem("All Users", hiddenUsers.isEmpty());
+                allUsersMenuItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        if (hiddenUsers.isEmpty()) {
+                            for (String username : savedUsers) {
+                                hiddenUsers.add(username);
+                            }
+                        }
+                        else {
+                            hiddenUsers.clear();
+                        }
+                        refreshAnnotations(null);
+                    }
+                });
+                userListMenu.add(allUsersMenuItem);
+
+                userListMenu.addSeparator();
+
+                for (final String username : savedUsers) {
+                    JMenuItem userMenuItem = new JCheckBoxMenuItem(username, !hiddenUsers.contains(username));
+                    userMenuItem.setBackground(userColors.getColor(username));
+                    userMenuItem.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            if (hiddenUsers.contains(username)) {
+                                hiddenUsers.remove(username);
+                            }
+                            else {
+                                hiddenUsers.add(username);
+                            }
+                            refreshAnnotations(null);
+                        }
+                    });
+                    userMenuItem.setIcon(Icons.getIcon("user.png"));
+                    userListMenu.add(userMenuItem);
+                }
+
+                return userListMenu;
+            }
+
+            @Override
+            protected JPopupMenu getPopupImageRoleMenu() {
+
+                final JPopupMenu imageRoleListMenu = new JPopupMenu();
+                final List<String> imageRoles = new ArrayList<>(allImageRoles);
+
+                for (final String imageRole : imageRoles) {
+                    JMenuItem roleMenuItem = new JCheckBoxMenuItem(imageRole, imageRole.equals(getCurrImageRole()));
+                    roleMenuItem.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            setCurrImageRole(imageRole);
+                            imageObjectsLoadDone(null);
+                        }
+                    });
+                    imageRoleListMenu.add(roleMenuItem);
+                }
+                return imageRoleListMenu;
+            }
+        };
+    }
+
+    protected void entitySelected(String entityId, boolean clearAll) {
+        log.debug("selecting {} in {} viewer", entityId, getSelectionCategory());
+        imagesPanel.setSelection(entityId, true, clearAll);
+//        updateStatusBar();
+    }
+
+    public void entityDeselected(String entityId) {
+        imagesPanel.setSelection(entityId, false, false);
+//        updateStatusBar();
+    }
+
+//    private void updateStatusBar() {
+//        if (imageObjects == null) {
+//            return;
+//        }
+//        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
+//        int s = esm.getSelectedEntitiesIds(getSelectionCategory()).size();
+//        statusLabel.setText(s + " of " + allImageObjects.size() + " selected");
+//        statusLabel.setText("Selection changed");
+//    }
+
+    /**
+     * This should be called by any handler that wishes to show/unshow the HUD.
+     */
+//    private void updateHud(boolean toggle) {
+//        List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
+//        if (selectedIds.size() != 1) {
+//            hud.hideDialog();
+//            return;
+//        }
+//        Entity entity = null;
+//        String selectedId = selectedIds.get(0);
+//        for (RootedEntity re : getRootedEntitiesById(selectedId)) {
+//            // Get the image from the annotated image button which is also a Dynamic Image Button.
+//            final AnnotatedImageButton button = imagesPanel.getButtonById(re.getId());
+//            if (button instanceof DynamicImageButton) {
+//                entity = re.getEntity();
+//                break;   // Only one.
+//            }
+//        }
+//        if (toggle) {
+//            hud.setEntityAndToggleDialog(entity);
+//        }
+//        else {
+//            hud.setEntity(entity);
+//        }
+//    }
+
+//    public synchronized void goParent() {
+//        final String selectedUniqueId = contextRootedEntity.getUniqueId();
+//        SwingUtilities.invokeLater(new Runnable() {
+//            @Override
+//            public void run() {
+//                String parentId = Utils.getParentIdFromUniqueId(selectedUniqueId);
+//                if (StringUtils.isEmpty(parentId)) {
+//                    clear();
+//                }
+//                else {
+//                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, parentId, true);
+//                }
+//            }
+//        });
+//    }
+    
+    public void showImageObjects(List<T> imageObjects) {
+        showImageObjects(imageObjects, null);
+    }
+    
+    public void showImageObjects(List<T> imageObjects, final Callable<Void> success) {
+        
+        // Indicate a load
+
+        // Cancel previous loads
+        imagesPanel.cancelAllLoads();
+//        if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
+//            entityLoadingWorker.disregard();
+//        }
+//        if (annotationsInitWorker != null && !annotationsInitWorker.isDone()) {
+//            annotationsInitWorker.disregard();
+//        }
+
+        // Temporarily disable scroll loading
+        imagesPanel.setScrollLoadingEnabled(false);
+
+        log.info("Setting {} image objects",imageObjects.size());
+        setImageObjects(imageObjects);
+        imageObjectsLoadDone(success);
+                
+//        entityLoadingWorker = new SimpleWorker() {
+//
+//            private List<T> loadedImageObjects = new ArrayList<T>();
+//
+//            @Override
+//            protected void doStuff() throws Exception {
+//                for (T imageObject : pageObjects) {
+////                    if (!EntityUtils.isInitialized(rootedEntity.getEntity())) {
+////                        log.warn("Had to load entity " + rootedEntity.getEntity().getId());
+////                        rootedEntity.getEntityData().setChildEntity(ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()));
+////                    }
+////                    EntityData defaultImageEd = rootedEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
+////                    if (defaultImageEd != null && defaultImageEd.getValue() == null && defaultImageEd.getChildEntity() != null) {
+////                        log.warn("Had to load default image " + rootedEntity.getEntity().getName());
+////                        defaultImageEd.setChildEntity(ModelMgr.getModelMgr().getEntityById(defaultImageEd.getChildEntity().getId()));
+////                    }
+//                    loadedImageObjects.add(imageObject);
+//                }
+//            }
+//
+//            @Override
+//            protected void hadSuccess() {
+//                setImageObjects(loadedImageObjects);
+//                imageObjectsLoadDone(success);
+//            }
+//
+//            @Override
+//            protected void hadError(Throwable error) {
+//                SessionMgr.getSessionMgr().handleException(error);
+//            }
+//        };
+//        entityLoadingWorker.execute();
+//
+//        annotationsInitWorker = new SimpleWorker() {
+//
+//            @Override
+//            protected void doStuff() throws Exception {
+//                List<Object> uniqueIds = new ArrayList<Object>();
+//                for (T imageObject : allImageObjects) {
+//                    uniqueIds.add(imagesPanel.getIconPanel().getImageUniqueId(imageObject));
+//                }
+////                annotations.init(uniqueIds);
+//            }
+//
+//            @Override
+//            protected void hadSuccess() {
+//
+//                if (!entityLoadInProgress.get()) {
+//                    // Entity load finished before we did, so its safe to update the annotations
+//                    refreshAnnotations(null);
+////                    filterEntities();
+//                    SwingUtilities.invokeLater(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            imagesPanel.recalculateGrid();
+//                        }
+//                    });
+//                }
+//
+//                annotationLoadInProgress.set(false);
+//            }
+//
+//            @Override
+//            protected void hadError(Throwable error) {
+//                SessionMgr.getSessionMgr().handleException(error);
+//            }
+//        };
+//        annotationsInitWorker.execute();
+        
+        
+        
+    }
+    
+//    public synchronized void loadEntity(RootedEntity rootedEntity, final Callable<Void> success) {
+//
+//        this.contextRootedEntity = rootedEntity;
+//        if (contextRootedEntity == null) {
+//            return;
+//        }
+//
+//        Entity entity = contextRootedEntity.getEntity();
+//
+//        log.debug("loadEntity {} (@{})", entity.getName(), System.identityHashCode(entity));
+//
+//        List<EntityData> eds = ModelUtils.getSortedEntityDatas(entity);
+//        List<EntityData> children = new ArrayList<EntityData>();
+//        for (EntityData ed : eds) {
+//            Entity child = ed.getChildEntity();
+//            if (!EntityUtils.isHidden(ed) && child != null && !(child instanceof ForbiddenEntity)) {
+//                children.add(ed);
+//            }
+//        }
+//
+//        List<RootedEntity> lazyRootedEntities = new ArrayList<RootedEntity>();
+//        for (EntityData ed : children) {
+//            String childId = ModelUtils.getChildUniqueId(rootedEntity.getUniqueId(), ed);
+//            lazyRootedEntities.add(new RootedEntity(childId, ed));
+//        }
+//
+//        if (lazyRootedEntities.isEmpty()) {
+//            lazyRootedEntities.add(rootedEntity);
+//        }
+//
+//        // Update back/forward navigation
+////        EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
+////        iconDemoToolbar.getPrevButton().setEnabled(history.isBackEnabled());
+////        iconDemoToolbar.getNextButton().setEnabled(history.isNextEnabled());
+//
+//        loadImageEntities(lazyRootedEntities, success);
+//    }
+//
+//    public void loadImageEntities(final List<RootedEntity> lazyRootedEntities) {
+//        // TODO: revisit this, since it doesn't set contextRootedEntity
+//        loadImageEntities(lazyRootedEntities, null);
+//    }
+
+//    private synchronized void loadImageEntities(final List<RootedEntity> lazyRootedEntities, final Callable<Void> success) {
+//
+//        this.allRootedEntitiesByEntityId.clear();
+//        this.allRootedEntitiesByPathId.clear();
+//        this.allRootedEntities = lazyRootedEntities;
+//        for (RootedEntity re : allRootedEntities) {
+//            allRootedEntitiesByEntityId.put(re.getEntityId(), re);
+//            allRootedEntitiesByPathId.put(re.getId(), re);
+//        }
+//
+//        this.numPages = (int) Math.ceil((double) allRootedEntities.size() / (double) PAGE_SIZE);
+//        loadImageEntities(0, success);
+//    }
+
+    private synchronized void imageObjectsLoadDone(final Callable<Void> success) {
+        
+        // Create the image buttons
+        imagesPanel.setImageObjects(imageObjects);
+
+        // Update preferences for each button
+        Boolean tagTable = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
+                ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY);
+        if (tagTable == null) {
+            tagTable = false;
+        }
+
+        imagesPanel.setTagTable(tagTable);
+        imagesPanel.setTagVisbility(iconDemoToolbar.areTagsVisible());
+        imagesPanel.setTitleVisbility(iconDemoToolbar.areTitlesVisible());
+
+        // Since the images are not loaded yet, this will just resize the empty
+        // buttons so that we can calculate the grid correctly
+        imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
+        imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
+
+        // Update selection
+//        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
+//        esm.deselectAll(getSelectionCategory());
+
+        // Actually display everything
+        showImagePanel();
+
+        // Wait until everything is recomputed
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                imagesPanel.recalculateGrid();
+                imagesPanel.setScrollLoadingEnabled(true);
+
+                // Finally, we're done, we can call the success callback
+                ConcurrentUtils.invokeAndHandleExceptions(success);
+            }
+        });
+    }
+
+//    protected void removeRootedEntity(final RootedEntity rootedEntity) {
+//        int index = getRootedEntities().indexOf(rootedEntity);
+//        if (index < 0) {
+//            return;
+//        }
+//
+//        pageRootedEntities.remove(rootedEntity);
+//        allRootedEntities.remove(rootedEntity);
+//        allRootedEntitiesByEntityId.removeAll(rootedEntity.getEntityId());
+//        allRootedEntitiesByPathId.removeAll(rootedEntity.getId());
+//
+//        this.numPages = (int) Math.ceil((double) allRootedEntities.size() / (double) PAGE_SIZE);
+//        updatePagingStatus();
+//
+//        SwingUtilities.invokeLater(new Runnable() {
+//            @Override
+//            public void run() {
+//                RootedEntity next = getNextEntity();
+//                if (next != null) {
+//                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), next.getId(), true);
+//                }
+//                imagesPanel.removeRootedEntity(rootedEntity);
+//                imagesPanel.recalculateGrid();
+//            }
+//        });
+//    }
+
+//    private void filterEntities() {
+//
+//        AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
+//        if (session == null) {
+//            return;
+//        }
+//        session.clearCompletedIds();
+//        Set<Long> completed = session.getCompletedEntityIds();
+//
+//        imagesPanel.showAllButtons();
+//        Boolean hideAnnotated = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
+//                ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY);
+//        if (hideAnnotated != null && hideAnnotated) {
+//            imagesPanel.hideButtons(completed);
+//        }
+//    }
+
+    /**
+     * Reload the annotations from the database and then refresh the UI.
+     */
+//    public synchronized void reloadAnnotations(final Long entityId) {
+//
+//        if (annotations == null || pageRootedEntities == null) {
+//            return;
+//        }
+//        
+//        annotationLoadingWorker = new SimpleWorker() {
+//
+//            protected void doStuff() throws Exception {
+//                annotations.reload(entityId);
+//            }
+//
+//            protected void hadSuccess() {
+//                refreshAnnotations(entityId);
+//            }
+//
+//            protected void hadError(Throwable error) {
+//                SessionMgr.getSessionMgr().handleException(error);
+//            }
+//        };
+//
+//        annotationLoadingWorker.execute();
+//    }
+
+    /**
+     * Refresh the annotation display in the UI, but do not reload anything from
+     * the database.
+     */
+    private synchronized void refreshAnnotations(Long entityId) {
+        // Refresh all user list
+        allUsers.clear();
+        for (OntologyAnnotation annotation : annotations.getAnnotations()) {
+            String name = EntityUtils.getNameFromSubjectKey(annotation.getOwner());
+            if (!allUsers.contains(name)) {
+                allUsers.add(name);
+            }
+        }
+        Collections.sort(allUsers);
+        imagesPanel.setAnnotations(annotations);
+
+        if (entityId == null) {
+            imagesPanel.showAllAnnotations();
+        }
+        else {
+            imagesPanel.showAnnotationsForEntity(entityId);
+        }
+    }
+
+    public void refresh() {
+        refresh(false, null);
+    }
+
+    public void totalRefresh() {
+        refresh(true, null);
+    }
+
+    public void refresh(final Callable<Void> successCallback) {
+        refresh(false, successCallback);
+    }
+
+    public void totalRefresh(final Callable<Void> successCallback) {
+        refresh(true, successCallback);
+    }
+
+    private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
+
+    public void refresh(final boolean invalidateCache, final Callable<Void> successCallback) {
+
+//        if (contextImageObject == null) {
+//            return;
+//        }
+//
+//        if (refreshInProgress.getAndSet(true)) {
+//            log.debug("Skipping refresh, since there is one already in progress");
+//            return;
+//        }
+//
+//        log.debug("Starting a refresh");
+//
+//        final List<String> selectedIds = new ArrayList<String>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
+//        final Callable<Void> success = new Callable<Void>() {
+//            @Override
+//            public Void call() throws Exception {
+//                // At the very end, reselect our buttons if possible
+//                boolean first = true;
+//                for (String selectedId : selectedIds) {
+//                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), selectedId, first);
+//                    first = false;
+//                }
+//                // Now call the user's callback 
+//                if (successCallback != null) {
+//                    successCallback.call();
+//                }
+//                return null;
+//            }
+//        };
+//
+//        SimpleWorker refreshWorker = new SimpleWorker() {
+//
+//            T imageObject = contextImageObject;
+//
+//            protected void doStuff() throws Exception {
+//                if (invalidateCache) {
+//                    ModelMgr.getModelMgr().invalidateCache(rootedEntity.getEntity(), true);
+//                }
+//                Entity entity = ModelMgr.getModelMgr().getEntityAndChildren(rootedEntity.getEntity().getId());
+//                rootedEntity.setEntity(entity);
+//            }
+//
+//            protected void hadSuccess() {
+//                SwingUtilities.invokeLater(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        if (rootedEntity.getEntity() == null) {
+//                            clear();
+//                            if (success != null) {
+//                                try {
+//                                    success.call();
+//                                }
+//                                catch (Exception e) {
+//                                    hadError(e);
+//                                }
+//                            }
+//                        }
+//                        else {
+//                            //loadEntity(rootedEntity, success);
+//                        }
+//                        refreshInProgress.set(false);
+//                        log.debug("Refresh complete");
+//                    }
+//                });
+//            }
+//
+//            protected void hadError(Throwable error) {
+//                refreshInProgress.set(false);
+//                SessionMgr.getSessionMgr().handleException(error);
+//            }
+//        };
+//
+//        refreshWorker.execute();
+    }
+
+    public synchronized void clear() {
+
+        log.debug("Clearing {}", getSelectionCategory());
+
+        this.imageObjects = null;
+
+        removeAll();
+
+        revalidate();
+        repaint();
+    }
+
+    public void close() {
+        log.debug("Closing {}", getSelectionCategory());
+        SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
+        ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
+        ModelMgr.getModelMgr().unregisterOnEventBus(this);
+    }
+
+    public synchronized void showImagePanel() {
+
+        removeAll();
+        add(iconDemoToolbar, BorderLayout.NORTH);
+        add(imagesPanel, BorderLayout.CENTER);
+
+        revalidate();
+        repaint();
+    }
+
+//    public RootedEntity getPreviousEntity() {
+//        if (pageRootedEntities == null) {
+//            return null;
+//        }
+//        int i = pageRootedEntities.indexOf(getLastSelectedEntity());
+//        if (i < 1) {
+//            // Already at the beginning
+//            return null;
+//        }
+//        return pageRootedEntities.get(i - 1);
+//    }
+//
+//    public RootedEntity getNextEntity() {
+//        if (pageRootedEntities == null) {
+//            return null;
+//        }
+//        int i = pageRootedEntities.indexOf(getLastSelectedEntity());
+//        if (i > pageRootedEntities.size() - 2) {
+//            // Already at the end
+//            return null;
+//        }
+//        return pageRootedEntities.get(i + 1);
+//    }
+    
+    protected abstract void populateImageRoles(List<T> imageObjects);
+
+    private synchronized void setImageObjects(List<T> imageObjects) {
+        this.imageObjects = imageObjects;
+        populateImageRoles(imageObjects);
+        iconDemoToolbar.getImageRoleButton().setEnabled(!allImageRoles.isEmpty());
+        if (!allImageRoles.contains(getCurrImageRole())) {
+            setCurrImageRole(FileType.SignalMip.toString());
+        }
+    }
+
+//    public synchronized RootedEntity getLastSelectedEntity() {
+//        String entityId = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
+//        if (entityId == null) {
+//            return null;
+//        }
+//        AnnotatedImageButton button = imagesPanel.getButtonById(entityId);
+//        if (button == null) {
+//            return null;
+//        }
+//        return button.getRootedEntity();
+//    }
+//
+//    public List<RootedEntity> getSelectedEntities() {
+//        List<RootedEntity> selectedEntities = new ArrayList<RootedEntity>();
+//        if (pageRootedEntities == null) {
+//            return selectedEntities;
+//        }
+//        for (RootedEntity rootedEntity : pageRootedEntities) {
+//            AnnotatedImageButton button = imagesPanel.getButtonById(rootedEntity.getId());
+//            if (button.isSelected()) {
+//                selectedEntities.add(rootedEntity);
+//            }
+//        }
+//        return selectedEntities;
+//    }
+
+    public IconDemoToolbar getToolbar() {
+        return iconDemoToolbar;
+    }
+
+//    public Hud getHud() {
+//        return hud;
+//    }
+
+    public Annotations getAnnotations() {
+        return annotations;
+    }
+
+//    public RootedEntity getContextRootedEntity() {
+//        return contextRootedEntity;
+//    }
+//
+//    private List<RootedEntity> getRootedEntitiesById(String id) {
+//        List<RootedEntity> res = new ArrayList<RootedEntity>();
+//        // Assume these are path ids
+//        res.addAll(allRootedEntitiesByPathId.get(id));
+//        if (res.isEmpty()) {
+//            // Maybe we were given entity GUIDs
+//            try {
+//                Long entityId = Long.parseLong(id);
+//                res.addAll(allRootedEntitiesByEntityId.get(entityId));
+//            }
+//            catch (NumberFormatException e) {
+//                // Expected
+//            }
+//        }
+//        return res;
+//    }
+//
+//    public RootedEntity getRootedEntityById(String id) {
+//        List<RootedEntity> res = getRootedEntitiesById(id);
+//        if (res == null || res.isEmpty()) {
+//            return null;
+//        }
+//        return res.get(0);
+//    }
+
+    public boolean areTitlesVisible() {
+        return getToolbar().areTitlesVisible();
+    }
+
+    public boolean areTagsVisible() {
+        return getToolbar().areTagsVisible();
+    }
+
+//    public EntityViewerState saveViewerState() {
+//        // We could get this from the EntitySelectionModel, but sometimes that 
+//        // doesn't have the latest select the user is currently making.
+//        Set<String> selectedIds = new HashSet<String>();
+//        for(AnnotatedImageButton button : imagesPanel.getSelectedButtons()) {
+//            selectedIds.add(button.getRootedEntity().getId());
+//        }
+//        return new EntityViewerState(getClass(), contextRootedEntity, selectedIds);
+//    }
+//
+//    public void restoreViewerState(final EntityViewerState state) {
+//        // It's critical to call loadEntity in the ViewerPane not the local one.
+//        // The ViewerPane version does extra stuff to get the ancestors button
+//        // and breadcrumbs to show correctly.
+//        getViewerPane().loadEntity(state.getContextRootedEntity(), new Callable<Void>() {
+//            @Override
+//            public Void call() throws Exception {
+//                // Go to the right page
+//                int i = 0;
+//                int firstIdIndex = 0;
+//                for (RootedEntity rootedEntity : allRootedEntities) {
+//                    if (state.getSelectedIds().contains(rootedEntity.getId())) {
+//                        firstIdIndex = i;
+//                        break;
+//                    }
+//                    i++;
+//                }
+//
+//                Callable<Void> makeSelections = new Callable<Void>() {
+//                    @Override
+//                    public Void call() throws Exception {
+//                        for (String selectedId : state.getSelectedIds()) {
+//                            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), selectedId, false);
+//                        }
+//                        // Wait for all selections to finish before we scroll
+//                        SwingUtilities.invokeLater(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                imagesPanel.scrollSelectedEntitiesToCenter();
+//                            }
+//                        });
+//                        return null;
+//                    }
+//                };
+//
+//                int page = (int) Math.floor((double) firstIdIndex / (double) PAGE_SIZE);
+//                if (page != currPage) {
+//                    loadImageEntities(page, makeSelections);
+//                }
+//                else {
+//                    makeSelections.call();
+//                }
+//
+//                return null;
+//            }
+//        });
+//    }
+}

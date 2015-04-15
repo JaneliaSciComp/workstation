@@ -20,9 +20,9 @@ import org.janelia.it.workstation.gui.dialogs.ModalDialog;
  */
 public abstract class EditFilterDialog extends ModalDialog {
 
-    private JButton clearButton;
-    private JButton cancelButton;
-    private JButton okButton;
+    private final JButton clearButton;
+    private final JButton cancelButton;
+    private final JButton okButton;
     
     protected SavedSearch savedSearch;
     protected Filter filter;
@@ -59,6 +59,8 @@ public abstract class EditFilterDialog extends ModalDialog {
                 }
             }
         });
+        
+        getRootPane().setDefaultButton(okButton);
     }
 
     protected abstract JPanel getFilterPanel(Filter filter);

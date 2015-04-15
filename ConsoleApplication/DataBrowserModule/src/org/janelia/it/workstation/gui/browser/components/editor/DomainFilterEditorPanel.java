@@ -7,8 +7,8 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -17,6 +17,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.common.SolrDocument;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.SavedSearch;
@@ -24,11 +25,14 @@ import org.janelia.it.jacs.model.domain.gui.search.filters.AttributeFilter;
 import org.janelia.it.jacs.model.domain.gui.search.filters.Filter;
 import org.janelia.it.jacs.model.domain.gui.search.filters.FullTextFilter;
 import org.janelia.it.jacs.model.domain.gui.search.filters.SetFilter;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.browser.icongrid.node.DomainObjectIconGridViewer;
+import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.components.viewer.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -44,11 +48,6 @@ import org.slf4j.LoggerFactory;
 public class DomainFilterEditorPanel extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(DomainFilterEditorPanel.class);
-
-    /**
-     * How many results to load at a time
-     */
-    private static final int PAGE_SIZE = 100;
     
     // UI Settings
     private static final Border PADDING_BORDER = BorderFactory.createEmptyBorder(5, 5, 5, 5);
@@ -56,14 +55,14 @@ public class DomainFilterEditorPanel extends JPanel {
     // UI Elements
     private JYTaskPane filterTaskPane;
     private JYTaskPane optionsTaskPane;
-    private final DomainObjectIconGridViewer iconGridViewer;
+    private final PaginatedResultsPanel resultsPanel;
     
     // Search state
     private SavedSearch savedSearch;
-    private String fullQueryString;
-    
-    // Results
-    protected SearchResults searchResults = new SearchResults();
+    private String displayQueryString;
+    private final int pageSize = SearchResults.PAGE_SIZE;
+    protected SolrQuery query;
+    protected SearchResults searchResults;
 
     private enum ViewerType {
 
@@ -113,11 +112,21 @@ public class DomainFilterEditorPanel extends JPanel {
         taskPaneContainer.add(filterTaskPane);
         taskPaneContainer.add(optionsTaskPane);
 
-        this.iconGridViewer = new DomainObjectIconGridViewer();
+        this.resultsPanel = new PaginatedResultsPanel() {
+            @Override
+            protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
+                ResultPage resultPage = searchResults.getPage(page);
+                if (resultPage==null) {
+                    resultPage = performSearch(query, page);
+                    searchResults.setPage(page, resultPage);
+                }
+                return resultPage;
+            }
+        };
 
         JPanel searchResultsPanel = new JPanel();
         searchResultsPanel.setLayout(new BorderLayout());
-        searchResultsPanel.add(iconGridViewer, BorderLayout.CENTER);
+        searchResultsPanel.add(resultsPanel, BorderLayout.CENTER);
 
         setLayout(new BorderLayout());
         add(taskPaneContainer, BorderLayout.WEST);
@@ -328,6 +337,9 @@ public class DomainFilterEditorPanel extends JPanel {
 
         StringBuilder aux = new StringBuilder();
 
+        // TODO: make this user definable
+        aux.append("+entity_type:sample ");
+        
         for (Filter filter : filters) {
             if (filter instanceof AttributeFilter) {
 
@@ -394,6 +406,7 @@ public class DomainFilterEditorPanel extends JPanel {
             builder.setAscending(!sortCriteria.startsWith("-"));
         }
         
+        // TODO: add UI for facet filters
 //        builder.getFilters().putAll(filters);
 //        if (fetchFacets) {
 //            builder.getFacets().addAll(Arrays.asList(facets));
@@ -401,12 +414,8 @@ public class DomainFilterEditorPanel extends JPanel {
         
         return builder;
     }
-    
+            
     public synchronized void performSearch(final int pageNum, final boolean showLoading) {
-        performSearch(pageNum, showLoading, null);
-    }
-    
-    public synchronized void performSearch(final int pageNum, final boolean showLoading, final Callable<Void> success) {
 
         log.debug("performSearch(pageNum={},showLoading={})", pageNum, showLoading);
 
@@ -427,32 +436,29 @@ public class DomainFilterEditorPanel extends JPanel {
         if (builder.getSearchString()!=null) {
             qs.append(builder.getSearchString());
         }
-        this.fullQueryString = qs.toString();
-
+        this.displayQueryString = qs.toString();
+        
         SimpleWorker worker = new SimpleWorker() {
-
-            private ResultPage resultPage;
 
             @Override
             protected void doStuff() throws Exception {
-                resultPage = new ResultPage(performSearch(builder, pageNum, PAGE_SIZE));
-                log.debug("Adding result page ({} results)", resultPage.getNumItems());
-                searchResults.addPage(resultPage);
-//                resultsTable.setMoreResults(searchResults.hasMoreResults());
+                query = builder.getQuery();
+                ResultPage firstPage = performSearch(query, pageNum);
+                searchResults = new SearchResults(firstPage);
+                log.debug("Got {} results", firstPage.getNumPageResults());
             }
 
             @Override
             protected void hadSuccess() {
                 try {
-                    iconGridViewer.showSearchResults(searchResults);
-                    
+                    resultsPanel.showSearchResults(searchResults);
+
 //                    populateFacets(resultPage);
 //                    populateResultView(resultPage);
-//                    if (showLoading) {
-//                        resultsTable.showTable();
-//                    }
-//                    ConcurrentUtils.invoke(success);
-                    
+                    if (showLoading) {
+                        resultsPanel.showResultsView();
+                    }
+
                 }
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
@@ -463,27 +469,46 @@ public class DomainFilterEditorPanel extends JPanel {
             protected void hadError(Throwable error) {
                 SessionMgr.getSessionMgr().handleException(error);
                 if (showLoading) {
-//                    resultsTable.showNothing();
+                    resultsPanel.showNothing();
                 }
             }
         };
 
         if (showLoading) {
-//            resultsTable.showLoadingIndicator();
+            resultsPanel.showLoadingIndicator();
         }
         worker.execute();
     }
 
-    public SolrResults performSearch(SolrQueryBuilder builder, int page, int pageSize) throws Exception {
+    public ResultPage performSearch(SolrQuery query, int page) throws Exception {
         
         if (SwingUtilities.isEventDispatchThread()) {
-            throw new RuntimeException("GeneralSearchDialog.search called in the EDT");
+            throw new RuntimeException("DomainFilterEditorPanel.performSearch called in the EDT");
         }
         
-        SolrQuery query = builder.getQuery();
         query.setStart(pageSize*page);
         query.setRows(pageSize);
         
-        return ModelMgr.getModelMgr().searchSolr(query, false);
+        SolrResults solrResults = ModelMgr.getModelMgr().searchSolr(query, false);
+        
+        List<Long> ids = new ArrayList<>();
+        List<Reference> refs = new ArrayList<>();
+        for(SolrDocument doc : solrResults.getResponse().getResults()) {
+            Long id = new Long(doc.get("id").toString());
+            String type = (String)doc.getFieldValue("entity_type");
+            refs.add(new Reference(type, id));
+            ids.add(id);
+        }
+        
+        DomainDAO dao = DomainExplorerTopComponent.getDao();
+        List<DomainObject> domainObjects = dao.getDomainObjects(SessionMgr.getSubjectKey(), refs);
+        List<Annotation> annotations = dao.getAnnotations(SessionMgr.getSubjectKey(), ids);
+        
+        int numFound = (int)solrResults.getResponse().getResults().getNumFound();
+        
+        log.info("Search found {} objects",numFound);
+        log.info("Page contains {} objects and {} annotations",domainObjects.size(),annotations.size());
+        
+        return new ResultPage(domainObjects, annotations, numFound);
     }
 }
