@@ -45,7 +45,8 @@ public class AnnotationSkeletonPanel extends JPanel {
             actor.setSkeleton(dataSource.getSkeleton());
             actor.setCamera(mip3d.getVolumeModel().getCamera3d());
             actor.setTileFormat(tileFormat);
-            actor.setZThicknessInPixels( 29000 - 15000 );
+            // Set maximal thickness.  Z-fade is not practical for 3D rotations.
+            actor.setZThicknessInPixels( Long.MAX_VALUE );
             actor.updateAnchors();
 
             // This should be done after establishing the skeleton.
