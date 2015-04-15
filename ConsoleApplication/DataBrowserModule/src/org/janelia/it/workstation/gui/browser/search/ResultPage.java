@@ -7,8 +7,6 @@ import java.util.*;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * One page of annotated results, treated as a unit for performance reasons.
@@ -17,13 +15,11 @@ import org.slf4j.LoggerFactory;
  */
 public class ResultPage implements AnnotatedDomainObjectList {
 
-    private static final Logger log = LoggerFactory.getLogger(ResultPage.class);
-
     private final List<DomainObject> domainObjects = new ArrayList<>();
     private final ListMultimap<Long,Annotation> annotationsByDomainObjectId = ArrayListMultimap.<Long,Annotation>create();
     private final int numTotalResults;
     
-    private Map<Long, DomainObject> domainObjectById;
+//    private Map<Long, DomainObject> domainObjectById;
     
     public ResultPage(List<DomainObject> domainObjects, List<Annotation> annotations, int totalNumResults) {
         this.domainObjects.addAll(domainObjects);
@@ -51,14 +47,14 @@ public class ResultPage implements AnnotatedDomainObjectList {
         return annotationsByDomainObjectId.get(domainObjectId);
     }
     
-    @Override
-    public DomainObject getDomainObject(Long domainObjectId) {
-        if (domainObjectById==null) {
-            this.domainObjectById = new HashMap<>();
-            for(DomainObject domainObject : domainObjects) {
-                domainObjectById.put(domainObject.getId(), domainObject);
-            }
-        }
-        return domainObjectById.get(domainObjectId);
-    }
+//    @Override
+//    public DomainObject getDomainObject(Long domainObjectId) {
+//        if (domainObjectById==null) {
+//            this.domainObjectById = new HashMap<>();
+//            for(DomainObject domainObject : domainObjects) {
+//                domainObjectById.put(domainObject.getId(), domainObject);
+//            }
+//        }
+//        return domainObjectById.get(domainObjectId);
+//    }
 }

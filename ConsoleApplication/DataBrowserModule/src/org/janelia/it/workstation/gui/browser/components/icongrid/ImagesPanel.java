@@ -13,7 +13,6 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.framework.outline.Annotations;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
-import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,10 +98,10 @@ public class ImagesPanel<T> extends JScrollPane {
     }
     
     /**
-     * Returns the button with the given entity.
+     * Returns the button with the given unique id.
      */
-    public AnnotatedImageButton getButtonById(String id) {
-        return buttons.get(id);
+    public AnnotatedImageButton getButtonById(Object uniqueId) {
+        return buttons.get(uniqueId);
     }
 
     public void setButtonKeyListener(KeyListener buttonKeyListener) {
@@ -195,7 +194,7 @@ public class ImagesPanel<T> extends JScrollPane {
         Object imageId = iconPanel.getImageUniqueId(imageObject);
         AnnotatedImageButton button = buttons.get(imageId);
         if (button == null) {
-            return; // Button was already removed, probably because of a EntityChangedEvent
+            return; // Button was already removed
         }
         buttonsPanel.remove(button);
         buttons.remove(imageId);
@@ -229,13 +228,14 @@ public class ImagesPanel<T> extends JScrollPane {
 //        });
     }
 
-    public List<AnnotatedImageButton> getButtonsByEntityId(Long entityId) {
-        List<AnnotatedImageButton> entityButtons = new ArrayList<AnnotatedImageButton>();
-//        for (AnnotatedImageButton button : buttons.values()) {
-//            if (button.getRootedEntity().getEntity().getId().equals(entityId)) {
-//                entityButtons.add(button);
-//            }
-//        }
+    public List<AnnotatedImageButton<T>> getButtonsByUniqueId(Object uniqueId) {
+        List<AnnotatedImageButton<T>> entityButtons = new ArrayList<>();
+        for (AnnotatedImageButton<T> button : buttons.values()) {
+        Object imageId = iconPanel.getImageUniqueId(button.getImageObject());
+            if (imageId.equals(uniqueId)) {
+                entityButtons.add(button);
+            }
+        }
         return entityButtons;
     }
 
@@ -290,9 +290,9 @@ public class ImagesPanel<T> extends JScrollPane {
         repaint();
     }
 
-    public synchronized void hideButtons(Collection<Long> entityIds) {
-        for (Long entityId : entityIds) {
-            AnnotatedImageButton button = getButtonById(entityId + "");
+    public synchronized void hideButtons(Collection<Object> uniqueIds) {
+        for (Object uniqueId : uniqueIds) {
+            AnnotatedImageButton button = getButtonById(uniqueId.toString());
             buttonsPanel.remove(button);
         }
         revalidate();
@@ -311,11 +311,12 @@ public class ImagesPanel<T> extends JScrollPane {
         getViewport().scrollRectToVisible(new Rectangle(0, buttonsPanel.getHeight(), 1, 1));
     }
 
-    public void scrollEntityToCenter(RootedEntity rootedEntity) {
-        if (rootedEntity == null) {
+    public void scrollObjectToCenter(T imageObject) {
+        if (imageObject == null) {
             return;
         }
-        AnnotatedImageButton selectedButton = getButtonById(rootedEntity.getId());
+        Object uniqueId = iconPanel.getImageUniqueId(imageObject);
+        AnnotatedImageButton<T> selectedButton = getButtonById(uniqueId.toString());
         scrollButtonToCenter(selectedButton);
     }
 
@@ -388,7 +389,7 @@ public class ImagesPanel<T> extends JScrollPane {
     }
 
     public void scrollSelectedEntitiesToCenter() {
-        List<AnnotatedImageButton> selected = getSelectedButtons();
+        List<AnnotatedImageButton<T>> selected = getSelectedButtons();
         if (selected.isEmpty()) {
             return;
         }
@@ -398,7 +399,7 @@ public class ImagesPanel<T> extends JScrollPane {
     }
 
     public void scrollSelectedEntitiesToTop() {
-        List<AnnotatedImageButton> selected = getSelectedButtons();
+        List<AnnotatedImageButton<T>> selected = getSelectedButtons();
         if (selected.isEmpty()) {
             return;
         }
@@ -455,10 +456,6 @@ public class ImagesPanel<T> extends JScrollPane {
         return false;
     }
 
-    /**
-     * The identifier can be either a uniqueId (path) or just a simple entity id. In the latter case you may get
-     * multiple entities selected, if there are duplicates.
-     */
     public void setSelection(T selectedObject, boolean selection, boolean clearAll) {
         if (clearAll) {
             for (AnnotatedImageButton<T> button : buttons.values()) {
@@ -491,16 +488,12 @@ public class ImagesPanel<T> extends JScrollPane {
         }
     }
     
-    /**
-     * The identifier can be either a uniqueId (path) or just a simple entity id. In the latter case you may get
-     * multiple entities selected, if there are duplicates.
-     */
-    public void setSelection(String selectedEntityId, boolean selection, boolean clearAll) {
+    public void setSelectionByUniqueId(Object selectedUniqueId, boolean selection, boolean clearAll) {
         if (clearAll) {
             for (AnnotatedImageButton<T> button : buttons.values()) {
                 T imageObject = button.getImageObject();
                 Object imageId = iconPanel.getImageUniqueId(imageObject);
-                if (imageId.equals(selectedEntityId) || imageId.toString().equals(selectedEntityId)) {
+                if (imageId.equals(selectedUniqueId)) {
                     setSelection(button, true);
                 }
                 else {
@@ -509,16 +502,16 @@ public class ImagesPanel<T> extends JScrollPane {
             }
         }
         else {
-            AnnotatedImageButton button = buttons.get(selectedEntityId);
+            AnnotatedImageButton button = buttons.get(selectedUniqueId);
             if (button != null) {
                 setSelection(button, selection);
             }
         }
     }
 
-    public List<AnnotatedImageButton> getSelectedButtons() {
-        List<AnnotatedImageButton> selected = new ArrayList<AnnotatedImageButton>();
-        for (AnnotatedImageButton button : buttons.values()) {
+    public List<AnnotatedImageButton<T>> getSelectedButtons() {
+        List<AnnotatedImageButton<T>> selected = new ArrayList<>();
+        for (AnnotatedImageButton<T> button : buttons.values()) {
             if (button.isSelected()) {
                 selected.add(button);
             }

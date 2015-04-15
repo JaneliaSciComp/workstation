@@ -1,10 +1,7 @@
 package org.janelia.it.workstation.gui.browser.components.icongrid;
 
-import org.janelia.it.workstation.gui.browser.icongrid.*;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -20,15 +17,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
@@ -52,8 +44,13 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
+import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
@@ -73,8 +70,6 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
     protected IconDemoToolbar iconDemoToolbar;
 
     private String currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
-
-    protected ImagesPanel<T> imagesPanel;
     
     // These members deal with the context and entities within it
     protected List<T> imageObjects;
@@ -90,103 +85,114 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
     protected SessionModelListener sessionModelListener;
     protected ModelMgrObserver modelMgrObserver;
 
-//    // Listen for key strokes and execute the appropriate key bindings
-//    // TODO: we should replace this with an action map in the future
-//    protected KeyListener keyListener = new KeyAdapter() {
-//        @Override
-//        public void keyPressed(KeyEvent e) {
+    // Listen for key strokes and execute the appropriate key bindings
+    // TODO: we should replace this with an action map in the future
+    protected KeyListener keyListener = new KeyAdapter() {
+        @Override
+        public void keyPressed(KeyEvent e) {
 
-//            if (KeymapUtil.isModifier(e)) {
-//                return;
-//            }
-//            if (e.getID() != KeyEvent.KEY_PRESSED) {
-//                return;
-//            }
-//
-//            KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-//            if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
-//
-//                // No keybinds matched, use the default behavior
-//                // Ctrl-A or Meta-A to select all
-//                if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
-//                    for (RootedEntity rootedEntity : pageRootedEntities) {
-//                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
-//                    }
-//                    if (pageRootedEntities.size() < allRootedEntities.size()) {
+            if (KeymapUtil.isModifier(e)) {
+                return;
+            }
+            if (e.getID() != KeyEvent.KEY_PRESSED) {
+                return;
+            }
+
+            KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
+            if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
+
+                // No keybinds matched, use the default behavior
+                // Ctrl-A or Meta-A to select all
+                if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
+                    for (T imageObject : imageObjects) {
+                        Object uniqueId = getImageUniqueId(imageObject);
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), uniqueId.toString(), false);
+                    }
+                    // TODO: notify our pagination container
+//                    if (imageObjects.size() < allRootedEntities.size()) {
 //                        selectionButtonContainer.setVisible(true);
 //                    }
-//                    return;
-//                }
-//
-//                // Space on a single entity triggers a preview 
-//                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    return;
+                }
+
+                // Space on a single entity triggers a preview 
+                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    // TODO: notify our hud container
 //                    updateHud(true);
-//                    e.consume();
-//                    return;
-//                }
-//
-//                // Enter with a single entity selected triggers an outline
-//                // navigation
-//                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-//                    List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
-//                    if (selectedIds.size() != 1) {
-//                        return;
-//                    }
-//                    String selectedId = selectedIds.get(0);
-//                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, selectedId, true);
-//                    return;
-//                }
-//
-//                // Delete triggers deletion
-//                if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-//                    List<RootedEntity> selected = getSelectedEntities();
-//                    if (selected.isEmpty()) {
-//                        return;
-//                    }
-//                    final Action action = new RemoveEntityAction(selected, true, false);
+                    e.consume();
+                    return;
+                }
+
+                // Enter with a single entity selected triggers an outline
+                // navigation
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
+                    if (selectedIds.size() != 1) {
+                        return;
+                    }
+                    String selectedId = selectedIds.get(0);
+                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, selectedId, true);
+                    return;
+                }
+
+                // Delete triggers deletion
+                if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    List<AnnotatedImageButton<T>> selected = imagesPanel.getSelectedButtons();
+                    List<T> toDelete = new ArrayList<>();
+                    for(AnnotatedImageButton<T> button : selected) {
+                        T imageObject = button.getImageObject();
+                        toDelete.add(imageObject);
+                    }
+                    
+                    if (selected.isEmpty()) {
+                        return;
+                    }
+                    // TODO: implement DomainObject deletion
+//                    final Action action = new RemoveEntityAction(toDelete, true, false);
 //                    action.doAction();
-//                    e.consume();
-//                    return;
-//                }
-//
-//                // Tab and arrow navigation to page through the images
-//                boolean clearAll = false;
-//                RootedEntity rootedEntity = null;
-//                if (e.getKeyCode() == KeyEvent.VK_TAB) {
-//                    clearAll = true;
-//                    if (e.isShiftDown()) {
-//                        rootedEntity = getPreviousEntity();
-//                    }
-//                    else {
-//                        rootedEntity = getNextEntity();
-//                    }
-//                }
-//                else {
-//                    clearAll = true;
-//                    if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-//                        rootedEntity = getPreviousEntity();
-//                    }
-//                    else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-//                        rootedEntity = getNextEntity();
-//                    }
-//                }
-//
-//                if (rootedEntity != null) {
-//                    AnnotatedImageButton button = imagesPanel.getButtonById(rootedEntity.getId());
-//                    if (button != null) {
-//                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), clearAll);
-//                        imagesPanel.scrollEntityToCenter(rootedEntity);
-//                        button.requestFocus();
+                    e.consume();
+                    return;
+                }
+
+                // Tab and arrow navigation to page through the images
+                boolean clearAll = false;
+                T imageObj = null;
+                if (e.getKeyCode() == KeyEvent.VK_TAB) {
+                    clearAll = true;
+                    if (e.isShiftDown()) {
+                        imageObj = getPreviousObject();
+                    }
+                    else {
+                        imageObj = getNextObject();
+                    }
+                }
+                else {
+                    clearAll = true;
+                    if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                        imageObj = getPreviousObject();
+                    }
+                    else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                        imageObj = getNextObject();
+                    }
+                }
+
+                if (imageObj != null) {
+                    Object uniqueId = getImageUniqueId(imageObj);
+                    AnnotatedImageButton button = imagesPanel.getButtonById(uniqueId);
+                    if (button != null) {
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), uniqueId.toString(), clearAll);
+                        imagesPanel.scrollObjectToCenter(imageObj);
+                        button.requestFocus();
 //                        updateHud(false);
-//                    }
-//                }
-//            }
-//
-//            revalidate();
-//            repaint();
-//        }
-//    };
-//
+                    }
+                }
+            }
+
+            revalidate();
+            repaint();
+        }
+    };
+
     // Listener for clicking on buttons
     protected MouseListener buttonMouseListener = new MouseHandler() {
 
@@ -226,12 +232,12 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
             if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
                 return;
             }
+//            hud.setKeyListener(keyListener);
             buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
         }
     };
 
-//    protected JPopupMenu getButtonPopupMenu() {
-//        return null;
+    protected JPopupMenu getButtonPopupMenu() {
 //        List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
 //        List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
 //        for (String entityId : selectionIds) {
@@ -245,72 +251,65 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 //        }
 //        JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
 //        ((EntityContextMenu) popupMenu).addMenuItems();
-//
 //        return popupMenu;
-//    }
-//
+        return null;
+    }
+
     /**
      * This is a separate method so that it can be overridden to accommodate other behavior patterns.
      */
     protected abstract void buttonDrillDown(AnnotatedImageButton button);
 
-    Set<T> selected = new HashSet<>();
-    private T lastSelected = null;
     
     protected void buttonSelection(AnnotatedImageButton button, boolean multiSelect, boolean rangeSelect) {
         
-        T imageObject = (T)button.getImageObject();
+        final String category = getSelectionCategory();
+        final T imageObject = (T)button.getImageObject();
+        final Object uniqueId = getImageUniqueId(imageObject);
+        final String uniqueIdStr = uniqueId.toString();
         
-        // TODO: tell the parent?
 //        selectionButtonContainer.setVisible(false);
-                
+
         if (multiSelect) {
             // With the meta key we toggle items in the current
             // selection without clearing it
             if (!button.isSelected()) {
-                selected.add(imageObject);
-                lastSelected = imageObject;
+                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, uniqueIdStr, false);
             }
             else {
-                selected.remove(imageObject);
-                lastSelected = null;
+                ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(category, uniqueIdStr);
             }
         }
-        else {        
+        else {
             // With shift, we select ranges
+            String lastSelected = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
             if (rangeSelect && lastSelected != null) {
                 // Walk through the buttons and select everything between the last and current selections
                 boolean selecting = false;
                 for (T otherImageObject : imageObjects) {
-                    if (otherImageObject.equals(lastSelected) || otherImageObject.equals(imageObject)) {
-                        if (otherImageObject.equals(imageObject)) {
+                    final Object otherUniqueId = getImageUniqueId(otherImageObject);
+                    final String otherUniqueIdStr = otherUniqueId.toString();
+                    if (otherUniqueIdStr.equals(lastSelected) || otherUniqueIdStr.equals(uniqueIdStr)) {
+                        if (otherUniqueIdStr.equals(uniqueIdStr)) {
                             // Always select the button that was clicked
-                            selected.add(otherImageObject);
+                            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherUniqueIdStr, false);
                         }
                         if (selecting) {
-                            break;
+                            return; // We already selected, this is the end
                         }
                         selecting = true; // Start selecting
                         continue; // Skip selection of the first and last items, which should already be selected
                     }
                     if (selecting) {
-                        selected.add(otherImageObject);
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherUniqueIdStr, false);
                     }
                 }
             }
             else {
-                selected.clear();
-                selected.add(imageObject);
+                // This is a good old fashioned single button selection
+                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, uniqueIdStr, true);
             }
-            lastSelected = imageObject;
         }
-        
-//        try {
-//            manager.setSelectedNodes(selected.toArray(new Node[selected.size()]));
-//        }
-//        catch (PropertyVetoException e) {
-//            log.warn("Could not select node", e);
-//        }
 
         button.requestFocus();
     }
@@ -356,13 +355,56 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
         iconDemoToolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
 
         imagesPanel = new ImagesPanel<>(this);
-        
-//        imagesPanel.setButtonKeyListener(keyListener);
+        imagesPanel.setButtonKeyListener(keyListener);
         imagesPanel.setButtonMouseListener(buttonMouseListener);
         imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
 
-//        addKeyListener(keyListener);
-
+        addKeyListener(keyListener);
+        
+//        imagesPanel.addMouseListener(new MouseHandler() {
+//            @Override
+//            protected void popupTriggered(MouseEvent e) {
+//                if (contextRootedEntity == null) {
+//                    return;
+//                }
+//                JPopupMenu popupMenu = new JPopupMenu();
+//                JMenuItem titleItem = new JMenuItem("" + contextRootedEntity.getEntity().getName());
+//                titleItem.setEnabled(false);
+//                popupMenu.add(titleItem);
+//
+//                JMenuItem newFolderItem = new JMenuItem("  Create New Folder");
+//                newFolderItem.addActionListener(new ActionListener() {
+//                    public void actionPerformed(ActionEvent actionEvent) {
+//
+//                        // Add button clicked
+//                        String folderName = (String) JOptionPane.showInputDialog(IconDemoPanel.this, "Folder Name:\n",
+//                                "Create folder under " + contextRootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+//                        if ((folderName == null) || (folderName.length() <= 0)) {
+//                            return;
+//                        }
+//
+//                        try {
+//                            // Update database
+//                            Entity parentFolder = contextRootedEntity.getEntity();
+//                            Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+//                            ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder);
+//                        }
+//                        catch (Exception ex) {
+//                            SessionMgr.getSessionMgr().handleException(ex);
+//                        }
+//                    }
+//                });
+//
+//                if (!contextRootedEntity.getEntity().getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)
+//                        || !contextRootedEntity.getEntity().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
+//                    newFolderItem.setEnabled(false);
+//                }
+//
+//                popupMenu.add(newFolderItem);
+//                popupMenu.show(imagesPanel, e.getX(), e.getY());
+//            }
+//        });
+        
         modelMgrObserver = new ModelMgrAdapter() {
 
 //            @Override
@@ -392,7 +434,7 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
                 }
             }
         };
-//        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
 //        ModelMgr.getModelMgr().registerOnEventBus(this);
 
         this.addComponentListener(new ComponentAdapter() {
@@ -466,18 +508,22 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
         });
     }
 
+    @Override
     public ImagesPanel<T> getImagesPanel() {
         return imagesPanel;
     }
 
+    @Override
     public String getCurrImageRole() {
         return currImageRole;
     }
 
+    @Override
     public void setCurrImageRole(String currImageRole) {
         this.currImageRole = currImageRole;
     }
 
+    @Override
     public String getSelectionCategory() {
         return EntitySelectionModel.CATEGORY_MAIN_VIEW;
     }
@@ -609,7 +655,7 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 
                 // Save the list of users so that when the function actually runs, the
                 // users it affects are the same users that were displayed
-                final List<String> savedUsers = new ArrayList<String>(allUsers);
+                final List<String> savedUsers = new ArrayList<>(allUsers);
 
                 JMenuItem allUsersMenuItem = new JCheckBoxMenuItem("All Users", hiddenUsers.isEmpty());
                 allUsersMenuItem.addActionListener(new ActionListener() {
@@ -673,12 +719,12 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 
     protected void entitySelected(String entityId, boolean clearAll) {
         log.debug("selecting {} in {} viewer", entityId, getSelectionCategory());
-        imagesPanel.setSelection(entityId, true, clearAll);
+        imagesPanel.setSelectionByUniqueId(entityId, true, clearAll);
 //        updateStatusBar();
     }
 
     public void entityDeselected(String entityId) {
-        imagesPanel.setSelection(entityId, false, false);
+        imagesPanel.setSelectionByUniqueId(entityId, false, false);
 //        updateStatusBar();
     }
 
@@ -740,96 +786,15 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
     }
     
     public void showImageObjects(List<T> imageObjects, final Callable<Void> success) {
-        
-        // Indicate a load
 
         // Cancel previous loads
         imagesPanel.cancelAllLoads();
-//        if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
-//            entityLoadingWorker.disregard();
-//        }
-//        if (annotationsInitWorker != null && !annotationsInitWorker.isDone()) {
-//            annotationsInitWorker.disregard();
-//        }
 
         // Temporarily disable scroll loading
         imagesPanel.setScrollLoadingEnabled(false);
 
-        log.info("Setting {} image objects",imageObjects.size());
         setImageObjects(imageObjects);
         imageObjectsLoadDone(success);
-                
-//        entityLoadingWorker = new SimpleWorker() {
-//
-//            private List<T> loadedImageObjects = new ArrayList<T>();
-//
-//            @Override
-//            protected void doStuff() throws Exception {
-//                for (T imageObject : pageObjects) {
-////                    if (!EntityUtils.isInitialized(rootedEntity.getEntity())) {
-////                        log.warn("Had to load entity " + rootedEntity.getEntity().getId());
-////                        rootedEntity.getEntityData().setChildEntity(ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()));
-////                    }
-////                    EntityData defaultImageEd = rootedEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
-////                    if (defaultImageEd != null && defaultImageEd.getValue() == null && defaultImageEd.getChildEntity() != null) {
-////                        log.warn("Had to load default image " + rootedEntity.getEntity().getName());
-////                        defaultImageEd.setChildEntity(ModelMgr.getModelMgr().getEntityById(defaultImageEd.getChildEntity().getId()));
-////                    }
-//                    loadedImageObjects.add(imageObject);
-//                }
-//            }
-//
-//            @Override
-//            protected void hadSuccess() {
-//                setImageObjects(loadedImageObjects);
-//                imageObjectsLoadDone(success);
-//            }
-//
-//            @Override
-//            protected void hadError(Throwable error) {
-//                SessionMgr.getSessionMgr().handleException(error);
-//            }
-//        };
-//        entityLoadingWorker.execute();
-//
-//        annotationsInitWorker = new SimpleWorker() {
-//
-//            @Override
-//            protected void doStuff() throws Exception {
-//                List<Object> uniqueIds = new ArrayList<Object>();
-//                for (T imageObject : allImageObjects) {
-//                    uniqueIds.add(imagesPanel.getIconPanel().getImageUniqueId(imageObject));
-//                }
-////                annotations.init(uniqueIds);
-//            }
-//
-//            @Override
-//            protected void hadSuccess() {
-//
-//                if (!entityLoadInProgress.get()) {
-//                    // Entity load finished before we did, so its safe to update the annotations
-//                    refreshAnnotations(null);
-////                    filterEntities();
-//                    SwingUtilities.invokeLater(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            imagesPanel.recalculateGrid();
-//                        }
-//                    });
-//                }
-//
-//                annotationLoadInProgress.set(false);
-//            }
-//
-//            @Override
-//            protected void hadError(Throwable error) {
-//                SessionMgr.getSessionMgr().handleException(error);
-//            }
-//        };
-//        annotationsInitWorker.execute();
-        
-        
-        
     }
     
 //    public synchronized void loadEntity(RootedEntity rootedEntity, final Callable<Void> success) {
@@ -1148,33 +1113,34 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
         repaint();
     }
 
-//    public RootedEntity getPreviousEntity() {
-//        if (pageRootedEntities == null) {
-//            return null;
-//        }
-//        int i = pageRootedEntities.indexOf(getLastSelectedEntity());
-//        if (i < 1) {
-//            // Already at the beginning
-//            return null;
-//        }
-//        return pageRootedEntities.get(i - 1);
-//    }
-//
-//    public RootedEntity getNextEntity() {
-//        if (pageRootedEntities == null) {
-//            return null;
-//        }
-//        int i = pageRootedEntities.indexOf(getLastSelectedEntity());
-//        if (i > pageRootedEntities.size() - 2) {
-//            // Already at the end
-//            return null;
-//        }
-//        return pageRootedEntities.get(i + 1);
-//    }
+    public T getPreviousObject() {
+        if (imageObjects == null) {
+            return null;
+        }
+        int i = imageObjects.indexOf(getLastSelectedObject());
+        if (i < 1) {
+            // Already at the beginning
+            return null;
+        }
+        return imageObjects.get(i - 1);
+    }
+
+    public T getNextObject() {
+        if (imageObjects == null) {
+            return null;
+        }
+        int i = imageObjects.indexOf(getLastSelectedObject());
+        if (i > imageObjects.size() - 2) {
+            // Already at the end
+            return null;
+        }
+        return imageObjects.get(i + 1);
+    }
     
     protected abstract void populateImageRoles(List<T> imageObjects);
 
     private synchronized void setImageObjects(List<T> imageObjects) {
+        log.debug("Setting {} image objects",imageObjects.size());
         this.imageObjects = imageObjects;
         populateImageRoles(imageObjects);
         iconDemoToolbar.getImageRoleButton().setEnabled(!allImageRoles.isEmpty());
@@ -1183,17 +1149,17 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
         }
     }
 
-//    public synchronized RootedEntity getLastSelectedEntity() {
-//        String entityId = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
-//        if (entityId == null) {
-//            return null;
-//        }
-//        AnnotatedImageButton button = imagesPanel.getButtonById(entityId);
-//        if (button == null) {
-//            return null;
-//        }
-//        return button.getRootedEntity();
-//    }
+    public synchronized T getLastSelectedObject() {
+        String uniqueId = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
+        if (uniqueId == null) {
+            return null;
+        }
+        AnnotatedImageButton<T> button = imagesPanel.getButtonById(uniqueId);
+        if (button == null) {
+            return null;
+        }
+        return button.getImageObject();
+    }
 //
 //    public List<RootedEntity> getSelectedEntities() {
 //        List<RootedEntity> selectedEntities = new ArrayList<RootedEntity>();
@@ -1250,10 +1216,12 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 //        return res.get(0);
 //    }
 
+    @Override
     public boolean areTitlesVisible() {
         return getToolbar().areTitlesVisible();
     }
 
+    @Override
     public boolean areTagsVisible() {
         return getToolbar().areTagsVisible();
     }

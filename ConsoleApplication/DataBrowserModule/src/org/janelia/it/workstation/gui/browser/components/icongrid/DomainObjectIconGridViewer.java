@@ -45,7 +45,7 @@ public class DomainObjectIconGridViewer extends IconGridViewer<DomainObject> imp
 
     @Override
     public Object getImageUniqueId(DomainObject domainObject) {
-        return domainObject.getId();
+        return domainObject.getId().toString();
     }
 
     @Override

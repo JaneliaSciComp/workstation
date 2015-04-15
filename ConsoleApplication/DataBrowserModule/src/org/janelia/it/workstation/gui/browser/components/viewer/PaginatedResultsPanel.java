@@ -51,6 +51,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
     
     // Content
     protected SearchResults searchResults;
+    private ResultPage resultPage;
     protected int numPages = 0;
     protected int currPage = 0;
     
@@ -149,6 +150,25 @@ public abstract class PaginatedResultsPanel extends JPanel {
         endPageButton.setEnabled(currPage != numPages - 1);
     }
 
+//    protected void entitySelected(String entityId, boolean clearAll) {
+//        log.debug("selecting {} in {} viewer", entityId, getSelectionCategory());
+//        imagesPanel.setSelection(entityId, true, clearAll);
+//        updateStatusBar();
+////        updateHud(false);
+//    }
+//
+//    public void entityDeselected(String entityId) {
+//        imagesPanel.setSelection(entityId, false, false);
+//        updateStatusBar();
+//    }
+    
+    private void updateStatusBar() {
+//        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
+//        int s = esm.getSelectedEntitiesIds(getSelectionCategory()).size();
+        int s = 0;
+        statusLabel.setText(s + " of " + resultPage.getNumPageResults() + " selected");
+    }
+    
     private synchronized void goPrevPage() {
         this.currPage -= 1;
         if (currPage < 0) {
@@ -191,6 +211,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
     public void showResultsView() {
         removeAll();
         add(resultsView.getViewerPanel(), BorderLayout.CENTER);
+        pagingStatusLabel.setText("Page " + (currPage + 1) + " of " + numPages);
         add(statusBar, BorderLayout.SOUTH);
         updateUI();
     }
@@ -218,8 +239,6 @@ public abstract class PaginatedResultsPanel extends JPanel {
         }
         
         SimpleWorker worker = new SimpleWorker() {
-
-            private ResultPage resultPage = null;
         
             @Override
             protected void doStuff() throws Exception {

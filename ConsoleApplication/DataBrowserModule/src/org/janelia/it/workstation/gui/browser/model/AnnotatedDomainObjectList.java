@@ -15,6 +15,6 @@ public interface AnnotatedDomainObjectList {
     
     public List<Annotation> getAnnotations(Long domainObjectId);
     
-    public DomainObject getDomainObject(Long domainObjectId);
+//    public DomainObject getDomainObject(Long domainObjectId);
     
 }
