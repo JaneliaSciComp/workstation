@@ -21,6 +21,7 @@ import org.janelia.it.workstation.gui.util.WindowLocator;
  * @author fosterl
  */
 public class AnnotationSkeletonViewLauncher {
+    
     public List<JMenuItem> getMenuItems() {
         List<JMenuItem> menuItems = new ArrayList<>();
         Action launchAction = new AbstractAction() {
@@ -29,11 +30,15 @@ public class AnnotationSkeletonViewLauncher {
             }
             @Override
             public void actionPerformed(ActionEvent e) {
-                WindowLocator.makeVisibleAndGet(AnnotationSkeletalViewTopComponent.PREFERRED_ID);
+                AnnotationSkeletalViewTopComponent topComponent = (AnnotationSkeletalViewTopComponent)
+                        WindowLocator.makeVisibleAndGet(AnnotationSkeletalViewTopComponent.PREFERRED_ID);
+                // This exchange will refresh contents of viewer.
+                topComponent.componentClosed();
+                topComponent.componentOpened();
             }
         };
         menuItems.add(new JMenuItem(launchAction));
         return menuItems;
     }
-    
+
 }

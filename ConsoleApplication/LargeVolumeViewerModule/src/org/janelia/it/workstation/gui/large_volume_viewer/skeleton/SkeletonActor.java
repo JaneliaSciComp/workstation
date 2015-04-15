@@ -29,6 +29,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
@@ -52,10 +53,6 @@ import org.slf4j.LoggerFactory;
 public class SkeletonActor 
 implements GLActor
 {
-    // NOTE: for future ref-I had caused this actor to be a skeleton change
-    //  listener. However, I realized that the SkeletonController filled the
-    //  same function, and undid this. I have tried to test to ensure no ill
-    //  effects, but leaving this note just in case. LLF
 	private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
 	
 	// semantic constants for allocating byte arrays
@@ -93,21 +90,19 @@ implements GLActor
 	private BufferedImage anchorImage;
 	private int anchorTextureId = -1;
 	private BufferedImage parentAnchorImage;
-	private int parentAnchorTextureId = -1;
+    private int discardNonParent = 0; //Emphasize default value.
+    private int parentAnchorTextureId = -1;
 	//
 	private Skeleton skeleton;
     private SkeletonActorStateUpdater updater;
 	private Camera3d camera;
 	private float zThicknessInPixels = 100;
 	//
-    private Anchor hoverAnchor = null;
-    private Anchor nextParent = null;
-	//
     private boolean bIsVisible = true;
     
     private Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments = new HashMap<>();
 
-    private Map<Long, NeuronStyle> neuronStyles = new HashMap<>();
+    private NeuronStyleModel neuronStyles;
 
     // note: this initial color is now overridden by other components
     private float neuronColor[] = {0.8f,1.0f,0.3f};
@@ -124,6 +119,10 @@ implements GLActor
     public void clearStyles() {
         neuronStyles.clear();
     }
+    
+    public void setNeuronStyleModel( NeuronStyleModel nsModel ) {
+        this.neuronStyles = nsModel;
+    }
 
     public SkeletonActorStateUpdater getUpdater() {
         return updater;
@@ -138,7 +137,7 @@ implements GLActor
 
         NeuronStyle style;
         for (Long neuronID: neuronVertices.keySet()) {
-            if (!neuronStyles.get(neuronID).isVisible()) {
+            if (neuronStyles.get(neuronID) != null  &&  !neuronStyles.get(neuronID).isVisible()) {
                 continue;
             }
 
@@ -227,24 +226,28 @@ implements GLActor
         setupAnchorShaders(gl);
 
         for (Long neuronID: neuronVertices.keySet()) {
-            if (!neuronStyles.get(neuronID).isVisible()) {
+            if (neuronStyles.get(neuronID) != null  &&  !neuronStyles.get(neuronID).isVisible()) {
                 continue;
             }
 
             // setup per-neuron anchor shader settings (used to be in setupAnchorShader)
             int tempIndex;
+            Anchor hoverAnchor = skeleton.getHoverAnchor();
             if (hoverAnchor != null && hoverAnchor.getNeuronID().equals(neuronID)) {
                 tempIndex = getIndexForAnchor(hoverAnchor);
             } else {
                 tempIndex = -1;
             }
             anchorShader.setUniform(gl, "highlightAnchorIndex", tempIndex);
+            Anchor nextParent = skeleton.getNextParent();
             if (nextParent != null && nextParent.getNeuronID().equals(neuronID)) {
                 tempIndex = getIndexForAnchor(nextParent);
             } else {
                 tempIndex = -1;
             }
             anchorShader.setUniform(gl, "parentAnchorIndex", tempIndex);
+System.out.println("Anchor shader setting discardNonParent=" + discardNonParent + ", with tempIndex="+tempIndex);            
+            anchorShader.setUniform(gl, "isDiscardNonParent", discardNonParent);
 
             // TODO - crashes unless glBufferData called every time.
             // if (verticesNeedCopy) {
@@ -372,7 +375,7 @@ implements GLActor
         gl.glLineWidth(5.0f);
 
         for (Long neuronID: neuronTracedSegments.keySet()) {
-            if (!neuronStyles.get(neuronID).isVisible()) {
+            if (neuronStyles.get(neuronID) != null  &&  !neuronStyles.get(neuronID).isVisible()) {
                 continue;
             }
 
@@ -442,6 +445,10 @@ implements GLActor
 		this.anchorsVisible = anchorsVisible;
         updater.update();
 	}
+    
+    public void setShowOnlyParentAnchors(boolean showOnlyParent) {
+        this.discardNonParent = showOnlyParent ? 1 : 0;
+    }
 
 	public void setZThicknessInPixels(float zThicknessInPixels) {
 		this.zThicknessInPixels = zThicknessInPixels;
@@ -829,20 +836,23 @@ implements GLActor
 	}
 
     public synchronized  void setHoverAnchor(Anchor anchor) {
-        if (anchor == hoverAnchor) {
+        if (anchor == skeleton.getHoverAnchor()) {
             return;
         }
-        hoverAnchor = anchor;
+        skeleton.setHoverAnchor(anchor);
         updater.update();
     }
 
 	public Anchor getNextParent() {
-		return nextParent;
+		return skeleton.getNextParent();
 	}
 
     public boolean setNextParentByID(Long annotationID) {
         // find the anchor corresponding to this annotation ID and pass along
         Anchor foundAnchor = null;
+        if (getSkeleton() == null) {
+            return false;
+        }
         for (Anchor testAnchor: getSkeleton().getAnchors()) {
             if (testAnchor.getGuid().equals(annotationID)) {
                 foundAnchor = testAnchor;
@@ -855,13 +865,13 @@ implements GLActor
     }
 
 	public boolean setNextParent(Anchor parent) {
-		if (parent == nextParent)
+		if (parent == skeleton.getNextParent())
 			return false;
-		nextParent = parent;
+		skeleton.setNextParent(parent);
         // first signal is for drawing the marker, second is for notifying
         //  components that want to, eg, select the enclosing neuron
         updater.update();
-        updater.update(nextParent);
+        updater.update(skeleton.getNextParent());
 		return true;
 	}
 

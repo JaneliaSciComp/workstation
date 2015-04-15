@@ -6,6 +6,7 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
@@ -25,18 +26,38 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener,
         NextParentListener, NeuronStyleChangeListener {
     private Skeleton skeleton;
-    private SkeletonActor actor;
+    private List<SkeletonActor> actors = new ArrayList<>();
     private SkeletonAnchorListener skeletonAnchorListener;
     private AnnotationManager annoMgr;
     private LargeVolumeViewerTranslator lvvTranslator;
     private QuadViewController qvController;
     
-    public SkeletonController(Skeleton skeleton, SkeletonActor actor, AnnotationManager annoMgr) {
+    private static SkeletonController instance = new SkeletonController();
+    
+    private long nextParentId = -1;
+    
+    private SkeletonController() {
+    }
+    
+    public static SkeletonController getInstance() {
+        return instance;
+    }
+    
+    /** In a "driving" client that would normally construct, call this instead. */
+    public void reestablish(Skeleton skeleton, AnnotationManager annotationMgr) {
         this.skeleton = skeleton;
-        this.annoMgr = annoMgr;
-        this.actor = actor;
+        this.annoMgr = annotationMgr;
         skeletonAnchorListener = new ControllerSkeletonAnchorListener();
         this.skeleton.setController(this);
+
+        actors.clear();
+        lvvTranslator = null;
+        qvController = null;
+    }
+
+    public void registerForEvents(SkeletonActor actor) {
+        this.actors.add(actor);
+        actor.setNextParentByID(nextParentId);
     }
     
     public void registerForEvents(LargeVolumeViewerTranslator lvvTranslator) {
@@ -103,19 +124,26 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void clearAnchors() {
         skeleton.clear();
-        actor.clearStyles();
+        for (SkeletonActor actor: actors) {
+            actor.clearStyles();
+        }
 		skeletonChanged();
     }
 
     //--------------------------------IMPLEMENTS NextParentListener    
     @Override
     public void setNextParent(Long id) {
-        actor.setNextParentByID(id);
+        nextParentId = id;
+        for (SkeletonActor actor: actors) {
+            actor.setNextParentByID(id);
+        }
     }
 
     @Override
     public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
-        actor.changeNeuronStyle(neuron, style);
+        for (SkeletonActor actor: actors) {
+            actor.changeNeuronStyle(neuron, style);
+        }
     }
 
     public void annotationSelected( Long guid ) {
@@ -123,7 +151,9 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
     
     public void skeletonChanged() {
-        actor.updateAnchors();
+        for (SkeletonActor actor: actors) {
+            actor.updateAnchors();
+        }
     }
 
     public void deleteSubtreeRequested(Anchor anchor) {

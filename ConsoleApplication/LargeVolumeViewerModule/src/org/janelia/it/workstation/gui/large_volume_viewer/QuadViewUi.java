@@ -57,6 +57,7 @@ import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkelet
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -100,7 +101,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	TileServer tileServer = largeVolumeViewer.getTileServer();
 	private SharedVolumeImage volumeImage = tileServer.getSharedVolumeImage();
 	private ImageColorModel imageColorModel = new ImageColorModel(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
-
+    private NeuronStyleModel neuronStyleModel = new NeuronStyleModel();
+    
 	// Four quadrants for orthogonal views
 	OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
 	OrthogonalPanel swViewer = new OrthogonalPanel(CoordinateAxis.Y, orthoViewContextSharer);
@@ -178,6 +180,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private TileFormat tileFormat;
     
     private Snapshot3DLauncher snapshot3dLauncher;
+    private SkeletonController skeletonController;
     private AnnotationSkeletonViewLauncher annotationSkeletonViewLauncher;
     private PathTraceRequestListener pathTraceListener;
     private WorkspaceClosureListener wsCloseListener;
@@ -247,6 +250,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
 		largeVolumeViewer.setImageColorModel(imageColorModel);
+        largeVolumeViewer.setNeuronStyleModel(neuronStyleModel);
 		sliderPanel.setVisible(false);
         
         camera.addCameraListener(new CameraListener() {
@@ -275,7 +279,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         getSkeletonActor().addAnchorUpdateListener(annotationMgr);
                 
         // Nb: skeleton.anchorMovedSilentSignal intentially does *not* connect to annotationMgr!
-
         quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer);
         largeVolumeViewerTranslator.setViewStateListener(quadViewController);
         annotationPanel.setViewStateListener(quadViewController);
@@ -301,9 +304,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }
         });
 
-        SkeletonController skeletonController = new SkeletonController(
-                skeleton, largeVolumeViewer.getSkeletonActor(), annotationMgr
-        );
+        skeletonController = SkeletonController.getInstance();
+        skeletonController.reestablish(skeleton, annotationMgr);
+        skeletonController.registerForEvents(largeVolumeViewer.getSkeletonActor());
         largeVolumeViewerTranslator.connectSkeletonSignals(skeleton, skeletonController);
 
 		// must come after setupUi() (etc), since it triggers UI changes:
@@ -415,6 +418,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     
     public Skeleton getSkeleton() {
         return skeleton;
+    }
+    
+    public NeuronStyleModel getNeuronStyleModel() {
+        return neuronStyleModel;
     }
     
 	public void clearCache() {
@@ -1197,6 +1204,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     		url.openStream();            
         	rtnVal = volumeImage.loadURL(url);
             this.setLoadedUrl(url);
+
     	} catch (IOException exc) {
             throw new RuntimeException(
                     "Error opening folder " + url
