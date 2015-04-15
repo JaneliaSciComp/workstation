@@ -19,9 +19,8 @@ public class AddEditNoteDialog extends JDialog {
     private boolean success = false;
     private String outputText;
 
-    public AddEditNoteDialog(Frame parent, String inputText, TmNeuron neuron, Long annotationID) {
+    public AddEditNoteDialog(Frame parent, final String inputText, TmNeuron neuron, Long annotationID) {
         super(parent, "Add note", true);
-
 
         // set up the UI
         setLayout(new GridBagLayout());
@@ -45,21 +44,33 @@ public class AddEditNoteDialog extends JDialog {
         // -- second, some of them may not be allowed depending on
         //      the geometry of the neuron
 
-        // can I build these buttons in a loop from an enum or whatever?
-        // can we put key shortcuts on these buttons?
-        JButton predefButton = new JButton("predefined");
-        predefButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                success = true;
-                // this should merge with existing note
-                outputText = "predefined";
-                dispose();
-            }
-        });
-
         JPanel predefinedPanel = new JPanel();
-        predefinedPanel.add(predefButton);
+        for (final PredefinedNote predefNote: PredefinedNote.values()) {
+            JButton predefButton = new JButton(predefNote.getNoteText());
+            predefButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    success = true;
+                    // merge with existing note, if there is one
+                    if (inputText.length() > 0) {
+                        if (!inputText.endsWith(" ")) {
+                            outputText = inputText + " " + predefNote.getNoteText();
+                        } else {
+                            outputText = inputText + predefNote.getNoteText();
+                        }
+                    } else {
+                        outputText = predefNote.getNoteText();
+                    }
+                    dispose();
+                }
+            });
+            // if a predefined note can't be applied to the input
+            //  annotation, leave the button but disable it
+            if (!predefNote.isValid(neuron, annotationID)) {
+                predefButton.setEnabled(false);
+            }
+            predefinedPanel.add(predefButton);
+        }
 
         constraints.gridx = 0;
         constraints.gridy = 1;
