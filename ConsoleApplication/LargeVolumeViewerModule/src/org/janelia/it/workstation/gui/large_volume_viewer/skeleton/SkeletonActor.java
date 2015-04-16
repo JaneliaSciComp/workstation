@@ -246,7 +246,6 @@ implements GLActor
                 tempIndex = -1;
             }
             anchorShader.setUniform(gl, "parentAnchorIndex", tempIndex);
-System.out.println("Anchor shader setting discardNonParent=" + discardNonParent + ", with tempIndex="+tempIndex);            
             anchorShader.setUniform(gl, "isDiscardNonParent", discardNonParent);
 
             // TODO - crashes unless glBufferData called every time.

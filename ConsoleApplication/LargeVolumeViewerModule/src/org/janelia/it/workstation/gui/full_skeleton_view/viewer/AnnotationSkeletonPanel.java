@@ -9,6 +9,7 @@ package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 import java.awt.BorderLayout;
 import java.awt.Graphics;
 import javax.swing.JPanel;
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
@@ -39,8 +40,9 @@ public class AnnotationSkeletonPanel extends JPanel {
             actor.setAnchorsVisible(true);
             TileFormat tileFormat = dataSource.getSkeleton().getTileFormat();
             final BoundingBox3d boundingBox = tileFormat.calcBoundingBox();
-            actor.getBoundingBox3d().setMax( boundingBox.getMax() );
-            actor.getBoundingBox3d().setMin( boundingBox.getMin() );
+            Vec3 yExtender = new Vec3(0, 0.75 * boundingBox.getHeight(), 0);
+            actor.getBoundingBox3d().setMax( boundingBox.getMax().plus( yExtender ) );
+            actor.getBoundingBox3d().setMin( boundingBox.getMin().minus( yExtender ) );
             mip3d = new Mip3d();
             actor.setSkeleton(dataSource.getSkeleton());
             actor.setCamera(mip3d.getVolumeModel().getCamera3d());
@@ -52,7 +54,6 @@ public class AnnotationSkeletonPanel extends JPanel {
             // This should be done after establishing the skeleton.
             SkeletonController controller = SkeletonController.getInstance();
             controller.registerForEvents(actor);
-//            controller.skeletonChanged();
 
             mip3d.addActor(actor);    
             mip3d.setResetFirstRedraw(true);

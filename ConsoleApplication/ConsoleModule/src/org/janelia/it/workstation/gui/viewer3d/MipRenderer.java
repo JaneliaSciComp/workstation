@@ -266,7 +266,7 @@ class MipRenderer
         else if ( heightRatioFactor > 1.5 ) {
             heightRatioFactor = 1.0;
         }
-        double newFocusDistance = finalAspectRatio * 1.05 * DISTANCE_TO_SCREEN_IN_PIXELS * heightRatioFactor;
+        double newFocusDistance = finalAspectRatio * 1.05 * DISTANCE_TO_SCREEN_IN_PIXELS * heightRatioFactor; 
         logger.debug("Setting camera depth to " + (-newFocusDistance) + " for finalAspectRatio of " + finalAspectRatio + " and hgithRatioFactor of " + heightRatioFactor);        
         volumeModel.setCameraDepth( new Vec3( 0.0, 0.0, -newFocusDistance ) );        
         getVolumeModel().setCameraPixelsPerSceneUnit(DISTANCE_TO_SCREEN_IN_PIXELS, getVolumeModel().getCameraFocusDistance());
