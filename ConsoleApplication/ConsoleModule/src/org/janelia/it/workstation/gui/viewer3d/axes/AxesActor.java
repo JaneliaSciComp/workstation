@@ -49,6 +49,7 @@ public class AxesActor implements GLActor
     // OpenGL state
     private boolean bBuffersNeedUpload = true;
     private double[] axisLengths = new double[ 3 ];
+    private BoundingBox3d boundingBox;
     Collection<AxisLabel> labels = new ArrayList<>();
     final int[] handleArr = new int[ 1 ];
 
@@ -59,6 +60,7 @@ public class AxesActor implements GLActor
     private FontInfo axisLabelFontInfo;
     
     private VolumeModel volumeModel;
+    private int previousShader;
 
     private int lineBufferVertexCount = 0;
 
@@ -83,7 +85,7 @@ public class AxesActor implements GLActor
 
     public AxesActor() {
         setAxisLengths( DEFAULT_AXIS_LEN, DEFAULT_AXIS_LEN, DEFAULT_AXIS_LEN );
-    }
+    }        
 
     public void setVolumeModel( VolumeModel volumeModel ) {
         this.volumeModel = volumeModel;
@@ -94,6 +96,10 @@ public class AxesActor implements GLActor
         axisLengths[ 1 ] = yAxisLength;
         axisLengths[ 2 ] = zAxisLength;
         logger.trace("Axial lengths are {}, {} and " + zAxisLength, xAxisLength, yAxisLength);
+    }
+    
+    public void setBoundingBox( BoundingBox3d boundingBox ) {
+        this.boundingBox = boundingBox;
     }
 
     public void setAxisLengthDivisor( double axisLengthDivisor ) {
@@ -142,7 +148,6 @@ public class AxesActor implements GLActor
         
         GL2 gl = glDrawable.getGL().getGL2();
         reportError( gl, "Display of axes-actor upon entry" );
-
         gl.glDisable(GL2.GL_CULL_FACE);
         gl.glFrontFace(GL2.GL_CW);
         reportError( gl, "Display of axes-actor cull-face" );
@@ -210,9 +215,14 @@ public class AxesActor implements GLActor
         gl.glDisableClientState( GL2.GL_VERTEX_ARRAY );   // Prob: not in v2
         gl.glDisable( GL2.GL_LINE_SMOOTH );               // May not be in v2
         reportError( gl, "Display of axes-actor 6" );
+        
+        gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
+        gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, 0 );
 
         gl.glDisable(GL2.GL_BLEND);
-        reportError(gl, "Axes-actor, end of display.");
+        reportError(gl, "Axes-actor, end of display.");                
+
+        gl.glUseProgram(previousShader);
 
 	}
 
@@ -234,14 +244,22 @@ public class AxesActor implements GLActor
 
     @Override
 	public BoundingBox3d getBoundingBox3d() {
-		BoundingBox3d result = new BoundingBox3d();
-		Vec3 half = new Vec3(0,0,0);
-        for (int i = 0; i < 3; ++i)
-            half.set(i, 0.5 * axisLengths[i]);
-        result.include(half.minus());
-		result.include(half);
+        BoundingBox3d result;
+        if (this.boundingBox == null) {
+            result = new BoundingBox3d();
+            Vec3 half = new Vec3(0, 0, 0);
+            for (int i = 0; i < 3; ++i) {
+                half.set(i, 0.5 * axisLengths[i]);
+            }
+            result.include(half.minus());
+            result.include(half);
+        }
+        else {
+            result = this.boundingBox;
+        }
 		return result;
 	}
+    
     //---------------------------------------END IMPLEMENTATION GLActor
 
     /** Call this when this actor is to be re-shown after an absense. */

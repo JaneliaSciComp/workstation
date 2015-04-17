@@ -14,8 +14,11 @@ import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationS
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
+import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
 
 /**
  * This panel holds all relevant components for showing the skeleton of
@@ -55,8 +58,11 @@ public class AnnotationSkeletonPanel extends JPanel {
             SkeletonController controller = SkeletonController.getInstance();
             controller.registerForEvents(actor);
 
-            mip3d.addActor(actor);    
             mip3d.setResetFirstRedraw(true);
+            final BoundingBox3d originalBoundingBox = tileFormat.calcBoundingBox();
+            GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, mip3d.getVolumeModel() );
+            mip3d.addActor(axesActor);
+            mip3d.addActor(actor);
             this.add(mip3d, BorderLayout.CENTER);
             validate();
             repaint();
@@ -73,5 +79,22 @@ public class AnnotationSkeletonPanel extends JPanel {
     public void paint(Graphics g) {
         establish3D();
         super.paint(g);
+    }
+
+    /**
+     * Creates the actor to draw the axes on the screen.
+     *
+     * @param boundingBox tells extrema for the axes.
+     * @param axisLengthDivisor applies downsampling abbreviation of axes.
+     * @param volumeModel tells the axes actor whether its background will be white.
+     * @return the actor.
+     */
+    public GLActor buildAxesActor(BoundingBox3d boundingBox, double axisLengthDivisor, VolumeModel volumeModel) {
+        AxesActor axes = new AxesActor();
+        axes.setVolumeModel(volumeModel);
+        axes.setBoundingBox(boundingBox);
+        axes.setAxisLengthDivisor( axisLengthDivisor );
+        axes.setFullAxes( true );
+        return axes;
     }
 }

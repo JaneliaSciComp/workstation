@@ -333,6 +333,7 @@ implements GLActor
         anchorShader.unload(gl);
         gl.glDisable(GL2.GL_POINT_SPRITE);
         gl.glDisable(GL2.GL_TEXTURE_2D);
+        gl.glDisable(GL2.GL_BLEND);
     }
 
     @Override

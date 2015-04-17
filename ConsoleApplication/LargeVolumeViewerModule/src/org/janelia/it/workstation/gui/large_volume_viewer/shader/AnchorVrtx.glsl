@@ -42,5 +42,5 @@ void main(void)
 
     // Can setup to discard anything that is not a parent.
     if (isParent == 0 && isDiscardNonParent >= 1)
-        fog = 1;
+        fog = 1.1;
 }
