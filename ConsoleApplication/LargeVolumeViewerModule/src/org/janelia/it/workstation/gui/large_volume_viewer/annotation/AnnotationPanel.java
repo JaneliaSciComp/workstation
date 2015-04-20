@@ -43,6 +43,7 @@ public class AnnotationPanel extends JPanel
 
 
     // UI components
+    private FilteredAnnotationList filteredList;
     private NeuriteTreePanel neuriteTreePanel;
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
@@ -134,7 +135,8 @@ public class AnnotationPanel extends JPanel
 
     private void setupSignals() {
         // outgoing from the model:
-        PanelController panelController = new PanelController(this, noteListPanel, neuriteTreePanel, workspaceNeuronList, largeVolumeViewerTranslator);
+        PanelController panelController = new PanelController(this, noteListPanel, neuriteTreePanel,
+                filteredList, workspaceNeuronList, largeVolumeViewerTranslator);
         panelController.registerForEvents(annotationModel);
         panelController.registerForEvents(annotationMgr);
         panelController.registerForEvents(workspaceInfoPanel);
@@ -346,6 +348,12 @@ public class AnnotationPanel extends JPanel
                         neuronToolButton.getBounds().y + neuronToolButton.getBounds().height);
             }
         });
+
+
+        // ----- interesting annotations
+        add(Box.createRigidArea(new Dimension(0, 20)), cVert);
+        filteredList = new FilteredAnnotationList(width);
+        add(filteredList, cVert);
 
 
         // ----- neuron information; show name, whatever attributes, list of neurites
