@@ -1051,7 +1051,7 @@ called from a  SimpleWorker thread.
     }
 
     /**
-     * add or update a note on a geomentric annotation
+     * add or update a note on a geometric annotation
      */
     public synchronized void setNote(TmGeoAnnotation geoAnnotation, String noteString) throws Exception {
         TmNeuron neuron = getNeuronFromAnnotationID(geoAnnotation.getId());
