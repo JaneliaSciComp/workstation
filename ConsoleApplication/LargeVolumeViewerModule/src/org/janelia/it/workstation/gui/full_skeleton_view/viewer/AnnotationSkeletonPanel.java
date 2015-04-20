@@ -47,9 +47,13 @@ public class AnnotationSkeletonPanel extends JPanel {
             actor.getBoundingBox3d().setMax( boundingBox.getMax().plus( yExtender ) );
             actor.getBoundingBox3d().setMin( boundingBox.getMin().minus( yExtender ) );
             mip3d = new Mip3d();
+            VolumeModel volumeModel = mip3d.getVolumeModel();
             actor.setSkeleton(dataSource.getSkeleton());
-            actor.setCamera(mip3d.getVolumeModel().getCamera3d());
+            actor.setCamera(volumeModel.getCamera3d());
             actor.setTileFormat(tileFormat);
+            volumeModel.setBackgroundColor(new float[] {
+                0.999f, 0.999f, 0.999f
+            });
             // Set maximal thickness.  Z-fade is not practical for 3D rotations.
             actor.setZThicknessInPixels( Long.MAX_VALUE );
             actor.updateAnchors();
@@ -60,8 +64,8 @@ public class AnnotationSkeletonPanel extends JPanel {
 
             mip3d.setResetFirstRedraw(true);
             final BoundingBox3d originalBoundingBox = tileFormat.calcBoundingBox();
-            GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, mip3d.getVolumeModel() );
-            mip3d.addActor(axesActor);
+            GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
+//            mip3d.addActor(axesActor);
             mip3d.addActor(actor);
             this.add(mip3d, BorderLayout.CENTER);
             validate();

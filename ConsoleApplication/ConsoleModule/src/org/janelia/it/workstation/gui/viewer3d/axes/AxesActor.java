@@ -40,8 +40,8 @@ public class AxesActor implements GLActor
     // Vary these parameters to taste
 	// Rendering variables
 	private RenderMethod renderMethod =
-		//RenderMethod.ALPHA_BLENDING;
-		RenderMethod.MAXIMUM_INTENSITY; // MIP
+		RenderMethod.ALPHA_BLENDING;
+		//RenderMethod.MAXIMUM_INTENSITY; // MIP
     private boolean bIsInitialized = false;
     private boolean bFullAxes = false;
     private double axisLengthDivisor = 1.0;
