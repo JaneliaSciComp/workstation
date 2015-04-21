@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import org.janelia.it.workstation.publication_quality.mesh.MeshViewer.ExtendedVolumeModel;
+import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 
 /**
  * Testing class - a regression test vehicle, for looking at mesh rendering over existing volumes.
@@ -50,8 +50,8 @@ public class TestMeshRender {
                 public void actionPerformed(ActionEvent e) {
                     Rotation3d rotation = viewerWidget.getVolumeModel().getCamera3d().getRotation();
                     System.out.println("Rotation = " + rotation);
-                    float[] mvm = ((ExtendedVolumeModel)viewerWidget.getVolumeModel()).getModelViewMatrix();
-                    float[] pm = ((ExtendedVolumeModel)viewerWidget.getVolumeModel()).getPerspectiveMatrix();
+                    float[] mvm = ((MeshViewContext)viewerWidget.getVolumeModel()).getModelViewMatrix();
+                    float[] pm = ((MeshViewContext)viewerWidget.getVolumeModel()).getPerspectiveMatrix();
                     ViewMatrixSupport vms = new ViewMatrixSupport();
                     vms.dumpMatrices( mvm, pm );
                 }
@@ -81,7 +81,7 @@ public class TestMeshRender {
             logger.info("Successful vtx attrib manager.");
             MeshDrawActor.MeshDrawActorConfigurator configurator = new MeshDrawActor.MeshDrawActorConfigurator();
             configurator.setAxisLengths( new double[] {1024, 512, 218} );
-            configurator.setVolumeModel( viewerWidget.getVolumeModel() );
+            configurator.setContext( viewerWidget.getMeshViewContext() ); 
 
             configurator.setVertexAttributeManager(attribMgr);
             //configurator.setRenderableId( MeshRenderTestFacilities.COMPARTMENT_RENDERABLE_ID);

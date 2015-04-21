@@ -7,16 +7,13 @@ import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.GL2Adapter;
 import org.janelia.it.workstation.gui.opengl.GL2AdapterFactory;
 import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.DebugGL2;
 import javax.media.opengl.GLAutoDrawable;
 import java.awt.*;
-import java.util.ArrayList;
 
-public class ActorRenderer 
+public abstract class ActorRenderer 
     extends BaseRenderer
 {
     public static final double MAX_PIXELS_PER_VOXEL = 100.0;
@@ -62,70 +59,22 @@ public class ActorRenderer
 
     }
 
-    @Override
-    public void display(GLAutoDrawable glDrawable) {
-        // Preset background from the volume model.
-        float[] backgroundClrArr = volumeModel.getBackgroundColorFArr();
-        this.backgroundColor = new Color( backgroundClrArr[ 0 ], backgroundClrArr[ 1 ], backgroundClrArr[ 2 ] );
-	    super.display(glDrawable); // fills background
-        
-        widthInPixels = glDrawable.getWidth();
-        heightInPixels = glDrawable.getHeight();
-        if (resetFirstRedraw && (! hasBeenReset)) {
-            resetView();
-            hasBeenReset = true;
-        }
-
-        //final GL2 gl = glDrawable.getGL().getGL2();
-        final GL2Adapter gl = GL2AdapterFactory.createGL2Adapter( glDrawable );
-        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
-        gl.glPushMatrix();
-        updateProjection(gl);
-        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
-        gl.glPushMatrix();
-        gl.glLoadIdentity();
-
-        glDrawable.getWidth();
-        Vec3 f = volumeModel.getCamera3d().getFocus();    // This is what allows (follows) drag in X and Y.
-        Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
-        Vec3 u = rotation.times( UP_IN_CAMERA );
-        double unitsPerPixel = glUnitsPerPixel();
-        Vec3 c = f.plus(rotation.times(volumeModel.getCameraDepth().times(unitsPerPixel)));
-        gl.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
-                f.x(), f.y(), f.z(), // focus in ground
-                u.x(), u.y(), u.z()); // up vector in ground
-
-        if ( System.getProperty( "glComposablePipelineDebug", "f" ).toLowerCase().startsWith("t") ) {
-            DebugGL2 debugGl2 = new JaneliaDebugGL2(glDrawable);
-            glDrawable.setGL(debugGl2);
-        }
-
-        // Copy member list of actors local for independent iteration.
-        for (GLActor actor : new ArrayList<>( actors ))
-            actor.display(glDrawable);
-
-        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
-        gl.glPopMatrix();
-        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
-        gl.glPopMatrix();
-    }
- 
     public double glUnitsPerPixel() {
-        return Math.abs( volumeModel.getCameraFocusDistance() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
+        return Math.abs( getVolumeModel().getCameraFocusDistance() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
     }
 
     public void resetView() {
         // Adjust view to fit the actual objects present
         BoundingBox3d boundingBox = getBoundingBox();
-        volumeModel.getCamera3d().setFocus(boundingBox.getCenter());
+        getVolumeModel().getCamera3d().setFocus(boundingBox.getCenter());
         getVolumeModel().getCamera3d().resetRotation();
         resetCameraDepth(boundingBox);
     }
 
     @Override
     public void reshape(GLAutoDrawable glDrawable, int x, int y, int width, int height) {
-        this.widthInPixels = width;
-        this.heightInPixels = height;
+        this.setWidthInPixels(width);
+        this.setHeightInPixels(height);
 
         // System.out.println("reshape() called: x = "+x+", y = "+y+", width = "+width+", height = "+height);
         //final GL2 gl = glDrawable.getGL().getGL2();
@@ -135,7 +84,7 @@ public class ActorRenderer
         gl2Adapter.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
         gl2Adapter.glLoadIdentity();
 
-        double previousFocusDistance = volumeModel.getCameraFocusDistance();
+        double previousFocusDistance = getVolumeModel().getCameraFocusDistance();
         if ( previousFocusDistance == DEFAULT_CAMERA_FOCUS_DISTANCE ) {
             BoundingBox3d boundingBox = getBoundingBox();
             resetCameraDepth(boundingBox);
@@ -164,7 +113,7 @@ public class ActorRenderer
 	public void translatePixels(double dx, double dy, double dz) {
 		// trackball translate
 		Vec3 t = new Vec3(-dx, -dy, -dz);
-		volumeModel.getCamera3d().getFocus().plusEquals(
+		getVolumeModel().getCamera3d().getFocus().plusEquals(
                 getVolumeModel().getCamera3d().getRotation().times(t)
         );
 	}
@@ -176,7 +125,7 @@ public class ActorRenderer
         gl.glMatrixMode( GL2Adapter.MatrixMode.GL_PROJECTION );
         gl.glLoadIdentity();
         final float h = (float) getWidthInPixels() / (float) getHeightInPixels();
-        double cameraFocusDistance = volumeModel.getCameraFocusDistance();
+        double cameraFocusDistance = getVolumeModel().getCameraFocusDistance();
         double scaledFocusDistance = Math.abs(cameraFocusDistance) * glUnitsPerPixel();
         glu.gluPerspective(verticalApertureInDegrees,
         		h,
@@ -193,7 +142,7 @@ public class ActorRenderer
 			return;
         }
 
-        double cameraFocusDistance = volumeModel.getCameraFocusDistance();
+        double cameraFocusDistance = getVolumeModel().getCameraFocusDistance();
         cameraFocusDistance /= zoomRatio;
         if ( cameraFocusDistance > MAX_CAMERA_FOCUS_DISTANCE ) {
             return;
@@ -203,7 +152,7 @@ public class ActorRenderer
         }
         getVolumeModel().setCameraPixelsPerSceneUnit( DISTANCE_TO_SCREEN_IN_PIXELS, cameraFocusDistance );
 
-        volumeModel.setCameraDepth(new Vec3(0.0, 0.0, cameraFocusDistance));
+        getVolumeModel().setCameraDepth(new Vec3(0.0, 0.0, cameraFocusDistance));
 
     }
 	
@@ -230,6 +179,13 @@ public class ActorRenderer
         this.volumeModel = volumeModel;
     }
 
+    protected void resetOnFirstRedraw() {
+        if (resetFirstRedraw && (! hasBeenReset)) {
+            resetView();
+            hasBeenReset = true;
+        }
+    }
+ 
     /**
      * @return the widthInPixels
      */
@@ -242,6 +198,20 @@ public class ActorRenderer
      */
     protected double getHeightInPixels() {
         return heightInPixels;
+    }
+
+    /**
+     * @param widthInPixels the widthInPixels to set
+     */
+    protected void setWidthInPixels(double widthInPixels) {
+        this.widthInPixels = widthInPixels;
+    }
+
+    /**
+     * @param heightInPixels the heightInPixels to set
+     */
+    protected void setHeightInPixels(double heightInPixels) {
+        this.heightInPixels = heightInPixels;
     }
 
     private double maxAspectRatio(BoundingBox3d boundingBox) {
@@ -286,7 +256,7 @@ public class ActorRenderer
         }
         double newFocusDistance = finalAspectRatio * 1.05 * DISTANCE_TO_SCREEN_IN_PIXELS * heightRatioFactor; 
         logger.debug("Setting camera depth to " + (-newFocusDistance) + " for finalAspectRatio of " + finalAspectRatio + " and hgithRatioFactor of " + heightRatioFactor);        
-        volumeModel.setCameraDepth( new Vec3( 0.0, 0.0, -newFocusDistance ) );        
+        getVolumeModel().setCameraDepth( new Vec3( 0.0, 0.0, -newFocusDistance ) );        
         getVolumeModel().setCameraPixelsPerSceneUnit(DISTANCE_TO_SCREEN_IN_PIXELS, getVolumeModel().getCameraFocusDistance());
     }
 

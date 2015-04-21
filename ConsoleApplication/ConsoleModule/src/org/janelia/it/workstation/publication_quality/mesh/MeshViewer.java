@@ -6,6 +6,7 @@
 
 package org.janelia.it.workstation.publication_quality.mesh;
 
+import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.Viewer3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.publication_quality.mesh.actor.MeshRenderer;
@@ -16,43 +17,22 @@ import org.janelia.it.workstation.publication_quality.mesh.actor.MeshRenderer;
  * @author fosterl
  */
 public class MeshViewer extends Viewer3d {
-    private ExtendedVolumeModel volumeModel;
+    private MeshViewContext context;
     
 	public MeshViewer() {
         final MeshRenderer meshRenderer = new MeshRenderer();
         setActorRenderer( meshRenderer);
-        volumeModel = new ExtendedVolumeModel( super.getVolumeModel() );
-        meshRenderer.setVolumeModel(volumeModel);
+        context = new MeshViewContext();
+        super.setVolumeModel(context);
+        meshRenderer.setVolumeModel(context);
     }
     
     @Override
     public VolumeModel getVolumeModel() {
-        return volumeModel;
+        return context;
     }
     
-    public static class ExtendedVolumeModel extends VolumeModel {
-        private float[] perspectiveMatrix;
-        private float[] modelViewMatrix;
-        
-        private VolumeModel wrapped;
-        public ExtendedVolumeModel( VolumeModel wraped ) {
-            this.wrapped = wrapped;
-        }
-        
-        public float[] getPerspectiveMatrix() {
-            return perspectiveMatrix;
-        }
-
-        public void setPerspectiveMatrix(float[] perspectiveMatrix) {
-            this.perspectiveMatrix = perspectiveMatrix;
-        }
-
-        public float[] getModelViewMatrix() {
-            return modelViewMatrix;
-        }
-
-        public void setModelViewMatrix(float[] modelViewMatrix) {
-            this.modelViewMatrix = modelViewMatrix;
-        }        
+    public MeshViewContext getMeshViewContext() {
+        return context;
     }
 }

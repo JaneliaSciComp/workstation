@@ -38,6 +38,10 @@ public class Viewer3d extends BaseGLViewer implements ActionListener {
     public VolumeModel getVolumeModel() {
         return renderer.getVolumeModel();
     }
+    
+    public void setVolumeModel(VolumeModel volumeModel) {
+        renderer.setVolumeModel(volumeModel);
+    }
 
     /** External addition to this conveniently-central popup menu. */
     public void addMenuAction( Action action ) {

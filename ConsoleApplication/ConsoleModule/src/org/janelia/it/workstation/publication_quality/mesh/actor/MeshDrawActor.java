@@ -4,7 +4,6 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
 import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
@@ -16,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import org.janelia.it.workstation.publication_quality.mesh.MeshViewer;
+import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 
 /**
  * This is a gl-actor to draw pre-collected buffers, which have been laid out for
@@ -59,7 +58,7 @@ public class MeshDrawActor implements GLActor {
      * and allow some checking as needed.
      */
     public static class MeshDrawActorConfigurator {
-        private VolumeModel volumeModel;
+        private MeshViewContext context;
         private Long renderableId = -1L;
         private VertexAttributeManagerI vtxAttribMgr;
         private double[] axisLengths;
@@ -68,8 +67,8 @@ public class MeshDrawActor implements GLActor {
             this.axisLengths = axisLengths;
         }
 
-        public void setVolumeModel( VolumeModel model ) {
-            this.volumeModel = model;
+        public void setContext( MeshViewContext context ) {
+            this.context = context;
         }
 
         public void setRenderableId( Long renderableId ) {
@@ -80,9 +79,9 @@ public class MeshDrawActor implements GLActor {
             this.vtxAttribMgr = vertexAttribMgr;
         }
 
-        public VolumeModel getVolumeModel() {
-            assert volumeModel != null : "Volume Model not initialized";
-            return volumeModel;
+        public MeshViewContext getContext() {
+            assert context != null : "Context not initialized";
+            return context;
         }
 
         public Long getRenderableId() {
@@ -146,10 +145,10 @@ public class MeshDrawActor implements GLActor {
         ViewMatrixSupport vms = new ViewMatrixSupport();
         if (shader instanceof MeshDrawShader) {
             MeshDrawShader mdShader = (MeshDrawShader)shader;
-            final MeshViewer.ExtendedVolumeModel volumeModel = (MeshViewer.ExtendedVolumeModel)configurator.getVolumeModel();
-            mdShader.setUniformMatrix4v(gl, PROJECTION_UNIFORM_NAME, false, volumeModel.getPerspectiveMatrix());
-            mdShader.setUniformMatrix4v(gl, MODEL_VIEW_UNIFORM_NAME, false, volumeModel.getModelViewMatrix());
-            mdShader.setUniformMatrix4v(gl, NORMAL_MATRIX_UNIFORM_NAME, false, vms.computeNormalMatrix(volumeModel.getModelViewMatrix()));
+            final MeshViewContext context = configurator.getContext();
+            mdShader.setUniformMatrix4v(gl, PROJECTION_UNIFORM_NAME, false, context.getPerspectiveMatrix());
+            mdShader.setUniformMatrix4v(gl, MODEL_VIEW_UNIFORM_NAME, false, context.getModelViewMatrix());
+            mdShader.setUniformMatrix4v(gl, NORMAL_MATRIX_UNIFORM_NAME, false, vms.computeNormalMatrix(context.getModelViewMatrix()));
         }
 
         // TODO : make it possible to establish an arbitrary group of vertex attributes programmatically.

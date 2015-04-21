@@ -326,7 +326,7 @@ implements GLActor
         }
         else {
             gl.glEnable(GL2.GL_DEPTH_TEST);
-            gl.glDepthFunc(GL2.GL_LEQUAL);
+            gl.glDepthFunc(GL2.GL_LESS);
         }
         anchorShader.load(gl);
 
