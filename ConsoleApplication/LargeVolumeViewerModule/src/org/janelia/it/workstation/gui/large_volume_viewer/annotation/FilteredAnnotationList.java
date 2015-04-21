@@ -1,16 +1,19 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteRequestedListener;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.*;
+import java.util.List;
 
 /**
  * this UI element displays a list of annotations according to a
@@ -68,18 +71,6 @@ public class FilteredAnnotationList extends JPanel {
 
     }
 
-    /**
-     * given the current data and the state of the UI,
-     * populate the model with the subset of the data that
-     * satisfies the filter
-     */
-    private void filterData() {
-
-        // pass
-
-    }
-
-
 
     public void loadNeuron(TmNeuron neuron) {
         currentNeuron = neuron;
@@ -114,37 +105,45 @@ public class FilteredAnnotationList extends JPanel {
             return;
         }
 
-
-        // clear model
+        // loop over neurons, roots in neuron, annotations per root;
+        //  put all the "interesting" annotations in a list
         model.clear();
-
-        // loop over neurons
-        // loop over roots in neuron
-        // loop over annotations per root
-        // for each "interesting" annotation, create a row in the table model
-
-        // if root, branch, or end = interesting
-        // if has note = interesting
-
-        // first try: annotations with notes
+        SimpleAnnotationFilter filter = getFilter();
+        String note;
         for (TmNeuron neuron: currentWorkspace.getNeuronList()) {
-            for (TmStructuredTextAnnotation note: neuron.getStructuredTextAnnotationMap().values()) {
-                // recall that the parent ID field of the note tells us which ann it's on
-                model.addAnnotation(new InterestingAnnotation(note.getParentId(), annotationMgr.getNote(note.getParentId())));
+            for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+                for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
+                    if (annotationMgr.getNote(ann.getId()).length() > 0) {
+                        note = annotationMgr.getNote(ann.getId());
+                    } else {
+                        note = "";
+                    }
+                    InterestingAnnotation maybeInteresting =
+                        new InterestingAnnotation(ann.getId(),
+                            getAnnotationGeometry(ann),
+                            note);
+                    if (filter.isInteresting(maybeInteresting)) {
+                        model.addAnnotation(maybeInteresting);
+                    }
+                }
             }
         }
 
+        /*
+        // test pass: just grab annotations with notes and throw in model
+        //  without filtering
+        for (TmNeuron neuron: currentWorkspace.getNeuronList()) {
+            for (TmStructuredTextAnnotation note: neuron.getStructuredTextAnnotationMap().values()) {
+                // recall that the parent ID field of the note tells us which ann it's on
+                model.addAnnotation(new InterestingAnnotation(note.getParentId(),
+                        AnnotationGeometry.LINK, annotationMgr.getNote(note.getParentId())
+                ));
+            }
+        }
+        */
 
 
-        // refilter:
-        filterData();
-
-
-        // trigger redisplay (?)
         model.fireTableDataChanged();
-
-
-
     }
 
     private void setupUI() {
@@ -161,6 +160,19 @@ public class FilteredAnnotationList extends JPanel {
         add(new JLabel("Annotations", JLabel.LEADING), c);
 
         filteredTable = new JTable(model);
+        filteredTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        filteredTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                int viewRow = filteredTable.getSelectedRow();
+                if (viewRow >= 0) {
+                    // selection still visible
+                    int modelRow = filteredTable.convertRowIndexToModel(viewRow);
+                    InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
+                    annoSelectListener.annotationSelected(ann.getAnnotationID());
+                }
+            }
+        });
 
         JScrollPane scrollPane = new JScrollPane(filteredTable);
         filteredTable.setFillsViewportHeight(true);
@@ -172,6 +184,27 @@ public class FilteredAnnotationList extends JPanel {
         c2.anchor = GridBagConstraints.PAGE_START;
         c2.fill = GridBagConstraints.BOTH;
         add(scrollPane, c2);
+    }
+
+    /**
+     * examine the state of the UI and generate an
+     * appropriate filter
+     */
+    public SimpleAnnotationFilter getFilter() {
+        // testing:
+        return new SimpleAnnotationFilter();
+    }
+
+    public AnnotationGeometry getAnnotationGeometry(TmGeoAnnotation ann) {
+        if (ann.isRoot()) {
+            return AnnotationGeometry.ROOT;
+        } else if (ann.isBranch()) {
+            return AnnotationGeometry.BRANCH;
+        } else if (ann.isEnd()) {
+            return AnnotationGeometry.END;
+        } else {
+            return AnnotationGeometry.LINK;
+        }
     }
 
     public void setAnnoSelectListener(AnnotationSelectionListener annoSelectListener) {
@@ -200,7 +233,7 @@ public class FilteredAnnotationList extends JPanel {
 
 
 class FilteredAnnotationModel extends AbstractTableModel {
-    private String[] columnNames = {"ann ID", "note"};
+    private String[] columnNames = {"ID", "geo", "note"};
 
     private ArrayList<InterestingAnnotation> annotations = new ArrayList<>();
 
@@ -225,11 +258,17 @@ class FilteredAnnotationModel extends AbstractTableModel {
         return annotations.size();
     }
 
+    public InterestingAnnotation getAnnotationAtRow(int row) {
+        return annotations.get(row);
+    }
+
     public Object getValueAt(int row, int column) {
         switch (column) {
             case 0:
                 return annotations.get(row).getAnnIDText();
             case 1:
+                return annotations.get(row).getGeometryText();
+            case 2:
                 return annotations.get(row).getNoteText();
             default:
                 return null;
@@ -246,10 +285,20 @@ class FilteredAnnotationModel extends AbstractTableModel {
 class InterestingAnnotation {
     private Long annotationID;
     private String noteText;
+    private AnnotationGeometry geometry;
 
-    public InterestingAnnotation(Long annotationID, String noteText) {
+    public InterestingAnnotation(Long annotationID, AnnotationGeometry geometry) {
+        new InterestingAnnotation(annotationID, geometry, "");
+    }
+
+    public InterestingAnnotation(Long annotationID, AnnotationGeometry geometry, String noteText) {
         this.annotationID = annotationID;
         this.noteText = noteText;
+        this.geometry = geometry;
+    }
+
+    public Long getAnnotationID() {
+        return annotationID;
     }
 
     public String getAnnIDText() {
@@ -257,7 +306,57 @@ class InterestingAnnotation {
         return annID.substring(annID.length() - 4);
     }
 
+    public boolean hasNote() {
+        return getNoteText().length() > 0;
+    }
+
     public String getNoteText() {
         return noteText;
+    }
+
+    public AnnotationGeometry getGeometry() {
+        return geometry;
+    }
+
+    public String getGeometryText() {
+        return geometry.getTexticon();
+    }
+}
+
+/**
+ * terms for describing annotation geometry
+ */
+enum AnnotationGeometry {
+    ROOT        ("o--"),
+    BRANCH      ("--<"),
+    LINK        ("---"),
+    END         ("--o");
+
+    private String texticon;
+
+    AnnotationGeometry(String texticon) {
+        this.texticon = texticon;
+    }
+
+    public String getTexticon() {
+        return texticon;
+    }
+}
+
+/**
+ * a configurable filter generated from the UI that
+ * determines whether an annotation is interesting or not
+ *
+ * I'm going to wrap geometry and note matching in one
+ * filter for now; could imagine developing a whole
+ * hierarchy of filters and combining them via
+ * boolean filters based on other filters, etc.;
+ * but let's not get too far ahead of our needs
+ */
+class SimpleAnnotationFilter {
+
+    public boolean isInteresting(InterestingAnnotation ann) {
+        // minimal: has note or geom not link
+        return ann.hasNote() || ann.getGeometry() != AnnotationGeometry.LINK;
     }
 }
