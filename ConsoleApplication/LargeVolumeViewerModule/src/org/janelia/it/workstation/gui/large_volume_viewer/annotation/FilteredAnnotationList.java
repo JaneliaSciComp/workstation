@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteRequestedListener;
@@ -12,6 +13,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
@@ -75,12 +78,6 @@ public class FilteredAnnotationList extends JPanel {
     public void loadNeuron(TmNeuron neuron) {
         currentNeuron = neuron;
         updateData();
-
-        // testing
-        if (neuron != null) {
-            System.out.println("neuron loaded: " + neuron.getName());
-        }
-
     }
 
     public void loadWorkspace(TmWorkspace workspace) {
@@ -89,12 +86,6 @@ public class FilteredAnnotationList extends JPanel {
             currentNeuron = null;
         }
         updateData();
-
-        // testing
-        if (workspace != null) {
-            System.out.println("workspace loaded: " + workspace.getName());
-        }
-
     }
 
     private void updateData() {
@@ -173,6 +164,26 @@ public class FilteredAnnotationList extends JPanel {
                 }
             }
         });
+
+        filteredTable.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent me) {
+                if (me.getClickCount() == 2) {
+                    JTable table = (JTable) me.getSource();
+                    int viewRow = table.rowAtPoint(me.getPoint());
+                    if (viewRow > 0) {
+                        int modelRow = filteredTable.convertRowIndexToModel(viewRow);
+                        if (panListener != null) {
+                            InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
+                            TmGeoAnnotation ann = currentNeuron.getGeoAnnotationMap().get(interestingAnnotation.getAnnotationID());
+                            if (ann != null) {
+                                panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
 
         JScrollPane scrollPane = new JScrollPane(filteredTable);
         filteredTable.setFillsViewportHeight(true);
