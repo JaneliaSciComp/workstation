@@ -24,7 +24,7 @@ public class MeshViewer extends Viewer3d {
         setActorRenderer( meshRenderer);
         context = new MeshViewContext();
         super.setVolumeModel(context);
-        meshRenderer.setVolumeModel(context);
+        meshRenderer.setMeshViewContext(context);
     }
     
     @Override

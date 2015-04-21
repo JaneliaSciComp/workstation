@@ -17,8 +17,8 @@ import org.janelia.it.workstation.gui.opengl.GL2AdapterFactory;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.ActorRenderer;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
-import org.janelia.it.workstation.publication_quality.mesh.MeshViewer;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 
 /**
@@ -26,6 +26,8 @@ import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
  * @author fosterl
  */
 public class MeshRenderer extends ActorRenderer {
+    private MeshViewContext context;
+    
     @Override
     public void updateProjection(GL2Adapter gl) {
         gl.getGL2GL3().glViewport(0, 0, (int) getWidthInPixels(), (int) getHeightInPixels());
@@ -41,21 +43,13 @@ public class MeshRenderer extends ActorRenderer {
                 0.5 * scaledFocusDistance, 2.0 * scaledFocusDistance
         );
 
-        ((MeshViewContext)getVolumeModel()).setPerspectiveMatrix(perspective);
+        getMeshViewContext().setPerspectiveMatrix(perspective);
 
     }
+    
     @Override
     public void display(GLAutoDrawable glDrawable) {
 
-        Vec3 f = getVolumeModel().getCamera3d().getFocus();    // This is what allows (follows) drag in X and Y.
-        Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
-        Vec3 u = rotation.times( UP_IN_CAMERA );
-        double unitsPerPixel = glUnitsPerPixel();
-        Vec3 c = f.plus(rotation.times(getVolumeModel().getCameraDepth().times(unitsPerPixel)));
-        float[] viewingTransform = //new ViewMatrixSupport().getIdentityMatrix();
-                new ViewMatrixSupport().getLookAt(c, f, u);
-        ((MeshViewContext)getVolumeModel()).setModelViewMatrix( viewingTransform );
-        
         // Preset background from the volume model.
         float[] backgroundClrArr = getVolumeModel().getBackgroundColorFArr();
         this.backgroundColor = new Color( backgroundClrArr[ 0 ], backgroundClrArr[ 1 ], backgroundClrArr[ 2 ] );
@@ -66,6 +60,7 @@ public class MeshRenderer extends ActorRenderer {
 
         final GL2Adapter gl = GL2AdapterFactory.createGL2Adapter( glDrawable );
         updateProjection(gl);
+        updateModelView();
 
         if ( System.getProperty( "glComposablePipelineDebug", "f" ).toLowerCase().startsWith("t") ) {
             DebugGL2 debugGl2 = new JaneliaDebugGL2(glDrawable);
@@ -78,4 +73,32 @@ public class MeshRenderer extends ActorRenderer {
             actor.display(glDrawable);
     }
 
+    public MeshViewContext getMeshViewContext() {
+        return context;
+    }
+    
+    public void setMeshViewContext( MeshViewContext context ) {
+        this.context = context;
+        super.setVolumeModel(context);
+    }
+    
+    @Override
+    public void setVolumeModel(VolumeModel volumeModel) {
+        if (volumeModel instanceof MeshViewContext) {
+            setMeshViewContext( (MeshViewContext)volumeModel );
+        }
+    }
+    
+    private void updateModelView() {
+        // Update Model/View matrix.
+        Vec3 f = getVolumeModel().getCamera3d().getFocus();    // This is what allows (follows) drag in X and Y.
+        Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
+        Vec3 u = rotation.times(UP_IN_CAMERA);
+        double unitsPerPixel = glUnitsPerPixel();
+        Vec3 c = f.plus(rotation.times(getVolumeModel().getCameraDepth().times(unitsPerPixel)));
+        float[] viewingTransform = //new ViewMatrixSupport().getIdentityMatrix();
+                new ViewMatrixSupport().getLookAt(c, f, u);
+        getMeshViewContext().setModelViewMatrix(viewingTransform);
+
+    }
 }

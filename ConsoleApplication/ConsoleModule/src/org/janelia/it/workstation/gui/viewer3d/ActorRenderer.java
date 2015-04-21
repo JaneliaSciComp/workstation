@@ -175,7 +175,7 @@ public abstract class ActorRenderer
     }
     
     /** Optionally override the default volume model. */
-    public final void setVolumeModel(VolumeModel volumeModel) {
+    public void setVolumeModel(VolumeModel volumeModel) {
         this.volumeModel = volumeModel;
     }
 

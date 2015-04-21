@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.media.opengl.GL;
@@ -25,6 +24,7 @@ import javax.swing.ImageIcon;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
+import java.util.Vector;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
@@ -365,12 +365,22 @@ implements GLActor
 		if ( ! bIsGlInitialized )
 			init(glDrawable);
 
+        GL gl = glDrawable.getGL();
+        if (rim == RenderInterpositionMethod.Occlusion) {
+            gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
+            gl.glEnable(GL2GL3.GL_DEPTH_TEST);
+            gl.glDepthFunc(GL2GL3.GL_LESS);
+        }
 
         displayLines(glDrawable);
         displayTracedSegments(glDrawable);
 
 		if (isAnchorsVisible())
 			displayAnchors(glDrawable);
+
+        if (rim == RenderInterpositionMethod.Occlusion) {
+            gl.glDisable(GL2GL3.GL_DEPTH_TEST);
+        }
 	}
 
 	private void displayTracedSegments(GLAutoDrawable glDrawable) {
