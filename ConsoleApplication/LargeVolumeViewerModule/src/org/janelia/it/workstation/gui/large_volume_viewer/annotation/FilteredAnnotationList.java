@@ -12,6 +12,8 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -69,7 +71,45 @@ public class FilteredAnnotationList extends JPanel {
         // future: replace with custom sorter which gets us
         //  filtering (filter by regex on text columns, can
         //  restrict to specific column)
-        filteredTable.setAutoCreateRowSorter(true);
+        // filteredTable.setAutoCreateRowSorter(true);
+        TableRowSorter<TableModel> sorter
+                = new TableRowSorter<TableModel>(filteredTable.getModel());
+        filteredTable.setRowSorter(sorter);
+
+
+        // single-click selects annotation
+        filteredTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                int viewRow = filteredTable.getSelectedRow();
+                if (viewRow >= 0) {
+                    // selection still visible
+                    int modelRow = filteredTable.convertRowIndexToModel(viewRow);
+                    InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
+                    annoSelectListener.annotationSelected(ann.getAnnotationID());
+                }
+            }
+        });
+
+        // double-click shifts camera to annotation
+        filteredTable.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent me) {
+                if (me.getClickCount() == 2) {
+                    JTable table = (JTable) me.getSource();
+                    int viewRow = table.rowAtPoint(me.getPoint());
+                    if (viewRow > 0) {
+                        int modelRow = filteredTable.convertRowIndexToModel(viewRow);
+                        if (panListener != null) {
+                            InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
+                            TmGeoAnnotation ann = currentNeuron.getGeoAnnotationMap().get(interestingAnnotation.getAnnotationID());
+                            if (ann != null) {
+                                panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
 
     }
@@ -152,37 +192,6 @@ public class FilteredAnnotationList extends JPanel {
 
         filteredTable = new JTable(model);
         filteredTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        filteredTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                int viewRow = filteredTable.getSelectedRow();
-                if (viewRow >= 0) {
-                    // selection still visible
-                    int modelRow = filteredTable.convertRowIndexToModel(viewRow);
-                    InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
-                    annoSelectListener.annotationSelected(ann.getAnnotationID());
-                }
-            }
-        });
-
-        filteredTable.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent me) {
-                if (me.getClickCount() == 2) {
-                    JTable table = (JTable) me.getSource();
-                    int viewRow = table.rowAtPoint(me.getPoint());
-                    if (viewRow > 0) {
-                        int modelRow = filteredTable.convertRowIndexToModel(viewRow);
-                        if (panListener != null) {
-                            InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
-                            TmGeoAnnotation ann = currentNeuron.getGeoAnnotationMap().get(interestingAnnotation.getAnnotationID());
-                            if (ann != null) {
-                                panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
-                            }
-                        }
-                    }
-                }
-            }
-        });
 
 
         JScrollPane scrollPane = new JScrollPane(filteredTable);
