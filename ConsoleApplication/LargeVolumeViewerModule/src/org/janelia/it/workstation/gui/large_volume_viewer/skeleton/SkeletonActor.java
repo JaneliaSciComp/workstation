@@ -110,11 +110,20 @@ implements GLActor
     private boolean anchorsVisible = true;
 	
 	private TileFormat tileFormat;
+    private RenderInterpositionMethod rim = RenderInterpositionMethod.MIP;
+    
+    public enum RenderInterpositionMethod {
+        MIP, Occlusion
+    }
 
 	public SkeletonActor() {
         updater = new SkeletonActorStateUpdater();
 		// log.info("New SkeletonActor");
 	}
+    
+    public void setRenderInterpositionMethod( RenderInterpositionMethod rim ) {
+        this.rim = rim;
+    }
 
     public void clearStyles() {
         neuronStyles.clear();
@@ -311,8 +320,14 @@ implements GLActor
         gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR );
         gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR );
         //
-        gl.glEnable(GL2.GL_BLEND);
-        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+        if (rim == RenderInterpositionMethod.MIP) {
+            gl.glEnable(GL2.GL_BLEND);
+            gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+        }
+        else {
+            gl.glEnable(GL2.GL_DEPTH_TEST);
+            gl.glDepthFunc(GL2.GL_LEQUAL);
+        }
         anchorShader.load(gl);
 
         // used to set uniforms for hover index and parent index here, but
@@ -333,7 +348,12 @@ implements GLActor
         anchorShader.unload(gl);
         gl.glDisable(GL2.GL_POINT_SPRITE);
         gl.glDisable(GL2.GL_TEXTURE_2D);
-        gl.glDisable(GL2.GL_BLEND);
+        if (rim == RenderInterpositionMethod.MIP) {
+            gl.glDisable(GL2.GL_BLEND);
+        }
+        else {
+            gl.glDisable(GL2.GL_DEPTH_TEST);
+        }
     }
 
     @Override
@@ -811,9 +831,15 @@ implements GLActor
 		linesNeedCopy = true;
 		verticesNeedCopy = true;
 		
-		// Apply transparency, even when anchors are not shown
-        gl.glEnable(GL2.GL_BLEND);
-        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+        if (rim == RenderInterpositionMethod.MIP) {
+    		// Apply transparency, even when anchors are not shown
+            gl.glEnable(GL2.GL_BLEND);
+            gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+        }
+        else {
+            gl.glEnable(GL2.GL_DEPTH_TEST);
+            gl.glDepthFunc(GL2.GL_LEQUAL);
+        }
 		
         bIsGlInitialized = true;
 	}

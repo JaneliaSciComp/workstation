@@ -16,7 +16,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonCon
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.gui.viewer3d.Mip3d;
+import org.janelia.it.workstation.gui.viewer3d.OcclusiveViewer;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
 
@@ -28,7 +28,7 @@ import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
  */
 public class AnnotationSkeletonPanel extends JPanel {
     private final AnnotationSkeletonDataSourceI dataSource;
-    private Mip3d mip3d;
+    private OcclusiveViewer viewer;
     
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
@@ -36,7 +36,7 @@ public class AnnotationSkeletonPanel extends JPanel {
     }
 
     public void establish3D() {
-        if (mip3d == null  &&  dataSource.getSkeleton() != null) {
+        if (viewer == null  &&  dataSource.getSkeleton() != null) {
             SkeletonActor actor = new SkeletonActor();
             actor.setNeuronStyleModel(dataSource.getNeuronStyleModel());
             actor.setShowOnlyParentAnchors(true);
@@ -46,13 +46,17 @@ public class AnnotationSkeletonPanel extends JPanel {
             Vec3 yExtender = new Vec3(0, 0.75 * boundingBox.getHeight(), 0);
             actor.getBoundingBox3d().setMax( boundingBox.getMax().plus( yExtender ) );
             actor.getBoundingBox3d().setMin( boundingBox.getMin().minus( yExtender ) );
-            mip3d = new Mip3d();
-            VolumeModel volumeModel = mip3d.getVolumeModel();
+            viewer = new OcclusiveViewer();
+            VolumeModel volumeModel = viewer.getVolumeModel();
             actor.setSkeleton(dataSource.getSkeleton());
             actor.setCamera(volumeModel.getCamera3d());
             actor.setTileFormat(tileFormat);
+            actor.setRenderInterpositionMethod(
+                    SkeletonActor.RenderInterpositionMethod.Occlusion
+            );
             volumeModel.setBackgroundColor(new float[] {
                 0.999f, 0.999f, 0.999f
+//                0.0f, 0.0f, 0.0f
             });
             // Set maximal thickness.  Z-fade is not practical for 3D rotations.
             actor.setZThicknessInPixels( Long.MAX_VALUE );
@@ -62,21 +66,21 @@ public class AnnotationSkeletonPanel extends JPanel {
             SkeletonController controller = SkeletonController.getInstance();
             controller.registerForEvents(actor);
 
-            mip3d.setResetFirstRedraw(true);
+            viewer.setResetFirstRedraw(true);
             final BoundingBox3d originalBoundingBox = tileFormat.calcBoundingBox();
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
 //            mip3d.addActor(axesActor);
-            mip3d.addActor(actor);
-            this.add(mip3d, BorderLayout.CENTER);
+            viewer.addActor(actor);
+            this.add(viewer, BorderLayout.CENTER);
             validate();
             repaint();
         }
     }
     
     public void close() {
-        if (mip3d != null ) {
-            mip3d.clear();
-            mip3d = null;
+        if (viewer != null ) {
+            viewer.clear();
+            viewer = null;
         }
     }
     

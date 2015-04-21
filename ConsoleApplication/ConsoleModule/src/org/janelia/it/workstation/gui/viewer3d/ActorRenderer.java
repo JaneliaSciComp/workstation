@@ -16,7 +16,7 @@ import javax.media.opengl.GLAutoDrawable;
 import java.awt.*;
 import java.util.ArrayList;
 
-class ActorRenderer 
+public class ActorRenderer 
     extends BaseRenderer
 {
     public static final double MAX_PIXELS_PER_VOXEL = 100.0;
@@ -24,7 +24,7 @@ class ActorRenderer
     private static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 20.0;
     private static final double MIN_CAMERA_FOCUS_DISTANCE = -100000.0;
     private static final double MAX_CAMERA_FOCUS_DISTANCE = -0.001;
-    private static final Vec3 UP_IN_CAMERA = new Vec3(0,-1,0);
+    protected static final Vec3 UP_IN_CAMERA = new Vec3(0,-1,0);
 
     // camera parameters
     private double defaultHeightInPixels = 400.0;
@@ -48,8 +48,8 @@ class ActorRenderer
     
     public void centerOnPixel(Point p) {
     		// System.out.println("center");
-    		double dx =  p.x - widthInPixels/2.0;
-    		double dy = heightInPixels/2.0 - p.y;
+    		double dx =  p.x - getWidthInPixels()/2.0;
+    		double dy = getHeightInPixels()/2.0 - p.y;
     		translatePixels(-dx, dy, 0.0);
     }
     
@@ -149,8 +149,8 @@ class ActorRenderer
 			return;
 		UnitVec3 rotationAxis = new UnitVec3(dy, -dx, dz);
 		double windowSize = Math.sqrt(
-				widthInPixels*widthInPixels 
-				+ heightInPixels*heightInPixels);
+				getWidthInPixels()*getWidthInPixels() 
+				+ getHeightInPixels()*getHeightInPixels());
 		// Drag across the entire window to rotate all the way around
 		double rotationAngle = 2.0 * Math.PI * dragDistance/windowSize;
 		// System.out.println(rotationAxis.toString() + rotationAngle);
@@ -170,19 +170,19 @@ class ActorRenderer
 	}
 	
 	public void updateProjection(GL2Adapter gl) {
-        gl.getGL2GL3().glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
+        gl.getGL2GL3().glViewport(0, 0, (int) getWidthInPixels(), (int) getHeightInPixels());
         double verticalApertureInDegrees = 180.0/Math.PI * 2.0 * Math.abs(
-        		Math.atan2(heightInPixels/2.0, DISTANCE_TO_SCREEN_IN_PIXELS));
+        		Math.atan2(getHeightInPixels()/2.0, DISTANCE_TO_SCREEN_IN_PIXELS));
         gl.glMatrixMode( GL2Adapter.MatrixMode.GL_PROJECTION );
         gl.glLoadIdentity();
-        final float h = (float) widthInPixels / (float) heightInPixels;
+        final float h = (float) getWidthInPixels() / (float) getHeightInPixels();
         double cameraFocusDistance = volumeModel.getCameraFocusDistance();
         double scaledFocusDistance = Math.abs(cameraFocusDistance) * glUnitsPerPixel();
         glu.gluPerspective(verticalApertureInDegrees,
         		h,
         		0.5 * scaledFocusDistance,
         		2.0 * scaledFocusDistance);
-
+        logger.debug("Doing gluperspective based on near={}, far={}.", (0.01 * scaledFocusDistance), (2.0*scaledFocusDistance));
 	}
 	
 	public void zoom(double zoomRatio) {
@@ -209,10 +209,10 @@ class ActorRenderer
 	
 	public void zoomPixels(Point newPoint, Point oldPoint) {
 		// Are we dragging away from the center, or toward the center?
-		double[] p0 = {oldPoint.x - widthInPixels/2.0,
-				oldPoint.y - heightInPixels/2.0};
-		double[] p1 = {newPoint.x - widthInPixels/2.0,
-				newPoint.y - heightInPixels/2.0};
+		double[] p0 = {oldPoint.x - getWidthInPixels()/2.0,
+				oldPoint.y - getHeightInPixels()/2.0};
+		double[] p1 = {newPoint.x - getWidthInPixels()/2.0,
+				newPoint.y - getHeightInPixels()/2.0};
 		double dC0 = Math.sqrt(p0[0]*p0[0]+p0[1]*p0[1]);
 		double dC1 = Math.sqrt(p1[0]*p1[0]+p1[1]*p1[1]);
 		double dC = dC1 - dC0; // positive means away
@@ -224,6 +224,25 @@ class ActorRenderer
     public final VolumeModel getVolumeModel() {
         return volumeModel;
     }
+    
+    /** Optionally override the default volume model. */
+    public final void setVolumeModel(VolumeModel volumeModel) {
+        this.volumeModel = volumeModel;
+    }
+
+    /**
+     * @return the widthInPixels
+     */
+    protected double getWidthInPixels() {
+        return widthInPixels;
+    }
+
+    /**
+     * @return the heightInPixels
+     */
+    protected double getHeightInPixels() {
+        return heightInPixels;
+    }
 
     private double maxAspectRatio(BoundingBox3d boundingBox) {
 
@@ -233,9 +252,9 @@ class ActorRenderer
         boolean horizontalBox = boundingBox.getWidth() > boundingBox.getHeight();
 
         double glAspectRatio = Math.max(
-                widthInPixels / heightInPixels, heightInPixels / widthInPixels
+                getWidthInPixels() / getHeightInPixels(), getHeightInPixels() / getWidthInPixels()
         );
-        boolean horizontalGl = widthInPixels > heightInPixels;
+        boolean horizontalGl = getWidthInPixels() > getHeightInPixels();
 
         if ( horizontalGl && horizontalBox ) {
             return Math.max(
@@ -258,7 +277,7 @@ class ActorRenderer
         // System.out.println("Focus = " + focusInGround);
         // cameraFocusDistance = DEFAULT_CAMERA_FOCUS_DISTANCE * defaultHeightInPixels / heightInPixels;
         double finalAspectRatio = maxAspectRatio(boundingBox);
-        double heightRatioFactor = heightInMicrometers / heightInPixels;
+        double heightRatioFactor = heightInMicrometers / getHeightInPixels();
         if ( heightRatioFactor < 0.5 ) {
             heightRatioFactor *= (1.75 - heightRatioFactor) * (1.75 - heightRatioFactor);
         }

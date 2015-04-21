@@ -163,9 +163,9 @@ public class Viewer3d extends BaseGLViewer implements ActionListener {
     }
 
     /** Special synchronized method, for adding actors. Supports multi-threaded brick-add. */
-    private void addActorToRenderer(GLActor brick) {
+    private void addActorToRenderer(GLActor actor) {
         synchronized ( this ) {
-            renderer.addActor(brick);
+            renderer.addActor(actor);
             renderer.resetView();
         }
     }
