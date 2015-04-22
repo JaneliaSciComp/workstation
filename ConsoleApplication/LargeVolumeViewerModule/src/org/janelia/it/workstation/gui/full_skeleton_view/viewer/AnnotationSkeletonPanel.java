@@ -7,7 +7,12 @@
 package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JColorChooser;
 import javax.swing.JPanel;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
@@ -55,8 +60,8 @@ public class AnnotationSkeletonPanel extends JPanel {
                     SkeletonActor.RenderInterpositionMethod.Occlusion
             );
             volumeModel.setBackgroundColor(new float[] {
-                0.999f, 0.999f, 0.999f
-//                0.0f, 0.0f, 0.0f
+//                0.999f, 0.999f, 0.999f
+                0.0f, 0.0f, 0.0f
             });
             // Set maximal thickness.  Z-fade is not practical for 3D rotations.
             actor.setZThicknessInPixels( Long.MAX_VALUE );
@@ -69,8 +74,9 @@ public class AnnotationSkeletonPanel extends JPanel {
             viewer.setResetFirstRedraw(true);
             final BoundingBox3d originalBoundingBox = tileFormat.calcBoundingBox();
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
-//            mip3d.addActor(axesActor);
+            viewer.addActor(axesActor);
             viewer.addActor(actor);
+            viewer.addMenuAction(new BackgroundPickAction(viewer));
             this.add(viewer, BorderLayout.CENTER);
             validate();
             repaint();
@@ -105,4 +111,30 @@ public class AnnotationSkeletonPanel extends JPanel {
         axes.setFullAxes( true );
         return axes;
     }
+    
+    public static class BackgroundPickAction extends AbstractAction {
+
+        private OcclusiveViewer viewer;
+        public BackgroundPickAction( OcclusiveViewer viewer ) {
+            this.viewer = viewer;
+            putValue(Action.NAME, "Background Color");
+        }
+        
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            float[] background = viewer.getVolumeModel().getBackgroundColorFArr();
+            Color oldBackground = new Color( background[0], background[1], background[2] );
+            Color newBackground = JColorChooser.showDialog(
+                    viewer, 
+                    "Annotation Skeleton Background Color", 
+                    oldBackground
+            );
+            if ( newBackground != null ) {
+                newBackground.getColorComponents(background);
+                viewer.getVolumeModel().setBackgroundColor(background);
+            }
+        }
+        
+    }
+    
 }
