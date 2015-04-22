@@ -204,6 +204,10 @@ implements GLActor
                     GL2.GL_UNSIGNED_INT,
                     0L);
             // narrower colored line
+            if (rim == RenderInterpositionMethod.Occlusion) {
+                gl.glEnable(GL2.GL_POLYGON_OFFSET_LINE);
+                gl.glPolygonOffset(1.0f, 1.0f);
+            }
             gl.glLineWidth(1.5f);
             if (neuronStyles.containsKey(neuronID)) {
                 style = neuronStyles.get(neuronID);
@@ -215,6 +219,9 @@ implements GLActor
                     neuronLineIndices.get(neuronID).capacity(),
                     GL2.GL_UNSIGNED_INT,
                     0L);
+            if (rim == RenderInterpositionMethod.Occlusion) {
+                gl.glDisable(GL2.GL_POLYGON_OFFSET_LINE);
+            }
         }
 
         gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);	
