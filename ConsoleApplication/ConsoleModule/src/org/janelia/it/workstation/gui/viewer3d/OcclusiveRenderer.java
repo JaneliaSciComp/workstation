@@ -65,6 +65,22 @@ class OcclusiveRenderer
         gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
         gl.glPopMatrix();
     }
+    
+    @Override
+    public void updateProjection(GL2Adapter gl) {
+        gl.getGL2GL3().glViewport(0, 0, (int) getWidthInPixels(), (int) getHeightInPixels());
+        double verticalApertureInDegrees = 180.0 / Math.PI * 2.0 * Math.abs(
+                Math.atan2(getHeightInPixels() / 2.0, DISTANCE_TO_SCREEN_IN_PIXELS));
+        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
+        gl.glLoadIdentity();
+        final float h = (float) getWidthInPixels() / (float) getHeightInPixels();
+        double cameraFocusDistance = getVolumeModel().getCameraFocusDistance();
+        double scaledFocusDistance = Math.abs(cameraFocusDistance) * glUnitsPerPixel();
+        glu.gluPerspective(verticalApertureInDegrees,
+                h,
+                0.005 * scaledFocusDistance,
+                5.0 * scaledFocusDistance);
+    }
 
     protected void displayBackground(GL2 gl) 
     {

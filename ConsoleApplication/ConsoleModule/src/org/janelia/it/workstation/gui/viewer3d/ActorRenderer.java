@@ -131,7 +131,6 @@ public abstract class ActorRenderer
         		h,
         		0.5 * scaledFocusDistance,
         		2.0 * scaledFocusDistance);
-        logger.debug("Doing gluperspective based on near={}, far={}.", (0.01 * scaledFocusDistance), (2.0*scaledFocusDistance));
 	}
 	
 	public void zoom(double zoomRatio) {
