@@ -143,6 +143,7 @@ implements GLActor
 
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
         GL2 gl2 = gl.getGL2();
+        transparencyDepthMode(gl, true);
 
         NeuronStyle style;
         for (Long neuronID: neuronVertices.keySet()) {
@@ -228,6 +229,7 @@ implements GLActor
 	    gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
+        transparencyDepthMode(gl, false);
         lineShader.unload(gl2);
 	}
 
@@ -327,14 +329,7 @@ implements GLActor
         gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR );
         gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR );
         //
-        if (rim == RenderInterpositionMethod.MIP) {
-            gl.glEnable(GL2.GL_BLEND);
-            gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
-        }
-        else {
-            gl.glEnable(GL2.GL_DEPTH_TEST);
-            gl.glDepthFunc(GL2.GL_LESS);
-        }
+        transparencyDepthMode(gl, true);
         anchorShader.load(gl);
 
         // used to set uniforms for hover index and parent index here, but
@@ -355,12 +350,7 @@ implements GLActor
         anchorShader.unload(gl);
         gl.glDisable(GL2.GL_POINT_SPRITE);
         gl.glDisable(GL2.GL_TEXTURE_2D);
-        if (rim == RenderInterpositionMethod.MIP) {
-            gl.glDisable(GL2.GL_BLEND);
-        }
-        else {
-            gl.glDisable(GL2.GL_DEPTH_TEST);
-        }
+        transparencyDepthMode(gl, false);
     }
 
     @Override
@@ -743,10 +733,6 @@ implements GLActor
         }
 	}
 	
-	private TileFormat getTileFormat() {
-		return tileFormat;
-	}
-
 	@Override
 	public void init(GLAutoDrawable glDrawable) {
 		// Required for gl_VertexID to be found in shader
@@ -847,16 +833,7 @@ implements GLActor
 		PassThroughTextureShader.checkGlError(gl, "load anchor texture");
 		linesNeedCopy = true;
 		verticesNeedCopy = true;
-		
-        if (rim == RenderInterpositionMethod.MIP) {
-    		// Apply transparency, even when anchors are not shown
-            gl.glEnable(GL2.GL_BLEND);
-            gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
-        }
-        else {
-            gl.glEnable(GL2.GL_DEPTH_TEST);
-            gl.glDepthFunc(GL2.GL_LEQUAL);
-        }
+        transparencyDepthMode(gl, true);
 		
         bIsGlInitialized = true;
 	}
@@ -961,4 +938,29 @@ implements GLActor
             return neuronStyles.get(anchor.getNeuronID()).isVisible();
         }
     }
+    
+    protected void transparencyDepthMode(GL2GL3 gl, boolean enable) {
+        if (enable) {
+            if (rim == RenderInterpositionMethod.MIP) {
+                // Apply transparency, even when anchors are not shown
+                gl.glEnable(GL2.GL_BLEND);
+                gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+            } else {
+                gl.glEnable(GL2.GL_DEPTH_TEST);
+                gl.glDepthFunc(GL2.GL_LEQUAL);
+            }
+        }
+        else {
+            if (rim == RenderInterpositionMethod.MIP) {
+                gl.glDisable(GL2.GL_BLEND);
+            } else {
+                gl.glDisable(GL2.GL_DEPTH_TEST);
+            }
+        }
+    }
+
+	private TileFormat getTileFormat() {
+		return tileFormat;
+	}
+    
 }
