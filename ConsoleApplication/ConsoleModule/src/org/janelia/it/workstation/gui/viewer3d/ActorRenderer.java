@@ -35,9 +35,13 @@ public abstract class ActorRenderer
 
     // scene objects
     public ActorRenderer() {
-        logger = LoggerFactory.getLogger(ActorRenderer.class);
 		// actors.add(new TeapotActor()); // solid shading is not supported right now
-        volumeModel = new VolumeModel();
+        this(new VolumeModel());
+    }
+    
+    public ActorRenderer( VolumeModel volumeModel ) {
+        logger = LoggerFactory.getLogger(ActorRenderer.class);
+        this.volumeModel = volumeModel;
         BasicObservableCamera3d camera3d = new BasicObservableCamera3d();
         camera3d.setFocus( 0.0, 0.0, -DEFAULT_CAMERA_FOCUS_DISTANCE );
         getVolumeModel().setCamera3d(camera3d);

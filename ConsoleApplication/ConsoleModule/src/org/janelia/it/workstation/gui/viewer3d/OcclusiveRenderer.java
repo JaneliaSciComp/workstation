@@ -18,7 +18,7 @@ class OcclusiveRenderer
 {
     // scene objects
     public OcclusiveRenderer() {
-        super();
+        super(new OcclusiveVolumeModel());
     }
     
     @Override
@@ -91,5 +91,17 @@ class OcclusiveRenderer
 	    		backgroundColor.getBlue()/255.0f,
 	    		backgroundColor.getAlpha()/255.0f);
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);    		
+    }
+    
+    public static class OcclusiveVolumeModel extends VolumeModel {
+        /**
+         * Never return true for white-background.  Want colors remaining
+         * same,
+         * @return always false;
+         */
+        @Override
+        public boolean isWhiteBackground() {
+            return false;
+        }
     }
 }

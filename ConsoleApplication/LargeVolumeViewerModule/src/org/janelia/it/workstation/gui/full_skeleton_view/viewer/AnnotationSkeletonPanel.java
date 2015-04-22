@@ -60,7 +60,6 @@ public class AnnotationSkeletonPanel extends JPanel {
                     SkeletonActor.RenderInterpositionMethod.Occlusion
             );
             volumeModel.setBackgroundColor(new float[] {
-//                0.999f, 0.999f, 0.999f
                 0.0f, 0.0f, 0.0f
             });
             // Set maximal thickness.  Z-fade is not practical for 3D rotations.
@@ -107,6 +106,7 @@ public class AnnotationSkeletonPanel extends JPanel {
         AxesActor axes = new AxesActor();
         axes.setVolumeModel(volumeModel);
         axes.setBoundingBox(boundingBox);
+        axes.setRenderMethod(AxesActor.RenderMethod.MESH);
         axes.setAxisLengthDivisor( axisLengthDivisor );
         axes.setFullAxes( true );
         return axes;

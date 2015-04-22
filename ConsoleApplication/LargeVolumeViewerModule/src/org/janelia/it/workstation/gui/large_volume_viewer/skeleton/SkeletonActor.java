@@ -380,7 +380,6 @@ public class SkeletonActor
 
         GL gl = glDrawable.getGL();
         if (rim == RenderInterpositionMethod.Occlusion) {
-            gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
             gl.glEnable(GL2GL3.GL_DEPTH_TEST);
             gl.glDepthFunc(GL2GL3.GL_LESS);
         }

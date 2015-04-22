@@ -35,7 +35,7 @@ public class AxesActor implements GLActor
     public static final float TICK_SIZE = 15.0f;
     public static final float SCENE_UNITS_BETWEEN_TICKS = 100.0f;
 
-    public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING}
+    public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING, MESH}
 
     // Vary these parameters to taste
 	// Rendering variables
@@ -91,6 +91,20 @@ public class AxesActor implements GLActor
         this.volumeModel = volumeModel;
     }
     
+    /**
+     * @return the renderMethod
+     */
+    public RenderMethod getRenderMethod() {
+        return renderMethod;
+    }
+
+    /**
+     * @param renderMethod the renderMethod to set
+     */
+    public void setRenderMethod(RenderMethod renderMethod) {
+        this.renderMethod = renderMethod;
+    }
+
     public void setAxisLengths( double xAxisLength, double yAxisLength, double zAxisLength ) {
         axisLengths[ 0 ] = xAxisLength;
         axisLengths[ 1 ] = yAxisLength;
@@ -157,25 +171,7 @@ public class AxesActor implements GLActor
         reportError( gl, "Display of axes-actor lighting 2" );
         gl.glDisable(GL2.GL_LIGHTING);
         reportError( gl, "Display of axes-actor lighting 3" );
-
-        // set blending to enable transparent voxels
-        gl.glEnable(GL2.GL_BLEND);
-        if (renderMethod == RenderMethod.ALPHA_BLENDING) {
-            gl.glBlendEquation(GL2.GL_FUNC_ADD);
-            // Weight source by GL_ONE because we are using premultiplied alpha.
-            gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
-            reportError( gl, "Display of axes-actor alpha" );
-        }
-        else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
-            if ( volumeModel.isWhiteBackground() ) {
-                gl.glBlendEquation(GL2.GL_MIN);
-            }
-            else {
-                gl.glBlendEquation(GL2.GL_MAX);
-            }
-            gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
-            reportError( gl, "Display of axes-actor maxintensity" );
-        }
+        setRenderMode(gl, true);
 
         gl.glEnable( GL2.GL_LINE_SMOOTH );                     // May not be in v2
         gl.glHint( GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST );   // May not be in v2
@@ -219,7 +215,7 @@ public class AxesActor implements GLActor
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
         gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, 0 );
 
-        gl.glDisable(GL2.GL_BLEND);
+        setRenderMode(gl, false);
         reportError(gl, "Axes-actor, end of display.");                
 
         gl.glUseProgram(previousShader);
@@ -264,6 +260,39 @@ public class AxesActor implements GLActor
 
     /** Call this when this actor is to be re-shown after an absense. */
     public void refresh() {
+    }
+
+    private void setRenderMode(GL2 gl, boolean enable) {
+        if (enable) {
+            // set blending to enable transparent voxels
+            if (getRenderMethod() == RenderMethod.ALPHA_BLENDING) {
+                gl.glEnable(GL2.GL_BLEND);
+                gl.glBlendEquation(GL2.GL_FUNC_ADD);
+                // Weight source by GL_ONE because we are using premultiplied alpha.
+                gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
+                reportError(gl, "Display of axes-actor alpha");
+            } else if (getRenderMethod() == RenderMethod.MAXIMUM_INTENSITY) {
+                gl.glEnable(GL2.GL_BLEND);
+                if (volumeModel.isWhiteBackground()) {
+                    gl.glBlendEquation(GL2.GL_MIN);
+                } else {
+                    gl.glBlendEquation(GL2.GL_MAX);
+                }
+                gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
+                reportError(gl, "Display of axes-actor maxintensity");
+            } else {
+                gl.glEnable(GL2.GL_DEPTH_TEST);
+                gl.glDepthFunc(GL2.GL_LESS);
+                reportError(gl, "Display of axes-actor depth");
+            }
+        }
+        else {
+            if (getRenderMethod() == RenderMethod.MESH) {
+                gl.glDisable(GL2.GL_DEPTH_TEST);
+            } else {
+                gl.glDisable(GL2.GL_BLEND);
+            }
+        }
     }
 
     private void buildBuffers(GL2 gl) {
