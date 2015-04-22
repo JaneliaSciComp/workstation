@@ -9,12 +9,17 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanTo
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteRequestedListener;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
@@ -38,8 +43,10 @@ public class FilteredAnnotationList extends JPanel {
 
     // GUI stuff
     private int width;
-    private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
+    private static final int height = 2 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
     JTable filteredTable;
+    JTextField filterField;
+    TableRowSorter<FilteredAnnotationModel> sorter;
 
     // data stuff
     AnnotationManager annotationMgr;
@@ -72,8 +79,7 @@ public class FilteredAnnotationList extends JPanel {
         //  filtering (filter by regex on text columns, can
         //  restrict to specific column)
         // filteredTable.setAutoCreateRowSorter(true);
-        TableRowSorter<TableModel> sorter
-                = new TableRowSorter<TableModel>(filteredTable.getModel());
+        sorter = new TableRowSorter<>((FilteredAnnotationModel) filteredTable.getModel());
         filteredTable.setRowSorter(sorter);
 
 
@@ -160,19 +166,6 @@ public class FilteredAnnotationList extends JPanel {
             }
         }
 
-        /*
-        // test pass: just grab annotations with notes and throw in model
-        //  without filtering
-        for (TmNeuron neuron: currentWorkspace.getNeuronList()) {
-            for (TmStructuredTextAnnotation note: neuron.getStructuredTextAnnotationMap().values()) {
-                // recall that the parent ID field of the note tells us which ann it's on
-                model.addAnnotation(new InterestingAnnotation(note.getParentId(),
-                        AnnotationGeometry.LINK, annotationMgr.getNote(note.getParentId())
-                ));
-            }
-        }
-        */
-
 
         model.fireTableDataChanged();
     }
@@ -180,6 +173,7 @@ public class FilteredAnnotationList extends JPanel {
     private void setupUI() {
         setLayout(new GridBagLayout());
 
+        // label
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
@@ -190,9 +184,14 @@ public class FilteredAnnotationList extends JPanel {
         c.weighty = 0.0;
         add(new JLabel("Annotations", JLabel.LEADING), c);
 
+        // table
         filteredTable = new JTable(model);
         filteredTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
+        // bit inelegant, but hand-tune some widths (default is 75):
+        // ...and seems to be ignored, ugh
+        filteredTable.getColumnModel().getColumn(0).setPreferredWidth(45);
+        filteredTable.getColumnModel().getColumn(1).setPreferredWidth(40);
 
         JScrollPane scrollPane = new JScrollPane(filteredTable);
         filteredTable.setFillsViewportHeight(true);
@@ -204,6 +203,69 @@ public class FilteredAnnotationList extends JPanel {
         c2.anchor = GridBagConstraints.PAGE_START;
         c2.fill = GridBagConstraints.BOTH;
         add(scrollPane, c2);
+
+        // text field for filter
+        JPanel filterPanel = new JPanel();
+        filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.LINE_AXIS));
+        JLabel filterLabel = new JLabel("Filter text:");
+        filterPanel.add(filterLabel);
+        filterField = new JTextField();
+        filterField.getDocument().addDocumentListener(
+                new DocumentListener() {
+                    @Override
+                    public void insertUpdate(DocumentEvent e) {
+                        updateRowFilter();
+                    }
+
+                    @Override
+                    public void removeUpdate(DocumentEvent e) {
+                        updateRowFilter();
+                    }
+
+                    @Override
+                    public void changedUpdate(DocumentEvent e) {
+                        updateRowFilter();
+                    }
+                }
+        );
+        filterPanel.add(filterField);
+        JButton clearFilter = new JButton("Clear");
+        clearFilter.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                filterField.setText("");
+            }
+        });
+        filterPanel.add(clearFilter);
+
+        GridBagConstraints c3 = new GridBagConstraints();
+        c3.gridx = 0;
+        c3.gridy = GridBagConstraints.RELATIVE;
+        c3.weighty = 0.0;
+        c3.anchor = GridBagConstraints.PAGE_START;
+        c3.fill = GridBagConstraints.HORIZONTAL;
+        add(filterPanel, c3);
+
+
+
+
+    }
+
+    /**
+     * update the table filter based on user text input in
+     * the filter box; this is a filter based on text in
+     * the table, done by Java, compared with a filter on
+     * annotation information that we do explicitly above
+     */
+    private void updateRowFilter() {
+        RowFilter<FilteredAnnotationModel, Object> rowFilter = null;
+        try {
+            rowFilter = RowFilter.regexFilter(filterField.getText());
+        } catch (java.util.regex.PatternSyntaxException e) {
+            // if the regex doesn't parse, don't update the filter
+            return;
+        }
+        sorter.setRowFilter(rowFilter);
     }
 
     /**
