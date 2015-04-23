@@ -106,6 +106,7 @@ public class AnnotationSkeletonPanel extends JPanel {
         AxesActor axes = new AxesActor();
         axes.setVolumeModel(volumeModel);
         axes.setBoundingBox(boundingBox);
+        axes.setAxisLengths( boundingBox.getWidth(), boundingBox.getHeight(), boundingBox.getDepth() );
         axes.setRenderMethod(AxesActor.RenderMethod.MESH);
         axes.setAxisLengthDivisor( axisLengthDivisor );
         axes.setFullAxes( true );

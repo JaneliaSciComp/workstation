@@ -32,7 +32,7 @@ import org.janelia.it.workstation.gui.viewer3d.text.AxisLabel.AxisOfParallel;
 public class AxesActor implements GLActor
 {
     private static final double DEFAULT_AXIS_LEN = 1000.0;
-    public static final float TICK_SIZE = 15.0f;
+    private static final float DEFAULT_AXIS_LABEL_MULTIPLIER = 1.0f;
     public static final float SCENE_UNITS_BETWEEN_TICKS = 100.0f;
 
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING, MESH}
@@ -40,8 +40,8 @@ public class AxesActor implements GLActor
     // Vary these parameters to taste
 	// Rendering variables
 	private RenderMethod renderMethod =
-		RenderMethod.ALPHA_BLENDING;
-		//RenderMethod.MAXIMUM_INTENSITY; // MIP
+		//RenderMethod.ALPHA_BLENDING;
+		RenderMethod.MAXIMUM_INTENSITY; // MIP
     private boolean bIsInitialized = false;
     private boolean bFullAxes = false;
     private double axisLengthDivisor = 1.0;
@@ -63,6 +63,10 @@ public class AxesActor implements GLActor
     private int previousShader;
 
     private int lineBufferVertexCount = 0;
+    private float sceneUnitsBetweenTicks = SCENE_UNITS_BETWEEN_TICKS;
+    private double log10LeastAxis = 2;
+    private float axisLabelMagnifier;
+    private int tickSize;
 
     private static final Logger logger = LoggerFactory.getLogger( AxesActor.class );
 
@@ -109,6 +113,22 @@ public class AxesActor implements GLActor
         axisLengths[ 0 ] = xAxisLength;
         axisLengths[ 1 ] = yAxisLength;
         axisLengths[ 2 ] = zAxisLength;
+        double leastAxis = axisLengths[0];
+        for ( int i = 1; i < 3; i++ ) {
+            if (axisLengths[i] < leastAxis) {
+                leastAxis = axisLengths[i];
+            }
+        }
+        log10LeastAxis = Math.floor( Math.max(Math.log10(leastAxis), 1.0) );        
+        sceneUnitsBetweenTicks = (float)Math.floor( Math.pow( 10.0, log10LeastAxis ) );
+        tickSize = (int)(0.15 * sceneUnitsBetweenTicks);
+        if ( log10LeastAxis >= 3.0 ) {
+            axisLabelMagnifier = (float)(Math.pow(10.0, log10LeastAxis - 2));
+        }
+        else {
+            axisLabelMagnifier = DEFAULT_AXIS_LABEL_MULTIPLIER;
+        }
+
         logger.trace("Axial lengths are {}, {} and " + zAxisLength, xAxisLength, yAxisLength);
     }
     
@@ -192,6 +212,7 @@ public class AxesActor implements GLActor
             color[ 2] = 0.15f;
         }
 
+        gl.glLineWidth(1.0f);
         gl.glColor4f( color[ 0 ], color[ 1 ], color[ 2 ], alpha );
         reportError( gl, "Display of axes-actor 2" );
 
@@ -280,7 +301,7 @@ public class AxesActor implements GLActor
                 }
                 gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
                 reportError(gl, "Display of axes-actor maxintensity");
-            } else {
+            } else if (getRenderMethod() == RenderMethod.MESH) {
                 gl.glEnable(GL2.GL_DEPTH_TEST);
                 gl.glDepthFunc(GL2.GL_LESS);
                 reportError(gl, "Display of axes-actor depth");
@@ -315,12 +336,12 @@ public class AxesActor implements GLActor
                 (float)boundingBox.getMaxY(),
                 (float)boundingBox.getMaxZ()
         };
-
-        Geometry xTicks = getTickGeometry(tickOrigin, TICK_SIZE, new AxisIteration(0, 1), new AxisIteration(1, -1), 2, nextVertexOffset);
+        
+        Geometry xTicks = getTickGeometry(tickOrigin, tickSize, new AxisIteration(0, 1), new AxisIteration(1, -1), 2, nextVertexOffset);
         nextVertexOffset += xTicks.getVertexCount();
-        Geometry yTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 1, -1 ), new AxisIteration( 2, -1 ), 0, nextVertexOffset );
+        Geometry yTicks = getTickGeometry( tickOrigin, tickSize, new AxisIteration( 1, -1 ), new AxisIteration( 2, -1 ), 0, nextVertexOffset );
         nextVertexOffset += yTicks.getVertexCount();
-        Geometry zTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 2, -1 ), new AxisIteration( 0, 1 ), 1, nextVertexOffset );
+        Geometry zTicks = getTickGeometry( tickOrigin, tickSize, new AxisIteration( 2, -1 ), new AxisIteration( 0, 1 ), 1, nextVertexOffset );
         nextVertexOffset += zTicks.getVertexCount();
 
         ByteBuffer baseBuffer = ByteBuffer.allocateDirect(
@@ -559,22 +580,22 @@ public class AxesActor implements GLActor
     private float[] getXShapeCoords( double xCenter, double yCenter, double zCenter ) {
         float[] rtnVal = new float[ 4 * 3 ];
         // Top-left stroke start.
-        rtnVal[ 0 ] = (float)xCenter - 5.0f;
-        rtnVal[ 1 ] = (float)yCenter + 6.0f;
-        rtnVal[ 2 ] = (float)zCenter + 5.0f;
+        rtnVal[ 0 ] = (float)xCenter - 5.0f * axisLabelMagnifier;
+        rtnVal[ 1 ] = (float)yCenter + 6.0f * axisLabelMagnifier;
+        rtnVal[ 2 ] = (float)zCenter + 5.0f * axisLabelMagnifier;
         // Bottom-right stroke end.
-        rtnVal[ 3 ] = (float)xCenter + 5.0f;
-        rtnVal[ 4 ] = (float)yCenter - 6.0f;
-        rtnVal[ 5 ] = (float)zCenter + 5.0f;
+        rtnVal[ 3 ] = (float)xCenter + 5.0f * axisLabelMagnifier;
+        rtnVal[ 4 ] = (float)yCenter - 6.0f * axisLabelMagnifier;
+        rtnVal[ 5 ] = (float)zCenter + 5.0f * axisLabelMagnifier;
 
         // Top-right stroke start.
-        rtnVal[ 6 ] = (float)xCenter + 5.0f;
-        rtnVal[ 7 ] = (float)yCenter + 6.0f;
-        rtnVal[ 8 ] = (float)zCenter + 5.0f;
+        rtnVal[ 6 ] = (float)xCenter + 5.0f * axisLabelMagnifier;
+        rtnVal[ 7 ] = (float)yCenter + 6.0f * axisLabelMagnifier;
+        rtnVal[ 8 ] = (float)zCenter + 5.0f * axisLabelMagnifier;
         // Bottom-left stroke end.
-        rtnVal[ 9 ] = (float)xCenter - 5.0f;
-        rtnVal[ 10 ] = (float)yCenter - 6.0f;
-        rtnVal[ 11 ] = (float)zCenter + 5.0f;
+        rtnVal[ 9 ] = (float)xCenter - 5.0f * axisLabelMagnifier;
+        rtnVal[ 10 ] = (float)yCenter - 6.0f * axisLabelMagnifier;
+        rtnVal[ 11 ] = (float)zCenter + 5.0f * axisLabelMagnifier;
 
         return rtnVal;
     }
@@ -583,24 +604,24 @@ public class AxesActor implements GLActor
         // Only four points are needed.  However, the indices need to use one coord twice.
         float[] rtnVal = new float[ 4 * 3 ];
         // Top-left stroke start.
-        rtnVal[ 0 ] = (float)xCenter - 5.0f;
-        rtnVal[ 1 ] = (float)yCenter - 6.0f;
-        rtnVal[ 2 ] = (float)zCenter + 5.0f;
+        rtnVal[ 0 ] = (float)xCenter - 5.0f * axisLabelMagnifier;
+        rtnVal[ 1 ] = (float)yCenter - 6.0f * axisLabelMagnifier;
+        rtnVal[ 2 ] = (float)zCenter + 5.0f * axisLabelMagnifier;
         // Center stroke end.
         rtnVal[ 3 ] = (float)xCenter;
         rtnVal[ 4 ] = (float)yCenter;
-        rtnVal[ 5 ] = (float)zCenter + 5.0f;
+        rtnVal[ 5 ] = (float)zCenter + 5.0f * axisLabelMagnifier;
 
         // Top-right stroke start.
-        rtnVal[ 6 ] = (float)xCenter + 5.0f;
-        rtnVal[ 7 ] = (float)yCenter - 6.0f;
-        rtnVal[ 8 ] = (float)zCenter + 5.0f;
+        rtnVal[ 6 ] = (float)xCenter + 5.0f * axisLabelMagnifier;
+        rtnVal[ 7 ] = (float)yCenter - 6.0f * axisLabelMagnifier;
+        rtnVal[ 8 ] = (float)zCenter + 5.0f * axisLabelMagnifier;
         // Top-right stroke ends at Center stroke end.
 
         // Bottom-stroke end.
         rtnVal[ 9 ] = (float)xCenter;
-        rtnVal[ 10 ] = (float)yCenter + 6.0f;
-        rtnVal[ 11 ] = (float)zCenter + 5.0f;
+        rtnVal[ 10 ] = (float)yCenter + 6.0f * axisLabelMagnifier;
+        rtnVal[ 11 ] = (float)zCenter + 5.0f * axisLabelMagnifier;
 
         return rtnVal;
     }
@@ -609,25 +630,25 @@ public class AxesActor implements GLActor
         float[] rtnVal = new float[ 4 * 3 ];
         // Top-left stroke start.
         //0
-        rtnVal[ 0 ] = (float)xCenter - 5.0f;
-        rtnVal[ 1 ] = (float)yCenter - 6.0f;
-        rtnVal[ 2 ] = (float)zCenter + 5.0f;
+        rtnVal[ 0 ] = (float)xCenter - 5.0f * axisLabelMagnifier;
+        rtnVal[ 1 ] = (float)yCenter - 6.0f * axisLabelMagnifier;
+        rtnVal[ 2 ] = (float)zCenter + 5.0f * axisLabelMagnifier;
         // Top-right stroke end.
         //1
-        rtnVal[ 3 ] = (float)xCenter + 5.0f;
-        rtnVal[ 4 ] = (float)yCenter - 6.0f;
-        rtnVal[ 5 ] = (float)zCenter + 5.0f;
+        rtnVal[ 3 ] = (float)xCenter + 5.0f * axisLabelMagnifier;
+        rtnVal[ 4 ] = (float)yCenter - 6.0f * axisLabelMagnifier;
+        rtnVal[ 5 ] = (float)zCenter + 5.0f * axisLabelMagnifier;
 
         // Bottom-left stroke start.
         //2
-        rtnVal[ 6 ] = (float)xCenter - 5.0f;
-        rtnVal[ 7 ] = (float)yCenter + 6.0f;
-        rtnVal[ 8 ] = (float)zCenter + 5.0f;
+        rtnVal[ 6 ] = (float)xCenter - 5.0f * axisLabelMagnifier;
+        rtnVal[ 7 ] = (float)yCenter + 6.0f * axisLabelMagnifier;
+        rtnVal[ 8 ] = (float)zCenter + 5.0f * axisLabelMagnifier;
         // Bottom-right stroke end.
         //3
-        rtnVal[ 9 ] = (float)xCenter + 5.0f;
-        rtnVal[ 10 ] = (float)yCenter + 6.0f;
-        rtnVal[ 11 ] = (float)zCenter + 5.0f;
+        rtnVal[ 9 ] = (float)xCenter + 5.0f * axisLabelMagnifier;
+        rtnVal[ 10 ] = (float)yCenter + 6.0f * axisLabelMagnifier;
+        rtnVal[ 11 ] = (float)zCenter + 5.0f * axisLabelMagnifier;
 
         return rtnVal;
     }
@@ -654,7 +675,7 @@ public class AxesActor implements GLActor
     // Tick mark support.
     private int getTickCount( int axisLength ) {
         // Going for one / 100
-        return (int)(axisLength / SCENE_UNITS_BETWEEN_TICKS * axisLengthDivisor) + 1;
+        return (int)(axisLength / sceneUnitsBetweenTicks * axisLengthDivisor + 1);
     }
 
     /**
@@ -681,11 +702,11 @@ public class AxesActor implements GLActor
         int tickCount = getTickCount(new Float(axisLengths[tickAxis.getAxisNum()]).intValue());
         if ( tickCount == 0 ) tickCount = 2;
         int tickOffsDiv = ( axisLengthDivisor == 0 ) ? 1 : (int)axisLengthDivisor;
-        int tickOffset = (int) SCENE_UNITS_BETWEEN_TICKS / tickOffsDiv; //(int)axisLengths[ tickAxis.getAxisNum() ] / tickCount;
+        int tickOffset = (int) sceneUnitsBetweenTicks / tickOffsDiv; //(int)axisLengths[ tickAxis.getAxisNum() ] / tickCount;
         float[] vertices = new float[ tickCount * 6 ];
         int[] indices = new int[ 2 * tickCount ];
 
-        int indexCount = 0;
+        int indexCount = 0;        
         for ( int i = 0; i < tickCount; i++ ) {
             // Drawing path along one axis.
             float axisOffset = origin[ tickAxis.getAxisNum() ] + (tickAxis.getIterationDirectionMultiplier() * (float)(i * tickOffset) );
