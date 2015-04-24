@@ -103,7 +103,7 @@ public class FilteredAnnotationList extends JPanel {
                 if (me.getClickCount() == 2) {
                     JTable table = (JTable) me.getSource();
                     int viewRow = table.rowAtPoint(me.getPoint());
-                    if (viewRow > 0) {
+                    if (viewRow >= 0) {
                         int modelRow = filteredTable.convertRowIndexToModel(viewRow);
                         if (panListener != null) {
                             InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
