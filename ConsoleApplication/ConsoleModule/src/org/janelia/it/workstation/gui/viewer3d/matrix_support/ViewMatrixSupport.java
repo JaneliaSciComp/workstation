@@ -155,9 +155,9 @@ public class ViewMatrixSupport {
     /**
      * Works like "gluLookAt". Will assume 'previous matrix' is identity.
      *
-     * @param c center of the scene
-     * @param f focus point.
-     * @param u Up-in-Ground
+     * @param center center of the scene
+     * @param eye focus point.
+     * @param up Up-in-Ground
      * @return matrix suitable for the viewing transformation.
      */
     public float[] getLookAt(Vec3 eye, Vec3 center, Vec3 up) {
