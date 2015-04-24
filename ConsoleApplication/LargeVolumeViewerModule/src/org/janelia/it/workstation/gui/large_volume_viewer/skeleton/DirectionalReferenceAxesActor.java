@@ -133,12 +133,12 @@ public class DirectionalReferenceAxesActor implements GLActor {
         shader.setUniform4fv(gl, DirectionalReferenceAxesShader.COLOR_UNIFORM_NAME, getColor());
         reportError(gl, "Display of axes-actor uniforms");
 
+//        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);  // Prob: not in v2.
+//        reportError(gl, "Display of axes-actor 2");
+//
         // Draw the little lines.
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, lineBufferHandle);
         reportError(gl, "Display of axes-actor 1");
-
-        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);  // Prob: not in v2.
-        reportError(gl, "Display of axes-actor 2");
 
         // 3 floats per coord. Stride is 0, offset to first is 0.
         gl.glEnableVertexAttribArray( shader.getVertexAttribLoc() );
