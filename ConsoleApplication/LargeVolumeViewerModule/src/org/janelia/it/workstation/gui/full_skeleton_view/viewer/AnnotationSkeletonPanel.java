@@ -18,9 +18,11 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.DirectionalReferenceAxesActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.OcclusiveViewer;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
@@ -41,7 +43,7 @@ public class AnnotationSkeletonPanel extends JPanel {
     }
 
     public void establish3D() {
-        if (viewer == null  &&  dataSource.getSkeleton() != null) {
+        if (viewer == null  &&  dataSource.getSkeleton() != null  &&  dataSource.getSkeleton().getTileFormat() != null) {
             SkeletonActor actor = new SkeletonActor();
             actor.setNeuronStyleModel(dataSource.getNeuronStyleModel());
             actor.setShowOnlyParentAnchors(true);
@@ -52,6 +54,8 @@ public class AnnotationSkeletonPanel extends JPanel {
             actor.getBoundingBox3d().setMax( boundingBox.getMax().plus( yExtender ) );
             actor.getBoundingBox3d().setMin( boundingBox.getMin().minus( yExtender ) );
             viewer = new OcclusiveViewer();
+            MeshViewContext context = new MeshViewContext();
+            viewer.setVolumeModel(context);
             VolumeModel volumeModel = viewer.getVolumeModel();
             actor.setSkeleton(dataSource.getSkeleton());
             actor.setCamera(volumeModel.getCamera3d());
@@ -70,11 +74,19 @@ public class AnnotationSkeletonPanel extends JPanel {
             SkeletonController controller = SkeletonController.getInstance();
             controller.registerForEvents(actor);
 
+            DirectionalReferenceAxesActor refAxisActor = new DirectionalReferenceAxesActor(
+                    new float[] { 100.0f, 100.0f, 100.0f },
+                    boundingBox,
+                    context,
+                    DirectionalReferenceAxesActor.Placement.BOTTOM_LEFT                    
+            );
+            
             viewer.setResetFirstRedraw(true);
             final BoundingBox3d originalBoundingBox = tileFormat.calcBoundingBox();
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
             viewer.addActor(axesActor);
             viewer.addActor(actor);
+            viewer.addActor(refAxisActor);
             viewer.addMenuAction(new BackgroundPickAction(viewer));
             this.add(viewer, BorderLayout.CENTER);
             validate();
@@ -89,6 +101,7 @@ public class AnnotationSkeletonPanel extends JPanel {
         }
     }
     
+    @Override
     public void paint(Graphics g) {
         establish3D();
         super.paint(g);

@@ -10,14 +10,16 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.axes.Geometry;
+import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 
 /**
  * Actor which shows a trio of vertex-joined rays, indicating what direction the
@@ -27,45 +29,84 @@ import org.janelia.it.workstation.gui.viewer3d.axes.Geometry;
  */
 public class DirectionalReferenceAxesActor implements GLActor {
 
+    private static final float[] DEFAULT_COLOR = {
+        0.5f, 0.5f, 0.5f, 1.0f
+    };
+
     private BoundingBox3d boundingBox;
-    private boolean bBuffersNeedUpload = true;
-    private VolumeModel volumeModel;
+    private boolean bIsInitialized = false;
+    private final MeshViewContext context;
     private int lineBufferVertexCount = 0;
     private int previousShader;
 
     private int inxBufferHandle;
     private int lineBufferHandle;
     
-    private int vertexAttribLoc;
-    private int shaderLoc = -20;
-
-    private int[] handleArr = new int[1];
+    private DirectionalReferenceAxesShader shader = null;
+    
+    // For download from GPU.  Contents only reliable after
+    // most recent download.
+    private final IntBuffer gpuToCpuBuffer = IntBuffer.allocate(1);
+    private final int[] handleArr = new int[1];
+    private float[] color = DEFAULT_COLOR;
+    
+    private final MatrixManager matrixManager;
 
     public enum Placement {
-
         TOP_LEFT, BOTTOM_LEFT, TOP_RIGHT, BOTTOM_RIGHT
     }
 
+    /**
+     * Construct with config data.
+     * 
+     * @param onscreenSize how big will this widget appear on screen?
+     * @param parentBoundingBox this is contained within a parent space.
+     * @param context for exchange of info with caller, grand-caller, etc.
+     * @param placement pick a presentation corner.
+     */
     public DirectionalReferenceAxesActor(
-            float[] screenSize,
+            float[] onscreenSize,
             BoundingBox3d parentBoundingBox,
-            VolumeModel volumeModel,
+            MeshViewContext context,
             Placement placement) {
 
-        // Closest to viewer, on the volume.
-        this.volumeModel = volumeModel;
-        
-        createBoundingBox(placement, parentBoundingBox, screenSize);
+        this.context = context;
+        this.matrixManager = new MatrixManager(context);
+        createBoundingBox(placement, parentBoundingBox, onscreenSize);
+    }
+
+    /**
+     * @return the color
+     */
+    public float[] getColor() {
+        return color;
+    }
+
+    /**
+     * @param color the color to set
+     */
+    public void setColor(float[] color) {
+        this.color = color;
     }
 
     @Override
     public void display(GLAutoDrawable glDrawable) {
-
+        
         GL2 gl = glDrawable.getGL().getGL2();
+        if (! bIsInitialized) {
+            init(glDrawable);
+        }
+        
         reportError(gl, "Display of axes-actor upon entry");
-        IntBuffer ib = IntBuffer.allocate(1);
-        gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, ib);
-        previousShader = ib.get();
+        
+        // Exchange shader programs.
+        gpuToCpuBuffer.rewind();
+        gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, gpuToCpuBuffer);
+        gpuToCpuBuffer.rewind();
+        previousShader = gpuToCpuBuffer.get();
+        gl.glUseProgram(shader.getShaderProgram());
+
+        // Rendering characteristics / 'draw' state.
         gl.glDisable(GL2.GL_CULL_FACE);
         gl.glFrontFace(GL2.GL_CW);
         reportError(gl, "Display of axes-actor cull-face");
@@ -76,44 +117,41 @@ public class DirectionalReferenceAxesActor implements GLActor {
         gl.glDisable(GL2.GL_LIGHTING);
         reportError(gl, "Display of axes-actor lighting 3");
         setRenderMode(gl, true);
-
+        
         gl.glEnable(GL2.GL_LINE_SMOOTH);                     // May not be in v2
         gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);   // May not be in v2
+
+        gl.glLineWidth(1.0f);
+        reportError(gl, "Display of axes-actor end characteristics");
+
+        // Deal with positioning matrices here, rather than in the renderer.
+        matrixManager.recalculate(gl);
+
+        shader.setUniformMatrix4v(gl, DirectionalReferenceAxesShader.PROJECTION_UNIFORM_NAME, false, context.getPerspectiveMatrix());
+        shader.setUniformMatrix4v(gl, DirectionalReferenceAxesShader.MODEL_VIEW_UNIFORM_NAME, false, context.getModelViewMatrix());
+
+        shader.setUniform4fv(gl, DirectionalReferenceAxesShader.COLOR_UNIFORM_NAME, getColor());
+        reportError(gl, "Display of axes-actor uniforms");
 
         // Draw the little lines.
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, lineBufferHandle);
         reportError(gl, "Display of axes-actor 1");
 
-        float alpha = 1.0f;
-        float[] color = new float[3];
-        if (volumeModel.isWhiteBackground()) {
-            color[ 0] = 1.0f;
-            color[ 1] = 0.85f;
-            color[ 2] = 0.85f;
-        } else {
-            color[ 0] = 0.30f;
-            color[ 1] = 0.15f;
-            color[ 2] = 0.15f;
-        }
-
-        gl.glLineWidth(1.0f);
-        gl.glColor4f(color[ 0 ], color[ 1 ], color[ 2 ], alpha);
+        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);  // Prob: not in v2.
         reportError(gl, "Display of axes-actor 2");
 
-        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);  // Prob: not in v2.
+        // 3 floats per coord. Stride is 0, offset to first is 0.
+        gl.glEnableVertexAttribArray( shader.getVertexAttribLoc() );
+        gl.glVertexAttribPointer(lineBufferHandle, 3, GL2.GL_FLOAT, false, 0, 0);
         reportError(gl, "Display of axes-actor 3");
 
-        // 3 floats per coord. Stride is 0, offset to first is 0.
-        gl.glEnableVertexAttribArray( lineBufferHandle );
-        gl.glVertexAttribPointer(vertexAttribLoc, 3, GL2.GL_FLOAT, false, 0, 0);
-        reportError(gl, "Display of axes-actor 4");
-
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
-        reportError(gl, "Display of axes-actor 4a.");
+        reportError(gl, "Display of axes-actor 4.");
 
         gl.glDrawElements(GL2.GL_LINES, lineBufferVertexCount, GL2.GL_UNSIGNED_INT, 0);
         reportError(gl, "Display of axes-actor 5");
 
+        // Tear down 'draw' state.
         gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);   // Prob: not in v2
         gl.glDisable(GL2.GL_LINE_SMOOTH);               // May not be in v2
         reportError(gl, "Display of axes-actor 6");
@@ -124,6 +162,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
         setRenderMode(gl, false);
         reportError(gl, "Axes-actor, end of display.");
 
+        // Switch back to previous shader.
         gl.glUseProgram(previousShader);
 
     }
@@ -135,15 +174,16 @@ public class DirectionalReferenceAxesActor implements GLActor {
 
     @Override
     public void init(GLAutoDrawable glDrawable) {
-        GL2 gl = glDrawable.getGL().getGL2();
+        GL2GL3 gl = glDrawable.getGL().getGL2GL3();
 
-        if (bBuffersNeedUpload) {
+        if (! bIsInitialized) {
             try {
-                // Uploading buffers sufficient to draw the axes, ticks, etc.
+                // Initialize the shader.
+                shaderInitialize(gl);
+                // Uploading buffers sufficient to draw the axes, etc.
                 buildBuffers(gl);
 
-                bBuffersNeedUpload = false;
-                vertexAttribLoc = gl.glGetAttribLocation(shaderLoc, "vertexAttribute");
+                bIsInitialized = true;
             } catch (Exception ex) {
                 SessionMgr.getSessionMgr().handleException(ex);
             }
@@ -153,10 +193,20 @@ public class DirectionalReferenceAxesActor implements GLActor {
 
     @Override
     public void dispose(GLAutoDrawable glDrawable) {
-        bBuffersNeedUpload = true;
+        bIsInitialized = false;
+    }
+    
+    private void shaderInitialize(GL2GL3 gl) throws ShaderCreationException {
+        if ( shader == null ) {
+            shader = new DirectionalReferenceAxesShader();
+            shader.init(gl.getGL2());
+            shader.setUniform4fv(gl, DirectionalReferenceAxesShader.COLOR_UNIFORM_NAME, getColor());
+
+            reportError(gl.getGL2(), "Obtaining the in-shader locations-1.");
+        }
     }
 
-    private void buildBuffers(GL2 gl) {
+    private void buildBuffers(GL2GL3 gl) {
         Geometry axisGeometries = new Geometry(createAxisGeometry(), createAxisIndices(0));
         // Get these buffers.
         IntBuffer indexBuf = bufferAxisIndices(axisGeometries);
@@ -168,53 +218,53 @@ public class DirectionalReferenceAxesActor implements GLActor {
         inxBufferHandle = createBufferHandle(gl);
 
         // Bind data to the handle, and upload it to the GPU.
-        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, lineBufferHandle);
-        reportError(gl, "Bind buffer");
+        gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, lineBufferHandle);
+        reportError(gl.getGL2(), "Bind buffer");
         gl.glBufferData(
-                GL2.GL_ARRAY_BUFFER,
+                GL2GL3.GL_ARRAY_BUFFER,
                 (long) (vtxBuf.capacity() * (Float.SIZE / 8)),
                 vtxBuf,
-                GL2.GL_STATIC_DRAW
+                GL2GL3.GL_STATIC_DRAW
         );
-        reportError(gl, "Buffer Data");
+        reportError(gl.getGL2(), "Buffer Data");
 
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
-        reportError(gl, "Bind Inx Buf");
+        reportError(gl.getGL2(), "Bind Inx Buf");
 
         gl.glBufferData(
-                GL2.GL_ELEMENT_ARRAY_BUFFER,
+                GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
                 (long) (indexBuf.capacity() * (Integer.SIZE / 8)),
                 indexBuf,
-                GL2.GL_STATIC_DRAW
+                GL2GL3.GL_STATIC_DRAW
         );
     }
 
-    private void createBoundingBox(Placement placement, BoundingBox3d parentBoundingBox, float[] screenSize) {
+    private void createBoundingBox(Placement placement, BoundingBox3d parentBoundingBox, float[] onscreenSize) {
         double minZ = parentBoundingBox.getMinZ();
         boundingBox = new BoundingBox3d();
         switch (placement) {
             case TOP_LEFT:
                 boundingBox.include(new Vec3(parentBoundingBox.getMinX(), parentBoundingBox.getMaxY(), minZ));
-                boundingBox.include(new Vec3(parentBoundingBox.getMinX() + screenSize[0], parentBoundingBox.getMaxY() - screenSize[1], minZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMinX() + onscreenSize[0], parentBoundingBox.getMaxY() - onscreenSize[1], minZ));
                 break;
             case TOP_RIGHT:
                 boundingBox.include(new Vec3(parentBoundingBox.getMaxX(), parentBoundingBox.getMaxY(), minZ));
-                boundingBox.include(new Vec3(parentBoundingBox.getMaxX() - screenSize[0], parentBoundingBox.getMaxY() - screenSize[1], minZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMaxX() - onscreenSize[0], parentBoundingBox.getMaxY() - onscreenSize[1], minZ));
                 break;
             case BOTTOM_LEFT:
                 boundingBox.include(new Vec3(parentBoundingBox.getMinX(), parentBoundingBox.getMinY(), minZ));
-                boundingBox.include(new Vec3(parentBoundingBox.getMinX() + screenSize[0], parentBoundingBox.getMinY() + screenSize[1], minZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMinX() + onscreenSize[0], parentBoundingBox.getMinY() + onscreenSize[1], minZ));
                 break;
             case BOTTOM_RIGHT:
                 boundingBox.include(new Vec3(parentBoundingBox.getMaxX(), parentBoundingBox.getMinY(), minZ));
-                boundingBox.include(new Vec3(parentBoundingBox.getMaxX() - screenSize[0], parentBoundingBox.getMinY() + screenSize[1], minZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMaxX() - onscreenSize[0], parentBoundingBox.getMinY() + onscreenSize[1], minZ));
                 break;
             default:
                 break;
         }
     }
 
-    private int createBufferHandle(GL2 gl) {
+    private int createBufferHandle(GL2GL3 gl) {
         gl.glGenBuffers(1, handleArr, 0);
         return handleArr[ 0];
     }
@@ -253,11 +303,13 @@ public class DirectionalReferenceAxesActor implements GLActor {
 
     private int[] createAxisIndices(int indexOffset) {
         // 2 coord sets per line; 3 axis lines
-        int coordsPerAxis = 3 * 2;
+        int coordsPerPrimitive = 2;
+        int axisCount = 3;
+        int coordsPerAxis = axisCount * coordsPerPrimitive;
         int[] indices = new int[coordsPerAxis];
-        for (int i = 0; i < 3; i++) {
-            indices[ 2 * i] = 2 * i + indexOffset;
-            indices[ 2 * i + 1] = 2 * i + 1 + indexOffset;
+        for (int i = 0; i < axisCount; i++) {
+            indices[ coordsPerPrimitive * i] = coordsPerPrimitive * i + indexOffset;
+            indices[ coordsPerPrimitive * i + 1] = coordsPerPrimitive * i + 1 + indexOffset;
         }
 
         return indices;
