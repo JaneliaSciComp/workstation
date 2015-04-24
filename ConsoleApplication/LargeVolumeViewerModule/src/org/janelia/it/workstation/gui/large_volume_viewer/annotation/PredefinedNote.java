@@ -3,6 +3,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * this enum defines the predefined notes that a user can add to
  * our geometric annotations
@@ -27,6 +30,20 @@ public enum PredefinedNote {
     ;
 
     private final String noteText;
+
+    /**
+     * given a string, identify any PredefinedNotes whose text
+     * is included in the string; returns a list of such notes
+     */
+    public static List<PredefinedNote> findNotes(String noteText) {
+        List<PredefinedNote> foundNotes = new ArrayList<>();
+        for (PredefinedNote note: PredefinedNote.values()) {
+            if (noteText.contains(note.getNoteText())) {
+                foundNotes.add(note);
+            }
+        }
+        return foundNotes;
+    }
 
     PredefinedNote(String noteText) {
         this.noteText = noteText;
