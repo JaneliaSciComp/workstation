@@ -84,6 +84,8 @@ public class FilteredAnnotationList extends JPanel {
 
 
         // single-click selects annotation
+        // NOTE: I suspect this could (or even should) go into the mouse
+        //  listener alongside the double-click action below
         filteredTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -186,7 +188,10 @@ public class FilteredAnnotationList extends JPanel {
 
         // table
         filteredTable = new JTable(model);
-        filteredTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // we respond to clicks, but we're not really selecting rows
+        filteredTable.setRowSelectionAllowed(false);
+
 
         // bit inelegant, but hand-tune some widths (default is 75):
         // ...and seems to be ignored, ugh

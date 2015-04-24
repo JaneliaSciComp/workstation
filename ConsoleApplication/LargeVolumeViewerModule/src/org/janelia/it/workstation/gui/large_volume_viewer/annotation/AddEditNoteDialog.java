@@ -54,9 +54,9 @@ public class AddEditNoteDialog extends JDialog {
                     // merge with existing note, if there is one
                     if (inputText.length() > 0) {
                         if (!inputText.endsWith(" ")) {
-                            outputText = inputText + " " + predefNote.getNoteText();
+                            outputText = entryField.getText() + " " + predefNote.getNoteText();
                         } else {
-                            outputText = inputText + predefNote.getNoteText();
+                            outputText = entryField.getText() + predefNote.getNoteText();
                         }
                     } else {
                         outputText = predefNote.getNoteText();
