@@ -67,6 +67,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     public DomainExplorerTopComponent() {
         initComponents();
         beanTreeView.setDefaultActionAllowed(false);
+        beanTreeView.setRootVisible(false);
         
         setName(Bundle.CTL_DomainExplorerTopComponent());
         setToolTipText(Bundle.HINT_DomainExplorerTopComponent());
@@ -154,6 +155,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         
         // Share the root context with the browser
         DomainBrowserTopComponent browser = (DomainBrowserTopComponent)WindowLocator.getByName(DomainBrowserTopComponent.TC_NAME);
+        // TODO: make this work if the domain browser is not opened by default
         browser.getExplorerManager().setRootContext(mgr.getRootContext());
         
     }
@@ -170,7 +172,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         toolBar = new javax.swing.JToolBar();
         workspaceCombo = new javax.swing.JComboBox();
         refreshButton = new javax.swing.JButton();
-        viewToggleButton = new javax.swing.JToggleButton();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
 
         toolBar.setRollover(true);
@@ -194,18 +195,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             }
         });
         toolBar.add(refreshButton);
-
-        org.openide.awt.Mnemonics.setLocalizedText(viewToggleButton, org.openide.util.NbBundle.getMessage(DomainExplorerTopComponent.class, "DomainExplorerTopComponent.viewToggleButton.text")); // NOI18N
-        viewToggleButton.setToolTipText(org.openide.util.NbBundle.getMessage(DomainExplorerTopComponent.class, "DomainExplorerTopComponent.viewToggleButton.toolTipText")); // NOI18N
-        viewToggleButton.setFocusable(false);
-        viewToggleButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        viewToggleButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        viewToggleButton.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                viewToggleButtonItemStateChanged(evt);
-            }
-        });
-        toolBar.add(viewToggleButton);
         toolBar.add(filler1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -235,34 +224,16 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
     }//GEN-LAST:event_workspaceComboItemStateChanged
 
-    private static boolean showNeuronView = false;
-
-    public static boolean isShowNeurons() {
-        return showNeuronView;
-    }
 
     private void refreshButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_refreshButtonActionPerformed
         loadWorkspaces();
     }//GEN-LAST:event_refreshButtonActionPerformed
-
-    private void viewToggleButtonItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_viewToggleButtonItemStateChanged
-        try {
-            if (showNeuronView != viewToggleButton.isSelected()) {
-                showNeuronView = viewToggleButton.isSelected();
-                loadWorkspace(currWorkspace.getWorkspace());
-            }
-        }
-        catch (Exception e) {
-            log.error("Error changing view", e);
-        }
-    }//GEN-LAST:event_viewToggleButtonItemStateChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private org.openide.explorer.view.BeanTreeView beanTreeView;
     private javax.swing.Box.Filler filler1;
     private javax.swing.JButton refreshButton;
     private javax.swing.JToolBar toolBar;
-    private javax.swing.JToggleButton viewToggleButton;
     private javax.swing.JComboBox workspaceCombo;
     // End of variables declaration//GEN-END:variables
     @Override
@@ -319,6 +290,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     public void activateNode(Node node) {
+        log.info("activateNode: {}",node.getName());
         Node[] activatedNodes = new Node[1];
         activatedNodes[0] = node;
         

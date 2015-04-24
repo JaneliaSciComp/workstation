@@ -1,11 +1,21 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.BorderLayout;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import javax.swing.ActionMap;
 import javax.swing.text.DefaultEditorKit;
-import org.janelia.it.workstation.gui.browser.icongrid.node.NodeIconGridViewer;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.workstation.gui.browser.components.viewer.PaginatedResultsPanel;
+import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
+import org.janelia.it.workstation.gui.browser.search.ResultPage;
+import org.janelia.it.workstation.gui.browser.search.SearchResults;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -51,7 +61,7 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
     
     private final static Logger log = LoggerFactory.getLogger(DomainBrowserTopComponent.class);
     
-    private final NodeIconGridViewer iconGridViewer;
+    private final PaginatedResultsPanel resultsPanel;
     
     private Lookup.Result<AbstractNode> result = null;
     
@@ -59,8 +69,14 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
     
     public DomainBrowserTopComponent() {
         initComponents();
-        iconGridViewer = new NodeIconGridViewer();
-        mainPanel.add(iconGridViewer, BorderLayout.CENTER);
+        
+        resultsPanel = new PaginatedResultsPanel() {
+            @Override
+            protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
+                return searchResults.getPage(page);
+            }
+        };
+        mainPanel.add(resultsPanel, BorderLayout.CENTER);
         
         setName(Bundle.CTL_DomainBrowserTopComponent());
         setToolTipText(Bundle.HINT_DomainBrowserTopComponent());
@@ -138,10 +154,52 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
         if (!allNodes.isEmpty()) {
             final Node obj = allNodes.iterator().next();
             log.trace("Setting context object on IconGridViewer to "+obj.getDisplayName());
-            iconGridViewer.setContextObject(obj);
+            
+            SimpleWorker childLoadingWorker = new SimpleWorker() {
+
+                private List<DomainObject> domainObjects;
+                private List<Annotation> annotations;
+
+                @Override
+                protected void doStuff() throws Exception {
+                    log.debug("Getting children...");
+                    DomainDAO dao = DomainExplorerTopComponent.getDao();
+                    if (obj instanceof ObjectSetNode) {
+                        ObjectSetNode objectSetNode = (ObjectSetNode)obj;
+                        domainObjects = dao.getDomainObjects(SessionMgr.getSubjectKey(), objectSetNode.getObjectSet());
+                        List<Long> ids = new ArrayList<>();
+                        for(DomainObject domainObject : domainObjects) {
+                            ids.add(domainObject.getId());
+                        }
+                        annotations = dao.getAnnotations(SessionMgr.getSubjectKey(), ids);
+                        log.debug("  Showing "+domainObjects.size()+" items");
+                    }
+                    else {
+                        log.debug("  This is not something we can load");
+                    }
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    if (domainObjects==null || domainObjects.isEmpty()) {
+                        resultsPanel.showNothing();
+                        return;
+                    }
+                    SearchResults searchResults = SearchResults.paginate(domainObjects, annotations);
+                    resultsPanel.showSearchResults(searchResults);
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+
+            childLoadingWorker.execute();
+            
         } 
         else {
-            iconGridViewer.setContextObject(null);
+            resultsPanel.showNothing();
         }
     }
 

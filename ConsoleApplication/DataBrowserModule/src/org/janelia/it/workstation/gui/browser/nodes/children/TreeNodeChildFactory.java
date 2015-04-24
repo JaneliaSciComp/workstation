@@ -70,10 +70,15 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             for(Reference reference : treeNode.getChildren()) {
                 DomainObject obj = map.get(reference.getTargetId());
                 if (obj!=null) {
-                    temp.add(obj);
+                    if (TreeNode.class.isAssignableFrom(obj.getClass())) {
+                        temp.add(obj);
+                    }
+                    else if (ObjectSet.class.isAssignableFrom(obj.getClass())) {
+                        temp.add(obj);
+                    }
                 }
                 else {
-                    temp.add(new DeadReference(reference));
+                    //temp.add(new DeadReference(reference));
                 }
             }
         }
@@ -81,7 +86,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         list.addAll(temp);
         return true;
     }
-
+    
     @Override
     protected Node createNodeForKey(DomainObject key) {
         try {
@@ -90,33 +95,36 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             if (TreeNode.class.isAssignableFrom(key.getClass())) {
                 return new TreeNodeNode(this, (TreeNode)key);
             }
-            if (ObjectSet.class.isAssignableFrom(key.getClass())) {
+            else if (ObjectSet.class.isAssignableFrom(key.getClass())) {
                 return new ObjectSetNode(this, (ObjectSet)key);
             }
-            else if (Sample.class.isAssignableFrom(key.getClass())) {
-                return new SampleNode(this, (Sample)key);
-            }
-            else if (NeuronFragment.class.isAssignableFrom(key.getClass())) {
-                return new NeuronFragmentNode(this, (NeuronFragment)key);
-            }
-            else if (LSMImage.class.isAssignableFrom(key.getClass())) {
-                return new LSMImageNode(this, (LSMImage)key);
-            }
-            else if (ScreenSample.class.isAssignableFrom(key.getClass())) {
-                return new ScreenSampleNode(this, (ScreenSample)key);
-            }
-            else if (FlyLine.class.isAssignableFrom(key.getClass())) {
-                return new FlyLineNode(this, (FlyLine)key);
-            }
-            else if (CompartmentSet.class.isAssignableFrom(key.getClass())) {
-                return new CompartmentSetNode(this, (CompartmentSet)key);
-            }
-            else if (DeadReference.class.isAssignableFrom(key.getClass())) {
-                return new DeadReferenceNode(this, (DeadReference)key);
-            }
             else {
-                log.warn("Cannot handle type: " + key.getClass().getName());
+                return null;
             }
+//            else if (Sample.class.isAssignableFrom(key.getClass())) {
+//                return new SampleNode(this, (Sample)key);
+//            }
+//            else if (NeuronFragment.class.isAssignableFrom(key.getClass())) {
+//                return new NeuronFragmentNode(this, (NeuronFragment)key);
+//            }
+//            else if (LSMImage.class.isAssignableFrom(key.getClass())) {
+//                return new LSMImageNode(this, (LSMImage)key);
+//            }
+//            else if (ScreenSample.class.isAssignableFrom(key.getClass())) {
+//                return new ScreenSampleNode(this, (ScreenSample)key);
+//            }
+//            else if (FlyLine.class.isAssignableFrom(key.getClass())) {
+//                return new FlyLineNode(this, (FlyLine)key);
+//            }
+//            else if (CompartmentSet.class.isAssignableFrom(key.getClass())) {
+//                return new CompartmentSetNode(this, (CompartmentSet)key);
+//            }
+//            else if (DeadReference.class.isAssignableFrom(key.getClass())) {
+//                return new DeadReferenceNode(this, (DeadReference)key);
+//            }
+//            else {
+//                log.warn("Cannot handle type: " + key.getClass().getName());
+//            }
         }
         catch (Exception e) {
             log.error("Error creating node for key " + key, e);

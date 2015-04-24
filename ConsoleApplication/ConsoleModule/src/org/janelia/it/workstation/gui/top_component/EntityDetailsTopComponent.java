@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = true, position = 20)
+@TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = false, position = 20)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.EntityDetailsTopComponent")
 @ActionReference(path = "Menu/Window", position = 20)
 @TopComponent.OpenActionRegistration(

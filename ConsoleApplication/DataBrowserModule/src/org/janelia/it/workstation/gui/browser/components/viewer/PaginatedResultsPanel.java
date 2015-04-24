@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.components.viewer;
 
+import de.javasoft.swing.SimpleDropDownButton;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -10,7 +11,9 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.UIManager;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
@@ -49,6 +52,8 @@ public abstract class PaginatedResultsPanel extends JPanel {
     protected final JButton selectAllButton;
     protected final JLabel pagingStatusLabel;
     
+    private SimpleDropDownButton viewTypeButton;
+    
     // Result view
     protected AnnotatedDomainObjectListViewer resultsView;
     
@@ -70,6 +75,9 @@ public abstract class PaginatedResultsPanel extends JPanel {
         splashPanel = new JLabel(Icons.getIcon("workstation_logo_white.png"));
         add(splashPanel);
         
+        viewTypeButton = new SimpleDropDownButton("Choose Viewer...");
+        viewTypeButton.setPopupMenu(getViewerPopupMenu());
+
         prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
         prevPageButton.setToolTipText("Back A Page");
         prevPageButton.addActionListener(new ActionListener() {
@@ -129,12 +137,13 @@ public abstract class PaginatedResultsPanel extends JPanel {
         statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.LINE_AXIS));
         statusBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, (Color) UIManager.get("windowBorder")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
 
-        statusBar.add(Box.createRigidArea(new Dimension(10, 20)));
+        statusBar.add(viewTypeButton);
+        statusBar.add(Box.createHorizontalGlue());
+        statusBar.add(new JSeparator(JSeparator.VERTICAL));
         statusBar.add(statusLabel);
         statusBar.add(Box.createRigidArea(new Dimension(10, 20)));
         statusBar.add(selectionButtonContainer);
         statusBar.add(new JSeparator(JSeparator.VERTICAL));
-        statusBar.add(Box.createHorizontalGlue());
         statusBar.add(pagingStatusLabel);
         statusBar.add(Box.createRigidArea(new Dimension(10, 20)));
         statusBar.add(startPageButton);
@@ -176,12 +185,65 @@ public abstract class PaginatedResultsPanel extends JPanel {
         };
         
         ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+        
+        setViewerType(ViewerType.IconViewer);
     }
     
-    public void setViewer(AnnotatedDomainObjectListViewer viewer) {
+    private JPopupMenu getViewerPopupMenu() {
+
+        JPopupMenu popupMenu = new JPopupMenu();
+        popupMenu.setLightWeightPopupEnabled(true);
+
+        JMenuItem iconViewItem = new JMenuItem("Icon View");
+        iconViewItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                setViewerType(ViewerType.IconViewer);
+            }
+        });
+        popupMenu.add(iconViewItem);
+
+        JMenuItem tableViewItem = new JMenuItem("Table View");
+        tableViewItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                setViewerType(ViewerType.TableViewer);
+            }
+        });
+        popupMenu.add(tableViewItem);
+
+        JMenuItem hybridViewIcon = new JMenuItem("Hybrid View");
+        hybridViewIcon.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                setViewerType(ViewerType.HybridViewer);
+            }
+        });
+        popupMenu.add(hybridViewIcon);
+
+        return popupMenu;
+    }
+    
+    private void setViewerType(ViewerType viewerType) {
+        this.viewTypeButton.setText(viewerType.getName());
+        try {
+            if (viewerType.getViewerClass()==null) {
+                setViewer(null);
+            }
+            else {
+                AnnotatedDomainObjectListViewer viewer = viewerType.getViewerClass().newInstance();
+                setViewer(viewer);
+            }
+        }
+        catch (InstantiationException | IllegalAccessException e) {
+            log.error("Error instantiating viewer class",e);
+            setViewer(null);
+        }
+        
+        updateResultsView();
+    }
+
+    private void setViewer(AnnotatedDomainObjectListViewer viewer) {
         this.resultsView = viewer;
     }
-    
+
     private void updatePagingStatus() {
         startPageButton.setEnabled(currPage != 0);
         prevPageButton.setEnabled(currPage > 0);
@@ -288,8 +350,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
 
             @Override
             protected void hadSuccess() {
-                showResultsView();
-                resultsView.showDomainObjects(resultPage);
+                updateResultsView();
             }
 
             @Override
@@ -300,6 +361,16 @@ public abstract class PaginatedResultsPanel extends JPanel {
         };
         
         worker.execute();
+    }
+    
+    private void updateResultsView() {
+        if (resultPage!=null) {
+            resultsView.showDomainObjects(resultPage);
+            showResultsView();
+        }
+        else {
+            showNothing();
+        }
     }
     
     protected abstract ResultPage getPage(SearchResults searchResults, int page) throws Exception;

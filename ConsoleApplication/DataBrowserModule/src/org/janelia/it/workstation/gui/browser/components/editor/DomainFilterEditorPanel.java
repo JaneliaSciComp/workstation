@@ -32,9 +32,6 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
-import org.janelia.it.workstation.gui.browser.components.icongrid.DomainObjectIconGridViewer;
-import org.janelia.it.workstation.gui.browser.components.table.DomainObjectTableViewer;
-import org.janelia.it.workstation.gui.browser.components.viewer.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.components.viewer.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.search.SearchResults;
@@ -67,54 +64,10 @@ public class DomainFilterEditorPanel extends JPanel {
     protected SolrQuery query;
     protected SearchResults searchResults;
 
-    private enum ViewerType {
-        
-        IconViewer("Icon View", DomainObjectIconGridViewer.class),
-        TableViewer("Table View", DomainObjectTableViewer.class),
-        HybridViewer("Hybrid View", null);
-        
-        private final String name;
-        private final Class<? extends AnnotatedDomainObjectListViewer> viewerClass;
-
-        ViewerType(String name, Class<? extends AnnotatedDomainObjectListViewer> viewerClass) {
-            this.name = name;
-            this.viewerClass = viewerClass;
-        }
-
-        public String getName() {
-            return name;
-        }
-        
-        public Class<? extends AnnotatedDomainObjectListViewer> getViewerClass() {
-            return viewerClass;
-        }
-    };
-
-    private SimpleDropDownButton viewTypeButton;
     private SimpleDropDownButton addFilterButton;
 
-    private void setViewerType(ViewerType viewerType) {
-        this.viewTypeButton.setText(viewerType.getName());
-        try {
-            if (viewerType.getViewerClass()==null) {
-                resultsPanel.setViewer(null);
-            }
-            else {
-                AnnotatedDomainObjectListViewer viewer = viewerType.getViewerClass().newInstance();
-                resultsPanel.setViewer(viewer);
-            }
-        }
-        catch (InstantiationException | IllegalAccessException e) {
-            log.error("Error instantiating viewer class",e);
-            resultsPanel.setViewer(null);
-        }
-        updateView();
-    }
 
     public DomainFilterEditorPanel() {
-
-        this.viewTypeButton = new SimpleDropDownButton("Choose Viewer...");
-        viewTypeButton.setPopupMenu(getViewerPopupMenu());
 
         this.addFilterButton = new SimpleDropDownButton("Add Filter...");
         addFilterButton.setPopupMenu(getAddFilterMenu());
@@ -123,7 +76,6 @@ public class DomainFilterEditorPanel extends JPanel {
         filterTaskPane.setTitle("Filters");
 
         JPanel optionPanel = new JPanel();
-        optionPanel.add(viewTypeButton);
 
         this.optionsTaskPane = new JYTaskPane();
         optionsTaskPane.setTitle("Options");
@@ -154,42 +106,8 @@ public class DomainFilterEditorPanel extends JPanel {
         add(searchResultsPanel, BorderLayout.CENTER);
 
         loadSavedSearch(new SavedSearch());
-        
-        setViewerType(ViewerType.IconViewer);
     }
-
-    private JPopupMenu getViewerPopupMenu() {
-
-        JPopupMenu popupMenu = new JPopupMenu();
-        popupMenu.setLightWeightPopupEnabled(true);
-
-        JMenuItem iconViewItem = new JMenuItem("Icon View");
-        iconViewItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                setViewerType(ViewerType.IconViewer);
-            }
-        });
-        popupMenu.add(iconViewItem);
-
-        JMenuItem tableViewItem = new JMenuItem("Table View");
-        tableViewItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                setViewerType(ViewerType.TableViewer);
-            }
-        });
-        popupMenu.add(tableViewItem);
-
-        JMenuItem hybridViewIcon = new JMenuItem("Hybrid View");
-        hybridViewIcon.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                setViewerType(ViewerType.HybridViewer);
-            }
-        });
-        popupMenu.add(hybridViewIcon);
-
-        return popupMenu;
-    }
-
+    
     private JPopupMenu getAddFilterMenu() {
 
         JPopupMenu addFilterMenu = new JPopupMenu();

@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "properties", openAtStartup = true, position = 0)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position = 0)
 @ActionID(category = "Window", id = "OntologyViewerTopComponent")
 @ActionReference(path = "Menu/Window", position = 40)
 @TopComponent.OpenActionRegistration(

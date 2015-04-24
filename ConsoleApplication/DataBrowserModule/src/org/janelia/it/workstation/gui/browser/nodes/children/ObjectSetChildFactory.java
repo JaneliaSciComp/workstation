@@ -1,32 +1,10 @@
 package org.janelia.it.workstation.gui.browser.nodes.children;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.screen.FlyLine;
-import org.janelia.it.jacs.model.domain.screen.ScreenSample;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
-import org.janelia.it.workstation.gui.browser.model.DeadReference;
-import org.janelia.it.workstation.gui.browser.nodes.CompartmentSetNode;
-import org.janelia.it.workstation.gui.browser.nodes.DeadReferenceNode;
-import org.janelia.it.workstation.gui.browser.nodes.FlyLineNode;
-import org.janelia.it.workstation.gui.browser.nodes.LSMImageNode;
-import org.janelia.it.workstation.gui.browser.nodes.NeuronFragmentNode;
-import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
-import org.janelia.it.workstation.gui.browser.nodes.SampleNode;
-import org.janelia.it.workstation.gui.browser.nodes.ScreenSampleNode;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,74 +26,75 @@ public class ObjectSetChildFactory extends TreeNodeChildFactory {
     
     @Override
     protected boolean createKeys(List<DomainObject> list) {
-        ObjectSet objectSet = objectSetRef.get();
-        if (objectSet==null) return false;
-        log.trace("Creating children keys for {}",objectSet.getName());   
-        
-        DomainDAO dao = DomainExplorerTopComponent.getDao();
-        List<DomainObject> members = dao.getDomainObjects(SessionMgr.getSubjectKey(), objectSet);
-        if (members.size()!=objectSet.getNumMembers()) {
-            log.info("Got {} children but expected {}",members.size(),objectSet.getNumMembers());   
-        }
-        
-        Map<Long,DomainObject> map = new HashMap<Long,DomainObject>();
-        for (DomainObject obj : members) {
-            map.put(obj.getId(), obj);
-        }
-        
-        List<DomainObject> temp = new ArrayList<DomainObject>();
-        if (objectSet.getMembers()!=null) {
-            for(Long memberId : objectSet.getMembers()) {
-                DomainObject obj = map.get(memberId);
-                if (obj!=null) {
-                    temp.add(obj);
-                }
-                else {
-                    temp.add(new DeadReference(new Reference(objectSet.getTargetType(), memberId)));
-                }
-            }
-        }
-        
-        list.addAll(temp);
-        return true;
+//        ObjectSet objectSet = objectSetRef.get();
+//        if (objectSet==null) return false;
+//        log.trace("Creating children keys for {}",objectSet.getName());   
+//        
+//        DomainDAO dao = DomainExplorerTopComponent.getDao();
+//        List<DomainObject> members = dao.getDomainObjects(SessionMgr.getSubjectKey(), objectSet);
+//        if (members.size()!=objectSet.getNumMembers()) {
+//            log.info("Got {} children but expected {}",members.size(),objectSet.getNumMembers());   
+//        }
+//        
+//        Map<Long,DomainObject> map = new HashMap<Long,DomainObject>();
+//        for (DomainObject obj : members) {
+//            map.put(obj.getId(), obj);
+//        }
+//        
+//        List<DomainObject> temp = new ArrayList<DomainObject>();
+//        if (objectSet.getMembers()!=null) {
+//            for(Long memberId : objectSet.getMembers()) {
+//                DomainObject obj = map.get(memberId);
+//                if (obj!=null) {
+//                    temp.add(obj);
+//                }
+//                else {
+//                    temp.add(new DeadReference(new Reference(objectSet.getTargetType(), memberId)));
+//                }
+//            }
+//        }
+//        
+//        list.addAll(temp);
+//        return true;
+        return false;
     }
 
     @Override
     protected Node createNodeForKey(DomainObject key) {
-        try {
-            // TODO: would be nice to do this dynamically, 
-            // or at least with some sort of annotation
-            if (ObjectSet.class.isAssignableFrom(key.getClass())) {
-                return new ObjectSetNode(this, (ObjectSet)key);
-            }
-            else if (Sample.class.isAssignableFrom(key.getClass())) {
-                return new SampleNode(this, (Sample)key);
-            }
-            else if (NeuronFragment.class.isAssignableFrom(key.getClass())) {
-                return new NeuronFragmentNode(this, (NeuronFragment)key);
-            }
-            else if (LSMImage.class.isAssignableFrom(key.getClass())) {
-                return new LSMImageNode(this, (LSMImage)key);
-            }
-            else if (ScreenSample.class.isAssignableFrom(key.getClass())) {
-                return new ScreenSampleNode(this, (ScreenSample)key);
-            }
-            else if (FlyLine.class.isAssignableFrom(key.getClass())) {
-                return new FlyLineNode(this, (FlyLine)key);
-            }
-            else if (CompartmentSet.class.isAssignableFrom(key.getClass())) {
-                return new CompartmentSetNode(this, (CompartmentSet)key);
-            }
-            else if (DeadReference.class.isAssignableFrom(key.getClass())) {
-                return new DeadReferenceNode(this, (DeadReference)key);
-            }
-            else {
-                log.warn("Cannot handle type: " + key.getClass().getName());
-            }
-        }
-        catch (Exception e) {
-            log.error("Error creating node for key " + key, e);
-        }
+//        try {
+//            // TODO: would be nice to do this dynamically, 
+//            // or at least with some sort of annotation
+//            if (ObjectSet.class.isAssignableFrom(key.getClass())) {
+//                return new ObjectSetNode(this, (ObjectSet)key);
+//            }
+//            else if (Sample.class.isAssignableFrom(key.getClass())) {
+//                return new SampleNode(this, (Sample)key);
+//            }
+//            else if (NeuronFragment.class.isAssignableFrom(key.getClass())) {
+//                return new NeuronFragmentNode(this, (NeuronFragment)key);
+//            }
+//            else if (LSMImage.class.isAssignableFrom(key.getClass())) {
+//                return new LSMImageNode(this, (LSMImage)key);
+//            }
+//            else if (ScreenSample.class.isAssignableFrom(key.getClass())) {
+//                return new ScreenSampleNode(this, (ScreenSample)key);
+//            }
+//            else if (FlyLine.class.isAssignableFrom(key.getClass())) {
+//                return new FlyLineNode(this, (FlyLine)key);
+//            }
+//            else if (CompartmentSet.class.isAssignableFrom(key.getClass())) {
+//                return new CompartmentSetNode(this, (CompartmentSet)key);
+//            }
+//            else if (DeadReference.class.isAssignableFrom(key.getClass())) {
+//                return new DeadReferenceNode(this, (DeadReference)key);
+//            }
+//            else {
+//                log.warn("Cannot handle type: " + key.getClass().getName());
+//            }
+//        }
+//        catch (Exception e) {
+//            log.error("Error creating node for key " + key, e);
+//        }
         return null;
     }
     

@@ -3,25 +3,16 @@ package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
 import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
-import org.janelia.it.workstation.gui.browser.nodes.children.ObjectSetChildFactory;
 import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.nodes.Children;
-import org.openide.nodes.Index;
-import org.openide.nodes.Node;
-import org.openide.nodes.NodeTransfer;
 import org.openide.util.datatransfer.PasteType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,47 +21,8 @@ public class ObjectSetNode extends DomainObjectNode {
     
     private final static Logger log = LoggerFactory.getLogger(ObjectSetNode.class);
     
-    private final ObjectSetChildFactory childFactory;
-    
     public ObjectSetNode(TreeNodeChildFactory parentChildFactory, ObjectSet objectSet) throws Exception {
-        this(parentChildFactory, objectSet.getNumMembers()==0?null:new ObjectSetChildFactory(objectSet), objectSet);
-    }
-    
-    private ObjectSetNode(TreeNodeChildFactory parentChildFactory, final ObjectSetChildFactory childFactory, ObjectSet objectSet) throws Exception {
-        super(parentChildFactory, objectSet.getNumMembers()==0?Children.LEAF:Children.create(childFactory, true), objectSet);
-        this.childFactory = childFactory;
-        if (objectSet.getNumMembers()>0) {
-            getLookupContents().add(new Index.Support() {
-                @Override
-                public Node[] getNodes() {
-                    return getChildren().getNodes();
-                }
-                @Override
-                public int getNodesCount() {
-                    return getNodes().length;
-                }
-                @Override
-                public void reorder(final int[] order) {
-                    SimpleWorker worker = new SimpleWorker() {
-                        @Override
-                        protected void doStuff() throws Exception {
-                            // TODO: imple,ent for object sets
-//                            DomainDAO dao = DomainExplorerTopComponent.getDao();
-//                            dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
-                        }
-                        @Override
-                        protected void hadSuccess() {
-                            childFactory.refresh();
-                        }
-                        @Override
-                        protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
-                        }
-                    };
-                    worker.execute();
-                }
-            });
-        }
+        super(parentChildFactory, Children.LEAF, objectSet);
     }
     
     public ObjectSet getObjectSet() {
@@ -83,29 +35,18 @@ public class ObjectSetNode extends DomainObjectNode {
     }
     
     @Override
+    public String getExtraLabel() {
+        return "("+getObjectSet().getNumMembers()+")";
+    }
+    
+    @Override
     public Image getIcon(int type) {
-
-        String typeSuffix = "";
-        if (getObjectSet().getName().equals(EntityConstants.NAME_DATA_SETS)) {
-            typeSuffix = "_database";
-        }
-        else if (getObjectSet().getName().equals(EntityConstants.NAME_SHARED_DATA)) {
-            typeSuffix = "_user";
-        }
-        else {
-            typeSuffix = "_key";
-        }
-
         if (!getObjectSet().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
-            return Icons.getIcon("folder_blue"+typeSuffix+".png").getImage();
+            // TODO: add a blue version of this icon
+            return Icons.getIcon("folder_blue.png").getImage();
         }
         else {
-            if (getObjectSet().getName().equals(EntityConstants.NAME_ALIGNMENT_BOARDS)) {
-                return Icons.getIcon("folder_palette.png").getImage();
-            }
-            else {
-                return Icons.getIcon("folder"+typeSuffix+".png").getImage();    
-            }
+            return Icons.getIcon("folder_image.png").getImage();
         }
     }
     

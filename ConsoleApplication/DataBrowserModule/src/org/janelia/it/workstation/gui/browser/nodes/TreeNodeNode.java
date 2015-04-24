@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
@@ -82,29 +81,17 @@ public class TreeNodeNode extends DomainObjectNode {
     }
     
     @Override
+    public String getExtraLabel() {
+        return "("+getTreeNode().getNumChildren()+")";
+    }
+    
+    @Override
     public Image getIcon(int type) {
-
-        String typeSuffix = "";
-        if (getTreeNode().getName().equals(EntityConstants.NAME_DATA_SETS)) {
-            typeSuffix = "_database";
-        }
-        else if (getTreeNode().getName().equals(EntityConstants.NAME_SHARED_DATA)) {
-            typeSuffix = "_user";
-        }
-        else {
-            typeSuffix = "_key";
-        }
-
         if (!getTreeNode().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
-            return Icons.getIcon("folder_blue"+typeSuffix+".png").getImage();
+            return Icons.getIcon("folder_blue.png").getImage();
         }
         else {
-            if (getTreeNode().getName().equals(EntityConstants.NAME_ALIGNMENT_BOARDS)) {
-                return Icons.getIcon("folder_palette.png").getImage();
-            }
-            else {
-                return Icons.getIcon("folder"+typeSuffix+".png").getImage();    
-            }
+            return Icons.getIcon("folder.png").getImage();    
         }
     }
     

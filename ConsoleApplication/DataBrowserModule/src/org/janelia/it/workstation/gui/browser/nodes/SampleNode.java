@@ -2,14 +2,12 @@ package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
 import java.util.List;
+
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
-import org.janelia.it.workstation.gui.browser.nodes.children.NeuronNodeFactory;
 import org.janelia.it.workstation.gui.browser.nodes.children.ObjectiveNodeFactory;
 import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -22,10 +20,7 @@ public class SampleNode extends DomainObjectNode {
     private final static Logger log = LoggerFactory.getLogger(SampleNode.class);
     
     public SampleNode(TreeNodeChildFactory parentChildFactory, Sample sample) throws Exception {
-        super(parentChildFactory, 
-                DomainExplorerTopComponent.isShowNeurons()
-                        ?Children.create(new NeuronNodeFactory(sample), true)
-                        :Children.create(new ObjectiveNodeFactory(sample), true), sample);
+        super(parentChildFactory, Children.create(new ObjectiveNodeFactory(sample), true), sample);
     }
     
     private Sample getSample() {

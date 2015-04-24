@@ -98,6 +98,10 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
         return getDomainObject().getOwnerKey();
     }
 
+    public String getExtraLabel() {
+        return null;
+    }
+    
     @Override
     public boolean canCut() {
         return true;
@@ -161,6 +165,7 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
     public String getHtmlDisplayName() {
         String primary = getPrimaryLabel();
         String secondary = getSecondaryLabel();
+        String extra = getExtraLabel();
         StringBuilder sb = new StringBuilder();
         if (primary!=null) {
             sb.append("<font color='!Label.foreground'>");
@@ -168,9 +173,14 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
             sb.append("</font>");
         }
         if (secondary!=null) {
-            sb.append(" <font color='#957D47'><i>");
+            sb.append(" <font color='#957D47'>");
             sb.append(secondary);
-            sb.append("</i></font>");
+            sb.append("</font>");
+        }
+        if (extra!=null) {
+            sb.append(" <font color='#959595'>");
+            sb.append(extra);
+            sb.append("</font>");
         }
         return sb.toString();
     }

@@ -92,6 +92,12 @@ public class OntologyNode extends DomainObjectNode {
     }
     
     @Override
+    public String getExtraLabel() {
+        // TODO: implement keybinding display
+        return null;
+    }
+    
+    @Override
     public Image getIcon(int type) {
         return Icons.getIcon("folder.png").getImage();    
     }
