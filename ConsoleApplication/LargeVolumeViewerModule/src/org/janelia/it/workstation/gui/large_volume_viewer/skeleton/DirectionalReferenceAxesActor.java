@@ -142,7 +142,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
 
         // 3 floats per coord. Stride is 0, offset to first is 0.
         gl.glEnableVertexAttribArray( shader.getVertexAttribLoc() );
-        gl.glVertexAttribPointer(lineBufferHandle, 3, GL2.GL_FLOAT, false, 0, 0);
+        gl.glVertexAttribPointer(shader.getVertexAttribLoc(), 3, GL2.GL_FLOAT, false, 0, 0);
         reportError(gl, "Display of axes-actor 3");
 
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
@@ -209,9 +209,9 @@ public class DirectionalReferenceAxesActor implements GLActor {
     private void buildBuffers(GL2GL3 gl) {
         Geometry axisGeometries = new Geometry(createAxisGeometry(), createAxisIndices(0));
         // Get these buffers.
-        IntBuffer indexBuf = bufferAxisIndices(axisGeometries);
         FloatBuffer vtxBuf = bufferAxisGeometry(axisGeometries);
-        lineBufferVertexCount = vtxBuf.capacity();
+        IntBuffer indexBuf = bufferAxisIndices(axisGeometries);
+        lineBufferVertexCount = vtxBuf.capacity() / 3;
 
         // Now push them over to GPU.
         lineBufferHandle = createBufferHandle(gl);
@@ -240,24 +240,25 @@ public class DirectionalReferenceAxesActor implements GLActor {
     }
 
     private void createBoundingBox(Placement placement, BoundingBox3d parentBoundingBox, float[] onscreenSize) {
-        double minZ = parentBoundingBox.getMinZ();
+        double minZ = parentBoundingBox.getMinZ() - onscreenSize[2];
+        double maxZ = parentBoundingBox.getMinZ();
         boundingBox = new BoundingBox3d();
         switch (placement) {
             case TOP_LEFT:
                 boundingBox.include(new Vec3(parentBoundingBox.getMinX(), parentBoundingBox.getMaxY(), minZ));
-                boundingBox.include(new Vec3(parentBoundingBox.getMinX() + onscreenSize[0], parentBoundingBox.getMaxY() - onscreenSize[1], minZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMinX() + onscreenSize[0], parentBoundingBox.getMaxY() - onscreenSize[1], maxZ));
                 break;
             case TOP_RIGHT:
                 boundingBox.include(new Vec3(parentBoundingBox.getMaxX(), parentBoundingBox.getMaxY(), minZ));
-                boundingBox.include(new Vec3(parentBoundingBox.getMaxX() - onscreenSize[0], parentBoundingBox.getMaxY() - onscreenSize[1], minZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMaxX() - onscreenSize[0], parentBoundingBox.getMaxY() - onscreenSize[1], maxZ));
                 break;
             case BOTTOM_LEFT:
                 boundingBox.include(new Vec3(parentBoundingBox.getMinX(), parentBoundingBox.getMinY(), minZ));
-                boundingBox.include(new Vec3(parentBoundingBox.getMinX() + onscreenSize[0], parentBoundingBox.getMinY() + onscreenSize[1], minZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMinX() + onscreenSize[0], parentBoundingBox.getMinY() + onscreenSize[1], maxZ));
                 break;
             case BOTTOM_RIGHT:
                 boundingBox.include(new Vec3(parentBoundingBox.getMaxX(), parentBoundingBox.getMinY(), minZ));
-                boundingBox.include(new Vec3(parentBoundingBox.getMaxX() - onscreenSize[0], parentBoundingBox.getMinY() + onscreenSize[1], minZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMaxX() - onscreenSize[0], parentBoundingBox.getMinY() + onscreenSize[1], maxZ));
                 break;
             default:
                 break;
@@ -273,31 +274,32 @@ public class DirectionalReferenceAxesActor implements GLActor {
         // 3 coords per point; 2 points per axis; 3 axes.
         float[] rtnVal = new float[3 * 2 * 3];
         // Handle X axis.
-        rtnVal[0] = (float) boundingBox.getMinX();
-        rtnVal[1] = (float) boundingBox.getMinY();
-        rtnVal[2] = (float) boundingBox.getMinZ();
+        int index = 0;
+        rtnVal[index++] = (float) boundingBox.getMinX();
+        rtnVal[index++] = (float) boundingBox.getMinY();
+        rtnVal[index++] = (float) boundingBox.getMinZ();
 
-        rtnVal[3] = (float) boundingBox.getMaxX();
-        rtnVal[4] = (float) boundingBox.getMinY();
-        rtnVal[5] = (float) boundingBox.getMinZ();
+        rtnVal[index++] = (float) boundingBox.getMaxX();
+        rtnVal[index++] = (float) boundingBox.getMinY();
+        rtnVal[index++] = (float) boundingBox.getMinZ();
 
         // Handle Y axis.
-        rtnVal[6] = (float) boundingBox.getMinX();
-        rtnVal[7] = (float) boundingBox.getMinY();
-        rtnVal[8] = (float) boundingBox.getMinZ();
+        rtnVal[index++] = (float) boundingBox.getMinX();
+        rtnVal[index++] = (float) boundingBox.getMinY();
+        rtnVal[index++] = (float) boundingBox.getMinZ();
 
-        rtnVal[9] = (float) boundingBox.getMinX();
-        rtnVal[10] = (float) boundingBox.getMaxY();
-        rtnVal[10] = (float) boundingBox.getMinZ();
+        rtnVal[index++] = (float) boundingBox.getMinX();
+        rtnVal[index++] = (float) boundingBox.getMaxY();
+        rtnVal[index++] = (float) boundingBox.getMinZ();
 
         // Handle Z axis.
-        rtnVal[11] = (float) boundingBox.getMinX();
-        rtnVal[12] = (float) boundingBox.getMinY();
-        rtnVal[13] = (float) boundingBox.getMinZ();
+        rtnVal[index++] = (float) boundingBox.getMinX();
+        rtnVal[index++] = (float) boundingBox.getMinY();
+        rtnVal[index++] = (float) boundingBox.getMinZ();
 
-        rtnVal[14] = (float) boundingBox.getMinX();
-        rtnVal[15] = (float) boundingBox.getMinY();
-        rtnVal[16] = (float) boundingBox.getMaxZ();
+        rtnVal[index++] = (float) boundingBox.getMinX();
+        rtnVal[index++] = (float) boundingBox.getMinY();
+        rtnVal[index++] = (float) boundingBox.getMaxZ();
         return rtnVal;
     }
 
@@ -308,8 +310,8 @@ public class DirectionalReferenceAxesActor implements GLActor {
         int coordsPerAxis = axisCount * coordsPerPrimitive;
         int[] indices = new int[coordsPerAxis];
         for (int i = 0; i < axisCount; i++) {
-            indices[ coordsPerPrimitive * i] = coordsPerPrimitive * i + indexOffset;
-            indices[ coordsPerPrimitive * i + 1] = coordsPerPrimitive * i + 1 + indexOffset;
+            indices[ coordsPerPrimitive * i ] = coordsPerPrimitive * i + indexOffset;
+            indices[ coordsPerPrimitive * i + 1 ] = coordsPerPrimitive * i + 1 + indexOffset;
         }
 
         return indices;
