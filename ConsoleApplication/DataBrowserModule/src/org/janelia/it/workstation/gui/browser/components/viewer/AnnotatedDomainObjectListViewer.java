@@ -14,4 +14,6 @@ public interface AnnotatedDomainObjectListViewer {
     public void showDomainObjects(AnnotatedDomainObjectList domainObjectList);
 
     public JPanel getViewerPanel();
+    
+    public String getSelectionCategory();
 }

@@ -25,11 +25,13 @@ public class StaticImageButton<T> extends AnnotatedImageButton<T> {
         super(imageObject, iconPanel);
     }
 
+    @Override
     public JComponent init(final T imageObject) {
         this.label = new JLabel(Icons.getLoadingIcon());
         return label;
     }
 
+    @Override
     public void setImageSize(int width, int height) {
         super.setImageSize(width, height);
         if (staticIcon != null) {
@@ -58,7 +60,7 @@ public class StaticImageButton<T> extends AnnotatedImageButton<T> {
             double h = label.getIcon().getIconHeight();
             registerAspectRatio(w, h);
 
-            int width = iconPanel.getImagesPanel().getMaxImageWidth();
+            int width = iconPanel.getMaxImageWidth();
             if (width <= staticIcon.getWidth()) { // Don't scale up icons
                 label.setIcon(new ImageIcon(Utils.getScaledImage(staticIcon, width)));
             }

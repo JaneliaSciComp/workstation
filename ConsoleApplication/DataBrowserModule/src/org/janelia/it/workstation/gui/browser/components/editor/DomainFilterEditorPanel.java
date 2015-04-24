@@ -32,6 +32,9 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.components.icongrid.DomainObjectIconGridViewer;
+import org.janelia.it.workstation.gui.browser.components.table.DomainObjectTableViewer;
+import org.janelia.it.workstation.gui.browser.components.viewer.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.components.viewer.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.search.SearchResults;
@@ -65,29 +68,47 @@ public class DomainFilterEditorPanel extends JPanel {
     protected SearchResults searchResults;
 
     private enum ViewerType {
+        
+        IconViewer("Icon View", DomainObjectIconGridViewer.class),
+        TableViewer("Table View", DomainObjectTableViewer.class),
+        HybridViewer("Hybrid View", null);
+        
+        private final String name;
+        private final Class<? extends AnnotatedDomainObjectListViewer> viewerClass;
 
-        IconViewer("Icon View"),
-        TableViewer("Table View"),
-        HybridViewer("Hybrid View");
-        private String name;
-
-        ViewerType(String name) {
+        ViewerType(String name, Class<? extends AnnotatedDomainObjectListViewer> viewerClass) {
             this.name = name;
+            this.viewerClass = viewerClass;
         }
 
         public String getName() {
             return name;
         }
+        
+        public Class<? extends AnnotatedDomainObjectListViewer> getViewerClass() {
+            return viewerClass;
+        }
     };
 
-    private ViewerType viewerType;
     private SimpleDropDownButton viewTypeButton;
     private SimpleDropDownButton addFilterButton;
 
     private void setViewerType(ViewerType viewerType) {
-        this.viewerType = viewerType;
         this.viewTypeButton.setText(viewerType.getName());
-        // TODO : switch viewer
+        try {
+            if (viewerType.getViewerClass()==null) {
+                resultsPanel.setViewer(null);
+            }
+            else {
+                AnnotatedDomainObjectListViewer viewer = viewerType.getViewerClass().newInstance();
+                resultsPanel.setViewer(viewer);
+            }
+        }
+        catch (InstantiationException | IllegalAccessException e) {
+            log.error("Error instantiating viewer class",e);
+            resultsPanel.setViewer(null);
+        }
+        updateView();
     }
 
     public DomainFilterEditorPanel() {
@@ -123,7 +144,7 @@ public class DomainFilterEditorPanel extends JPanel {
                 return resultPage;
             }
         };
-
+        
         JPanel searchResultsPanel = new JPanel();
         searchResultsPanel.setLayout(new BorderLayout());
         searchResultsPanel.add(resultsPanel, BorderLayout.CENTER);
@@ -132,9 +153,9 @@ public class DomainFilterEditorPanel extends JPanel {
         add(taskPaneContainer, BorderLayout.WEST);
         add(searchResultsPanel, BorderLayout.CENTER);
 
-        setViewerType(ViewerType.IconViewer);
-
         loadSavedSearch(new SavedSearch());
+        
+        setViewerType(ViewerType.IconViewer);
     }
 
     private JPopupMenu getViewerPopupMenu() {
@@ -218,7 +239,7 @@ public class DomainFilterEditorPanel extends JPanel {
 
         // Update filters
         filterTaskPane.removeAll();
-        if (savedSearch.getFilters()!=null) {
+        if (savedSearch!=null && savedSearch.getFilters()!=null) {
             for (Filter filter : savedSearch.getFilters()) {
                 filterTaskPane.add(createFilterLabel(filter));
             }

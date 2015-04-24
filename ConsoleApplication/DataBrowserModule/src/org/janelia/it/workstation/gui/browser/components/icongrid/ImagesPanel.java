@@ -25,29 +25,30 @@ public class ImagesPanel<T> extends JScrollPane {
 
     private static final Logger log = LoggerFactory.getLogger(ImagesPanel.class);
 
+    // Constants
     public static final int MIN_IMAGE_WIDTH = 100;
     public static final int DEFAULT_THUMBNAIL_SIZE = 300;
     public static final int MAX_IMAGE_WIDTH = 1000;
-
     public static final int MIN_TABLE_HEIGHT = 50;
     public static final int DEFAULT_TABLE_HEIGHT = 200;
     public static final int MAX_TABLE_HEIGHT = 500;
-    private final AtomicBoolean loadUnloadImagesInterrupt = new AtomicBoolean(false);
-    private final HashMap<Object, AnnotatedImageButton<T>> buttons = new LinkedHashMap<>();
-    private Map<Long, List<Annotation>> filteredAnnotationMap = new HashMap<>();
-
+    
+    // Listeners
     private KeyListener buttonKeyListener;
     private MouseListener buttonMouseListener;
 
+    // UI Components
+    private final HashMap<Object, AnnotatedImageButton<T>> buttons = new LinkedHashMap<>();
     private final IconPanel iconPanel;
     private final ScrollableGridPanel buttonsPanel;
 
+    // State
+    private Map<Long, List<Annotation>> filteredAnnotationMap = new HashMap<>();
+    private final AtomicBoolean loadUnloadImagesInterrupt = new AtomicBoolean(false);
     private Double lowestAspectRatio;
     private Integer maxImageWidth = DEFAULT_THUMBNAIL_SIZE;
     private Integer currTableHeight = DEFAULT_TABLE_HEIGHT;
-
     private Rectangle currViewRect;
-
     private Timer timer;
 
     // Listen for scroll events
@@ -229,14 +230,14 @@ public class ImagesPanel<T> extends JScrollPane {
     }
 
     public List<AnnotatedImageButton<T>> getButtonsByUniqueId(Object uniqueId) {
-        List<AnnotatedImageButton<T>> entityButtons = new ArrayList<>();
+        List<AnnotatedImageButton<T>> imageButtons = new ArrayList<>();
         for (AnnotatedImageButton<T> button : buttons.values()) {
         Object imageId = iconPanel.getImageUniqueId(button.getImageObject());
             if (imageId.equals(uniqueId)) {
-                entityButtons.add(button);
+                imageButtons.add(button);
             }
         }
-        return entityButtons;
+        return imageButtons;
     }
 
     /**

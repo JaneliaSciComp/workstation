@@ -13,7 +13,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.UIManager;
-import org.janelia.it.workstation.gui.browser.components.icongrid.DomainObjectIconGridViewer;
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -54,6 +57,8 @@ public abstract class PaginatedResultsPanel extends JPanel {
     private ResultPage resultPage;
     protected int numPages = 0;
     protected int currPage = 0;
+    
+    protected ModelMgrObserver modelMgrObserver;
     
     // Hud dialog
 //    protected Hud hud;
@@ -140,7 +145,41 @@ public abstract class PaginatedResultsPanel extends JPanel {
 //        hud = Hud.getSingletonInstance();
 //        hud.addKeyListener(keyListener);
         
-        this.resultsView = new DomainObjectIconGridViewer();
+        modelMgrObserver = new ModelMgrAdapter() {
+
+//            @Override
+//            public void annotationsChanged(final long entityId) {
+//                if (pageRootedEntities != null) {
+//                    SwingUtilities.invokeLater(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            reloadAnnotations(entityId);
+//                            filterEntities();
+//                        }
+//                    });
+//                }
+//            }
+
+            @Override
+            public void entitySelected(String category, String entityId, boolean clearAll) {
+                if (category.equals(resultsView.getSelectionCategory())) {
+                    PaginatedResultsPanel.this.entitySelected(entityId, clearAll);
+                }
+            }
+
+            @Override
+            public void entityDeselected(String category, String entityId) {
+                if (category.equals(resultsView.getSelectionCategory())) {
+                    PaginatedResultsPanel.this.entityDeselected(entityId);
+                }
+            }
+        };
+        
+        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+    }
+    
+    public void setViewer(AnnotatedDomainObjectListViewer viewer) {
+        this.resultsView = viewer;
     }
     
     private void updatePagingStatus() {
@@ -150,22 +189,19 @@ public abstract class PaginatedResultsPanel extends JPanel {
         endPageButton.setEnabled(currPage != numPages - 1);
     }
 
-//    protected void entitySelected(String entityId, boolean clearAll) {
-//        log.debug("selecting {} in {} viewer", entityId, getSelectionCategory());
-//        imagesPanel.setSelection(entityId, true, clearAll);
-//        updateStatusBar();
-////        updateHud(false);
-//    }
-//
-//    public void entityDeselected(String entityId) {
-//        imagesPanel.setSelection(entityId, false, false);
-//        updateStatusBar();
-//    }
+    protected void entitySelected(String entityId, boolean clearAll) {
+        log.debug("selecting {} in {} viewer", entityId, resultsView.getSelectionCategory());
+        updateStatusBar();
+//        updateHud(false);
+    }
+
+    public void entityDeselected(String entityId) {
+        updateStatusBar();
+    }
     
     private void updateStatusBar() {
-//        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
-//        int s = esm.getSelectedEntitiesIds(getSelectionCategory()).size();
-        int s = 0;
+        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
+        int s = esm.getSelectedEntitiesIds(resultsView.getSelectionCategory()).size();
         statusLabel.setText(s + " of " + resultPage.getNumPageResults() + " selected");
     }
     
@@ -209,9 +245,14 @@ public abstract class PaginatedResultsPanel extends JPanel {
     }
     
     public void showResultsView() {
+        if (resultsView==null) {
+            showNothing();
+            return;
+        }
         removeAll();
         add(resultsView.getViewerPanel(), BorderLayout.CENTER);
         pagingStatusLabel.setText("Page " + (currPage + 1) + " of " + numPages);
+        updateStatusBar();
         add(statusBar, BorderLayout.SOUTH);
         updateUI();
     }
@@ -262,4 +303,5 @@ public abstract class PaginatedResultsPanel extends JPanel {
     }
     
     protected abstract ResultPage getPage(SearchResults searchResults, int page) throws Exception;
+    
 }

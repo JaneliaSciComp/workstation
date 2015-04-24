@@ -1,16 +1,22 @@
 package org.janelia.it.workstation.gui.browser.components.icongrid;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.viewer.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
@@ -24,6 +30,8 @@ import org.slf4j.LoggerFactory;
 public class DomainObjectIconGridViewer extends IconGridViewer<DomainObject> implements AnnotatedDomainObjectListViewer {
     
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
+    
+    private final Map<Long,DomainObject> domainObjectByUniqueId = new HashMap<>();
     
     @Override
     protected void populateImageRoles(List<DomainObject> domainObjects) {
@@ -68,10 +76,34 @@ public class DomainObjectIconGridViewer extends IconGridViewer<DomainObject> imp
         if (lastResult==null) return null;
         return DomainUtils.get2dImageFilepath(lastResult, role);
     }
-
+    
+    @Override
+    public DomainObject getImageByUniqueId(Object id) {
+        return domainObjectByUniqueId.get((Long)id);
+    }
+    
     @Override
     public Object getImageLabel(DomainObject domainObject) {
         return domainObject.getName();
+    }
+    
+    @Override
+    protected JPopupMenu getButtonPopupMenu() {
+        List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
+        List<DomainObject> domainObjects = new ArrayList<>();
+        for (String entityId : selectionIds) {
+            Long uniqueId = new Long(entityId);
+            DomainObject imageObject = getImageByUniqueId(uniqueId);
+            if (imageObject == null) {
+                log.warn("Could not locate selected entity with id {}", entityId);
+            }
+            else {
+                domainObjects.add(imageObject);
+            }
+        }
+        JPopupMenu popupMenu = new DomainObjectContextMenu(domainObjects);
+        ((DomainObjectContextMenu) popupMenu).addMenuItems();
+        return popupMenu;
     }
     
     @Override
@@ -85,6 +117,11 @@ public class DomainObjectIconGridViewer extends IconGridViewer<DomainObject> imp
     public void showDomainObjects(AnnotatedDomainObjectList domainObjectList) {
         showImageObjects(domainObjectList.getDomainObjects());
         // TODO: set annotations?
+        
+        domainObjectByUniqueId.clear();
+        for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
+            domainObjectByUniqueId.put(domainObject.getId(), domainObject);
+        }
     }
 
     @Override

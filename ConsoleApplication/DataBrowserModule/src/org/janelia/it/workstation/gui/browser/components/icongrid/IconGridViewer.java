@@ -42,8 +42,6 @@ import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -67,14 +65,13 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
     private static final Logger log = LoggerFactory.getLogger(IconGridViewer.class);
 
     // Main components
-    protected IconDemoToolbar iconDemoToolbar;
+    private ImagesPanel<T> imagesPanel;
+    private IconDemoToolbar iconDemoToolbar;
 
     private String currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
     
     // These members deal with the context and entities within it
     protected List<T> imageObjects;
-    protected Multimap<String, T> imageObjectByPathId = HashMultimap.<String, T>create();
-    protected Multimap<Long, T> imageObjectByUniqueId = HashMultimap.<Long, T>create();
     protected final Annotations annotations = new Annotations();
     protected final List<String> allUsers = new ArrayList<>();
     protected final Set<String> hiddenUsers = new HashSet<>();
@@ -198,17 +195,18 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 
         @Override
         protected void popupTriggered(MouseEvent e) {
-//            if (e.isConsumed()) {
-//                return;
-//            }
-//            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
-//            // Select the button first
-//            RootedEntity rootedEntity = button.getRootedEntity();
-//            if (!button.isSelected()) {
-//                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), true);
-//            }
-//            getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
-//            e.consume();
+            if (e.isConsumed()) {
+                return;
+            }
+            AnnotatedImageButton<T> button = getButtonAncestor(e.getComponent());
+            // Select the button first
+            T imageObject = button.getImageObject();
+            Object uniqueId = getImageUniqueId(imageObject);
+            if (!button.isSelected()) {
+                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), uniqueId.toString(), true);
+            }
+            getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
+            e.consume();
         }
 
         @Override
@@ -237,23 +235,7 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
         }
     };
 
-    protected JPopupMenu getButtonPopupMenu() {
-//        List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
-//        List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
-//        for (String entityId : selectionIds) {
-//            RootedEntity re = getRootedEntityById(entityId);
-//            if (re == null) {
-//                log.warn("Could not locate selected entity with id {}", entityId);
-//            }
-//            else {
-//                rootedEntityList.add(re);
-//            }
-//        }
-//        JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
-//        ((EntityContextMenu) popupMenu).addMenuItems();
-//        return popupMenu;
-        return null;
-    }
+    protected abstract JPopupMenu getButtonPopupMenu();
 
     /**
      * This is a separate method so that it can be overridden to accommodate other behavior patterns.
@@ -354,7 +336,7 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
         iconDemoToolbar = createToolbar();
         iconDemoToolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
 
-        imagesPanel = new ImagesPanel<>(this);
+        imagesPanel = new ImagesPanel<T>(this);
         imagesPanel.setButtonKeyListener(keyListener);
         imagesPanel.setButtonMouseListener(buttonMouseListener);
         imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
@@ -364,9 +346,6 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 //        imagesPanel.addMouseListener(new MouseHandler() {
 //            @Override
 //            protected void popupTriggered(MouseEvent e) {
-//                if (contextRootedEntity == null) {
-//                    return;
-//                }
 //                JPopupMenu popupMenu = new JPopupMenu();
 //                JMenuItem titleItem = new JMenuItem("" + contextRootedEntity.getEntity().getName());
 //                titleItem.setEnabled(false);
@@ -507,12 +486,17 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
             }
         });
     }
-
+    
     @Override
-    public ImagesPanel<T> getImagesPanel() {
-        return imagesPanel;
+    public void registerAspectRatio(double aspectRatio) {
+        imagesPanel.registerAspectRatio(aspectRatio);
     }
 
+    @Override
+    public int getMaxImageWidth() {
+        return imagesPanel.getMaxImageWidth();
+    }
+    
     @Override
     public String getCurrImageRole() {
         return currImageRole;
@@ -523,11 +507,9 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
         this.currImageRole = currImageRole;
     }
 
-    @Override
     public String getSelectionCategory() {
         return EntitySelectionModel.CATEGORY_MAIN_VIEW;
     }
-    
     
 //    @Subscribe
 //    public void entityChanged(EntityChangeEvent event) {

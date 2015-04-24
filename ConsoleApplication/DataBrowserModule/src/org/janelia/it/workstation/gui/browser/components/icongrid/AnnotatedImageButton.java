@@ -320,7 +320,7 @@ public abstract class AnnotatedImageButton<T> extends JPanel implements DragGest
     public synchronized void registerAspectRatio(double width, double height) {
         double a = width / height;
         if (a != this.aspectRatio) {
-            iconPanel.getImagesPanel().registerAspectRatio(a);
+            iconPanel.registerAspectRatio(a);
         }
         this.aspectRatio = a;
     }
