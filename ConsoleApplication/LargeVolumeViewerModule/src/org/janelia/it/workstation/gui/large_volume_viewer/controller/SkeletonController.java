@@ -34,7 +34,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     
     private static SkeletonController instance = new SkeletonController();
     
-    private long nextParentId = -1;
+    private Long nextParentId = -1L;
     
     private SkeletonController() {
     }
