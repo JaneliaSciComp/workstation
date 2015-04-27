@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
-import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.geometric_search.gl.GL3ShaderActionSequence;
+import org.janelia.it.workstation.gui.geometric_search.gl.GL3SimpleActor;
+import org.janelia.it.workstation.gui.opengl.GLResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +40,7 @@ public class GL3Viewer extends GLJPanel
 
     static {
         try {
-            profile = GLProfile.get(GLProfile.GL3bc);
+            profile = GLProfile.get(GLProfile.GL3);
             capabilities = new GLCapabilities(profile);
         } catch ( Throwable th ) {
             profile = null;
@@ -56,13 +58,15 @@ public class GL3Viewer extends GLJPanel
         addMouseMotionListener(this);
         addMouseWheelListener(this);
 
-        addGLEventListener(renderer);
         setPreferredSize( new Dimension( 400, 400 ) );
 
         // Context menu for resetting view
         JMenuItem resetViewItem = new JMenuItem("Reset view");
         resetViewItem.addActionListener(this);
         popupMenu.add(resetViewItem);
+        model=new GL3Model();
+        renderer=new GL3Renderer(model);
+        addGLEventListener(renderer);
     }
 
     @Override
@@ -88,6 +92,8 @@ public class GL3Viewer extends GLJPanel
     public GL3Model getModel() {
         return model;
     }
+
+    public GL3Renderer getRenderer() { return renderer; }
 
     /** External addition to this conveniently-central popup menu. */
     public void addMenuAction( Action action ) {
@@ -128,8 +134,8 @@ public class GL3Viewer extends GLJPanel
     /**
      * Add any actor to this Mip as desired.
      */
-    public void addActor(GLActor actor) {
-        addActorToRenderer(actor);
+    public void addShaderAction(GL3ShaderActionSequence shaderAction) {
+        addActorToRenderer(shaderAction);
     }
 
 
@@ -194,9 +200,9 @@ public class GL3Viewer extends GLJPanel
     }
 
     /** Special synchronized method, for adding actors. Supports multi-threaded brick-add. */
-    private void addActorToRenderer(GLActor brick) {
+    private void addActorToRenderer(GL3ShaderActionSequence shaderAction) {
         synchronized ( this ) {
-            //renderer.addActor(brick);
+            renderer.addShaderAction(shaderAction);
             renderer.resetView();
         }
     }
