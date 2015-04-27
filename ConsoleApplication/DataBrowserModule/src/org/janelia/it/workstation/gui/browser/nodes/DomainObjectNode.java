@@ -17,6 +17,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import static javax.swing.Action.NAME;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -28,6 +29,7 @@ import org.janelia.it.workstation.gui.browser.actions.RemoveAction;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DatePropertyEditor;
+import org.janelia.it.workstation.gui.browser.components.DomainBrowserTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
@@ -127,6 +129,8 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
         List<Action> actions = new ArrayList<Action>();
         actions.add(new CopyNameAction());
         actions.add(new CopyGUIDAction());
+        actions.add(null);
+        actions.add(new OpenInNewViewerAction());
         actions.add(null);
         actions.add(new AddToTopLevelFolderAction());
         actions.add(new RenameAction());
@@ -452,5 +456,28 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
             return DomainUtils.hasWriteAccess(domainObject);
         }
     }
+    
+    private final class OpenInNewViewerAction extends AbstractAction {
 
+        public OpenInNewViewerAction() {
+            putValue(NAME, "Open In New Viewer");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            DomainBrowserTopComponent browser = new DomainBrowserTopComponent();
+            //TopComponent tcToOpen = WindowManager.getDefault().findTopComponent(); 
+            //Mode myMode = WindowManager.getDefault().findMode("editor");
+            //myMode.dockInto(myTopComponent);
+            browser.open();
+            browser.requestActive();
+            browser.getExplorerManager().setRootContext(DomainObjectNode.this);
+        }
+
+        @Override
+        public boolean isEnabled() {
+            DomainObject domainObject = getLookup().lookup(DomainObject.class);
+            return DomainUtils.hasWriteAccess(domainObject);
+        }
+    }
 }
