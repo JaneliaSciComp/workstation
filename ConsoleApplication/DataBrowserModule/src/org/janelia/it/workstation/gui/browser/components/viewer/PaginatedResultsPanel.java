@@ -51,8 +51,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
     protected final JButton startPageButton;
     protected final JButton selectAllButton;
     protected final JLabel pagingStatusLabel;
-    
-    private SimpleDropDownButton viewTypeButton;
+    private final SimpleDropDownButton viewTypeButton;
     
     // Result view
     protected AnnotatedDomainObjectListViewer resultsView;
@@ -264,7 +263,12 @@ public abstract class PaginatedResultsPanel extends JPanel {
     private void updateStatusBar() {
         EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
         int s = esm.getSelectedEntitiesIds(resultsView.getSelectionCategory()).size();
-        statusLabel.setText(s + " of " + resultPage.getNumPageResults() + " selected");
+        if (resultPage==null) {
+            statusLabel.setText("");
+        }
+        else {
+            statusLabel.setText(s + " of " + resultPage.getNumPageResults() + " selected");
+        }
     }
     
     private synchronized void goPrevPage() {
