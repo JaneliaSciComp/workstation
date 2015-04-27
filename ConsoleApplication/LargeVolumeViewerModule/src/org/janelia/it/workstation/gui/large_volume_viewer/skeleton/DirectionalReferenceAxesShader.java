@@ -8,6 +8,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
+import org.janelia.it.workstation.gui.viewer3d.OpenGLUtils;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
 
 /**
@@ -31,6 +32,7 @@ public class DirectionalReferenceAxesShader extends AbstractShader {
     public void init(GL2 gl) throws ShaderCreationException {
         super.init(gl);
         vertexAttribLoc = gl.glGetAttribLocation(getShaderProgram(), DirectionalReferenceAxesShader.VERTEX_ATTRIBUTE_NAME);
+        OpenGLUtils.reportError(gl, "Getting vertex attribute location.");
     }
     
     public int getVertexAttribLoc() {

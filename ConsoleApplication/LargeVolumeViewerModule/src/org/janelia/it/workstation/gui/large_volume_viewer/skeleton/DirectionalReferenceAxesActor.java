@@ -133,16 +133,13 @@ public class DirectionalReferenceAxesActor implements GLActor {
         shader.setUniform4fv(gl, DirectionalReferenceAxesShader.COLOR_UNIFORM_NAME, getColor());
         reportError(gl, "Display of axes-actor uniforms");
 
-//        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);  // Prob: not in v2.
-//        reportError(gl, "Display of axes-actor 2");
-//
         // Draw the little lines.
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, lineBufferHandle);
         reportError(gl, "Display of axes-actor 1");
 
         // 3 floats per coord. Stride is 0, offset to first is 0.
         gl.glEnableVertexAttribArray( shader.getVertexAttribLoc() );
-        gl.glVertexAttribPointer(shader.getVertexAttribLoc(), 3, GL2.GL_FLOAT, false, 0, 0);
+        gl.glVertexAttribPointer( shader.getVertexAttribLoc(), 3, GL2.GL_FLOAT, false, 0, 0 );
         reportError(gl, "Display of axes-actor 3");
 
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
@@ -200,9 +197,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
         if ( shader == null ) {
             shader = new DirectionalReferenceAxesShader();
             shader.init(gl.getGL2());
-            shader.setUniform4fv(gl, DirectionalReferenceAxesShader.COLOR_UNIFORM_NAME, getColor());
-
-            reportError(gl.getGL2(), "Obtaining the in-shader locations-1.");
+            reportError(gl.getGL2(), "Initializing shader.");
         }
     }
 
@@ -237,28 +232,30 @@ public class DirectionalReferenceAxesActor implements GLActor {
                 indexBuf,
                 GL2GL3.GL_STATIC_DRAW
         );
+        reportError(gl.getGL2(), "Buffer Inx Data");
     }
 
     private void createBoundingBox(Placement placement, BoundingBox3d parentBoundingBox, float[] onscreenSize) {
-        double minZ = parentBoundingBox.getMinZ() - onscreenSize[2];
-        double maxZ = parentBoundingBox.getMinZ();
+        double minZ = (parentBoundingBox.getMaxZ() + parentBoundingBox.getMinZ()) / 2.0;
+        //double minZ = parentBoundingBox.getMaxZ() - onscreenSize[2];
+        double maxZ = minZ + onscreenSize[ 2 ];
         boundingBox = new BoundingBox3d();
         switch (placement) {
             case TOP_LEFT:
-                boundingBox.include(new Vec3(parentBoundingBox.getMinX(), parentBoundingBox.getMaxY(), minZ));
-                boundingBox.include(new Vec3(parentBoundingBox.getMinX() + onscreenSize[0], parentBoundingBox.getMaxY() - onscreenSize[1], maxZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMinX(), parentBoundingBox.getMaxY(), maxZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMinX() + onscreenSize[0], parentBoundingBox.getMaxY() - onscreenSize[1], minZ));
                 break;
             case TOP_RIGHT:
-                boundingBox.include(new Vec3(parentBoundingBox.getMaxX(), parentBoundingBox.getMaxY(), minZ));
-                boundingBox.include(new Vec3(parentBoundingBox.getMaxX() - onscreenSize[0], parentBoundingBox.getMaxY() - onscreenSize[1], maxZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMaxX(), parentBoundingBox.getMaxY(), maxZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMaxX() - onscreenSize[0], parentBoundingBox.getMaxY() - onscreenSize[1], minZ));
                 break;
             case BOTTOM_LEFT:
-                boundingBox.include(new Vec3(parentBoundingBox.getMinX(), parentBoundingBox.getMinY(), minZ));
-                boundingBox.include(new Vec3(parentBoundingBox.getMinX() + onscreenSize[0], parentBoundingBox.getMinY() + onscreenSize[1], maxZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMinX(), parentBoundingBox.getMinY(), maxZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMinX() + onscreenSize[0], parentBoundingBox.getMinY() + onscreenSize[1], minZ));
                 break;
             case BOTTOM_RIGHT:
-                boundingBox.include(new Vec3(parentBoundingBox.getMaxX(), parentBoundingBox.getMinY(), minZ));
-                boundingBox.include(new Vec3(parentBoundingBox.getMaxX() - onscreenSize[0], parentBoundingBox.getMinY() + onscreenSize[1], maxZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMaxX(), parentBoundingBox.getMinY(), maxZ));
+                boundingBox.include(new Vec3(parentBoundingBox.getMaxX() - onscreenSize[0], parentBoundingBox.getMinY() + onscreenSize[1], minZ));
                 break;
             default:
                 break;
@@ -275,32 +272,47 @@ public class DirectionalReferenceAxesActor implements GLActor {
         float[] rtnVal = new float[3 * 2 * 3];
         // Handle X axis.
         int index = 0;
-        rtnVal[index++] = (float) boundingBox.getMinX();
-        rtnVal[index++] = (float) boundingBox.getMinY();
-        rtnVal[index++] = (float) boundingBox.getMinZ();
-
-        rtnVal[index++] = (float) boundingBox.getMaxX();
-        rtnVal[index++] = (float) boundingBox.getMinY();
-        rtnVal[index++] = (float) boundingBox.getMinZ();
+        index = fillCornerVertex(rtnVal, index);
+        rtnVal[index++] = 100.0f;
+        rtnVal[index++] = 0.0f;
+        rtnVal[index++] = 0.0f;
+        
+//        rtnVal[index++] = (float) boundingBox.getMaxX();
+//        rtnVal[index++] = (float) boundingBox.getMinY();
+//        rtnVal[index++] = (float) boundingBox.getMinZ();
 
         // Handle Y axis.
-        rtnVal[index++] = (float) boundingBox.getMinX();
-        rtnVal[index++] = (float) boundingBox.getMinY();
-        rtnVal[index++] = (float) boundingBox.getMinZ();
+        index = fillCornerVertex(rtnVal, index);
 
-        rtnVal[index++] = (float) boundingBox.getMinX();
-        rtnVal[index++] = (float) boundingBox.getMaxY();
-        rtnVal[index++] = (float) boundingBox.getMinZ();
+        rtnVal[index++] = 0.0f;
+        rtnVal[index++] = 100.0f;
+        rtnVal[index++] = 0.0f;
+
+//        rtnVal[index++] = (float) boundingBox.getMinX();
+//        rtnVal[index++] = (float) boundingBox.getMaxY();
+//        rtnVal[index++] = (float) boundingBox.getMinZ();
 
         // Handle Z axis.
-        rtnVal[index++] = (float) boundingBox.getMinX();
-        rtnVal[index++] = (float) boundingBox.getMinY();
-        rtnVal[index++] = (float) boundingBox.getMinZ();
+        index = fillCornerVertex(rtnVal, index);
 
-        rtnVal[index++] = (float) boundingBox.getMinX();
-        rtnVal[index++] = (float) boundingBox.getMinY();
-        rtnVal[index++] = (float) boundingBox.getMaxZ();
+        rtnVal[index++] = 0.0f;
+        rtnVal[index++] = 0.0f;
+        rtnVal[index++] = 100.0f;
+//        rtnVal[index++] = (float) boundingBox.getMinX();
+//        rtnVal[index++] = (float) boundingBox.getMinY();
+//        rtnVal[index++] = (float) boundingBox.getMaxZ();
         return rtnVal;
+    }
+    
+    private int fillCornerVertex( float[] rtnVal, int index ) {
+//        rtnVal[index++] = (float) boundingBox.getMinX();
+//        rtnVal[index++] = (float) boundingBox.getMinY();
+//        rtnVal[index++] = (float) boundingBox.getMinZ();
+        rtnVal[index++] = (float)0.0;
+        rtnVal[index++] = (float)0.0;
+        rtnVal[index++] = (float)0.0;
+        
+        return index;
     }
 
     private int[] createAxisIndices(int indexOffset) {
