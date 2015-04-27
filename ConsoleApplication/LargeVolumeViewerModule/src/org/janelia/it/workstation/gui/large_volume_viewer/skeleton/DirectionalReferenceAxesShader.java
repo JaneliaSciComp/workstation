@@ -21,22 +21,27 @@ public class DirectionalReferenceAxesShader extends AbstractShader {
     public static final String MODEL_VIEW_UNIFORM_NAME = "modelView";
     public static final String PROJECTION_UNIFORM_NAME = "projection";
     public static final String VERTEX_ATTRIBUTE_NAME = "vertexAttribute";
-    public static final String COLOR_UNIFORM_NAME = "color";
+    public static final String COLOR_ATTRIBUTE_NAME = "colorAttribute";
 
     private static final String VERTEX_SHADER = "DirectionalReferenceAxesVtx.glsl";
     private static final String FRAGMENT_SHADER = "DirectionalReferenceAxesFrg.glsl";
 
     private int vertexAttribLoc;
+    private int colorAttribLoc;
 
     @Override
     public void init(GL2 gl) throws ShaderCreationException {
         super.init(gl);
-        vertexAttribLoc = gl.glGetAttribLocation(getShaderProgram(), DirectionalReferenceAxesShader.VERTEX_ATTRIBUTE_NAME);
-        OpenGLUtils.reportError(gl, "Getting vertex attribute location.");
+        vertexAttribLoc = getAttribLoc(gl, DirectionalReferenceAxesShader.VERTEX_ATTRIBUTE_NAME);
+        colorAttribLoc = getAttribLoc(gl, DirectionalReferenceAxesShader.COLOR_ATTRIBUTE_NAME);
     }
-    
+
     public int getVertexAttribLoc() {
         return vertexAttribLoc;
+    }
+    
+    public int getColorAttribLoc() {
+        return colorAttribLoc;
     }
 
     public boolean setUniformMatrix4v(GL2GL3 gl, String varName, boolean transpose, float[] data) {
@@ -85,6 +90,12 @@ public class DirectionalReferenceAxesShader extends AbstractShader {
         if (data == null) {
             throw new IllegalArgumentException("Null data pushed to uniform.");
         }
+    }
+
+    protected int getAttribLoc(GL2 gl, String attribName) {
+        int attribLoc = gl.glGetAttribLocation(getShaderProgram(), attribName);
+        OpenGLUtils.reportError(gl, "Getting " + attribName + " attribute location.");
+        return attribLoc;
     }
 
 }
