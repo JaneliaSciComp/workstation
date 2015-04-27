@@ -60,9 +60,9 @@ import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class IconGridViewer<T> extends IconPanel<T> {
+public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
 
-    private static final Logger log = LoggerFactory.getLogger(IconGridViewer.class);
+    private static final Logger log = LoggerFactory.getLogger(IconGridViewerPanel.class);
 
     // Main components
     private ImagesPanel<T> imagesPanel;
@@ -304,7 +304,7 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
         return (AnnotatedImageButton) c;
     }
 
-    public IconGridViewer() {
+    public IconGridViewerPanel() {
 
         setBorder(BorderFactory.createEmptyBorder());
         setLayout(new BorderLayout());
@@ -326,7 +326,7 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
                 if (key == "console.serverLogin") {
-                    IconGridViewer.this.clear();
+                    IconGridViewerPanel.this.clear();
                 }
             }
         };
@@ -402,14 +402,14 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
             @Override
             public void entitySelected(String category, String entityId, boolean clearAll) {
                 if (category.equals(getSelectionCategory())) {
-                    IconGridViewer.this.entitySelected(entityId, clearAll);
+                    IconGridViewerPanel.this.entitySelected(entityId, clearAll);
                 }
             }
 
             @Override
             public void entityDeselected(String category, String entityId) {
                 if (category.equals(getSelectionCategory())) {
-                    IconGridViewer.this.entityDeselected(entityId);
+                    IconGridViewerPanel.this.entityDeselected(entityId);
                 }
             }
         };
@@ -603,7 +603,7 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 
             @Override
             protected void refresh() {
-                IconGridViewer.this.totalRefresh();
+                IconGridViewerPanel.this.totalRefresh();
             }
 
             @Override
