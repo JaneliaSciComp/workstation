@@ -21,7 +21,7 @@ import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
  */
 public class MatrixManager {
     private static final Vec3 UP_IN_CAMERA = new Vec3(0, -1, 0);
-    private static final double ASSUMED_FOCUS_DISTANCE = -DISTANCE_TO_SCREEN_IN_PIXELS / 10.0;
+    private static final double ASSUMED_FOCUS_DISTANCE = -DISTANCE_TO_SCREEN_IN_PIXELS;
     private static final Vec3 FOCUS = new Vec3(0,0,0);
     private static final Vec3 ASSUMED_CAMERA_DEPTH = new Vec3(0, 0, ASSUMED_FOCUS_DISTANCE);
     

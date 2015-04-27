@@ -272,32 +272,42 @@ public class DirectionalReferenceAxesActor implements GLActor {
         float[] rtnVal = new float[3 * 2 * 3];
         // Handle X axis.
         int index = 0;
-        index = fillCornerVertex(rtnVal, index);
+//        index = fillCornerVertex(rtnVal, index);
+        rtnVal[index++] = 0.0f;
         rtnVal[index++] = 100.0f;
-        rtnVal[index++] = 0.0f;
-        rtnVal[index++] = 0.0f;
+        rtnVal[index++] = 100.0f;
+        
+        rtnVal[index++] = 100.0f;
+        rtnVal[index++] = 100.0f;
+        rtnVal[index++] = 100.0f;
         
 //        rtnVal[index++] = (float) boundingBox.getMaxX();
 //        rtnVal[index++] = (float) boundingBox.getMinY();
 //        rtnVal[index++] = (float) boundingBox.getMinZ();
 
         // Handle Y axis.
-        index = fillCornerVertex(rtnVal, index);
-
+//        index = fillCornerVertex(rtnVal, index);
         rtnVal[index++] = 0.0f;
         rtnVal[index++] = 100.0f;
+        rtnVal[index++] = 100.0f;
+        
         rtnVal[index++] = 0.0f;
+        rtnVal[index++] = 0.0f;
+        rtnVal[index++] = 100.0f;
 
 //        rtnVal[index++] = (float) boundingBox.getMinX();
 //        rtnVal[index++] = (float) boundingBox.getMaxY();
 //        rtnVal[index++] = (float) boundingBox.getMinZ();
 
         // Handle Z axis.
-        index = fillCornerVertex(rtnVal, index);
-
-        rtnVal[index++] = 0.0f;
+//        index = fillCornerVertex(rtnVal, index);
         rtnVal[index++] = 0.0f;
         rtnVal[index++] = 100.0f;
+        rtnVal[index++] = 100.0f;
+        
+        rtnVal[index++] = 0.0f;
+        rtnVal[index++] = 100.0f;
+        rtnVal[index++] = 0.0f;
 //        rtnVal[index++] = (float) boundingBox.getMinX();
 //        rtnVal[index++] = (float) boundingBox.getMinY();
 //        rtnVal[index++] = (float) boundingBox.getMaxZ();
