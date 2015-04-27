@@ -49,6 +49,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
     private final IntBuffer gpuToCpuBuffer = IntBuffer.allocate(1);
     private final int[] handleArr = new int[1];
     private float[] color = DEFAULT_COLOR;
+    private float[] onscreenSize;
     
     private final MatrixManager matrixManager;
 
@@ -71,6 +72,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
             Placement placement) {
 
         this.context = context;
+        this.onscreenSize = onscreenSize;
         this.matrixManager = new MatrixManager(context);
         createBoundingBox(placement, parentBoundingBox, onscreenSize);
     }
@@ -274,9 +276,9 @@ public class DirectionalReferenceAxesActor implements GLActor {
         int index = 0;
         index = fillCornerVertex(rtnVal, index);
         
-        rtnVal[index++] = 100.0f;
-        rtnVal[index++] = 100.0f;
-        rtnVal[index++] = 100.0f;
+        rtnVal[index++] = onscreenSize[0];
+        rtnVal[index++] = onscreenSize[1];
+        rtnVal[index++] = onscreenSize[2];
         
 //        rtnVal[index++] = (float) boundingBox.getMaxX();
 //        rtnVal[index++] = (float) boundingBox.getMinY();
@@ -287,7 +289,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
         
         rtnVal[index++] = 0.0f;
         rtnVal[index++] = 0.0f;
-        rtnVal[index++] = 100.0f;
+        rtnVal[index++] = onscreenSize[2];
 
 //        rtnVal[index++] = (float) boundingBox.getMinX();
 //        rtnVal[index++] = (float) boundingBox.getMaxY();
@@ -297,7 +299,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
         index = fillCornerVertex(rtnVal, index);
         
         rtnVal[index++] = 0.0f;
-        rtnVal[index++] = 100.0f;
+        rtnVal[index++] = onscreenSize[1];
         rtnVal[index++] = 0.0f;
 //        rtnVal[index++] = (float) boundingBox.getMinX();
 //        rtnVal[index++] = (float) boundingBox.getMinY();
@@ -307,8 +309,8 @@ public class DirectionalReferenceAxesActor implements GLActor {
     
     private int fillCornerVertex( float[] rtnVal, int index ) {
         rtnVal[index++] = 0.0f;
-        rtnVal[index++] = 100.0f;
-        rtnVal[index++] = 100.0f;
+        rtnVal[index++] = onscreenSize[1];
+        rtnVal[index++] = onscreenSize[2];
         
         return index;
     }
