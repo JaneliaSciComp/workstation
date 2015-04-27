@@ -91,10 +91,10 @@ public class MeshObjFileActor implements GLActor
         gl2.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 
 
-        gl2.glEnable(gl2.GL_DEPTH_TEST);
-        gl2.glDepthFunc(gl2.GL_LEQUAL);
+        gl2.glEnable(GL2.GL_DEPTH_TEST);
+        gl2.glDepthFunc(GL2.GL_LEQUAL);
 
-        gl2.glShadeModel(gl2.GL_SMOOTH);
+        gl2.glShadeModel(GL2.GL_SMOOTH);
         gl2.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);
 
         float[] lightPos = { -30, 0, 5, 1 };
