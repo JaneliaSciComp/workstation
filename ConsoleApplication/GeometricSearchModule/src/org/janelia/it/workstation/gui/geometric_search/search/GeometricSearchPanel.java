@@ -49,36 +49,50 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
 
-        GL3ShaderActionSequence meshSequence=new GL3ShaderActionSequence("Mesh");
-        final MeshObjFileV2Shader meshShader = new MeshObjFileV2Shader();
+        GL3ShaderActionSequence glSequence = new GL3ShaderActionSequence("Lattice");
+        final PassthroughShader passthroughShader = new PassthroughShader();
 
-        meshShader.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL3 gl) {
-                Matrix4 viewMatrix=viewer.getRenderer().getViewMatrix();
-                meshShader.setView(gl, viewMatrix);
-                Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
-                meshShader.setProjection(gl, projMatrix);
-            }
-        });
+        final LatticeActor latticeActor = new LatticeActor();
 
-        final MeshObjFileV2Actor meshActor =  new MeshObjFileV2Actor(new File("/Users/murphys/simple_cube.obj"));
+        glSequence.setShader(passthroughShader);
+        glSequence.getActorSequence().add(latticeActor);
 
-        meshActor.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL3 gl) {
-                Matrix4 actorModel=meshActor.getModel();
-                meshShader.setModel(gl, actorModel);
-            }
-        });
+        logger.info("Adding glSequence...");
+        viewer.addShaderAction(glSequence);
 
-        //MeshObjFileActor meshActor =  new MeshObjFileActor(new File("/Users/murphys/compartment_62.obj"));
-        meshActor.setDrawLines(false);
 
-        meshSequence.setShader(meshShader);
-        meshSequence.getActorSequence().add(meshActor);
+        ///////////////////////////////////////////////////////////////////////////////
 
-        viewer.addShaderAction(meshSequence);
+//        GL3ShaderActionSequence meshSequence=new GL3ShaderActionSequence("Mesh");
+//        final MeshObjFileV2Shader meshShader = new MeshObjFileV2Shader();
+//
+//        meshShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+//            @Override
+//            public void update(GL3 gl) {
+//                Matrix4 viewMatrix=viewer.getRenderer().getViewMatrix();
+//                meshShader.setView(gl, viewMatrix);
+//                Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
+//                meshShader.setProjection(gl, projMatrix);
+//            }
+//        });
+//
+//        final MeshObjFileV2Actor meshActor =  new MeshObjFileV2Actor(new File("/Users/murphys/simple_cube.obj"));
+//
+//        meshActor.setUpdateCallback(new GLDisplayUpdateCallback() {
+//            @Override
+//            public void update(GL3 gl) {
+//                Matrix4 actorModel=meshActor.getModel();
+//                meshShader.setModel(gl, actorModel);
+//            }
+//        });
+//
+//        //MeshObjFileActor meshActor =  new MeshObjFileActor(new File("/Users/murphys/compartment_62.obj"));
+//        meshActor.setDrawLines(false);
+//
+//        meshSequence.setShader(meshShader);
+//        meshSequence.getActorSequence().add(meshActor);
+//
+//        viewer.addShaderAction(meshSequence);
 
         add(viewer, BorderLayout.CENTER);
 
