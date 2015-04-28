@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.browser.components.icongrid;
 
 import javax.swing.JPanel;
-import org.janelia.it.jacs.model.domain.DomainObject;
 
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
@@ -10,7 +9,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class IconPanel<T> extends JPanel {
+public abstract class IconPanel<T,S> extends JPanel {
 
     private String currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
 
@@ -29,9 +28,9 @@ public abstract class IconPanel<T> extends JPanel {
 
     public abstract boolean areTagsVisible();
     
-    public abstract DomainObject getImageByUniqueId(Object id);
+    public abstract T getImageByUniqueId(S id);
     
-    public abstract Object getImageUniqueId(T imageObject);
+    public abstract S getImageUniqueId(T imageObject);
     
     public abstract String getImageFilepath(T imageObject);
     

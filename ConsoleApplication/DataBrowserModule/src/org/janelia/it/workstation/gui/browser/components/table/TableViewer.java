@@ -11,6 +11,7 @@ import javax.swing.JTable;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import org.janelia.it.workstation.gui.browser.components.editor.DomainObjectAttribute;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicRow;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
@@ -22,12 +23,14 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class TableViewer<T> extends JPanel {
+public abstract class TableViewer<T,S> extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(TableViewer.class);
 
     protected final JPanel resultsPane;
     protected final DynamicTable resultsTable;
+    
+    protected SelectionModel<T,S> selectionModel;
         
     public TableViewer() {
         
@@ -52,10 +55,22 @@ public abstract class TableViewer<T> extends JPanel {
                 }
                 DynamicRow drow = getRows().get(row);
                 T object = (T) drow.getUserObject();
-                objectSelected(object);
+                //objectSelected(object);
             }
         };
 
+        resultsTable.getTable().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                if (e.getValueIsAdjusting()) return;
+                boolean clearAll = true;
+                for(Object object : resultsTable.getSelectedObjects()) {
+                    selectionModel.select((T)object, clearAll);
+                    clearAll = false;
+                }
+            }
+        });
+        
         resultsTable.setMaxColWidth(80);
         resultsTable.setMaxColWidth(600);
         resultsTable.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 5));
@@ -67,9 +82,12 @@ public abstract class TableViewer<T> extends JPanel {
         
     }
     
-//    protected abstract JPopupMenu getContextualPopupMenu();
+    public void setSelectionModel(SelectionModel<T,S> selectionModel) {
+        selectionModel.setSource(this);
+        this.selectionModel = selectionModel;
+    }
     
-    protected abstract void objectSelected(T selectedObjects);
+//    protected abstract JPopupMenu getContextualPopupMenu();
     
     protected abstract Object getValue(T object, String column);
     

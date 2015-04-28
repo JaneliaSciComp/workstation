@@ -33,6 +33,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.viewer.PaginatedResultsPanel;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -66,6 +67,7 @@ public class DomainFilterEditorPanel extends JPanel {
 
     private SimpleDropDownButton addFilterButton;
 
+    private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
 
     public DomainFilterEditorPanel() {
 
@@ -85,7 +87,7 @@ public class DomainFilterEditorPanel extends JPanel {
         taskPaneContainer.add(filterTaskPane);
         taskPaneContainer.add(optionsTaskPane);
 
-        this.resultsPanel = new PaginatedResultsPanel() {
+        this.resultsPanel = new PaginatedResultsPanel(selectionModel) {
             @Override
             protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
                 ResultPage resultPage = searchResults.getPage(page);

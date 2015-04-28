@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.components.viewer;
 
+import com.google.common.eventbus.Subscribe;
 import de.javasoft.swing.SimpleDropDownButton;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -16,10 +17,8 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.UIManager;
-import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
-import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
-import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -62,12 +61,14 @@ public abstract class PaginatedResultsPanel extends JPanel {
     protected int numPages = 0;
     protected int currPage = 0;
     
-    protected ModelMgrObserver modelMgrObserver;
+    protected DomainObjectSelectionModel selectionModel;
     
     // Hud dialog
 //    protected Hud hud;
     
-    public PaginatedResultsPanel() {
+    public PaginatedResultsPanel(DomainObjectSelectionModel selectionModel) {
+        
+        this.selectionModel = selectionModel;
         
         setLayout(new BorderLayout());
         
@@ -153,38 +154,6 @@ public abstract class PaginatedResultsPanel extends JPanel {
 //        hud = Hud.getSingletonInstance();
 //        hud.addKeyListener(keyListener);
         
-        modelMgrObserver = new ModelMgrAdapter() {
-
-//            @Override
-//            public void annotationsChanged(final long entityId) {
-//                if (pageRootedEntities != null) {
-//                    SwingUtilities.invokeLater(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            reloadAnnotations(entityId);
-//                            filterEntities();
-//                        }
-//                    });
-//                }
-//            }
-
-            @Override
-            public void entitySelected(String category, String entityId, boolean clearAll) {
-                if (category.equals(resultsView.getSelectionCategory())) {
-                    PaginatedResultsPanel.this.entitySelected(entityId, clearAll);
-                }
-            }
-
-            @Override
-            public void entityDeselected(String category, String entityId) {
-                if (category.equals(resultsView.getSelectionCategory())) {
-                    PaginatedResultsPanel.this.entityDeselected(entityId);
-                }
-            }
-        };
-        
-        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
-        
         setViewerType(ViewerType.IconViewer);
     }
     
@@ -240,6 +209,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
     }
 
     private void setViewer(AnnotatedDomainObjectListViewer viewer) {
+        viewer.setSelectionModel(selectionModel);
         this.resultsView = viewer;
     }
 
@@ -250,19 +220,15 @@ public abstract class PaginatedResultsPanel extends JPanel {
         endPageButton.setEnabled(currPage != numPages - 1);
     }
 
-    protected void entitySelected(String entityId, boolean clearAll) {
-        log.debug("selecting {} in {} viewer", entityId, resultsView.getSelectionCategory());
+    @Subscribe
+    public void domainObjectSelected(DomainObjectSelectionEvent event) {
+        if (event.getSource()!=resultsView) return;
         updateStatusBar();
 //        updateHud(false);
     }
-
-    public void entityDeselected(String entityId) {
-        updateStatusBar();
-    }
     
     private void updateStatusBar() {
-        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
-        int s = esm.getSelectedEntitiesIds(resultsView.getSelectionCategory()).size();
+        int s = selectionModel.getSelectedIds().size();
         if (resultPage==null) {
             statusLabel.setText("");
         }

@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.browser.components.viewer;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 
 import javax.swing.JPanel;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 
 /**
  * A viewer that can display an AnnotatedDomainObjectList.
@@ -14,6 +15,6 @@ public interface AnnotatedDomainObjectListViewer {
     public void showDomainObjects(AnnotatedDomainObjectList domainObjectList);
 
     public JPanel getViewerPanel();
-    
-    public String getSelectionCategory();
+
+    public void setSelectionModel(DomainObjectSelectionModel selectionModel);
 }

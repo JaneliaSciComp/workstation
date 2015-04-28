@@ -9,28 +9,35 @@ import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
  */
 public class DomainObjectSelectionEvent {
 
+    private final Object source;
     private final DomainObjectId identifier;
     private final DomainObjectNode domainObjectNode;
     private final DomainObject domainObject;
-    private final SelectionType selectionType;
+    private final boolean select;
     private final boolean clearAll;
 
-    public DomainObjectSelectionEvent(DomainObjectId identifier, DomainObjectNode domainObjectNode, SelectionType selectionType, boolean clearAll) {
+    public DomainObjectSelectionEvent(Object source, DomainObjectId identifier, DomainObjectNode domainObjectNode, boolean select, boolean clearAll) {
+        this.source = source;
         this.identifier = identifier;
         this.domainObjectNode = domainObjectNode;
         this.domainObject = domainObjectNode.getDomainObject();
-        this.selectionType = selectionType;
+        this.select = select;
         this.clearAll = clearAll;
     }
     
-    public DomainObjectSelectionEvent(DomainObjectId identifier, DomainObject domainObject, SelectionType selectionType, boolean clearAll) {
+    public DomainObjectSelectionEvent(Object source, DomainObjectId identifier, DomainObject domainObject, boolean select, boolean clearAll) {
+        this.source = source;
         this.identifier = identifier;
         this.domainObjectNode = null;
         this.domainObject = domainObject;
-        this.selectionType = selectionType;
+        this.select = select;
         this.clearAll = clearAll;
     }
 
+    public Object getSource() {
+        return source;
+    }
+    
     public DomainObjectId getIdentifier() {
         return identifier;
     }
@@ -43,11 +50,16 @@ public class DomainObjectSelectionEvent {
         return domainObject;
     }
 
-    public SelectionType getSelectionType() {
-        return selectionType;
+    public boolean isSelect() {
+        return select;
     }
 
     public boolean isClearAll() {
         return clearAll;
+    }
+
+    @Override
+    public String toString() {
+        return "DomainObjectSelectionEvent[" + "source=" + source + ", identifier=" + identifier + ", domainObjectNode=" + domainObjectNode + ", domainObject=" + domainObject + ", select=" + select + ", clearAll=" + clearAll + ']';
     }
 }

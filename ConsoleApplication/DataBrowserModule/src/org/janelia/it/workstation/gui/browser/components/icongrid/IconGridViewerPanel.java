@@ -46,7 +46,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 
@@ -60,12 +60,12 @@ import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
+public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
 
     private static final Logger log = LoggerFactory.getLogger(IconGridViewerPanel.class);
 
     // Main components
-    private ImagesPanel<T> imagesPanel;
+    private ImagesPanel<T,S> imagesPanel;
     private IconDemoToolbar iconDemoToolbar;
 
     private String currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
@@ -81,6 +81,9 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
     // Listeners
     protected SessionModelListener sessionModelListener;
     protected ModelMgrObserver modelMgrObserver;
+    
+    protected SelectionModel<T,S> selectionModel;
+    
 
     // Listen for key strokes and execute the appropriate key bindings
     // TODO: we should replace this with an action map in the future
@@ -101,9 +104,10 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
                 // No keybinds matched, use the default behavior
                 // Ctrl-A or Meta-A to select all
                 if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
+                    boolean clearAll = true;
                     for (T imageObject : imageObjects) {
-                        Object uniqueId = getImageUniqueId(imageObject);
-                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), uniqueId.toString(), false);
+                        selectImageObject(imageObject, clearAll);
+                        clearAll = false;
                     }
                     // TODO: notify our pagination container
 //                    if (imageObjects.size() < allRootedEntities.size()) {
@@ -122,15 +126,16 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
 
                 // Enter with a single entity selected triggers an outline
                 // navigation
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
-                    if (selectedIds.size() != 1) {
-                        return;
-                    }
-                    String selectedId = selectedIds.get(0);
-                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, selectedId, true);
-                    return;
-                }
+//                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+//                    List<S> selectedIds = selectionModel.getSelectedIds();
+//                    if (selectedIds.size() != 1) {
+//                        return;
+//                    }
+//                    S selectedId = selectedIds.get(0);
+//                    T selectedObject = getImageByUniqueId(selectedId);
+//                    selectionModel.select(selectedObject, true);
+//                    return;
+//                }
 
                 // Delete triggers deletion
                 if (e.getKeyCode() == KeyEvent.VK_DELETE) {
@@ -174,10 +179,10 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
                 }
 
                 if (imageObj != null) {
-                    Object uniqueId = getImageUniqueId(imageObj);
-                    AnnotatedImageButton button = imagesPanel.getButtonById(uniqueId);
+                    S id = getImageUniqueId(imageObj);
+                    AnnotatedImageButton button = imagesPanel.getButtonById(id);
                     if (button != null) {
-                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), uniqueId.toString(), clearAll);
+                        selectImageObject(imageObj, clearAll);
                         imagesPanel.scrollObjectToCenter(imageObj);
                         button.requestFocus();
 //                        updateHud(false);
@@ -201,9 +206,8 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
             AnnotatedImageButton<T> button = getButtonAncestor(e.getComponent());
             // Select the button first
             T imageObject = button.getImageObject();
-            Object uniqueId = getImageUniqueId(imageObject);
             if (!button.isSelected()) {
-                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), uniqueId.toString(), true);
+                selectImageObject(imageObject, true);
             }
             getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
             e.consume();
@@ -242,13 +246,10 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
      */
     protected abstract void buttonDrillDown(AnnotatedImageButton button);
 
-    
     protected void buttonSelection(AnnotatedImageButton button, boolean multiSelect, boolean rangeSelect) {
         
-        final String category = getSelectionCategory();
         final T imageObject = (T)button.getImageObject();
-        final Object uniqueId = getImageUniqueId(imageObject);
-        final String uniqueIdStr = uniqueId.toString();
+        final S uniqueId = getImageUniqueId(imageObject);
         
 //        selectionButtonContainer.setVisible(false);
 
@@ -256,40 +257,46 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
             // With the meta key we toggle items in the current
             // selection without clearing it
             if (!button.isSelected()) {
-                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, uniqueIdStr, false);
+                selectImageObject(imageObject, false);
             }
             else {
-                ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(category, uniqueIdStr);
+                deselectImageObject(imageObject);
             }
         }
         else {
             // With shift, we select ranges
-            String lastSelected = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
-            if (rangeSelect && lastSelected != null) {
+            S lastSelectedId = selectionModel.getLastSelectedId();
+            log.trace("lastSelectedId="+lastSelectedId);
+            if (rangeSelect && lastSelectedId != null) {
                 // Walk through the buttons and select everything between the last and current selections
                 boolean selecting = false;
                 for (T otherImageObject : imageObjects) {
-                    final Object otherUniqueId = getImageUniqueId(otherImageObject);
-                    final String otherUniqueIdStr = otherUniqueId.toString();
-                    if (otherUniqueIdStr.equals(lastSelected) || otherUniqueIdStr.equals(uniqueIdStr)) {
-                        if (otherUniqueIdStr.equals(uniqueIdStr)) {
+                    final S otherUniqueId = getImageUniqueId(otherImageObject);
+                    log.trace("Consider "+otherUniqueId);
+                    if (otherUniqueId.equals(lastSelectedId) || otherUniqueId.equals(uniqueId)) {
+                        if (otherUniqueId.equals(lastSelectedId)) {
+                            log.trace("  Last selected!");
+                        }
+                        if (otherUniqueId.equals(uniqueId)) {
                             // Always select the button that was clicked
-                            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherUniqueIdStr, false);
+                            selectImageObject(otherImageObject, false);
                         }
                         if (selecting) {
+                            log.trace("  End selecting");
                             return; // We already selected, this is the end
                         }
+                        log.trace("  Begin selecting");
                         selecting = true; // Start selecting
                         continue; // Skip selection of the first and last items, which should already be selected
                     }
                     if (selecting) {
-                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherUniqueIdStr, false);
+                        selectImageObject(otherImageObject, false);
                     }
                 }
             }
             else {
                 // This is a good old fashioned single button selection
-                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, uniqueIdStr, true);
+                selectImageObject(imageObject, true);
             }
         }
 
@@ -336,7 +343,7 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
         iconDemoToolbar = createToolbar();
         iconDemoToolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
 
-        imagesPanel = new ImagesPanel<T>(this);
+        imagesPanel = new ImagesPanel<>(this);
         imagesPanel.setButtonKeyListener(keyListener);
         imagesPanel.setButtonMouseListener(buttonMouseListener);
         imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
@@ -398,22 +405,20 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
 //                    });
 //                }
 //            }
-
-            @Override
-            public void entitySelected(String category, String entityId, boolean clearAll) {
-                if (category.equals(getSelectionCategory())) {
-                    IconGridViewerPanel.this.entitySelected(entityId, clearAll);
-                }
-            }
-
-            @Override
-            public void entityDeselected(String category, String entityId) {
-                if (category.equals(getSelectionCategory())) {
-                    IconGridViewerPanel.this.entityDeselected(entityId);
-                }
-            }
+//
+//            @Override
+//            public void entitySelected(String category, String entityId, boolean clearAll) {
+//                IconGridViewerPanel.this.entitySelected(entityId, clearAll);
+//            }
+//
+//            @Override
+//            public void entityDeselected(String category, String entityId) {
+//                if (category.equals(getSelectionCategory())) {
+//                    IconGridViewerPanel.this.entityDeselected(entityId);
+//                }
+//            }
         };
-        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+//        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
 //        ModelMgr.getModelMgr().registerOnEventBus(this);
 
         this.addComponentListener(new ComponentAdapter() {
@@ -507,8 +512,9 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
         this.currImageRole = currImageRole;
     }
 
-    public String getSelectionCategory() {
-        return EntitySelectionModel.CATEGORY_MAIN_VIEW;
+    public void setSelectionModel(SelectionModel<T,S> selectionModel) {
+        selectionModel.setSource(this);
+        this.selectionModel = selectionModel;
     }
     
 //    @Subscribe
@@ -699,15 +705,16 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
         };
     }
 
-    protected void entitySelected(String entityId, boolean clearAll) {
-        log.debug("selecting {} in {} viewer", entityId, getSelectionCategory());
-        imagesPanel.setSelectionByUniqueId(entityId, true, clearAll);
-//        updateStatusBar();
+    protected void selectImageObject(T imageObject, boolean clearAll) {
+        final S id = getImageUniqueId(imageObject);
+        imagesPanel.setSelectionByUniqueId(id, true, clearAll);
+        selectionModel.select(imageObject, clearAll);
     }
 
-    public void entityDeselected(String entityId) {
-        imagesPanel.setSelectionByUniqueId(entityId, false, false);
-//        updateStatusBar();
+    protected void deselectImageObject(T imageObject) {
+        final S id = getImageUniqueId(imageObject);
+        imagesPanel.setSelectionByUniqueId(id, false, false);
+        selectionModel.deselect(imageObject);
     }
 
 //    private void updateStatusBar() {
@@ -1067,19 +1074,13 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
     }
 
     public synchronized void clear() {
-
-        log.debug("Clearing {}", getSelectionCategory());
-
         this.imageObjects = null;
-
         removeAll();
-
         revalidate();
         repaint();
     }
 
     public void close() {
-        log.debug("Closing {}", getSelectionCategory());
         SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
         ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
@@ -1132,7 +1133,7 @@ public abstract class IconGridViewerPanel<T> extends IconPanel<T> {
     }
 
     public synchronized T getLastSelectedObject() {
-        String uniqueId = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
+        S uniqueId = selectionModel.getLastSelectedId();
         if (uniqueId == null) {
             return null;
         }

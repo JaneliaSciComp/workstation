@@ -15,10 +15,11 @@ import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.viewer.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectId;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +28,11 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject> implements AnnotatedDomainObjectListViewer {
+public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,DomainObjectId> implements AnnotatedDomainObjectListViewer {
     
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
     
-    private final Map<Long,DomainObject> domainObjectByUniqueId = new HashMap<>();
+    private final Map<DomainObjectId,DomainObject> domainObjectByUniqueId = new HashMap<>();
     
     @Override
     protected void populateImageRoles(List<DomainObject> domainObjects) {
@@ -52,8 +53,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
-    public Object getImageUniqueId(DomainObject domainObject) {
-        return domainObject.getId().toString();
+    public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
+        super.setSelectionModel(selectionModel);
+    }
+    
+    @Override
+    public DomainObjectId getImageUniqueId(DomainObject domainObject) {
+        return DomainObjectId.createFor(domainObject);
     }
 
     @Override
@@ -66,7 +72,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         // TODO: this needs to be generalized and user configurable
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
-            if (sample==null) return null;
             List<String> objectives = sample.getOrderedObjectives();
             if (objectives==null) return null;
             ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size()-1));
@@ -81,8 +86,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
     
     @Override
-    public DomainObject getImageByUniqueId(Object id) {
-        return domainObjectByUniqueId.get((Long)id);
+    public DomainObject getImageByUniqueId(DomainObjectId id) {
+        return domainObjectByUniqueId.get(id);
     }
     
     @Override
@@ -92,13 +97,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected JPopupMenu getButtonPopupMenu() {
-        List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
+        List<DomainObjectId> selectionIds = selectionModel.getSelectedIds();
         List<DomainObject> domainObjects = new ArrayList<>();
-        for (String entityId : selectionIds) {
-            Long uniqueId = new Long(entityId);
-            DomainObject imageObject = getImageByUniqueId(uniqueId);
+        for (DomainObjectId id : selectionIds) {
+            DomainObject imageObject = getImageByUniqueId(id);
             if (imageObject == null) {
-                log.warn("Could not locate selected entity with id {}", entityId);
+                log.warn("Could not locate selected entity with id {}", id);
             }
             else {
                 domainObjects.add(imageObject);
@@ -123,7 +127,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         
         domainObjectByUniqueId.clear();
         for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
-            domainObjectByUniqueId.put(domainObject.getId(), domainObject);
+            domainObjectByUniqueId.put(DomainObjectId.createFor(domainObject), domainObject);
         }
     }
 

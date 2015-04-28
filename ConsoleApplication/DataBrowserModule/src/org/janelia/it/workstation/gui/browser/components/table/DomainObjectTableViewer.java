@@ -14,10 +14,10 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.SearchAttribute;
 import org.janelia.it.jacs.model.util.ReflectionHelper;
-import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.components.editor.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.browser.components.viewer.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectId;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.reflections.ReflectionUtils;
 import org.slf4j.Logger;
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectTableViewer extends TableViewer<DomainObject> implements AnnotatedDomainObjectListViewer {
+public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObjectId> implements AnnotatedDomainObjectListViewer {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectTableViewer.class);
 
@@ -38,6 +38,11 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject> implement
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
     
     private AnnotatedDomainObjectList domainObjectList;
+    
+    @Override
+    public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
+        super.setSelectionModel(selectionModel);
+    }
     
     @Override
     public void showDomainObjects(AnnotatedDomainObjectList domainObjectList) {
@@ -121,18 +126,8 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject> implement
     }
     
     @Override
-    public void objectSelected(DomainObject selectedObject) {
-        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), selectedObject.getId().toString(), true);
-    }
-    
-    @Override
     public JPanel getViewerPanel() {
         return this;
-    }
-    
-    @Override
-    public String getSelectionCategory() {
-        return EntitySelectionModel.CATEGORY_MAIN_VIEW;
     }
     
 //    @Override
