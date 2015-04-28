@@ -2,6 +2,7 @@
 
 uniform sampler2D anchorTexture;
 uniform sampler2D parentAnchorTexture;
+uniform int smallParentImage = 1;
 
 varying vec3 anchorColor;
 varying float fog;
@@ -22,11 +23,16 @@ void main ( )
         c = texture2D(parentAnchorTexture, gl_PointCoord);
 
     // Convolute with skeleton color
-    c.rgb *= anchorColor.rgb; // modulate with skeleton color
+    if (smallParentImage > 0) {
+        c.rgb *= anchorColor.rgb; // modulate with skeleton color
+        // Fade away at distant Z
+        c.a *= (1.0 - fog);
+    }
+    else {
+        if (c.r < 0.1  &&  c.g < 0.1  &&  c.b < 0.1)
+            discard;
+    }
     
-    // Fade away at distant Z
-    c.a *= (1.0 - fog);
-
     // Set final color    
     gl_FragColor = c;
 }

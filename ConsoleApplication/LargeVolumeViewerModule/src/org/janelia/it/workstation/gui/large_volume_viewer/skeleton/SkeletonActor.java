@@ -55,6 +55,22 @@ import org.slf4j.LoggerFactory;
 public class SkeletonActor
         implements GLActor {
 
+    private static final String LARGE_PARENT_IMG = "white-ball-icone-6188-32.png";
+    private static final String SMALL_PARENT_IMG = "ParentAnchor16.png";
+    
+    public enum ParentAnchorImage {
+        SMALL {
+            public String toString() {
+                return SMALL_PARENT_IMG;
+            }
+        },
+        LARGE {
+            public String toString() {
+                return LARGE_PARENT_IMG;
+            }
+        }
+    }
+    
     private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
 
     // semantic constants for allocating byte arrays
@@ -99,6 +115,9 @@ public class SkeletonActor
     private SkeletonActorStateUpdater updater;
     private Camera3d camera;
     private float zThicknessInPixels = 100;
+    private String parentAnchorImageName = SMALL_PARENT_IMG;
+    private boolean smallParentImage = true;
+    
     //
     private boolean bIsVisible = true;
 
@@ -138,6 +157,17 @@ public class SkeletonActor
 
     public SkeletonActorStateUpdater getUpdater() {
         return updater;
+    }
+    
+    /**
+     * Overrides the default parent image name (found among the icons).
+     * The only candidates which should be given, are enumerated.
+     */
+    public void setParentAnchorImageName(ParentAnchorImage image) {
+        if (image == ParentAnchorImage.LARGE) {
+            smallParentImage = false;
+        }
+        parentAnchorImageName = image.toString();
     }
 
     private synchronized void displayLines(GLAutoDrawable glDrawable) {
@@ -357,6 +387,11 @@ public class SkeletonActor
         anchorShader.setUniform3v(gl, "focus", 1, focus);
         anchorShader.setUniform(gl, "anchorTexture", 0);
         anchorShader.setUniform(gl, "parentAnchorTexture", 1);
+        anchorShader.setUniform(gl, "smallParentImage", this.smallParentImage ? 1 : 0);
+        if (! smallParentImage) {
+            anchorShader.setUniform(gl, "startingPointSize", 20.0f);
+            anchorShader.setUniform(gl, "maxPointSize", 8.0f);
+        }
     }
 
     private void tearDownAnchorShaders(GL2 gl) {
@@ -789,8 +824,7 @@ public class SkeletonActor
         }
         if (parentAnchorImage == null) {
             // load anchor texture
-            String imageFileName = "ParentAnchor16.png";
-            ImageIcon anchorIcon = Icons.getIcon(imageFileName);
+            ImageIcon anchorIcon = Icons.getIcon(parentAnchorImageName);
             Image source = anchorIcon.getImage();
             int w = source.getWidth(null);
             int h = source.getHeight(null);
@@ -799,12 +833,14 @@ public class SkeletonActor
             g2d.drawImage(source, 0, 0, null);
             g2d.dispose();
         }
-        int w = anchorImage.getWidth();
-        int h = anchorImage.getHeight();
+        
         int ids[] = {0, 0};
         gl.glGenTextures(2, ids, 0); // count, array, offset
         anchorTextureId = ids[0];
         parentAnchorTextureId = ids[1];
+
+        int w = anchorImage.getWidth();
+        int h = anchorImage.getHeight();
         byte byteArray[] = new byte[w * h * 4];
         ByteBuffer pixels = ByteBuffer.wrap(byteArray);
         pixels.order(ByteOrder.nativeOrder());
@@ -819,7 +855,7 @@ public class SkeletonActor
         // Upload anchor texture to video card
         gl.glEnable(GL2.GL_TEXTURE_2D);
         gl.glBindTexture(GL2.GL_TEXTURE_2D, anchorTextureId);
-        pixels.rewind();
+        intPixels.rewind();
         gl.glTexImage2D(GL2.GL_TEXTURE_2D,
                 0, // mipmap level
                 GL2.GL_RGBA,
@@ -829,9 +865,20 @@ public class SkeletonActor
                 GL2.GL_RGBA,
                 GL2.GL_UNSIGNED_BYTE,
                 pixels);
-        // Parent texture is like anchor texture, but with a "P" in it.
+        
+        // Parent texture may be like anchor texture, but with a "P" in it.
+        // If not, could be different shape entirely.
+        if (!( w == parentAnchorImage.getWidth() && h == parentAnchorImage.getHeight() ) ) {
+            w = parentAnchorImage.getWidth();
+            h = parentAnchorImage.getHeight();
+            byteArray = new byte[w * h * 4];
+            pixels = ByteBuffer.wrap(byteArray);
+            pixels.order(ByteOrder.nativeOrder());
+            intPixels = pixels.asIntBuffer();
+        }
         gl.glBindTexture(GL2.GL_TEXTURE_2D, parentAnchorTextureId);
         intPixels.rewind();
+        
         for (int y = 0; y < h; ++y) {
             for (int x = 0; x < w; ++x) {
                 intPixels.put(parentAnchorImage.getRGB(x, y));
