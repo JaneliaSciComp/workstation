@@ -116,7 +116,7 @@ public class SkeletonActor
     private Camera3d camera;
     private float zThicknessInPixels = 100;
     private String parentAnchorImageName = SMALL_PARENT_IMG;
-    private boolean smallParentImage = true;
+    private boolean modulateParentImage = true;
     
     //
     private boolean bIsVisible = true;
@@ -165,7 +165,7 @@ public class SkeletonActor
      */
     public void setParentAnchorImageName(ParentAnchorImage image) {
         if (image == ParentAnchorImage.LARGE) {
-            smallParentImage = false;
+            modulateParentImage = false;
         }
         parentAnchorImageName = image.toString();
     }
@@ -387,10 +387,10 @@ public class SkeletonActor
         anchorShader.setUniform3v(gl, "focus", 1, focus);
         anchorShader.setUniform(gl, "anchorTexture", 0);
         anchorShader.setUniform(gl, "parentAnchorTexture", 1);
-        anchorShader.setUniform(gl, "smallParentImage", this.smallParentImage ? 1 : 0);
-        if (! smallParentImage) {
+        anchorShader.setUniform(gl, "modulateParentImage", this.modulateParentImage ? 1 : 0);
+        if (! modulateParentImage) {
             anchorShader.setUniform(gl, "startingPointSize", 20.0f);
-            anchorShader.setUniform(gl, "maxPointSize", 8.0f);
+            anchorShader.setUniform(gl, "maxPointSize", 6.0f);
         }
     }
 
