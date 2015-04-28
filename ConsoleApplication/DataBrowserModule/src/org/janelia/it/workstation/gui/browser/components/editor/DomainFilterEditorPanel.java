@@ -1,19 +1,25 @@
 package org.janelia.it.workstation.gui.browser.components.editor;
 
-import de.javasoft.swing.JYTaskPane;
 import de.javasoft.swing.SimpleDropDownButton;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -38,7 +44,6 @@ import org.janelia.it.workstation.gui.browser.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.jdesktop.swingx.JXTaskPaneContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,8 +59,7 @@ public class DomainFilterEditorPanel extends JPanel {
     private static final Border PADDING_BORDER = BorderFactory.createEmptyBorder(5, 5, 5, 5);
 
     // UI Elements
-    private JYTaskPane filterTaskPane;
-    private JYTaskPane optionsTaskPane;
+    private JPanel filterPanel;
     private final PaginatedResultsPanel resultsPanel;
     
     // Search state
@@ -66,27 +70,40 @@ public class DomainFilterEditorPanel extends JPanel {
     protected SearchResults searchResults;
 
     private SimpleDropDownButton addFilterButton;
+    private JComboBox inputField;
+    private JButton searchButton;
 
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
 
     public DomainFilterEditorPanel() {
 
+        this.filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        
         this.addFilterButton = new SimpleDropDownButton("Add Filter...");
         addFilterButton.setPopupMenu(getAddFilterMenu());
 
-        this.filterTaskPane = new JYTaskPane();
-        filterTaskPane.setTitle("Filters");
-
-        JPanel optionPanel = new JPanel();
-
-        this.optionsTaskPane = new JYTaskPane();
-        optionsTaskPane.setTitle("Options");
-        optionsTaskPane.add(optionPanel);
-
-        JXTaskPaneContainer taskPaneContainer = new JXTaskPaneContainer();
-        taskPaneContainer.add(filterTaskPane);
-        taskPaneContainer.add(optionsTaskPane);
-
+        this.inputField = new JComboBox();
+        inputField.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
+        inputField.setEditable(true);
+        inputField.setToolTipText("Enter search terms...");
+        
+        AbstractAction mySearchAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateView();
+            }
+        };
+        
+        searchButton = new JButton("Search");
+        searchButton.addActionListener(mySearchAction);
+        
+        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
+        getActionMap().put("enterAction", mySearchAction);
+        
+        filterPanel.add(inputField);
+        filterPanel.add(addFilterButton);
+//        filterPanel.add(searchButton);
+        
         this.resultsPanel = new PaginatedResultsPanel(selectionModel) {
             @Override
             protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
@@ -104,26 +121,23 @@ public class DomainFilterEditorPanel extends JPanel {
         searchResultsPanel.add(resultsPanel, BorderLayout.CENTER);
 
         setLayout(new BorderLayout());
-        add(taskPaneContainer, BorderLayout.WEST);
+        add(filterPanel, BorderLayout.NORTH);
         add(searchResultsPanel, BorderLayout.CENTER);
 
-        loadSavedSearch(new SavedSearch());
+        SavedSearch savedSearch = new SavedSearch();
+        FullTextFilter filter = new FullTextFilter();
+        savedSearch.addFilter(filter);
+        loadSavedSearch(savedSearch);
+    }
+    
+    public JPanel getResultsPanel() {
+        return resultsPanel;
     }
     
     private JPopupMenu getAddFilterMenu() {
 
         JPopupMenu addFilterMenu = new JPopupMenu();
         addFilterMenu.setLightWeightPopupEnabled(true);
-
-        JMenuItem fullTextItem = new JMenuItem("Full Text Filter");
-        fullTextItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                Filter filter = new FullTextFilter();
-                EditFilterDialog.getInstanceForFilter(savedSearch, filter).showDialog();
-                updateView();
-            }
-        });
-        addFilterMenu.add(fullTextItem);
 
         JMenuItem attributeFilterItem = new JMenuItem("Attribute Filter");
         attributeFilterItem.addActionListener(new ActionListener() {
@@ -152,25 +166,54 @@ public class DomainFilterEditorPanel extends JPanel {
         this.savedSearch = savedSearch;
         updateView();
     }
-
+    
     private void updateView() {
 
+        updateSearch();
         log.info("Updating view");
 
         // Update filters
-        filterTaskPane.removeAll();
+        filterPanel.removeAll();
+        filterPanel.add(inputField);
         if (savedSearch!=null && savedSearch.getFilters()!=null) {
             for (Filter filter : savedSearch.getFilters()) {
-                filterTaskPane.add(createFilterLabel(filter));
+                if (filter instanceof FullTextFilter) {
+                    // Ignore
+                }
+                else {
+                    filterPanel.add(createFilterLabel(filter));
+                }
             }
         }
-        filterTaskPane.add(addFilterButton);
-        optionsTaskPane.revalidate();
+        filterPanel.add(addFilterButton);
+        filterPanel.revalidate();
 
         // Update search
         performSearch(0, true);
     }
 
+    private void updateSearch() {
+        
+        if (savedSearch==null || savedSearch.getFilters()==null) return;
+        
+        boolean setFullTextFilter = false;
+        for (Filter filter : savedSearch.getFilters()) {
+            if (filter instanceof FullTextFilter) {
+                ((FullTextFilter)filter).setText(getInputFieldValue());
+                setFullTextFilter = true;
+            }
+        }
+        if (!setFullTextFilter) {
+            FullTextFilter filter = new FullTextFilter();
+            filter.setText(getInputFieldValue());
+            savedSearch.addFilter(filter);
+        }
+    }
+    
+    public String getInputFieldValue() {
+        return (String)inputField.getSelectedItem();
+    }
+    
     private JComponent createFilterLabel(final Filter filter) {
         RoundedPanel filterLabel = new RoundedPanel() {
             @Override
@@ -195,8 +238,8 @@ public class DomainFilterEditorPanel extends JPanel {
                 removeItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
                         savedSearch.removeFilter(filter);
-                        filterTaskPane.remove(thisPanel);
-                        filterTaskPane.revalidate();
+                        filterPanel.remove(thisPanel);
+                        filterPanel.revalidate();
                     }
                 });
                 popupMenu.add(removeItem);
@@ -220,8 +263,8 @@ public class DomainFilterEditorPanel extends JPanel {
         return filterLabel;
     }
 
-    public boolean isInFilterPane(Point p) {
-        return filterTaskPane.getBounds().contains(p);
+    public boolean isInFilterPanel(Point p) {
+        return filterPanel.getBounds().contains(p);
     }
 
     public void dropDomainObject(DomainObject obj) {

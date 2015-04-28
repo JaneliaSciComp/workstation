@@ -12,6 +12,7 @@ import java.awt.dnd.DropTargetListener;
 import java.io.IOException;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.components.editor.DomainFilterEditorPanel;
+import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -32,14 +33,14 @@ import org.slf4j.LoggerFactory;
 @TopComponent.Description(
         preferredID = DomainFilterEditorTopComponent.TC_NAME,
         //iconBase="SET/PATH/TO/ICON/HERE", 
-        persistenceType = TopComponent.PERSISTENCE_ALWAYS
+        persistenceType = TopComponent.PERSISTENCE_ONLY_OPENED
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = true)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.browser.components.DomainFilterEditorTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_DomainFilterEditorAction",
-        preferredID = "DomainFilterEditorTopComponent"
+        preferredID = DomainFilterEditorTopComponent.TC_NAME
 )
 @Messages({
     "CTL_DomainFilterEditorAction=Filter Editor",
@@ -47,10 +48,11 @@ import org.slf4j.LoggerFactory;
 })
 public final class DomainFilterEditorTopComponent extends TopComponent {
 
-    public static final String TC_NAME = "DomainFilterEditorTopComponent";
     private final static Logger log = LoggerFactory.getLogger(DomainFilterEditorTopComponent.class);
     
-    private DomainFilterEditorPanel editorPanel;
+    public static final String TC_NAME = "DomainFilterEditorTopComponent";
+    
+    private final DomainFilterEditorPanel editorPanel;
     
     public DomainFilterEditorTopComponent() {
         initComponents();
@@ -94,14 +96,17 @@ public final class DomainFilterEditorTopComponent extends TopComponent {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel mainPanel;
     // End of variables declaration//GEN-END:variables
+    
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        Events.getInstance().registerOnEventBus(this);
+        Events.getInstance().registerOnEventBus(editorPanel.getResultsPanel());
     }
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
+        Events.getInstance().unregisterOnEventBus(this);
+        Events.getInstance().unregisterOnEventBus(editorPanel.getResultsPanel());
     }
 
     @Override
@@ -144,7 +149,7 @@ public final class DomainFilterEditorTopComponent extends TopComponent {
         public void drop(DropTargetDropEvent dtde) {
             
             Point point = dtde.getLocation();
-            if (!editorPanel.isInFilterPane(point)) {
+            if (!editorPanel.isInFilterPanel(point)) {
                 log.warn("Dropped outside of filter panel");
                 dtde.rejectDrop();
                 dtde.dropComplete(false);

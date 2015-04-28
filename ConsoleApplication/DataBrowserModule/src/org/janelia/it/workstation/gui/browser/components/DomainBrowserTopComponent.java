@@ -119,7 +119,6 @@ public final class DomainBrowserTopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         Events.getInstance().registerOnEventBus(this);
-        log.info("Registering results panel on event bus: "+resultsPanel);
         Events.getInstance().registerOnEventBus(resultsPanel);
         activate(this);
     }
@@ -127,7 +126,6 @@ public final class DomainBrowserTopComponent extends TopComponent {
     @Override
     public void componentClosed() {
         Events.getInstance().unregisterOnEventBus(this);
-        log.info("Unregistering results panel on event bus: "+resultsPanel);
         Events.getInstance().unregisterOnEventBus(resultsPanel);
     }
 

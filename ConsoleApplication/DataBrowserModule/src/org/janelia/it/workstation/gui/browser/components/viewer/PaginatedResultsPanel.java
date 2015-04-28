@@ -67,7 +67,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
 //    protected Hud hud;
     
     public PaginatedResultsPanel(DomainObjectSelectionModel selectionModel) {
-        
+                
         this.selectionModel = selectionModel;
         
         setLayout(new BorderLayout());
