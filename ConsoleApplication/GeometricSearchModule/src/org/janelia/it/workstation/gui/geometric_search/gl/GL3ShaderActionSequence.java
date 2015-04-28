@@ -1,8 +1,5 @@
 package org.janelia.it.workstation.gui.geometric_search.gl;
 
-import org.janelia.geometry3d.Matrix4;
-
-import javax.media.opengl.GL3;
 import javax.media.opengl.GL3;
 import java.util.ArrayList;
 import java.util.List;

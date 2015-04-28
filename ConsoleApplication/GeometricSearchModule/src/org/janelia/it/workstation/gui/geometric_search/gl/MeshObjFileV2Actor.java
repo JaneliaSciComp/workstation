@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.geometric_search.gl;
 
-import org.janelia.geometry3d.Matrix4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,6 +7,8 @@ import javax.media.opengl.GL3;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,8 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
     boolean loaded=false;
     boolean loadError=false;
     boolean drawLines=false;
+    IntBuffer vertexArrayId=IntBuffer.allocate(1);
+    IntBuffer vertexBufferId=IntBuffer.allocate(1);
 
     private class vGroup {
 
@@ -61,11 +64,37 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
     @Override
     public void display(GL3 gl) {
         super.display(gl);
+        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+        gl.glVertexAttribPointer(0, 3, GL3.GL_FLOAT, false, 0, 0);
+        gl.glEnableVertexAttribArray(0);
+        gl.glBindVertexArray(vertexArrayId.get(0));
+        gl.glDrawArrays(GL3.GL_TRIANGLES, 0, vList.size());
     }
 
     @Override
     public void init(GL3 gl) {
-
+        if (!loaded) {
+            try {
+                loadObjFile();
+            } catch (Exception ex) {
+                logger.error("Could not load file "+objFile.getAbsolutePath());
+                ex.printStackTrace();
+                loadError=true;
+                return;
+            }
+            loaded=true;
+        }
+        FloatBuffer fb=FloatBuffer.allocate(vList.size()*3);
+        for (int i=0;i<vList.size();i++) {
+            fb.put(vList.get(i).x);
+            fb.put(vList.get(i).y);
+            fb.put(vList.get(i).z);
+        }
+        gl.glGenVertexArrays(1, vertexArrayId);
+        gl.glBindVertexArray(vertexArrayId.get(0));
+        gl.glGenBuffers(1, vertexBufferId);
+        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+        gl.glBufferData(GL3.GL_ARRAY_BUFFER, vList.size() * 3 * Float.SIZE, fb, GL3.GL_STATIC_DRAW);
     }
 
     @Override
