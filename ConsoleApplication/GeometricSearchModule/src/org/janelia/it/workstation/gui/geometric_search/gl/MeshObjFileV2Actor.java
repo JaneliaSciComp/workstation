@@ -64,11 +64,17 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
     @Override
     public void display(GL3 gl) {
         super.display(gl);
-        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId.get(0));
-        gl.glVertexAttribPointer(0, 3, GL3.GL_FLOAT, false, 0, 0);
-        gl.glEnableVertexAttribArray(0);
+        checkGlError(gl, "d super.display() error");
         gl.glBindVertexArray(vertexArrayId.get(0));
+        checkGlError(gl, "d glBindVertexArray error");
+        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+        checkGlError(gl, "d glBindBuffer error");
+        gl.glVertexAttribPointer(0, 3, GL3.GL_FLOAT, false, 0, 0);
+        checkGlError(gl, "d glVertexAttribPointer error");
+        gl.glEnableVertexAttribArray(0);
+        checkGlError(gl, "d glEnableVertexAttribArray error");
         gl.glDrawArrays(GL3.GL_TRIANGLES, 0, vList.size());
+        checkGlError(gl, "d glDrawArrays error");
     }
 
     @Override
@@ -91,10 +97,15 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
             fb.put(vList.get(i).z);
         }
         gl.glGenVertexArrays(1, vertexArrayId);
+        checkGlError(gl, "glGenVertexArrays error");
         gl.glBindVertexArray(vertexArrayId.get(0));
+        checkGlError(gl, "glBindVertexArray error");
         gl.glGenBuffers(1, vertexBufferId);
+        checkGlError(gl, "glGenBuffers error");
         gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+        checkGlError(gl, "glBindBuffer error");
         gl.glBufferData(GL3.GL_ARRAY_BUFFER, vList.size() * 3 * Float.SIZE, fb, GL3.GL_STATIC_DRAW);
+        checkGlError(gl, "glBufferData error");
     }
 
     @Override
