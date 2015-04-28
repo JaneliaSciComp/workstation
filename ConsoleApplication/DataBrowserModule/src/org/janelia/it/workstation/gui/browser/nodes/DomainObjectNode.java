@@ -466,12 +466,13 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
         @Override
         public void actionPerformed(ActionEvent e) {
             DomainBrowserTopComponent browser = new DomainBrowserTopComponent();
-            //TopComponent tcToOpen = WindowManager.getDefault().findTopComponent(); 
-            //Mode myMode = WindowManager.getDefault().findMode("editor");
-            //myMode.dockInto(myTopComponent);
             browser.open();
             browser.requestActive();
-            browser.getExplorerManager().setRootContext(DomainObjectNode.this);
+            DomainExplorerTopComponent explorer = (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
+            //explorer.selectNode(DomainObjectNode.this);
+            // Deselect it first, so that this generates another selection event, since the browser didn't exist when the first one was generated
+            explorer.getSelectionModel().deselect(DomainObjectNode.this);
+            explorer.getSelectionModel().select(DomainObjectNode.this, true);
         }
 
         @Override

@@ -104,6 +104,17 @@ public final class DomainFilterEditorTopComponent extends TopComponent {
         // TODO add custom code on component closing
     }
 
+    @Override
+    protected void componentActivated() {
+//        ExplorerUtils.activateActions(mgr, true);
+    }
+    
+    @Override
+    protected void componentDeactivated() {
+//        ExplorerUtils.activateActions(mgr, false);
+    }
+    
+        
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles

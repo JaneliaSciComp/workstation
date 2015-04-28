@@ -1,33 +1,28 @@
 package org.janelia.it.workstation.gui.browser.components;
 
+import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import javax.swing.ActionMap;
-import javax.swing.text.DefaultEditorKit;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.components.viewer.PaginatedResultsPanel;
+import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.selection.ObjectSetSelectionEvent;
 import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
 import org.janelia.it.workstation.gui.browser.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.explorer.ExplorerManager;
-import org.openide.explorer.ExplorerUtils;
-import org.openide.nodes.AbstractNode;
-import org.openide.nodes.Node;
-import org.openide.util.Lookup;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.lookup.AbstractLookup;
+import org.openide.util.lookup.InstanceContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,21 +36,21 @@ import org.slf4j.LoggerFactory;
 @TopComponent.Description(
         preferredID = DomainBrowserTopComponent.TC_NAME,
         //iconBase="SET/PATH/TO/ICON/HERE", 
-        persistenceType = TopComponent.PERSISTENCE_ALWAYS
+        persistenceType = TopComponent.PERSISTENCE_NEVER
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = true)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.browser.components.DomainBrowserTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_DomainBrowserAction",
-        preferredID = "DomainBrowserTopComponent"
+        preferredID = DomainBrowserTopComponent.TC_NAME
 )
 @Messages({
     "CTL_DomainBrowserAction=Domain Browser",
     "CTL_DomainBrowserTopComponent=Domain Browser",
     "HINT_DomainBrowserTopComponent=Domain Browser"
 })
-public final class DomainBrowserTopComponent extends TopComponent implements LookupListener, ExplorerManager.Provider {
+public final class DomainBrowserTopComponent extends TopComponent {
 
     public static final String TC_NAME = "DomainBrowserTopComponent";
     
@@ -63,9 +58,15 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
     
     private final PaginatedResultsPanel resultsPanel;
     
-    private Lookup.Result<AbstractNode> result = null;
+    private final InstanceContent content = new InstanceContent();
     
-    private final ExplorerManager mgr = new ExplorerManager();
+    private static DomainBrowserTopComponent activeInstance;
+    private static void activate(DomainBrowserTopComponent instance) {
+        activeInstance = instance;
+    }
+    private static boolean isActive(DomainBrowserTopComponent instance) {
+        return activeInstance == instance;
+    }
     
     public DomainBrowserTopComponent() {
         initComponents();
@@ -80,13 +81,7 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
         
         setName(Bundle.CTL_DomainBrowserTopComponent());
         setToolTipText(Bundle.HINT_DomainBrowserTopComponent());
-        associateLookup(ExplorerUtils.createLookup(mgr, getActionMap()));
-        
-        ActionMap map = this.getActionMap();
-        map.put(DefaultEditorKit.copyAction, ExplorerUtils.actionCopy(mgr));
-        map.put(DefaultEditorKit.cutAction, ExplorerUtils.actionCut(mgr));
-        map.put(DefaultEditorKit.pasteAction, ExplorerUtils.actionPaste(mgr));
-        map.put("delete", ExplorerUtils.actionDelete(mgr, true)); 
+        associateLookup(new AbstractLookup(content));
     }
     
     /**
@@ -120,94 +115,106 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
 
     @Override
     public void componentOpened() {
-        // Typically we would use the following line to react to the currently selected top component
-        //result = Utilities.actionsGlobalContext().lookupResult(AbstractNode.class);
-        // But in this case we're only interested in the domain explorer
-        TopComponent win = WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
-        result = win.getLookup().lookupResult(AbstractNode.class);
-        result.addLookupListener(this);
+        Events.getInstance().registerOnEventBus(this);
+        activate(this);
     }
     
     @Override
     public void componentClosed() {
-        result.removeLookupListener(this);
+        Events.getInstance().unregisterOnEventBus(this);
     }
 
     @Override
     protected void componentActivated() {
-        ExplorerUtils.activateActions(mgr, true);
+        activate(this);
+        ObjectSetNode objectSetNode = getCurrent();
+        DomainExplorerTopComponent.getInstance().selectNode(objectSetNode);
     }
     
     @Override
     protected void componentDeactivated() {
-        ExplorerUtils.activateActions(mgr, false);
     }
     
-    @Override
-    public ExplorerManager getExplorerManager() {
-        return mgr;
+    private ObjectSetNode getCurrent() {
+        return getLookup().lookup(ObjectSetNode.class);
     }
-    
-    @Override
-    public void resultChanged(LookupEvent lookupEvent) {
-        Collection<? extends AbstractNode> allNodes = result.allInstances();
-        if (!allNodes.isEmpty()) {
-            final Node obj = allNodes.iterator().next();
-            log.trace("Setting context object on IconGridViewer to "+obj.getDisplayName());
-            
-            SimpleWorker childLoadingWorker = new SimpleWorker() {
 
-                private List<DomainObject> domainObjects;
-                private List<Annotation> annotations;
-
-                @Override
-                protected void doStuff() throws Exception {
-                    log.debug("Getting children...");
-                    DomainDAO dao = DomainExplorerTopComponent.getDao();
-                    if (obj instanceof ObjectSetNode) {
-                        ObjectSetNode objectSetNode = (ObjectSetNode)obj;
-                        domainObjects = dao.getDomainObjects(SessionMgr.getSubjectKey(), objectSetNode.getObjectSet());
-                        List<Long> ids = new ArrayList<>();
-                        for(DomainObject domainObject : domainObjects) {
-                            ids.add(domainObject.getId());
-                        }
-                        annotations = dao.getAnnotations(SessionMgr.getSubjectKey(), ids);
-                        log.debug("  Showing "+domainObjects.size()+" items");
-                    }
-                    else {
-                        log.debug("  This is not something we can load");
-                    }
-                }
-
-                @Override
-                protected void hadSuccess() {
-                    if (domainObjects==null || domainObjects.isEmpty()) {
-                        resultsPanel.showNothing();
-                        return;
-                    }
-                    SearchResults searchResults = SearchResults.paginate(domainObjects, annotations);
-                    resultsPanel.showSearchResults(searchResults);
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
-                }
-            };
-
-            childLoadingWorker.execute();
-            
-        } 
-        else {
-            resultsPanel.showNothing();
+    private boolean setCurrent(ObjectSetNode objectSetNode) {
+        ObjectSetNode curr = getLookup().lookup(ObjectSetNode.class);
+        if (curr==objectSetNode) {
+            return false;
         }
+        if (curr!=null) {
+            content.remove(curr);
+        }
+        content.add(objectSetNode);
+        return true;
+    }
+    
+    @Subscribe
+    public void loadObjectSet(ObjectSetSelectionEvent event)
+    {
+        if (!isActive(this)) {
+            // This instance is not active, so don't respond to events
+            return;
+        }
+        
+        requestVisible();
+        
+        ObjectSetNode objectSetNode = event.getObjectSetNode();
+        
+        if (!setCurrent(objectSetNode)) {
+            return;
+        }
+        
+        final ObjectSet objectSet = objectSetNode.getObjectSet();
+        
+        log.trace("loadObjectSet "+objectSet);
+
+        SimpleWorker childLoadingWorker = new SimpleWorker() {
+
+            private List<DomainObject> domainObjects;
+            private List<Annotation> annotations;
+
+            @Override
+            protected void doStuff() throws Exception {
+                log.debug("Getting children...");
+
+                DomainDAO dao = DomainExplorerTopComponent.getDao();
+                domainObjects = dao.getDomainObjects(SessionMgr.getSubjectKey(), objectSet);
+                List<Long> ids = new ArrayList<>();
+                for(DomainObject domainObject : domainObjects) {
+                    ids.add(domainObject.getId());
+                }
+                annotations = dao.getAnnotations(SessionMgr.getSubjectKey(), ids);
+                log.debug("  Showing "+domainObjects.size()+" items");
+            }
+
+            @Override
+            protected void hadSuccess() {
+                if (domainObjects==null || domainObjects.isEmpty()) {
+                    resultsPanel.showNothing();
+                    return;
+                }
+                SearchResults searchResults = SearchResults.paginate(domainObjects, annotations);
+                resultsPanel.showSearchResults(searchResults);
+                
+                setName(objectSet.getName());
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        childLoadingWorker.execute();
     }
 
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
         p.setProperty("version", "1.0");
-        // TODO store your settings
     }
 
     void readProperties(java.util.Properties p) {

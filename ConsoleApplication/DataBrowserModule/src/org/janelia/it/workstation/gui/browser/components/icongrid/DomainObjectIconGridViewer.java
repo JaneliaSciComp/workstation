@@ -64,17 +64,20 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     public String getImageFilepath(DomainObject domainObject, String role) {
         // TODO: this needs to be generalized and user configurable
-        Sample sample = (Sample)domainObject;
-        if (sample==null) return null;
-        List<String> objectives = sample.getOrderedObjectives();
-        if (objectives==null) return null;
-        ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size()-1));
-        if (objSample==null) return null;
-        SamplePipelineRun run = objSample.getLatestRun();
-        if (run==null) return null;
-        HasFiles lastResult = run.getLatestResultWithFiles();
-        if (lastResult==null) return null;
-        return DomainUtils.get2dImageFilepath(lastResult, role);
+        if (domainObject instanceof Sample) {
+            Sample sample = (Sample)domainObject;
+            if (sample==null) return null;
+            List<String> objectives = sample.getOrderedObjectives();
+            if (objectives==null) return null;
+            ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size()-1));
+            if (objSample==null) return null;
+            SamplePipelineRun run = objSample.getLatestRun();
+            if (run==null) return null;
+            HasFiles lastResult = run.getLatestResultWithFiles();
+            if (lastResult==null) return null;
+            return DomainUtils.get2dImageFilepath(lastResult, role);
+        }
+        return null;
     }
     
     @Override

@@ -9,9 +9,14 @@ import javax.swing.ActionMap;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionType;
+import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
@@ -20,7 +25,11 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
+import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Node;
+import org.openide.util.Lookup;
+import org.openide.util.LookupEvent;
+import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.RequestProcessor;
@@ -51,7 +60,7 @@ import org.slf4j.LoggerFactory;
     "CTL_DomainExplorerTopComponent=Domain Explorer",
     "HINT_DomainExplorerTopComponent=Browse the data"
 })
-public final class DomainExplorerTopComponent extends TopComponent implements ExplorerManager.Provider {
+public final class DomainExplorerTopComponent extends TopComponent implements ExplorerManager.Provider, LookupListener {
 
     public static final String TC_NAME = "DomainExplorerTopComponent";
     
@@ -64,6 +73,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     private final ExplorerManager mgr = new ExplorerManager();
 
+    private final DomainObjectNodeSelectionModel selectionModel = new DomainObjectNodeSelectionModel(SelectionType.Browser);
+    
+    private Lookup.Result<AbstractNode> result = null;
+    
     public DomainExplorerTopComponent() {
         initComponents();
         beanTreeView.setDefaultActionAllowed(false);
@@ -87,8 +100,17 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 loadWorkspaces();
             }
         });
+        
+    }
+    
+    public static DomainExplorerTopComponent getInstance() {
+        return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
     }
 
+    public DomainObjectNodeSelectionModel getSelectionModel() {
+        return selectionModel;
+    }
+    
 //    private void bindKeys() {
 //        
 //        CutAction cutAction = SystemAction.get(CutAction.class);
@@ -152,12 +174,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     private void loadWorkspace(Workspace workspace) throws Exception {
         mgr.setRootContext(new TreeNodeNode(null, workspace));
-        
-        // Share the root context with the browser
-        DomainBrowserTopComponent browser = (DomainBrowserTopComponent)WindowLocator.getByName(DomainBrowserTopComponent.TC_NAME);
-        // TODO: make this work if the domain browser is not opened by default
-        browser.getExplorerManager().setRootContext(mgr.getRootContext());
-        
     }
 
     /**
@@ -238,11 +254,13 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
+        result = getLookup().lookupResult(AbstractNode.class);
+        result.addLookupListener(this);
     }
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
+        result.removeLookupListener(this);
     }
     
     @Override
@@ -272,6 +290,24 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         return mgr;
     }
 
+    public void selectNode(Node node) {
+        if (node==null) return;
+        try {
+//            for(Node selectedNode : mgr.getSelectedNodes()) {
+//                if (node==selectedNode) {
+//                    log.info("Node is already selected");
+//                    return;
+//                }
+//            }
+            Node[] nodes = { node };
+//            log.info("Set selected nodes: "+node);
+            mgr.setSelectedNodes(nodes);
+        }
+        catch (PropertyVetoException e) {
+            log.error("Node selection was vetoed",e);
+        }
+    }
+
     private class WorkspaceWrapper {
 
         private Workspace workspace;
@@ -289,17 +325,14 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
     }
     
-    public void activateNode(Node node) {
-        log.info("activateNode: {}",node.getName());
-        Node[] activatedNodes = new Node[1];
-        activatedNodes[0] = node;
+    @Override
+    public void resultChanged(LookupEvent lookupEvent) {
+        Collection<? extends AbstractNode> allNodes = result.allInstances();
+        if (allNodes.isEmpty()) {
+            return;
+        }
+        final Node node = allNodes.iterator().next();
+        selectionModel.select((DomainObjectNode)node, true);
         
-        try {
-            mgr.setSelectedNodes(activatedNodes);
-            beanTreeView.expandNode(node);
-        }
-        catch (PropertyVetoException e) {
-            log.error("Node selection was vetoed",e);
-        }
     }
 }

@@ -194,7 +194,7 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
             return;
         }
         DomainExplorerTopComponent explorerTc = (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
-        explorerTc.activateNode((Node)imageObject);
+//        explorerTc.activateNode((Node)imageObject);
     }
 
     private Node lastSelected = null;
