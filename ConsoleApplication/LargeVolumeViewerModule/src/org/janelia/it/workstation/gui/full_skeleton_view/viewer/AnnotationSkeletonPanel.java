@@ -18,12 +18,16 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.DirectionalReferenceAxesActor;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.OcclusiveViewer;
+import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer;
+import org.janelia.it.workstation.gui.viewer3d.ResetPositionerI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
 
@@ -55,7 +59,13 @@ public class AnnotationSkeletonPanel extends JPanel {
             Vec3 yExtender = new Vec3(0, 0.75 * boundingBox.getHeight(), 0);
             actor.getBoundingBox3d().setMax( boundingBox.getMax().plus( yExtender ) );
             actor.getBoundingBox3d().setMin( boundingBox.getMin().minus( yExtender ) );
-            viewer = new OcclusiveViewer();
+            OcclusiveRenderer renderer = new OcclusiveRenderer();
+            final SkeletalBoundsResetPositioner skeletalBoundsResetPositioner = new SkeletalBoundsResetPositioner(dataSource.getSkeleton());
+            renderer.setResetPositioner( skeletalBoundsResetPositioner);
+            viewer = new OcclusiveViewer(renderer);
+            skeletalBoundsResetPositioner.setViewer(viewer);
+            skeletalBoundsResetPositioner.setRenderer(renderer);
+            skeletalBoundsResetPositioner.setActor(actor);
             MeshViewContext context = new MeshViewContext();
             viewer.setVolumeModel(context);
             VolumeModel volumeModel = viewer.getVolumeModel();
@@ -149,6 +159,64 @@ public class AnnotationSkeletonPanel extends JPanel {
                 newBackground.getColorComponents(background);
                 viewer.getVolumeModel().setBackgroundColor(background);
             }
+        }
+        
+    }
+    
+    public static class SkeletalBoundsResetPositioner implements ResetPositionerI {
+        private Skeleton skeleton;
+        private OcclusiveViewer viewer;
+        private OcclusiveRenderer renderer;
+        private SkeletonActor actor;
+        public SkeletalBoundsResetPositioner( Skeleton skeleton ) {
+            this.skeleton = skeleton;
+        }
+        
+        public void setViewer(OcclusiveViewer viewer) {
+            this.viewer = viewer;
+        }
+        
+        public void setRenderer(OcclusiveRenderer renderer) {
+            this.renderer = renderer;
+        }
+        
+        public void setActor(SkeletonActor actor) {
+            this.actor = actor;
+        }
+        
+        @Override
+        public void resetView() {
+            // Compute a bounding box out of the skeleton.
+            BoundingBox3d boundingBox = getInclusiveBox();            
+            viewer.getVolumeModel().getCamera3d().setFocus(boundingBox.getCenter());
+            viewer.getVolumeModel().getCamera3d().resetRotation();
+            renderer.resetCameraDepth(actor.getBoundingBox3d());
+        }
+        
+        private BoundingBox3d getInclusiveBox() {
+            Vec3 minimum = null;
+            Vec3 maximum = null;
+            for (Anchor anchor : skeleton.getAnchors()) {
+                if (minimum == null) {
+                    minimum = anchor.getLocation().clone();
+                } else {
+                    minimum.setX(Math.min(minimum.getX(), anchor.getLocation().getX()));
+                    minimum.setY(Math.min(minimum.getY(), anchor.getLocation().getY()));
+                    minimum.setZ(Math.min(minimum.getZ(), anchor.getLocation().getZ()));
+                }
+
+                if (maximum == null) {
+                    maximum = anchor.getLocation().clone();
+                } else {
+                    maximum.setX(Math.max(maximum.getX(), anchor.getLocation().getX()));
+                    maximum.setY(Math.max(maximum.getY(), anchor.getLocation().getY()));
+                    maximum.setZ(Math.max(maximum.getZ(), anchor.getLocation().getZ()));
+                }
+            }
+            BoundingBox3d box = new BoundingBox3d();
+            box.include(minimum);
+            box.include(maximum);
+            return box;
         }
         
     }

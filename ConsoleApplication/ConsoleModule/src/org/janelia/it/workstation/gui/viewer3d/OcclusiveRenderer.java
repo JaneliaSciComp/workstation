@@ -13,12 +13,18 @@ import org.janelia.it.workstation.gui.opengl.GLActor;
 import static org.janelia.it.workstation.gui.viewer3d.ActorRenderer.UP_IN_CAMERA;
 import org.janelia.it.workstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
 
-class OcclusiveRenderer 
+public class OcclusiveRenderer 
     extends ActorRenderer
 {
+    private ResetPositionerI resetPositioner;
+    
     // scene objects
     public OcclusiveRenderer() {
         super(new OcclusiveVolumeModel());
+    }
+    
+    public void setResetPositioner( ResetPositionerI resetPositioner ) {
+        this.resetPositioner = resetPositioner;
     }
     
     @Override
@@ -82,6 +88,23 @@ class OcclusiveRenderer
                 5.0 * scaledFocusDistance);
     }
 
+    @Override
+    public void resetView() {
+        if (resetPositioner == null) {
+            super.resetView();
+        }
+        else {
+            resetPositioner.resetView();
+        }
+    }
+    
+    /** Making this accessible for external use. */
+    @Override
+    public void resetCameraDepth(BoundingBox3d boundingBox) {
+        super.resetCameraDepth(boundingBox);
+    }
+
+    @Override
     protected void displayBackground(GL2 gl) 
     {
         // paint solid background color
