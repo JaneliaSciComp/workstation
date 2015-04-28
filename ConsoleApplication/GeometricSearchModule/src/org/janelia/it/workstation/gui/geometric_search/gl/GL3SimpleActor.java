@@ -1,13 +1,20 @@
 package org.janelia.it.workstation.gui.geometric_search.gl;
 
 import org.janelia.geometry3d.Matrix4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL3;
+import javax.media.opengl.glu.GLU;
 
 /**
  * Created by murphys on 4/10/15.
  */
 public abstract class GL3SimpleActor {
+
+    protected static GLU glu = new GLU();
+    private static Logger logger = LoggerFactory.getLogger(GL3SimpleActor.class);
+
 
     protected GLDisplayUpdateCallback updateCallback;
 
@@ -29,6 +36,14 @@ public abstract class GL3SimpleActor {
 
     public void setUpdateCallback(GLDisplayUpdateCallback updateCallback) {
         this.updateCallback=updateCallback;
+    }
+
+    protected void checkGlError(GL3 gl, String message) {
+        int errorNumber = gl.glGetError();
+        if (errorNumber <= 0)
+            return;
+        String errorStr = glu.gluErrorString(errorNumber);
+        logger.error( "OpenGL Error " + errorNumber + ": " + errorStr + ": " + message );
     }
 
 }
