@@ -138,6 +138,13 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
             actor.setNextParentByID(id);
         }
     }
+    
+    @Override
+    public void setNextParent(Anchor parent) {
+        for (SkeletonActor actor : actors) {
+            actor.setNextParent(parent);
+        }
+    }
 
     @Override
     public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {

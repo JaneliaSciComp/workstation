@@ -55,6 +55,22 @@ import org.slf4j.LoggerFactory;
 public class SkeletonActor
         implements GLActor {
 
+    private static final String LARGE_PARENT_IMG = "white-ball-icone-6188-32.png";
+    private static final String SMALL_PARENT_IMG = "ParentAnchor16.png";
+    
+    public enum ParentAnchorImage {
+        SMALL {
+            public String toString() {
+                return SMALL_PARENT_IMG;
+            }
+        },
+        LARGE {
+            public String toString() {
+                return LARGE_PARENT_IMG;
+            }
+        }
+    }
+    
     private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
 
     // semantic constants for allocating byte arrays
@@ -99,6 +115,10 @@ public class SkeletonActor
     private SkeletonActorStateUpdater updater;
     private Camera3d camera;
     private float zThicknessInPixels = 100;
+    private String parentAnchorImageName = SMALL_PARENT_IMG;
+    private boolean modulateParentImage = true;
+    private boolean isFocusOnNextParent = false;
+    
     //
     private boolean bIsVisible = true;
 
@@ -138,6 +158,17 @@ public class SkeletonActor
 
     public SkeletonActorStateUpdater getUpdater() {
         return updater;
+    }
+    
+    /**
+     * Overrides the default parent image name (found among the icons).
+     * The only candidates which should be given, are enumerated.
+     */
+    public void setParentAnchorImageName(ParentAnchorImage image) {
+        if (image == ParentAnchorImage.LARGE) {
+            modulateParentImage = false;
+        }
+        parentAnchorImageName = image.toString();
     }
 
     private synchronized void displayLines(GLAutoDrawable glDrawable) {
@@ -357,6 +388,11 @@ public class SkeletonActor
         anchorShader.setUniform3v(gl, "focus", 1, focus);
         anchorShader.setUniform(gl, "anchorTexture", 0);
         anchorShader.setUniform(gl, "parentAnchorTexture", 1);
+        anchorShader.setUniform(gl, "modulateParentImage", this.modulateParentImage ? 1 : 0);
+        if (! modulateParentImage) {
+            anchorShader.setUniform(gl, "startingPointSize", 20.0f);
+            anchorShader.setUniform(gl, "maxPointSize", 6.0f);
+        }
     }
 
     private void tearDownAnchorShaders(GL2 gl) {
@@ -491,6 +527,10 @@ public class SkeletonActor
         }
         this.anchorsVisible = anchorsVisible;
         updater.update();
+    }
+    
+    public void setFocusOnNextParent(boolean flag) {
+        isFocusOnNextParent = flag;
     }
 
     public void setShowOnlyParentAnchors(boolean showOnlyParent) {
@@ -789,8 +829,7 @@ public class SkeletonActor
         }
         if (parentAnchorImage == null) {
             // load anchor texture
-            String imageFileName = "ParentAnchor16.png";
-            ImageIcon anchorIcon = Icons.getIcon(imageFileName);
+            ImageIcon anchorIcon = Icons.getIcon(parentAnchorImageName);
             Image source = anchorIcon.getImage();
             int w = source.getWidth(null);
             int h = source.getHeight(null);
@@ -799,12 +838,14 @@ public class SkeletonActor
             g2d.drawImage(source, 0, 0, null);
             g2d.dispose();
         }
-        int w = anchorImage.getWidth();
-        int h = anchorImage.getHeight();
+        
         int ids[] = {0, 0};
         gl.glGenTextures(2, ids, 0); // count, array, offset
         anchorTextureId = ids[0];
         parentAnchorTextureId = ids[1];
+
+        int w = anchorImage.getWidth();
+        int h = anchorImage.getHeight();
         byte byteArray[] = new byte[w * h * 4];
         ByteBuffer pixels = ByteBuffer.wrap(byteArray);
         pixels.order(ByteOrder.nativeOrder());
@@ -819,7 +860,7 @@ public class SkeletonActor
         // Upload anchor texture to video card
         gl.glEnable(GL2.GL_TEXTURE_2D);
         gl.glBindTexture(GL2.GL_TEXTURE_2D, anchorTextureId);
-        pixels.rewind();
+        intPixels.rewind();
         gl.glTexImage2D(GL2.GL_TEXTURE_2D,
                 0, // mipmap level
                 GL2.GL_RGBA,
@@ -829,9 +870,20 @@ public class SkeletonActor
                 GL2.GL_RGBA,
                 GL2.GL_UNSIGNED_BYTE,
                 pixels);
-        // Parent texture is like anchor texture, but with a "P" in it.
+        
+        // Parent texture may be like anchor texture, but with a "P" in it.
+        // If not, could be different shape entirely.
+        if (!( w == parentAnchorImage.getWidth() && h == parentAnchorImage.getHeight() ) ) {
+            w = parentAnchorImage.getWidth();
+            h = parentAnchorImage.getHeight();
+            byteArray = new byte[w * h * 4];
+            pixels = ByteBuffer.wrap(byteArray);
+            pixels.order(ByteOrder.nativeOrder());
+            intPixels = pixels.asIntBuffer();
+        }
         gl.glBindTexture(GL2.GL_TEXTURE_2D, parentAnchorTextureId);
         intPixels.rewind();
+        
         for (int y = 0; y < h; ++y) {
             for (int x = 0; x < w; ++x) {
                 intPixels.put(parentAnchorImage.getRGB(x, y));
@@ -897,31 +949,17 @@ public class SkeletonActor
 
     public boolean setNextParentByID(Long annotationID) {
         // find the anchor corresponding to this annotation ID and pass along
-        Anchor foundAnchor = null;
         if (getSkeleton() == null) {
             return false;
         }
-        for (Anchor testAnchor : getSkeleton().getAnchors()) {
-            if (testAnchor.getGuid().equals(annotationID)) {
-                foundAnchor = testAnchor;
-                break;
-            }
-        }
+        Anchor foundAnchor = findAnchor(annotationID);
 
         // it's OK if we set a null (it's a deselect)
-        return setNextParent(foundAnchor);
+        return updateParent(foundAnchor);
     }
 
     public boolean setNextParent(Anchor parent) {
-        if (parent == skeleton.getNextParent()) {
-            return false;
-        }
-        skeleton.setNextParent(parent);
-        // first signal is for drawing the marker, second is for notifying
-        //  components that want to, eg, select the enclosing neuron
-        updater.update();
-        updater.update(skeleton.getNextParent());
-        return true;
+        return updateParent(parent);
     }
 
     public void addAnchorUpdateListener(UpdateAnchorListener l) {
@@ -972,6 +1010,17 @@ public class SkeletonActor
         }
     }
 
+    protected Anchor findAnchor(Long annotationID) {
+        Anchor foundAnchor = null;
+        for (Anchor testAnchor : getSkeleton().getAnchors()) {
+            if (testAnchor.getGuid().equals(annotationID)) {
+                foundAnchor = testAnchor;
+                break;
+            }
+        }
+        return foundAnchor;
+    }
+
     protected void transparencyDepthMode(GL2GL3 gl, boolean enable) {
         if (enable) {
             if (rim == RenderInterpositionMethod.MIP) {
@@ -989,6 +1038,20 @@ public class SkeletonActor
                 gl.glDisable(GL2.GL_DEPTH_TEST);
             }
         }
+    }
+
+    private boolean updateParent(Anchor parent) {
+        if (parent != skeleton.getNextParent()) {
+            skeleton.setNextParent(parent);
+            // first signal is for drawing the marker, second is for notifying
+            //  components that want to, eg, select the enclosing neuron
+            updater.update();
+            updater.update(skeleton.getNextParent());
+        }
+        if (isFocusOnNextParent && parent != null) {
+            getCamera().setFocus(parent.getLocation());
+        }
+        return true;
     }
 
     private TileFormat getTileFormat() {

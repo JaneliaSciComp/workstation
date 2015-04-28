@@ -45,9 +45,11 @@ public class AnnotationSkeletonPanel extends JPanel {
     public void establish3D() {
         if (viewer == null  &&  dataSource.getSkeleton() != null  &&  dataSource.getSkeleton().getTileFormat() != null) {
             SkeletonActor actor = new SkeletonActor();
-            actor.setNeuronStyleModel(dataSource.getNeuronStyleModel());
-            actor.setShowOnlyParentAnchors(true);
+            actor.setParentAnchorImageName( SkeletonActor.ParentAnchorImage.LARGE );
+            actor.setNeuronStyleModel( dataSource.getNeuronStyleModel() );
+            actor.setShowOnlyParentAnchors( true );
             actor.setAnchorsVisible(true);
+            actor.setFocusOnNextParent(true);
             TileFormat tileFormat = dataSource.getSkeleton().getTileFormat();
             final BoundingBox3d boundingBox = tileFormat.calcBoundingBox();
             Vec3 yExtender = new Vec3(0, 0.75 * boundingBox.getHeight(), 0);
