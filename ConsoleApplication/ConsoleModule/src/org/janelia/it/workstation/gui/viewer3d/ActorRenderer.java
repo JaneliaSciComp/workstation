@@ -241,7 +241,7 @@ public abstract class ActorRenderer
 
     }
 
-    private void resetCameraDepth(BoundingBox3d boundingBox) {
+    protected void resetCameraDepth(BoundingBox3d boundingBox) {
         double heightInMicrometers = boundingBox.getHeight();
         if (heightInMicrometers <= 0.0) { // watch for NaN!
             logger.warn("Adjusted height to account for zero-height bounding box.");
