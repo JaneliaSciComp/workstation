@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.search;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Rotation;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 
 import javax.media.opengl.GL3;
@@ -52,7 +53,31 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         GL3ShaderActionSequence glSequence = new GL3ShaderActionSequence("Lattice");
         final PassthroughShader passthroughShader = new PassthroughShader();
 
+        passthroughShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL3 gl) {
+                Matrix4 viewMatrix=viewer.getRenderer().getViewMatrix();
+                //viewMatrix.identity();
+                passthroughShader.setView(gl, viewMatrix);
+                Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
+                //projMatrix.identity();
+                passthroughShader.setProjection(gl, projMatrix);
+            }
+        });
+
         final LatticeActor latticeActor = new LatticeActor();
+
+//        Rotation r = new Rotation();
+//        r.setRotationFromAngleAboutY(new Float(Math.PI/8.0));
+//        latticeActor.setModel(r.asTransform());
+
+        latticeActor.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL3 gl) {
+                Matrix4 actorModel=latticeActor.getModel();
+                passthroughShader.setModel(gl, actorModel);
+            }
+        });
 
         glSequence.setShader(passthroughShader);
         glSequence.getActorSequence().add(latticeActor);

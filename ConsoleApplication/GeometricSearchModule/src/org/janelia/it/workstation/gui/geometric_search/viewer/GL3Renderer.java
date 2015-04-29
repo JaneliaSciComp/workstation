@@ -32,13 +32,13 @@ public class GL3Renderer implements GLEventListener
     protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
     protected Camera3d camera;
 
-    public static final double MAX_PIXELS_PER_VOXEL = 100.0;
+    public static final double MAX_PIXELS_PER_VOXEL = 100000.0;
     public static final double MIN_PIXELS_PER_VOXEL = 0.001;
-    private static final double MIN_CAMERA_FOCUS_DISTANCE = -100000.0;
+    private static final double MIN_CAMERA_FOCUS_DISTANCE = -1000000.0;
     private static final double MAX_CAMERA_FOCUS_DISTANCE = -0.001;
     private static final Vec3 UP_IN_CAMERA = new Vec3(0,-1,0);
     private static double FOV_Y_DEGREES = 45.0f;
-    private float FOV_TERM = new Float(Math.tan( (Math.PI/180.0) * (FOV_Y_DEGREES)/2.0) );
+    private float FOV_TERM = new Float(Math.tan( (Math.PI/180.0) * (FOV_Y_DEGREES/2.0) ) );
 
 
     // camera parameters
@@ -52,7 +52,7 @@ public class GL3Renderer implements GLEventListener
     Matrix4 viewMatrix;
     Matrix4 projectionMatrix;
 
-    private Logger logger;
+    private Logger logger = LoggerFactory.getLogger(GL3Renderer.class);
 
     public Matrix4 getViewMatrix() {
         return viewMatrix;
@@ -64,7 +64,6 @@ public class GL3Renderer implements GLEventListener
 
     // scene objects
     public GL3Renderer(GL3Model model) {
-        logger = LoggerFactory.getLogger(GL3Renderer.class);
         this.model=model;
         camera=model.getCamera3d();
     }
@@ -166,12 +165,12 @@ public class GL3Renderer implements GLEventListener
         }
 
         // View matrix
-        Vec3 f = camera.getFocus();    // This is what allows (follows) drag in X and Y.
+        Vec3 f = camera.getFocus(); // The focus point
         Rotation3d rotation = camera.getRotation();
         double unitsPerPixel = glUnitsPerPixel();
 
-        Vec3 c = f.plus(rotation.times(model.getCameraDepth().times(unitsPerPixel)));
-        Vec3 u = rotation.times(UP_IN_CAMERA);
+        Vec3 c = f.plus(rotation.times(model.getCameraDepth().times(unitsPerPixel))); // camera position
+        Vec3 u = rotation.times(UP_IN_CAMERA); // up vector
         Vector3 f3 = new Vector3(new Float(f.getX()), new Float(f.getY()), new Float(f.getZ()));
         Vector3 c3 = new Vector3(new Float(c.getX()), new Float(c.getY()), new Float(c.getZ()));
         Vector3 u3 = new Vector3(new Float(u.getX()), new Float(u.getY()), new Float(u.getZ()));
@@ -238,10 +237,10 @@ public class GL3Renderer implements GLEventListener
     }
 
     public void updateProjection(GL3 gl) {
-        gl.getGL2GL3().glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
+        gl.glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = model.getCameraFocusDistance();
-        float scaledFocusDistance = new Float(Math.abs(cameraFocusDistance) * glUnitsPerPixel());
+        float scaledFocusDistance = new Float(Math.abs(cameraFocusDistance));
         projectionMatrix = computeProjection(h, 0.5f * scaledFocusDistance, 2.0f * scaledFocusDistance);
     }
 
