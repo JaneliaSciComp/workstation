@@ -25,14 +25,18 @@ public class MatrixManager {
     private static final Vec3 FOCUS = new Vec3(0,0,0);
     private static final Vec3 ASSUMED_CAMERA_DEPTH = new Vec3(0, 0, ASSUMED_FOCUS_DISTANCE);
     
+    private Vec3 focus = FOCUS.clone();
     private final MeshViewContext context;
     private int widthInPixels;
     private int heightInPixels;
 
-    public MatrixManager(MeshViewContext context, int widthInPixels, int heightInPixels) {
+    public MatrixManager(MeshViewContext context, int widthInPixels, int heightInPixels, int depthInPixels) {
         this.context = context;
         this.widthInPixels = widthInPixels;
         this.heightInPixels = heightInPixels;
+        focus.setX( 0 );
+        focus.setY( heightInPixels / 2.0 );
+        focus.setZ( depthInPixels / 2.0 );
     }
     
     /**
@@ -45,7 +49,7 @@ public class MatrixManager {
     
     private void updateModelView(GL2GL3 gl) {
         // Update Model/View matrix.
-        Vec3 f = FOCUS;  // Disallows (does not follow) drag in X and Y.
+        Vec3 f = focus;  // Disallows (does not follow) drag in X and Y.
         Rotation3d rotation = context.getCamera3d().getRotation();
         Vec3 u = rotation.times(UP_IN_CAMERA);
         double unitsPerPixel = glUnitsPerPixel();

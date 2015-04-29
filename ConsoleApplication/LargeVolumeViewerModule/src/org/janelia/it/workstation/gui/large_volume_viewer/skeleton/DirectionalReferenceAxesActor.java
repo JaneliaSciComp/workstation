@@ -54,7 +54,6 @@ public class DirectionalReferenceAxesActor implements GLActor {
     // For download from GPU.  Contents only reliable after
     // most recent download.
     private final IntBuffer gpuToCpuBuffer = IntBuffer.allocate(1);
-    private final int[] handleArr = new int[1];
     private float[] onscreenSize;
     
     private final MatrixManager matrixManager;
@@ -80,7 +79,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
         this.context = context;
         this.onscreenSize = onscreenSize;
         this.matrixManager = new MatrixManager(
-                context, (int)onscreenSize[0] * 2, (int)onscreenSize[1] * 2
+                context, (int)onscreenSize[0] * 2, (int)onscreenSize[1] * 2, (int)onscreenSize[2] * 2
         );
         createBoundingBox(placement, parentBoundingBox, onscreenSize);
     }
