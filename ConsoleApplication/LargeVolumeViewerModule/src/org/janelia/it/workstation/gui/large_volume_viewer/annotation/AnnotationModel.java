@@ -644,6 +644,11 @@ called from a  SimpleWorker thread.
             }
         }
 
+        // see note in addChildAnnotations re: predef notes
+        // for merge, the target annotation is the one affected; fortunately, the
+        //  neuron has just been refreshed
+        stripPredefNotes(updateTargetNeuron, targetAnnotationID);
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -910,6 +915,11 @@ called from a  SimpleWorker thread.
 
         // notify, etc.; don't need to redraw anything, but the neurite list etc. need to be reloaded
         updateCurrentWorkspace();
+
+        // see notes in addChildAnnotation re: the predef notes
+        // in this case, the new root is the only annotation we need to check
+        stripPredefNotes(getNeuronFromAnnotationID(newRootID), newRootID);
+
         if (neuron.getId().equals(getCurrentNeuron().getId())){
             updateCurrentNeuron();
             final TmNeuron updateNeuron = getCurrentNeuron();
@@ -1079,6 +1089,10 @@ called from a  SimpleWorker thread.
         if (neuron == null) {
             throw new Exception("can't find neuron for annotation with ID " + geoAnnotation.getId());
         }
+
+        // fix: if setting empty note, don't add new note, and remove existing note;
+        //  don't leave a note with an empty string
+        // fix here or in back end, though?  or both?
 
         // if it's got a structured text annotation already:
         TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(geoAnnotation.getId());
