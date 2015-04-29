@@ -178,14 +178,6 @@ public abstract class PaginatedResultsPanel extends JPanel {
         });
         popupMenu.add(tableViewItem);
 
-        JMenuItem hybridViewIcon = new JMenuItem("Hybrid View");
-        hybridViewIcon.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                setViewerType(ViewerType.HybridViewer);
-            }
-        });
-        popupMenu.add(hybridViewIcon);
-
         return popupMenu;
     }
     

@@ -31,7 +31,7 @@
                 <package>org.janelia.it.jacs.model.domain.enums</package>
                 <package>org.janelia.it.jacs.model.domain.gui.alignment_board</package>
                 <package>org.janelia.it.jacs.model.domain.gui.search</package>
-                <package>org.janelia.it.jacs.model.domain.gui.search.filters</package>
+                <package>org.janelia.it.jacs.model.domain.gui.search.criteria</package>
                 <package>org.janelia.it.jacs.model.domain.interfaces</package>
                 <package>org.janelia.it.jacs.model.domain.ontology</package>
                 <package>org.janelia.it.jacs.model.domain.sample</package>

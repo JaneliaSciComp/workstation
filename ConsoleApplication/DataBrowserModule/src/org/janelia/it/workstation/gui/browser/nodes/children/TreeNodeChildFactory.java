@@ -60,14 +60,15 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             log.info("Got {} children but expected {}",children.size(),treeNode.getNumChildren());   
         }
         
-        Map<Long,DomainObject> map = new HashMap<Long,DomainObject>();
+        Map<Long,DomainObject> map = new HashMap<>();
         for (DomainObject obj : children) {
             map.put(obj.getId(), obj);
         }
         
-        List<DomainObject> temp = new ArrayList<DomainObject>();
+        List<DomainObject> temp = new ArrayList<>();
         if (treeNode.getChildren()!=null) {
             for(Reference reference : treeNode.getChildren()) {
+                if (reference==null) continue;
                 DomainObject obj = map.get(reference.getTargetId());
                 if (obj!=null) {
                     if (TreeNode.class.isAssignableFrom(obj.getClass())) {
