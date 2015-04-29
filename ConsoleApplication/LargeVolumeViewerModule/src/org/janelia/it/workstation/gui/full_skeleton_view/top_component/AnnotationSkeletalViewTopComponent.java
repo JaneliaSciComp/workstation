@@ -5,7 +5,6 @@
  */
 package org.janelia.it.workstation.gui.full_skeleton_view.top_component;
 
-import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;

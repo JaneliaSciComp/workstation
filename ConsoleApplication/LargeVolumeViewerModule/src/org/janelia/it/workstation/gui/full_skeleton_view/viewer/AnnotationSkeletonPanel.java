@@ -44,8 +44,8 @@ public class AnnotationSkeletonPanel extends JPanel {
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
         this.setLayout(new BorderLayout());
-    }
-
+            }
+    
     public void establish3D() {
         if (viewer == null  &&  dataSource.getSkeleton() != null  &&  dataSource.getSkeleton().getTileFormat() != null) {
             SkeletonActor actor = new SkeletonActor();
@@ -214,8 +214,10 @@ public class AnnotationSkeletonPanel extends JPanel {
                 }
             }
             BoundingBox3d box = new BoundingBox3d();
-            box.include(minimum);
-            box.include(maximum);
+            if (minimum != null  &&  maximum != null) {
+                box.include(minimum);
+                box.include(maximum);
+            }
             return box;
         }
         
