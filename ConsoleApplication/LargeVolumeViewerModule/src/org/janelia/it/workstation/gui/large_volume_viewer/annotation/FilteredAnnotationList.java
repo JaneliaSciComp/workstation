@@ -83,30 +83,18 @@ public class FilteredAnnotationList extends JPanel {
         filteredTable.setRowSorter(sorter);
 
 
-        // single-click selects annotation
-        // NOTE: I suspect this could (or even should) go into the mouse
-        //  listener alongside the double-click action below
-        filteredTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                int viewRow = filteredTable.getSelectedRow();
-                if (viewRow >= 0) {
-                    // selection still visible
-                    int modelRow = filteredTable.convertRowIndexToModel(viewRow);
-                    InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
-                    annoSelectListener.annotationSelected(ann.getAnnotationID());
-                }
-            }
-        });
-
-        // double-click shifts camera to annotation
+        // single-click selects annotation, and
+        //  double-click shifts camera to annotation
         filteredTable.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
-                if (me.getClickCount() == 2) {
-                    JTable table = (JTable) me.getSource();
-                    int viewRow = table.rowAtPoint(me.getPoint());
-                    if (viewRow >= 0) {
-                        int modelRow = filteredTable.convertRowIndexToModel(viewRow);
+                JTable table = (JTable) me.getSource();
+                int viewRow = table.rowAtPoint(me.getPoint());
+                if (viewRow >= 0) {
+                    int modelRow = filteredTable.convertRowIndexToModel(viewRow);
+                    if (me.getClickCount() == 1) {
+                        InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
+                        annoSelectListener.annotationSelected(ann.getAnnotationID());
+                    } else if (me.getClickCount() == 2) {
                         if (panListener != null) {
                             InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
                             TmGeoAnnotation ann = currentNeuron.getGeoAnnotationMap().get(interestingAnnotation.getAnnotationID());
