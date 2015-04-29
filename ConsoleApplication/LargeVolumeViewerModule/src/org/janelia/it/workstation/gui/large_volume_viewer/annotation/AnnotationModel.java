@@ -463,6 +463,14 @@ called from a  SimpleWorker thread.
             updateCurrentNeuron();
         }
 
+        // the parent may lose some predefined notes (finished end, possible branch)
+        // note 1: probably really ought to have some kind of "annotation connectivity
+        //  changed" listener so we don't need to remember to call this routine
+        //  when appropriate
+
+        // note2 : need to get updated copy of neuron:
+        stripPredefNotes(getNeuronFromAnnotationID(parentAnn.getId()), parentAnn.getId());
+
         if (automatedTracingEnabled()) {
             if (viewStateListener != null)
                 viewStateListener.pathTraceRequested(annotation.getId());
@@ -1050,6 +1058,19 @@ called from a  SimpleWorker thread.
         }        
     }
 
+    public String getNote(Long annotationID) {
+        TmNeuron neuron = getNeuronFromAnnotationID(annotationID);
+        final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
+        if (textAnnotation != null) {
+            JsonNode rootNode = textAnnotation.getData();
+            JsonNode noteNode = rootNode.path("note");
+            if (!noteNode.isMissingNode()) {
+                return noteNode.asText();
+            }
+        }
+        return "";
+    }
+
     /**
      * add or update a note on a geometric annotation
      */
@@ -1198,6 +1219,29 @@ called from a  SimpleWorker thread.
         } else {
             return false;
         }
+    }
+
+    /**
+     * examine the input annotation and remove any predefined notes which
+     * are no longer valid
+     */
+    private void stripPredefNotes(TmNeuron neuron, Long annID) throws Exception {
+        String noteText = getNote(annID);
+        boolean modified = false;
+        if (noteText.length() > 0) {
+            List<PredefinedNote> predefList = PredefinedNote.findNotes(noteText);
+            for (PredefinedNote predefNote: predefList) {
+                if (!predefNote.isValid(neuron, annID)) {
+                    // remove it!
+                    noteText = noteText.replace(predefNote.getNoteText(), "");
+                    modified = true;
+                }
+            }
+            if (modified) {
+                setNote(getGeoAnnotationFromID(annID), noteText);
+            }
+        }
+
     }
 
     /**

@@ -737,16 +737,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * annotation ID doesn't exist
      */
     public String getNote(Long annotationID) {
-        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
-        final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
-        if (textAnnotation != null) {
-            JsonNode rootNode = textAnnotation.getData();
-            JsonNode noteNode = rootNode.path("note");
-            if (!noteNode.isMissingNode()) {
-                return noteNode.asText();
-            }
-        }
-        return "";
+        return annotationModel.getNote(annotationID);
     }
 
     public void setNote(final Long annotationID, final String noteText) {
