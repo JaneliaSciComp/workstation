@@ -74,11 +74,8 @@ public class FilteredAnnotationList extends JPanel {
         setupUI();
 
         // interactions & behaviors
-        // allows (basic) sorting
-        // future: replace with custom sorter which gets us
-        //  filtering (filter by regex on text columns, can
-        //  restrict to specific column)
-        // filteredTable.setAutoCreateRowSorter(true);
+        // sorter allows click-on-column-header sorting, plus required
+        //  to do text filtering
         sorter = new TableRowSorter<>((FilteredAnnotationModel) filteredTable.getModel());
         filteredTable.setRowSorter(sorter);
 
@@ -106,7 +103,6 @@ public class FilteredAnnotationList extends JPanel {
                 }
             }
         });
-
 
     }
 
