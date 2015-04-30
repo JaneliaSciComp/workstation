@@ -12,12 +12,15 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * This will have access to setters, etc. on the panels, to provide
  * control feeds from external events.
  * @author fosterl
  */
-public class PanelController {
+public class PanelController implements TmGeoAnnotationAnchorListener {
     private PanelGlobalListener globalListener;
     private AnnotationPanel annotationPanel;
     private NoteListPanel noteListPanel;
@@ -51,6 +54,8 @@ public class PanelController {
         PanelTmGeoSelectListener ptgsl = new PanelTmGeoSelectListener();
         this.neuriteTreePanel.setAnnoSelectListener(ptgsl);
         this.filteredAnnotationList.setAnnoSelectListener(ptgsl);
+
+        this.lvvTranslator.addTmGeoAnchorListener(this);
     }
     
     public void registerForEvents(AnnotationModel annotationModel) {
@@ -152,5 +157,31 @@ public class PanelController {
             mgr.addEditNote(annotation.getId());
         }
         
+    }
+
+    // TmGeoAnnotationAnchorListener methods
+    // filtered annotation list, neurite tree list will need to listen
+    public void anchorAdded(TmGeoAnnotation annotation) {
+        filteredAnnotationList.annotationChanged(annotation);
+    }
+
+    public void anchorsAdded(List<TmGeoAnnotation> annotationList) {
+        filteredAnnotationList.annotationsChanged(annotationList);
+    }
+
+    public void anchorDeleted(TmGeoAnnotation annotation) {
+        filteredAnnotationList.annotationChanged(annotation);
+    }
+
+    public void anchorReparented(TmGeoAnnotation annotation) {
+        filteredAnnotationList.annotationChanged(annotation);
+    }
+
+    public void anchorMovedBack(TmGeoAnnotation annotation) {
+        filteredAnnotationList.annotationChanged(annotation);
+    }
+
+    public void clearAnchors() {
+        filteredAnnotationList.annotationsChanged(new ArrayList<TmGeoAnnotation>());
     }
 }

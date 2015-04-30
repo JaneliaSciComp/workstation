@@ -11,11 +11,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteReq
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -50,9 +46,8 @@ public class FilteredAnnotationList extends JPanel {
 
     // data stuff
     AnnotationManager annotationMgr;
+    AnnotationModel annotationModel;
     FilteredAnnotationModel model;
-    TmNeuron currentNeuron;
-    TmWorkspace currentWorkspace;
 
 
     // interaction
@@ -62,8 +57,9 @@ public class FilteredAnnotationList extends JPanel {
 
 
 
-    public FilteredAnnotationList(AnnotationManager annotationMgr, int width) {
+    public FilteredAnnotationList(AnnotationManager annotationMgr, final AnnotationModel annotationModel, int width) {
         this.annotationMgr = annotationMgr;
+        this.annotationModel = annotationModel;
         this.width = width;
 
         // set up model
@@ -94,6 +90,7 @@ public class FilteredAnnotationList extends JPanel {
                     } else if (me.getClickCount() == 2) {
                         if (panListener != null) {
                             InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
+                            TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
                             TmGeoAnnotation ann = currentNeuron.getGeoAnnotationMap().get(interestingAnnotation.getAnnotationID());
                             if (ann != null) {
                                 panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
@@ -107,16 +104,22 @@ public class FilteredAnnotationList extends JPanel {
     }
 
 
+    // the next routines are called by PanelController (etc) when data changes;
+    //   for now, they all call the same internal, brute force update
+
     public void loadNeuron(TmNeuron neuron) {
-        currentNeuron = neuron;
         updateData();
     }
 
     public void loadWorkspace(TmWorkspace workspace) {
-        currentWorkspace = workspace;
-        if (currentWorkspace == null) {
-            currentNeuron = null;
-        }
+        updateData();
+    }
+
+    public void annotationChanged(TmGeoAnnotation ann) {
+        updateData();
+    }
+
+    public void annotationsChanged(List<TmGeoAnnotation> annotationList) {
         updateData();
     }
 
@@ -124,6 +127,7 @@ public class FilteredAnnotationList extends JPanel {
         // totally brute force; we don't know what updated, so
         //  start from scratch each time
 
+        TmWorkspace currentWorkspace = annotationModel.getCurrentWorkspace();
         if (currentWorkspace == null) {
             return;
         }
