@@ -39,15 +39,12 @@ public class LatticeActor extends GL3SimpleActor {
             float start=-1.0f*(LENGTH/2.0f);
             float d = LENGTH / (1.0f * POINTS);
 
-            logger.info("start=" + start + " d=" + d);
-
             for (int i=0;i<POINTS;i++) {
                 for (int j=0;j<POINTS;j++) {
                     for (int k=0;k<POINTS;k++) {
                         float x = start + i * d;
                         float y = start + j * d;
                         float z = start + k * d;
-                        logger.info("x=" + x + " y=" + y + " z=" + z);
                         int vs = (i * POINTS * POINTS + j * POINTS + k) * 3;
                         varr[vs] = x;
                         varr[vs + 1] = y;
@@ -60,9 +57,6 @@ public class LatticeActor extends GL3SimpleActor {
                 fb.put(f, varr[f]);
             }
             loaded=true;
-        }
-        for (int r=0;r<fb.capacity();r=r+3) {
-            logger.info(fb.get(r) + " " + fb.get(r+1) + " " + fb.get(r+2));
         }
         gl.glGenVertexArrays(1, vertexArrayId);
         checkGlError(gl, "glGenVertexArrays error");
@@ -78,7 +72,6 @@ public class LatticeActor extends GL3SimpleActor {
 
     @Override
     public void display(GL3 gl) {
-        logger.info("display() ...");
         super.display(gl);
         gl.glPointSize(10f);
         gl.glBindVertexArray(vertexArrayId.get(0));
