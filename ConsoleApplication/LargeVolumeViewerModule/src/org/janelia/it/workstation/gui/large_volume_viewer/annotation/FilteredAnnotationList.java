@@ -176,7 +176,36 @@ public class FilteredAnnotationList extends JPanel {
         add(new JLabel("Annotations", JLabel.LEADING), c);
 
         // table
-        filteredTable = new JTable(model);
+        // implement tool tip while we're here
+        filteredTable = new JTable(model) {
+            // mostly taken from the Oracle tutorial
+            public String getToolTipText(MouseEvent event) {
+                String tip = null;
+                java.awt.Point p = event.getPoint();
+                int rowIndex = rowAtPoint(p);
+                if (rowIndex >= 0) {
+                    int colIndex = columnAtPoint(p);
+                    int realColumnIndex = convertColumnIndexToModel(colIndex);
+                    int realRowIndex = convertRowIndexToModel(rowIndex);
+
+                    if (realColumnIndex == 0) {
+                        // show full ID
+                        tip = model.getAnnotationAtRow(realRowIndex).getAnnotationID().toString();
+                    } else if (realColumnIndex == 1) {
+                        // no tip here
+                        tip = null;
+                    } else {
+                        // for the rest, show the full text (esp. for notes)
+                        tip = (String) model.getValueAt(realRowIndex, realColumnIndex);
+                    }
+                    return tip;
+                } else {
+                    // off visible rows, returns null = no tip
+                    return tip;
+                }
+            }
+        };
+
 
         // we respond to clicks, but we're not really selecting rows
         filteredTable.setRowSelectionAllowed(false);
