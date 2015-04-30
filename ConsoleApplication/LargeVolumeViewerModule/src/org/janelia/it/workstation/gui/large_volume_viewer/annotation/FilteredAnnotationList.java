@@ -57,7 +57,7 @@ public class FilteredAnnotationList extends JPanel {
 
 
 
-    public FilteredAnnotationList(AnnotationManager annotationMgr, final AnnotationModel annotationModel, int width) {
+    public FilteredAnnotationList(final AnnotationManager annotationMgr, final AnnotationModel annotationModel, int width) {
         this.annotationMgr = annotationMgr;
         this.annotationModel = annotationModel;
         this.width = width;
@@ -90,8 +90,9 @@ public class FilteredAnnotationList extends JPanel {
                     } else if (me.getClickCount() == 2) {
                         if (panListener != null) {
                             InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
-                            TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
-                            TmGeoAnnotation ann = currentNeuron.getGeoAnnotationMap().get(interestingAnnotation.getAnnotationID());
+                            TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getAnnotationID());
+                            // TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
+                            // TmGeoAnnotation ann = currentNeuron.getGeoAnnotationMap().get(interestingAnnotation.getAnnotationID());
                             if (ann != null) {
                                 panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
                             }
