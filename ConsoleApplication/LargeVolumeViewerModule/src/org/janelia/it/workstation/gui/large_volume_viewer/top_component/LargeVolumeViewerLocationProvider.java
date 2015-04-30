@@ -6,7 +6,6 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
-import java.net.URL;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;

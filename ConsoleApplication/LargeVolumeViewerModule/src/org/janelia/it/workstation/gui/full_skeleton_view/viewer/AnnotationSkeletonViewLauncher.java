@@ -22,6 +22,11 @@ import org.janelia.it.workstation.gui.util.WindowLocator;
  */
 public class AnnotationSkeletonViewLauncher {
     
+    /** Always re-open the view on initial creation. */
+    public AnnotationSkeletonViewLauncher() {
+        refreshView();
+    }
+    
     public List<JMenuItem> getMenuItems() {
         List<JMenuItem> menuItems = new ArrayList<>();
         Action launchAction = new AbstractAction() {
@@ -30,15 +35,33 @@ public class AnnotationSkeletonViewLauncher {
             }
             @Override
             public void actionPerformed(ActionEvent e) {
-                AnnotationSkeletalViewTopComponent topComponent = (AnnotationSkeletalViewTopComponent)
-                        WindowLocator.makeVisibleAndGet(AnnotationSkeletalViewTopComponent.PREFERRED_ID);
-                // This exchange will refresh contents of viewer.
-                topComponent.componentClosed();
-                topComponent.componentOpened();
+                reopenView();
             }
         };
         menuItems.add(new JMenuItem(launchAction));
         return menuItems;
+    }
+    
+    public void reopenView() {
+        AnnotationSkeletalViewTopComponent topComponent = showTopComponent();
+        // This exchange will refresh contents of viewer.
+        topComponent.componentOpened();
+    }
+    
+    private void refreshView() {
+        getTopComponent().componentOpened();
+    }
+
+    protected AnnotationSkeletalViewTopComponent getTopComponent() {
+        AnnotationSkeletalViewTopComponent topComponent =
+                (AnnotationSkeletalViewTopComponent) WindowLocator
+                        .getByName(AnnotationSkeletalViewTopComponent.PREFERRED_ID);
+        return topComponent;
+    }
+    
+    protected AnnotationSkeletalViewTopComponent showTopComponent() {
+        AnnotationSkeletalViewTopComponent topComponent = (AnnotationSkeletalViewTopComponent) WindowLocator.makeVisibleAndGet(AnnotationSkeletalViewTopComponent.PREFERRED_ID);
+        return topComponent;
     }
 
 }
