@@ -108,6 +108,7 @@ public class FilteredAnnotationList extends JPanel {
     //   for now, they all call the same internal, brute force update
 
     public void loadNeuron(TmNeuron neuron) {
+        System.out.println("filtered list: loadNeuron()");
         updateData();
     }
 

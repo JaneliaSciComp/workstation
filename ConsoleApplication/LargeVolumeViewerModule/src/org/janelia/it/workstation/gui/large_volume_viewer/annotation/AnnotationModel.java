@@ -198,8 +198,10 @@ called from a  SimpleWorker thread.
     // this method sets the current neuron *and*
     //  updates the UI
     public void selectNeuron(TmNeuron neuron) {
-        setCurrentNeuron(neuron);
-        fireNeuronSelected(neuron);
+        if (!neuron.getId().equals(getCurrentNeuron())) {
+            setCurrentNeuron(neuron);
+            fireNeuronSelected(neuron);
+        }
     }
 
     private void updateCurrentNeuron() {
