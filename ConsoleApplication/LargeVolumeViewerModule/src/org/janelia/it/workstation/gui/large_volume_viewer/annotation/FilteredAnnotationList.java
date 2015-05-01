@@ -472,7 +472,7 @@ class NotFilter implements AnnotationFilter {
     }
 }
 
-class AndFilter implements  AnnotationFilter {
+class AndFilter implements AnnotationFilter {
     private AnnotationFilter filter1;
     private AnnotationFilter filter2;
     public AndFilter(AnnotationFilter filter1, AnnotationFilter filter2) {
@@ -484,7 +484,22 @@ class AndFilter implements  AnnotationFilter {
     }
 }
 
-class OrFilter implements  AnnotationFilter {
+class AllFilter implements AnnotationFilter {
+    private List<AnnotationFilter> filterList;
+    public AllFilter(List<AnnotationFilter> filterList) {
+        this.filterList = filterList;
+    }
+    public boolean isInteresting(InterestingAnnotation ann) {
+        for (AnnotationFilter filter: filterList) {
+            if (!filter.isInteresting(ann)) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+class OrFilter implements AnnotationFilter {
     private AnnotationFilter filter1;
     private AnnotationFilter filter2;
     public OrFilter(AnnotationFilter filter1, AnnotationFilter filter2) {
@@ -493,6 +508,21 @@ class OrFilter implements  AnnotationFilter {
     }
     public boolean isInteresting(InterestingAnnotation ann) {
         return filter1.isInteresting(ann) || filter2.isInteresting(ann);
+    }
+}
+
+class AnyFilter implements AnnotationFilter {
+    private List<AnnotationFilter> filterList;
+    public AnyFilter(List<AnnotationFilter> filterList) {
+        this.filterList = filterList;
+    }
+    public boolean isInteresting(InterestingAnnotation ann) {
+        for (AnnotationFilter filter: filterList) {
+            if (filter.isInteresting(ann)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
