@@ -237,6 +237,7 @@ public class GL3Renderer implements GLEventListener
     public void translatePixels(double dx, double dy, double dz) {
         // trackball translate
         Vec3 t = new Vec3(-dx, -dy, -dz);
+        t.multEquals(glUnitsPerPixel());
         model.getCamera3d().getFocus().plusEquals(
                 camera.getRotation().times(t)
         );
@@ -286,6 +287,8 @@ public class GL3Renderer implements GLEventListener
         model.setCameraPixelsPerSceneUnit(DISTANCE_TO_SCREEN_IN_PIXELS, cameraFocusDistance);
 
         model.setCameraDepth(new Vec3(0.0, 0.0, cameraFocusDistance));
+
+        logger.info("ZOOM  glUnitsPerPixel="+glUnitsPerPixel()+" cameraFocusDistance="+cameraFocusDistance);
 
     }
 

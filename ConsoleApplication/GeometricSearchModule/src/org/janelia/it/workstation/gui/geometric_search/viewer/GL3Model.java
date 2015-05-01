@@ -36,7 +36,7 @@ public class GL3Model {
 
     public GL3Model() {
         camera3d = new BasicObservableCamera3d();
-        camera3d.setFocus(0.0,0.0,0.0);
+        camera3d.setFocus(0.0,0.0,0.5);
         cameraDepth = new Vec3(0.0, 0.0, -DEFAULT_CAMERA_FOCUS_DISTANCE);
     }
 
