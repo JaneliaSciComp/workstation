@@ -141,7 +141,7 @@ public class FilteredAnnotationList extends JPanel {
         // loop over neurons, roots in neuron, annotations per root;
         //  put all the "interesting" annotations in a list
         model.clear();
-        SimpleAnnotationFilter filter = getFilter();
+        AnnotationFilter filter = getFilter();
         String note;
         for (TmNeuron neuron: currentWorkspace.getNeuronList()) {
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
@@ -300,7 +300,7 @@ public class FilteredAnnotationList extends JPanel {
      * examine the state of the UI and generate an
      * appropriate filter
      */
-    public SimpleAnnotationFilter getFilter() {
+    public AnnotationFilter getFilter() {
         // testing:
         return new SimpleAnnotationFilter();
     }
@@ -463,10 +463,14 @@ enum AnnotationGeometry {
  * boolean filters based on other filters, etc.;
  * but let's not get too far ahead of our needs
  */
-class SimpleAnnotationFilter {
+class SimpleAnnotationFilter implements AnnotationFilter {
 
     public boolean isInteresting(InterestingAnnotation ann) {
         // minimal: has note or geom not link
         return ann.hasNote() || ann.getGeometry() != AnnotationGeometry.LINK;
     }
+}
+
+interface AnnotationFilter {
+    public boolean isInteresting(InterestingAnnotation ann);
 }
