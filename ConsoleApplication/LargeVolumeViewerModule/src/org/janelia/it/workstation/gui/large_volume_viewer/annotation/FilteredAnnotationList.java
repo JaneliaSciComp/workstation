@@ -301,8 +301,8 @@ public class FilteredAnnotationList extends JPanel {
      * appropriate filter
      */
     public AnnotationFilter getFilter() {
-        // testing:
-        return new SimpleAnnotationFilter();
+        // default filter: has note or isn't a straight link
+        return new OrFilter(new HasNoteFilter(), new NotFilter(new GeometryFilter(AnnotationGeometry.LINK)));
     }
 
     public AnnotationGeometry getAnnotationGeometry(TmGeoAnnotation ann) {
@@ -454,23 +454,70 @@ enum AnnotationGeometry {
 }
 
 /**
- * a configurable filter generated from the UI that
- * determines whether an annotation is interesting or not
- *
- * I'm going to wrap geometry and note matching in one
- * filter for now; could imagine developing a whole
- * hierarchy of filters and combining them via
- * boolean filters based on other filters, etc.;
- * but let's not get too far ahead of our needs
+ * a system of configurable filters that will be generated
+ * from the UI that will determine whether an annotation
+ * is interesting or not
  */
-class SimpleAnnotationFilter implements AnnotationFilter {
+interface AnnotationFilter {
+    public boolean isInteresting(InterestingAnnotation ann);
+}
 
+class NotFilter implements AnnotationFilter {
+    private AnnotationFilter filter;
+    public NotFilter(AnnotationFilter filter) {
+        this.filter = filter;
+    }
     public boolean isInteresting(InterestingAnnotation ann) {
-        // minimal: has note or geom not link
-        return ann.hasNote() || ann.getGeometry() != AnnotationGeometry.LINK;
+        return !filter.isInteresting(ann);
     }
 }
 
-interface AnnotationFilter {
-    public boolean isInteresting(InterestingAnnotation ann);
+class AndFilter implements  AnnotationFilter {
+    private AnnotationFilter filter1;
+    private AnnotationFilter filter2;
+    public AndFilter(AnnotationFilter filter1, AnnotationFilter filter2) {
+        this.filter1 = filter1;
+        this.filter2 = filter2;
+    }
+    public boolean isInteresting(InterestingAnnotation ann) {
+        return filter1.isInteresting(ann) && filter2.isInteresting(ann);
+    }
+}
+
+class OrFilter implements  AnnotationFilter {
+    private AnnotationFilter filter1;
+    private AnnotationFilter filter2;
+    public OrFilter(AnnotationFilter filter1, AnnotationFilter filter2) {
+        this.filter1 = filter1;
+        this.filter2 = filter2;
+    }
+    public boolean isInteresting(InterestingAnnotation ann) {
+        return filter1.isInteresting(ann) || filter2.isInteresting(ann);
+    }
+}
+
+class GeometryFilter implements AnnotationFilter {
+    private AnnotationGeometry geometry;
+    public GeometryFilter(AnnotationGeometry geometry) {
+        this.geometry = geometry;
+    }
+    public boolean isInteresting(InterestingAnnotation ann) {
+        return ann.getGeometry() == this.geometry;
+    }
+}
+
+class NoteTextFilter implements AnnotationFilter {
+    private String text;
+    public NoteTextFilter(String text) {
+        this.text = text;
+    }
+    public boolean isInteresting(InterestingAnnotation ann) {
+        return ann.getNoteText().contains(text);
+    }
+}
+
+class HasNoteFilter implements  AnnotationFilter {
+    public boolean isInteresting(InterestingAnnotation ann) {
+        return ann.hasNote();
+    }
 }
