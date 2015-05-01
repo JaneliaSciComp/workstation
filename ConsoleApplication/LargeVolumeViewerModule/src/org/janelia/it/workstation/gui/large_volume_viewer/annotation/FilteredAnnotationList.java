@@ -11,11 +11,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteReq
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -50,20 +46,23 @@ public class FilteredAnnotationList extends JPanel {
 
     // data stuff
     AnnotationManager annotationMgr;
+    AnnotationModel annotationModel;
     FilteredAnnotationModel model;
-    TmNeuron currentNeuron;
-    TmWorkspace currentWorkspace;
 
 
     // interaction
     private CameraPanToListener panListener;
     private AnnotationSelectionListener annoSelectListener;
+
+    // I'm leaving this in for now, even though it's not used; I can
+    //  imagine allowing note editing from this widget in the future
     private EditNoteRequestedListener editNoteRequestedListener;
 
 
 
-    public FilteredAnnotationList(AnnotationManager annotationMgr, int width) {
+    public FilteredAnnotationList(final AnnotationManager annotationMgr, final AnnotationModel annotationModel, int width) {
         this.annotationMgr = annotationMgr;
+        this.annotationModel = annotationModel;
         this.width = width;
 
         // set up model
@@ -74,42 +73,30 @@ public class FilteredAnnotationList extends JPanel {
         setupUI();
 
         // interactions & behaviors
-        // allows (basic) sorting
-        // future: replace with custom sorter which gets us
-        //  filtering (filter by regex on text columns, can
-        //  restrict to specific column)
-        // filteredTable.setAutoCreateRowSorter(true);
+        // sorter allows click-on-column-header sorting, plus required
+        //  to do text filtering
         sorter = new TableRowSorter<>((FilteredAnnotationModel) filteredTable.getModel());
         filteredTable.setRowSorter(sorter);
 
+        // default sort order: let's go with ID column for now?
+        filteredTable.getRowSorter().toggleSortOrder(0);
 
-        // single-click selects annotation
-        // NOTE: I suspect this could (or even should) go into the mouse
-        //  listener alongside the double-click action below
-        filteredTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                int viewRow = filteredTable.getSelectedRow();
-                if (viewRow >= 0) {
-                    // selection still visible
-                    int modelRow = filteredTable.convertRowIndexToModel(viewRow);
-                    InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
-                    annoSelectListener.annotationSelected(ann.getAnnotationID());
-                }
-            }
-        });
 
-        // double-click shifts camera to annotation
+        // single-click selects annotation, and
+        //  double-click shifts camera to annotation
         filteredTable.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
-                if (me.getClickCount() == 2) {
-                    JTable table = (JTable) me.getSource();
-                    int viewRow = table.rowAtPoint(me.getPoint());
-                    if (viewRow >= 0) {
-                        int modelRow = filteredTable.convertRowIndexToModel(viewRow);
+                JTable table = (JTable) me.getSource();
+                int viewRow = table.rowAtPoint(me.getPoint());
+                if (viewRow >= 0) {
+                    int modelRow = filteredTable.convertRowIndexToModel(viewRow);
+                    if (me.getClickCount() == 1) {
+                        InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
+                        annoSelectListener.annotationSelected(ann.getAnnotationID());
+                    } else if (me.getClickCount() == 2) {
                         if (panListener != null) {
                             InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
-                            TmGeoAnnotation ann = currentNeuron.getGeoAnnotationMap().get(interestingAnnotation.getAnnotationID());
+                            TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getAnnotationID());
                             if (ann != null) {
                                 panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
                             }
@@ -119,20 +106,26 @@ public class FilteredAnnotationList extends JPanel {
             }
         });
 
-
     }
 
 
+    // the next routines are called by PanelController (etc) when data changes;
+    //   for now, they all call the same internal, brute force update
+
     public void loadNeuron(TmNeuron neuron) {
-        currentNeuron = neuron;
+        System.out.println("filtered list: loadNeuron()");
         updateData();
     }
 
     public void loadWorkspace(TmWorkspace workspace) {
-        currentWorkspace = workspace;
-        if (currentWorkspace == null) {
-            currentNeuron = null;
-        }
+        updateData();
+    }
+
+    public void annotationChanged(TmGeoAnnotation ann) {
+        updateData();
+    }
+
+    public void annotationsChanged(List<TmGeoAnnotation> annotationList) {
         updateData();
     }
 
@@ -140,6 +133,7 @@ public class FilteredAnnotationList extends JPanel {
         // totally brute force; we don't know what updated, so
         //  start from scratch each time
 
+        TmWorkspace currentWorkspace = annotationModel.getCurrentWorkspace();
         if (currentWorkspace == null) {
             return;
         }
@@ -147,7 +141,7 @@ public class FilteredAnnotationList extends JPanel {
         // loop over neurons, roots in neuron, annotations per root;
         //  put all the "interesting" annotations in a list
         model.clear();
-        SimpleAnnotationFilter filter = getFilter();
+        AnnotationFilter filter = getFilter();
         String note;
         for (TmNeuron neuron: currentWorkspace.getNeuronList()) {
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
@@ -187,7 +181,36 @@ public class FilteredAnnotationList extends JPanel {
         add(new JLabel("Annotations", JLabel.LEADING), c);
 
         // table
-        filteredTable = new JTable(model);
+        // implement tool tip while we're here
+        filteredTable = new JTable(model) {
+            // mostly taken from the Oracle tutorial
+            public String getToolTipText(MouseEvent event) {
+                String tip = null;
+                java.awt.Point p = event.getPoint();
+                int rowIndex = rowAtPoint(p);
+                if (rowIndex >= 0) {
+                    int colIndex = columnAtPoint(p);
+                    int realColumnIndex = convertColumnIndexToModel(colIndex);
+                    int realRowIndex = convertRowIndexToModel(rowIndex);
+
+                    if (realColumnIndex == 0) {
+                        // show full ID
+                        tip = model.getAnnotationAtRow(realRowIndex).getAnnotationID().toString();
+                    } else if (realColumnIndex == 1) {
+                        // no tip here
+                        tip = null;
+                    } else {
+                        // for the rest, show the full text (esp. for notes)
+                        tip = (String) model.getValueAt(realRowIndex, realColumnIndex);
+                    }
+                    return tip;
+                } else {
+                    // off visible rows, returns null = no tip
+                    return tip;
+                }
+            }
+        };
+
 
         // we respond to clicks, but we're not really selecting rows
         filteredTable.setRowSelectionAllowed(false);
@@ -277,9 +300,9 @@ public class FilteredAnnotationList extends JPanel {
      * examine the state of the UI and generate an
      * appropriate filter
      */
-    public SimpleAnnotationFilter getFilter() {
-        // testing:
-        return new SimpleAnnotationFilter();
+    public AnnotationFilter getFilter() {
+        // default filter: has note or isn't a straight link
+        return new OrFilter(new HasNoteFilter(), new NotFilter(new GeometryFilter(AnnotationGeometry.LINK)));
     }
 
     public AnnotationGeometry getAnnotationGeometry(TmGeoAnnotation ann) {
@@ -431,19 +454,70 @@ enum AnnotationGeometry {
 }
 
 /**
- * a configurable filter generated from the UI that
- * determines whether an annotation is interesting or not
- *
- * I'm going to wrap geometry and note matching in one
- * filter for now; could imagine developing a whole
- * hierarchy of filters and combining them via
- * boolean filters based on other filters, etc.;
- * but let's not get too far ahead of our needs
+ * a system of configurable filters that will be generated
+ * from the UI that will determine whether an annotation
+ * is interesting or not
  */
-class SimpleAnnotationFilter {
+interface AnnotationFilter {
+    public boolean isInteresting(InterestingAnnotation ann);
+}
 
+class NotFilter implements AnnotationFilter {
+    private AnnotationFilter filter;
+    public NotFilter(AnnotationFilter filter) {
+        this.filter = filter;
+    }
     public boolean isInteresting(InterestingAnnotation ann) {
-        // minimal: has note or geom not link
-        return ann.hasNote() || ann.getGeometry() != AnnotationGeometry.LINK;
+        return !filter.isInteresting(ann);
+    }
+}
+
+class AndFilter implements  AnnotationFilter {
+    private AnnotationFilter filter1;
+    private AnnotationFilter filter2;
+    public AndFilter(AnnotationFilter filter1, AnnotationFilter filter2) {
+        this.filter1 = filter1;
+        this.filter2 = filter2;
+    }
+    public boolean isInteresting(InterestingAnnotation ann) {
+        return filter1.isInteresting(ann) && filter2.isInteresting(ann);
+    }
+}
+
+class OrFilter implements  AnnotationFilter {
+    private AnnotationFilter filter1;
+    private AnnotationFilter filter2;
+    public OrFilter(AnnotationFilter filter1, AnnotationFilter filter2) {
+        this.filter1 = filter1;
+        this.filter2 = filter2;
+    }
+    public boolean isInteresting(InterestingAnnotation ann) {
+        return filter1.isInteresting(ann) || filter2.isInteresting(ann);
+    }
+}
+
+class GeometryFilter implements AnnotationFilter {
+    private AnnotationGeometry geometry;
+    public GeometryFilter(AnnotationGeometry geometry) {
+        this.geometry = geometry;
+    }
+    public boolean isInteresting(InterestingAnnotation ann) {
+        return ann.getGeometry() == this.geometry;
+    }
+}
+
+class NoteTextFilter implements AnnotationFilter {
+    private String text;
+    public NoteTextFilter(String text) {
+        this.text = text;
+    }
+    public boolean isInteresting(InterestingAnnotation ann) {
+        return ann.getNoteText().contains(text);
+    }
+}
+
+class HasNoteFilter implements  AnnotationFilter {
+    public boolean isInteresting(InterestingAnnotation ann) {
+        return ann.hasNote();
     }
 }
