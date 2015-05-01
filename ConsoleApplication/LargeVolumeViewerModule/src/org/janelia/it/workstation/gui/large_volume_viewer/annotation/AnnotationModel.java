@@ -1093,28 +1093,38 @@ called from a  SimpleWorker thread.
             throw new Exception("can't find neuron for annotation with ID " + geoAnnotation.getId());
         }
 
-        // fix: if setting empty note, don't add new note, and remove existing note;
-        //  don't leave a note with an empty string
-        // fix here or in back end, though?  or both?
-
-        // if it's got a structured text annotation already:
         TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(geoAnnotation.getId());
         ObjectMapper mapper = new ObjectMapper();
         if (textAnnotation != null) {
-            // if you've got one, use it; for now, you only get one
+            // if you've got a structured text annotation already, use it; for now, you only get one
             JsonNode rootNode = textAnnotation.getData();
-            ((ObjectNode) rootNode).put("note", noteString);
-
-            modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
+            if (noteString.length() > 0) {
+                ((ObjectNode) rootNode).put("note", noteString);
+                modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
+            } else {
+                // there is a note attached, but we want it gone; if it's the only thing there,
+                //  delete the whole structured text annotation
+                ((ObjectNode) rootNode).remove("note");
+                if (rootNode.size() > 0) {
+                    modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
+                } else {
+                    // otherwise, there's something left, so persist it (note: as of this
+                    //  writing, there aren't any other structured text annotations besides
+                    //  note, but no need to get sloppy!)
+                    modelMgr.deleteStructuredTextAnnotation(textAnnotation.getId());
+                }
+            }
 
         } else {
-            // it doesn't exist
-            ObjectNode rootNode = mapper.createObjectNode();
-            rootNode.put("note", noteString);
+            // it doesn't exist; if input is also null, don't even bother
+            if (noteString.length() > 0) {
+                ObjectNode rootNode = mapper.createObjectNode();
+                rootNode.put("note", noteString);
 
-            modelMgr.addStructuredTextAnnotation(neuron.getId(), geoAnnotation.getId(),
-                    TmStructuredTextAnnotation.GEOMETRIC_ANNOTATION, TmStructuredTextAnnotation.FORMAT_VERSION,
-                    mapper.writeValueAsString(rootNode));
+                modelMgr.addStructuredTextAnnotation(neuron.getId(), geoAnnotation.getId(),
+                        TmStructuredTextAnnotation.GEOMETRIC_ANNOTATION, TmStructuredTextAnnotation.FORMAT_VERSION,
+                        mapper.writeValueAsString(rootNode));
+            }
         }
 
         // updates
