@@ -75,6 +75,9 @@ public class FilteredAnnotationList extends JPanel {
         sorter = new TableRowSorter<>((FilteredAnnotationModel) filteredTable.getModel());
         filteredTable.setRowSorter(sorter);
 
+        // default sort order: let's go with ID column for now?
+        filteredTable.getRowSorter().toggleSortOrder(0);
+
 
         // single-click selects annotation, and
         //  double-click shifts camera to annotation
@@ -91,8 +94,6 @@ public class FilteredAnnotationList extends JPanel {
                         if (panListener != null) {
                             InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
                             TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getAnnotationID());
-                            // TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
-                            // TmGeoAnnotation ann = currentNeuron.getGeoAnnotationMap().get(interestingAnnotation.getAnnotationID());
                             if (ann != null) {
                                 panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
                             }

@@ -923,11 +923,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (annotationID == null) {
             return;
         }
-
         TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
-        if (!neuron.getGeoAnnotationMap().containsKey(annotationID)) {
-            annotationModel.selectNeuron(neuron);
-        }
+        annotationModel.selectNeuron(neuron);
     }
 
     /**

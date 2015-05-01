@@ -196,12 +196,13 @@ called from a  SimpleWorker thread.
     }
 
     // this method sets the current neuron *and*
-    //  updates the UI
+    //  updates the UI; null neuron means deselect
     public void selectNeuron(TmNeuron neuron) {
-        if (!neuron.getId().equals(getCurrentNeuron())) {
-            setCurrentNeuron(neuron);
-            fireNeuronSelected(neuron);
+        if (neuron != null && getCurrentNeuron() != null && neuron.getId().equals(getCurrentNeuron().getId())) {
+            return;
         }
+        setCurrentNeuron(neuron);
+        fireNeuronSelected(neuron);
     }
 
     private void updateCurrentNeuron() {
