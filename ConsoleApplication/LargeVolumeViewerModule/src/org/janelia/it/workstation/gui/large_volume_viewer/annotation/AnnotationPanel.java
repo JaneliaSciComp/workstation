@@ -44,7 +44,6 @@ public class AnnotationPanel extends JPanel
 
     // UI components
     private FilteredAnnotationList filteredList;
-    private NeuriteTreePanel neuriteTreePanel;
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
     private JCheckBoxMenuItem automaticTracingMenuItem;
@@ -135,7 +134,7 @@ public class AnnotationPanel extends JPanel
 
     private void setupSignals() {
         // outgoing from the model:
-        PanelController panelController = new PanelController(this, noteListPanel, neuriteTreePanel,
+        PanelController panelController = new PanelController(this, noteListPanel,
                 filteredList, workspaceNeuronList, largeVolumeViewerTranslator);
         panelController.registerForEvents(annotationModel);
         panelController.registerForEvents(annotationMgr);
@@ -356,13 +355,7 @@ public class AnnotationPanel extends JPanel
         add(filteredList, cVert);
 
 
-        // ----- neuron information; show name, whatever attributes, list of neurites
-        add(Box.createRigidArea(new Dimension(0, 20)), cVert);
-        neuriteTreePanel = new NeuriteTreePanel(width);
-        neuriteTreePanel.setAnnotationManager(annotationMgr);
-        add(neuriteTreePanel, cVert);
-
-        // buttons for acting on annotations or neurites (which are in the list immediately above):
+        // buttons for acting on annotations
         JPanel neuriteButtonsPanel = new JPanel();
         neuriteButtonsPanel.setLayout(new BoxLayout(neuriteButtonsPanel, BoxLayout.LINE_AXIS));
         add(neuriteButtonsPanel, cVert);

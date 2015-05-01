@@ -24,7 +24,6 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
     private PanelGlobalListener globalListener;
     private AnnotationPanel annotationPanel;
     private NoteListPanel noteListPanel;
-    private NeuriteTreePanel neuriteTreePanel;
     private WorkspaceNeuronList wsNeuronList;
     private WorkspaceInfoPanel wsInfoPanel;
     private LargeVolumeViewerTranslator lvvTranslator;
@@ -33,26 +32,22 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
     public PanelController(
             AnnotationPanel annoPanel,
             NoteListPanel noteListPanel,
-            NeuriteTreePanel neuriteTreePanel,
             FilteredAnnotationList filteredAnnotationList,
             WorkspaceNeuronList wsNeuronList,
             LargeVolumeViewerTranslator lvvTranslator
     ) {
         this.annotationPanel = annoPanel;
         this.noteListPanel = noteListPanel;
-        this.neuriteTreePanel = neuriteTreePanel;
         this.filteredAnnotationList = filteredAnnotationList;
         this.wsNeuronList = wsNeuronList;
         this.lvvTranslator = lvvTranslator;
 
         PanelPanListener ppl = new PanelPanListener();
-        this.neuriteTreePanel.setPanListener(ppl);
         this.filteredAnnotationList.setPanListener(ppl);
         this.noteListPanel.setPanListener(ppl);
         this.wsNeuronList.setPanListener(ppl);
         
         PanelTmGeoSelectListener ptgsl = new PanelTmGeoSelectListener();
-        this.neuriteTreePanel.setAnnoSelectListener(ptgsl);
         this.filteredAnnotationList.setAnnoSelectListener(ptgsl);
 
         this.lvvTranslator.addTmGeoAnchorListener(this);
@@ -95,7 +90,6 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         
         @Override
         public void neuronSelected(TmNeuron neuron) {
-            neuriteTreePanel.loadNeuron(neuron);
             filteredAnnotationList.loadNeuron(neuron);
             wsNeuronList.selectNeuron(neuron);
         }

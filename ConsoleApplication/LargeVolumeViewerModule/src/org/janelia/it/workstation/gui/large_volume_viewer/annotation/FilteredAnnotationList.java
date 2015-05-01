@@ -53,6 +53,9 @@ public class FilteredAnnotationList extends JPanel {
     // interaction
     private CameraPanToListener panListener;
     private AnnotationSelectionListener annoSelectListener;
+
+    // I'm leaving this in for now, even though it's not used; I can
+    //  imagine allowing note editing from this widget in the future
     private EditNoteRequestedListener editNoteRequestedListener;
 
 
