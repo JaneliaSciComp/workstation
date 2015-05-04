@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package org.janelia.it.workstation.publication_quality.mesh.actor;
+package org.janelia.it.workstation.gui.viewer3d.mesh;
 
 import java.awt.Color;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.publication_quality.mesh.shader;
+package org.janelia.it.workstation.gui.viewer3d.mesh.shader;
 
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
 

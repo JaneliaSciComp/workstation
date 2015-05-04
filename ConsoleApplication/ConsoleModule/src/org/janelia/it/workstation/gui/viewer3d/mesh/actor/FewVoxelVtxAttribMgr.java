@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.publication_quality.mesh;
+package org.janelia.it.workstation.gui.viewer3d.mesh.actor;
 
 import org.janelia.it.jacs.shared.mesh_loader.*;
 import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
