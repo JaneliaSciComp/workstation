@@ -169,8 +169,12 @@ public class GL3Renderer implements GLEventListener
         Rotation3d rotation = camera.getRotation();
         double unitsPerPixel = glUnitsPerPixel();
 
-        Vec3 c = f.plus(rotation.times(model.getCameraDepth().times(unitsPerPixel))); // camera position
+        //Vec3 c = f.plus(rotation.times(model.getCameraDepth().times(unitsPerPixel))); // camera position
+
+        Vec3 c = f.plus(rotation.times(model.getCameraDepth())); // camera position
+
         Vec3 u = rotation.times(UP_IN_CAMERA); // up vector
+
         Vector3 f3 = new Vector3(new Float(f.getX()), new Float(f.getY()), new Float(f.getZ()));
         Vector3 c3 = new Vector3(new Float(c.getX()), new Float(c.getY()), new Float(c.getZ()));
         Vector3 u3 = new Vector3(new Float(u.getX()), new Float(u.getY()), new Float(u.getZ()));
@@ -195,6 +199,8 @@ public class GL3Renderer implements GLEventListener
 //        BoundingBox3d boundingBox = getBoundingBox();
 //        camera.setFocus(boundingBox.getCenter());
         camera.resetRotation();
+        camera.setFocus(0.0, 0.0, 0.0);
+        model.setCameraDepth(new Vec3(0.0, 0.0, -GL3Model.DEFAULT_CAMERA_FOCUS_DISTANCE));
 //        resetCameraDepth(boundingBox);
     }
 
@@ -231,13 +237,14 @@ public class GL3Renderer implements GLEventListener
     public void translatePixels(double dx, double dy, double dz) {
         // trackball translate
         Vec3 t = new Vec3(-dx, -dy, -dz);
+        t.multEquals(glUnitsPerPixel());
         model.getCamera3d().getFocus().plusEquals(
                 camera.getRotation().times(t)
         );
     }
 
     public void updateProjection(GL3 gl) {
-        gl.glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
+        //gl.glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = model.getCameraFocusDistance();
         float scaledFocusDistance = new Float(Math.abs(cameraFocusDistance));
@@ -251,10 +258,12 @@ public class GL3Renderer implements GLEventListener
         float right = top * aspectRatio;
         float left = -1f * right;
 
-        projection.set((2f * near) / (right - left), 0f, (right + left) / (right - left), 0f,
-                0f, (2f * near) / (top - bottom), (top + bottom) / (top - bottom), 0f,
-                0f, 0f, -1f * ((far + near) / (far - near)), -1f * ((2f * far * near) / (far - near)),
-                0f, 0f, -1f, 0f);
+        projection.set(
+
+                (2f * near) / (right - left),     0f,                             (right + left) / (right - left),         0f,
+                0f,                               (2f * near) / (top - bottom),   (top + bottom) / (top - bottom),         0f,
+                0f,                               0f,                             -1f * ((far + near) / (far - near)),    -1f * ((2f * far * near) / (far - near)),
+                0f,                               0f,                             -1f,                                     0f);
 
         return projection;
     }
@@ -278,6 +287,8 @@ public class GL3Renderer implements GLEventListener
         model.setCameraPixelsPerSceneUnit(DISTANCE_TO_SCREEN_IN_PIXELS, cameraFocusDistance);
 
         model.setCameraDepth(new Vec3(0.0, 0.0, cameraFocusDistance));
+
+        logger.info("ZOOM  glUnitsPerPixel="+glUnitsPerPixel()+" cameraFocusDistance="+cameraFocusDistance);
 
     }
 

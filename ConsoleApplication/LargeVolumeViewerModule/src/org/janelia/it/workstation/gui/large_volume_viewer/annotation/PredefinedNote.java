@@ -68,8 +68,8 @@ public enum PredefinedNote {
 
             default:
                 // everybody else is OK
+                return true;
         }
-        return true;
     }
 
     public String getNoteText() {
