@@ -16,6 +16,7 @@ import javax.media.opengl.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
+import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
 
 /**
  * This is a gl-actor to draw pre-collected buffers, which have been laid out for
@@ -24,6 +25,8 @@ import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
  * Created by fosterl on 4/14/14.
  */
 public class MeshDrawActor implements GLActor {
+    public enum MatrixScope { LOCAL, EXTERNAL }
+    
     private static final String MODEL_VIEW_UNIFORM_NAME = "modelView";
     private static final String PROJECTION_UNIFORM_NAME = "projection";
     private static final String NORMAL_MATRIX_UNIFORM_NAME = "normalMatrix";
@@ -47,6 +50,7 @@ public class MeshDrawActor implements GLActor {
     private AbstractShader shader;
 
     private IntBuffer tempBuffer = IntBuffer.allocate(1);
+    private MatrixManager matrixManager;
 
     public MeshDrawActor( MeshDrawActorConfigurator configurator ) {
         this.configurator = configurator;
@@ -62,6 +66,7 @@ public class MeshDrawActor implements GLActor {
         private Long renderableId = -1L;
         private VertexAttributeManagerI vtxAttribMgr;
         private double[] axisLengths;
+        private MatrixScope matrixScope = MatrixScope.EXTERNAL;
 
         public void setAxisLengths( double[] axisLengths ) {
             this.axisLengths = axisLengths;
@@ -99,14 +104,48 @@ public class MeshDrawActor implements GLActor {
             return axisLengths;
         }
 
+        /**
+         * @return the matrixScope
+         */
+        public MatrixScope getMatrixScope() {
+            return matrixScope;
+        }
+
+        /**
+         * @param matrixScope the matrixScope to set
+         */
+        public void setMatrixScope(MatrixScope matrixScope) {
+            this.matrixScope = matrixScope;
+        }
+
     }
 
     @Override
-    public void init(GLAutoDrawable glDrawable) {
+    public void init(final GLAutoDrawable glDrawable) {
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
 
+        MatrixManager.WindowDef windowDef = new MatrixManager.WindowDef() {
+            @Override
+            public int getWidthInPixels() {
+                return glDrawable.getWidth();
+            }
+
+            @Override
+            public int getHeightInPixels() {
+                return glDrawable.getHeight();
+            }
+            
+        };
+        
         if (bBuffersNeedUpload) {
             try {
+                if (configurator.getMatrixScope() == MatrixScope.LOCAL) {
+                    matrixManager = this.matrixManager = new MatrixManager(
+                            configurator.getContext(),
+                            windowDef,
+                            MatrixManager.FocusBehavior.DYNAMIC // *** TEMP ***
+                    );
+                }
                 // Uploading buffers sufficient to draw the mesh.
                 //   Gonna dance this mesh a-round...
                 initializeShaderValues(gl);
@@ -127,7 +166,6 @@ public class MeshDrawActor implements GLActor {
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
         reportError(gl, "Display of mesh-draw-actor upon entry");
 
-        gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
         gl.glDepthFunc(GL2GL3.GL_LESS);
 
@@ -141,6 +179,9 @@ public class MeshDrawActor implements GLActor {
         gl.glUseProgram( shader.getShaderProgram() );
         gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
         reportError( gl, "Display of mesh-draw-actor 1" );
+        
+        if (matrixManager != null)
+            matrixManager.recalculate(gl);
 
         ViewMatrixSupport vms = new ViewMatrixSupport();
         if (shader instanceof MeshDrawShader) {
@@ -178,6 +219,7 @@ public class MeshDrawActor implements GLActor {
         gl.glUseProgram( oldProgram );
 
         reportError(gl, "mesh-draw-actor, end of display.");
+        gl.glDisable( GL2.GL_DEPTH_TEST );
 
     }
 

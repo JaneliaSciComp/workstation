@@ -217,6 +217,9 @@
                 <package>org.janelia.it.workstation.model.viewer</package>
                 <package>org.janelia.it.workstation.nb_action</package>
                 <package>org.janelia.it.workstation.octree</package>
+                <package>org.janelia.it.workstation.publication_quality.mesh</package>
+                <package>org.janelia.it.workstation.publication_quality.mesh.actor</package>
+                <package>org.janelia.it.workstation.publication_quality.mesh.shader</package>
                 <package>org.janelia.it.workstation.raster</package>
                 <package>org.janelia.it.workstation.run_config</package>
                 <package>org.janelia.it.workstation.shared.annotations</package>
