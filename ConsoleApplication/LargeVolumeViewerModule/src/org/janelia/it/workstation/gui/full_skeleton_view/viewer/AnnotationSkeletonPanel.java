@@ -30,10 +30,10 @@ import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer;
 import org.janelia.it.workstation.gui.viewer3d.ResetPositionerI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
-import org.janelia.it.workstation.publication_quality.mesh.FewVoxelVtxAttribMgr;
-import org.janelia.it.workstation.publication_quality.mesh.FewVoxelVtxAttribMgr.Scenario;
-import org.janelia.it.workstation.publication_quality.mesh.actor.MeshDrawActor;
-import org.janelia.it.workstation.publication_quality.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr.Scenario;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
 
 /**
  * This panel holds all relevant components for showing the skeleton of
