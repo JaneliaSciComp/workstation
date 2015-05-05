@@ -68,6 +68,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.javasoft.swing.SimpleDropDownButton;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
+import org.janelia.it.jacs.shared.solr.SolrDocTypeEnum;
+import org.janelia.it.jacs.shared.solr.SolrUtils;
+import org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator;
 
 /**
  *
@@ -77,7 +87,10 @@ public class DomainFilterEditorPanel extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(DomainFilterEditorPanel.class);
     
+    private static final String ENTITY_TYPE_FIELD = "entity_type";
+    
     // UI Settings
+    private static final int MAX_VALUES_STRING_LENGTH = 20;
     private static final String DEFAULT_FILTER_NAME = "Unsaved Filter";
     private static final Font FILTER_NAME_FONT = new Font("Sans Serif", Font.BOLD, 16);
     private static final Class<?> DEFAULT_SEARCH_CLASS = Sample.class;
@@ -224,6 +237,7 @@ public class DomainFilterEditorPanel extends JPanel {
 
         searchAttrs.clear();
         facets.clear();
+        facets.add(ENTITY_TYPE_FIELD);
 
         for (Field field : ReflectionUtils.getAllFields(searchClass)) {
             SearchAttribute searchAttributeAnnot = field.getAnnotation(SearchAttribute.class);
@@ -299,11 +313,18 @@ public class DomainFilterEditorPanel extends JPanel {
         
         for(DomainObjectAttribute attr : searchAttrs) {
             if (attr.isFacet()) {
-                // TODO: create button name with selected values, like Jira has
-                SimpleDropDownButton facetButton = new SimpleDropDownButton(attr.getLabel());
+                StringBuilder label = new StringBuilder();
+                label.append(attr.getLabel());
+                List<String> values = new ArrayList<>(getSelectedFacetValues(attr.getName()));
+                Collections.sort(values);
+                if (!values.isEmpty()) {
+                    label.append(" (");
+                    label.append(StringUtils.getCommaDelimited(values, MAX_VALUES_STRING_LENGTH));
+                    label.append(")");
+                }
+                SimpleDropDownButton facetButton = new SimpleDropDownButton(label.toString());
                 populateFacetMenu(attr, facetButton.getPopupMenu());
                 criteriaPanel.add(facetButton);
-                
             }
         }
         
@@ -311,143 +332,46 @@ public class DomainFilterEditorPanel extends JPanel {
         criteriaPanel.revalidate();
     }
     
-    private void populateFacetMenu(DomainObjectAttribute attr, JPopupMenu popupMenu) {
+    private void populateFacetMenu(final DomainObjectAttribute attr, JPopupMenu popupMenu) {
 
         popupMenu.removeAll();
 
-        for (final FacetValue facetValue : facetValues.get(attr.getName())) {
-            String label = facetValue.getValue()+" ("+facetValue.getCount()+")";
-            JMenuItem menuItem = new JCheckBoxMenuItem(label, false);
+        Set<String> selectedValues = getSelectedFacetValues(attr.getName());
+
+        if (!selectedValues.isEmpty()) {
+            final JMenuItem menuItem = new JMenuItem("Clear selected");
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    
+                    updateFacet(attr.getName(), null, false);
+                    updateView();
                 }
             });
             popupMenu.add(menuItem);
         }
+
+        for (final FacetValue facetValue : facetValues.get(attr.getName())) {
+            String label = facetValue.getValue()+" ("+facetValue.getCount()+")";
+            final JMenuItem menuItem = new JCheckBoxMenuItem(label, false);
+            menuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    if (menuItem.isSelected()) {
+                        updateFacet(attr.getName(), facetValue.getValue(), true);
+                    }
+                    else {
+                        updateFacet(attr.getName(), facetValue.getValue(), false);
+                    }
+                    updateView();
+                }
+            });
+            menuItem.setSelected(selectedValues.contains(facetValue.getValue()));
+            popupMenu.add(menuItem);
+        }
     }
-
-
-//    protected void populateFacets(ResultPage resultPage) {
-//
-//        facetsPanel.removeAll();
-//
-//        SolrResults pageResults = resultPage.getSolrResults();
-//        if (pageResults == null) {
-//            return;
-//        }
-//
-//        QueryResponse qr = pageResults.getResponse();
-//        for (final FacetField ff : qr.getFacetFields()) {
-//
-//            JPanel facetPanel = new JPanel();
-//            facetPanel.setOpaque(false);
-//            facetPanel.setLayout(new BoxLayout(facetPanel, BoxLayout.PAGE_AXIS));
-//
-//            JLabel facetLabel = new JLabel(getFieldLabel(ff.getName()));
-//            facetLabel.setFont(groupFont);
-//            facetPanel.add(facetLabel);
-//
-//            Set<String> selectedValues = filters.get(ff.getName());
-//            List<Count> counts = ff.getValues();
-//            if (counts == null) {
-//                continue;
-//            }
-//
-//            for (final Count count : ff.getValues()) {
-//
-//                if (count==null) {
-//                    log.warn("Got null count value for facet field "+ff.getName());
-//                    continue;
-//                }
-//                final SearchAttribute attr = searchConfig.getAttributeByName(ff.getName());
-//                final String name = attr == null ? null : attr.getName();
-//                final String label = searchConfig.getFormattedFieldValue(count.getName(), name) + " (" + count.getCount() + ")";
-//
-//                final JCheckBox checkBox = new JCheckBox(new AbstractAction(label) {
-//                    public void actionPerformed(ActionEvent e) {
-//                        JCheckBox cb = (JCheckBox) e.getSource();
-//                        Set<String> values = filters.get(ff.getName());
-//                        if (values == null) {
-//                            values = new HashSet<String>();
-//                            filters.put(ff.getName(), values);
-//                        }
-//                        if (cb.isSelected()) {
-//                            values.add(count.getName());
-//                        }
-//                        else {
-//                            values.remove(count.getName());
-//                        }
-//                        performSearch(false, true, true);
-//                    }
-//                });
-//
-//                checkBox.setSelected(selectedValues != null && selectedValues.contains(count.getName()));
-//                checkBox.setFont(checkboxFont);
-//                facetPanel.add(checkBox);
-//            }
-//
-//            facetsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-//            facetsPanel.add(facetPanel);
-//        }
-//
-//        facetsPanel.revalidate();
-//        facetsPanel.repaint();
-//    }
     
     public String getInputFieldValue() {
         return (String)inputField.getSelectedItem();
     }
-//    
-//    private JComponent createFilterLabel(final Filter filter) {
-//        RoundedPanel filterLabel = new RoundedPanel() {
-//            @Override
-//            protected void showPopupMenu(MouseEvent e) {
-//                final RoundedPanel thisPanel = this;
-//
-//                JPopupMenu popupMenu = new JPopupMenu();
-//                popupMenu.setLightWeightPopupEnabled(true);
-//
-//                JMenuItem editItem = new JMenuItem("Filter...");
-//                editItem.addActionListener(new ActionListener() {
-//                    public void actionPerformed(ActionEvent actionEvent) {
-//                        EditFilterDialog.getInstanceForFilter(savedSearch, filter).showDialog();
-//                        updateView();
-//                    }
-//                });
-//                popupMenu.add(editItem);
-//
-//                popupMenu.addSeparator();
-//
-//                JMenuItem removeItem = new JMenuItem("Remove");
-//                removeItem.addActionListener(new ActionListener() {
-//                    public void actionPerformed(ActionEvent actionEvent) {
-//                        savedSearch.removeFilter(filter);
-//                        criteriaPanel.remove(thisPanel);
-//                        criteriaPanel.revalidate();
-//                    }
-//                });
-//                popupMenu.add(removeItem);
-//
-//                popupMenu.show(e.getComponent(), e.getX(), e.getY());
-//                e.consume();
-//            }
-//
-//            @Override
-//            protected void doubleClicked(MouseEvent e) {
-//                EditFilterDialog.getInstanceForFilter(savedSearch, filter).showDialog();
-//                updateView();
-//            }
-//
-//            @Override
-//            protected String getLabel() {
-//                return filter.getLabel();
-//            }
-//        };
-//        filterLabel.setBorder(PADDING_BORDER);
-//        return filterLabel;
-//    }
-
+    
     public boolean isInFilterPanel(Point p) {
         return criteriaPanel.getBounds().contains(p);
     }
@@ -474,86 +398,136 @@ public class DomainFilterEditorPanel extends JPanel {
         SolrQueryBuilder builder = new SolrQueryBuilder();
         
         for (String subjectKey : SessionMgr.getSubjectKeys()) {
+            log.trace("Adding query owner key: {}",subjectKey);
             builder.addOwnerKey(subjectKey);
         }
         
-        builder.setSearchString(filter.getSearchString());
+        if (filter.getSearchString()!=null) {
+            log.info("Setting query string: {}",filter.getSearchString());
+            builder.setSearchString(filter.getSearchString());
+        }
 
+        StringBuilder aux = new StringBuilder();
+        StringBuilder auxAnnot = new StringBuilder();
+
+        final Map<String, Set<String>> filters = new HashMap<>();
+        SearchType searchTypeAnnot = searchClass.getAnnotation(SearchType.class);
+        String searchType = searchTypeAnnot.key();
+        filters.put(ENTITY_TYPE_FIELD,getSingleItemMap(searchType));
+        
         List<Criteria> criteriaList = filter.getCriteriaList();
         if (criteriaList!=null) {
             for (Criteria criteria : criteriaList) {
-                if (criteria instanceof SetCriteria) {
-                    SetCriteria setCriteria = (SetCriteria) criteria;
-                    Reference ref = setCriteria.getSetReference();
+                if (criteria instanceof FacetCriteria) {
+                    FacetCriteria fc = (FacetCriteria) criteria;
+                    filters.put(fc.getAttributeName(), fc.getValues());
+                }
+                else if (criteria instanceof AttributeCriteria) {
+                    AttributeCriteria ac = (AttributeCriteria) criteria;
+                    CriteriaOperator operator = CriteriaOperator.CONTAINS;
+                    String value1 = null;
+                    String value2 = null;
+
+                    if (criteria instanceof DateRangeCriteria) {
+                        DateRangeCriteria drc = (DateRangeCriteria) criteria;
+                        Date startCal = drc.getStartDate();
+                        Date endCal = drc.getEndDate();
+                        value1 = startCal == null ? "*" : SolrUtils.formatDate(startCal);
+                        value2 = endCal == null ? "*" : SolrUtils.formatDate(endCal);
+                    }
+                    else if (criteria instanceof AttributeValueCriteria) {
+                        AttributeValueCriteria avc = (AttributeValueCriteria) criteria;
+                        value1 = avc.getValue();
+                    }
+                    else {
+                        log.warn("Unsupported criteria type: {}",criteria.getClass().getName());
+                    }
+                    
+                    if (value1 == null && value2 == null) {
+                        continue;
+                    }
+
+                    if ("annotations".equals(ac.getAttributeName())) {
+                        if (auxAnnot.length()>1) {
+                            auxAnnot.append(" ");
+                        }
+                        switch (operator) {
+                            case NOT_NULL:
+                                auxAnnot.append("*");
+                                break;
+                            default:
+                                auxAnnot.append(value1);
+                                break;
+                        }
+                        continue;
+                    }
+
+                    if (aux.length() > 0) {
+                        aux.append(" ");
+                    }
+                    aux.append("+");
+                    aux.append(ac.getAttributeName());
+                    aux.append(":");
+
+                    switch (operator) {
+                        case CONTAINS:
+                            if (criteria instanceof DateRangeCriteria) {
+                                aux.append("[");
+                                aux.append(value1);
+                                aux.append(" TO ");
+                                aux.append(value1);
+                                aux.append("+1DAY]");
+                            }
+                            else {
+                                aux.append(value1);
+                            }
+                            break;
+                        case BETWEEN:
+                            aux.append("[");
+                            aux.append(value1);
+                            aux.append(" TO ");
+                            aux.append(value2);
+                            aux.append("]");
+                            break;
+                        case NOT_NULL:
+                            aux.append("*");
+                            break;
+                    }
+
+                }
+                else if (criteria instanceof SetCriteria) {
+                    SetCriteria sc = (SetCriteria) criteria;
+                    Reference ref = sc.getSetReference();
+                    log.info("Setting query root: {}",ref.getTargetId());
                     builder.setRootId(ref.getTargetId());
-                    break;
                 }
             }
         }
         
-        StringBuilder aux = new StringBuilder();
-
-        // TODO: make this user definable
-        SearchType searchTypeAnnot = searchClass.getAnnotation(SearchType.class);
-        String searchType = searchTypeAnnot.key();    
-        aux.append("+entity_type:").append(searchType).append(" ");
-        
-        if (criteriaList!=null) {
-            for (Criteria criteria : criteriaList) {
-//                if (criteria instanceof AttributeCriteria) {
-//
-//                    // TODO: implement AttributeFilters
-//                    String value1 = null;
-//                    String value2 = null;
-//
-//                    SearchAttribute sa = criteria.getAttribute();
-//                    if (sa == null) {
-//                        continue;
-//                    }
-//
-//                    if (sa.getDataType().equals(SearchAttribute.DataType.DATE)) {
-//                        Calendar startCal = (Calendar) criteria.getValue1();
-//                        Calendar endCal = (Calendar) criteria.getValue2();
-//                        value1 = startCal == null ? "*" : SolrUtils.formatDate(startCal.getTime());
-//                        value2 = endCal == null ? "*" : SolrUtils.formatDate(endCal.getTime());
-//                    }
-//                    else {
-//                        value1 = (String) criteria.getValue1();
-//                        value2 = (String) criteria.getValue2();
-//                    }
-//
-//                    if (value1 == null && value2 == null) {
-//                        continue;
-//                    }
-//
-//                    if (aux.length() > 0) {
-//                        aux.append(" ");
-//                    }
-//                    aux.append("+");
-//                    aux.append(sa.getName());
-//                    aux.append(":");
-//
-//                    switch (criteria.getOp()) {
-//                        case CONTAINS:
-//                            aux.append(value1);
-//                            break;
-//                        case BETWEEN:
-//                            aux.append("[");
-//                            aux.append(value1);
-//                            aux.append(" TO ");
-//                            aux.append(value2);
-//                            aux.append("]");
-//                            break;
-//                        case NOT_NULL:
-//                            aux.append("*");
-//                            break;
-//                    }
-//                }
-            }
+        if (aux.length()>0) {
+            log.info("Adding aux query string: {}",aux);
+            builder.setAuxString(aux.toString());
         }
+        
+        if (auxAnnot.length()>0) {
+            log.info("Adding aux annotation query string: {}",auxAnnot);
+            builder.setAuxAnnotationQueryString(auxAnnot.toString());
+        }
+        
+        log.info("Adding facets: {}",facets);
+        builder.getFacets().addAll(facets);
+        
+        log.info("Adding facet filters: {}",filters);
+        builder.getFilters().putAll(filters);
 
-        builder.setAuxString(aux.toString());
-
+        String sortCriteria = filter.getSort();
+        if (!StringUtils.isEmpty(sortCriteria)) {
+            log.info("Setting sort: {}",sortCriteria);
+            String sortAttr = (sortCriteria.startsWith("-")||sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
+            builder.setSortField(sortAttr);
+            builder.setAscending(!sortCriteria.startsWith("-"));
+        }
+        
         return builder;
     }
             
@@ -563,16 +537,6 @@ public class DomainFilterEditorPanel extends JPanel {
 
         final SolrQueryBuilder builder = getQueryBuilder();
         
-        String sortCriteria = filter.getSort();
-        if (!StringUtils.isEmpty(sortCriteria)) {
-            String sortAttr = (sortCriteria.startsWith("-")||sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
-            builder.setSortField(sortAttr);
-            builder.setAscending(!sortCriteria.startsWith("-"));
-        }
-        
-        // TODO: add UI for facet filters
-//        builder.getFilters().putAll(filters);
-        builder.getFacets().addAll(facets);
         
         // If we don't have a query at this point, just give up
         if (!builder.hasQuery()) {
@@ -608,13 +572,9 @@ public class DomainFilterEditorPanel extends JPanel {
                 try {
                     resultsPanel.showSearchResults(searchResults);
                     updateFilterView();
-
-//                    populateFacets(resultPage);
-//                    populateResultView(resultPage);
                     if (showLoading) {
                         resultsPanel.showResultsView();
                     }
-
                 }
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
@@ -688,6 +648,56 @@ public class DomainFilterEditorPanel extends JPanel {
         return resultsPanel;
     }
     
+    private void updateFacet(String attrName, String value, boolean add) {
+        List<Criteria> criteriaList = filter.getCriteriaList();
+        boolean modified = false;
+        if (criteriaList != null) {
+            for (Iterator<Criteria> i = criteriaList.iterator(); i.hasNext(); ) {
+                Criteria criteria = i.next();
+                if (criteria instanceof FacetCriteria) {
+                    FacetCriteria fc = (FacetCriteria) criteria;
+                    if (fc.getAttributeName().equals(attrName)) {
+                        if (value==null) {
+                            // Remove facet entirely
+                            i.remove();
+                        }
+                        else {
+                            modified = true;
+                            if (add) {
+                                fc.getValues().add(value);
+                            }
+                            else {
+                                fc.getValues().remove(value);
+                                if (fc.getValues().isEmpty()) {
+                                    i.remove();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!modified && add) {
+            FacetCriteria fc = new FacetCriteria(); 
+            fc.setAttributeName(attrName);
+            fc.getValues().add(value);
+            filter.addCriteria(fc);
+        }
+    }
+    
+    private Set<String> getSelectedFacetValues(String attrName) {
+        if (filter==null || filter.getCriteriaList()==null) return new HashSet<>();
+        for (Criteria criteria : filter.getCriteriaList()) {
+            if (criteria instanceof FacetCriteria) {
+                FacetCriteria fc = (FacetCriteria) criteria;
+                if (fc.getAttributeName().equals(attrName)) {
+                    return fc.getValues();
+                }
+            }
+        }
+        return new HashSet<>();
+    }
+
     private class FacetValue {
         
         private final String value;
@@ -705,5 +715,11 @@ public class DomainFilterEditorPanel extends JPanel {
         public long getCount() {
             return count;
         }
+    }
+
+    private Set<String> getSingleItemMap(String searchType) {
+        Set<String> types = new HashSet<>();
+        types.add(searchType);
+        return types;
     }
 }
