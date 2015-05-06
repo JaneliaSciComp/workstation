@@ -5,14 +5,6 @@
  */
 package org.janelia.it.workstation.gui.full_skeleton_view.top_component;
 
-import java.awt.BorderLayout;
-import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
-import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonPanel;
-import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
-import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
-import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic;
-import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -40,13 +32,13 @@ import org.openide.util.NbBundle.Messages;
 )
 @Messages({
     "CTL_AnnotationSkeletalViewAction=AnnotationSkeletalView",
-    "CTL_AnnotationSkeletalViewTopComponent=Skeleton View of LVV Annotations Window",
+    "CTL_AnnotationSkeletalViewTopComponent=LVV Annotation Skeletons",
     "HINT_AnnotationSkeletalViewTopComponent=Skeletal View of LVV Annotations"
 })
 public final class AnnotationSkeletalViewTopComponent extends TopComponent {
 
     public static final String PREFERRED_ID = "AnnotationSkeletalViewTopComponent";
-    private AnnotationSkeletonPanel skelPanel;
+    private final TopComponentPopulator populator = new TopComponentPopulator();
     
     public AnnotationSkeletalViewTopComponent() {
         initComponents();
@@ -54,7 +46,7 @@ public final class AnnotationSkeletalViewTopComponent extends TopComponent {
         setToolTipText(Bundle.HINT_AnnotationSkeletalViewTopComponent());
 
     }
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -84,38 +76,15 @@ public final class AnnotationSkeletalViewTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        //SkeletonActor skeleton = new AnnotationSkeletonViewLauncher().getSkeletonActor();
-        skelPanel = new AnnotationSkeletonPanel( new AnnotationSkeletonDataSourceI() {
-            private Skeleton cachedSkeleton;
-            
-            @Override
-            public Skeleton getSkeleton() {
-                if (cachedSkeleton == null) {
-                    // Strategy: get the Large Volume Viewer View.
-                    LargeVolumeViewerTopComponent tc
-                            = (LargeVolumeViewerTopComponent) WindowLocator.getByName(
-                                    LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID
-                            );
-                    if (tc != null) {
-                        QuadViewUi ui = tc.getLvvv().getQuadViewUi();
-                        if (ui != null) {
-                            cachedSkeleton = ui.getSkeleton();
-                        }
-                    }
-                }
-                return cachedSkeleton;
-            }
-        });
-        viewPanel.add( skelPanel, BorderLayout.CENTER );
+        populator.depopulate(viewPanel);
+        populator.populate(viewPanel);
     }
 
     @Override
     public void componentClosed() {
-        if (skelPanel != null) {
-            viewPanel.remove( skelPanel );
-        }
-    }
-
+        populator.depopulate(viewPanel);
+    }        
+    
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles

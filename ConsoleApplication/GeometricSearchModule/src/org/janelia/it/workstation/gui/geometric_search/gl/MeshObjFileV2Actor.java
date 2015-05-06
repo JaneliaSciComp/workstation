@@ -1,31 +1,29 @@
 package org.janelia.it.workstation.gui.geometric_search.gl;
 
-import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.GL3;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  * Created by murphys on 4/9/15.
  */
-public class MeshObjFileV2Actor implements GLActor
+public class MeshObjFileV2Actor extends GL3SimpleActor
 {
     private final Logger logger = LoggerFactory.getLogger(MeshObjFileV2Actor.class);
     File objFile;
     boolean loaded=false;
     boolean loadError=false;
     boolean drawLines=false;
+    IntBuffer vertexArrayId=IntBuffer.allocate(1);
+    IntBuffer vertexBufferId=IntBuffer.allocate(1);
 
     private class vGroup {
 
@@ -64,7 +62,90 @@ public class MeshObjFileV2Actor implements GLActor
     }
 
     @Override
-    public void display(GLAutoDrawable glDrawable) {
+    public void display(GL3 gl) {
+        super.display(gl);
+        checkGlError(gl, "d super.display() error");
+        gl.glBindVertexArray(vertexArrayId.get(0));
+        checkGlError(gl, "d glBindVertexArray error");
+        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+        checkGlError(gl, "d glBindBuffer error");
+        gl.glVertexAttribPointer(0, 3, GL3.GL_FLOAT, false, 0, 0);
+        checkGlError(gl, "d glVertexAttribPointer error");
+        gl.glEnableVertexAttribArray(0);
+        checkGlError(gl, "d glEnableVertexAttribArray error");
+        gl.glDrawArrays(GL3.GL_TRIANGLES, 0, vList.size());
+        checkGlError(gl, "d glDrawArrays error");
+    }
+
+    @Override
+    public void init(GL3 gl) {
+        if (!loaded) {
+            try {
+                loadObjFile();
+            } catch (Exception ex) {
+                logger.error("Could not load file "+objFile.getAbsolutePath());
+                ex.printStackTrace();
+                loadError=true;
+                return;
+            }
+            loaded=true;
+        }
+        FloatBuffer fb=FloatBuffer.allocate(vList.size()*3);
+        for (int i=0;i<vList.size();i++) {
+            fb.put(vList.get(i).x);
+            fb.put(vList.get(i).y);
+            fb.put(vList.get(i).z);
+        }
+        gl.glGenVertexArrays(1, vertexArrayId);
+        checkGlError(gl, "glGenVertexArrays error");
+        gl.glBindVertexArray(vertexArrayId.get(0));
+        checkGlError(gl, "glBindVertexArray error");
+        gl.glGenBuffers(1, vertexBufferId);
+        checkGlError(gl, "glGenBuffers error");
+        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+        checkGlError(gl, "glBindBuffer error");
+        gl.glBufferData(GL3.GL_ARRAY_BUFFER, vList.size() * 3 * Float.SIZE, fb, GL3.GL_STATIC_DRAW);
+        checkGlError(gl, "glBufferData error");
+    }
+
+    @Override
+    public void dispose(GL3 gl) {
+
+    }
+
+    private void loadObjFile() throws Exception {
+        BufferedReader reader = new BufferedReader(new FileReader(objFile));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String tline = line.trim();
+            if (tline.length() > 0 && !tline.startsWith("#")) {
+                if (tline.startsWith("vn")) {
+                    String[] tArr = tline.split("\\s+");
+                    if (tArr.length == 4) {
+                        vnList.add(new vGroup(tArr[1], tArr[2], tArr[3]));
+                    }
+                } else if (tline.startsWith("v")) {
+                    String[] tArr = tline.split("\\s+");
+                    if (tArr.length == 4) {
+                        vList.add(new vGroup(tArr[1], tArr[2], tArr[3]));
+                    }
+                } else if (tline.startsWith("f")) {
+                    tline=tline.replace('/', ' ');
+                    String[] tArr = tline.split("\\s+");
+                    if (tArr.length == 7) {
+                        fList.add(new fGroup(tArr[1], tArr[3], tArr[5]));
+                    }
+                }
+            }
+        }
+        logger.info("loadObjFile() loaded " + vnList.size()+" vn "+vList.size()+" v "+fList.size()+" f");
+        reader.close();
+    }
+
+    /*
+
+    @Override
+    public void display(GL3 gl, Matrix4 viewProjection) {
 
         if (loadError) {
             return;
@@ -81,10 +162,6 @@ public class MeshObjFileV2Actor implements GLActor
             }
             loaded=true;
         }
-
-        //logger.info("display()");
-
-        GL2 gl2 = glDrawable.getGL().getGL2();
 
         gl2.glClearColor(0f, 0f, 0f, 1f);
         gl2.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
@@ -116,7 +193,7 @@ public class MeshObjFileV2Actor implements GLActor
 
     }
 
-    private void drawTrianglesAndLines(GL2 gl2) {
+    private void drawTrianglesAndLines(GL3 gl) {
         gl2.glBegin(gl2.GL_TRIANGLES);
 
         int vMax=vList.size();
@@ -156,51 +233,7 @@ public class MeshObjFileV2Actor implements GLActor
             }
         }
     }
+    */
 
-    @Override
-    public BoundingBox3d getBoundingBox3d() {
-        // NOTE - Y coordinate is inverted w.r.t. glVertex3d(...)
-        BoundingBox3d result = new BoundingBox3d();
-        result.setMin(-100.0, -100.0, -100.0);
-        result.setMax(100.0,  100.0, 100.0);
-        return result;
-    }
-
-    @Override
-    public void init(GLAutoDrawable glDrawable) {
-    }
-
-    @Override
-    public void dispose(GLAutoDrawable glDrawable) {
-    }
-
-    private void loadObjFile() throws Exception {
-        BufferedReader reader = new BufferedReader(new FileReader(objFile));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            String tline = line.trim();
-            if (tline.length() > 0 && !tline.startsWith("#")) {
-                if (tline.startsWith("vn")) {
-                    String[] tArr = tline.split("\\s+");
-                    if (tArr.length == 4) {
-                        vnList.add(new vGroup(tArr[1], tArr[2], tArr[3]));
-                    }
-                } else if (tline.startsWith("v")) {
-                    String[] tArr = tline.split("\\s+");
-                    if (tArr.length == 4) {
-                        vList.add(new vGroup(tArr[1], tArr[2], tArr[3]));
-                    }
-                } else if (tline.startsWith("f")) {
-                    tline=tline.replace('/', ' ');
-                    String[] tArr = tline.split("\\s+");
-                    if (tArr.length == 7) {
-                        fList.add(new fGroup(tArr[1], tArr[3], tArr[5]));
-                    }
-                }
-            }
-        }
-        logger.info("loadObjFile() loaded " + vnList.size()+" vn "+vList.size()+" v "+fList.size()+" f");
-        reader.close();
-    }
 
 }

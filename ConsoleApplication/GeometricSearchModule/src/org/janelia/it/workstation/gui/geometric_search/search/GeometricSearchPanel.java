@@ -1,11 +1,14 @@
 package org.janelia.it.workstation.gui.geometric_search.search;
 
+import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Rotation;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 
+import javax.media.opengl.GL3;
 import javax.swing.*;
 
-import org.janelia.it.workstation.gui.geometric_search.gl.DepthShader;
-import org.janelia.it.workstation.gui.geometric_search.gl.MeshObjFileActor;
+import org.janelia.it.workstation.gui.geometric_search.gl.*;
+import org.janelia.it.workstation.gui.geometric_search.viewer.GL3Viewer;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,91 +23,112 @@ import java.io.File;
 public class GeometricSearchPanel extends JPanel implements Refreshable {
 
     private final Logger logger = LoggerFactory.getLogger(GeometricSearchPanel.class);
-    Mip3d mip3d;
-    //TestGLJPanel testGLJPanel;
+    GL3Viewer viewer;
 
     @Override
     public void refresh() {
-        logger.info("*** refresh()");
 
-        if ( mip3d == null ) {
-            logger.warn("Have to create a new mip3d on refresh.");
-            createMip3d();
+        if ( viewer == null ) {
+            createGL3Viewer();
         }
 
-        mip3d.refresh();
-
-//        if (testGLJPanel==null) {
-//            createMip3d();
-//        }
-        //testGLJPanel.display();
-
+        viewer.refresh();
     }
 
     @Override
     public void totalRefresh() {
-        logger.info("*** totalRefresh()");
         refresh();
     }
 
-    private void createMip3d() {
-        logger.info("*** createMip3d()");
+    private void createGL3Viewer() {
 
-        if ( mip3d != null ) {
-            mip3d.releaseMenuActions();
+        if ( viewer != null ) {
+            viewer.releaseMenuActions();
         }
-        mip3d = new Mip3d();
-        mip3d.setPreferredSize(new Dimension(1200, 900));
-        mip3d.setVisible(true);
-        mip3d.setResetFirstRedraw(true);
+        viewer = new GL3Viewer();
+        viewer.setPreferredSize(new Dimension(1200, 900));
+        viewer.setVisible(true);
+        viewer.setResetFirstRedraw(true);
 
-        //XrayMeshShader shader=new XrayMeshShader();
-        //DepthShader shader=new DepthShader();
-        //shader.addActor(new MeshObjFileActor(new File("/Users/murphys/compartment_62.obj")));
+        GL3ShaderActionSequence glSequence = new GL3ShaderActionSequence("Lattice");
+        final PassthroughShader passthroughShader = new PassthroughShader();
+
+        passthroughShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL3 gl) {
+                Matrix4 viewMatrix=viewer.getRenderer().getViewMatrix();
+                //viewMatrix.identity();
+                passthroughShader.setView(gl, viewMatrix);
+                Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
+                projMatrix.identity();
+                passthroughShader.setProjection(gl, projMatrix);
+            }
+        });
+
+        final LatticeActor latticeActor = new LatticeActor();
+
+//        Rotation r = new Rotation();
+//        r.setRotationFromAngleAboutY(new Float(Math.PI/8.0));
+//        latticeActor.setModel(r.asTransform());
+
+        latticeActor.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL3 gl) {
+                Matrix4 actorModel=latticeActor.getModel();
+                passthroughShader.setModel(gl, actorModel);
+            }
+        });
+
+        glSequence.setShader(passthroughShader);
+        glSequence.getActorSequence().add(latticeActor);
+
+        logger.info("Adding glSequence...");
+        viewer.addShaderAction(glSequence);
 
 
-        //mip3d.addActor(shader);
+        ///////////////////////////////////////////////////////////////////////////////
 
-        MeshObjFileActor meshActor =  new MeshObjFileActor(new File("/Users/murphys/simple_cube.obj"));
-        //MeshObjFileActor meshActor =  new MeshObjFileActor(new File("/Users/murphys/compartment_62.obj"));
-        meshActor.setDrawLines(false);
-        mip3d.addActor(meshActor);
+//        GL3ShaderActionSequence meshSequence=new GL3ShaderActionSequence("Mesh");
+//        final MeshObjFileV2Shader meshShader = new MeshObjFileV2Shader();
+//
+//        meshShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+//            @Override
+//            public void update(GL3 gl) {
+//                Matrix4 viewMatrix=viewer.getRenderer().getViewMatrix();
+//                meshShader.setView(gl, viewMatrix);
+//                Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
+//                meshShader.setProjection(gl, projMatrix);
+//            }
+//        });
+//
+//        final MeshObjFileV2Actor meshActor =  new MeshObjFileV2Actor(new File("/Users/murphys/simple_cube.obj"));
+//
+//        meshActor.setUpdateCallback(new GLDisplayUpdateCallback() {
+//            @Override
+//            public void update(GL3 gl) {
+//                Matrix4 actorModel=meshActor.getModel();
+//                meshShader.setModel(gl, actorModel);
+//            }
+//        });
+//
+//        //MeshObjFileActor meshActor =  new MeshObjFileActor(new File("/Users/murphys/compartment_62.obj"));
+//        meshActor.setDrawLines(false);
+//
+//        meshSequence.setShader(meshShader);
+//        meshSequence.getActorSequence().add(meshActor);
+//
+//        viewer.addShaderAction(meshSequence);
 
-        add(mip3d, BorderLayout.CENTER);
-
-//        if (testGLJPanel==null) {
-//            testGLJPanel=new TestGLJPanel();
-//            testGLJPanel.setVisible(true);
-//            add(testGLJPanel, BorderLayout.CENTER);
-//        }
+        add(viewer, BorderLayout.CENTER);
 
     }
 
     public void displayReady() {
-        logger.info("*** displayReady()");
-        if (mip3d==null) {
-            createMip3d();
+        if (viewer==null) {
+            createGL3Viewer();
         }
-        mip3d.resetView();
-        mip3d.refresh();
-        logger.info("*** displayReady() done");
+        viewer.resetView();
+        viewer.refresh();
     }
-
-
-//    protected void render( GL2 gl2, int width, int height ) {
-//        gl2.glClear( gl2.GL_COLOR_BUFFER_BIT );
-//
-//        // draw a triangle filling the window
-//        gl2.glLoadIdentity();
-//        gl2.glBegin( gl2.GL_TRIANGLES );
-//        gl2.glColor3f( 1, 0, 0 );
-//        gl2.glVertex2f( 0, 0 );
-//        gl2.glColor3f( 0, 1, 0 );
-//        gl2.glVertex2f( width, 0 );
-//        gl2.glColor3f( 0, 0, 1 );
-//        gl2.glVertex2f( width / 2, height );
-//        gl2.glEnd();
-//    }
-
 
 }

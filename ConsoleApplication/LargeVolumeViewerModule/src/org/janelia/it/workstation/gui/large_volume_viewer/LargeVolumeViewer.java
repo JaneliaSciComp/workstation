@@ -17,6 +17,10 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.ZScanMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorStateUpdater;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
@@ -38,9 +42,6 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
 import java.util.List;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorStateUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -363,6 +364,10 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		this.imageColorModel = imageColorModel;
 		sliceActor.setImageColorModel(imageColorModel);
 	}
+    
+    public void setNeuronStyleModel(NeuronStyleModel nsModel) {
+        skeletonActor.setNeuronStyleModel(nsModel);
+    }
 	
 	public Skeleton getSkeleton() {
 		return skeletonActor.getSkeleton();

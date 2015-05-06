@@ -10,49 +10,47 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuriteTreePanel;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NoteListPanel;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceInfoPanel;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceNeuronList;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This will have access to setters, etc. on the panels, to provide
  * control feeds from external events.
  * @author fosterl
  */
-public class PanelController {
+public class PanelController implements TmGeoAnnotationAnchorListener {
     private PanelGlobalListener globalListener;
     private AnnotationPanel annotationPanel;
     private NoteListPanel noteListPanel;
-    private NeuriteTreePanel neuriteTreePanel;
     private WorkspaceNeuronList wsNeuronList;
     private WorkspaceInfoPanel wsInfoPanel;
     private LargeVolumeViewerTranslator lvvTranslator;
+    private FilteredAnnotationList filteredAnnotationList;
     
     public PanelController(
             AnnotationPanel annoPanel,
             NoteListPanel noteListPanel,
-            NeuriteTreePanel neuriteTreePanel,
+            FilteredAnnotationList filteredAnnotationList,
             WorkspaceNeuronList wsNeuronList,
             LargeVolumeViewerTranslator lvvTranslator
     ) {
         this.annotationPanel = annoPanel;
         this.noteListPanel = noteListPanel;
-        this.neuriteTreePanel = neuriteTreePanel;
+        this.filteredAnnotationList = filteredAnnotationList;
         this.wsNeuronList = wsNeuronList;
         this.lvvTranslator = lvvTranslator;
 
         PanelPanListener ppl = new PanelPanListener();
-        this.neuriteTreePanel.setPanListener(ppl);
+        this.filteredAnnotationList.setPanListener(ppl);
         this.noteListPanel.setPanListener(ppl);
         this.wsNeuronList.setPanListener(ppl);
         
         PanelTmGeoSelectListener ptgsl = new PanelTmGeoSelectListener();
-        this.neuriteTreePanel.setAnnoSelectListener(ptgsl);
+        this.filteredAnnotationList.setAnnoSelectListener(ptgsl);
+
+        this.lvvTranslator.addTmGeoAnchorListener(this);
     }
     
     public void registerForEvents(AnnotationModel annotationModel) {
@@ -67,6 +65,7 @@ public class PanelController {
     public void registerForEvents(AnnotationManager annotationManager) {
         PanelEditNoteRequestedListener penrl = new PanelEditNoteRequestedListener(annotationManager);
         noteListPanel.setEditNoteRequestListener(penrl);
+        filteredAnnotationList.setEditNoteRequestListener(penrl);
     }
     
     public void registerForEvents(WorkspaceInfoPanel wsip) {
@@ -84,13 +83,14 @@ public class PanelController {
         public void workspaceLoaded(TmWorkspace workspace) {
             annotationPanel.loadWorkspace(workspace);
             noteListPanel.loadWorkspace(workspace);
+            filteredAnnotationList.loadWorkspace(workspace);
             wsNeuronList.loadWorkspace(workspace);
             wsInfoPanel.loadWorkspace(workspace);
         }
         
         @Override
         public void neuronSelected(TmNeuron neuron) {
-            neuriteTreePanel.loadNeuron(neuron);
+            filteredAnnotationList.loadNeuron(neuron);
             wsNeuronList.selectNeuron(neuron);
         }
     }
@@ -118,6 +118,7 @@ public class PanelController {
         @Override
         public void notesUpdated(TmWorkspace workspace) {
             noteListPanel.loadWorkspace(workspace);
+            filteredAnnotationList.loadWorkspace(workspace);
         }
         
     }
@@ -150,5 +151,31 @@ public class PanelController {
             mgr.addEditNote(annotation.getId());
         }
         
+    }
+
+    // TmGeoAnnotationAnchorListener methods
+    // filtered annotation list, neurite tree list will need to listen
+    public void anchorAdded(TmGeoAnnotation annotation) {
+        filteredAnnotationList.annotationChanged(annotation);
+    }
+
+    public void anchorsAdded(List<TmGeoAnnotation> annotationList) {
+        filteredAnnotationList.annotationsChanged(annotationList);
+    }
+
+    public void anchorDeleted(TmGeoAnnotation annotation) {
+        filteredAnnotationList.annotationChanged(annotation);
+    }
+
+    public void anchorReparented(TmGeoAnnotation annotation) {
+        filteredAnnotationList.annotationChanged(annotation);
+    }
+
+    public void anchorMovedBack(TmGeoAnnotation annotation) {
+        filteredAnnotationList.annotationChanged(annotation);
+    }
+
+    public void clearAnchors() {
+        filteredAnnotationList.annotationsChanged(new ArrayList<TmGeoAnnotation>());
     }
 }

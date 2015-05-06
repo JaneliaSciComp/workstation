@@ -121,7 +121,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void anchorAdded(AnchorSeed seed) {
         addAnnotation(seed.getLocation(), seed.getParentGuid());
     }
-    
+
     public void moveAnchor(Anchor anchor) {
         // find closest to new anchor location that isn't the annotation already
         //  associated with anchor; remember that anchors are in micron
@@ -131,10 +131,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                         anchor.getLocation().getY(),anchor.getLocation().getZ()));
         Vec3 anchorVoxelLocation = new Vec3(tempLocation.getX(),
                 tempLocation.getY(), tempLocation.getZ());
-        
+
         TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchorVoxelLocation,
                 annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
-        
+
         // check distance and other restrictions
         if (closest != null && canMergeNeurite(anchor.getGuid(), anchorVoxelLocation, closest.getId())) {
             // check if user wants to merge (expensive to undo) or move (near something that
@@ -198,7 +198,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void volumeLoaded(URL url) {
         onVolumeLoaded();
     }
-    
+
     public TileFormat getTileFormat() {
         return tileServer.getLoadAdapter().getTileFormat();
     }
@@ -737,16 +737,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * annotation ID doesn't exist
      */
     public String getNote(Long annotationID) {
-        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
-        final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
-        if (textAnnotation != null) {
-            JsonNode rootNode = textAnnotation.getData();
-            JsonNode noteNode = rootNode.path("note");
-            if (!noteNode.isMissingNode()) {
-                return noteNode.asText();
-            }
-        }
-        return "";
+        return annotationModel.getNote(annotationID);
     }
 
     public void setNote(final Long annotationID, final String noteText) {
@@ -932,7 +923,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (annotationID == null) {
             return;
         }
-
         TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
         annotationModel.selectNeuron(neuron);
     }

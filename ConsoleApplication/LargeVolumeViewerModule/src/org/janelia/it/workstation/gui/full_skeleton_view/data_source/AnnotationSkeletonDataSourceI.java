@@ -7,6 +7,7 @@
 package org.janelia.it.workstation.gui.full_skeleton_view.data_source;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 
 /**
  * Implement this to provide data to the skeleton view.
@@ -15,4 +16,5 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
  */
 public interface AnnotationSkeletonDataSourceI {
     Skeleton getSkeleton();
+    NeuronStyleModel getNeuronStyleModel();
 }

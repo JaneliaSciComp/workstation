@@ -62,6 +62,8 @@ public class Skeleton {
     private TileFormat tileFormat;
 
 	private Set<Anchor> anchors = new LinkedHashSet<>();
+    private Anchor nextParent;
+    private Anchor hoverAnchor;
 	
 	private Map<SegmentIndex, AnchoredVoxelPath> tracedSegments =
 			new ConcurrentHashMap<>();
@@ -93,6 +95,10 @@ public class Skeleton {
     public void setTileFormat(TileFormat tileFormat) {
         this.tileFormat = tileFormat;
     }
+    
+    public TileFormat getTileFormat() {
+        return tileFormat;
+    }
 	
 	public void addAnchors(List<Anchor> anchorList) {
         for (Anchor anchor: anchorList) {
@@ -121,6 +127,34 @@ public class Skeleton {
 		return true;
 	}
     
+    /**
+     * @return the nextParent
+     */
+    public Anchor getNextParent() {
+        return nextParent;
+    }
+
+    /**
+     * @param nextParent the nextParent to set
+     */
+    public void setNextParent(Anchor nextParent) {
+        this.nextParent = nextParent;
+    }
+
+    /**
+     * @return the hoverAnchor
+     */
+    public Anchor getHoverAnchor() {
+        return hoverAnchor;
+    }
+
+    /**
+     * @param hoverAnchor the hoverAnchor to set
+     */
+    public void setHoverAnchor(Anchor hoverAnchor) {
+        this.hoverAnchor = hoverAnchor;
+    }
+
     public void deleteLinkRequest(Anchor anchor) {
         controller.deleteLinkRequested(anchor);
     }

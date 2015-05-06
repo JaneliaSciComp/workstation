@@ -6,6 +6,8 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
+
 /**
  * Implement this to hear about when the next parent is requested.
  * 
@@ -13,4 +15,5 @@ package org.janelia.it.workstation.gui.large_volume_viewer.controller;
  */
 public interface NextParentListener {
     void setNextParent(Long id);
+    void setNextParent(Anchor anchor);
 }
