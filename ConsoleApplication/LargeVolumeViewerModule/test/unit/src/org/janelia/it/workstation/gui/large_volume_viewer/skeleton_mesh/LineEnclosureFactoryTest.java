@@ -47,5 +47,12 @@ public class LineEnclosureFactoryTest {
             2000.0, 2000.0, 2000.0
         };
         factory.addEnclosure(startingCoords, endingCoords);
+        startingCoords = new double[] {
+            200.0, 200.0, 200.0
+        };
+        endingCoords = new double[]{
+            100.0, 200.0, 200.0
+        };
+        factory.addEnclosure(startingCoords, endingCoords);
     }
 }

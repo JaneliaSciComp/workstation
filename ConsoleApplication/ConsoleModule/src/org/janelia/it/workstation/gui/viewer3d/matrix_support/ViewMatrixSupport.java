@@ -248,7 +248,10 @@ public class ViewMatrixSupport {
         Matrix pointMatrix = new Matrix( expandedPoint, 4 );
         
         Matrix result = transformMatrix.times(pointMatrix);
-        return result.getArray()[0];
+        if ( result.getRowPackedCopy().length < 3 ) {
+            throw new IllegalStateException("Failed to produce right-sized array.");
+        }
+        return result.getRowPackedCopy();
     }
 
     /**

@@ -23,6 +23,7 @@ import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
  */
 public class LineEnclosureFactory implements TriangleSource {
     
+    private static final double[] PROTOTYPE_NORMAL = {0, 0, -1};
     private List<VertexInfoBean> vertices = new ArrayList<>();
     private List<Triangle> triangles = new ArrayList<>();
     private ViewMatrixSupport matrixUtils = new ViewMatrixSupport();
@@ -54,9 +55,9 @@ public class LineEnclosureFactory implements TriangleSource {
             throw new IllegalArgumentException("3-D ending coords only.");
         }
         
-        double[] deltasOverLength = computeDeltasOverLength( startingCoords, endingCoords );
-        double[][] startPoly = makeEndPolygonForPoint( startingCoords, deltasOverLength );
-        double[][] endPoly = makeEndPolygonForPoint( endingCoords, deltasOverLength );
+        //double[] deltasOverLength = computeDeltasOverLength( startingCoords, endingCoords );
+        double[][] startPoly = makeEndPolygonStartPoint( startingCoords, endingCoords );
+        double[][] endPoly = makeEndPolygonStartPoint( endingCoords, startingCoords );
         addVertices(startPoly);
         addVertices(endPoly);
         Triangle t = new Triangle();
@@ -87,13 +88,17 @@ public class LineEnclosureFactory implements TriangleSource {
     private double[][] createPrototypeEndPolygon() {
         double[][] prototypeEndPolygon = new double[ endPolygonSides ][];
         prototypeEndPolygon[0] = new double[] { -endPolygonRadius, 0f, 0f };
-        double thetaIncrement = 2.0 * Math.PI / endPolygonSides;
-        double theta = 0;
+        double fullcircle = Math.PI * 2.0;
+        double thetaIncrement = fullcircle / endPolygonSides;
+        double theta = Math.PI;  // Position of first polygon point.
         for ( int i = 1; i < endPolygonSides; i++ ) {
             theta += thetaIncrement;
+            theta = theta % fullcircle;
             float x = (float)(Math.cos(theta) * endPolygonRadius);
             float y = (float)(Math.sin(theta) * endPolygonRadius);
-            
+            //System.out.println(String.format(
+            //   "Theta=%f, x=%f, y=%f, cos=%f, sin=%f.  Iteration=%d\n", 
+            //   theta, x, y, Math.cos(theta), Math.sin(theta), i));
             prototypeEndPolygon[i] = new double[] { x, y, 0f };
         }
         
@@ -115,6 +120,35 @@ public class LineEnclosureFactory implements TriangleSource {
         rtnVal[ 2 ] = lineDelta[2] / lineLen;
         
         return rtnVal;
+    }
+    
+    private double[][] makeEndPolygonStartPoint( double[] coords, double[] endPoint ) {
+        
+        // Get the three angles: about X, about Y, about Z.
+        double[] lineUnitVector = normalize(getLineDelta(coords, endPoint));
+        
+        double[] deltas = getLineDelta(lineUnitVector, PROTOTYPE_NORMAL);
+        
+        double aboutX = deltas[2] == 0 ? 0 : Math.atan(deltas[1] / deltas[2]);
+        double aboutY = deltas[2] == 0 ? 0 : Math.atan(deltas[0] / deltas[2]);
+        double aboutZ = deltas[0] == 0 ? 0 : Math.atan(deltas[1] / deltas[0]);
+        
+        // Now that we have our angles, we make the transform.
+        Matrix transform = matrixUtils.getTransform3D(
+                aboutX, aboutY, aboutZ,
+                0, 0, 0);
+//                coords[0], coords[1], coords[2]);
+        
+        double[][] polygon = new double[endPolygonSides][3];
+        // Clone the prototype.
+        for (int i = 0; i < endPolygonSides; i++) {
+            System.arraycopy(prototypeEndPolygon[i], 0, polygon[i], 0, 3);
+        }
+
+        for (int i = 0; i < polygon.length; i++) {
+            polygon[i] = matrixUtils.transform(transform, polygon[i]);
+        }
+        return polygon;
     }
     
     private double[][] makeEndPolygonForPoint( double[] coords, double[] deltasOverLength ) {
@@ -141,6 +175,14 @@ public class LineEnclosureFactory implements TriangleSource {
             polygon[i] = matrixUtils.transform( transformMatrix, polygon[i] );
         }
         return polygon;
+    }
+    
+    private double[] normalize( double[] distance ) {
+        double magnitude = Math.sqrt( distance[0] * distance[0] + distance[1] * distance[1] + distance[2] * distance[2] );
+        distance[0] /= magnitude;
+        distance[1] /= magnitude;
+        distance[2] /= magnitude;
+        return distance;
     }
     
     private double[] getLineDelta( double[] startCoords, double[] endCoords ) {
