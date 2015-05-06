@@ -32,17 +32,13 @@ package org.janelia.horta;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.List;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.BrightnessModel;
-import org.janelia.gltools.BasicScreenBlitActor;
 import org.janelia.gltools.ColorBackgroundActor;
 import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.GL3Actor;
-import org.janelia.gltools.GL3Resource;
 import org.janelia.gltools.LightingBlitActor;
 import org.janelia.gltools.MultipassRenderer;
 import org.janelia.gltools.RemapColorActor;
@@ -60,8 +56,10 @@ extends MultipassRenderer
     private final RenderPass hdrPass;
     private final RenderTarget hdrTarget;
     private final RenderTarget pickBuffer;
+    private final RenderTarget depthTarget;
     private final float[] clearColor4 = new float[] {0,0,0,0};
     private final int[] clearColor4i = new int[] {0,0,0,0};
+    private final float[] depthOne = new float[] {1};
     private final GLAutoDrawable drawable;
     private final ColorBackgroundActor backgroundActor;
     
@@ -84,6 +82,7 @@ extends MultipassRenderer
         
         // Create G-Buffer for deferred rendering
         final int hdrAttachment = GL3.GL_COLOR_ATTACHMENT0;
+        final int depthAttachment = GL3.GL_DEPTH_ATTACHMENT;
         final int pickAttachment = GL3.GL_COLOR_ATTACHMENT1;
         
         gBuffer = new Framebuffer(drawable);
@@ -95,6 +94,12 @@ extends MultipassRenderer
                 GL3.GL_RG16UI,
                 pickAttachment
         );
+        depthTarget = gBuffer.addRenderTarget(
+                // warning: using naked "GL_DEPTH_COMPONENT" without a size result in GL_INVALID_ENUM error, after glTexStorage2D(...)
+                GL3.GL_DEPTH_COMPONENT24, // TODO 16? 24? 32?
+                depthAttachment);
+        
+        // TODO - Opaque pass
         
         // 2) Second pass: volume intensities to hdr buffer
         hdrPass = new RenderPass(gBuffer) 
@@ -119,8 +124,8 @@ extends MultipassRenderer
                 gl.glDrawBuffers(targetAttachments.length, targetAttachments, 0);
 
                 gl.glClearBufferfv(GL3.GL_COLOR, 0, clearColor4, 0);
+                gl.glClearBufferfv(GL3.GL_DEPTH, 0, depthOne, 0);
                 gl.glClearBufferuiv(GL3.GL_COLOR, 1, clearColor4i, 0); // pick buffer...
-                // gl.glClearBufferfv(GL3.GL_DEPTH, 0, depthOne, 0);
 
                 // Blend intensity channel, but not pick channel
                 gl.glDisablei(GL3.GL_BLEND, 0); // TODO
