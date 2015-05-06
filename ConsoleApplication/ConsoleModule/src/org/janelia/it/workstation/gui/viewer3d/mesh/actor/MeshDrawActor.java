@@ -7,7 +7,6 @@ import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
 import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
-import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeManagerI;
 import org.janelia.it.workstation.gui.viewer3d.mesh.shader.MeshDrawShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
 
@@ -64,7 +64,7 @@ public class MeshDrawActor implements GLActor {
     public static class MeshDrawActorConfigurator {
         private MeshViewContext context;
         private Long renderableId = -1L;
-        private VertexAttributeManagerI vtxAttribMgr;
+        private VertexAttributeSourceI vtxAttribMgr;
         private double[] axisLengths;
         private MatrixScope matrixScope = MatrixScope.EXTERNAL;
 
@@ -80,7 +80,7 @@ public class MeshDrawActor implements GLActor {
             this.renderableId = renderableId;
         }
 
-        public void setVertexAttributeManager(VertexAttributeManagerI vertexAttribMgr) {
+        public void setVertexAttributeManager(VertexAttributeSourceI vertexAttribMgr) {
             this.vtxAttribMgr = vertexAttribMgr;
         }
 
@@ -94,7 +94,7 @@ public class MeshDrawActor implements GLActor {
             return renderableId;
         }
 
-        public VertexAttributeManagerI getVertexAttributeManager() {
+        public VertexAttributeSourceI getVertexAttributeManager() {
             assert vtxAttribMgr != null : "Attrib mgr not initialized.";
             return vtxAttribMgr;
         }
