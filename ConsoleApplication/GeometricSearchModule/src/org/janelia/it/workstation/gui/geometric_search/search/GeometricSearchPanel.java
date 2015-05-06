@@ -60,7 +60,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                 //viewMatrix.identity();
                 passthroughShader.setView(gl, viewMatrix);
                 Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
-                projMatrix.identity();
+                //projMatrix.identity();
                 passthroughShader.setProjection(gl, projMatrix);
             }
         });
