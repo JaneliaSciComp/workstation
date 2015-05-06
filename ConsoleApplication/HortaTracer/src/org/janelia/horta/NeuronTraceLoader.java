@@ -177,7 +177,7 @@ public class NeuronTraceLoader {
             );
 
             // mprActor.addChild(boxMesh);
-            neuronMPRenderer.clearVolumeActors();
+            // neuronMPRenderer.clearVolumeActors(); // TODO - temporarily disabling removal of actors
             neuronMPRenderer.addVolumeActor(boxMesh);
         }
         
