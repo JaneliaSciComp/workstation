@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import java.beans.PropertyVetoException;
+import java.net.UnknownHostException;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 
 import java.util.Collection;
@@ -74,6 +75,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     
     private Lookup.Result<AbstractNode> result = null;
     
+    private static DomainDAO dao;
+    private WorkspaceWrapper currWorkspace;
+    
     public DomainExplorerTopComponent() {
         initComponents();
         beanTreeView.setDefaultActionAllowed(false);
@@ -127,22 +131,28 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 //        keys.put(keyPaste, pasteAction);
 //    }
     
-    private static DomainDAO dao;
 
     public static DomainDAO getDao() {
         if (dao == null) {
             try {
                 dao = new DomainDAO(MONGO_SERVER_URL, MONGO_DATABASE, MONGO_USERNAME, MONGO_PASSWORD);
             }
-            catch (Exception e) {
+            catch (UnknownHostException e) {
                 SessionMgr.getSessionMgr().handleException(e);
             }
         }
         return dao;
     }
 
-    private WorkspaceWrapper currWorkspace;
-
+    public Workspace getCurrentWorkspace() {
+        return currWorkspace==null?null:currWorkspace.getWorkspace();
+    }
+    
+    public void refresh() {
+        loadWorkspaces();
+        // TODO: reselect the same node that was selected
+    }
+    
     private void loadWorkspaces() {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -150,7 +160,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 try {
                     DomainDAO dao = getDao();
                     Collection<Workspace> workspaces = dao.getWorkspaces(SessionMgr.getSubjectKey());
-                    DefaultComboBoxModel<WorkspaceWrapper> model = new DefaultComboBoxModel<WorkspaceWrapper>();
+                    DefaultComboBoxModel<WorkspaceWrapper> model = new DefaultComboBoxModel<>();
                     for (Workspace workspace : workspaces) {
                         WorkspaceWrapper wrapper = new WorkspaceWrapper(workspace);
                         model.addElement(wrapper);
@@ -308,12 +318,16 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             return;
         }
         final Node node = allNodes.iterator().next();
-        selectionModel.select((DomainObjectNode)node, true);   
+        selectionModel.select((DomainObjectNode)node, true);
+    }
+
+    public void selectNodeById(Long id) {
+        // TODO: we need RootedEntities or Paths or something
     }
 
     private class WorkspaceWrapper {
 
-        private Workspace workspace;
+        private final Workspace workspace;
 
         WorkspaceWrapper(Workspace workspace) {
             this.workspace = workspace;

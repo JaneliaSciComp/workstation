@@ -2,21 +2,18 @@ package org.janelia.it.workstation.gui.browser.components;
 
 import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
-import java.util.ArrayList;
-import java.util.List;
+import javax.swing.JPanel;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
-import org.janelia.it.workstation.gui.browser.components.viewer.PaginatedResultsPanel;
+import org.janelia.it.workstation.gui.browser.components.editor.FilterEditorPanel;
+import org.janelia.it.workstation.gui.browser.components.editor.DomainObjectEditor;
+import org.janelia.it.workstation.gui.browser.components.editor.ObjectSetEditorPanel;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
-import org.janelia.it.workstation.gui.browser.events.selection.ObjectSetSelectionEvent;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
-import org.janelia.it.workstation.gui.browser.search.ResultPage;
-import org.janelia.it.workstation.gui.browser.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -37,7 +34,7 @@ import org.slf4j.LoggerFactory;
 @TopComponent.Description(
         preferredID = DomainBrowserTopComponent.TC_NAME,
         //iconBase="SET/PATH/TO/ICON/HERE", 
-        persistenceType = TopComponent.PERSISTENCE_NEVER
+        persistenceType = TopComponent.PERSISTENCE_ONLY_OPENED
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = true)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.browser.components.DomainBrowserTopComponent")
@@ -53,15 +50,11 @@ import org.slf4j.LoggerFactory;
 })
 public final class DomainBrowserTopComponent extends TopComponent {
 
-    public static final String TC_NAME = "DomainBrowserTopComponent";
-    
     private final static Logger log = LoggerFactory.getLogger(DomainBrowserTopComponent.class);
     
-    private final PaginatedResultsPanel resultsPanel;
+    public static final String TC_NAME = "DomainBrowserTopComponent";
     
-    private final InstanceContent content = new InstanceContent();
-    
-    private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+    /* Manage the active instance of this top component */
     
     private static DomainBrowserTopComponent activeInstance;
     private static void activate(DomainBrowserTopComponent instance) {
@@ -70,17 +63,17 @@ public final class DomainBrowserTopComponent extends TopComponent {
     private static boolean isActive(DomainBrowserTopComponent instance) {
         return activeInstance == instance;
     }
+    public static DomainBrowserTopComponent getActiveInstance() {
+        return activeInstance;
+    }
     
+    /* Instance variables */
+    
+    private final InstanceContent content = new InstanceContent();
+    private DomainObjectEditor editor;
+            
     public DomainBrowserTopComponent() {
         initComponents();
-        
-        resultsPanel = new PaginatedResultsPanel(selectionModel) {
-            @Override
-            protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
-                return searchResults.getPage(page);
-            }
-        };
-        mainPanel.add(resultsPanel, BorderLayout.CENTER);
         
         setName(Bundle.CTL_DomainBrowserTopComponent());
         setToolTipText(Bundle.HINT_DomainBrowserTopComponent());
@@ -119,45 +112,63 @@ public final class DomainBrowserTopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         Events.getInstance().registerOnEventBus(this);
-        Events.getInstance().registerOnEventBus(resultsPanel);
         activate(this);
     }
     
     @Override
     public void componentClosed() {
         Events.getInstance().unregisterOnEventBus(this);
-        Events.getInstance().unregisterOnEventBus(resultsPanel);
     }
 
     @Override
     protected void componentActivated() {
         activate(this);
-        ObjectSetNode objectSetNode = getCurrent();
-        DomainExplorerTopComponent.getInstance().selectNode(objectSetNode);
+        DomainObjectNode domainObjectNode = getCurrent();
+        DomainExplorerTopComponent.getInstance().selectNode(domainObjectNode);
     }
     
     @Override
     protected void componentDeactivated() {
     }
     
-    private ObjectSetNode getCurrent() {
-        return getLookup().lookup(ObjectSetNode.class);
+    private DomainObjectNode getCurrent() {
+        return getLookup().lookup(DomainObjectNode.class);
     }
 
-    private boolean setCurrent(ObjectSetNode objectSetNode) {
+    private boolean setCurrent(DomainObjectNode domainObjectNode) {
         ObjectSetNode curr = getLookup().lookup(ObjectSetNode.class);
-        if (curr==objectSetNode) {
+        if (curr==domainObjectNode) {
             return false;
         }
         if (curr!=null) {
             content.remove(curr);
         }
-        content.add(objectSetNode);
+        content.add(domainObjectNode);
         return true;
     }
     
+    public void setEditorClass(Class<? extends DomainObjectEditor> editorClass) {
+        try {
+            if (editor!=null) {
+                mainPanel.remove((JPanel)editor);
+                Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
+            }
+            editor = editorClass.newInstance();
+            mainPanel.add((JPanel) editor, BorderLayout.CENTER);
+            Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
+        }
+        catch (InstantiationException | IllegalAccessException e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
+        setName(editor.getName());
+    }
+    
+    public DomainObjectEditor getEditor() {
+        return editor;
+    }
+    
     @Subscribe
-    public void loadObjectSet(ObjectSetSelectionEvent event) {
+    public void loadDomainObject(DomainObjectSelectionEvent event) {
 
         // We only care about events if we're active
         if (!isActive(this)) {
@@ -179,57 +190,35 @@ public final class DomainBrowserTopComponent extends TopComponent {
         
         requestVisible();
         
-        ObjectSetNode objectSetNode = event.getObjectSetNode();
+        DomainObjectNode domainObjectNode = event.getDomainObjectNode();
 
         // Do we already have the given node loaded?
-        if (!setCurrent(objectSetNode)) {
+        if (!setCurrent(domainObjectNode)) {
             return;
         }
         
-        final ObjectSet objectSet = objectSetNode.getObjectSet();
-        
-        log.trace("loadObjectSet "+objectSet);
-
-        SimpleWorker childLoadingWorker = new SimpleWorker() {
-
-            private List<DomainObject> domainObjects;
-            private List<Annotation> annotations;
-
-            @Override
-            protected void doStuff() throws Exception {
-                log.debug("Getting children...");
-
-                DomainDAO dao = DomainExplorerTopComponent.getDao();
-                domainObjects = dao.getDomainObjects(SessionMgr.getSubjectKey(), objectSet);
-                List<Long> ids = new ArrayList<>();
-                for(DomainObject domainObject : domainObjects) {
-                    ids.add(domainObject.getId());
-                }
-                annotations = dao.getAnnotations(SessionMgr.getSubjectKey(), ids);
-                log.debug("  Showing "+domainObjects.size()+" items");
-            }
-
-            @Override
-            protected void hadSuccess() {
-                if (domainObjects==null || domainObjects.isEmpty()) {
-                    resultsPanel.showNothing();
-                    return;
-                }
-                SearchResults searchResults = SearchResults.paginate(domainObjects, annotations);
-                resultsPanel.showSearchResults(searchResults);
-                
-                setName(objectSet.getName());
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-
-        childLoadingWorker.execute();
+        final DomainObject domainObject = domainObjectNode.getDomainObject();
+        final Class<? extends DomainObjectEditor> editorClass = getEditorClass(domainObject);
+        if (editorClass==null) {
+            return;
+        }
+        if (editor==null || !editor.getClass().equals(editorClass)) {
+            setEditorClass(editorClass);
+        }
+        editor.loadDomainObject(domainObject);
+        setName(domainObject.getName());
     }
 
+    private Class<? extends DomainObjectEditor> getEditorClass(DomainObject domainObject) {
+        if (domainObject instanceof Filter) {
+            return FilterEditorPanel.class;
+        }
+        else if (domainObject instanceof ObjectSet) {
+            return ObjectSetEditorPanel.class;
+        }
+        return null;
+    }
+    
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles

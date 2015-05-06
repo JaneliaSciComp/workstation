@@ -8,25 +8,14 @@ import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.screen.FlyLine;
-import org.janelia.it.jacs.model.domain.screen.ScreenSample;
+import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.model.DeadReference;
-import org.janelia.it.workstation.gui.browser.nodes.CompartmentSetNode;
-import org.janelia.it.workstation.gui.browser.nodes.DeadReferenceNode;
-import org.janelia.it.workstation.gui.browser.nodes.FlyLineNode;
-import org.janelia.it.workstation.gui.browser.nodes.LSMImageNode;
-import org.janelia.it.workstation.gui.browser.nodes.NeuronFragmentNode;
+import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
 import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
-import org.janelia.it.workstation.gui.browser.nodes.SampleNode;
-import org.janelia.it.workstation.gui.browser.nodes.ScreenSampleNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.nodes.ChildFactory;
@@ -45,7 +34,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     private final WeakReference<TreeNode> treeNodeRef;
     
     public TreeNodeChildFactory(TreeNode treeNode) {
-        this.treeNodeRef = new WeakReference<TreeNode>(treeNode);
+        this.treeNodeRef = new WeakReference<>(treeNode);
     }
     
     @Override
@@ -70,11 +59,15 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             for(Reference reference : treeNode.getChildren()) {
                 if (reference==null) continue;
                 DomainObject obj = map.get(reference.getTargetId());
+                log.trace(reference.getTargetType()+"#"+reference.getTargetId()+" -> "+obj);
                 if (obj!=null) {
                     if (TreeNode.class.isAssignableFrom(obj.getClass())) {
                         temp.add(obj);
                     }
                     else if (ObjectSet.class.isAssignableFrom(obj.getClass())) {
+                        temp.add(obj);
+                    }
+                    else if (Filter.class.isAssignableFrom(obj.getClass())) {
                         temp.add(obj);
                     }
                 }
@@ -98,6 +91,9 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             }
             else if (ObjectSet.class.isAssignableFrom(key.getClass())) {
                 return new ObjectSetNode(this, (ObjectSet)key);
+            }
+            else if (Filter.class.isAssignableFrom(key.getClass())) {
+                return new FilterNode(this, (Filter)key);
             }
             else {
                 return null;

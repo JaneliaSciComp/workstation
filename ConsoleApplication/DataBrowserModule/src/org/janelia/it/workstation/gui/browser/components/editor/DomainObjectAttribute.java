@@ -11,12 +11,11 @@ public class DomainObjectAttribute {
     private final String name;
     private final String label;
     private final boolean facet;
-    private Method getter;
+    private final Method getter;
     
     public DomainObjectAttribute(String name, String label, boolean facet, Method getter) {
         this.name = name;
         this.label = label;
-//        this.dataType = type.isAssignableFrom(Date.class) ? DataType.DATE : DataType.STRING;
         this.facet = facet;
         this.getter = getter;
     }

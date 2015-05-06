@@ -144,7 +144,7 @@ public class TreeNodeNode extends DomainObjectNode {
                 log.info("Will paste {} on {}", domainObject.getId(), treeNode.getName());
             }
             catch (Exception ex) {
-                log.error("WTF", ex);
+                log.error("Error pasting domain object", ex);
             }
             return new PasteType() {
                 @Override

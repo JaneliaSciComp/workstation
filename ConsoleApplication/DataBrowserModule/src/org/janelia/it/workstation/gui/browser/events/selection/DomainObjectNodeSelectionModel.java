@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.browser.events.selection;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
 import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
 
 /**
@@ -16,6 +17,10 @@ public class DomainObjectNodeSelectionModel extends SelectionModel<DomainObjectN
         if (domainObjectNode instanceof ObjectSetNode) {
             ObjectSetNode objectSetNode = (ObjectSetNode)domainObjectNode;
             Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), id, select, objectSetNode));
+        }
+        else if (domainObjectNode instanceof FilterNode) {
+            FilterNode filterNode = (FilterNode)domainObjectNode;
+            Events.getInstance().postOnEventBus(new FilterSelectionEvent(getSource(), id, select, filterNode));
         }
         else {
             Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), id, domainObjectNode, select, clearAll));
