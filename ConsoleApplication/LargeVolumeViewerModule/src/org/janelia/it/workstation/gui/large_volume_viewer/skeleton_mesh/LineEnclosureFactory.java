@@ -13,6 +13,9 @@ import org.janelia.it.jacs.shared.mesh_loader.Triangle;
 import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
 import org.janelia.it.jacs.shared.mesh_loader.VertexInfoBean;
 import org.janelia.it.jacs.shared.mesh_loader.VertexInfoKey;
+import org.janelia.it.workstation.geom.Rotation3d;
+import org.janelia.it.workstation.geom.UnitVec3;
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 
 /**
@@ -22,6 +25,8 @@ import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
  * @author fosterl
  */
 public class LineEnclosureFactory implements TriangleSource {
+    
+    private static final int X = 0, Y = 1, Z = 2;
     
     private static final double[] PROTOTYPE_NORMAL = {0, 0, -1};
     private List<VertexInfoBean> vertices = new ArrayList<>();
@@ -115,18 +120,46 @@ public class LineEnclosureFactory implements TriangleSource {
         }
         double lineLen = Math.sqrt(accum);
 
-        rtnVal[ 0 ] = lineDelta[0] / lineLen;
-        rtnVal[ 1 ] = lineDelta[1] / lineLen;
-        rtnVal[ 2 ] = lineDelta[2] / lineLen;
+        rtnVal[ X ] = lineDelta[0] / lineLen;
+        rtnVal[ Y ] = lineDelta[1] / lineLen;
+        rtnVal[ Z ] = lineDelta[2] / lineLen;
         
         return rtnVal;
+    }
+    
+    private double[][] makePolygonAroundPoint( double[] coords, double[] endPoint ) {
+        
+        // Get the three angles: about X, about Y, about Z.
+        double[][] polygon = new double[endPolygonSides][3];
+        // Clone the prototype.
+        for (int i = 0; i < endPolygonSides; i++) {
+            System.arraycopy(prototypeEndPolygon[i], 0, polygon[i], 0, 3);
+        }
+        double[] deltas = normalize(getLineDelta(coords, endPoint));
+
+        Rotation3d rotation = new Rotation3d();
+        rotation.add(new UnitVec3(deltas[X], deltas[Y], deltas[Z]));
+        Vec3 f = new Vec3(PROTOTYPE_NORMAL[X], PROTOTYPE_NORMAL[Y], PROTOTYPE_NORMAL[Z]);
+        Vec3 u = rotation.times(new Vec3(0,-1,0));
+        Vec3 c = f.plus(rotation.times(new Vec3(1,1,1)));
+        // Eye, Center, Up
+        float[] lookAt = matrixUtils.getLookAt(c, f, u);
+        
+        Matrix transform = matrixUtils.getTransform3D(aboutX, aboutY, aboutZ, coords[X], coords[Y], coords[Z]);
+        for (int i = 0; i < polygon.length; i++) {
+            polygon[i] = matrixUtils.transform(transform, polygon[i]);
+        }
+        return polygon;
     }
     
     private double[][] makeEndPolygonStartPoint( double[] coords, double[] endPoint ) {
         
         // Get the three angles: about X, about Y, about Z.
         double[] lineUnitVector = normalize(getLineDelta(coords, endPoint));
-        
+        //double[] crossProtoNormal = getCrossProduct( lineUnitVector, PROTOTYPE_NORMAL );
+        //double crossMag = getMagnitude( crossProtoNormal );
+        //double theta = Math.asin(crossMag);
+
         double[] deltas = getLineDelta(lineUnitVector, PROTOTYPE_NORMAL);
         
         double aboutX = deltas[2] == 0 ? 0 : Math.atan(deltas[1] / deltas[2]);
@@ -170,7 +203,7 @@ public class LineEnclosureFactory implements TriangleSource {
                 deltaYslashLen, deltaZslashLen, 
                 deltaXslashLen, deltaZslashLen,
                 deltaYslashLen, deltaXslashLen, 
-                coords[0], coords[1], coords[2]);
+                coords[X], coords[Y], coords[Z]);
         for ( int i = 0; i < polygon.length; i++ ) {
             polygon[i] = matrixUtils.transform( transformMatrix, polygon[i] );
         }
@@ -178,11 +211,16 @@ public class LineEnclosureFactory implements TriangleSource {
     }
     
     private double[] normalize( double[] distance ) {
-        double magnitude = Math.sqrt( distance[0] * distance[0] + distance[1] * distance[1] + distance[2] * distance[2] );
+        double magnitude = getMagnitude( distance );
         distance[0] /= magnitude;
         distance[1] /= magnitude;
         distance[2] /= magnitude;
         return distance;
+    }
+
+    public double getMagnitude(double[] distance) {
+        double magnitude = Math.sqrt( distance[0] * distance[0] + distance[1] * distance[1] + distance[2] * distance[2] );
+        return magnitude;
     }
     
     private double[] getLineDelta( double[] startCoords, double[] endCoords ) {
@@ -191,5 +229,22 @@ public class LineEnclosureFactory implements TriangleSource {
             delta[ i ] = startCoords[ i ] - endCoords[ i ];
         }
         return delta;
+    }
+    
+    /**
+     * 
+     * cx = aybz − azby
+     * cy = azbx − axbz
+     * cz = axby − aybx	
+     * @return 
+     */
+    private double[] getCrossProduct( double[] a, double[] b ) {
+        double[] c = new double[ a.length ];
+        
+        c[ X ] = a[Y] * b[Z] - a[Z] * b[Z];
+        c[ Y ] = a[Z] * b[X] - a[X] * b[X];
+        c[ Z ] = a[X] * b[Y] - a[Y] * b[Y];
+        
+        return c;
     }
 }
