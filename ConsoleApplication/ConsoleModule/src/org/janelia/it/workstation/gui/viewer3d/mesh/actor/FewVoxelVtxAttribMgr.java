@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.publication_quality.mesh;
+package org.janelia.it.workstation.gui.viewer3d.mesh.actor;
 
 import org.janelia.it.jacs.shared.mesh_loader.*;
 import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
@@ -35,8 +35,8 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI, VertexExpo
 
     @Override
     public List<TriangleSource> execute() throws Exception {
-        triangleSources = new ArrayList<TriangleSource>();
-        renderIdToBuffers = new HashMap<Long,RenderBuffersBean>();
+        triangleSources = new ArrayList<>();
+        renderIdToBuffers = new HashMap<>();
 
         int startingX = 0;
         int startingY = 0;
@@ -98,6 +98,8 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI, VertexExpo
         // Making a zig-zag pattern on level Z=0.
         VoxelInfoBean voxelInfoBean;
         VoxelInfoKey key;
+        
+        int voxSize = 15;
 
         voxelInfoBean = new VoxelInfoBean();
         key = new VoxelInfoKey(startingX,startingY,startingZ);
@@ -110,7 +112,7 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI, VertexExpo
         voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
         factory.addEnclosure(voxelInfoBean);
 
-        key = new VoxelInfoKey(startingX+1, startingY+1, startingZ);
+        key = new VoxelInfoKey(startingX+voxSize, startingY+voxSize, startingZ);
         voxelInfoBean = new VoxelInfoBean();
         voxelInfoBean.setKey( key );
         voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
@@ -121,7 +123,7 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI, VertexExpo
         voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
         factory.addEnclosure(voxelInfoBean);
 
-        key = new VoxelInfoKey(startingX+2, startingY+2, startingZ);
+        key = new VoxelInfoKey(startingX+voxSize * 2, startingY+voxSize * 2, startingZ);
         voxelInfoBean = new VoxelInfoBean();
         voxelInfoBean.setKey( key );
         voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
@@ -134,7 +136,7 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI, VertexExpo
 
         // Making zig-zag at next z-level.
         voxelInfoBean = new VoxelInfoBean();
-        key = new VoxelInfoKey(startingX+1,startingY,startingZ+1);
+        key = new VoxelInfoKey(startingX+voxSize,startingY,startingZ+voxSize);
         voxelInfoBean.setKey(key);
         voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
         voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
@@ -144,7 +146,7 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI, VertexExpo
         voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
         factory.addEnclosure(voxelInfoBean);
 
-        key = new VoxelInfoKey(startingX+2, startingY+1, startingZ+1);
+        key = new VoxelInfoKey(startingX+voxSize * 2, startingY+voxSize, startingZ+voxSize);
         voxelInfoBean = new VoxelInfoBean();
         voxelInfoBean.setKey( key );
         voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
@@ -155,7 +157,7 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI, VertexExpo
         voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
         factory.addEnclosure(voxelInfoBean);
 
-        key = new VoxelInfoKey(startingX+3, startingY+2, startingZ+1);
+        key = new VoxelInfoKey(startingX+voxSize * 3, startingY+voxSize * 2, startingZ+voxSize);
         voxelInfoBean = new VoxelInfoBean();
         voxelInfoBean.setKey( key );
         voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
@@ -166,7 +168,7 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI, VertexExpo
         voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
         factory.addEnclosure(voxelInfoBean);
 
-        key = new VoxelInfoKey(startingX+4, startingY+3, startingZ+1);
+        key = new VoxelInfoKey(startingX+voxSize * 4, startingY+voxSize * 3, startingZ+voxSize * 1);
         voxelInfoBean = new VoxelInfoBean();
         voxelInfoBean.setKey( key );
         voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);

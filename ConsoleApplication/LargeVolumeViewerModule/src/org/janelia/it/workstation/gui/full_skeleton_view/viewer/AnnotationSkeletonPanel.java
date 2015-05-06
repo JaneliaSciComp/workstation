@@ -30,6 +30,10 @@ import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer;
 import org.janelia.it.workstation.gui.viewer3d.ResetPositionerI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr.Scenario;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
 
 /**
  * This panel holds all relevant components for showing the skeleton of
@@ -44,7 +48,7 @@ public class AnnotationSkeletonPanel extends JPanel {
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
         this.setLayout(new BorderLayout());
-            }
+    }
     
     public void establish3D() {
         if (viewer == null  &&  dataSource.getSkeleton() != null  &&  dataSource.getSkeleton().getTileFormat() != null) {
@@ -95,10 +99,14 @@ public class AnnotationSkeletonPanel extends JPanel {
             
             viewer.setResetFirstRedraw(true);
             final BoundingBox3d originalBoundingBox = tileFormat.calcBoundingBox();
+
+            GLActor meshDrawActor = buildMeshDrawActor( context, originalBoundingBox );
+            
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
             viewer.addActor(axesActor);
             viewer.addActor(actor);
             viewer.addActor(refAxisActor);
+//            viewer.addActor(meshDrawActor);
             viewer.addMenuAction(new BackgroundPickAction(viewer));
             this.add(viewer, BorderLayout.CENTER);
             validate();
@@ -136,6 +144,27 @@ public class AnnotationSkeletonPanel extends JPanel {
         axes.setAxisLengthDivisor( axisLengthDivisor );
         axes.setFullAxes( true );
         return axes;
+    }
+    
+    private GLActor buildMeshDrawActor(MeshViewContext context, BoundingBox3d boundingBox) {
+        MeshDrawActorConfigurator configurator = new MeshDrawActorConfigurator();
+        //configurator.setAxisLengths( new double[] { boundingBox.getWidth(), boundingBox.getHeight(), boundingBox.getDepth() } );
+        configurator.setAxisLengths( new double[] { boundingBox.getMaxX(), boundingBox.getMaxY(), boundingBox.getMaxZ() } );
+        //configurator.setAxisLengths(new double[]{100.0, 100.0, 100.0});
+        configurator.setContext(context);
+        configurator.setRenderableId( 777L );
+        configurator.setMatrixScope(MeshDrawActor.MatrixScope.LOCAL);                  
+        
+        final FewVoxelVtxAttribMgr fewVoxelVtxAttribMgr = new FewVoxelVtxAttribMgr( 777L, Scenario.whole );
+        try {
+            fewVoxelVtxAttribMgr.execute();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+        configurator.setVertexAttributeManager(fewVoxelVtxAttribMgr);
+        
+        MeshDrawActor meshDraw = new MeshDrawActor(configurator);
+        return meshDraw;
     }
     
     public static class BackgroundPickAction extends AbstractAction {

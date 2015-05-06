@@ -4,12 +4,12 @@
  * and open the template in the editor.
  */
 
-package org.janelia.it.workstation.publication_quality.mesh;
+package org.janelia.it.workstation.gui.viewer3d.mesh;
 
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.Viewer3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.workstation.publication_quality.mesh.actor.MeshRenderer;
+import org.janelia.it.workstation.gui.viewer3d.mesh.MeshRenderer;
 
 /**
  * Special viewer to support carrying around extra information needed for mesh.

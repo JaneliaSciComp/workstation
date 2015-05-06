@@ -4,11 +4,12 @@
  * and open the template in the editor.
  */
 
-package org.janelia.it.workstation.publication_quality.mesh.actor;
+package org.janelia.it.workstation.gui.viewer3d.mesh;
 
 import java.awt.Color;
 import java.util.ArrayList;
 import javax.media.opengl.DebugGL2;
+import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
@@ -69,6 +70,7 @@ public class MeshRenderer extends ActorRenderer {
 
         // Copy member list of actors local for independent iteration.
 	    super.display(glDrawable); // fills background
+        glDrawable.getGL().glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
         for (GLActor actor : new ArrayList<>( actors ))
             actor.display(glDrawable);
     }

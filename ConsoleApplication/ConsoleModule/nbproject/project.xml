@@ -203,6 +203,9 @@
                 <package>org.janelia.it.workstation.gui.viewer3d.loader</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.masking</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.matrix_support</package>
+                <package>org.janelia.it.workstation.gui.viewer3d.mesh</package>
+                <package>org.janelia.it.workstation.gui.viewer3d.mesh.actor</package>
+                <package>org.janelia.it.workstation.gui.viewer3d.mesh.shader</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.renderable</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.resolver</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.scaled_image</package>

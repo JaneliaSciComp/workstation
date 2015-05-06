@@ -5,6 +5,7 @@
  */
 package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
+import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -14,6 +15,7 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager.FocusBehavior;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
@@ -79,7 +81,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
         this.context = context;
         this.onscreenSize = onscreenSize;
         this.matrixManager = new MatrixManager(
-                context, (int)onscreenSize[0] * 2, (int)onscreenSize[1] * 2, (int)onscreenSize[2] * 2
+                context, (int)onscreenSize[0] * 2, (int)onscreenSize[1] * 2, FocusBehavior.FIXED
         );
         createBoundingBox(placement, parentBoundingBox, onscreenSize);
     }

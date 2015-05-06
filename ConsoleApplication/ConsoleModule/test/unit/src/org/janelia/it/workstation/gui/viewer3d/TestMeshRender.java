@@ -1,11 +1,12 @@
-package org.janelia.it.workstation.publication_quality.mesh;
+package org.janelia.it.workstation.gui.viewer3d;
 
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr;
+import org.janelia.it.workstation.gui.viewer3d.mesh.MeshViewer;
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.WorkstationEnvironment;
-import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
-import org.janelia.it.workstation.publication_quality.mesh.actor.MeshDrawActor;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeManagerI;
@@ -15,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 
 /**
  * Testing class - a regression test vehicle, for looking at mesh rendering over existing volumes.
