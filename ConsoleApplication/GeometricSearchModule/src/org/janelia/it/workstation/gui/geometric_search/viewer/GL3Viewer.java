@@ -71,12 +71,15 @@ public class GL3Viewer extends GLJPanel
 
     @Override
     public void mousePressed(MouseEvent e) {
-
+        maybeShowPopup(e);
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-
+        if (bMouseIsDragging) {
+            bMouseIsDragging=false;
+        }
+        maybeShowPopup(e);
     }
 
     @Override
@@ -118,12 +121,11 @@ public class GL3Viewer extends GLJPanel
 
     @Override
     public void actionPerformed(ActionEvent arg0) {
-        // System.out.println("reset view");
         resetView();
     }
 
     public void resetView() {
-        //renderer.resetView();
+        renderer.resetView();
         repaint();
     }
 
@@ -204,6 +206,18 @@ public class GL3Viewer extends GLJPanel
         synchronized ( this ) {
             renderer.addShaderAction(shaderAction);
             //renderer.resetView();
+        }
+    }
+
+    protected void maybeShowPopup(MouseEvent event)
+    {
+        logger.info("maybeShowPopup = " + event.getClass().getName());
+        if (event.isPopupTrigger()) {
+            logger.info("isPopupTrigger=true");
+            popupMenu.show(event.getComponent(),
+                    event.getX(), event.getY());
+        } else {
+            logger.info("isPopupTrigger=false");
         }
     }
 
