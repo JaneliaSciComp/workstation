@@ -109,7 +109,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
     // UI Elements
     private JPanel filterPanel;
     private JLabel filterNameLabel;
-    private JButton renameButton;
+    private JButton saveButton;
+    private JButton saveAsButton;
     private JPanel criteriaPanel;
     private final PaginatedResultsPanel resultsPanel;
     
@@ -118,7 +119,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
     private JComboBox inputField;    
     
     // Search state
-    private Filter filter;
+    private Filter filter;    
+    private boolean dirty = false;
     
     // Derived from search state (Filter)
     private Class<?> searchClass;
@@ -147,8 +149,36 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         filterNameLabel.setFont(FILTER_NAME_FONT);
         filterPanel.add(filterNameLabel);
         
-        this.renameButton = new JButton("Save As");
-        renameButton.addActionListener(new ActionListener() {
+        this.saveButton = new JButton("Save");
+        saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SimpleWorker worker = new SimpleWorker() {
+                        
+                    @Override
+                    protected void doStuff() throws Exception {
+                        DomainDAO dao = DomainExplorerTopComponent.getDao();
+                        dao.save(SessionMgr.getSubjectKey(), filter);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        saveButton.setVisible(false);
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                worker.execute();
+                
+            }
+        });
+        filterPanel.add(saveButton);
+        
+        this.saveAsButton = new JButton("Save As");
+        saveAsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 final String newName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), 
@@ -211,7 +241,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
                 
             }
         });
-        filterPanel.add(renameButton);
+        filterPanel.add(saveAsButton);
         
         this.criteriaPanel = new JPanel(new WrapLayout(true, FlowLayout.LEFT));
         criteriaPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 8, 2));
@@ -276,15 +306,24 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         dt.setActive(true);
     }
     
+    public void loadNewFilter() {
+        this.filter = new Filter();
+        filter.setName(DEFAULT_FILTER_NAME);
+        filter.setSearchType(DEFAULT_SEARCH_CLASS.getName());
+        setSearchClass(DEFAULT_SEARCH_CLASS);
+        saveButton.setVisible(false);
+    }
+    
     @Override
     public void loadDomainObject(Filter filter) {
         this.filter = filter;
         try {
             setSearchClass(Class.forName(filter.getSearchType()));
+            saveButton.setVisible(false);
         }
         catch (ClassNotFoundException e) {
-            loadNewFilter();
             SessionMgr.getSessionMgr().handleException(e);
+            loadNewFilter();
         }
     }
     
@@ -296,13 +335,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
     @Override
     public Object getEventBusListener() {
         return resultsPanel;
-    }
-    
-    public void loadNewFilter() {
-        this.filter = new Filter();
-        filter.setName(DEFAULT_FILTER_NAME);
-        filter.setSearchType(DEFAULT_SEARCH_CLASS.getName());
-        setSearchClass(DEFAULT_SEARCH_CLASS);
     }
     
     private void setSearchClass(Class<?> searchClass) {
@@ -341,7 +373,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         });
 
         populateAddFilterMenu(addFilterButton.getPopupMenu());
-        
+        dirty = true;
         refresh();
     }
 
@@ -360,10 +392,22 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
             popupMenu.add(menuItem);
         }
     }
-    
+
     private void refresh() {
         log.info("refresh");
-        filter.setSearchString(getInputFieldValue());
+        
+        String inputFieldValue = getInputFieldValue();
+        
+        if (filter.getSearchString()!=null && !filter.getSearchString().equals(inputFieldValue)) {
+            dirty = true;
+        }
+        
+        filter.setSearchString(inputFieldValue);
+        
+        if (dirty) {
+            saveButton.setVisible(true);
+        }
+        
         performSearch(0, true);
     }
     
@@ -421,6 +465,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     updateFacet(attr.getName(), null, false);
+                    dirty = true;
                     refresh();
                 }
             });
@@ -438,6 +483,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
                     else {
                         updateFacet(attr.getName(), facetValue.getValue(), false);
                     }
+                    dirty = true;
                     refresh();
                 }
             });
@@ -463,6 +509,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         criteria.setSetReference(reference);
         filter.addCriteria(criteria);
 
+        dirty = true;   
         refresh();
     }
 
