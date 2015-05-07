@@ -123,7 +123,7 @@ public class GL3Viewer extends GLJPanel
     }
 
     public void resetView() {
-        renderer.resetView();
+        //renderer.resetView();
         repaint();
     }
 
@@ -203,7 +203,7 @@ public class GL3Viewer extends GLJPanel
     private void addActorToRenderer(GL3ShaderActionSequence shaderAction) {
         synchronized ( this ) {
             renderer.addShaderAction(shaderAction);
-            renderer.resetView();
+            //renderer.resetView();
         }
     }
 

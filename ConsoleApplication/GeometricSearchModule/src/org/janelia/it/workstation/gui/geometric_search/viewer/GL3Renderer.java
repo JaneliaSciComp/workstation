@@ -156,11 +156,13 @@ public class GL3Renderer implements GLEventListener
 
         final GL3 gl = glDrawable.getGL().getGL3();
         displayBackground(gl);
+        gl.glClear(GL3.GL_DEPTH_BUFFER_BIT);
+        gl.glEnable(GL3.GL_DEPTH_TEST);
 
         widthInPixels = glDrawable.getWidth();
         heightInPixels = glDrawable.getHeight();
         if (resetFirstRedraw && (! hasBeenReset)) {
-            resetView();
+            //resetView();
             hasBeenReset = true;
         }
 
@@ -171,8 +173,8 @@ public class GL3Renderer implements GLEventListener
 
         //Vec3 c = f.plus(rotation.times(model.getCameraDepth().times(unitsPerPixel))); // camera position
 
-        Vec3 md = model.getCameraDepth();
-        //md.setZ(md.getZ()*-1.0);
+        Vec3 md = model.getCameraDepth().clone();
+        md.setZ(md.getZ()*-1.0);
 
         Vec3 c = f.plus(rotation.times(md)); // camera position
 
@@ -201,15 +203,15 @@ public class GL3Renderer implements GLEventListener
         return Math.abs( model.getCameraFocusDistance() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
     }
 
-    public void resetView() {
-        // Adjust view to fit the actual objects present
-//        BoundingBox3d boundingBox = getBoundingBox();
-//        camera.setFocus(boundingBox.getCenter());
-        camera.resetRotation();
-        camera.setFocus(0.0, 0.0, 0.0);
-        model.setCameraDepth(new Vec3(0.0, 0.0, -GL3Model.DEFAULT_CAMERA_FOCUS_DISTANCE));
-//        resetCameraDepth(boundingBox);
-    }
+//    public void resetView() {
+//        // Adjust view to fit the actual objects present
+////        BoundingBox3d boundingBox = getBoundingBox();
+////        camera.setFocus(boundingBox.getCenter());
+//        camera.resetRotation();
+//        camera.setFocus(0.0, 0.0, 0.0);
+//        model.setCameraDepth(new Vec3(0.0, 0.0, -GL3Model.DEFAULT_CAMERA_FOCUS_DISTANCE));
+////        resetCameraDepth(boundingBox);
+//    }
 
     @Override
     public void reshape(GLAutoDrawable glDrawable, int x, int y, int width, int height) {
@@ -227,7 +229,7 @@ public class GL3Renderer implements GLEventListener
         double dragDistance = Math.sqrt(dy * dy + dx * dx + dz * dz);
         if (dragDistance <= 0.0)
             return;
-        UnitVec3 rotationAxis = new UnitVec3(dy, -dx, dz);
+        UnitVec3 rotationAxis = new UnitVec3(dy, dx, dz);
         double windowSize = Math.sqrt(
                 widthInPixels * widthInPixels
                         + heightInPixels * heightInPixels);
@@ -255,7 +257,7 @@ public class GL3Renderer implements GLEventListener
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = model.getCameraFocusDistance();
         float scaledFocusDistance = new Float(Math.abs(cameraFocusDistance));
-        projectionMatrix = computeProjection(1.0f, 0.5f, 2.0f);
+        projectionMatrix = computeProjection(h, 0.5f*scaledFocusDistance, 2.0f*scaledFocusDistance);
     }
 
     Matrix4 computeProjection(float aspectRatio, float near, float far) {
@@ -384,7 +386,7 @@ public class GL3Renderer implements GLEventListener
                 0f, 0f, 1f, 0f,
                 -1f*c.getX(), -1f*c.getY(), -1f*c.getZ(), 1f);
 
-        Matrix4 result = lam.multiply(tm);
+        Matrix4 result = tm.multiply(lam);
         return result;
     }
 
