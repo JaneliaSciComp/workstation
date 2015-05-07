@@ -264,7 +264,7 @@ public class FilteredAnnotationList extends JPanel {
         JPanel filterButtons = new JPanel();
         filterButtons.setLayout(new BoxLayout(filterButtons, BoxLayout.LINE_AXIS));
 
-        JButton defaultButton = new JButton();
+        JToggleButton defaultButton = new JToggleButton();
         defaultButton.setAction(new AbstractAction("Default") {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -273,8 +273,9 @@ public class FilteredAnnotationList extends JPanel {
             }
         });
         filterButtons.add(defaultButton);
+        defaultButton.setSelected(true);
 
-        JButton endsButton = new JButton();
+        JToggleButton endsButton = new JToggleButton();
         endsButton.setAction(new AbstractAction("Ends") {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -284,7 +285,7 @@ public class FilteredAnnotationList extends JPanel {
         });
         filterButtons.add(endsButton);
 
-        JButton branchButton = new JButton();
+        JToggleButton branchButton = new JToggleButton();
         branchButton.setAction(new AbstractAction("Branches") {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -293,6 +294,11 @@ public class FilteredAnnotationList extends JPanel {
             }
         });
         filterButtons.add(branchButton);
+
+        ButtonGroup buttonGroup = new ButtonGroup();
+        buttonGroup.add(defaultButton);
+        buttonGroup.add(endsButton);
+        buttonGroup.add(branchButton);
 
         GridBagConstraints c3 = new GridBagConstraints();
         c3.gridx = 0;
