@@ -182,9 +182,9 @@ public class ViewMatrixSupport {
         double sinAboutZ = Math.sin(aboutZ);
         double cosAboutZ = Math.cos(aboutZ);
         return getTransform3D(
-                cosAboutX, sinAboutX, 
-                cosAboutY, sinAboutY, 
-                cosAboutZ, sinAboutZ, 
+                sinAboutX, cosAboutX, 
+                sinAboutY, cosAboutY, 
+                sinAboutZ, cosAboutZ, 
                 translateX, translateY, translateZ);
     }
 
@@ -203,9 +203,9 @@ public class ViewMatrixSupport {
      * @return matrix, ready to transform points.
      */
     public Matrix getTransform3D(
-            double cosAboutX, double sinAboutX, 
-            double cosAboutY, double sinAboutY,
-            double cosAboutZ, double sinAboutZ, 
+            double sinAboutX, double cosAboutX, 
+            double sinAboutY, double cosAboutY,
+            double sinAboutZ, double cosAboutZ, 
             double translateX, double translateY, double translateZ) {
         Matrix xRot = Matrix.identity(4, 4);
         xRot.set(1, 1, cosAboutX);
