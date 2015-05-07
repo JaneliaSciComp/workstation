@@ -8,6 +8,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh;
 
 import Jama.Matrix;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.janelia.it.jacs.shared.mesh_loader.Triangle;
 import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
@@ -17,6 +18,8 @@ import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.UnitVec3;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Can build up mesh enclosures over lines.  Lines are defined as pairs
@@ -26,6 +29,7 @@ import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
  */
 public class LineEnclosureFactory implements TriangleSource {
     
+    private static Logger logger = LoggerFactory.getLogger(LineEnclosureFactory.class);
     private static final int X = 0, Y = 1, Z = 2;
     
     private static final double[] PROTOTYPE_NORMAL = {0, 0, -1};
@@ -61,10 +65,9 @@ public class LineEnclosureFactory implements TriangleSource {
         }
         
         //double[] deltasOverLength = computeDeltasOverLength( startingCoords, endingCoords );
-        double[][] startPoly = makeEndPolygonStartPoint( startingCoords, endingCoords );
-        double[][] endPoly = makeEndPolygonStartPoint( endingCoords, startingCoords );
-        addVertices(startPoly);
-        addVertices(endPoly);
+        List<double[][]> endCaps = makeEndPolygons( startingCoords, endingCoords );
+        addVertices(endCaps.get(0));
+        addVertices(endCaps.get(1));
         Triangle t = new Triangle();
     }
 
@@ -87,6 +90,7 @@ public class LineEnclosureFactory implements TriangleSource {
             key.setPosition(poly[i]);
             bean.setKey(key);
             vertices.add(bean);
+            logger.info("Adding vertex {},{},{}", key.getPosition()[X], key.getPosition()[Y], key.getPosition()[Z]);
         }
     }
 
@@ -127,6 +131,12 @@ public class LineEnclosureFactory implements TriangleSource {
         return rtnVal;
     }
     
+    /**
+     * This is probably a dead end.  Experimental. Never tested.
+     * @param coords
+     * @param endPoint
+     * @return 
+     */
     private double[][] makePolygonAroundPoint( double[] coords, double[] endPoint ) {
         
         // Get the three angles: about X, about Y, about Z.
@@ -144,7 +154,9 @@ public class LineEnclosureFactory implements TriangleSource {
         Vec3 c = f.plus(rotation.times(new Vec3(1,1,1)));
         // Eye, Center, Up
         float[] lookAt = matrixUtils.getLookAt(c, f, u);
-        
+        double aboutX = 0;
+        double aboutY = 0;
+        double aboutZ = 0;
         Matrix transform = matrixUtils.getTransform3D(aboutX, aboutY, aboutZ, coords[X], coords[Y], coords[Z]);
         for (int i = 0; i < polygon.length; i++) {
             polygon[i] = matrixUtils.transform(transform, polygon[i]);
@@ -152,30 +164,42 @@ public class LineEnclosureFactory implements TriangleSource {
         return polygon;
     }
     
-    private double[][] makeEndPolygonStartPoint( double[] coords, double[] endPoint ) {
+    private List<double[][]> endCapPolygonsHolder = new ArrayList<>();
+    private List<double[][]> makeEndPolygons( double[] startCoords, double[] endCoords ) {
+        
+        endCapPolygonsHolder.clear();
         
         // Get the three angles: about X, about Y, about Z.
-        double[] lineUnitVector = normalize(getLineDelta(coords, endPoint));
+        double[] lineUnitVector = normalize(getLineDelta(startCoords, endCoords));
         //double[] crossProtoNormal = getCrossProduct( lineUnitVector, PROTOTYPE_NORMAL );
         //double crossMag = getMagnitude( crossProtoNormal );
         //double theta = Math.asin(crossMag);
 
-        double[] deltas = getLineDelta(lineUnitVector, PROTOTYPE_NORMAL);
+        //double[] deltas = getLineDelta(lineUnitVector, PROTOTYPE_NORMAL);
         
-        double aboutX = deltas[2] == 0 ? 0 : Math.atan(deltas[1] / deltas[2]);
-        double aboutY = deltas[2] == 0 ? 0 : Math.atan(deltas[0] / deltas[2]);
-        double aboutZ = deltas[0] == 0 ? 0 : Math.atan(deltas[1] / deltas[0]);
+        double aboutX = lineUnitVector[2] == 0 ? 0 : Math.atan(lineUnitVector[1] / lineUnitVector[2]);
+        double aboutY = lineUnitVector[2] == 0 ? 0 : Math.atan(lineUnitVector[0] / lineUnitVector[2]);
+        double aboutZ = lineUnitVector[0] == 0 ? 0 : Math.atan(lineUnitVector[1] / lineUnitVector[0]);
         
         // Now that we have our angles, we make the transform.
         Matrix transform = matrixUtils.getTransform3D(
                 aboutX, aboutY, aboutZ,
-                0, 0, 0);
-//                coords[0], coords[1], coords[2]);
+                startCoords[X], startCoords[Y], startCoords[Z]);        
+        endCapPolygonsHolder.add(producePolygon(transform));
         
-        double[][] polygon = new double[endPolygonSides][3];
+        transform.set(0, 3, endCoords[X]);
+        transform.set(1, 3, endCoords[Y]);
+        transform.set(2, 3, endCoords[Z]);
+        endCapPolygonsHolder.add(producePolygon(transform));
+        
+        return endCapPolygonsHolder;
+    }
+
+    protected double[][] producePolygon(Matrix transform) {
         // Clone the prototype.
+        double[][] polygon = new double[endPolygonSides][];
         for (int i = 0; i < endPolygonSides; i++) {
-            System.arraycopy(prototypeEndPolygon[i], 0, polygon[i], 0, 3);
+            polygon[i] = Arrays.copyOf(prototypeEndPolygon[i], 3);
         }
 
         for (int i = 0; i < polygon.length; i++) {

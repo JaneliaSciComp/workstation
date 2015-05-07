@@ -40,10 +40,29 @@ public class LineEnclosureFactoryTest {
     @Test
     public void hexagonalPrismEnclosure() {
         LineEnclosureFactory factory = new LineEnclosureFactory( 6, 16.0 );
-        double[] startingCoords = new double[] {
+        double[] startingCoords;
+        double[] endingCoords;
+        
+        startingCoords = new double[] {
+            0,0,0
+        };
+        endingCoords = new double[] {
+            1,0,1
+        };
+        factory.addEnclosure(startingCoords, endingCoords);
+        
+        startingCoords = new double[]{
+            0, 0, 0
+        };
+        endingCoords = new double[]{
+            -1, 0, 1
+        };
+        factory.addEnclosure(startingCoords, endingCoords);
+
+        startingCoords = new double[] {
             2000.0, 2000.0, 1500.0
         };
-        double[] endingCoords = new double[] {
+        endingCoords = new double[] {
             2000.0, 2000.0, 2000.0
         };
         factory.addEnclosure(startingCoords, endingCoords);
