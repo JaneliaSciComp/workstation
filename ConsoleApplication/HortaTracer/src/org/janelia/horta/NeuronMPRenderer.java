@@ -96,7 +96,8 @@ extends MultipassRenderer
         );
         depthTarget = gBuffer.addRenderTarget(
                 // warning: using naked "GL_DEPTH_COMPONENT" without a size result in GL_INVALID_ENUM error, after glTexStorage2D(...)
-                GL3.GL_DEPTH_COMPONENT24, // TODO 16? 24? 32?
+                // warning: using naked "GL_DEPTH_COMPONENT16" results in an error at glClear...
+                GL3.GL_DEPTH_COMPONENT24, // 16? 24? 32? // 16 does not work; unspecified does not work
                 depthAttachment);
         
         // TODO - Opaque pass

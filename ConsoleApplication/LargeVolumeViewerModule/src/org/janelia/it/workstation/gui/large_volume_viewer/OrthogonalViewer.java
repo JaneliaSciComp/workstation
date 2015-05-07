@@ -42,7 +42,7 @@ import java.util.Vector;
  *
  */
 public class OrthogonalViewer
-extends GLJPanel
+// extends GLJPanel
 implements MouseModalWidget, TileConsumer, RepaintListener
 {
     private static final Logger log = LoggerFactory.getLogger(OrthogonalViewer.class);
@@ -73,7 +73,11 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     
 	private TileServer tileServer;
 
-	public OrthogonalViewer(CoordinateAxis axis) {
+    // May 2015 extend by containment, not inheritance
+    // Store GLCanvas or GLJPanel in terms of these interfaces:
+    GLDrawableWrapper glCanvas;
+    
+    public OrthogonalViewer(CoordinateAxis axis) {
 		init(axis);
 	}
 	
@@ -82,7 +86,18 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 			GLCapabilitiesChooser chooser,
 			GLContext sharedContext) 
 	{
-		super(capabilities, chooser, sharedContext);
+        // TODO - use GLCanvas on Linux
+		glCanvas = new GLJPanelWrapper(capabilities, chooser, sharedContext) {
+            @Override
+            public void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D)g;
+                for (AwtActor actor : hudActors)
+                    if (actor.isVisible())
+                        actor.paint(g2);
+            }
+        };
+        
 		init(axis);
 	}
 	
@@ -111,21 +126,21 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		else // Y-away, x-right, z-up
 		    getViewerInGround().setFromCanonicalRotationAboutPrincipalAxis(
 		            3, CoordinateAxis.X);
-		addGLEventListener(renderer);
+		glCanvas.getGLAutoDrawable().addGLEventListener(renderer);
         setMouseMode(MouseMode.Mode.PAN);
         setWheelMode(WheelMode.Mode.ZOOM);
         rubberBand.setRepaintListener(this);
-        addMouseListener(this);
-        addMouseMotionListener(this);
-        addMouseWheelListener(this);
-        addKeyListener(this);
+        glCanvas.getInnerAwtComponent().addMouseListener(this);
+        glCanvas.getInnerAwtComponent().addMouseMotionListener(this);
+        glCanvas.getInnerAwtComponent().addMouseWheelListener(this);
+        glCanvas.getInnerAwtComponent().addKeyListener(this);
         pointComputer.setCamera(camera);
         pointComputer.setWidget(this, false);
         pointComputer.setViewerInGround(getViewerInGround());
         //
 		renderer.setBackgroundColor(Color.black);
         // PopupMenu
-        addMouseListener(new MouseHandler() {
+        glCanvas.getInnerAwtComponent().addMouseListener(new MouseHandler() {
             @Override
             protected void popupTriggered(MouseEvent e) {
                 // System.out.println("popup");
@@ -164,15 +179,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         reticleActor.setVisible(false);
         hudActors.add(reticleActor);
 	}
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D)g;
-        for (AwtActor actor : hudActors)
-        	if (actor.isVisible())
-        		actor.paint(g2);
-    }
     
 	public void setCamera(ObservableCamera3d camera) {
         if (camera == null)
@@ -213,7 +219,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     @Override
     public void mouseClicked(MouseEvent event) {
         mouseMode.mouseClicked(event);
-        requestFocusInWindow();
+        glCanvas.getInnerAwtComponent().requestFocusInWindow();
     }
 
     @Override
@@ -299,7 +305,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         }
         this.mouseMode.setCamera(camera);
         this.mouseMode.setWidget(this, true);
-        this.setToolTipText(mouseMode.getToolTipText());        
+        glCanvas.getOuterJComponent().setToolTipText(mouseMode.getToolTipText());        
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
 
@@ -344,8 +350,8 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 
     @Override
     public Point2D getPixelOffsetFromCenter(Point2D point) {
-        double dx = point.getX() - getWidth() / 2.0;
-        double dy = point.getY() - getHeight() / 2.0;
+        double dx = point.getX() - glCanvas.getInnerAwtComponent().getWidth() / 2.0;
+        double dy = point.getY() - glCanvas.getInnerAwtComponent().getHeight() / 2.0;
         return new Point2D.Double(dx, dy);
     }
 
@@ -361,7 +367,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 
     @Override
     public JComponent getComponent() {
-        return this;
+        return glCanvas.getOuterJComponent();
     }
 
 	public void setSkeletonActor(SkeletonActor skeletonActor) {
@@ -434,6 +440,18 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		mouseMode.keyReleased(event);
 	}
 
+    @Override
+    public boolean isShowing()
+    {
+        return glCanvas.getInnerAwtComponent().isShowing();
+    }
+
+    @Override
+    public void repaint()
+    {
+        glCanvas.getInnerAwtComponent().repaint();
+    }
+
 	public static class IncrementSliceAction extends AbstractAction {
 		private int increment;
 		private OrthogonalViewer viewer;
@@ -486,8 +504,8 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 			return;
 		this.tileServer = tileServer;
 		// Prepare to update tile set if viewer resizes
-		removeComponentListener(tileServer); // in case it's already there
-		addComponentListener(tileServer);
+		glCanvas.getInnerAwtComponent().removeComponentListener(tileServer); // in case it's already there
+		glCanvas.getInnerAwtComponent().addComponentListener(tileServer);
 	}
     
     
