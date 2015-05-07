@@ -36,7 +36,7 @@ public class GL3Renderer implements GLEventListener
     public static final double MIN_PIXELS_PER_VOXEL = 0.001;
     private static final double MIN_CAMERA_FOCUS_DISTANCE = -1000000.0;
     private static final double MAX_CAMERA_FOCUS_DISTANCE = -0.001;
-    private static final Vec3 UP_IN_CAMERA = new Vec3(0,-1,0);
+    private static final Vec3 UP_IN_CAMERA = new Vec3(0,1,0);
     private static double FOV_Y_DEGREES = 45.0f;
     private float FOV_TERM = new Float(Math.tan( (Math.PI/180.0) * (FOV_Y_DEGREES/2.0) ) );
 
@@ -171,13 +171,20 @@ public class GL3Renderer implements GLEventListener
 
         //Vec3 c = f.plus(rotation.times(model.getCameraDepth().times(unitsPerPixel))); // camera position
 
-        Vec3 c = f.plus(rotation.times(model.getCameraDepth())); // camera position
+        Vec3 md = model.getCameraDepth();
+        //md.setZ(md.getZ()*-1.0);
+
+        Vec3 c = f.plus(rotation.times(md)); // camera position
 
         Vec3 u = rotation.times(UP_IN_CAMERA); // up vector
 
         Vector3 f3 = new Vector3(new Float(f.getX()), new Float(f.getY()), new Float(f.getZ()));
         Vector3 c3 = new Vector3(new Float(c.getX()), new Float(c.getY()), new Float(c.getZ()));
         Vector3 u3 = new Vector3(new Float(u.getX()), new Float(u.getY()), new Float(u.getZ()));
+
+        logger.info("camera= "+c3.getX()+" "+c3.getY()+" "+c3.getZ());
+        logger.info("focus=  "+f3.getX()+" "+f3.getY()+" "+f3.getZ());
+        logger.info("up=     "+u3.getX()+" "+u3.getY()+" "+u3.getZ());
 
         viewMatrix = lookAt(c3, f3, u3);
 
@@ -248,7 +255,7 @@ public class GL3Renderer implements GLEventListener
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = model.getCameraFocusDistance();
         float scaledFocusDistance = new Float(Math.abs(cameraFocusDistance));
-        projectionMatrix = computeProjection(h, 0.5f * scaledFocusDistance, 2.0f * scaledFocusDistance);
+        projectionMatrix = computeProjection(1.0f, 0.5f, 2.0f);
     }
 
     Matrix4 computeProjection(float aspectRatio, float near, float far) {
@@ -264,6 +271,7 @@ public class GL3Renderer implements GLEventListener
                 0f,                               (2f * near) / (top - bottom),   (top + bottom) / (top - bottom),         0f,
                 0f,                               0f,                             -1f * ((far + near) / (far - near)),    -1f * ((2f * far * near) / (far - near)),
                 0f,                               0f,                             -1f,                                     0f);
+        projection.transpose();
 
         return projection;
     }
@@ -288,7 +296,7 @@ public class GL3Renderer implements GLEventListener
 
         model.setCameraDepth(new Vec3(0.0, 0.0, cameraFocusDistance));
 
-        logger.info("ZOOM  glUnitsPerPixel="+glUnitsPerPixel()+" cameraFocusDistance="+cameraFocusDistance);
+        logger.info("ZOOM  glUnitsPerPixel=" + glUnitsPerPixel() + " cameraFocusDistance=" + cameraFocusDistance);
 
     }
 
@@ -298,7 +306,7 @@ public class GL3Renderer implements GLEventListener
                 oldPoint.y - heightInPixels/2.0};
         double[] p1 = {newPoint.x - widthInPixels/2.0,
                 newPoint.y - heightInPixels/2.0};
-        double dC0 = Math.sqrt(p0[0]*p0[0]+p0[1]*p0[1]);
+        double dC0 = Math.sqrt(p0[0] * p0[0] + p0[1] * p0[1]);
         double dC1 = Math.sqrt(p1[0]*p1[0]+p1[1]*p1[1]);
         double dC = dC1 - dC0; // positive means away
         double denom = Math.max(20.0, dC1);
@@ -364,9 +372,9 @@ public class GL3Renderer implements GLEventListener
         Vector3 up=computeNormalOfPlane(sn, fn);
         Matrix4 lam = new Matrix4();
 
-        lam.set( sn.getX(),   up.getX(),    fn.getX(),   0.0f,
-                 sn.getY(),   up.getY(),    fn.getY(),   0.0f,
-                 sn.getZ(),   up.getZ(),    fn.getZ(),   0.0f,
+        lam.set( sn.getX(),   up.getX(),    -1f*fn.getX(),   0.0f,
+                 sn.getY(),   up.getY(),    -1f*fn.getY(),   0.0f,
+                 sn.getZ(),   up.getZ(),    -1f*fn.getZ(),   0.0f,
                  0.0f,         0.0f,        0.0f,        1.0f);
 
         Matrix4 tm = new Matrix4();
@@ -386,6 +394,30 @@ public class GL3Renderer implements GLEventListener
                                  v1.getX() * v2.getY() - v1.getY() * v2.getX());
         return norm;
     }
+
+//    protected Matrix4 lookAt2(Vector3 eye, Vector3 center, Vector3 up) {
+//        Vector3 f = center.sub(eye).normalize();
+//        Vector3 u = up.normalize();
+//        Vector3 s = f.cross(u);
+//        u = s.cross(f);
+//
+//        Matrix4 result = new Matrix4();
+//        result.set(  s.getX(),       s.getY(),         s.getZ(),        0f,
+//                     u.getX(),       u.getY(),         u.getZ(),        0f,
+//                     -1f*f.getX(),   -1f * f.getY(),   -1f * f.getZ(),  0f,
+//                     0f,             0f,               0f,              1f);
+//        result.transpose();
+//
+//        Matrix4 translate = new Matrix4();
+//        translate.set( 1f, 0f, 0f, -1f*eye.getX(),
+//                       0f, 1f, 0f, -1f*eye.getY(),
+//                       0f, 0f, 1f, -1f*eye.getZ(),
+//                       0f, 0f, 0f,  1f);
+//        translate.transpose();
+//
+//        return result.multiply(translate);
+//
+//    }
 
 
 }
