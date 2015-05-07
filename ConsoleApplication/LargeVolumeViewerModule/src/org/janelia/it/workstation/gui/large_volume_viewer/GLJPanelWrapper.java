@@ -50,7 +50,8 @@ public class GLJPanelWrapper extends GLJPanel implements GLDrawableWrapper
                              final GLContext sharedContext) 
     {
         super(capabilities, chooser);
-        setSharedContext(sharedContext);
+        if (sharedContext != null)
+            setSharedContext(sharedContext);
     }
 
     @Override

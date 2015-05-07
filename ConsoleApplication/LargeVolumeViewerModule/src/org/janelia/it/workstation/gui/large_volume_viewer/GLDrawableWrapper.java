@@ -45,4 +45,5 @@ public interface GLDrawableWrapper
     JComponent getOuterJComponent();
     GLAutoDrawable getGLAutoDrawable();
     void paintComponent(Graphics g); // expose Component protected method as public
+    void repaint();
 }

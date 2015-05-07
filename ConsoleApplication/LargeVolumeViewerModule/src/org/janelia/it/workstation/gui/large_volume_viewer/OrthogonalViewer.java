@@ -34,6 +34,7 @@ import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Vector;
+import org.apache.commons.lang.SystemUtils;
 
 /**
  * Intended replacement class for LargeVolumeViewer,
@@ -86,17 +87,35 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 			GLCapabilitiesChooser chooser,
 			GLContext sharedContext) 
 	{
-        // TODO - use GLCanvas on Linux
-		glCanvas = new GLJPanelWrapper(capabilities, chooser, sharedContext) {
-            @Override
-            public void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D)g;
-                for (AwtActor actor : hudActors)
-                    if (actor.isVisible())
-                        actor.paint(g2);
-            }
-        };
+        // Use GLCanvas on Linux
+        // if (false)
+        if (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX) 
+        {
+            glCanvas = new GLCanvasWrapper(capabilities, chooser, sharedContext) 
+            {
+                @Override
+                public void paintComponent(Graphics g) {
+                    super.paintComponent(g);
+                    Graphics2D g2 = (Graphics2D) g;
+                    for (AwtActor actor : hudActors) {
+                        if (actor.isVisible()) {
+                            actor.paint(g2);
+                        }
+                    }
+                }
+            };
+        } else { // Mac cannot use GLCanvas -- too broken
+            glCanvas = new GLJPanelWrapper(capabilities, chooser, sharedContext) {
+                @Override
+                public void paintComponent(Graphics g) {
+                    super.paintComponent(g);
+                    Graphics2D g2 = (Graphics2D)g;
+                    for (AwtActor actor : hudActors)
+                        if (actor.isVisible())
+                            actor.paint(g2);
+                }
+            };
+        }
         
 		init(axis);
 	}
@@ -449,7 +468,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     @Override
     public void repaint()
     {
-        glCanvas.getInnerAwtComponent().repaint();
+        glCanvas.repaint();
     }
 
 	public static class IncrementSliceAction extends AbstractAction {

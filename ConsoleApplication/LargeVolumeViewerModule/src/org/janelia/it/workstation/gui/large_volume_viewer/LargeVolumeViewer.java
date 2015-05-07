@@ -41,6 +41,7 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
 import java.util.List;
+import org.apache.commons.lang.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,15 +85,29 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                              final GLContext sharedContext,
                              ObservableCamera3d camera)
 	{
-        // TODO - use GLCanvas on Linux
-		glCanvas = new GLJPanelWrapper(capabilities, chooser, sharedContext) {
-            	@Override
-                public void paintComponent(Graphics g) {
-                    super.paintComponent(g);
-                    Graphics2D g2 = (Graphics2D)g;
-                    rubberBand.paint(g2);
-                }
-        };
+        // Use GLCanvas on Linux
+        if (false)
+        // if (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX) 
+        {
+            glCanvas = new GLCanvasWrapper(capabilities, chooser, sharedContext) {
+                    @Override
+                    public void paintComponent(Graphics g) {
+                        super.paintComponent(g);
+                        Graphics2D g2 = (Graphics2D)g;
+                        rubberBand.paint(g2);
+                    }
+            };            
+        }
+        else {
+            glCanvas = new GLJPanelWrapper(capabilities, chooser, sharedContext) {
+                    @Override
+                    public void paintComponent(Graphics g) {
+                        super.paintComponent(g);
+                        Graphics2D g2 = (Graphics2D)g;
+                        rubberBand.paint(g2);
+                    }
+            };
+        }
         
 		init(camera);
 	}
@@ -450,7 +465,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     @Override
     public void repaint()
     {
-        glCanvas.getInnerAwtComponent().repaint();
+        glCanvas.repaint();
     }
 
 }
