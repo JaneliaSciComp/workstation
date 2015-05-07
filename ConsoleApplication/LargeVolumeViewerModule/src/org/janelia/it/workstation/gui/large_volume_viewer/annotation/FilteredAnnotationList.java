@@ -40,15 +40,17 @@ public class FilteredAnnotationList extends JPanel {
     // GUI stuff
     private int width;
     private static final int height = 2 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
-    JTable filteredTable;
-    JTextField filterField;
-    TableRowSorter<FilteredAnnotationModel> sorter;
+    private JTable filteredTable;
+    private JTextField filterField;
+    private TableRowSorter<FilteredAnnotationModel> sorter;
 
     // data stuff
-    AnnotationManager annotationMgr;
-    AnnotationModel annotationModel;
-    FilteredAnnotationModel model;
+    private AnnotationManager annotationMgr;
+    private AnnotationModel annotationModel;
+    private FilteredAnnotationModel model;
 
+    private Map<String, AnnotationFilter> filters = new HashMap<>();
+    private AnnotationFilter currentFilter;
 
     // interaction
     private CameraPanToListener panListener;
@@ -65,8 +67,9 @@ public class FilteredAnnotationList extends JPanel {
         this.annotationModel = annotationModel;
         this.width = width;
 
-        // set up model
+        // set up model & data-related stuff
         model = new FilteredAnnotationModel();
+        setupFilters();
 
 
         // GUI stuff
@@ -141,7 +144,7 @@ public class FilteredAnnotationList extends JPanel {
         // loop over neurons, roots in neuron, annotations per root;
         //  put all the "interesting" annotations in a list
         model.clear();
-        AnnotationFilter filter = getFilter();
+        AnnotationFilter filter = getCurrentFilter();
         String note;
         for (TmNeuron neuron: currentWorkspace.getNeuronList()) {
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
@@ -164,6 +167,30 @@ public class FilteredAnnotationList extends JPanel {
 
 
         model.fireTableDataChanged();
+    }
+
+    private void setupFilters() {
+        // set up all the filters once
+
+        // default filter: interesting = has a note or isn't a straight link (ie, root, end, branch)
+        filters.put("default", new OrFilter(new HasNoteFilter(), new NotFilter(new GeometryFilter(AnnotationGeometry.LINK))));
+
+
+        // endpoint that isn't marked traced or problem
+        List<AnnotationFilter> tempFilters = new ArrayList<>();
+        tempFilters.add(new NotFilter(new PredefNoteFilter(PredefinedNote.TRACED_END)));
+        tempFilters.add(new NotFilter(new PredefNoteFilter(PredefinedNote.PROBLEM_END)));
+        tempFilters.add(new GeometryFilter(AnnotationGeometry.END));
+        filters.put("ends", new AllFilter(tempFilters));
+
+
+        // points marked as branches-to-be
+        filters.put("branches", new PredefNoteFilter(PredefinedNote.FUTURE_BRANCH));
+
+
+        // this is probably not right...need to set the variable and the UI state, ugh
+        //  do I need to do a model here?
+        setCurrentFilter(filters.get("default"));
     }
 
     private void setupUI() {
@@ -232,6 +259,50 @@ public class FilteredAnnotationList extends JPanel {
         c2.fill = GridBagConstraints.BOTH;
         add(scrollPane, c2);
 
+
+        // buttons for pre-defined filters
+        JPanel filterButtons = new JPanel();
+        filterButtons.setLayout(new BoxLayout(filterButtons, BoxLayout.LINE_AXIS));
+
+        JButton defaultButton = new JButton();
+        defaultButton.setAction(new AbstractAction("Default") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setCurrentFilter(filters.get("default"));
+                updateData();
+            }
+        });
+        filterButtons.add(defaultButton);
+
+        JButton endsButton = new JButton();
+        endsButton.setAction(new AbstractAction("Ends") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setCurrentFilter(filters.get("ends"));
+                updateData();
+            }
+        });
+        filterButtons.add(endsButton);
+
+        JButton branchButton = new JButton();
+        branchButton.setAction(new AbstractAction("Branches") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setCurrentFilter(filters.get("branches"));
+                updateData();
+            }
+        });
+        filterButtons.add(branchButton);
+
+        GridBagConstraints c3 = new GridBagConstraints();
+        c3.gridx = 0;
+        c3.gridy = GridBagConstraints.RELATIVE;
+        c3.weighty = 0.0;
+        c3.anchor = GridBagConstraints.PAGE_START;
+        c3.fill = GridBagConstraints.HORIZONTAL;
+        add(filterButtons, c3);
+
+
         // text field for filter
         JPanel filterPanel = new JPanel();
         filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.LINE_AXIS));
@@ -266,13 +337,13 @@ public class FilteredAnnotationList extends JPanel {
         });
         filterPanel.add(clearFilter);
 
-        GridBagConstraints c3 = new GridBagConstraints();
-        c3.gridx = 0;
-        c3.gridy = GridBagConstraints.RELATIVE;
-        c3.weighty = 0.0;
-        c3.anchor = GridBagConstraints.PAGE_START;
-        c3.fill = GridBagConstraints.HORIZONTAL;
-        add(filterPanel, c3);
+        GridBagConstraints c4 = new GridBagConstraints();
+        c4.gridx = 0;
+        c4.gridy = GridBagConstraints.RELATIVE;
+        c4.weighty = 0.0;
+        c4.anchor = GridBagConstraints.PAGE_START;
+        c4.fill = GridBagConstraints.HORIZONTAL;
+        add(filterPanel, c4);
 
 
 
@@ -303,6 +374,14 @@ public class FilteredAnnotationList extends JPanel {
     public AnnotationFilter getFilter() {
         // default filter: has note or isn't a straight link
         return new OrFilter(new HasNoteFilter(), new NotFilter(new GeometryFilter(AnnotationGeometry.LINK)));
+    }
+
+    public AnnotationFilter getCurrentFilter() {
+        return currentFilter;
+    }
+
+    public void setCurrentFilter(AnnotationFilter currentFilter) {
+        this.currentFilter = currentFilter;
     }
 
     public AnnotationGeometry getAnnotationGeometry(TmGeoAnnotation ann) {
@@ -467,6 +546,7 @@ class NotFilter implements AnnotationFilter {
     public NotFilter(AnnotationFilter filter) {
         this.filter = filter;
     }
+    @Override
     public boolean isInteresting(InterestingAnnotation ann) {
         return !filter.isInteresting(ann);
     }
@@ -479,6 +559,7 @@ class AndFilter implements AnnotationFilter {
         this.filter1 = filter1;
         this.filter2 = filter2;
     }
+    @Override
     public boolean isInteresting(InterestingAnnotation ann) {
         return filter1.isInteresting(ann) && filter2.isInteresting(ann);
     }
@@ -489,6 +570,7 @@ class AllFilter implements AnnotationFilter {
     public AllFilter(List<AnnotationFilter> filterList) {
         this.filterList = filterList;
     }
+    @Override
     public boolean isInteresting(InterestingAnnotation ann) {
         for (AnnotationFilter filter: filterList) {
             if (!filter.isInteresting(ann)) {
@@ -506,6 +588,7 @@ class OrFilter implements AnnotationFilter {
         this.filter1 = filter1;
         this.filter2 = filter2;
     }
+    @Override
     public boolean isInteresting(InterestingAnnotation ann) {
         return filter1.isInteresting(ann) || filter2.isInteresting(ann);
     }
@@ -516,6 +599,7 @@ class AnyFilter implements AnnotationFilter {
     public AnyFilter(List<AnnotationFilter> filterList) {
         this.filterList = filterList;
     }
+    @Override
     public boolean isInteresting(InterestingAnnotation ann) {
         for (AnnotationFilter filter: filterList) {
             if (filter.isInteresting(ann)) {
@@ -531,6 +615,7 @@ class GeometryFilter implements AnnotationFilter {
     public GeometryFilter(AnnotationGeometry geometry) {
         this.geometry = geometry;
     }
+    @Override
     public boolean isInteresting(InterestingAnnotation ann) {
         return ann.getGeometry() == this.geometry;
     }
@@ -541,13 +626,27 @@ class NoteTextFilter implements AnnotationFilter {
     public NoteTextFilter(String text) {
         this.text = text;
     }
+    @Override
     public boolean isInteresting(InterestingAnnotation ann) {
         return ann.getNoteText().contains(text);
     }
 }
 
 class HasNoteFilter implements  AnnotationFilter {
+    @Override
     public boolean isInteresting(InterestingAnnotation ann) {
         return ann.hasNote();
+    }
+}
+
+class PredefNoteFilter implements AnnotationFilter {
+    private PredefinedNote predefNote;
+    public PredefNoteFilter(PredefinedNote predefNote) {
+        this.predefNote = predefNote;
+    }
+
+    @Override
+    public boolean isInteresting(InterestingAnnotation ann) {
+        return ann.getNoteText().contains(predefNote.getNoteText());
     }
 }
