@@ -144,7 +144,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private LargeVolumeViewerTranslator largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
 
 	// Actions
-	private final Action openFolderAction = new OpenFolderAction(largeVolumeViewer, this);
+	private final Action openFolderAction = new OpenFolderAction(largeVolumeViewer.getComponent(), this);
 	private RecentFileList recentFileList = new RecentFileList(new JMenu("Open Recent"));
 	private final Action resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
 	private final Action resetColorsAction = new ResetColorsAction(imageColorModel);
@@ -602,9 +602,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		viewerPanel.add(seViewer, new QuadrantConstraints(1,1));
 		
 		largeVolumeViewer.setCamera(camera);
-		largeVolumeViewer.setBackground(Color.DARK_GRAY);
+		largeVolumeViewer.getComponent().setBackground(Color.DARK_GRAY);
 		zViewerPanel.setLayout(new BoxLayout(zViewerPanel, BoxLayout.Y_AXIS));
-		zViewerPanel.add(largeVolumeViewer);
+		zViewerPanel.add(largeVolumeViewer.getComponent());
 		
 		// JPanel zScanPanel = new JPanel();
 		zViewerPanel.add(zScanPanel);

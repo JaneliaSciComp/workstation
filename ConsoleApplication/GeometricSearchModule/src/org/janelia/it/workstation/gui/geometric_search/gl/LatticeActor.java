@@ -21,7 +21,7 @@ public class LatticeActor extends GL3SimpleActor {
     float[] varr;
 
     final int POINTS = 10;
-    final float LENGTH = 2.0f;
+    final float LENGTH = 1.0f;
 
     boolean loaded=false;
 
@@ -36,7 +36,7 @@ public class LatticeActor extends GL3SimpleActor {
 
             int arrSize=POINTS*POINTS*POINTS*3;
             varr=new float[arrSize];
-            float start=-1.0f*(LENGTH/2.0f);
+            float start=-0.5f*LENGTH;
             float d = LENGTH / (1.0f * POINTS);
 
             for (int i=0;i<POINTS;i++) {
@@ -44,7 +44,7 @@ public class LatticeActor extends GL3SimpleActor {
                     for (int k=0;k<POINTS;k++) {
                         float x = start + i * d;
                         float y = start + j * d;
-                        float z = start + k * d;
+                        float z = start+0.5f + k * d;
                         int vs = (i * POINTS * POINTS + j * POINTS + k) * 3;
                         varr[vs] = x;
                         varr[vs + 1] = y;
