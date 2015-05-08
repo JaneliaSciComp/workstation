@@ -240,7 +240,7 @@ public class GL3Renderer implements GLEventListener
 
     public void translatePixels(double dx, double dy, double dz) {
         // trackball translate
-        Vec3 t = new Vec3(-dx, -dy, -dz);
+        Vec3 t = new Vec3(-dx, dy, -dz);
         t.multEquals(glUnitsPerPixel());
         model.getCamera3d().getFocus().plusEquals(
                 camera.getRotation().times(t)
