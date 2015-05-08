@@ -85,9 +85,11 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                              final GLContext sharedContext,
                              ObservableCamera3d camera)
 	{
-        // Use GLCanvas on Linux
-        if (false)
+        // Use GLCanvas on Linux, for better frame rate on EnginFrame
+        // But not on Windows, so we could still use Java2D decorations
+        // if (false)
         // if (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX) 
+        if (SystemUtils.IS_OS_LINUX) 
         {
             glCanvas = new GLCanvasWrapper(capabilities, chooser, sharedContext) {
                     @Override
