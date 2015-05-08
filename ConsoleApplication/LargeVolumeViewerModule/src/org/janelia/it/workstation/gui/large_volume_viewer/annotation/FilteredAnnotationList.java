@@ -266,6 +266,36 @@ public class FilteredAnnotationList extends JPanel {
         add(scrollPane, c2);
 
 
+
+        // combo box to change filters
+        // names taken from contents of filter list set up elsewhere
+        //  probably should take names directly?  but I'd like to control
+        //  the order, something the returned keySet doesn't do;
+        //  plus, want to be sure 'default' comes up selected
+        JPanel filterMenuPanel = new JPanel();
+        filterMenuPanel.setLayout(new BorderLayout(2, 2));
+        filterMenuPanel.add(new JLabel("Filter:"), BorderLayout.LINE_START);
+        String[] filterNames = {"default", "ends", "branches", "roots", "interesting", "review"};
+        final JComboBox filterMenu = new JComboBox(filterNames);
+        filterMenu.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JComboBox cb = (JComboBox) e.getSource();
+                String name = (String) cb.getSelectedItem();
+                setCurrentFilter(filters.get(name));
+                updateData();
+            }
+        });
+        filterMenuPanel.add(filterMenu, BorderLayout.CENTER);
+
+        GridBagConstraints c3 = new GridBagConstraints();
+        c3.gridx = 0;
+        c3.gridy = GridBagConstraints.RELATIVE;
+        c3.weighty = 0.0;
+        c3.anchor = GridBagConstraints.PAGE_START;
+        c3.fill = GridBagConstraints.HORIZONTAL;
+        add(filterMenuPanel, c3);
+
         // these buttons will trigger a change in the drop-down menu below
         JPanel filterButtons = new JPanel();
         filterButtons.setLayout(new BoxLayout(filterButtons, BoxLayout.LINE_AXIS));
@@ -285,38 +315,13 @@ public class FilteredAnnotationList extends JPanel {
         buttonGroup.add(endsButton);
         buttonGroup.add(branchButton);
 
-        GridBagConstraints c3 = new GridBagConstraints();
-        c3.gridx = 0;
-        c3.gridy = GridBagConstraints.RELATIVE;
-        c3.weighty = 0.0;
-        c3.anchor = GridBagConstraints.PAGE_START;
-        c3.fill = GridBagConstraints.HORIZONTAL;
-        add(filterButtons, c3);
-
-
-        // combo box to change filters
-        // names taken from contents of filter list set up elsewhere
-        //  probably should take names directly?  but I'd like to control
-        //  the order, something the returned keySet doesn't do;
-        //  plus, want to be sure 'default' comes up selected
-        String[] filterNames = {"default", "ends", "branches", "roots", "interesting", "review"};
-        final JComboBox filterMenu = new JComboBox(filterNames);
-        filterMenu.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JComboBox cb = (JComboBox) e.getSource();
-                String name = (String) cb.getSelectedItem();
-                setCurrentFilter(filters.get(name));
-                updateData();
-            }
-        });
         GridBagConstraints c4 = new GridBagConstraints();
         c4.gridx = 0;
         c4.gridy = GridBagConstraints.RELATIVE;
         c4.weighty = 0.0;
         c4.anchor = GridBagConstraints.PAGE_START;
         c4.fill = GridBagConstraints.HORIZONTAL;
-        add(filterMenu, c4);
+        add(filterButtons, c4);
 
 
         // hook buttons to filter menu
