@@ -116,7 +116,6 @@ public class FilteredAnnotationList extends JPanel {
     //   for now, they all call the same internal, brute force update
 
     public void loadNeuron(TmNeuron neuron) {
-        System.out.println("filtered list: loadNeuron()");
         updateData();
     }
 
@@ -156,6 +155,7 @@ public class FilteredAnnotationList extends JPanel {
                     }
                     InterestingAnnotation maybeInteresting =
                         new InterestingAnnotation(ann.getId(),
+                            neuron.getId(),
                             getAnnotationGeometry(ann),
                             note);
                     if (filter.isInteresting(maybeInteresting)) {
@@ -170,7 +170,7 @@ public class FilteredAnnotationList extends JPanel {
     }
 
     private void setupFilters() {
-        // set up all the filters once
+        // set up all the filters once; put in order you want them to appear
 
         // default filter: interesting = has a note or isn't a straight link (ie, root, end, branch)
         filters.put("default", new OrFilter(new HasNoteFilter(), new NotFilter(new GeometryFilter(AnnotationGeometry.LINK))));
@@ -188,8 +188,14 @@ public class FilteredAnnotationList extends JPanel {
         filters.put("branches", new PredefNoteFilter(PredefinedNote.FUTURE_BRANCH));
 
 
-        // this is probably not right...need to set the variable and the UI state, ugh
-        //  do I need to do a model here?
+        // roots (which are often placed in cell bodies)
+        filters.put("roots", new GeometryFilter(AnnotationGeometry.ROOT));
+
+        // interesting and review tags
+        filters.put("interesting", new PredefNoteFilter(PredefinedNote.POINT_OF_INTEREST));
+        filters.put("review", new PredefNoteFilter(PredefinedNote.REVIEW));
+
+
         setCurrentFilter(filters.get("default"));
     }
 
@@ -244,7 +250,7 @@ public class FilteredAnnotationList extends JPanel {
 
 
         // bit inelegant, but hand-tune some widths (default is 75):
-        // ...and seems to be ignored, ugh
+        // ...and they seems to be ignored, ugh
         filteredTable.getColumnModel().getColumn(0).setPreferredWidth(45);
         filteredTable.getColumnModel().getColumn(1).setPreferredWidth(40);
 
@@ -260,39 +266,18 @@ public class FilteredAnnotationList extends JPanel {
         add(scrollPane, c2);
 
 
-        // buttons for pre-defined filters
+        // these buttons will trigger a change in the drop-down menu below
         JPanel filterButtons = new JPanel();
         filterButtons.setLayout(new BoxLayout(filterButtons, BoxLayout.LINE_AXIS));
 
-        JToggleButton defaultButton = new JToggleButton();
-        defaultButton.setAction(new AbstractAction("Default") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setCurrentFilter(filters.get("default"));
-                updateData();
-            }
-        });
+        JButton defaultButton = new JButton();
         filterButtons.add(defaultButton);
         defaultButton.setSelected(true);
 
-        JToggleButton endsButton = new JToggleButton();
-        endsButton.setAction(new AbstractAction("Ends") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setCurrentFilter(filters.get("ends"));
-                updateData();
-            }
-        });
+        JButton endsButton = new JButton();
         filterButtons.add(endsButton);
 
-        JToggleButton branchButton = new JToggleButton();
-        branchButton.setAction(new AbstractAction("Branches") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setCurrentFilter(filters.get("branches"));
-                updateData();
-            }
-        });
+        JButton branchButton = new JButton();
         filterButtons.add(branchButton);
 
         ButtonGroup buttonGroup = new ButtonGroup();
@@ -307,6 +292,52 @@ public class FilteredAnnotationList extends JPanel {
         c3.anchor = GridBagConstraints.PAGE_START;
         c3.fill = GridBagConstraints.HORIZONTAL;
         add(filterButtons, c3);
+
+
+        // combo box to change filters
+        // names taken from contents of filter list set up elsewhere
+        //  probably should take names directly?  but I'd like to control
+        //  the order, something the returned keySet doesn't do;
+        //  plus, want to be sure 'default' comes up selected
+        String[] filterNames = {"default", "ends", "branches", "roots", "interesting", "review"};
+        final JComboBox filterMenu = new JComboBox(filterNames);
+        filterMenu.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JComboBox cb = (JComboBox) e.getSource();
+                String name = (String) cb.getSelectedItem();
+                setCurrentFilter(filters.get(name));
+                updateData();
+            }
+        });
+        GridBagConstraints c4 = new GridBagConstraints();
+        c4.gridx = 0;
+        c4.gridy = GridBagConstraints.RELATIVE;
+        c4.weighty = 0.0;
+        c4.anchor = GridBagConstraints.PAGE_START;
+        c4.fill = GridBagConstraints.HORIZONTAL;
+        add(filterMenu, c4);
+
+
+        // hook buttons to filter menu
+        defaultButton.setAction(new AbstractAction("Default") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                filterMenu.setSelectedItem("default");
+            }
+        });
+        endsButton.setAction(new AbstractAction("Ends") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                filterMenu.setSelectedItem("ends");
+            }
+        });
+        branchButton.setAction(new AbstractAction("Branches") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                filterMenu.setSelectedItem("branches");
+            }
+        });
 
 
         // text field for filter
@@ -343,15 +374,13 @@ public class FilteredAnnotationList extends JPanel {
         });
         filterPanel.add(clearFilter);
 
-        GridBagConstraints c4 = new GridBagConstraints();
-        c4.gridx = 0;
-        c4.gridy = GridBagConstraints.RELATIVE;
-        c4.weighty = 0.0;
-        c4.anchor = GridBagConstraints.PAGE_START;
-        c4.fill = GridBagConstraints.HORIZONTAL;
-        add(filterPanel, c4);
-
-
+        GridBagConstraints c5 = new GridBagConstraints();
+        c5.gridx = 0;
+        c5.gridy = GridBagConstraints.RELATIVE;
+        c5.weighty = 0.0;
+        c5.anchor = GridBagConstraints.PAGE_START;
+        c5.fill = GridBagConstraints.HORIZONTAL;
+        add(filterPanel, c5);
 
 
     }
@@ -479,21 +508,27 @@ class FilteredAnnotationModel extends AbstractTableModel {
  */
 class InterestingAnnotation {
     private Long annotationID;
+    private Long neuronID;
     private String noteText;
     private AnnotationGeometry geometry;
 
-    public InterestingAnnotation(Long annotationID, AnnotationGeometry geometry) {
-        new InterestingAnnotation(annotationID, geometry, "");
+    public InterestingAnnotation(Long annotationID, Long neuronID, AnnotationGeometry geometry) {
+        new InterestingAnnotation(annotationID, neuronID, geometry, "");
     }
 
-    public InterestingAnnotation(Long annotationID, AnnotationGeometry geometry, String noteText) {
+    public InterestingAnnotation(Long annotationID, Long neuronID, AnnotationGeometry geometry, String noteText) {
         this.annotationID = annotationID;
+        this.neuronID = neuronID;
         this.noteText = noteText;
         this.geometry = geometry;
     }
 
     public Long getAnnotationID() {
         return annotationID;
+    }
+
+    public Long getNeuronID() {
+        return neuronID;
     }
 
     public String getAnnIDText() {
@@ -654,5 +689,16 @@ class PredefNoteFilter implements AnnotationFilter {
     @Override
     public boolean isInteresting(InterestingAnnotation ann) {
         return ann.getNoteText().contains(predefNote.getNoteText());
+    }
+}
+
+class NeuronFilter implements AnnotationFilter {
+    private Long neuronID;
+    public NeuronFilter(TmNeuron neuron) {
+        this.neuronID = neuron.getId();
+    }
+    @Override
+    public boolean isInteresting(InterestingAnnotation ann) {
+        return ann.getNeuronID().equals(neuronID);
     }
 }
