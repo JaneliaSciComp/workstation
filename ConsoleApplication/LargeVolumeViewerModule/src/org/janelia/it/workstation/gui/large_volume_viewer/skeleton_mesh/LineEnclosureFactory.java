@@ -41,6 +41,7 @@ public class LineEnclosureFactory implements TriangleSource {
     private double endPolygonRadius; 
     
     private double[][] prototypeEndPolygon;
+    private List<double[][]> endCapPolygonsHolder = new ArrayList<>();
     
     public LineEnclosureFactory(int endPolygonSides, double endPolygonRadius) {
         this.endPolygonSides = endPolygonSides;
@@ -64,7 +65,7 @@ public class LineEnclosureFactory implements TriangleSource {
             throw new IllegalArgumentException("3-D ending coords only.");
         }
         
-        List<double[][]> discardedEndCaps = makeEndPolygons(startingCoords, endingCoords);
+        //List<double[][]> discardedEndCaps = makeEndPolygons(startingCoords, endingCoords);
         List<double[][]> endCaps = makeEndPolygonsNoTrig( startingCoords, endingCoords );
         addVertices(endCaps.get(0));
         addVertices(endCaps.get(1));
@@ -94,23 +95,6 @@ public class LineEnclosureFactory implements TriangleSource {
         }
     }
 
-    private double[] computeDeltasOverLength( double[] startCoords, double[] endCoords ) {
-        double[] rtnVal = new double[ 3 ];
-        double[] lineDelta = getLineDelta(startCoords, endCoords);
-        
-        double accum = 0.0;
-        for (int i = 0; i < 3; i++) {
-            accum += lineDelta[i] * lineDelta[i];
-        }
-        double lineLen = Math.sqrt(accum);
-        for (int i = 0; i < 3; i++) {
-            rtnVal[i] = lineDelta[i] / lineLen;
-        }
-
-        return rtnVal;
-    }
-    
-    private List<double[][]> endCapPolygonsHolder = new ArrayList<>();
     private List<double[][]> makeEndPolygons( double[] startCoords, double[] endCoords ) {
         
         endCapPolygonsHolder.clear();
