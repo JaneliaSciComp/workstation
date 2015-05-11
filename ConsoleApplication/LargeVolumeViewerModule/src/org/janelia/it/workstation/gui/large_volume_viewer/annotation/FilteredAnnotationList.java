@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import com.google.common.base.Stopwatch;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
@@ -144,6 +145,11 @@ public class FilteredAnnotationList extends JPanel {
     }
 
     private void updateData() {
+        // check how long to update
+        // ans: with ~2k annotations, <20ms to update
+        // Stopwatch stopwatch = new Stopwatch();
+        // stopwatch.start();
+
         // totally brute force; we don't know what updated, so
         //  start from scratch each time
 
@@ -179,6 +185,10 @@ public class FilteredAnnotationList extends JPanel {
 
 
         model.fireTableDataChanged();
+
+        // stopwatch.stop();
+        // System.out.println("updated filtered annotation list; elapsed time = " + stopwatch.toString());
+
     }
 
     private void setupFilters() {
