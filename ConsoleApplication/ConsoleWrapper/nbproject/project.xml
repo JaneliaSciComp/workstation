@@ -250,6 +250,18 @@
                 <package>com.jgoodies.forms.factories</package>
                 <package>com.jgoodies.forms.layout</package>
                 <package>com.jgoodies.forms.util</package>
+                <package>com.jogamp.common</package>
+                <package>com.jogamp.common.jvm</package>
+                <package>com.jogamp.common.net</package>
+                <package>com.jogamp.common.net.asset</package>
+                <package>com.jogamp.common.nio</package>
+                <package>com.jogamp.common.os</package>
+                <package>com.jogamp.common.type</package>
+                <package>com.jogamp.common.util</package>
+                <package>com.jogamp.common.util.awt</package>
+                <package>com.jogamp.common.util.cache</package>
+                <package>com.jogamp.common.util.locks</package>
+                <package>com.jogamp.gluegen.runtime</package>
                 <package>com.kenai.jaffl</package>
                 <package>com.kenai.jaffl.annotations</package>
                 <package>com.kenai.jaffl.byref</package>
@@ -621,6 +633,11 @@
                 <package>javax.xml.ws.wsaddressing</package>
                 <package>jline</package>
                 <package>jnr.netdb</package>
+                <package>jogamp.common</package>
+                <package>jogamp.common.jvm</package>
+                <package>jogamp.common.os</package>
+                <package>jogamp.common.os.elf</package>
+                <package>jogamp.common.util.locks</package>
                 <package>landmarks</package>
                 <package>leica</package>
                 <package>loci.common</package>
@@ -1950,10 +1967,6 @@
                 <binary-origin>release/modules/ext/commons-fileupload-1.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/neethi-2.0.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/neethi-2.0.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlueIce.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaBlueIce.jar</binary-origin>
             </class-path-extension>
@@ -2274,12 +2287,12 @@
                 <binary-origin>release/modules/ext/regexp-1.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jackson-annotations-2.4.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jackson-annotations-2.4.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/kd.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/kd.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackson-annotations-2.4.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-annotations-2.4.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/saaj-impl-1.3.2.jar</runtime-relative-path>
@@ -2460,10 +2473,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/gluegen-rt.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/gluegen-rt.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jackson-databind-2.2.3.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jackson-databind-2.2.3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-xmlbeans-1.5.5.jar</runtime-relative-path>
