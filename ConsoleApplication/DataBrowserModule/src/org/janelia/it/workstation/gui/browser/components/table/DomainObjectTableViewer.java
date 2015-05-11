@@ -1,8 +1,6 @@
 package org.janelia.it.workstation.gui.browser.components.table;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,14 +10,12 @@ import java.util.Map;
 import javax.swing.JPanel;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.support.SearchAttribute;
-import org.janelia.it.jacs.model.util.ReflectionHelper;
-import org.janelia.it.workstation.gui.browser.components.editor.DomainObjectAttribute;
+import org.janelia.it.workstation.gui.browser.api.DomainUtils;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.browser.components.viewer.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
-import org.reflections.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +30,8 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
 
     private static final String COLUMN_KEY_ANNOTATIONS = "annotations";
     
-    private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",false,null);
+    private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",false,true,null);
+    
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
     
     private AnnotatedDomainObjectList domainObjectList;
@@ -53,7 +50,7 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
         searchAttrs.add(annotationAttr);
         
         for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
-            searchAttrs.addAll(getAttributes(domainObject));
+            searchAttrs.addAll(DomainUtils.getAttributes(domainObject));
             break; // for now we assume heterogenous lists, so we can quit after looking at the first object
         }
         
@@ -64,43 +61,13 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
             }
         });
         
+        for(DomainObjectAttribute attr : searchAttrs) {
+            attributeMap.put(attr.getName(), attr);
+        }
+        
         setAttributeColumns(searchAttrs);
                 
         showObjects(domainObjectList.getDomainObjects());
-    }
-    
-    private List<DomainObjectAttribute> getAttributes(DomainObject domainObject) {
-
-        attributeMap.clear();
-        
-        List<DomainObjectAttribute> attrs = new ArrayList<>();
-        Class<?> clazz = domainObject.getClass();
-        
-        for (Field field : ReflectionUtils.getAllFields(clazz)) {
-            SearchAttribute searchAttributeAnnot = field.getAnnotation(SearchAttribute.class);
-            if (searchAttributeAnnot!=null) {
-                try {
-                    Method getter = ReflectionHelper.getGetter(clazz, field.getName());
-                    DomainObjectAttribute attr = new DomainObjectAttribute(searchAttributeAnnot.key(), searchAttributeAnnot.label(), searchAttributeAnnot.facet(), getter);
-                    attrs.add(attr);
-                    attributeMap.put(attr.getName(), attr);
-                }
-                catch (Exception e) {
-                    log.warn("Error getting field " + field.getName() + " on object " + domainObject, e);
-                }
-            }
-        }
-
-        for (Method method : clazz.getMethods()) {
-            SearchAttribute searchAttributeAnnot = method.getAnnotation(SearchAttribute.class);
-            if (searchAttributeAnnot!=null) {
-                DomainObjectAttribute attr = new DomainObjectAttribute(searchAttributeAnnot.key(), searchAttributeAnnot.label(), searchAttributeAnnot.facet(), method);
-                attrs.add(attr);
-                attributeMap.put(attr.getName(), attr);
-            }
-        }
-
-        return attrs;
     }
         
     @Override

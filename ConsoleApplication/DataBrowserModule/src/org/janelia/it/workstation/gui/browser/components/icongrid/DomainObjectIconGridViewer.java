@@ -115,9 +115,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected void buttonDrillDown(AnnotatedImageButton button) {
-    
         DomainObject domainObject = (DomainObject)button.getImageObject();
-        
+        // TODO: to we even drill down anymore?
     }
     
     @Override

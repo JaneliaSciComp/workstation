@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.components.editor;
 
+import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -356,7 +357,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
                 }
                 try {
                     Method getter = ReflectionHelper.getGetter(searchClass, field.getName());
-                    DomainObjectAttribute attr = new DomainObjectAttribute(searchAttributeAnnot.key(), searchAttributeAnnot.label(), searchAttributeAnnot.facet(), getter);
+                    DomainObjectAttribute attr = new DomainObjectAttribute(searchAttributeAnnot.key(), searchAttributeAnnot.label(), searchAttributeAnnot.facet(), searchAttributeAnnot.display(), getter);
                     searchAttrs.add(attr);
                 }
                 catch (Exception e) {
