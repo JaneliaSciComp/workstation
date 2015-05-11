@@ -9,7 +9,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh;
 import Jama.Matrix;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.janelia.it.jacs.shared.mesh_loader.Triangle;
 import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
 import org.janelia.it.jacs.shared.mesh_loader.VertexInfoBean;
@@ -40,13 +42,16 @@ public class LineEnclosureFactory implements TriangleSource {
     private int endPolygonSides = -1;
     private double endPolygonRadius; 
     
-    private double[][] prototypeEndPolygon;
+    private Map<Integer,double[][]> axisAlignedPrototypePolygons = new HashMap<>();
+    private double[][] zAxisAlignedPrototypePolygon;
+
     private List<double[][]> endCapPolygonsHolder = new ArrayList<>();
     
     public LineEnclosureFactory(int endPolygonSides, double endPolygonRadius) {
         this.endPolygonSides = endPolygonSides;
         this.endPolygonRadius = endPolygonRadius;
-        this.prototypeEndPolygon = createPrototypeEndPolygon();
+        this.zAxisAlignedPrototypePolygon = createZAxisAlignedPrototypeEndPolygon();  
+        axisAlignedPrototypePolygons.put(2, this.zAxisAlignedPrototypePolygon);
     }
 
     /**
@@ -56,8 +61,9 @@ public class LineEnclosureFactory implements TriangleSource {
      * 
      * @param startingCoords one end.
      * @param endingCoords other end.
+     * @return number of coordinates created here.
      */
-    public void addEnclosure( double[] startingCoords, double[] endingCoords ) {
+    public int addEnclosure( double[] startingCoords, double[] endingCoords ) {
         if ( startingCoords.length != 3 ) {
             throw new IllegalArgumentException("3-D starting coords only.");
         }
@@ -67,9 +73,11 @@ public class LineEnclosureFactory implements TriangleSource {
         
         //List<double[][]> discardedEndCaps = makeEndPolygons(startingCoords, endingCoords);
         List<double[][]> endCaps = makeEndPolygonsNoTrig( startingCoords, endingCoords );
-        addVertices(endCaps.get(0));
-        addVertices(endCaps.get(1));
+        int coordCount = 0;
+        coordCount += addVertices(endCaps.get(0));
+        coordCount += addVertices(endCaps.get(1));
         Triangle t = new Triangle();
+        return coordCount;
     }
 
     //--------------------------------------------IMPLEMENT TriangleSource
@@ -84,7 +92,8 @@ public class LineEnclosureFactory implements TriangleSource {
     }
 
     //--------------------------------------------HELPERS
-    protected void addVertices(double[][] poly) {
+    protected int addVertices(double[][] poly) {
+        int coordCount = 0;
         for (int i = 0; i < poly.length; i++) {
             VertexInfoBean bean = new VertexInfoBean();
             VertexInfoKey key = new VertexInfoKey();
@@ -92,7 +101,9 @@ public class LineEnclosureFactory implements TriangleSource {
             bean.setKey(key);
             vertices.add(bean);
             logger.info("Adding vertex {},{},{}", key.getPosition()[X], key.getPosition()[Y], key.getPosition()[Z]);
+            coordCount += 3;
         }
+        return coordCount;
     }
 
     private List<double[][]> makeEndPolygons( double[] startCoords, double[] endCoords ) {
@@ -110,12 +121,12 @@ public class LineEnclosureFactory implements TriangleSource {
         Matrix transform = matrixUtils.getTransform3D(
                 aboutX, aboutY, aboutZ,
                 startCoords[X], startCoords[Y], startCoords[Z]);        
-        endCapPolygonsHolder.add(producePolygon(transform));
+        endCapPolygonsHolder.add(producePolygon(transform, zAxisAlignedPrototypePolygon));
         
         transform.set(0, 3, endCoords[X]);
         transform.set(1, 3, endCoords[Y]);
         transform.set(2, 3, endCoords[Z]);
-        endCapPolygonsHolder.add(producePolygon(transform));
+        endCapPolygonsHolder.add(producePolygon(transform, zAxisAlignedPrototypePolygon));
         
         return endCapPolygonsHolder;
     }
@@ -126,23 +137,47 @@ public class LineEnclosureFactory implements TriangleSource {
 
         // Establish the positioning matrix.
         double[] lineDelta = getLineDelta(endCoords, startCoords);
-        double[] lengthsInPlanes = getLengthsInPlanes( lineDelta );
+        double[] planarProjections = getPlanarProjections( lineDelta );
         
-        Matrix transformMatrix = matrixUtils.getTransform3D(
-                lineDelta[Y] / lengthsInPlanes[YZ], lineDelta[Z] / lengthsInPlanes[YZ],
-                lineDelta[Z] / lengthsInPlanes[ZX], lineDelta[X] / lengthsInPlanes[ZX],
-                lineDelta[Y] / lengthsInPlanes[XY], lineDelta[X] / lengthsInPlanes[XY],
-                startCoords[X], startCoords[Y], startCoords[Z]);
+        int axialAlignment = -1;
+        for (int i = 0; i < planarProjections.length; i++) {
+            if (Math.abs(planarProjections[i]) < 0.0001) {
+                axialAlignment = i;
+            }
+        }
         
-        endCapPolygonsHolder.add( producePolygon( transformMatrix ) );
+        Matrix transformMatrix;
+        double[][] prototypePolygon;
+        if (axialAlignment == -1) {
+            transformMatrix = matrixUtils.getTransform3D(
+                    lineDelta[Y] / planarProjections[YZ], lineDelta[Z] / planarProjections[YZ],
+                    lineDelta[Z] / planarProjections[ZX], lineDelta[X] / planarProjections[ZX],
+                    lineDelta[Y] / planarProjections[XY], lineDelta[X] / planarProjections[XY],
+                    startCoords[X], startCoords[Y], startCoords[Z]);
+            prototypePolygon = zAxisAlignedPrototypePolygon;
+        }
+        else {
+            // Special case: aligned right along some axis.  Trig assumptions won't help.
+            if (axisAlignedPrototypePolygons.get(axialAlignment) == null) {
+                axisAlignedPrototypePolygons.put(axialAlignment, createAxisAlignedPrototypeEndPolygon(axialAlignment));
+            }
+            transformMatrix = matrixUtils.getTransform3D(
+                    0f,
+                    0f,
+                    0f,
+                    startCoords[X], startCoords[Y], startCoords[Z]);
+            prototypePolygon = axisAlignedPrototypePolygons.get(axialAlignment);
+        }
+        
+        endCapPolygonsHolder.add( producePolygon( transformMatrix, prototypePolygon ) );
         transformMatrix.set(0, 3, endCoords[X]);
         transformMatrix.set(1, 3, endCoords[Y]);
         transformMatrix.set(2, 3, endCoords[Z]);
-        endCapPolygonsHolder.add( producePolygon( transformMatrix ) );
+        endCapPolygonsHolder.add( producePolygon( transformMatrix, prototypePolygon ) );
         return endCapPolygonsHolder;
     }
     
-    private double[] getLengthsInPlanes( double[] lineDelta ) {
+    private double[] getPlanarProjections( double[] lineDelta ) {
         return new double[] {
             Math.sqrt(lineDelta[Y] * lineDelta[Y] + lineDelta[Z] * lineDelta[Z]),
             Math.sqrt(lineDelta[Z] * lineDelta[Z] + lineDelta[X] * lineDelta[X]),
@@ -150,26 +185,6 @@ public class LineEnclosureFactory implements TriangleSource {
         };
     }
 
-//    private double[][] makeEndPolygonForPoint( double[] coords, double[] deltasOverLength ) {
-//        return makeEndPolygon(deltasOverLength[X], deltasOverLength[Y], deltasOverLength[Z], coords);        
-//    }
-
-//    protected double[][] makeEndPolygon(
-//            Matrix transformMatrix,
-//            double[] coords) {
-//
-//        double[][] polygon = new double[endPolygonSides][3];
-//        // Clone the prototype.
-//        for (int i = 0; i < endPolygonSides; i++) {
-//            System.arraycopy(prototypeEndPolygon[i], 0, polygon[i], 0, 3);
-//        }
-//
-//        for ( int i = 0; i < polygon.length; i++ ) {
-//            polygon[i] = matrixUtils.transform( transformMatrix, polygon[i] );
-//        }
-//        return polygon;
-//    }
-    
     private double[] normalize( double[] distance ) {
         double magnitude = getMagnitude( distance );
         distance[0] /= magnitude;
@@ -191,25 +206,26 @@ public class LineEnclosureFactory implements TriangleSource {
         return delta;
     }
     
-//    private double deltaSlashLen( double lineDelta, double lineDelta1, double lineDelta2 ) {
-//        return lineDelta / Math.sqrt( lineDelta1 * lineDelta1 + lineDelta2 * lineDelta2 );
-//    }
-    
-    protected double[][] producePolygon(Matrix transform) {
+    protected double[][] clonePrototypePolygon(double[][] prototype) {
         //dumpTransform(transform);
         // Clone the prototype.
         double[][] polygon = new double[endPolygonSides][];
         for (int i = 0; i < endPolygonSides; i++) {
-            polygon[i] = Arrays.copyOf(prototypeEndPolygon[i], 3);
+            polygon[i] = Arrays.copyOf(prototype[i], 3);
         }
+        return polygon;
+    }
 
+    protected double[][] producePolygon(Matrix transform, double[][] prototype) {
+        double[][] polygon = clonePrototypePolygon(prototype);
+        
         for (int i = 0; i < polygon.length; i++) {
             polygon[i] = matrixUtils.transform(transform, polygon[i]);
         }
         return polygon;
     }
 
-    private double[][] createPrototypeEndPolygon() {
+    private double[][] createAxisAlignedPrototypeEndPolygon(int axis) {
         double[][] prototypeEndPolygon = new double[endPolygonSides][];
         prototypeEndPolygon[0] = new double[]{-endPolygonRadius, 0f, 0f};
         double fullcircle = Math.PI * 2.0;
@@ -218,12 +234,78 @@ public class LineEnclosureFactory implements TriangleSource {
         for (int i = 1; i < endPolygonSides; i++) {
             theta += thetaIncrement;
             theta = theta % fullcircle;
-            float x = (float) (Math.cos(theta) * endPolygonRadius);
-            float y = (float) (Math.sin(theta) * endPolygonRadius);
+            float[] calculatedCoords = new float[2];
+            calculatedCoords[0] = (float) (Math.cos(theta) * endPolygonRadius);
+            calculatedCoords[1] = (float) (Math.sin(theta) * endPolygonRadius);
             //System.out.println(String.format(
             //   "Theta=%f, x=%f, y=%f, cos=%f, sin=%f.  Iteration=%d\n", 
             //   theta, x, y, Math.cos(theta), Math.sin(theta), i));
-            prototypeEndPolygon[i] = new double[]{x, y, 0f};
+            prototypeEndPolygon[i] = new double[3];
+            int calcNum = 0;
+            for (int coord = 0; coord < 3; coord++) {
+                prototypeEndPolygon[i][coord] = coord == axis ? 0: calculatedCoords[ calcNum++ ];
+            }
+        }
+
+        return prototypeEndPolygon;
+    }
+
+    private double[][] createZAxisAlignedPrototypeEndPolygon() {
+        return createAxisAlignedPrototypeEndPolygon(Z);
+//        double[][] prototypeEndPolygon = new double[endPolygonSides][];
+//        prototypeEndPolygon[0] = new double[]{-endPolygonRadius, 0f, 0f};
+//        double fullcircle = Math.PI * 2.0;
+//        double thetaIncrement = fullcircle / endPolygonSides;
+//        double theta = Math.PI;  // Position of first polygon point.
+//        for (int i = 1; i < endPolygonSides; i++) {
+//            theta += thetaIncrement;
+//            theta = theta % fullcircle;
+//            float x = (float) (Math.cos(theta) * endPolygonRadius);
+//            float y = (float) (Math.sin(theta) * endPolygonRadius);
+//            //System.out.println(String.format(
+//            //   "Theta=%f, x=%f, y=%f, cos=%f, sin=%f.  Iteration=%d\n", 
+//            //   theta, x, y, Math.cos(theta), Math.sin(theta), i));
+//            prototypeEndPolygon[i] = new double[]{x, y, 0f};
+//        }
+
+//        return prototypeEndPolygon;
+    }
+
+    private double[][] createXAxisAlignedPrototypeEndPolygon() {
+        double[][] prototypeEndPolygon = new double[endPolygonSides][];
+        prototypeEndPolygon[0] = new double[]{0f, 0f, -endPolygonRadius};
+        double fullcircle = Math.PI * 2.0;
+        double thetaIncrement = fullcircle / endPolygonSides;
+        double theta = Math.PI;  // Position of first polygon point.
+        for (int i = 1; i < endPolygonSides; i++) {
+            theta += thetaIncrement;
+            theta = theta % fullcircle;
+            float y = (float) (Math.cos(theta) * endPolygonRadius);
+            float z = (float) (Math.sin(theta) * endPolygonRadius);
+            //System.out.println(String.format(
+            //   "Theta=%f, x=%f, y=%f, cos=%f, sin=%f.  Iteration=%d\n", 
+            //   theta, x, y, Math.cos(theta), Math.sin(theta), i));
+            prototypeEndPolygon[i] = new double[]{0f, y, z};
+        }
+
+        return prototypeEndPolygon;
+    }
+
+    private double[][] createYAxisAlignedPrototypeEndPolygon() {
+        double[][] prototypeEndPolygon = new double[endPolygonSides][];
+        prototypeEndPolygon[0] = new double[]{0f, 0f, -endPolygonRadius};
+        double fullcircle = Math.PI * 2.0;
+        double thetaIncrement = fullcircle / endPolygonSides;
+        double theta = Math.PI;  // Position of first polygon point.
+        for (int i = 1; i < endPolygonSides; i++) {
+            theta += thetaIncrement;
+            theta = theta % fullcircle;
+            float x = (float) (Math.cos(theta) * endPolygonRadius);
+            float z = (float) (Math.sin(theta) * endPolygonRadius);
+            //System.out.println(String.format(
+            //   "Theta=%f, x=%f, y=%f, cos=%f, sin=%f.  Iteration=%d\n", 
+            //   theta, x, y, Math.cos(theta), Math.sin(theta), i));
+            prototypeEndPolygon[i] = new double[]{x, 0f, z};
         }
 
         return prototypeEndPolygon;

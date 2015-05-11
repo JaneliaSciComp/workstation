@@ -6,6 +6,7 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh;
 
+import org.janelia.it.jacs.shared.mesh_loader.VertexInfoBean;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -43,35 +44,58 @@ public class LineEnclosureFactoryTest {
         double[] startingCoords;
         double[] endingCoords;
         
+        int totalCoordCount = 0;
+        //1
         startingCoords = new double[] {
             0,0,0
         };
         endingCoords = new double[] {
             1,0,1
         };
-        factory.addEnclosure(startingCoords, endingCoords);
+        totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
+        System.out.println("1. Coord count " + totalCoordCount);
         
+        //2
         startingCoords = new double[]{
             0, 0, 0
         };
         endingCoords = new double[]{
             -1, 0, 1
         };
-        factory.addEnclosure(startingCoords, endingCoords);
+        totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
+        System.out.println("2. Coord count " + totalCoordCount);
 
+        //3
         startingCoords = new double[] {
             2000.0, 2000.0, 1500.0
         };
         endingCoords = new double[] {
             2000.0, 2000.0, 2000.0
         };
-        factory.addEnclosure(startingCoords, endingCoords);
+        totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
+        System.out.println("3. Coord count " + totalCoordCount);
+        
+        //4
         startingCoords = new double[] {
             200.0, 200.0, 200.0
         };
         endingCoords = new double[]{
             100.0, 200.0, 200.0
         };
-        factory.addEnclosure(startingCoords, endingCoords);
+        totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
+        System.out.println("4. Coord count " + totalCoordCount);
+        
+        int vtxNum = 1;
+        int absVtxCount = 0;
+        for (VertexInfoBean vtx: factory.getVertices()) {
+            int inVertexCoordNum = 0;
+            for (float coord: vtx.getCoordinates()) {
+                assertTrue("Coord is not a number.  Absolute coord number: " + absVtxCount + ", in-vertex coordinate " + inVertexCoordNum + " in vertex number " + vtxNum,
+                           ! Double.isNaN(coord));
+                absVtxCount++;
+                inVertexCoordNum ++;
+            }
+            vtxNum ++;
+        }
     }
 }
