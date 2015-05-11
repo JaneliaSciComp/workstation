@@ -28,8 +28,7 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.actions.RemoveAction;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.components.DatePropertyEditor;
-import org.janelia.it.workstation.gui.browser.components.DomainBrowserTopComponent;
+import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
@@ -259,10 +258,6 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
                 PropertySupport.Reflection prop = new PropertySupport.Reflection(obj, getter.getReturnType(), getter, setter);
                 prop.setName(DomainUtils.unCamelCase(getter.getName().replaceFirst("get", "")));
                 set.put(prop);
-
-                if (getter.getReturnType().isAssignableFrom(Date.class)) {
-                    prop.setPropertyEditorClass(DatePropertyEditor.class);
-                }
             }
 
         }
@@ -465,7 +460,7 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            DomainBrowserTopComponent browser = new DomainBrowserTopComponent();
+            DomainListViewTopComponent browser = new DomainListViewTopComponent();
             browser.open();
             browser.requestActive();
             DomainExplorerTopComponent explorer = (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);

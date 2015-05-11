@@ -17,7 +17,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import static javax.swing.Action.NAME;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.components.DatePropertyEditor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.AbstractNode;
@@ -147,10 +146,6 @@ public class InternalNode<T> extends AbstractNode implements HasUniqueId, Has2dR
                         new PropertySupport.Reflection(obj, getter.getReturnType(), getter, setter);
                 prop.setName(DomainUtils.unCamelCase(getter.getName().replaceFirst("get", "")));
                 set.put(prop);
-                
-                if (getter.getReturnType().isAssignableFrom(Date.class)) {
-                    prop.setPropertyEditorClass(DatePropertyEditor.class);        
-                }
             }
 
         } catch (Exception ex) {

@@ -2,8 +2,8 @@ package org.janelia.it.workstation.gui.browser.nb_action;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import org.janelia.it.workstation.gui.browser.components.DomainBrowserTopComponent;
-import org.janelia.it.workstation.gui.browser.components.editor.FilterEditorPanel;
+import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
+import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
@@ -23,9 +23,9 @@ public final class NewFilterAction implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        DomainBrowserTopComponent browser = DomainBrowserTopComponent.getActiveInstance();
+        DomainListViewTopComponent browser = DomainListViewTopComponent.getActiveInstance();
         if (browser==null) {
-            browser = new DomainBrowserTopComponent();
+            browser = new DomainListViewTopComponent();
             browser.open();
             browser.requestActive();
         }
