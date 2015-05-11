@@ -13,12 +13,15 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author fosterl
  */
 public class LineEnclosureFactoryTest {
+    private Logger logger = LoggerFactory.getLogger(LineEnclosureFactoryTest.class);
     public LineEnclosureFactoryTest() {
     }
     
@@ -53,17 +56,17 @@ public class LineEnclosureFactoryTest {
             1,0,1
         };
         totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
-        System.out.println("1. Coord count " + totalCoordCount);
+        logger.info("1. Coord count " + totalCoordCount);
         
         //2
-        startingCoords = new double[]{
+        startingCoords = new double[] {
             0, 0, 0
         };
-        endingCoords = new double[]{
+        endingCoords = new double[] {
             -1, 0, 1
         };
         totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
-        System.out.println("2. Coord count " + totalCoordCount);
+        logger.info("2. Coord count " + totalCoordCount);
 
         //3
         startingCoords = new double[] {
@@ -73,7 +76,7 @@ public class LineEnclosureFactoryTest {
             2000.0, 2000.0, 2000.0
         };
         totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
-        System.out.println("3. Coord count " + totalCoordCount);
+        logger.info("3. Coord count " + totalCoordCount);
         
         //4
         startingCoords = new double[] {
@@ -83,8 +86,28 @@ public class LineEnclosureFactoryTest {
             100.0, 200.0, 200.0
         };
         totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
-        System.out.println("4. Coord count " + totalCoordCount);
+        logger.info("4. Coord count " + totalCoordCount);
         
+        //5
+        startingCoords = new double[]{
+            0,0,0
+        };
+        endingCoords = new double[]{
+            1,0,-1
+        };
+        totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
+        logger.info("5. (45 degrees behind posi X) Coord count " + totalCoordCount);
+
+        //6
+        startingCoords = new double[]{
+            0, 0, 0
+        };
+        endingCoords = new double[]{
+            1, 1, 0
+        };
+        totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
+        logger.info("6. (45 degrees below posi X) Coord count " + totalCoordCount);
+
         int vtxNum = 1;
         int absVtxCount = 0;
         for (VertexInfoBean vtx: factory.getVertices()) {

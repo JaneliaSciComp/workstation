@@ -223,7 +223,7 @@ public class ViewMatrixSupport {
         zRot.set(0, 0, cosAboutZ);
         zRot.set(0, 1, -sinAboutZ);
         zRot.set(1, 0, sinAboutZ);
-        zRot.set(1, 2, cosAboutZ);
+        zRot.set(1, 1, cosAboutZ);
 
         Matrix fullTransform = xRot.times(yRot).times(zRot);
         fullTransform.set(0, 3, translateX);

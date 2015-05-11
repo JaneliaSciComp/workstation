@@ -178,6 +178,12 @@ public class LineEnclosureFactory implements TriangleSource {
     }
     
     private double[] getPlanarProjections( double[] lineDelta ) {
+        // Applies signs, multiplied, to get sometimes-negative projections.
+//        double[] signums = new double[] {
+//            Math.signum(lineDelta[X]),
+//            Math.signum(lineDelta[Y]),
+//            Math.signum(lineDelta[Z])
+//        };
         return new double[] {
             Math.sqrt(lineDelta[Y] * lineDelta[Y] + lineDelta[Z] * lineDelta[Z]),
             Math.sqrt(lineDelta[Z] * lineDelta[Z] + lineDelta[X] * lineDelta[X]),
@@ -203,6 +209,11 @@ public class LineEnclosureFactory implements TriangleSource {
         for ( int i = 0; i < startCoords.length; i++ ) {
             delta[ i ] = startCoords[ i ] - endCoords[ i ];
         }
+//        if (delta[2] < 0) {
+//            for (int i = 0; i < 3; i++) {
+//                delta[i] *= -1;
+//            }
+//        }
         return delta;
     }
     
@@ -252,63 +263,6 @@ public class LineEnclosureFactory implements TriangleSource {
 
     private double[][] createZAxisAlignedPrototypeEndPolygon() {
         return createAxisAlignedPrototypeEndPolygon(Z);
-//        double[][] prototypeEndPolygon = new double[endPolygonSides][];
-//        prototypeEndPolygon[0] = new double[]{-endPolygonRadius, 0f, 0f};
-//        double fullcircle = Math.PI * 2.0;
-//        double thetaIncrement = fullcircle / endPolygonSides;
-//        double theta = Math.PI;  // Position of first polygon point.
-//        for (int i = 1; i < endPolygonSides; i++) {
-//            theta += thetaIncrement;
-//            theta = theta % fullcircle;
-//            float x = (float) (Math.cos(theta) * endPolygonRadius);
-//            float y = (float) (Math.sin(theta) * endPolygonRadius);
-//            //System.out.println(String.format(
-//            //   "Theta=%f, x=%f, y=%f, cos=%f, sin=%f.  Iteration=%d\n", 
-//            //   theta, x, y, Math.cos(theta), Math.sin(theta), i));
-//            prototypeEndPolygon[i] = new double[]{x, y, 0f};
-//        }
-
-//        return prototypeEndPolygon;
-    }
-
-    private double[][] createXAxisAlignedPrototypeEndPolygon() {
-        double[][] prototypeEndPolygon = new double[endPolygonSides][];
-        prototypeEndPolygon[0] = new double[]{0f, 0f, -endPolygonRadius};
-        double fullcircle = Math.PI * 2.0;
-        double thetaIncrement = fullcircle / endPolygonSides;
-        double theta = Math.PI;  // Position of first polygon point.
-        for (int i = 1; i < endPolygonSides; i++) {
-            theta += thetaIncrement;
-            theta = theta % fullcircle;
-            float y = (float) (Math.cos(theta) * endPolygonRadius);
-            float z = (float) (Math.sin(theta) * endPolygonRadius);
-            //System.out.println(String.format(
-            //   "Theta=%f, x=%f, y=%f, cos=%f, sin=%f.  Iteration=%d\n", 
-            //   theta, x, y, Math.cos(theta), Math.sin(theta), i));
-            prototypeEndPolygon[i] = new double[]{0f, y, z};
-        }
-
-        return prototypeEndPolygon;
-    }
-
-    private double[][] createYAxisAlignedPrototypeEndPolygon() {
-        double[][] prototypeEndPolygon = new double[endPolygonSides][];
-        prototypeEndPolygon[0] = new double[]{0f, 0f, -endPolygonRadius};
-        double fullcircle = Math.PI * 2.0;
-        double thetaIncrement = fullcircle / endPolygonSides;
-        double theta = Math.PI;  // Position of first polygon point.
-        for (int i = 1; i < endPolygonSides; i++) {
-            theta += thetaIncrement;
-            theta = theta % fullcircle;
-            float x = (float) (Math.cos(theta) * endPolygonRadius);
-            float z = (float) (Math.sin(theta) * endPolygonRadius);
-            //System.out.println(String.format(
-            //   "Theta=%f, x=%f, y=%f, cos=%f, sin=%f.  Iteration=%d\n", 
-            //   theta, x, y, Math.cos(theta), Math.sin(theta), i));
-            prototypeEndPolygon[i] = new double[]{x, 0f, z};
-        }
-
-        return prototypeEndPolygon;
     }
 
     @SuppressWarnings("unused")
