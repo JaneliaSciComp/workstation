@@ -332,7 +332,7 @@ public class DomainObjectDetailsPanel extends JPanel {
 
         this.domainObject = domainObject;
 
-        log.info("Loading domain object: "+domainObject.getId());
+        log.debug("Loading domain object: "+domainObject.getId());
         
         refresh();
                 
@@ -350,27 +350,6 @@ public class DomainObjectDetailsPanel extends JPanel {
         // Update the attribute table
         attributesTable.removeAllRows();
 
-//        attributesTable.addRow(new AttributeValue("Type", domainObject.getClass().getName()));
-//        
-//        attributesTable.addRow(new AttributeValue("GUID", "" + domainObject.getId()));
-//        attributesTable.addRow(new AttributeValue("Name", domainObject.getName()));
-//        attributesTable.addRow(new AttributeValue("Type", domainObject.getClass().getName()));
-//
-//        String sortCriteria = ModelMgr.getModelMgr().getSortCriteria(domainObject.getId());
-//        if (sortCriteria != null) {
-//            attributesTable.addRow(new AttributeValue("Sort Criteria", sortCriteria));
-//        }
-//
-//        if (role != null) {
-//            attributesTable.addRow(new AttributeValue("Role", role));
-//        }
-//        if (domainObject.getCreationDate() != null) {
-//            attributesTable.addRow(new AttributeValue("Creation Date", df.format(domainObject.getCreationDate())));
-//        }
-//        if (domainObject.getUpdatedDate() != null) {
-//            attributesTable.addRow(new AttributeValue("Updated Date", df.format(domainObject.getUpdatedDate())));
-//        }
-        
         List<DomainObjectAttribute> searchAttrs = DomainUtils.getAttributes(domainObject);
                 
         Collections.sort(searchAttrs, new Comparator<DomainObjectAttribute>() {
@@ -437,7 +416,6 @@ public class DomainObjectDetailsPanel extends JPanel {
         usedSubjects.addAll(domainObject.getReaders());
         usedSubjects.addAll(domainObject.getWriters());
         for(String subjectKey : usedSubjects) {
-            log.info("Adding DOP for "+subjectKey);
             DomainObjectPermission dop = new DomainObjectPermission(domainObject, subjectKey);
             dop.setRead(domainObject.getReaders().contains(subjectKey));
             dop.setWrite(domainObject.getWriters().contains(subjectKey));
