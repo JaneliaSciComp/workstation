@@ -32,6 +32,13 @@ import java.util.List;
  * right now; essentially end up rebuilding the whole model
  * and view every time anything changes
  *
+ * another implementation note: OK, I admit it, I prefer Python
+ * over Java; as such, I thought throwing one or two support classes
+ * in this file would be not a big deal, but it mushroomed, and
+ * now there's all kinds of stuff, all of it only used by
+ * the primary class, but still...definitely need to refactor
+ * at some point...
+ *
  * djo, 4/15
  *
  */
@@ -43,6 +50,7 @@ public class FilteredAnnotationList extends JPanel {
     private JTable filteredTable;
     private JTextField filterField;
     private TableRowSorter<FilteredAnnotationModel> sorter;
+    private JCheckBox neuronCheckbox;
 
     // data stuff
     private AnnotationManager annotationMgr;
@@ -108,6 +116,10 @@ public class FilteredAnnotationList extends JPanel {
                 }
             }
         });
+
+        // set the current filter late, after both the filters and UI are
+        //  set up
+        setCurrentFilter(filters.get("default"));
 
     }
 
@@ -195,8 +207,6 @@ public class FilteredAnnotationList extends JPanel {
         filters.put("interesting", new PredefNoteFilter(PredefinedNote.POINT_OF_INTEREST));
         filters.put("review", new PredefNoteFilter(PredefinedNote.REVIEW));
 
-
-        setCurrentFilter(filters.get("default"));
     }
 
     private void setupUI() {
@@ -344,6 +354,24 @@ public class FilteredAnnotationList extends JPanel {
             }
         });
 
+        // checkbox for current neuron only
+        neuronCheckbox = new JCheckBox("Current neuron only");
+        neuronCheckbox.setSelected(false);
+        neuronCheckbox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateData();
+            }
+        });
+
+        GridBagConstraints c5 = new GridBagConstraints();
+        c5.gridx = 0;
+        c5.gridy = GridBagConstraints.RELATIVE;
+        c5.weighty = 0.0;
+        c5.anchor = GridBagConstraints.PAGE_START;
+        c5.fill = GridBagConstraints.HORIZONTAL;
+        add(neuronCheckbox, c5);
+
 
         // text field for filter
         JPanel filterPanel = new JPanel();
@@ -379,13 +407,13 @@ public class FilteredAnnotationList extends JPanel {
         });
         filterPanel.add(clearFilter);
 
-        GridBagConstraints c5 = new GridBagConstraints();
-        c5.gridx = 0;
-        c5.gridy = GridBagConstraints.RELATIVE;
-        c5.weighty = 0.0;
-        c5.anchor = GridBagConstraints.PAGE_START;
-        c5.fill = GridBagConstraints.HORIZONTAL;
-        add(filterPanel, c5);
+        GridBagConstraints c6 = new GridBagConstraints();
+        c6.gridx = 0;
+        c6.gridy = GridBagConstraints.RELATIVE;
+        c6.weighty = 0.0;
+        c6.anchor = GridBagConstraints.PAGE_START;
+        c6.fill = GridBagConstraints.HORIZONTAL;
+        add(filterPanel, c6);
 
 
     }
@@ -416,10 +444,27 @@ public class FilteredAnnotationList extends JPanel {
         return new OrFilter(new HasNoteFilter(), new NotFilter(new GeometryFilter(AnnotationGeometry.LINK)));
     }
 
+    /**
+     * returns the currently active filter as determined
+     * by the UI; includes the effect of "current neuron only" as
+     * well as the drop menus and buttons
+     *
+     * implementation note: the "current neuron" logic works better
+     * here than in the "set" side, because flipping the "current
+     * neuron" toggle doesn't explicitly set the filter
+     */
     public AnnotationFilter getCurrentFilter() {
-        return currentFilter;
+        TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
+        if (neuronCheckbox.isSelected() && currentNeuron != null) {
+            return new AndFilter(new NeuronFilter(currentNeuron), currentFilter);
+        } else {
+            return currentFilter;
+        }
     }
 
+    /**
+     * sets the current filter
+     */
     public void setCurrentFilter(AnnotationFilter currentFilter) {
         this.currentFilter = currentFilter;
     }
