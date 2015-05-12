@@ -51,36 +51,44 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         viewer.setResetFirstRedraw(true);
 
         GL3ShaderActionSequence glSequence = new GL3ShaderActionSequence("Lattice");
-        final PassthroughShader passthroughShader = new PassthroughShader();
 
-        passthroughShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+        //final PassthroughShader passthroughShader = new PassthroughShader();
+        final MeshObjFileV2Shader shader = new MeshObjFileV2Shader();
+
+        shader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL3 gl) {
                 Matrix4 viewMatrix=viewer.getRenderer().getViewMatrix();
-                //viewMatrix.identity();
-                passthroughShader.setView(gl, viewMatrix);
+                shader.setView(gl, viewMatrix);
                 Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
-                //projMatrix.identity();
-                passthroughShader.setProjection(gl, projMatrix);
+                shader.setProjection(gl, projMatrix);
             }
         });
 
-        final LatticeActor latticeActor = new LatticeActor();
+//        final LatticeActor latticeActor = new LatticeActor();
+//
+//        latticeActor.setUpdateCallback(new GLDisplayUpdateCallback() {
+//            @Override
+//            public void update(GL3 gl) {
+//                Matrix4 actorModel=latticeActor.getModel();
+//                passthroughShader.setModel(gl, actorModel);
+//            }
+//        });
 
-//        Rotation r = new Rotation();
-//        r.setRotationFromAngleAboutY(new Float(Math.PI/8.0));
-//        latticeActor.setModel(r.asTransform());
+        final MeshObjFileV2Actor meshActor = new MeshObjFileV2Actor(new File("/Users/murphys/compartment_62.obj"));
 
-        latticeActor.setUpdateCallback(new GLDisplayUpdateCallback() {
+        meshActor.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL3 gl) {
-                Matrix4 actorModel=latticeActor.getModel();
-                passthroughShader.setModel(gl, actorModel);
+                Matrix4 actorModel = meshActor.getModel();
+                shader.setModel(gl, actorModel);
             }
         });
 
-        glSequence.setShader(passthroughShader);
-        glSequence.getActorSequence().add(latticeActor);
+
+        glSequence.setShader(shader);
+//        glSequence.getActorSequence().add(latticeActor);
+        glSequence.getActorSequence().add(meshActor);
 
         logger.info("Adding glSequence...");
         viewer.addShaderAction(glSequence);

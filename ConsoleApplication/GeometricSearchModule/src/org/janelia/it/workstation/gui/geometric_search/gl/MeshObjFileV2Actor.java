@@ -63,6 +63,7 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
 
     @Override
     public void display(GL3 gl) {
+
         super.display(gl);
         checkGlError(gl, "d super.display() error");
         gl.glBindVertexArray(vertexArrayId.get(0));
@@ -70,10 +71,13 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
         gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId.get(0));
         checkGlError(gl, "d glBindBuffer error");
         gl.glVertexAttribPointer(0, 3, GL3.GL_FLOAT, false, 0, 0);
+        gl.glVertexAttribPointer(1, 3, GL3.GL_FLOAT, false, 0, fList.size() * 9 * 4);
         checkGlError(gl, "d glVertexAttribPointer error");
         gl.glEnableVertexAttribArray(0);
-        checkGlError(gl, "d glEnableVertexAttribArray error");
-        gl.glDrawArrays(GL3.GL_TRIANGLES, 0, vList.size());
+        checkGlError(gl, "d glEnableVertexAttribArray 0 error");
+        gl.glEnableVertexAttribArray(1);
+        checkGlError(gl, "d glEnableVertexAttribArray 1 error");
+        gl.glDrawArrays(GL3.GL_TRIANGLES, 0, fList.size()*3);
         checkGlError(gl, "d glDrawArrays error");
     }
 
@@ -90,12 +94,48 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
             }
             loaded=true;
         }
-        FloatBuffer fb=FloatBuffer.allocate(vList.size()*3);
-        for (int i=0;i<vList.size();i++) {
-            fb.put(vList.get(i).x);
-            fb.put(vList.get(i).y);
-            fb.put(vList.get(i).z);
+
+        // We want to create a triangle for each face, picking from the vertices
+        FloatBuffer fb=FloatBuffer.allocate(fList.size()*9*2); // 9 floats per 3 vertices, and 9 floats for the vertex normals
+        // First, the vertices
+        for (int f=0;f<fList.size();f++) {
+            fGroup fg=fList.get(f);
+            int[] fa=new int[3];
+            fa[0]=fg.f1-1;
+            fa[1]=fg.f2-1;
+            fa[2]=fg.f3-1;
+            for (int i=0;i<3;i++) {
+                vGroup vg=vList.get(fa[i]);
+                float x=vg.x;
+                float y=vg.y;
+                float z=vg.z;
+                int s=f*9+i*3;
+                fb.put(s, x);
+                fb.put(s+1, y);
+                fb.put(s+2, z);
+            }
         }
+        // Next, the normals
+        int vOffset=fList.size()*9;
+        for (int f=0;f<fList.size();f++) {
+            fGroup fg=fList.get(f);
+            int[] fa=new int[3];
+            fa[0]=fg.f1-1;
+            fa[1]=fg.f2-1;
+            fa[2]=fg.f3-1;
+            for (int i=0;i<3;i++) {
+                vGroup vg=vnList.get(fa[i]);
+                float x=vg.x;
+                float y=vg.y;
+                float z=vg.z;
+                int s=vOffset+f*9+i*3;
+                fb.put(s, x);
+                fb.put(s+1, y);
+                fb.put(s+2, z);
+            }
+        }
+
+
         gl.glGenVertexArrays(1, vertexArrayId);
         checkGlError(gl, "glGenVertexArrays error");
         gl.glBindVertexArray(vertexArrayId.get(0));
@@ -104,7 +144,7 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
         checkGlError(gl, "glGenBuffers error");
         gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId.get(0));
         checkGlError(gl, "glBindBuffer error");
-        gl.glBufferData(GL3.GL_ARRAY_BUFFER, vList.size() * 3 * Float.SIZE, fb, GL3.GL_STATIC_DRAW);
+        gl.glBufferData(GL3.GL_ARRAY_BUFFER, fb.capacity() * 4, fb, GL3.GL_STATIC_DRAW);
         checkGlError(gl, "glBufferData error");
     }
 
@@ -141,99 +181,6 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
         logger.info("loadObjFile() loaded " + vnList.size()+" vn "+vList.size()+" v "+fList.size()+" f");
         reader.close();
     }
-
-    /*
-
-    @Override
-    public void display(GL3 gl, Matrix4 viewProjection) {
-
-        if (loadError) {
-            return;
-        }
-
-        if (!loaded) {
-            try {
-                loadObjFile();
-            } catch (Exception ex) {
-                logger.error("Could not load file "+objFile.getAbsolutePath());
-                ex.printStackTrace();
-                loadError=true;
-                return;
-            }
-            loaded=true;
-        }
-
-        gl2.glClearColor(0f, 0f, 0f, 1f);
-        gl2.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
-
-
-        gl2.glEnable(gl2.GL_DEPTH_TEST);
-        gl2.glDepthFunc(gl2.GL_LEQUAL);
-
-        gl2.glShadeModel(gl2.GL_SMOOTH);
-        gl2.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);
-
-        float[] lightPos = { -30, 0, 5, 1 };
-        float[] lightAmbient = { 0.3f, 0.3f, 0.3f, 1f };
-        float[] lightSpecular = { 0.8f, 0.8f, 0.8f, 1f };
-
-        gl2.glEnable(GL2.GL_LIGHT1);
-        gl2.glEnable(GL2.GL_LIGHTING);
-
-        gl2.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, lightPos, 0);
-        gl2.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, lightAmbient, 0);
-        gl2.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, lightSpecular, 0);
-
-        float[] rgba = { 0.3f, 0.5f, 1f };
-        gl2.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, rgba, 0);
-        gl2.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, rgba, 0);
-        gl2.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, FloatBuffer.wrap(new float[]{0.5f}));
-
-        drawTrianglesAndLines(gl2);
-
-    }
-
-    private void drawTrianglesAndLines(GL3 gl) {
-        gl2.glBegin(gl2.GL_TRIANGLES);
-
-        int vMax=vList.size();
-
-        Iterator<fGroup> fi=fList.iterator();
-        while (fi.hasNext()) {
-            fGroup vg=fi.next();
-
-            if (vg.f1<=vMax && vg.f2<=vMax && vg.f3<=vMax) {
-                vGroup v1=vList.get(vg.f1-1);
-                vGroup v2=vList.get(vg.f2-1);
-                vGroup v3=vList.get(vg.f3-1);
-                gl2.glVertex3f(v1.x*100f, v1.y*100f, v1.z*100f);
-                gl2.glVertex3f(v2.x*100f, v2.y*100f, v2.z*100f);
-                gl2.glVertex3f(v3.x*100f, v3.y*100f, v3.z*100f);
-            }
-        }
-        gl2.glEnd();
-
-        if (drawLines) {
-            gl2.glColor3f(0.0f, 0.0f, 0.0f);
-            Iterator<fGroup> fd=fList.iterator();
-            while (fd.hasNext()) {
-                fGroup vg=fd.next();
-                if (vg.f1<=vMax && vg.f2<=vMax && vg.f3<=vMax) {
-                    vGroup v1=vList.get(vg.f1-1);
-                    vGroup v2=vList.get(vg.f2-1);
-                    vGroup v3=vList.get(vg.f3-1);
-
-                    gl2.glBegin(gl2.GL_LINE_STRIP);
-                    gl2.glVertex3f(v1.x*100f, v1.y*100f, v1.z*100f);
-                    gl2.glVertex3f(v2.x*100f, v2.y*100f, v2.z*100f);
-                    gl2.glVertex3f(v3.x*100f, v3.y*100f, v3.z*100f);
-                    gl2.glVertex3f(v1.x*100f, v1.y*100f, v1.z*100f);
-                    gl2.glEnd();
-                }
-            }
-        }
-    }
-    */
 
 
 }

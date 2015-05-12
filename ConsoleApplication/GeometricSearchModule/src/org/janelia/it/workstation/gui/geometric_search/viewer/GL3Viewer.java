@@ -211,13 +211,9 @@ public class GL3Viewer extends GLJPanel
 
     protected void maybeShowPopup(MouseEvent event)
     {
-        logger.info("maybeShowPopup = " + event.getClass().getName());
         if (event.isPopupTrigger()) {
-            logger.info("isPopupTrigger=true");
             popupMenu.show(event.getComponent(),
                     event.getX(), event.getY());
-        } else {
-            logger.info("isPopupTrigger=false");
         }
     }
 
