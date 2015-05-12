@@ -10,7 +10,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.screen.PatternMask;
 import org.janelia.it.jacs.model.domain.screen.ScreenSample;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.model.PatternMaskSet;
 import org.janelia.it.workstation.gui.browser.nodes.PatternMaskSetNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -39,7 +39,7 @@ public class PatternMaskSetNodeFactory extends ChildFactory<PatternMaskSet> {
         ScreenSample screenSample = screenSampleRef.get();
         if (screenSample==null) return false;
         
-        DomainDAO dao = DomainExplorerTopComponent.getDao();
+        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
         if (screenSample.getPatternMasks() != null) {
             
             List<DomainObject> masks = dao.getDomainObjects(SessionMgr.getSubjectKey(), screenSample.getPatternMasks());

@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import java.beans.PropertyVetoException;
-import java.net.UnknownHostException;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 
 import java.util.Collection;
@@ -13,6 +12,7 @@ import javax.swing.text.DefaultEditorKit;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
@@ -63,11 +63,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     public static final String TC_NAME = "DomainExplorerTopComponent";
     
     private Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
-
-    protected static final String MONGO_SERVER_URL = "mongo-db";
-    protected static final String MONGO_DATABASE = "jacs";
-    protected static final String MONGO_USERNAME = "flyportal";
-    protected static final String MONGO_PASSWORD = "flyportal";
 
     private final ExplorerManager mgr = new ExplorerManager();
 
@@ -131,19 +126,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 //        keys.put(keyPaste, pasteAction);
 //    }
     
-
-    public static DomainDAO getDao() {
-        if (dao == null) {
-            try {
-                dao = new DomainDAO(MONGO_SERVER_URL, MONGO_DATABASE, MONGO_USERNAME, MONGO_PASSWORD);
-            }
-            catch (UnknownHostException e) {
-                SessionMgr.getSessionMgr().handleException(e);
-            }
-        }
-        return dao;
-    }
-
     public Workspace getCurrentWorkspace() {
         return currWorkspace==null?null:currWorkspace.getWorkspace();
     }
@@ -158,7 +140,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             public void run() {
                 try {
-                    DomainDAO dao = getDao();
+                    DomainDAO dao = DomainMgr.getDomainMgr().getDao();
                     Collection<Workspace> workspaces = dao.getWorkspaces(SessionMgr.getSubjectKey());
                     DefaultComboBoxModel<WorkspaceWrapper> model = new DefaultComboBoxModel<>();
                     for (Workspace workspace : workspaces) {

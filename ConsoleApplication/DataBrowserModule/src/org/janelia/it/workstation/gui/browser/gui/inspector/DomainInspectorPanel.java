@@ -41,8 +41,8 @@ import com.google.common.collect.ComparisonChain;
 import java.lang.reflect.InvocationTargetException;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationView;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainObjectPermissionDialog;
@@ -466,7 +466,7 @@ public class DomainInspectorPanel extends JPanel {
             @Override
             protected void doStuff() throws Exception {
                 // TODO: use domain dao
-                annotations.addAll(DomainExplorerTopComponent.getDao().getAnnotations(SessionMgr.getSubjectKey(), domainObject.getId()));
+                annotations.addAll(DomainMgr.getDomainMgr().getDao().getAnnotations(SessionMgr.getSubjectKey(), domainObject.getId()));
             }
 
             @Override

@@ -159,17 +159,10 @@ public class ImagesPanel<T,S> extends JScrollPane {
             
             if (buttons.containsKey(imageId)) {
                 continue;
-            }
-
-            AnnotatedImageButton button;
+            }            
 
             String filepath = iconPanel.getImageFilepath(imageObject, iconPanel.getCurrImageRole());
-            if (filepath != null) {
-                button = new DynamicImageButton(imageObject, iconPanel);
-            }
-            else {
-                button = new StaticImageButton(imageObject, iconPanel);
-            }
+            AnnotatedImageButton<T> button = AnnotatedImageButton.create(imageObject, filepath, iconPanel);
 
             button.setTitleVisible(iconPanel.areTitlesVisible());
             button.setTagsVisible(iconPanel.areTagsVisible());

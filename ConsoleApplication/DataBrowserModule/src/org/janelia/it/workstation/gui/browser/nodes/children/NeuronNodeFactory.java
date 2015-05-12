@@ -13,7 +13,7 @@ import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.nodes.NeuronFragmentNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.nodes.ChildFactory;
@@ -50,7 +50,7 @@ public class NeuronNodeFactory extends ChildFactory<NeuronFragment> {
         if (separationRef!=null) {
             NeuronSeparation separation = separationRef.get();
             if (separation==null) return false;
-            DomainDAO dao = DomainExplorerTopComponent.getDao();
+            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
             if (separation.getFragmentsReference()!=null) {
                 for(DomainObject object : dao.getDomainObjects(SessionMgr.getSubjectKey(), separation.getFragmentsReference())) {
                     if (object instanceof NeuronFragment) {
@@ -63,7 +63,7 @@ public class NeuronNodeFactory extends ChildFactory<NeuronFragment> {
             }
         }
         else {
-            DomainDAO dao = DomainExplorerTopComponent.getDao();
+            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
             Long separationId = null;
             if (sample.getObjectives() != null) {
                 List<String> objectives = new ArrayList<String>(sample.getObjectives().keySet());

@@ -86,6 +86,7 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.solr.SolrUtils;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator;
 import org.openide.util.datatransfer.ExTransferable;
@@ -158,7 +159,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
                         
                     @Override
                     protected void doStuff() throws Exception {
-                        DomainDAO dao = DomainExplorerTopComponent.getDao();
+                        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
                         dao.save(SessionMgr.getSubjectKey(), filter);
                     }
 
@@ -201,7 +202,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
                         }
                                 
                         filter.setName(newName);
-                        DomainDAO dao = DomainExplorerTopComponent.getDao();
+                        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
                         dao.save(SessionMgr.getSubjectKey(), filter);
                         Workspace workspace = DomainExplorerTopComponent.getInstance().getCurrentWorkspace();
                         dao.addChild(SessionMgr.getSubjectKey(), workspace, filter);
@@ -743,7 +744,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
             ids.add(id);
         }
         
-        DomainDAO dao = DomainExplorerTopComponent.getDao();
+        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
         List<DomainObject> domainObjects = dao.getDomainObjects(SessionMgr.getSubjectKey(), refs);
         List<Annotation> annotations = dao.getAnnotations(SessionMgr.getSubjectKey(), ids);
         

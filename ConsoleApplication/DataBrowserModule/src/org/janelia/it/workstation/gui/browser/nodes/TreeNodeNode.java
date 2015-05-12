@@ -10,8 +10,8 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -53,7 +53,7 @@ public class TreeNodeNode extends DomainObjectNode {
                     SimpleWorker worker = new SimpleWorker() {
                         @Override
                         protected void doStuff() throws Exception {
-                            DomainDAO dao = DomainExplorerTopComponent.getDao();
+                            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
                             dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
                         }
                         @Override

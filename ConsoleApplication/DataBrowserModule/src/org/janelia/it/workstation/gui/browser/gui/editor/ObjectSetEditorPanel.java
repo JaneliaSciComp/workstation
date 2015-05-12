@@ -8,8 +8,8 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
@@ -59,7 +59,7 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectEditor<O
             protected void doStuff() throws Exception {
                 log.debug("Getting children...");
 
-                DomainDAO dao = DomainExplorerTopComponent.getDao();
+                DomainDAO dao = DomainMgr.getDomainMgr().getDao();
                 domainObjects = dao.getDomainObjects(SessionMgr.getSubjectKey(), objectSet);
                 List<Long> ids = new ArrayList<>();
                 for(DomainObject domainObject : domainObjects) {

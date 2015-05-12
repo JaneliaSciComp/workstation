@@ -7,7 +7,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.screen.PatternMask;
 import org.janelia.it.jacs.model.domain.screen.ScreenSample;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.model.PatternMaskSet;
 import org.janelia.it.workstation.gui.browser.nodes.PatternMaskNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -28,13 +28,13 @@ public class PatternMaskNodeFactory extends ChildFactory<PatternMask> {
     private final WeakReference<PatternMaskSet> patternMaskSetRef;
 
     public PatternMaskNodeFactory(ScreenSample screenSample) {
-        this.screenSampleRef = new WeakReference<ScreenSample>(screenSample);
+        this.screenSampleRef = new WeakReference<>(screenSample);
         this.patternMaskSetRef = null;
     }
 
     public PatternMaskNodeFactory(ScreenSample screenSample, PatternMaskSet patternMaskSet) {
-        this.screenSampleRef = new WeakReference<ScreenSample>(screenSample);
-        this.patternMaskSetRef = new WeakReference<PatternMaskSet>(patternMaskSet);
+        this.screenSampleRef = new WeakReference<>(screenSample);
+        this.patternMaskSetRef = new WeakReference<>(patternMaskSet);
     }
     
     @Override
@@ -50,7 +50,7 @@ public class PatternMaskNodeFactory extends ChildFactory<PatternMask> {
         ScreenSample screenSample = screenSampleRef.get();
         if (screenSample==null) return false;
         
-        DomainDAO dao = DomainExplorerTopComponent.getDao();
+        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
         if (screenSample.getPatternMasks() != null) {
             List<DomainObject> masks = dao.getDomainObjects(SessionMgr.getSubjectKey(), screenSample.getPatternMasks());
             for(DomainObject mask : masks) {

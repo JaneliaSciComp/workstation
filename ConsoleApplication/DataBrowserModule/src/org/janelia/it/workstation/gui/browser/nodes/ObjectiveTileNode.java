@@ -9,7 +9,7 @@ import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
@@ -26,7 +26,7 @@ public class ObjectiveTileNode extends InternalNode<SampleTile> {
     
     public ObjectiveTileNode(Sample sample, SampleTile sampleTile) throws Exception {
         super(Children.create(new ObjectiveTileNode.MyChildFactory(sample, sampleTile), true), sampleTile);
-        this.sampleRef = new WeakReference<Sample>(sample);
+        this.sampleRef = new WeakReference<>(sample);
     }
     
     public SampleTile getSampleTile() {
@@ -49,8 +49,8 @@ public class ObjectiveTileNode extends InternalNode<SampleTile> {
         private final WeakReference<SampleTile> sampleTileRef;
         
         public MyChildFactory(Sample sample, SampleTile sampleTile) {
-            this.sampleRef = new WeakReference<Sample>(sample);
-            this.sampleTileRef = new WeakReference<SampleTile>(sampleTile);
+            this.sampleRef = new WeakReference<>(sample);
+            this.sampleTileRef = new WeakReference<>(sampleTile);
         }
         
         @Override
@@ -58,7 +58,7 @@ public class ObjectiveTileNode extends InternalNode<SampleTile> {
             SampleTile sampleTile = sampleTileRef.get();
             if (sampleTile==null) return false;
             
-            DomainDAO dao = DomainExplorerTopComponent.getDao();
+            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
             for(DomainObject obj : dao.getDomainObjects(SessionMgr.getSubjectKey(), sampleTile.getLsmReferences())) {
                 LSMImage image = (LSMImage)obj;
                 list.add(image);

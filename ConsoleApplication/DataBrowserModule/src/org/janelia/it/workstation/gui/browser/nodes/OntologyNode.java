@@ -11,7 +11,6 @@ import javax.swing.Action;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.nodes.children.OntologyChildFactory;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -27,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
 public class OntologyNode extends DomainObjectNode {
     
@@ -59,7 +59,7 @@ public class OntologyNode extends DomainObjectNode {
                     SimpleWorker worker = new SimpleWorker() {
                         @Override
                         protected void doStuff() throws Exception {
-                            DomainDAO dao = DomainExplorerTopComponent.getDao();
+                            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
                             //dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
                         }
                         @Override
@@ -130,7 +130,7 @@ public class OntologyNode extends DomainObjectNode {
             @Override
             protected void doStuff() throws Exception {
                 log.trace("Changing name from " + oldName + " to: " + newName);
-                DomainDAO dao = DomainExplorerTopComponent.getDao();
+                DomainDAO dao = DomainMgr.getDomainMgr().getDao();
                 dao.updateProperty(SessionMgr.getSubjectKey(), ontology, "name", newName);
             }
             @Override

@@ -70,6 +70,15 @@ public abstract class AnnotatedImageButton<T> extends JPanel implements DragGest
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
+    
+    public static <U> AnnotatedImageButton<U> create(U imageObject, String filepath, IconPanel iconPanel) {
+        if (filepath != null) {
+            return new DynamicImageButton(imageObject, iconPanel);
+        }
+        else {
+            return new StaticImageButton(imageObject, iconPanel);
+        }
+    }
 
     public AnnotatedImageButton(final T imageObject, final IconPanel iconPanel) {
 

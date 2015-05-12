@@ -12,7 +12,7 @@ import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.model.DeadReference;
 import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
 import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
@@ -43,7 +43,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         if (treeNode==null) return false;
         log.trace("Creating children keys for {}",treeNode.getName());   
         
-        DomainDAO dao = DomainExplorerTopComponent.getDao();
+        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
         List<DomainObject> children = dao.getDomainObjects(SessionMgr.getSubjectKey(), treeNode.getChildren());
         if (children.size()!=treeNode.getNumChildren()) {
             log.info("Got {} children but expected {}",children.size(),treeNode.getNumChildren());   
@@ -143,7 +143,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         }   
         log.info("Adding child {} to {}",domainObject.getId(),treeNode.getName());
         
-        DomainDAO dao = DomainExplorerTopComponent.getDao();
+        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
         try {
             dao.addChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
         }
@@ -178,7 +178,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         
         try {
             log.info("removing child {} from {}", domainObject.getId(), treeNode.getName());
-            DomainDAO dao = DomainExplorerTopComponent.getDao();
+            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
             if (domainObject instanceof DeadReference) {
                 dao.removeReference(SessionMgr.getSubjectKey(), treeNode, ((DeadReference) domainObject).getReference());
             }

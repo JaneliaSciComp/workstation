@@ -12,7 +12,6 @@ import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -27,6 +26,7 @@ import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.actions.RemoveAction;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
@@ -437,7 +437,7 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
                 return;
             }
             try {
-                DomainDAO dao = DomainExplorerTopComponent.getDao();
+                DomainDAO dao = DomainMgr.getDomainMgr().getDao();
                 dao.updateProperty(SessionMgr.getSubjectKey(), domainObject, "name", newName);
             } 
             catch (Exception ex) {

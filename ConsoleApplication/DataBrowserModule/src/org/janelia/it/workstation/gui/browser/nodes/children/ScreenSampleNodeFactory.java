@@ -3,13 +3,10 @@ package org.janelia.it.workstation.gui.browser.nodes.children;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.screen.FlyLine;
-import org.janelia.it.jacs.model.domain.screen.PatternMask;
 import org.janelia.it.jacs.model.domain.screen.ScreenSample;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
-import org.janelia.it.workstation.gui.browser.nodes.PatternMaskNode;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.nodes.ScreenSampleNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.nodes.ChildFactory;
@@ -28,7 +25,7 @@ public class ScreenSampleNodeFactory extends ChildFactory<ScreenSample> {
     private final WeakReference<FlyLine> flyLineRef;
 
     public ScreenSampleNodeFactory(FlyLine flyLine) {
-        this.flyLineRef = new WeakReference<FlyLine>(flyLine);
+        this.flyLineRef = new WeakReference<>(flyLine);
     }
 
     @Override
@@ -36,7 +33,7 @@ public class ScreenSampleNodeFactory extends ChildFactory<ScreenSample> {
         FlyLine flyLine = flyLineRef.get();
         if (flyLine==null) return false;
         
-        DomainDAO dao = DomainExplorerTopComponent.getDao();
+        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
         
         for(ScreenSample screenSample : dao.getScreenSampleByFlyLine(SessionMgr.getSubjectKey(), flyLine.getName())) {
             list.add(screenSample);
