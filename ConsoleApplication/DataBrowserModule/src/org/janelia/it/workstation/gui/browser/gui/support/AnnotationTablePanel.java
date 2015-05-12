@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.gui.support;
 
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
@@ -9,6 +10,7 @@ import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImagesPanel;
 
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
@@ -16,8 +18,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.workstation.gui.browser.icongrid.ImagesPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
