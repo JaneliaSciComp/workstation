@@ -9,7 +9,7 @@ import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeManagerI;
+import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +40,7 @@ public class TestMeshRender {
 
     private static class PresWorker extends SimpleWorker {
         private MeshViewer viewerWidget;
-        private VertexAttributeManagerI attribMgr;
+        private VertexAttributeSourceI attribMgr;
 
         public PresWorker() {
             viewerWidget = new MeshViewer();

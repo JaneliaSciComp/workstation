@@ -356,9 +356,12 @@ public class AnnotationPanel extends JPanel
 
 
         // buttons for acting on annotations
+        // NOTE: there's only one button and we don't really use it, so this
+        //  is hidden for now (but not removed in case we want it later)
+        // NOTE 2: the same functionality is still available on the right-click menu
         JPanel neuriteButtonsPanel = new JPanel();
         neuriteButtonsPanel.setLayout(new BoxLayout(neuriteButtonsPanel, BoxLayout.LINE_AXIS));
-        add(neuriteButtonsPanel, cVert);
+        // add(neuriteButtonsPanel, cVert);
 
         JButton centerAnnotationButton = new JButton("Center");
         centerAnnotationAction.putValue(Action.NAME, "Center");
