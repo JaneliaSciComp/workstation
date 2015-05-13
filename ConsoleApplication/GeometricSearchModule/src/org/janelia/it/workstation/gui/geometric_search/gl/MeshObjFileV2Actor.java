@@ -63,8 +63,22 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
 
     @Override
     public void display(GL3 gl) {
-
         super.display(gl);
+
+
+//        gl.glDisable(GL3.GL_DEPTH_TEST);
+////        gl.glShadeModel(GL3.GL_SMOOTH);
+////        gl.glDisable(GL3.GL_ALPHA_TEST);
+////        gl.glAlphaFunc(GL3.GL_GREATER, 0.5f);
+//        gl.glEnable(GL3.GL_BLEND);
+//        gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_SRC_ALPHA);
+//        gl.glBlendEquation(GL3.GL_FUNC_ADD);
+//        gl.glDepthFunc(GL3.GL_LEQUAL);
+
+
+
+
+
         checkGlError(gl, "d super.display() error");
         gl.glBindVertexArray(vertexArrayId.get(0));
         checkGlError(gl, "d glBindVertexArray error");
@@ -79,6 +93,9 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
         checkGlError(gl, "d glEnableVertexAttribArray 1 error");
         gl.glDrawArrays(GL3.GL_TRIANGLES, 0, fList.size()*3);
         checkGlError(gl, "d glDrawArrays error");
+
+//        gl.glEnable(GL3.GL_DEPTH_TEST);
+//        gl.glDisable(GL3.GL_BLEND);
     }
 
     @Override

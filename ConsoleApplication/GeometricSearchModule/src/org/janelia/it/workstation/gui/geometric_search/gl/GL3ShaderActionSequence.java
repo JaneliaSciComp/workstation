@@ -55,9 +55,19 @@ public class GL3ShaderActionSequence {
     public void display(GL3 gl) {
         shader.load(gl);
         shader.display(gl);
+        gl.glEnable(GL3.GL_DEPTH_TEST);
+//        gl.glShadeModel(GL3.GL_SMOOTH);
+//        gl.glDisable(GL3.GL_ALPHA_TEST);
+//        gl.glAlphaFunc(GL3.GL_GREATER, 0.5f);
+        gl.glEnable(GL3.GL_BLEND);
+        gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_SRC_ALPHA);
+        gl.glBlendEquation(GL3.GL_FUNC_ADD);
+        gl.glDepthFunc(GL3.GL_LEQUAL);
         for (GL3SimpleActor actor: actorSequence) {
             actor.display(gl);
         }
+        //gl.glEnable(GL3.GL_DEPTH_TEST);
+        gl.glDisable(GL3.GL_BLEND);
         shader.unload(gl);
     }
 
