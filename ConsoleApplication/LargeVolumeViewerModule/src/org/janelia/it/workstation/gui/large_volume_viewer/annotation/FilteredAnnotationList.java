@@ -269,8 +269,7 @@ public class FilteredAnnotationList extends JPanel {
         filteredTable.setRowSelectionAllowed(false);
 
 
-        // bit inelegant, but hand-tune some widths (default is 75):
-        // ...and they seems to be ignored, ugh
+        // inelegant, but hand-tune column widths (finally seems to work):
         filteredTable.getColumnModel().getColumn(0).setPreferredWidth(60);
         filteredTable.getColumnModel().getColumn(1).setPreferredWidth(50);
         filteredTable.getColumnModel().getColumn(2).setPreferredWidth(115);
