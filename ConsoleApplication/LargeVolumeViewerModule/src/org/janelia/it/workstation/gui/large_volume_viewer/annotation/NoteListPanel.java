@@ -71,7 +71,13 @@ public class NoteListPanel extends JPanel {
         add(new JLabel("Notes", JLabel.LEADING), c);
 
         noteListModel = new DefaultListModel<>();
-        JList noteListBox = new JList(noteListModel);
+        JList noteListBox = new JList(noteListModel) {
+            public String getToolTipText(MouseEvent event) {
+                int location = locationToIndex(event.getPoint());
+                return getModel().getElementAt(location).toString();
+            }
+        };
+
         JScrollPane noteScrollPane = new JScrollPane(noteListBox);
         noteListBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
