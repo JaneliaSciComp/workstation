@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.browser.components;
 
 import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
-import javax.swing.JPanel;
+import javax.swing.JComponent;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
@@ -73,7 +73,6 @@ public final class DomainListViewTopComponent extends TopComponent {
             
     public DomainListViewTopComponent() {
         initComponents();
-        
         setName(Bundle.CTL_DomainListViewTopComponent());
         setToolTipText(Bundle.HINT_DomainListViewTopComponent());
         associateLookup(new AbstractLookup(content));
@@ -88,24 +87,10 @@ public final class DomainListViewTopComponent extends TopComponent {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        mainPanel = new javax.swing.JPanel();
-
-        mainPanel.setLayout(new java.awt.BorderLayout());
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 327, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 298, Short.MAX_VALUE)
-        );
+        setLayout(new java.awt.BorderLayout());
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel mainPanel;
     // End of variables declaration//GEN-END:variables
 
     @Override
@@ -135,7 +120,7 @@ public final class DomainListViewTopComponent extends TopComponent {
     }
 
     private boolean setCurrent(DomainObjectNode domainObjectNode) {
-        DomainObjectNode curr = getLookup().lookup(DomainObjectNode.class);
+        DomainObjectNode curr = getCurrent();
         if (curr==domainObjectNode) {
             return false;
         }
@@ -149,11 +134,11 @@ public final class DomainListViewTopComponent extends TopComponent {
     public void setEditorClass(Class<? extends DomainObjectEditor> editorClass) {
         try {
             if (editor!=null) {
-                mainPanel.remove((JPanel)editor);
+                remove((JComponent)editor);
                 Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
             }
             editor = editorClass.newInstance();
-            mainPanel.add((JPanel) editor, BorderLayout.CENTER);
+            add((JComponent)editor, BorderLayout.CENTER);
             Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
         }
         catch (InstantiationException | IllegalAccessException e) {

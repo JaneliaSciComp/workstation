@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class DynamicImagePanel extends JPanel {
+public class DynamicImagePanel extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(DynamicImagePanel.class);
 
@@ -144,7 +144,7 @@ public abstract class DynamicImagePanel extends JPanel {
             if (wantViewable) {
                 if (!this.viewable) {
                     
-                    loadWorker = new LoadImageWorker(this, imageFilename) {
+                    loadWorker = new LoadImageWorker(imageFilename, getDisplaySize()) {
 
                         @Override
                         protected void hadSuccess() {
@@ -163,8 +163,6 @@ public abstract class DynamicImagePanel extends JPanel {
                             setMaxSizeImage(getNewMaxSizeImage());
                             setImageLabel(imageLabel);
                             imageLabel.setIcon(new ImageIcon(getNewScaledImage()));
-//				            syncToViewerState();
-//					        invalidate();
 
                             ConcurrentUtils.invokeAndHandleExceptions(success);
 
@@ -174,30 +172,25 @@ public abstract class DynamicImagePanel extends JPanel {
                         @Override
                         protected void hadError(Throwable error) {
                             if (error instanceof FileNotFoundException) {
-                                log.warn("File not found: " + imageFilename);
+                                log.warn("File not found: " + imageFilename, error);
                                 errorLabel.setText("File not found");
-                                error.printStackTrace();
                             }
                             else if (error.getCause() != null && (error.getCause() instanceof FormatException)) {
-                                log.warn("Image format not supported for: " + imageFilename);
+                                log.warn("Image format not supported for: " + imageFilename, error);
                                 errorLabel.setText("Image format not supported");
-                                error.printStackTrace();
                             }
                             else {
-                                log.warn("Image could not be loaded: " + imageFilename);
+                                log.warn("Image could not be loaded: " + imageFilename, error);
                                 errorLabel.setText("Image could not be loaded");
-                                error.printStackTrace();
                             }
                             setImageLabel(errorLabel);
                             revalidate();
                             repaint();
                         }
                     };
+                    
                     loadWorker.executeInImagePool();
 
-                }
-                else {
-                    syncToViewerState();
                 }
             }
             else {
@@ -244,13 +237,13 @@ public abstract class DynamicImagePanel extends JPanel {
         add(label);
     }
 
-    protected abstract void syncToViewerState();
-
     public Integer getMaxSize() {
         return maxSize;
     }
 
     public void setDisplaySize(int displaySize) {
-        this.displaySize = displaySize;
+        if (displaySize>0) {
+            this.displaySize = displaySize;
+        }
     }
 }

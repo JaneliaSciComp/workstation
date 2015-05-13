@@ -49,9 +49,14 @@ public abstract class LoadImageWorker extends SimpleWorker {
     private BufferedImage maxSizeImage;
     private BufferedImage scaledImage;
     
-    public LoadImageWorker(DynamicImagePanel panel, String imageFilename) {
+    public LoadImageWorker(String imageFilename) {
         this.imageFilename = imageFilename;
-        this.displaySize = panel.getDisplaySize();
+        this.displaySize = 0;
+    }
+    
+    public LoadImageWorker(String imageFilename, int width) {
+        this.imageFilename = imageFilename;
+        this.displaySize = width;
     }
 
     @Override
@@ -62,32 +67,42 @@ public abstract class LoadImageWorker extends SimpleWorker {
             this.maxSizeImage = imageCache.get(imageFilename);
             if (maxSizeImage != null) {
                 // Scale image to current image display size
-                this.scaledImage = Utils.getScaledImageByWidth(maxSizeImage, displaySize);
+                rescaleToDisplaySize();
                 return;
             }
         }
 
         if (useCacheBehind) {
             // Async cache-behind
+            log.info("Async cache-behind loading: "+imageFilename);
             URL imageFileURL = SessionMgr.getURL(imageFilename);
-            log.debug("Loading "+imageFileURL);
             maxSizeImage = Utils.readImage(imageFileURL);
-            if (maxSizeImage != null) {
+            if (maxSizeImage != null && imageCache != null) {
                 imageCache.put(imageFilename, maxSizeImage);
             }
         }
         else {
             // Sync cache-ahead
+            log.info("Cache-ahead loading: "+imageFilename);
             File imageFile = SessionMgr.getCachedFile(imageFilename, false);
             maxSizeImage = Utils.readImage(imageFile.toURI().toURL());
         }
 
         if (maxSizeImage != null) {
             // Scale image to current image display size
-            this.scaledImage = Utils.getScaledImageByWidth(maxSizeImage, displaySize);
+            rescaleToDisplaySize();
         }
     }
 
+    private void rescaleToDisplaySize() {
+        if (displaySize>0) {
+            this.scaledImage = Utils.getScaledImageByWidth(maxSizeImage, displaySize);
+        }
+        else {
+            this.scaledImage = maxSizeImage;
+        }
+    }
+    
     protected BufferedImage getNewMaxSizeImage() {
         return maxSizeImage;
     }
@@ -99,7 +114,6 @@ public abstract class LoadImageWorker extends SimpleWorker {
     protected int getNewDisplaySize() {
         return displaySize;
     }
-
 
     /**
      * Adapted from SimpleWorker so that we can use a separate thread pool and customize the number of threads

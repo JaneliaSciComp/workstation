@@ -64,7 +64,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public String getImageFilepath(DomainObject domainObject) {
-        return getImageFilepath(domainObject, FileType.SignalMip.toString());
+        String imageRole = getCurrImageRole();
+        return getImageFilepath(domainObject, imageRole);
     }
 
     @Override
@@ -81,6 +82,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             HasFiles lastResult = run.getLatestResultWithFiles();
             if (lastResult==null) return null;
             return DomainUtils.get2dImageFilepath(lastResult, role);
+        }
+        else if (domainObject instanceof HasFiles) {
+            HasFiles hasFiles = (HasFiles)domainObject;
+            return DomainUtils.get2dImageFilepath(hasFiles, role);
         }
         return null;
     }

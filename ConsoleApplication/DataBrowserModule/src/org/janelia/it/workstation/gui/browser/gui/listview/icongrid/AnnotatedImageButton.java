@@ -5,8 +5,6 @@ import java.awt.dnd.*;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
 
 import javax.swing.*;
 
@@ -15,9 +13,9 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
-import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 
 /**
  * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an
@@ -25,7 +23,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class AnnotatedImageButton<T> extends JPanel implements DragGestureListener {
+public abstract class AnnotatedImageButton<T> extends SelectablePanel implements DragGestureListener {
 
     protected final JLabel titleLabel;
     protected final JLabel subtitleLabel;
@@ -40,37 +38,15 @@ public abstract class AnnotatedImageButton<T> extends JPanel implements DragGest
     protected final IconPanel iconPanel;
     protected final T imageObject;
     protected SimpleWorker annotationLoadingWorker;
-
-    private static BufferedImage normalBorderImage;
-    private static BufferedImage selectedBorderImage;
-    private static Color normalBackground;
-    private static Color selectedBackground;
-
-    static {
-        // TODO: this should be done whenever the L&F changes, but currently we need to restart anyway, 
-        // so it doesn't matter until that is fixed
-
-        String normalBorder = "border_normal.png";
-        String selectedBorder = "border_selected.png";
-        normalBackground = new Color(241, 241, 241);
-        selectedBackground = new Color(203, 203, 203);
-
-        if (SessionMgr.getSessionMgr().isDarkLook()) {
-            normalBorder = "border_dark_normal.png";
-            selectedBorder = "border_dark_selected.png";
-            normalBackground = null;
-            selectedBackground = null;
-        }
-
-        try {
-            normalBorderImage = Utils.toBufferedImage(Utils.getClasspathImage(normalBorder).getImage());
-            selectedBorderImage = Utils.toBufferedImage(Utils.getClasspathImage(selectedBorder).getImage());
-        }
-        catch (FileNotFoundException e) {
-            SessionMgr.getSessionMgr().handleException(e);
-        }
-    }
     
+    /**
+     * Factory method for creating AnnotatedImageButtons. 
+     * @param <U>
+     * @param imageObject
+     * @param filepath
+     * @param iconPanel
+     * @return 
+     */
     public static <U> AnnotatedImageButton<U> create(U imageObject, String filepath, IconPanel iconPanel) {
         if (filepath != null) {
             return new DynamicImageButton(imageObject, iconPanel);
@@ -80,10 +56,7 @@ public abstract class AnnotatedImageButton<T> extends JPanel implements DragGest
         }
     }
 
-    public AnnotatedImageButton(final T imageObject, final IconPanel iconPanel) {
-
-        normalBackground = getBackground();
-        setBackground(normalBackground);
+    protected AnnotatedImageButton(final T imageObject, final IconPanel iconPanel) {
 
         this.iconPanel = iconPanel;
         this.imageObject = imageObject;
@@ -178,8 +151,13 @@ public abstract class AnnotatedImageButton<T> extends JPanel implements DragGest
         mainPanel.removeAll();
 
         StringBuilder tsb = new StringBuilder();
-        tsb.append(iconPanel.getImageLabel(imageObject));
-
+        if (iconPanel!=null) {
+            tsb.append(iconPanel.getImageLabel(imageObject));
+        }
+        else {
+            tsb.append(imageObject.toString());
+        }
+        
 //        String splitPart = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
 //        if (splitPart != null) {
 //            tsb.append(" (").append(splitPart).append(")");
@@ -326,12 +304,14 @@ public abstract class AnnotatedImageButton<T> extends JPanel implements DragGest
     public void setViewable(boolean wantViewable) {
     }
 
-    public synchronized void registerAspectRatio(double width, double height) {
+    protected synchronized void registerAspectRatio(double width, double height) {
         double a = width / height;
         if (a != this.aspectRatio) {
-            iconPanel.registerAspectRatio(a);
+            this.aspectRatio = a;
+            if (iconPanel!=null) {
+                iconPanel.registerAspectRatio(a);
+            }
         }
-        this.aspectRatio = a;
     }
 
     @Override
@@ -348,58 +328,5 @@ public abstract class AnnotatedImageButton<T> extends JPanel implements DragGest
 //            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconPanel.getSelectionCategory(), rootedEntity.getId(), true);
 //        }
         getTransferHandler().exportAsDrag(this, dge.getTriggerEvent(), TransferHandler.LINK);
-    }
-
-    public IconPanel getIconPanel() {
-        return iconPanel;
-    }
-
-    private boolean selected;
-
-    public boolean isSelected() {
-        return selected;
-    }
-
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-
-        if (selected) {
-            if (selectedBackground != null) {
-                setBackground(selectedBackground);
-            }
-        }
-        else {
-            if (normalBackground != null) {
-                setBackground(normalBackground);
-            }
-        }
-        repaint();
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-
-        super.paintComponent(g);
-
-        BufferedImage borderImage = selected ? selectedBorderImage : normalBorderImage;
-        if (borderImage == null) {
-            return;
-        }
-
-        int b = 10; // border width
-        int w = getWidth();
-        int h = getHeight();
-        int iw = borderImage.getWidth();
-        int ih = borderImage.getHeight();
-
-        g.drawImage(borderImage, 0, 0, b, b, 0, 0, b, b, null); // top left
-        g.drawImage(borderImage, w - b, 0, w, b, iw - b, 0, iw, b, null); // top right
-        g.drawImage(borderImage, 0, h - b, b, h, 0, ih - b, b, ih, null); // bottom right
-        g.drawImage(borderImage, w - b, h - b, w, h, iw - b, ih - b, iw, ih, null); // bottom left
-
-        g.drawImage(borderImage, b, 0, w - b, b, b, 0, iw - b, b, null); // top
-        g.drawImage(borderImage, 0, b, b, h - b, 0, b, b, ih - b, null); // left
-        g.drawImage(borderImage, b, h - b, w - b, h, b, ih - b, iw - b, ih, null); // bottom
-        g.drawImage(borderImage, w - b, b, w, h - b, iw - b, b, iw, ih - b, null); // right
     }
 }

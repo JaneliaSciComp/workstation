@@ -31,6 +31,10 @@ public class DomainUtils {
     private static final Logger log = LoggerFactory.getLogger(DomainUtils.class);
     
     public static String get2dImageFilepath(HasFiles hasFiles, String role) {
+        return get2dImageFilepath(hasFiles, FileType.valueOf(role));
+    }
+    
+    public static String get2dImageFilepath(HasFiles hasFiles, FileType fileType) {
         
         StringBuilder urlSb = new StringBuilder();
 
@@ -41,7 +45,6 @@ public class DomainUtils {
             }
         }
         
-        FileType fileType = FileType.valueOf(role);
         Map<FileType,String> files = hasFiles.getFiles();
         if (files==null) return null;
 

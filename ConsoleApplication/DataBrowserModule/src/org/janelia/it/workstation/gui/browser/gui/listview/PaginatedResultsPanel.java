@@ -79,7 +79,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         viewTypeButton.setPopupMenu(getViewerPopupMenu());
 
         prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
-        prevPageButton.setToolTipText("Back A Page");
+        prevPageButton.setToolTipText("Back a page");
         prevPageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -88,7 +88,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         });
 
         nextPageButton = new JButton(Icons.getIcon("arrow_forward.gif"));
-        nextPageButton.setToolTipText("Forward A Page");
+        nextPageButton.setToolTipText("Forward a page");
         nextPageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -97,7 +97,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         });
 
         startPageButton = new JButton(Icons.getIcon("arrow_double_left.png"));
-        startPageButton.setToolTipText("Jump To Start");
+        startPageButton.setToolTipText("Jump to start");
         startPageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -106,7 +106,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         });
 
         endPageButton = new JButton(Icons.getIcon("arrow_double_right.png"));
-        endPageButton.setToolTipText("Jump To End");
+        endPageButton.setToolTipText("Jump to end");
         endPageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

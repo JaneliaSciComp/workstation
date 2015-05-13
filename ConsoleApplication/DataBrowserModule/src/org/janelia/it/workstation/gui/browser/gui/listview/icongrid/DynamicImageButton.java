@@ -5,9 +5,9 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
-
 /**
- * An AnnotatedImageButton with a dynamic image.
+ * An AnnotatedImageButton with a dynamic image, i.e. one that is loaded
+ * from via the network, not a locally available icon.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -21,9 +21,7 @@ public class DynamicImageButton<T> extends AnnotatedImageButton<T> {
 
     public JComponent init(final T imageObject) {
 
-        String imageRole = iconPanel.getCurrImageRole();
-
-        String filepath = iconPanel.getImageFilepath(imageObject, imageRole);
+        String filepath = iconPanel.getImageFilepath(imageObject);
         if (filepath == null) {
             throw new IllegalStateException("Entity has no filepath");
         }
@@ -33,10 +31,7 @@ public class DynamicImageButton<T> extends AnnotatedImageButton<T> {
 
         // send original file path so that file path translation or local caching occurs
         // asynchronously within the the load image worker
-        this.dynamicImagePanel = new DynamicImagePanel(filepath, ImagesPanel.MAX_IMAGE_WIDTH) {
-            protected void syncToViewerState() {
-            }
-        };
+        this.dynamicImagePanel = new DynamicImagePanel(filepath, ImagesPanel.MAX_IMAGE_WIDTH);
         return dynamicImagePanel;
     }
 
