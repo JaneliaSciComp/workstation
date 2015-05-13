@@ -44,6 +44,7 @@ public class GL3ShaderActionSequence {
         shader.dispose(gl);
     }
 
+
     public void init(GL3 gl) throws Exception {
         shader.init(gl);
         for (GL3SimpleActor actor : actorSequence) {

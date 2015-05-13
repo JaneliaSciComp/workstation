@@ -75,12 +75,22 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 //            }
 //        });
 
-        final MeshObjFileV2Actor meshActor = new MeshObjFileV2Actor(new File("/Users/murphys/compartment_62.obj"));
+        final MeshObjFileV2Actor meshActor1 = new MeshObjFileV2Actor(new File("/Users/murphys/meshes/compartment_62.obj"));
 
-        meshActor.setUpdateCallback(new GLDisplayUpdateCallback() {
+        meshActor1.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL3 gl) {
-                Matrix4 actorModel = meshActor.getModel();
+                Matrix4 actorModel = meshActor1.getModel();
+                shader.setModel(gl, actorModel);
+            }
+        });
+
+        final MeshObjFileV2Actor meshActor2 = new MeshObjFileV2Actor(new File("/Users/murphys/meshes/compartment_39.obj"));
+
+        meshActor2.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL3 gl) {
+                Matrix4 actorModel = meshActor2.getModel();
                 shader.setModel(gl, actorModel);
             }
         });
@@ -88,7 +98,8 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
         glSequence.setShader(shader);
 //        glSequence.getActorSequence().add(latticeActor);
-        glSequence.getActorSequence().add(meshActor);
+        glSequence.getActorSequence().add(meshActor1);
+        glSequence.getActorSequence().add(meshActor2);
 
         logger.info("Adding glSequence...");
         viewer.addShaderAction(glSequence);
