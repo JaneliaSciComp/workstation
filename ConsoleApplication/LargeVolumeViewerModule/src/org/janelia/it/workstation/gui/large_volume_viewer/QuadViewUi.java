@@ -3,6 +3,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 import org.janelia.console.viewerapi.ToolButton;
 import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
@@ -177,6 +179,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
 	// annotation-related
     private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction(this);
+    private final BacktrackNeuronAction backtrackNeuronAction = new BacktrackNeuronAction(this);
     private TileFormat tileFormat;
     
     private Snapshot3DLauncher snapshot3dLauncher;
@@ -234,7 +237,27 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public void setCameraFocus( Vec3 focus ) {
         camera.setFocus(focus);
     }
-    
+
+    /**
+     * move toward the neuron root to the next branch or the root
+     */
+    public void backtrackNeuronMicron() {
+        TmNeuron neuron = annotationModel.getCurrentNeuron();
+        if (neuron != null) {
+            Anchor anchor = getSkeletonActor().getNextParent();
+            if (anchor != null) {
+                TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
+                ann = neuron.getParentOf(ann);
+                while (!ann.isRoot() && !ann.isBranch()) {
+                    ann = neuron.getParentOf(ann);
+                }
+                TileFormat tileFormat = tileServer.getLoadAdapter().getTileFormat();
+                setCameraFocus(tileFormat.micronVec3ForVoxelVec3Centered(new Vec3(ann.getX(), ann.getY(), ann.getZ())));
+                // setCameraFocus(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+            }
+        }
+    }
+
     public void centerNextParentMicron() {
         Anchor anchor = getSkeletonActor().getNextParent();
         if (anchor != null) {
@@ -278,7 +301,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         // connect up text UI and model with graphic UI(s):
         getSkeletonActor().addAnchorUpdateListener(annotationMgr);
                 
-        // Nb: skeleton.anchorMovedSilentSignal intentially does *not* connect to annotationMgr!
+        // Nb: skeleton.anchorMovedSilentSignal intentionally does *not* connect to annotationMgr!
         quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer);
         largeVolumeViewerTranslator.setViewStateListener(quadViewController);
         annotationPanel.setViewStateListener(quadViewController);
@@ -778,26 +801,26 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, KeyEvent.SHIFT_DOWN_MASK, false),
         		"ModifierPressed");
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, KeyEvent.CTRL_DOWN_MASK, false),
-        		"ModifierPressed");
+                "ModifierPressed");
         
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0, true),
-				"ModifierReleased");
+                "ModifierReleased");
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true),
-				"ModifierReleased");
+                "ModifierReleased");
 
         ActionMap actionMap = getActionMap();
-        actionMap.put("ModifierPressed", new AbstractAction() 
-        {
-			private static final long serialVersionUID = 1L;
-			@Override
+        actionMap.put("ModifierPressed", new AbstractAction() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
             public void actionPerformed(ActionEvent e) {
                 setModifierKeyPressed(true);
             }
         });
-        actionMap.put("ModifierReleased", new AbstractAction() 
-        {
-			private static final long serialVersionUID = 1L;
-			@Override
+        actionMap.put("ModifierReleased", new AbstractAction() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
             public void actionPerformed(ActionEvent e) {
                 setModifierKeyPressed(false);
             }
@@ -831,7 +854,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         //  broken out for clarity and organization more than anything
 
         Action modeActions[] = {
-                centerNextParentAction
+                centerNextParentAction,
+                backtrackNeuronAction
         };
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         for (Action action : modeActions) {
