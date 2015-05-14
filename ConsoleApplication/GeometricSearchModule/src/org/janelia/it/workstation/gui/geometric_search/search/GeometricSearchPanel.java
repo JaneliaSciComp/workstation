@@ -52,7 +52,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
         GL3ShaderActionSequence actionSequence = new GL3ShaderActionSequence("Experimental Shader Action Sequence");
 
-        setupMeshExperiment(actionSequence);
+        setupTexelExperiment(actionSequence);
 
         logger.info("Adding glSequence...");
         viewer.addShaderAction(actionSequence);
@@ -67,6 +67,22 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         }
         viewer.resetView();
         viewer.refresh();
+    }
+
+    private void setupTexelExperiment(GL3ShaderActionSequence actionSequence) {
+        final TexelShader shader = new TexelShader();
+
+        shader.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL3 gl) {
+                //int uniformLoc = gl.glGetUniformLocation(shader.getShaderProgram(), "tex");
+            }
+        });
+
+        final TexelActor texelActor = new TexelActor();
+
+        actionSequence.setShader(shader);
+        actionSequence.getActorSequence().add(texelActor);
     }
 
     private void setupMeshExperiment(GL3ShaderActionSequence actionSequence) {
