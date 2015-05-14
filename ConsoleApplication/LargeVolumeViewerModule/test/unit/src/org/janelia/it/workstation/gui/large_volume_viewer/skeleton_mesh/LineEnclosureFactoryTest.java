@@ -48,66 +48,46 @@ public class LineEnclosureFactoryTest {
         double[] endingCoords;
         
         int totalCoordCount = 0;
-        //1
-        startingCoords = new double[] {
-            0,0,0
-        };
-        endingCoords = new double[] {
-            1,0,1
-        };
-        totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
-        logger.info("1. Coord count " + totalCoordCount);
+		double[] origin = {0,0,0};
+		double[] coords = new double[] {1,0,1};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("1. Coord count " + formatCoords(coords) + totalCoordCount);
         
         //2
-        startingCoords = new double[] {
-            0, 0, 0
-        };
-        endingCoords = new double[] {
-            -1, 0, 1
-        };
-        totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
-        logger.info("2. Coord count " + totalCoordCount);
+		coords = new double[] {-1,0,1};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("2. Coord count " + formatCoords(coords) + totalCoordCount);
 
         //3
-        startingCoords = new double[] {
-            2000.0, 2000.0, 1500.0
-        };
-        endingCoords = new double[] {
-            2000.0, 2000.0, 2000.0
-        };
-        totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
-        logger.info("3. Coord count " + totalCoordCount);
+		coords = new double[] {1,0,-1};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("3. Coord count (" + formatCoords(coords) + totalCoordCount);
         
         //4
-        startingCoords = new double[] {
-            200.0, 200.0, 200.0
-        };
-        endingCoords = new double[]{
-            100.0, 200.0, 200.0
-        };
-        totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
-        logger.info("4. Coord count " + totalCoordCount);
+		coords =  new double[] {1,1,1};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("4. Coord count " + formatCoords(coords) + totalCoordCount);
+        
+        //4a
+		coords = new double[] {-1,1,0};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("4a. Coord count " + formatCoords(coords) + totalCoordCount);
         
         //5
-        startingCoords = new double[]{
-            0,0,0
-        };
-        endingCoords = new double[]{
-            1,0,-1
-        };
-        totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
-        logger.info("5. (45 degrees behind posi X) Coord count " + totalCoordCount);
-
+		coords = new double[] {1,-1,0};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("5. Coord count " + formatCoords(coords) + totalCoordCount);
+        
         //6
-        startingCoords = new double[]{
-            0, 0, 0
-        };
-        endingCoords = new double[]{
-            1, 1, 0
-        };
-        totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
-        logger.info("6. (45 degrees below posi X) Coord count " + totalCoordCount);
-
+		coords = new double[] {0,1,1};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("6. Coord count " + formatCoords(coords) + totalCoordCount);
+        
+        //7
+		coords = new double[] {0,-1,1};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("7. Coord count " + formatCoords(coords) + totalCoordCount);
+        
         int vtxNum = 1;
         int absVtxCount = 0;
         for (VertexInfoBean vtx: factory.getVertices()) {
@@ -121,4 +101,13 @@ public class LineEnclosureFactoryTest {
             vtxNum ++;
         }
     }
+
+	private int testCoordPair(int totalCoordCount, double[] startingCoords, double[] endingCoords, LineEnclosureFactory factory) {
+		totalCoordCount += factory.addEnclosure(startingCoords, endingCoords);
+		return totalCoordCount;
+	}
+	
+	private String formatCoords(double[] coords) {
+		return String.format("(%f, %f, %f) ", coords[0], coords[1], coords[2]);
+	}
 }

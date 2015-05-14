@@ -71,8 +71,8 @@ public class LineEnclosureFactory implements TriangleSource {
             throw new IllegalArgumentException("3-D ending coords only.");
         }
         
-        //List<double[][]> discardedEndCaps = makeEndPolygons(startingCoords, endingCoords);
-        List<double[][]> endCaps = makeEndPolygonsNoTrig( startingCoords, endingCoords );
+        List<double[][]> endCaps = makeEndPolygons(startingCoords, endingCoords);
+        //List<double[][]> endCaps = makeEndPolygonsNoTrig( startingCoords, endingCoords );
         int coordCount = 0;
         coordCount += addVertices(endCaps.get(0));
         coordCount += addVertices(endCaps.get(1));
@@ -116,13 +116,15 @@ public class LineEnclosureFactory implements TriangleSource {
         double aboutX = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[Z]);
         double aboutY = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Z]);
         double aboutZ = lineUnitVector[X] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[X]);
+		
+		System.out.println(String.format("Using angles: %f, %f, %f", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ)));
         
         // Now that we have our angles, we make the transform.
         Matrix transform = matrixUtils.getTransform3D(
                 aboutX, aboutY, aboutZ,
                 startCoords[X], startCoords[Y], startCoords[Z]);        
         endCapPolygonsHolder.add(producePolygon(transform, zAxisAlignedPrototypePolygon));
-        
+
         transform.set(0, 3, endCoords[X]);
         transform.set(1, 3, endCoords[Y]);
         transform.set(2, 3, endCoords[Z]);
