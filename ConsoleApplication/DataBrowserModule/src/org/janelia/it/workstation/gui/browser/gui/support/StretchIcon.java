@@ -11,6 +11,8 @@ import java.net.URL;
 import javax.swing.ImageIcon;
 
 /**
+ * Copied from https://tips4java.wordpress.com/2012/03/31/stretch-icon/
+ * 
  * An <CODE>Icon</CODE> that scales its image to fill the component area,
  * excluding any border or insets, optionally maintaining the image's aspect
  * ratio by padding and centering the scaled image horizontally or vertically.

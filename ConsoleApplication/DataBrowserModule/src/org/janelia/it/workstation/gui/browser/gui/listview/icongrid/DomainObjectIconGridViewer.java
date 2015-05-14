@@ -79,7 +79,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             if (objSample==null) return null;
             SamplePipelineRun run = objSample.getLatestRun();
             if (run==null) return null;
-            HasFiles lastResult = run.getLatestResultWithFiles();
+            HasFiles lastResult = run.getLatestResult();
             if (lastResult==null) return null;
             return DomainUtils.get2dImageFilepath(lastResult, role);
         }

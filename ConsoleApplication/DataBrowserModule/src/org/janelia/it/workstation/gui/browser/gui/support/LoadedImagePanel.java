@@ -23,14 +23,16 @@ public class LoadedImagePanel extends JPanel {
     
     private static final Logger log = LoggerFactory.getLogger(LoadedImagePanel.class);
     
+    private static final int DEFAULT_HEIGHT = 20;
+    
     protected final String imageFilename;
     
     protected final JLabel loadingLabel;
     protected final JLabel imageLabel;
     protected final JLabel errorLabel;
+    protected JLabel activeLabel;
     
     private LoadImageWorker loadWorker;
-    
     private Double aspectRatio;
     
     public LoadedImagePanel(String imageFilename) {
@@ -45,6 +47,8 @@ public class LoadedImagePanel extends JPanel {
         loadingLabel.setIcon(Icons.getLoadingIcon());
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
         loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
+        loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
+        loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         errorLabel = new JLabel();
         errorLabel.setOpaque(false);
@@ -52,19 +56,23 @@ public class LoadedImagePanel extends JPanel {
         errorLabel.setIcon(Icons.getMissingIcon());
         errorLabel.setVerticalTextPosition(JLabel.BOTTOM);
         errorLabel.setHorizontalTextPosition(JLabel.CENTER);
+        errorLabel.setVerticalAlignment(SwingConstants.CENTER);
+        errorLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         imageLabel = new JLabel();
         imageLabel.setOpaque(false);
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         imageLabel.setVerticalAlignment(SwingConstants.CENTER);
-                
+        imageLabel.setVerticalAlignment(SwingConstants.CENTER);
+        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+               
 //        setBorder(BorderFactory.createLineBorder(Color.ORANGE));
         
         setImageLabel(loadingLabel);
         
         load();
     }
-    
+
     private void load() {
         
         loadWorker = new LoadImageWorker(imageFilename) {
@@ -87,14 +95,15 @@ public class LoadedImagePanel extends JPanel {
                 setImageLabel(imageLabel);
                                 
                 loadWorker = null;
-                updateUI();
+                revalidate();
+                repaint();
                 doneLoading();
             }
 
             @Override
             protected void hadError(Throwable error) {
                 if (error instanceof FileNotFoundException) {
-                    log.warn("File not found: " + imageFilename, error);
+                    log.warn("File not found: " + imageFilename);
                     errorLabel.setText("File not found");
                 }
                 else if (error.getCause() != null && (error.getCause() instanceof FormatException)) {
@@ -106,7 +115,9 @@ public class LoadedImagePanel extends JPanel {
                     errorLabel.setText("Image could not be loaded");
                 }
                 setImageLabel(errorLabel);
-                updateUI();
+                revalidate();
+                repaint();
+                doneLoading();
             }
         };
 
@@ -118,17 +129,28 @@ public class LoadedImagePanel extends JPanel {
     }
 
     private void setImageLabel(JLabel label) {
+        this.activeLabel = label;
         removeAll();
         add(label, BorderLayout.CENTER);
     }
 
     public void scaleImage(int w) {
+        if (w<0) return;
+        int h = DEFAULT_HEIGHT;
         if (aspectRatio==null) {
-            log.error("Cannot scale image before it is loaded");
-            return;
+            if (activeLabel==loadingLabel) {
+                h = loadingLabel.getIcon().getIconHeight()+10;
+                return;
+            }
+            else if (activeLabel==errorLabel) {
+                h = errorLabel.getIcon().getIconHeight()+40;
+                return;
+            }
         }
-        int h = (int) Math.round(w / aspectRatio);
-//        log.info("old={} new={}",getPreferredSize(),new Dimension(w, h));
+        else {
+            h = (int) Math.round(w / aspectRatio);
+        }
+//        log.info("setPreferredSize({},{}) "+imageFilename, w, h);
         setPreferredSize(new Dimension(w, h));
     }
 }

@@ -349,255 +349,275 @@
     <display autosize="true" stereotype="true" accessors="true"/>  
   </package>  
   <dependency id="33">    
-    <end type="SOURCE" refId="25"/>    
-    <end type="TARGET" refId="2"/>  
-  </dependency>  
-  <dependency id="34">    
-    <end type="SOURCE" refId="9"/>    
-    <end type="TARGET" refId="26"/>  
-  </dependency>  
-  <generalization id="35">    
-    <end type="SOURCE" refId="13"/>    
-    <end type="TARGET" refId="1"/>  
-  </generalization>  
-  <dependency id="36">    
-    <end type="SOURCE" refId="24"/>    
-    <end type="TARGET" refId="25"/>  
-  </dependency>  
-  <dependency id="37">    
     <end type="SOURCE" refId="26"/>    
-    <end type="TARGET" refId="10"/>  
+    <end type="TARGET" refId="9"/>  
   </dependency>  
-  <realization id="38">    
-    <end type="SOURCE" refId="9"/>    
-    <end type="TARGET" refId="7"/>  
-  </realization>  
-  <realization id="39">    
-    <end type="SOURCE" refId="23"/>    
-    <end type="TARGET" refId="19"/>  
-  </realization>  
-  <association id="40">    
+  <association id="34">    
     <end type="SOURCE" refId="20" navigable="false">      
-      <attribute id="41" name="iconDemoToolbar"/>      
-      <multiplicity id="42" minimum="0" maximum="1"/>    
+      <attribute id="35" name="iconDemoToolbar"/>      
+      <multiplicity id="36" minimum="0" maximum="1"/>    
     </end>    
     <end type="TARGET" refId="8" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <association id="43">    
-    <end type="SOURCE" refId="15" navigable="false">      
-      <attribute id="44" name="parent"/>      
-      <multiplicity id="45" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="24" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <dependency id="46">    
-    <end type="SOURCE" refId="1"/>    
-    <end type="TARGET" refId="13"/>  
+  <dependency id="37">    
+    <end type="SOURCE" refId="29"/>    
+    <end type="TARGET" refId="26"/>  
   </dependency>  
-  <association id="47">    
-    <end type="SOURCE" refId="27" navigable="false">      
-      <attribute id="48" name="detailsPanel"/>      
-      <multiplicity id="49" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="24" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <realization id="50">    
-    <end type="SOURCE" refId="22"/>    
-    <end type="TARGET" refId="6"/>  
-  </realization>  
-  <dependency id="51">    
-    <end type="SOURCE" refId="13"/>    
-    <end type="TARGET" refId="16"/>  
-  </dependency>  
-  <association id="52">    
+  <association id="38">    
     <end type="SOURCE" refId="2" navigable="false">      
-      <attribute id="53" name="iconPanel"/>      
-      <multiplicity id="54" minimum="0" maximum="1"/>    
+      <attribute id="39" name="buttonsPanel"/>      
+      <multiplicity id="40" minimum="0" maximum="1"/>    
     </end>    
-    <end type="TARGET" refId="16" navigable="true"/>    
+    <end type="TARGET" refId="21" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <association id="55">    
-    <end type="SOURCE" refId="1" navigable="false">      
-      <attribute id="56" name="iconPanel"/>      
-      <multiplicity id="57" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="16" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="58">    
-    <end type="SOURCE" refId="26" navigable="false">      
-      <attribute id="59" name="activeInstance"/>      
-      <multiplicity id="60" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="26" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <nesting id="61">    
-    <end type="SOURCE" refId="2"/>    
-    <end type="TARGET" refId="21"/>  
-  </nesting>  
-  <dependency id="62">    
+  <generalization id="41">    
     <end type="SOURCE" refId="17"/>    
-    <end type="TARGET" refId="16"/>  
-  </dependency>  
-  <association id="63">    
-    <end type="SOURCE" refId="20" navigable="false">      
-      <attribute id="64" name="imagesPanel"/>      
-      <multiplicity id="65" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="2" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <generalization id="66">    
-    <end type="SOURCE" refId="8"/>    
-    <end type="TARGET" refId="4"/>  
+    <end type="TARGET" refId="1"/>  
   </generalization>  
-  <association id="67">    
-    <end type="SOURCE" refId="9" navigable="false">      
-      <attribute id="68" name="resultsPanel"/>      
-      <multiplicity id="69" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="14" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <realization id="70">    
-    <end type="SOURCE" refId="10"/>    
-    <end type="TARGET" refId="7"/>  
-  </realization>  
-  <association id="71">    
+  <association id="42">    
     <end type="SOURCE" refId="24" navigable="false">      
-      <attribute id="72" name="annotationsView"/>      
-      <multiplicity id="73" minimum="0" maximum="1"/>    
+      <attribute id="43" name="annotationsView"/>      
+      <multiplicity id="44" minimum="0" maximum="1"/>    
     </end>    
     <end type="TARGET" refId="6" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <association id="74">    
+  <dependency id="45">    
+    <end type="SOURCE" refId="13"/>    
+    <end type="TARGET" refId="16"/>  
+  </dependency>  
+  <association id="46">    
     <end type="SOURCE" refId="24" navigable="false">      
-      <attribute id="75" name="dopDialog"/>      
-      <multiplicity id="76" minimum="0" maximum="1"/>    
+      <attribute id="47" name="dopDialog"/>      
+      <multiplicity id="48" minimum="0" maximum="1"/>    
     </end>    
     <end type="TARGET" refId="15" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <dependency id="77">    
+  <dependency id="49">    
     <end type="SOURCE" refId="10"/>    
     <end type="TARGET" refId="28"/>  
   </dependency>  
-  <dependency id="78">    
-    <end type="SOURCE" refId="26"/>    
-    <end type="TARGET" refId="9"/>  
+  <dependency id="50">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="1"/>  
   </dependency>  
-  <association id="79">    
+  <realization id="51">    
+    <end type="SOURCE" refId="9"/>    
+    <end type="TARGET" refId="7"/>  
+  </realization>  
+  <generalization id="52">    
+    <end type="SOURCE" refId="23"/>    
+    <end type="TARGET" refId="5"/>  
+  </generalization>  
+  <realization id="53">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="19"/>  
+  </realization>  
+  <dependency id="54">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="13"/>  
+  </dependency>  
+  <association id="55">    
+    <end type="SOURCE" refId="20" navigable="false">      
+      <attribute id="56" name="imagesPanel"/>      
+      <multiplicity id="57" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="2" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <generalization id="58">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="20"/>  
+  </generalization>  
+  <generalization id="59">    
+    <end type="SOURCE" refId="20"/>    
+    <end type="TARGET" refId="16"/>  
+  </generalization>  
+  <generalization id="60">    
+    <end type="SOURCE" refId="8"/>    
+    <end type="TARGET" refId="4"/>  
+  </generalization>  
+  <generalization id="61">    
+    <end type="SOURCE" refId="13"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <nesting id="62">    
+    <end type="SOURCE" refId="2"/>    
+    <end type="TARGET" refId="21"/>  
+  </nesting>  
+  <dependency id="63">    
+    <end type="SOURCE" refId="17"/>    
+    <end type="TARGET" refId="2"/>  
+  </dependency>  
+  <dependency id="64">    
+    <end type="SOURCE" refId="24"/>    
+    <end type="TARGET" refId="25"/>  
+  </dependency>  
+  <realization id="65">    
+    <end type="SOURCE" refId="22"/>    
+    <end type="TARGET" refId="6"/>  
+  </realization>  
+  <association id="66">    
     <end type="SOURCE" refId="26" navigable="false">      
-      <attribute id="80" name="editor"/>      
-      <multiplicity id="81" minimum="0" maximum="1"/>    
+      <attribute id="67" name="editor"/>      
+      <multiplicity id="68" minimum="0" maximum="1"/>    
     </end>    
     <end type="TARGET" refId="7" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <association id="82">    
-    <end type="SOURCE" refId="14" navigable="false">      
-      <attribute id="83" name="resultsView"/>      
-      <multiplicity id="84" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="19" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="85">    
-    <end type="SOURCE" refId="10" navigable="false">      
-      <attribute id="86" name="resultsPanel"/>      
-      <multiplicity id="87" minimum="0" maximum="1"/>    
-    </end>    
-    <end type="TARGET" refId="14" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <association id="88">    
-    <end type="SOURCE" refId="2" navigable="false">      
-      <attribute id="89" name="buttons"/>      
-      <multiplicity id="90" minimum="0" maximum="2147483647"/>    
-    </end>    
-    <end type="TARGET" refId="1" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <generalization id="91">    
-    <end type="SOURCE" refId="23"/>    
-    <end type="TARGET" refId="5"/>  
-  </generalization>  
-  <dependency id="92">    
-    <end type="SOURCE" refId="1"/>    
-    <end type="TARGET" refId="17"/>  
-  </dependency>  
-  <association id="93">    
+  <association id="69">    
     <end type="SOURCE" refId="11" navigable="false">      
-      <attribute id="94" name="loadWorker"/>      
-      <multiplicity id="95" minimum="0" maximum="1"/>    
+      <attribute id="70" name="loadWorker"/>      
+      <multiplicity id="71" minimum="0" maximum="1"/>    
     </end>    
     <end type="TARGET" refId="12" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <generalization id="96">    
-    <end type="SOURCE" refId="17"/>    
+  <realization id="72">    
+    <end type="SOURCE" refId="10"/>    
+    <end type="TARGET" refId="7"/>  
+  </realization>  
+  <association id="73">    
+    <end type="SOURCE" refId="1" navigable="false">      
+      <attribute id="74" name="iconPanel"/>      
+      <multiplicity id="75" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="16" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="76">    
+    <end type="SOURCE" refId="2" navigable="false">      
+      <attribute id="77" name="buttons"/>      
+      <multiplicity id="78" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="1" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="79">    
+    <end type="SOURCE" refId="14" navigable="false">      
+      <attribute id="80" name="resultsView"/>      
+      <multiplicity id="81" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="19" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="82">    
+    <end type="SOURCE" refId="26" navigable="false">      
+      <attribute id="83" name="activeInstance"/>      
+      <multiplicity id="84" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="26" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <dependency id="85">    
+    <end type="SOURCE" refId="26"/>    
+    <end type="TARGET" refId="28"/>  
+  </dependency>  
+  <association id="86">    
+    <end type="SOURCE" refId="29" navigable="false">      
+      <attribute id="87" name="activeInstance"/>      
+      <multiplicity id="88" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="29" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="89">    
+    <end type="SOURCE" refId="2" navigable="false">      
+      <attribute id="90" name="iconPanel"/>      
+      <multiplicity id="91" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="16" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <dependency id="92">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="17"/>  
+  </dependency>  
+  <dependency id="93">    
+    <end type="SOURCE" refId="20"/>    
     <end type="TARGET" refId="1"/>  
-  </generalization>  
-  <realization id="97">    
-    <end type="SOURCE" refId="3"/>    
+  </dependency>  
+  <realization id="94">    
+    <end type="SOURCE" refId="25"/>    
+    <end type="TARGET" refId="6"/>  
+  </realization>  
+  <association id="95">    
+    <end type="SOURCE" refId="15" navigable="false">      
+      <attribute id="96" name="parent"/>      
+      <multiplicity id="97" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="24" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <dependency id="98">    
+    <end type="SOURCE" refId="9"/>    
+    <end type="TARGET" refId="26"/>  
+  </dependency>  
+  <dependency id="99">    
+    <end type="SOURCE" refId="14"/>    
+    <end type="TARGET" refId="18"/>  
+  </dependency>  
+  <realization id="100">    
+    <end type="SOURCE" refId="23"/>    
     <end type="TARGET" refId="19"/>  
   </realization>  
-  <association id="98">    
+  <dependency id="101">    
+    <end type="SOURCE" refId="25"/>    
+    <end type="TARGET" refId="2"/>  
+  </dependency>  
+  <dependency id="102">    
+    <end type="SOURCE" refId="17"/>    
+    <end type="TARGET" refId="16"/>  
+  </dependency>  
+  <association id="103">    
     <end type="SOURCE" refId="17" navigable="false">      
-      <attribute id="99" name="dynamicImagePanel"/>      
-      <multiplicity id="100" minimum="0" maximum="1"/>    
+      <attribute id="104" name="dynamicImagePanel"/>      
+      <multiplicity id="105" minimum="0" maximum="1"/>    
     </end>    
     <end type="TARGET" refId="11" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <dependency id="101">    
-    <end type="SOURCE" refId="3"/>    
-    <end type="TARGET" refId="1"/>  
-  </dependency>  
-  <dependency id="102">    
+  <dependency id="106">    
     <end type="SOURCE" refId="26"/>    
-    <end type="TARGET" refId="28"/>  
+    <end type="TARGET" refId="10"/>  
   </dependency>  
-  <generalization id="103">    
-    <end type="SOURCE" refId="20"/>    
-    <end type="TARGET" refId="16"/>  
-  </generalization>  
-  <generalization id="104">    
-    <end type="SOURCE" refId="3"/>    
-    <end type="TARGET" refId="20"/>  
-  </generalization>  
-  <dependency id="105">    
+  <association id="107">    
+    <end type="SOURCE" refId="29" navigable="false">      
+      <attribute id="108" name="editor"/>      
+      <multiplicity id="109" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="7" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <dependency id="110">    
     <end type="SOURCE" refId="8"/>    
     <end type="TARGET" refId="2"/>  
   </dependency>  
-  <realization id="106">    
-    <end type="SOURCE" refId="25"/>    
-    <end type="TARGET" refId="6"/>  
-  </realization>  
-  <dependency id="107">    
-    <end type="SOURCE" refId="20"/>    
-    <end type="TARGET" refId="1"/>  
-  </dependency>  
-  <dependency id="108">    
-    <end type="SOURCE" refId="14"/>    
-    <end type="TARGET" refId="18"/>  
-  </dependency>  
-  <dependency id="109">    
-    <end type="SOURCE" refId="17"/>    
-    <end type="TARGET" refId="2"/>  
-  </dependency>  
-  <association id="110">    
-    <end type="SOURCE" refId="2" navigable="false">      
-      <attribute id="111" name="buttonsPanel"/>      
-      <multiplicity id="112" minimum="0" maximum="1"/>    
+  <association id="111">    
+    <end type="SOURCE" refId="10" navigable="false">      
+      <attribute id="112" name="resultsPanel"/>      
+      <multiplicity id="113" minimum="0" maximum="1"/>    
     </end>    
-    <end type="TARGET" refId="21" navigable="true"/>    
+    <end type="TARGET" refId="14" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="114">    
+    <end type="SOURCE" refId="27" navigable="false">      
+      <attribute id="115" name="detailsPanel"/>      
+      <multiplicity id="116" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="24" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="117">    
+    <end type="SOURCE" refId="9" navigable="false">      
+      <attribute id="118" name="resultsPanel"/>      
+      <multiplicity id="119" minimum="0" maximum="1"/>    
+    </end>    
+    <end type="TARGET" refId="14" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
   <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 

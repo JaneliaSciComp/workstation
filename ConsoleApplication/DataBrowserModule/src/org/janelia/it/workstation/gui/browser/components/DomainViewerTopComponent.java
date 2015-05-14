@@ -173,6 +173,11 @@ public final class DomainViewerTopComponent extends TopComponent {
             return;
         }
         
+        if (!event.isClearAll()) {
+            log.debug("Event is not clear all: {}",event);
+            return;
+        }
+        
         requestVisible();
         
         final DomainObject domainObject = event.getDomainObject();

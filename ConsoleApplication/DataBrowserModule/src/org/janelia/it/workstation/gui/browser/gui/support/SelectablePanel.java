@@ -17,6 +17,8 @@ import org.janelia.it.workstation.shared.util.Utils;
  */
 public class SelectablePanel extends JPanel {
     
+    public static final int BORDER_WIDTH = 10;
+    
     private static BufferedImage normalBorderImage;
     private static BufferedImage selectedBorderImage;
     private static Color normalBackground;
@@ -92,7 +94,7 @@ public class SelectablePanel extends JPanel {
             return;
         }
 
-        int b = 10; // border width
+        int b = BORDER_WIDTH; // border width
         int w = getWidth();
         int h = getHeight();
         int iw = borderImage.getWidth();

@@ -11,11 +11,11 @@ import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import static javax.swing.Action.NAME;
+
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -32,20 +32,12 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class InternalNode<T> extends AbstractNode implements HasUniqueId, Has2dRepresentation {
-    
-    private final long uniqueId;
-    
+public class InternalNode<T> extends AbstractNode implements Has2dRepresentation {
+        
     private final static Logger log = LoggerFactory.getLogger(InternalNode.class);
     
     public InternalNode(Children children, T object) throws Exception {
         super(children, Lookups.singleton(object));
-        this.uniqueId = IdGenerator.getNextId();
-    }
-    
-    @Override
-    public Long getUniqueId() {
-        return uniqueId;
     }
     
     public T getObject() {

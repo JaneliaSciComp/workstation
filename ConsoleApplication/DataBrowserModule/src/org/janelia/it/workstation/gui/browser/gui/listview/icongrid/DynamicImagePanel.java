@@ -172,7 +172,7 @@ public class DynamicImagePanel extends JPanel {
                         @Override
                         protected void hadError(Throwable error) {
                             if (error instanceof FileNotFoundException) {
-                                log.warn("File not found: " + imageFilename, error);
+                                log.warn("File not found: " + imageFilename);
                                 errorLabel.setText("File not found");
                             }
                             else if (error.getCause() != null && (error.getCause() instanceof FormatException)) {

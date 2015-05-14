@@ -16,7 +16,6 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import static javax.swing.Action.NAME;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -28,8 +27,8 @@ import org.janelia.it.workstation.gui.browser.actions.RemoveAction;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -55,11 +54,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2dRepresentation {
+public class DomainObjectNode extends AbstractNode implements Has2dRepresentation {
 
     private final static Logger log = LoggerFactory.getLogger(DomainObjectNode.class);
-
-    private long uniqueId;
 
     protected final ChildFactory parentChildFactory;
 
@@ -74,12 +71,6 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
         this.parentChildFactory = parentChildFactory;
         this.lookupContents = lookupContents;
         lookupContents.add(domainObject);
-        this.uniqueId = IdGenerator.getNextId();
-    }
-
-    @Override
-    public Long getUniqueId() {
-        return uniqueId;
     }
 
     protected InstanceContent getLookupContents() {

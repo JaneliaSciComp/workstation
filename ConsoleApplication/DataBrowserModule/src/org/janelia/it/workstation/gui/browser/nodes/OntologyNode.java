@@ -10,6 +10,7 @@ import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.nodes.children.OntologyChildFactory;
@@ -26,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
 public class OntologyNode extends DomainObjectNode {
     
