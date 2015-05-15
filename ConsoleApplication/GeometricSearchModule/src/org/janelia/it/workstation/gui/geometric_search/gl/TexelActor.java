@@ -10,7 +10,8 @@ import java.nio.IntBuffer;
 /**
  * Created by murphys on 5/14/15.
  */
-public class TexelActor extends GL3SimpleActor {
+public class
+        TexelActor extends GL3SimpleActor {
 
     private final Logger logger = LoggerFactory.getLogger(TexelActor.class);
 
@@ -128,8 +129,8 @@ public class TexelActor extends GL3SimpleActor {
 
         quadFb.put(16, 0.0f); quadFb.put(17, 0.0f);
         quadFb.put(18, 1.0f); quadFb.put(19, 0.0f);
-        quadFb.put(20, 1.0f); quadFb.put(21, 0.0f);
-        quadFb.put(22, 0.0f); quadFb.put(23, 0.0f);
+        quadFb.put(20, 1.0f); quadFb.put(21, 1.0f);
+        quadFb.put(22, 0.0f); quadFb.put(23, 1.0f);
 
         // VERTEX ARRAY
         gl.glGenVertexArrays(1, vertexArrayId);

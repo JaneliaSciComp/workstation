@@ -75,7 +75,8 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         shader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL3 gl) {
-                //int uniformLoc = gl.glGetUniformLocation(shader.getShaderProgram(), "tex");
+                int uniformLoc = gl.glGetUniformLocation(shader.getShaderProgram(), "tex");
+                gl.glUniform1i(uniformLoc, 0);
             }
         });
 
