@@ -247,13 +247,13 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             Anchor anchor = getSkeletonActor().getNextParent();
             if (anchor != null) {
                 TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
-                ann = neuron.getParentOf(ann);
-                while (!ann.isRoot() && !ann.isBranch()) {
+                if (!ann.isRoot()) {
                     ann = neuron.getParentOf(ann);
+                    while (!ann.isRoot() && !ann.isBranch()) {
+                        ann = neuron.getParentOf(ann);
+                    }
+                    skeletonController.setNextParent(getSkeleton().getAnchorByID(ann.getId()));
                 }
-                TileFormat tileFormat = tileServer.getLoadAdapter().getTileFormat();
-                setCameraFocus(tileFormat.micronVec3ForVoxelVec3Centered(new Vec3(ann.getX(), ann.getY(), ann.getZ())));
-                // setCameraFocus(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
             }
         }
     }
