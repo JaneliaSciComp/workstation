@@ -23,7 +23,7 @@ import javax.swing.JOptionPane;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.workstation.gui.browser.actions.RemoveAction;
+import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
@@ -264,7 +264,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
     public String get2dImageFilepath(String role) {
         DomainObject domainObject = getDomainObject();
         if (domainObject instanceof HasFiles) {
-            return DomainUtils.get2dImageFilepath((HasFiles) domainObject, role);
+            return DomainUtils.getFilepath((HasFiles) domainObject, role);
         }
         return null;
     }

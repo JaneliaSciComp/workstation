@@ -30,11 +30,23 @@ public class DomainUtils {
 
     private static final Logger log = LoggerFactory.getLogger(DomainUtils.class);
     
-    public static String get2dImageFilepath(HasFiles hasFiles, String role) {
-        return get2dImageFilepath(hasFiles, FileType.valueOf(role));
+    public static String getFilepath(HasFilepath hasFilepath) {
+        return hasFilepath.getFilepath();
     }
     
-    public static String get2dImageFilepath(HasFiles hasFiles, FileType fileType) {
+    /**
+     * @deprecated use the version with FileType instead of this weakly-typed String version
+     */
+    public static String getFilepath(HasFiles hasFiles, String role) {
+        return getFilepath(hasFiles, FileType.valueOf(role));
+    }
+    
+    public static String getFilepath(HasFiles hasFiles, FileType fileType) {
+        
+        Map<FileType,String> files = hasFiles.getFiles();
+        if (files==null) return null;
+        String filepath = files.get(fileType);
+        if (filepath==null) return null;
         
         StringBuilder urlSb = new StringBuilder();
 
@@ -44,21 +56,6 @@ public class DomainUtils {
                 urlSb.append(rootPath);
             }
         }
-        
-        Map<FileType,String> files = hasFiles.getFiles();
-        if (files==null) return null;
-
-        String filepath = files.get(fileType);
-        if (filepath==null) {
-            for(FileType subFileType : FileType.values()) {
-                if (subFileType.isIs2dImage()) {
-                    filepath = files.get(subFileType);
-                    if (filepath!=null) break;
-                }
-            }
-        }
-        
-        if (filepath==null) return null;
         
         if (urlSb.length()>0) urlSb.append("/");
         urlSb.append(filepath);

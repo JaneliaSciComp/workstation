@@ -10,11 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import javax.swing.JMenu;
 
 import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
@@ -25,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectContextMenu extends JPopupMenu {
+public class DomainObjectContextMenu extends PopupContextMenu {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
 
@@ -39,9 +38,6 @@ public class DomainObjectContextMenu extends JPopupMenu {
     protected List<DomainObject> domainObjectList;
     protected DomainObject domainObject;
     protected boolean multiple;
-    
-    // Internal state
-    protected boolean nextAddRequiresSeparator = false;
 
     public DomainObjectContextMenu() {
     }
@@ -1789,36 +1785,6 @@ public class DomainObjectContextMenu extends JPopupMenu {
 //
 //        return specialAnnotationSession;
 //    }
-//
-    @Override
-    public JMenuItem add(JMenuItem menuItem) {
-
-        if (menuItem == null)
-            return null;
-
-        if ((menuItem instanceof JMenu)) {
-            JMenu menu = (JMenu) menuItem;
-            if (menu.getItemCount() == 0)
-                return null;
-        }
-
-        if (nextAddRequiresSeparator) {
-            addSeparator();
-            nextAddRequiresSeparator = false;
-        }
-
-        return super.add(menuItem);
-    }
-
-    public JMenuItem add(JMenu menu, JMenuItem menuItem) {
-        if (menu == null || menuItem == null)
-            return null;
-        return menu.add(menuItem);
-    }
-
-    public void setNextAddRequiresSeparator(boolean nextAddRequiresSeparator) {
-        this.nextAddRequiresSeparator = nextAddRequiresSeparator;
-    }
 //    
 //    public class EntityAcceptorActionListener implements ActionListener {
 //

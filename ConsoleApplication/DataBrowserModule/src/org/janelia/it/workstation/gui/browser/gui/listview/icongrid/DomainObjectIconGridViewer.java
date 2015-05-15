@@ -81,11 +81,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             if (run==null) return null;
             HasFiles lastResult = run.getLatestResult();
             if (lastResult==null) return null;
-            return DomainUtils.get2dImageFilepath(lastResult, role);
+            return DomainUtils.getFilepath(lastResult, role);
         }
         else if (domainObject instanceof HasFiles) {
             HasFiles hasFiles = (HasFiles)domainObject;
-            return DomainUtils.get2dImageFilepath(hasFiles, role);
+            return DomainUtils.getFilepath(hasFiles, role);
         }
         return null;
     }

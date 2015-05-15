@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.actions;
+package org.janelia.it.workstation.gui.browser.nb_action;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,7 @@ public final class RemoveAction extends NodeAction {
     
     private static RemoveAction singleton = new RemoveAction();
     
-    private List<Node> selected = new ArrayList<Node>();
+    private List<Node> selected = new ArrayList<>();
     
     public static RemoveAction get() {
         return singleton;

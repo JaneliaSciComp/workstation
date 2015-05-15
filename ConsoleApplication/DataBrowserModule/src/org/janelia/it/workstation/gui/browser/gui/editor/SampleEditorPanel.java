@@ -5,10 +5,10 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-import java.awt.Insets;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
@@ -16,13 +16,18 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
 import static org.janelia.it.jacs.model.domain.enums.FileType.ReferenceMip;
@@ -49,18 +54,24 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
 
     private final static Logger log = LoggerFactory.getLogger(SampleEditorPanel.class);
     
+    private final static String ALL_VALUE = "all";
+    
+    // UI Components
     private final JPanel mainPanel;
     private final JPanel filterPanel;
     private final JPanel dataPanel;
     private final SimpleDropDownButton objectiveButton;
     private final SimpleDropDownButton areaButton;
+    private final Set<PipelineResultPanel> resultPanels = new HashSet<>();
+    private final Set<LoadedImagePanel> lips = new HashSet<>();
         
-    private Set<LoadedImagePanel> lips = new HashSet<>();
-    private Set<PipelineResultPanel> resultPanels = new HashSet<>();
+    // State
+    private String currObjective = ALL_VALUE;
+    private String currArea = ALL_VALUE;
+    private Sample sample;
     
-    
-    // Listener for clicking on buttons
-    protected MouseListener buttonMouseListener = new MouseHandler() {
+    // Listener for clicking on result panels
+    protected MouseListener resultMouseListener = new MouseHandler() {
 
         @Override
         protected void popupTriggered(MouseEvent e) {
@@ -70,23 +81,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
             PipelineResultPanel resultPanel = getResultPanelAncestor(e.getComponent());
             // Select the button first
             resultPanelSelection(resultPanel);
-//            T imageObject = button.getImageObject();
-//            if (!button.isSelected()) {
-//                selectImageObject(imageObject, true);
-//            }
-//            getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
-            e.consume();
-        }
-
-        @Override
-        protected void doubleLeftClicked(MouseEvent e) {
-            if (e.isConsumed()) {
-                return;
-            }
-            PipelineResultPanel resultPanel = getResultPanelAncestor(e.getComponent());
-            resultPanelSelection(resultPanel);
-//            buttonDrillDown(button);
-            // Double-clicking an image in gallery view triggers an outline selection
+            getButtonPopupMenu(resultPanel.getResult()).show(e.getComponent(), e.getX(), e.getY());
             e.consume();
         }
 
@@ -100,40 +95,16 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
             if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
                 return;
             }
-//            hud.setKeyListener(keyListener);
-            
             resultPanelSelection(resultPanel);
-//            buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
         }
     };
     
-    private void resultPanelSelection(PipelineResultPanel resultPanel) {
-        for(PipelineResultPanel otherResultPanel : resultPanels) {
-            if (resultPanel != otherResultPanel) {
-                otherResultPanel.setSelected(false);
-//                otherResultPanel.revalidate();
-//                otherResultPanel.repaint();
-            }
-        }
-        resultPanel.setSelected(true);
-        resultPanel.requestFocus();
-    }
-    
-    private PipelineResultPanel getResultPanelAncestor(Component component) {
-        Component c = component;
-        while (c!=null) {
-            if (c instanceof PipelineResultPanel) {
-                return (PipelineResultPanel)c;
-            }
-            c = c.getParent();
-        }
-        return null;
-    }
-    
     public SampleEditorPanel() {
         
-        objectiveButton = new SimpleDropDownButton("Objective");
-        areaButton = new SimpleDropDownButton("Area");
+        // TODO: load filter from user prefs
+        
+        objectiveButton = new SimpleDropDownButton("Objective: "+currObjective);
+        areaButton = new SimpleDropDownButton("Area: "+currArea);
         
         filterPanel = new JPanel();
         filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.LINE_AXIS));
@@ -153,48 +124,58 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-//                log.info("getSize().getWidth()={}", getSize().getWidth());
-//                log.info("getViewport().getSize().getWidth()={}", getViewport().getSize().getWidth());
-//                for(PipelineResultPanel resultPanel : resultPanels) {
-//                    log.info("resultPanel.getSize().getWidth()={}", resultPanel.getSize().getWidth());
-//                    break;
-//                }
-//                for(LoadedImagePanel image : lips) {
-//                    log.info("image.getParent().getSize().getWidth()={}", image.getParent().getSize().getWidth());
-//                    break;
-//                }
                 for(LoadedImagePanel image : lips) {
                     rescaleImage(image);
                     image.invalidate();
                 }
             }
         });
-        
     }
     
-    private void rescaleImage(LoadedImagePanel image) {
-        double width = image.getParent()==null?0:image.getParent().getSize().getWidth();
-        if (width==0) {
-            width = getViewport().getSize().getWidth() - 20;
-//            log.warn("Have to get width from viewport");
+    private void resultPanelSelection(PipelineResultPanel resultPanel) {
+        for(PipelineResultPanel otherResultPanel : resultPanels) {
+            if (resultPanel != otherResultPanel) {
+                otherResultPanel.setSelected(false);
+            }
         }
-        if (width==0) {
-            log.warn("Could not get width from parent or viewport");
-            return;
-        }
-//        double width = getViewport().getSize().getWidth();
-        // If the images are scaled too large, then the GridBagLayout 
-        // refuses to render them, so this needs to be large enough to avoid that.
-        // This should probably just be equal to the size of the horizontal 
-        // insets on the ResultPanels. 
-        int fudgeFactor = 30; 
-        image.scaleImage((int)Math.ceil(width/2)-fudgeFactor);
+        resultPanel.setSelected(true);
+        resultPanel.requestFocus();
     }
+    
+    private PipelineResultPanel getResultPanelAncestor(Component component) {
+        Component c = component;
+        while (c!=null) {
+            if (c instanceof PipelineResultPanel) {
+                return (PipelineResultPanel)c;
+            }
+            c = c.getParent();
+        }
+        return null;
+    }
+    
+    private JPopupMenu getButtonPopupMenu(PipelineResult result) {
+        SampleResultContextMenu popupMenu = new SampleResultContextMenu(sample, result);
+        popupMenu.addMenuItems();
+        return popupMenu;
+    }
+    
+    @Override
+    public String getName() {
+        return "Sample Editor";
+    }
+    
+    @Override
+    public Object getEventBusListener() {
+        return this;
+    }
+    
     
     @Override
     public void loadDomainObject(final Sample sample) {
                 
-        log.debug("loadDomainObject "+sample);
+        this.sample = sample;
+        
+        log.debug("Load sample {}",sample.getId());
         
         lips.clear();
         resultPanels.clear();
@@ -206,41 +187,79 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
         List<String> objectives = new ArrayList<>(sample.getObjectives().keySet());
         Collections.sort(objectives);
         
+        Set<String> areaSet = new LinkedHashSet<>();
+        
         for(String objective : objectives) {
             
-            ObjectiveSample objSample = sample.getObjectiveSample(objective);
-            SamplePipelineRun run = objSample.getLatestRun();
+            boolean diplayObjective = true;
             
+            if (!currObjective.equals(ALL_VALUE) && !currObjective.equals(objective)) {
+                diplayObjective = false;
+            }
+            
+            ObjectiveSample objSample = sample.getObjectiveSample(objective);
+            if (objSample==null) continue;
+            SamplePipelineRun run = objSample.getLatestRun();
             if (run==null) continue;
             
             SampleProcessingResult spr = run.getLatestProcessingResult();
             if (spr!=null) {
-                c.gridwidth = 1;
-                c.gridheight = 1;
-                c.gridx = 0;
-                c.gridy = y++;
-                c.insets = new Insets(0, 0, 0, 0);
-                c.fill = GridBagConstraints.BOTH;
-                c.anchor = GridBagConstraints.PAGE_START;
-                c.weightx = 1;
-                c.weighty = 0.9;
-                dataPanel.add(getResultPanel(spr, objective+" "+spr.getName()));
+                String area = spr.getAnatomicalArea();
+                if (area==null) area = "";
+                areaSet.add(area);
+                
+                boolean display = diplayObjective;
+                if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, objective)) {
+                    // TODO: reenable this when it's correctly populated in the database
+//                    display = false;
+                }
+                
+                if (display) {
+                    c.gridx = 0;
+                    c.gridy = y++;
+                    c.fill = GridBagConstraints.BOTH;
+                    c.anchor = GridBagConstraints.PAGE_START;
+                    c.weightx = 1;
+                    c.weighty = 0.9;
+                    PipelineResultPanel resultPanel = new PipelineResultPanel(objective, spr);
+                    resultPanels.add(resultPanel);
+                    log.info("Adding "+spr.getName());
+                    dataPanel.add(resultPanel);
+                }
             }
             
             SampleAlignmentResult ar = run.getLatestAlignmentResult();
             if (ar!=null) {
-                c.gridwidth = 1;
-                c.gridheight = 1;
-                c.gridx = 0;
-                c.gridy = y++;
-                c.insets = new Insets(0, 0, 0, 0);
-                c.fill = GridBagConstraints.BOTH;
-                c.anchor = GridBagConstraints.PAGE_START;
-                c.weightx = 1;
-                c.weighty = 0.9;
-                dataPanel.add(getResultPanel(ar, objective+" "+ar.getName()+" ("+ar.getAlignmentSpace()+")"));
+                String area = ar.getAnatomicalArea();
+                if (area==null) area = "";
+                areaSet.add(area);
+                                
+                boolean display = diplayObjective;
+                if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, objective)) {
+                    // TODO: reenable this when it's correctly populated in the database
+//                    display = false;
+                }
+                
+                if (display) {
+                    c.gridx = 0;
+                    c.gridy = y++;
+                    c.fill = GridBagConstraints.BOTH;
+                    c.anchor = GridBagConstraints.PAGE_START;
+                    c.weightx = 1;
+                    c.weighty = 0.9;
+                    PipelineResultPanel resultPanel = new PipelineResultPanel(objective, ar);
+                    resultPanels.add(resultPanel);
+                    dataPanel.add(resultPanel);
+                }
             }
         }
+        
+        objectives.add(0, ALL_VALUE);
+        populateObjectiveButton(objectives);
+        
+        List<String> areas = new ArrayList<>(areaSet);
+        areas.add(0, ALL_VALUE);
+        populateAreaButton(areas);
         
         
 //        SimpleWorker childLoadingWorker = new SimpleWorker() {
@@ -263,69 +282,74 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
 //
 //        childLoadingWorker.execute();
 
-//        updateUI();
+        if (resultPanels.isEmpty()) {
+            // Force update
+            updateUI();
+        }
     }
-    
-    private JPanel getResultPanel(PipelineResult result, String label) {
-        
-        PipelineResultPanel resultPanel = new PipelineResultPanel();
-                
-        JPanel imagePanel = new JPanel();
-        imagePanel.setLayout(new GridLayout(1, 2));
-            
-        if (result==null) return resultPanel;
-        
-        String signalMip = DomainUtils.get2dImageFilepath(result, SignalMip);
-        String refMip = DomainUtils.get2dImageFilepath(result, ReferenceMip);
 
-        GridBagConstraints c = new GridBagConstraints();
-        
-        c.gridx = 0;
-        c.gridy = 0;
-        c.insets = new Insets(10, 10, 10, 5);
-        c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.PAGE_START;
-        c.weightx = 0.5;
-        c.weighty = 1;
-        imagePanel.add(getImagePanel(signalMip, resultPanel));
-        
-        c.gridx = 1;
-        c.gridy = 0;
-        c.insets = new Insets(10, 5, 10, 10);
-        c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.PAGE_START;
-        c.weightx = 0.5;
-        c.weighty = 1;
-        imagePanel.add(getImagePanel(refMip, resultPanel));
-        
-        resultPanel.add(new JLabel(label), BorderLayout.NORTH);
-        resultPanel.add(imagePanel, BorderLayout.CENTER);
-        resultPanels.add(resultPanel);
-        return resultPanel;
+    private void populateObjectiveButton(List<String> objectives) {
+        objectiveButton.setText("Objective: "+currObjective);
+        objectiveButton.getPopupMenu().removeAll();
+        ButtonGroup group = new ButtonGroup();
+        for (final String objective : objectives) {
+            JMenuItem menuItem = new JRadioButtonMenuItem(objective, objective.equals(currObjective));
+            menuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    setObjective(objective);
+                }
+            });
+            group.add(menuItem);
+            objectiveButton.getPopupMenu().add(menuItem);
+        }
     }
     
-    private JPanel getImagePanel(String filepath, PipelineResultPanel resultPanel) {
-        LoadedImagePanel lip = new LoadedImagePanel(filepath) {
-            @Override
-            protected void doneLoading() {
-                rescaleImage(this);
-                invalidate();
-            }
-        };
-        rescaleImage(lip);
-        lip.addMouseListener(new MouseForwarder(resultPanel, "LoadedImagePanel->PipelineResultPanel"));
-        lips.add(lip);
-        return lip;
+    private void setObjective(String objective) {
+        this.currObjective = objective;
+        loadDomainObject(sample);
     }
     
-    @Override
-    public String getName() {
-        return "Sample Editor";
+    private void populateAreaButton(List<String> areas) {
+        areaButton.setText("Area: "+currArea);
+        areaButton.getPopupMenu().removeAll();
+        ButtonGroup group = new ButtonGroup();
+        for (final String area : areas) {
+            JMenuItem menuItem = new JRadioButtonMenuItem(area, area.equals(currArea));
+            menuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    setArea(area);
+                }
+            });
+            group.add(menuItem);
+            areaButton.getPopupMenu().add(menuItem);
+        }
     }
     
-    @Override
-    public Object getEventBusListener() {
-        return this;
+    private void setArea(String area) {
+        this.currArea = area;
+        loadDomainObject(sample);
+    }
+    
+    private boolean areEqualOrEmpty(String value1, String value2) {
+        if (value1==null || value1.equals("")) {
+            return value2==null || value2.equals("");
+        }
+        if (value2==null || value2.equals("")) {
+            return false;
+        }
+        return value1.equals(value2);
+    }
+    
+    private void rescaleImage(LoadedImagePanel image) {
+        double width = image.getParent()==null?0:image.getParent().getSize().getWidth();
+        if (width==0) {
+            width = getViewport().getSize().getWidth() - 20;
+        }
+        if (width==0) {
+            log.warn("Could not get width from parent or viewport");
+            return;
+        }
+        image.scaleImage((int)Math.ceil(width/2));
     }
     
     private class ScrollablePanel extends JPanel implements Scrollable {
@@ -363,12 +387,57 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
 
     private class PipelineResultPanel extends SelectablePanel {
 
-        public PipelineResultPanel() {
-            setLayout(new BorderLayout());
+        private final PipelineResult result;
+        
+        private PipelineResultPanel(PipelineResult result, String label) {
+            
+            this.result = result;
+            
             int b = SelectablePanel.BORDER_WIDTH;
             setBorder(BorderFactory.createEmptyBorder(b, b, b, b));
-            addMouseListener(buttonMouseListener);
+            setLayout(new BorderLayout());
+
+            JPanel imagePanel = new JPanel();
+            imagePanel.setLayout(new GridLayout(1, 2, 5, 0));
+
+            if (result==null) return;
+
+            String signalMip = DomainUtils.getFilepath(result, SignalMip);
+            String refMip = DomainUtils.getFilepath(result, ReferenceMip);
+
+            imagePanel.add(getImagePanel(signalMip));
+            imagePanel.add(getImagePanel(refMip));
+
+            add(new JLabel(label), BorderLayout.NORTH);
+            add(imagePanel, BorderLayout.CENTER);
+
+            addMouseListener(resultMouseListener);
+        }
+        
+        public PipelineResultPanel(String objective, SampleProcessingResult result) {
+            this(result, objective+" "+result.getName());
         }
 
+        public PipelineResultPanel(String objective, SampleAlignmentResult result) {
+            this(result, objective+" "+result.getName()+" ("+result.getAlignmentSpace()+")");
+        }
+
+        public PipelineResult getResult() {
+            return result;
+        }
+    
+        private JPanel getImagePanel(String filepath) {
+            LoadedImagePanel lip = new LoadedImagePanel(filepath) {
+                @Override
+                protected void doneLoading() {
+                    rescaleImage(this);
+                    invalidate();
+                }
+            };
+            rescaleImage(lip);
+            lip.addMouseListener(new MouseForwarder(this, "LoadedImagePanel->PipelineResultPanel"));
+            lips.add(lip);
+            return lip;
+        }
     }
 }
