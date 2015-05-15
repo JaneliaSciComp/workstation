@@ -119,16 +119,23 @@ public class LineEnclosureFactory implements TriangleSource {
 		
 		System.out.println(String.format("Using angles: %f, %f, %f", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ)));
         
-        // Now that we have our angles, we make the transform.
+        // Now that we have our angles, we make transforms.
         Matrix transform = matrixUtils.getTransform3D(
-                aboutX, aboutY, aboutZ,
-                startCoords[X], startCoords[Y], startCoords[Z]);        
-        endCapPolygonsHolder.add(producePolygon(transform, zAxisAlignedPrototypePolygon));
+                aboutX, aboutY, 0,
+                0,0,0); 
+		final double[][] polygon = clonePrototypePolygon(zAxisAlignedPrototypePolygon);
+		transformPolygon(polygon, transform);				
+        transform = matrixUtils.getTransform3D(
+                0, 0, aboutZ,
+                startCoords[X], startCoords[Y], startCoords[Z]);
+		transformPolygon(polygon, transform);
+        endCapPolygonsHolder.add(polygon);
 
         transform.set(0, 3, endCoords[X]);
         transform.set(1, 3, endCoords[Y]);
         transform.set(2, 3, endCoords[Z]);
-        endCapPolygonsHolder.add(producePolygon(transform, zAxisAlignedPrototypePolygon));
+		transformPolygon(polygon, transform);
+        endCapPolygonsHolder.add(polygon);
         
         return endCapPolygonsHolder;
     }
@@ -140,13 +147,7 @@ public class LineEnclosureFactory implements TriangleSource {
         // Establish the positioning matrix.
         double[] lineDelta = getLineDelta(endCoords, startCoords);
         double[] planarProjections = getPlanarProjections( lineDelta );
-        
-        int axialAlignment = -1;
-        for (int i = 0; i < planarProjections.length; i++) {
-            if (Math.abs(planarProjections[i]) < 0.0001) {
-                axialAlignment = i;
-            }
-        }
+		int axialAlignment = getAxialAlignment(planarProjections);
         
         Matrix transformMatrix;
         double[][] prototypePolygon;
@@ -178,6 +179,16 @@ public class LineEnclosureFactory implements TriangleSource {
         endCapPolygonsHolder.add( producePolygon( transformMatrix, prototypePolygon ) );
         return endCapPolygonsHolder;
     }
+
+	private int getAxialAlignment(double[] planarProjections) {
+		int axialAlignment = -1;
+		for (int i = 0; i < planarProjections.length; i++) {
+			if (Math.abs(planarProjections[i]) < 0.0001) {
+				axialAlignment = i;
+			}
+		}
+		return axialAlignment;
+	}
     
     private double[] getPlanarProjections( double[] lineDelta ) {
         // Applies signs, multiplied, to get sometimes-negative projections.
@@ -231,12 +242,15 @@ public class LineEnclosureFactory implements TriangleSource {
 
     protected double[][] producePolygon(Matrix transform, double[][] prototype) {
         double[][] polygon = clonePrototypePolygon(prototype);
-        
-        for (int i = 0; i < polygon.length; i++) {
-            polygon[i] = matrixUtils.transform(transform, polygon[i]);
-        }
+		transformPolygon(polygon, transform);
         return polygon;
     }
+
+	private void transformPolygon(double[][] polygon, Matrix transform) {
+		for (int i = 0; i < polygon.length; i++) {
+			polygon[i] = matrixUtils.transform(transform, polygon[i]);
+		}
+	}
 
     private double[][] createAxisAlignedPrototypeEndPolygon(int axis) {
         double[][] prototypeEndPolygon = new double[endPolygonSides][];
