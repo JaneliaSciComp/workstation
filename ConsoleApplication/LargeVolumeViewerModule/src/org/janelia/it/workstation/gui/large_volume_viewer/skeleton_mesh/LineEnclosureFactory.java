@@ -32,6 +32,7 @@ public class LineEnclosureFactory implements TriangleSource {
 	public static final double ZERO_TOLERANCE = 0.0001;
 	private static final double RADIANS_90 = Math.PI / 2.0;
     private static final int X = 0, Y = 1, Z = 2;
+	private static final int PERPENDICULAR_ALIGNMENT = 100;
     private static final int YZ = 0;
     private static final int ZX = 1;
     private static final int XY = 2;
@@ -145,17 +146,33 @@ public class LineEnclosureFactory implements TriangleSource {
 			transformPolygon(endingEndPolygon, transform2);
 			endCapPolygonsHolder.add(endingEndPolygon);			
 		}
+		else if (axialAlignment == PERPENDICULAR_ALIGNMENT) {
+			// Special case: new normal lies in the xy plane, but not on an axis.
+			// Only spin about Z.
+			Matrix transform = matrixUtils.getTransform3D(
+					0f, 0f, -aboutZ,
+					startCoords[X], startCoords[Y], startCoords[Z]
+			);
+			double[][] prototypePolygon = getPrototypePolygon(Y);
+			final double[][] startEndPolygon = clonePrototypePolygon(prototypePolygon);
+			transformPolygon(startEndPolygon, transform);		
+			endCapPolygonsHolder.add(startEndPolygon);
+			
+			final double[][] endingEndPolygon = clonePrototypePolygon(prototypePolygon);
+			transform.set(0, 3, endCoords[X]);
+			transform.set(1, 3, endCoords[Y]);
+			transform.set(2, 3, endCoords[Z]);
+			transformPolygon(endingEndPolygon, transform);
+			endCapPolygonsHolder.add(endingEndPolygon);
+		}
 		else {
 			// Special case: aligned right along some axis.  Trig assumptions won't help.
-			if (axisAlignedPrototypePolygons.get(axialAlignment) == null) {
-				axisAlignedPrototypePolygons.put(axialAlignment, createAxisAlignedPrototypeEndPolygon(axialAlignment));
-			}
 			Matrix transform = matrixUtils.getTransform3D(
 					0f,
 					0f,
 					0f,
 					startCoords[X], startCoords[Y], startCoords[Z]);
-			double[][] prototypePolygon = axisAlignedPrototypePolygons.get(axialAlignment);
+			double[][] prototypePolygon = getPrototypePolygon(axialAlignment);
 			endCapPolygonsHolder.add(producePolygon(transform, prototypePolygon));
 			transform.set(0, 3, endCoords[X]);
 			transform.set(1, 3, endCoords[Y]);
@@ -165,7 +182,7 @@ public class LineEnclosureFactory implements TriangleSource {
         
         return endCapPolygonsHolder;
     }
-    
+	
     private List<double[][]> makeEndPolygonsNoTrig(double[] startCoords, double[] endCoords) {
 
         endCapPolygonsHolder.clear();
@@ -211,13 +228,16 @@ public class LineEnclosureFactory implements TriangleSource {
 		double deltaY = Math.abs(lineDelta[Y]);
 		double deltaZ = Math.abs(lineDelta[Z]);
 		if (deltaX < ZERO_TOLERANCE  &&  deltaY < ZERO_TOLERANCE) {
-			return 2;
+			return Z;
 		}
 		else if (deltaX < ZERO_TOLERANCE && deltaZ < ZERO_TOLERANCE) {
-			return 1;
+			return Y;
 		}
 		else if (deltaY < ZERO_TOLERANCE && deltaZ < ZERO_TOLERANCE) {
-			return 0;
+			return X;
+		}
+		else if (deltaZ < ZERO_TOLERANCE ) {
+			return PERPENDICULAR_ALIGNMENT;
 		}
 		else {
 			return -1;
@@ -234,6 +254,13 @@ public class LineEnclosureFactory implements TriangleSource {
 		return axialAlignment;
 	}
     
+	private double[][] getPrototypePolygon(int axialAlignment) {
+		if (axisAlignedPrototypePolygons.get(axialAlignment) == null) {
+			axisAlignedPrototypePolygons.put(axialAlignment, createAxisAlignedPrototypeEndPolygon(axialAlignment));
+		}
+		return axisAlignedPrototypePolygons.get(axialAlignment);
+	}
+
     private double[] getPlanarProjections( double[] lineDelta ) {
         // Applies signs, multiplied, to get sometimes-negative projections.
 //        double[] signums = new double[] {

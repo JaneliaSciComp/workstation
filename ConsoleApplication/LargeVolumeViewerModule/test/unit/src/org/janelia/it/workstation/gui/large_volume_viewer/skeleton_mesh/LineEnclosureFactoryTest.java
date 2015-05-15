@@ -68,30 +68,35 @@ public class LineEnclosureFactoryTest {
         totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
         logger.info("4. Coord count " + formatCoords(coords) + totalCoordCount);
         
-        //4a
-		coords = new double[] {-1,1,0};
-        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
-        logger.info("4a. Coord count " + formatCoords(coords) + totalCoordCount);
-        
         //5
-		coords = new double[] {1,-1,0};
+		coords = new double[] {1,1,0};
         totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
         logger.info("5. Coord count " + formatCoords(coords) + totalCoordCount);
         
         //6
-		coords = new double[] {0,1,1};
+		coords = new double[] {-1,1,0};
         totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
         logger.info("6. Coord count " + formatCoords(coords) + totalCoordCount);
         
         //7
-		coords = new double[] {0,-1,1};
+		coords = new double[] {1,-1,0};
         totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
         logger.info("7. Coord count " + formatCoords(coords) + totalCoordCount);
         
         //8
-		coords = new double[] {0,1,0};
+		coords = new double[] {0,1,1};
         totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
         logger.info("8. Coord count " + formatCoords(coords) + totalCoordCount);
+        
+        //9
+		coords = new double[] {0,-1,1};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("9. Coord count " + formatCoords(coords) + totalCoordCount);
+        
+        //10
+		coords = new double[] {0,1,0};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("10. Coord count " + formatCoords(coords) + totalCoordCount);
         
         int vtxNum = 1;
         int absVtxCount = 0;
