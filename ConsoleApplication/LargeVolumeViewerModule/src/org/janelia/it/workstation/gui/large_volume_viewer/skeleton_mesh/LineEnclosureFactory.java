@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 public class LineEnclosureFactory implements TriangleSource {
     
     private static Logger logger = LoggerFactory.getLogger(LineEnclosureFactory.class);
+	public static final double ZERO_TOLERANCE = 0.0001;
+	private static final double RADIANS_90 = Math.PI / 2.0;
     private static final int X = 0, Y = 1, Z = 2;
     private static final int YZ = 0;
     private static final int ZX = 1;
@@ -109,33 +111,57 @@ public class LineEnclosureFactory implements TriangleSource {
     private List<double[][]> makeEndPolygons( double[] startCoords, double[] endCoords ) {
         
         endCapPolygonsHolder.clear();
+		final double[] lineDelta = getLineDelta(startCoords, endCoords);
         
         // Get the three angles: about X, about Y, about Z.
-        double[] lineUnitVector = normalize(getLineDelta(startCoords, endCoords));
+        double[] lineUnitVector = normalize(lineDelta);
         
-        double aboutX = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[Z]);
+        double aboutX = lineUnitVector[Z] == 0 ? 0 : -Math.atan(lineUnitVector[Y] / lineUnitVector[Z]);
         double aboutY = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Z]);
         double aboutZ = lineUnitVector[X] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[X]);
-		
+				
 		System.out.println(String.format("Using angles: %f, %f, %f", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ)));
-        
-        // Now that we have our angles, we make transforms.
-        Matrix transform = matrixUtils.getTransform3D(
-                aboutX, aboutY, 0,
-                0,0,0); 
-		final double[][] polygon = clonePrototypePolygon(zAxisAlignedPrototypePolygon);
-		transformPolygon(polygon, transform);				
-        transform = matrixUtils.getTransform3D(
-                0, 0, aboutZ,
-                startCoords[X], startCoords[Y], startCoords[Z]);
-		transformPolygon(polygon, transform);
-        endCapPolygonsHolder.add(polygon);
 
-        transform.set(0, 3, endCoords[X]);
-        transform.set(1, 3, endCoords[Y]);
-        transform.set(2, 3, endCoords[Z]);
-		transformPolygon(polygon, transform);
-        endCapPolygonsHolder.add(polygon);
+		int axialAlignment = getAxialAlignmentByLineDelta(lineDelta);
+		
+		if (axialAlignment == -1) {
+			// Now that we have our angles, we make transforms.
+			Matrix transform1 = matrixUtils.getTransform3D(
+					aboutX, aboutY, 0,
+					0, 0, 0);
+			final double[][] startEndPolygon = clonePrototypePolygon(zAxisAlignedPrototypePolygon);
+			transformPolygon(startEndPolygon, transform1);
+			Matrix transform2 = matrixUtils.getTransform3D(
+					0, 0, aboutZ,
+					startCoords[X], startCoords[Y], startCoords[Z]);
+			transformPolygon(startEndPolygon, transform2);
+			endCapPolygonsHolder.add(startEndPolygon);
+
+			final double[][] endingEndPolygon = clonePrototypePolygon(zAxisAlignedPrototypePolygon);
+			transformPolygon(endingEndPolygon, transform1);
+			transform2.set(0, 3, endCoords[X]);
+			transform2.set(1, 3, endCoords[Y]);
+			transform2.set(2, 3, endCoords[Z]);
+			transformPolygon(endingEndPolygon, transform2);
+			endCapPolygonsHolder.add(endingEndPolygon);			
+		}
+		else {
+			// Special case: aligned right along some axis.  Trig assumptions won't help.
+			if (axisAlignedPrototypePolygons.get(axialAlignment) == null) {
+				axisAlignedPrototypePolygons.put(axialAlignment, createAxisAlignedPrototypeEndPolygon(axialAlignment));
+			}
+			Matrix transform = matrixUtils.getTransform3D(
+					0f,
+					0f,
+					0f,
+					startCoords[X], startCoords[Y], startCoords[Z]);
+			double[][] prototypePolygon = axisAlignedPrototypePolygons.get(axialAlignment);
+			endCapPolygonsHolder.add(producePolygon(transform, prototypePolygon));
+			transform.set(0, 3, endCoords[X]);
+			transform.set(1, 3, endCoords[Y]);
+			transform.set(2, 3, endCoords[Z]);
+			endCapPolygonsHolder.add(producePolygon(transform, prototypePolygon));
+		}
         
         return endCapPolygonsHolder;
     }
@@ -180,10 +206,28 @@ public class LineEnclosureFactory implements TriangleSource {
         return endCapPolygonsHolder;
     }
 
+	private int getAxialAlignmentByLineDelta(double[] lineDelta) {
+		double deltaX = Math.abs(lineDelta[X]);
+		double deltaY = Math.abs(lineDelta[Y]);
+		double deltaZ = Math.abs(lineDelta[Z]);
+		if (deltaX < ZERO_TOLERANCE  &&  deltaY < ZERO_TOLERANCE) {
+			return 2;
+		}
+		else if (deltaX < ZERO_TOLERANCE && deltaZ < ZERO_TOLERANCE) {
+			return 1;
+		}
+		else if (deltaY < ZERO_TOLERANCE && deltaZ < ZERO_TOLERANCE) {
+			return 0;
+		}
+		else {
+			return -1;
+		}
+	}
+	
 	private int getAxialAlignment(double[] planarProjections) {
 		int axialAlignment = -1;
 		for (int i = 0; i < planarProjections.length; i++) {
-			if (Math.abs(planarProjections[i]) < 0.0001) {
+			if (Math.abs(planarProjections[i]) < ZERO_TOLERANCE) {
 				axialAlignment = i;
 			}
 		}

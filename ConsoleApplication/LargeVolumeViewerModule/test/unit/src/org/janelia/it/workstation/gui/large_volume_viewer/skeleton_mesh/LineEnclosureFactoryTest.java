@@ -88,6 +88,11 @@ public class LineEnclosureFactoryTest {
         totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
         logger.info("7. Coord count " + formatCoords(coords) + totalCoordCount);
         
+        //8
+		coords = new double[] {0,1,0};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("8. Coord count " + formatCoords(coords) + totalCoordCount);
+        
         int vtxNum = 1;
         int absVtxCount = 0;
         for (VertexInfoBean vtx: factory.getVertices()) {
