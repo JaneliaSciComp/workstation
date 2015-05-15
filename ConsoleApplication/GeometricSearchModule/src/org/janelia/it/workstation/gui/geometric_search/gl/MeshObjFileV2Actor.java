@@ -3,7 +3,7 @@ package org.janelia.it.workstation.gui.geometric_search.gl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL3;
+import javax.media.opengl.GL4;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Created by murphys on 4/9/15.
  */
-public class MeshObjFileV2Actor extends GL3SimpleActor
+public class MeshObjFileV2Actor extends GL4SimpleActor
 {
     private final Logger logger = LoggerFactory.getLogger(MeshObjFileV2Actor.class);
     File objFile;
@@ -62,18 +62,18 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
     }
 
     @Override
-    public void display(GL3 gl) {
+    public void display(GL4 gl) {
         super.display(gl);
 
 
-//        gl.glDisable(GL3.GL_DEPTH_TEST);
-////        gl.glShadeModel(GL3.GL_SMOOTH);
-////        gl.glDisable(GL3.GL_ALPHA_TEST);
-////        gl.glAlphaFunc(GL3.GL_GREATER, 0.5f);
-//        gl.glEnable(GL3.GL_BLEND);
-//        gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_SRC_ALPHA);
-//        gl.glBlendEquation(GL3.GL_FUNC_ADD);
-//        gl.glDepthFunc(GL3.GL_LEQUAL);
+//        gl.glDisable(GL4.GL_DEPTH_TEST);
+////        gl.glShadeModel(GL4.GL_SMOOTH);
+////        gl.glDisable(GL4.GL_ALPHA_TEST);
+////        gl.glAlphaFunc(GL4.GL_GREATER, 0.5f);
+//        gl.glEnable(GL4.GL_BLEND);
+//        gl.glBlendFunc(GL4.GL_SRC_ALPHA, GL4.GL_SRC_ALPHA);
+//        gl.glBlendEquation(GL4.GL_FUNC_ADD);
+//        gl.glDepthFunc(GL4.GL_LEQUAL);
 
 
 
@@ -82,24 +82,24 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
         checkGlError(gl, "d super.display() error");
         gl.glBindVertexArray(vertexArrayId.get(0));
         checkGlError(gl, "d glBindVertexArray error");
-        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
         checkGlError(gl, "d glBindBuffer error");
-        gl.glVertexAttribPointer(0, 3, GL3.GL_FLOAT, false, 0, 0);
-        gl.glVertexAttribPointer(1, 3, GL3.GL_FLOAT, false, 0, fList.size() * 9 * 4);
+        gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
+        gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 0, fList.size() * 9 * 4);
         checkGlError(gl, "d glVertexAttribPointer error");
         gl.glEnableVertexAttribArray(0);
         checkGlError(gl, "d glEnableVertexAttribArray 0 error");
         gl.glEnableVertexAttribArray(1);
         checkGlError(gl, "d glEnableVertexAttribArray 1 error");
-        gl.glDrawArrays(GL3.GL_TRIANGLES, 0, fList.size()*3);
+        gl.glDrawArrays(GL4.GL_TRIANGLES, 0, fList.size()*3);
         checkGlError(gl, "d glDrawArrays error");
 
-//        gl.glEnable(GL3.GL_DEPTH_TEST);
-//        gl.glDisable(GL3.GL_BLEND);
+//        gl.glEnable(GL4.GL_DEPTH_TEST);
+//        gl.glDisable(GL4.GL_BLEND);
     }
 
     @Override
-    public void init(GL3 gl) {
+    public void init(GL4 gl) {
         if (!loaded) {
             try {
                 loadObjFile();
@@ -159,14 +159,14 @@ public class MeshObjFileV2Actor extends GL3SimpleActor
         checkGlError(gl, "glBindVertexArray error");
         gl.glGenBuffers(1, vertexBufferId);
         checkGlError(gl, "glGenBuffers error");
-        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vertexBufferId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
         checkGlError(gl, "glBindBuffer error");
-        gl.glBufferData(GL3.GL_ARRAY_BUFFER, fb.capacity() * 4, fb, GL3.GL_STATIC_DRAW);
+        gl.glBufferData(GL4.GL_ARRAY_BUFFER, fb.capacity() * 4, fb, GL4.GL_STATIC_DRAW);
         checkGlError(gl, "glBufferData error");
     }
 
     @Override
-    public void dispose(GL3 gl) {
+    public void dispose(GL4 gl) {
 
     }
 

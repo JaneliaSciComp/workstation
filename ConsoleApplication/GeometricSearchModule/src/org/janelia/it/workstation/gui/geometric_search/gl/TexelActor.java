@@ -3,7 +3,7 @@ package org.janelia.it.workstation.gui.geometric_search.gl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL3;
+import javax.media.opengl.GL4;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
@@ -11,7 +11,7 @@ import java.nio.IntBuffer;
  * Created by murphys on 5/14/15.
  */
 public class
-        TexelActor extends GL3SimpleActor {
+        TexelActor extends GL4SimpleActor {
 
     private final Logger logger = LoggerFactory.getLogger(TexelActor.class);
 
@@ -24,38 +24,38 @@ public class
 
 
     @Override
-    public void display(GL3 gl) {
+    public void display(GL4 gl) {
         super.display(gl);
         checkGlError(gl, "d super.display() error");
 
-        gl.glBindTexture(GL3.GL_TEXTURE_2D, textureId.get(0));
+        gl.glBindTexture(GL4.GL_TEXTURE_2D, textureId.get(0));
         checkGlError(gl, "d glBindTexture() error");
 
         gl.glBindVertexArray(vertexArrayId.get(0));
         checkGlError(gl, "d glBindVertexArray() error");
 
-        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, quadDataBufferId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, quadDataBufferId.get(0));
         checkGlError(gl, "d glBindBuffer error");
 
-        gl.glVertexAttribPointer(0, 4, GL3.GL_FLOAT, false, 0, 0);
+        gl.glVertexAttribPointer(0, 4, GL4.GL_FLOAT, false, 0, 0);
         checkGlError(gl, "d glVertexAttribPointer 0 () error");
 
         gl.glEnableVertexAttribArray(0);
         checkGlError(gl, "d glEnableVertexAttribArray 0 () error");
 
-        gl.glVertexAttribPointer(1, 2, GL3.GL_FLOAT, false, 0, 16 * 4);
+        gl.glVertexAttribPointer(1, 2, GL4.GL_FLOAT, false, 0, 16 * 4);
         checkGlError(gl, "d glVertexAttribPointer 1 () error");
 
         gl.glEnableVertexAttribArray(1);
         checkGlError(gl, "d glEnableVertexAttribArray 1 () error");
 
-        gl.glDrawArrays(GL3.GL_TRIANGLE_FAN, 0, 4);
+        gl.glDrawArrays(GL4.GL_TRIANGLE_FAN, 0, 4);
         checkGlError(gl, "d glDrawArrays() error");
 
     }
 
     @Override
-    public void init(GL3 gl) {
+    public void init(GL4 gl) {
 
         // TEXTURE ////////////////////////
 
@@ -100,21 +100,21 @@ public class
         gl.glGenTextures(1, textureId);
         checkGlError(gl, "i glGenTextures() error");
 
-        gl.glBindTexture(GL3.GL_TEXTURE_2D, textureId.get(0));
+        gl.glBindTexture(GL4.GL_TEXTURE_2D, textureId.get(0));
         checkGlError(gl, "i glBindTexture() error");
 
-        gl.glTexStorage2D(GL3.GL_TEXTURE_2D,
+        gl.glTexStorage2D(GL4.GL_TEXTURE_2D,
                 1,
-                GL3.GL_RGBA32F,
+                GL4.GL_RGBA32F,
                 4, 4);
         checkGlError(gl, "i glTexStorage2D() error");
 
-        gl.glTexSubImage2D(GL3.GL_TEXTURE_2D,
+        gl.glTexSubImage2D(GL4.GL_TEXTURE_2D,
                 0,
                 0, 0,
                 4, 4,
-                GL3.GL_RGBA,
-                GL3.GL_FLOAT,
+                GL4.GL_RGBA,
+                GL4.GL_FLOAT,
                 textureFb);
         checkGlError(gl, "i glTexSubImage error");
 
@@ -142,16 +142,16 @@ public class
         gl.glGenBuffers(1, quadDataBufferId);
         checkGlError(gl, "i glGenBuffers() error");
 
-        gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, quadDataBufferId.get(0));
+        gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, quadDataBufferId.get(0));
         checkGlError(gl, "i glBindBuffer error");
 
-        gl.glBufferData(GL3.GL_ARRAY_BUFFER, quadFb.capacity() * 4, quadFb, GL3.GL_STATIC_DRAW);
+        gl.glBufferData(GL4.GL_ARRAY_BUFFER, quadFb.capacity() * 4, quadFb, GL4.GL_STATIC_DRAW);
         checkGlError(gl, "d glBufferData error");
 
     }
 
     @Override
-    public void dispose(GL3 gl) {
+    public void dispose(GL4 gl) {
 
     }
 

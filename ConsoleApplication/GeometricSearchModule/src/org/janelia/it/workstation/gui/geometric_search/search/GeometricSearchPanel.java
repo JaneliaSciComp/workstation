@@ -1,15 +1,13 @@
 package org.janelia.it.workstation.gui.geometric_search.search;
 
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Rotation;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 
-import javax.media.opengl.GL3;
+import javax.media.opengl.GL4;
 import javax.swing.*;
 
 import org.janelia.it.workstation.gui.geometric_search.gl.*;
-import org.janelia.it.workstation.gui.geometric_search.viewer.GL3Viewer;
-import org.janelia.it.workstation.gui.viewer3d.Mip3d;
+import org.janelia.it.workstation.gui.geometric_search.viewer.GL4Viewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,13 +21,13 @@ import java.io.File;
 public class GeometricSearchPanel extends JPanel implements Refreshable {
 
     private final Logger logger = LoggerFactory.getLogger(GeometricSearchPanel.class);
-    GL3Viewer viewer;
+    GL4Viewer viewer;
 
     @Override
     public void refresh() {
 
         if ( viewer == null ) {
-            createGL3Viewer();
+            createGL4Viewer();
         }
 
         viewer.refresh();
@@ -40,17 +38,17 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         refresh();
     }
 
-    private void createGL3Viewer() {
+    private void createGL4Viewer() {
 
         if ( viewer != null ) {
             viewer.releaseMenuActions();
         }
-        viewer = new GL3Viewer();
+        viewer = new GL4Viewer();
         viewer.setPreferredSize(new Dimension(1200, 900));
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
 
-        GL3ShaderActionSequence actionSequence = new GL3ShaderActionSequence("Experimental Shader Action Sequence");
+        GL4ShaderActionSequence actionSequence = new GL4ShaderActionSequence("Experimental Shader Action Sequence");
 
         setupTexelExperiment(actionSequence);
 
@@ -63,18 +61,18 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
     public void displayReady() {
         if (viewer==null) {
-            createGL3Viewer();
+            createGL4Viewer();
         }
         viewer.resetView();
         viewer.refresh();
     }
 
-    private void setupTexelExperiment(GL3ShaderActionSequence actionSequence) {
+    private void setupTexelExperiment(GL4ShaderActionSequence actionSequence) {
         final TexelShader shader = new TexelShader();
 
         shader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
-            public void update(GL3 gl) {
+            public void update(GL4 gl) {
                 int uniformLoc = gl.glGetUniformLocation(shader.getShaderProgram(), "tex");
                 gl.glUniform1i(uniformLoc, 0);
             }
@@ -86,12 +84,12 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         actionSequence.getActorSequence().add(texelActor);
     }
 
-    private void setupMeshExperiment(GL3ShaderActionSequence actionSequence) {
+    private void setupMeshExperiment(GL4ShaderActionSequence actionSequence) {
         final MeshObjFileV2Shader shader = new MeshObjFileV2Shader();
 
         shader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
-            public void update(GL3 gl) {
+            public void update(GL4 gl) {
                 Matrix4 viewMatrix=viewer.getRenderer().getViewMatrix();
                 shader.setView(gl, viewMatrix);
                 Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
@@ -103,7 +101,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
         meshActor1.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
-            public void update(GL3 gl) {
+            public void update(GL4 gl) {
                 Matrix4 actorModel = meshActor1.getModel();
                 shader.setModel(gl, actorModel);
             }
@@ -113,7 +111,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
         meshActor2.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
-            public void update(GL3 gl) {
+            public void update(GL4 gl) {
                 Matrix4 actorModel = meshActor2.getModel();
                 shader.setModel(gl, actorModel);
             }

@@ -19,9 +19,9 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 import javax.media.opengl.GL;
-import javax.media.opengl.GL3;
+import javax.media.opengl.GL4;
 
-public abstract class GL3Shader
+public abstract class GL4Shader
 {
     private int vertexShader = 0;
     private int fragmentShader = 0;
@@ -36,9 +36,9 @@ public abstract class GL3Shader
     public abstract String getVertexShaderResourceName();
     public abstract String getFragmentShaderResourceName();
 
-    private Logger logger = LoggerFactory.getLogger( GL3Shader.class );
+    private Logger logger = LoggerFactory.getLogger( GL4Shader.class );
 
-    public void dispose(GL3 gl) {
+    public void dispose(GL4 gl) {
         gl.glDeleteProgram(shaderProgram);
         shaderProgram = 0;
     }
@@ -47,14 +47,14 @@ public abstract class GL3Shader
         this.updateCallback=updateCallback;
     }
 
-    public void init(GL3 gl) throws ShaderCreationException {
+    public void init(GL4 gl) throws ShaderCreationException {
         // Create shader program
         if ( getVertexShaderResourceName() != null ) {
-            vertexShader = gl.glCreateShader(GL3.GL_VERTEX_SHADER);
+            vertexShader = gl.glCreateShader(GL4.GL_VERTEX_SHADER);
             loadOneShader(vertexShader, getVertexShaderResourceName(), gl);
 
             // System.out.println("loaded vertex shader");
-            fragmentShader = gl.glCreateShader(GL3.GL_FRAGMENT_SHADER);
+            fragmentShader = gl.glCreateShader(GL4.GL_FRAGMENT_SHADER);
             loadOneShader(fragmentShader, getFragmentShaderResourceName(), gl);
 
             // System.out.println("loaded fragment shader");
@@ -65,9 +65,9 @@ public abstract class GL3Shader
             gl.glLinkProgram(shaderProgram);
             gl.glValidateProgram(shaderProgram);
             IntBuffer intBuffer = IntBuffer.allocate(1);
-            gl.glGetProgramiv(shaderProgram, GL3.GL_LINK_STATUS, intBuffer);
+            gl.glGetProgramiv(shaderProgram, GL4.GL_LINK_STATUS, intBuffer);
             if (intBuffer.get(0) != 1) {
-                gl.glGetProgramiv(shaderProgram, GL3.GL_INFO_LOG_LENGTH, intBuffer);
+                gl.glGetProgramiv(shaderProgram, GL4.GL_INFO_LOG_LENGTH, intBuffer);
                 int size = intBuffer.get(0);
                 StringBuilder errBuilder = new StringBuilder();
                 errBuilder.append("Problem with fragment shader ")
@@ -90,20 +90,20 @@ public abstract class GL3Shader
         }
     }
 
-    public void display(GL3 gl) {
+    public void display(GL4 gl) {
         if (updateCallback!=null) {
             updateCallback.update(gl);
         }
     }
 
-    public void load(GL3 gl) {
+    public void load(GL4 gl) {
         int buf[] = {0};
-        gl.glGetIntegerv( GL3.GL_CURRENT_PROGRAM, buf, 0 );
+        gl.glGetIntegerv( GL4.GL_CURRENT_PROGRAM, buf, 0 );
         previousShader = buf[0];
         gl.glUseProgram(shaderProgram);
     }
 
-    private void loadOneShader(int shaderId, String resourceName, GL3 gl) throws ShaderCreationException {
+    private void loadOneShader(int shaderId, String resourceName, GL4 gl) throws ShaderCreationException {
         try {
             InputStream resourceStream = getClass().getResourceAsStream(
                     resourceName
@@ -128,14 +128,14 @@ public abstract class GL3Shader
 
             // query compile status and possibly read log
             int[] status = new int[1];
-            gl.glGetShaderiv(shaderId, GL3.GL_COMPILE_STATUS, status, 0);
+            gl.glGetShaderiv(shaderId, GL4.GL_COMPILE_STATUS, status, 0);
             if (status[0] == GL.GL_TRUE){
                 // System.out.println(resourceName + ": successful");
                 // everything compiled successfully, no log
             }
             else {
                 // compile failed, read the log and return it
-                gl.glGetShaderiv(shaderId, GL3.GL_INFO_LOG_LENGTH, status, 0);
+                gl.glGetShaderiv(shaderId, GL4.GL_INFO_LOG_LENGTH, status, 0);
                 int maxLogLength = status[0];
                 if (maxLogLength > 0) {
                     byte[] log = new byte[maxLogLength];
@@ -155,7 +155,7 @@ public abstract class GL3Shader
         return shaderProgram;
     }
 
-    public boolean setUniform(GL3 gl, String varName, float value) {
+    public boolean setUniform(GL4 gl, String varName, float value) {
         int uniformLoc = gl.glGetUniformLocation( shaderProgram, varName );
         if ( uniformLoc < 0 )
             return false;
@@ -163,7 +163,7 @@ public abstract class GL3Shader
         return true;
     }
 
-    public boolean setUniform(GL3 gl, String varName, int value)
+    public boolean setUniform(GL4 gl, String varName, int value)
     {
         int uniformLoc = gl.glGetUniformLocation( shaderProgram, varName );
         if ( uniformLoc < 0 )
@@ -172,7 +172,7 @@ public abstract class GL3Shader
         return true;
     }
 
-    public boolean setUniform2fv(GL3 gl, String varName, int vecCount, float[] data)
+    public boolean setUniform2fv(GL4 gl, String varName, int vecCount, float[] data)
     {
         int uniformLoc = gl.glGetUniformLocation( shaderProgram, varName );
         if ( uniformLoc < 0 )
@@ -181,7 +181,7 @@ public abstract class GL3Shader
         return true;
     }
 
-    public boolean setUniform3v(GL3 gl, String varName, int vecCount, float[] data)
+    public boolean setUniform3v(GL4 gl, String varName, int vecCount, float[] data)
     {
         int uniformLoc = gl.glGetUniformLocation( shaderProgram, varName );
         if ( uniformLoc < 0 )
@@ -190,7 +190,7 @@ public abstract class GL3Shader
         return true;
     }
 
-    public boolean setUniform4v(GL3 gl, String varName, int vecCount, float[] data)
+    public boolean setUniform4v(GL4 gl, String varName, int vecCount, float[] data)
     {
         int uniformLoc = gl.glGetUniformLocation( shaderProgram, varName );
         if ( uniformLoc < 0 )
@@ -199,7 +199,7 @@ public abstract class GL3Shader
         return true;
     }
 
-    public boolean setUniformMatrix2fv(GL3 gl, String varName, boolean transpose, float[] data) {
+    public boolean setUniformMatrix2fv(GL4 gl, String varName, boolean transpose, float[] data) {
         int uniformLoc = gl.glGetUniformLocation( shaderProgram, varName );
         if ( uniformLoc < 0 )
             return false;
@@ -207,7 +207,7 @@ public abstract class GL3Shader
         return true;
     }
 
-    public boolean setUniformMatrix4fv(GL3 gl, String varName, boolean transpose, float[] data) {
+    public boolean setUniformMatrix4fv(GL4 gl, String varName, boolean transpose, float[] data) {
         int uniformLoc = gl.glGetUniformLocation( shaderProgram, varName );
         if ( uniformLoc < 0 )
             return false;
@@ -215,7 +215,7 @@ public abstract class GL3Shader
         return true;
     }
 
-    public void unload(GL3 gl) {
+    public void unload(GL4 gl) {
         gl.glUseProgram(previousShader);
     }
 
