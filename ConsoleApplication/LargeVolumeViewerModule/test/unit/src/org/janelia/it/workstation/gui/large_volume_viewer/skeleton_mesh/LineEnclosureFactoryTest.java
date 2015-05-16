@@ -98,7 +98,57 @@ public class LineEnclosureFactoryTest {
         totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
         logger.info("10. Coord count " + formatCoords(coords) + totalCoordCount);
         
-        int vtxNum = 1;
+		//11
+		coords = new double[] {-1.732, 0, 1};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("11. Coord count " + formatCoords(coords) + totalCoordCount);
+        
+		//12
+		coords = new double[] {1.732, 0, -1};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("12. Coord count " + formatCoords(coords) + totalCoordCount);
+        
+		//13
+		coords = new double[] {0,1,1.732};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("13. Coord count " + formatCoords(coords) + totalCoordCount);
+
+		//14
+		coords = new double[] {0,-1,1.732};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("14. Coord count " + formatCoords(coords) + totalCoordCount);
+
+		//15
+		coords = new double[] {0,1,-1.732};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("15. Coord count " + formatCoords(coords) + totalCoordCount);
+
+		//16
+		coords = new double[] {0,-1,-1.732};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("16. Coord count " + formatCoords(coords) + totalCoordCount);
+
+        //17
+		coords = new double[] {0,1,1.732};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("17. Coord count " + formatCoords(coords) + totalCoordCount);
+        
+        //18
+		coords = new double[] {0,-1,1.732};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("18. Coord count " + formatCoords(coords) + totalCoordCount);
+        
+        //19
+		coords = new double[] {0,1,-1.732};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("19. Coord count " + formatCoords(coords) + totalCoordCount);
+        
+        //20
+		coords = new double[] {-1.732,-1, 0};
+        totalCoordCount = testCoordPair(totalCoordCount, origin, coords, factory);
+        logger.info("20. Coord count " + formatCoords(coords) + totalCoordCount);
+        
+		int vtxNum = 1;
         int absVtxCount = 0;
         for (VertexInfoBean vtx: factory.getVertices()) {
             int inVertexCoordNum = 0;
