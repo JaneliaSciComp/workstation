@@ -77,9 +77,11 @@ public class LineEnclosureFactory implements TriangleSource {
         List<double[][]> endCaps = makeEndPolygons(startingCoords, endingCoords);
         //List<double[][]> endCaps = makeEndPolygonsNoTrig( startingCoords, endingCoords );
         int coordCount = 0;
-        coordCount += addVertices(endCaps.get(0));
-        coordCount += addVertices(endCaps.get(1));
-        Triangle t = new Triangle();
+        List<VertexInfoBean> startVertices = addVertices(endCaps.get(0));
+		coordCount += startVertices.size();
+        List<VertexInfoBean> endVertices = addVertices(endCaps.get(1));
+		coordCount += endVertices.size();
+        createCCWTriangles(startVertices, endVertices);
         return coordCount;
     }
 
@@ -95,7 +97,16 @@ public class LineEnclosureFactory implements TriangleSource {
     }
 
     //--------------------------------------------HELPERS
-    protected int addVertices(double[][] poly) {
+	/**
+	 * Adds vertices to the overall collection, and to the bean collection
+	 * that represents this polygon.
+	 * 
+	 * @param poly simple array of coord triples.
+	 * @param polyBeans one for each coord triple.
+	 * @return list of coord beans.
+	 */
+    protected List<VertexInfoBean> addVertices(double[][] poly) {
+		List<VertexInfoBean> polyBeans = new ArrayList<>();
         int coordCount = 0;
         for (int i = 0; i < poly.length; i++) {
             VertexInfoBean bean = new VertexInfoBean();
@@ -103,11 +114,48 @@ public class LineEnclosureFactory implements TriangleSource {
             key.setPosition(poly[i]);
             bean.setKey(key);
             vertices.add(bean);
+			polyBeans.add(bean);
             logger.info("Adding vertex {},{},{}", key.getPosition()[X], key.getPosition()[Y], key.getPosition()[Z]);
             coordCount += 3;
         }
-        return coordCount;
+        return polyBeans;
     }
+	
+	private void createCCWTriangles(List<VertexInfoBean> startingVertices, List<VertexInfoBean> endingVertices) {			
+		int vertsPerPoly = startingVertices.size();
+		for ( int polygonVertex = 0; polygonVertex < vertsPerPoly; polygonVertex++ ) {
+			// Add a triangle that demarks leading corner of rectangle, to
+			// distant edge of rectangle, and back to starting corner.
+			
+			// 1xxxxxxxxx3
+			// |    xxxxx|
+			// |        x|
+			// +---------2
+			final int nextEdgeOffset = (polygonVertex + 1) % vertsPerPoly;
+			Triangle triangle = new Triangle();
+			triangle.addVertex(startingVertices.get( polygonVertex ));
+			triangle.addVertex(endingVertices.get( nextEdgeOffset));
+			triangle.addVertex(endingVertices.get( polygonVertex ));
+			triangles.add( triangle );
+			
+			// Add a triangle that demarks the leading edge of the rectangle,
+			// to the farthest corner.
+			
+			// 4---------+
+			// |x        |
+			// |xxxxx    |
+			// 5xxxxxxxxx6
+			triangle = new Triangle();
+			triangle.addVertex(startingVertices.get( polygonVertex ));
+			triangle.addVertex( endingVertices.get(nextEdgeOffset) );
+			triangle.addVertex( startingVertices.get( nextEdgeOffset ));
+			triangles.add( triangle );
+			
+		}
+		
+        // Now treating the end caps.
+		
+	}
 
     private List<double[][]> makeEndPolygons( double[] startCoords, double[] endCoords ) {
         
