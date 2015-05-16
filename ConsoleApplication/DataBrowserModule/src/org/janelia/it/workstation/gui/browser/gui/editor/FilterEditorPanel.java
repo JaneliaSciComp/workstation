@@ -20,7 +20,6 @@ import java.util.Set;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -69,6 +68,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.javasoft.swing.SimpleDropDownButton;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.GridBagConstraints;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
@@ -80,6 +82,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import javax.swing.BoxLayout;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
@@ -144,9 +147,9 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
     
     public FilterEditorPanel() {
 
-        this.filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        this.filterPanel = new JPanel(new WrapLayout(false, FlowLayout.LEFT));
         filterPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-                
+        
         this.filterNameLabel = new JLabel("");
         filterNameLabel.setFont(FILTER_NAME_FONT);
         filterPanel.add(filterNameLabel);
@@ -245,7 +248,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         });
         filterPanel.add(saveAsButton);
         
-        this.criteriaPanel = new JPanel(new WrapLayout(true, FlowLayout.LEFT));
+        this.criteriaPanel = new JPanel(new WrapLayout(false, FlowLayout.LEFT));
         criteriaPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 8, 2));
         
         this.typeCriteriaButton = new SimpleDropDownButton("Type: Sample");
@@ -296,11 +299,14 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
             }
         };
 
-        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-        add(filterPanel);
-        add(new JSeparator(JSeparator.HORIZONTAL));
-        add(criteriaPanel);
-        add(resultsPanel);
+        JPanel top = new JPanel(new BorderLayout());
+        top.add(filterPanel, BorderLayout.NORTH);
+        top.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.CENTER);
+        top.add(criteriaPanel, BorderLayout.SOUTH);
+        
+        setLayout(new BorderLayout());
+        add(top, BorderLayout.NORTH);
+        add(resultsPanel, BorderLayout.CENTER);
 
         MyDropTargetListener dtl = new MyDropTargetListener();
         DropTarget dt = new DropTarget(this, dtl);

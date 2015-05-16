@@ -50,8 +50,14 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
         searchAttrs.add(annotationAttr);
         
         for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
-            searchAttrs.addAll(DomainUtils.getAttributes(domainObject));
-            break; // for now we assume heterogenous lists, so we can quit after looking at the first object
+            for(DomainObjectAttribute attr : DomainUtils.getAttributes(domainObject)) {
+                if (attr.isDisplay()) {
+                    searchAttrs.add(attr);
+                }
+            }
+            // for now we assume that we are only displaying heterogenous 
+            // lists, so we can quit after looking at the first object
+            break; 
         }
         
         Collections.sort(searchAttrs, new Comparator<DomainObjectAttribute>() {
@@ -66,7 +72,6 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
         }
         
         setAttributeColumns(searchAttrs);
-                
         showObjects(domainObjectList.getDomainObjects());
     }
         
