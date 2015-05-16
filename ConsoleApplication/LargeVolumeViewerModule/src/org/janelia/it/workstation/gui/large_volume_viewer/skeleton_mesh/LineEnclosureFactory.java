@@ -154,7 +154,23 @@ public class LineEnclosureFactory implements TriangleSource {
 		}
 		
         // Now treating the end caps.
-		
+		// Winding to point close end away from tube.
+		for ( int i = 0; i < (vertsPerPoly - 2); i++ ) {
+			final Triangle triangle = new Triangle();
+			triangle.addVertex( startingVertices.get(0) );			
+			triangle.addVertex( startingVertices.get( i + 2 ) );
+			triangle.addVertex( startingVertices.get( i + 1 ) );
+			triangles.add( triangle );
+		}
+			
+		// Winding to point far end away from tube.
+		for ( int i = 0; i < (vertsPerPoly - 2); i++ ) {
+			final Triangle triangle = new Triangle();
+			triangle.addVertex( endingVertices.get(0) );
+			triangle.addVertex( endingVertices.get( i + 1 ) );
+			triangle.addVertex( endingVertices.get( i + 2 ) );
+			triangles.add( triangle );
+		}
 	}
 
     private List<double[][]> makeEndPolygons( double[] startCoords, double[] endCoords ) {
