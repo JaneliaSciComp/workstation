@@ -69,8 +69,6 @@ import org.slf4j.LoggerFactory;
 
 import de.javasoft.swing.SimpleDropDownButton;
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.GridBagConstraints;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
@@ -82,7 +80,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import javax.swing.BoxLayout;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
@@ -92,6 +89,7 @@ import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator;
+import org.janelia.it.workstation.gui.util.JScrollPopupMenu;
 import org.openide.util.datatransfer.ExTransferable;
 
 /**
@@ -102,7 +100,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
     
-    private static final String ENTITY_TYPE_FIELD = "entity_type";
+    private static final String SOLR_TYPE_FIELD = "type";
     
     // UI Settings
     private static final int MAX_VALUES_STRING_LENGTH = 20;
@@ -120,7 +118,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
     private final PaginatedResultsPanel resultsPanel;
     
     private SimpleDropDownButton typeCriteriaButton;
-    private SimpleDropDownButton addFilterButton;
+    private SimpleDropDownButton addCriteriaButton;
     private JComboBox inputField;    
     
     // Search state
@@ -256,8 +254,16 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         ButtonGroup typeGroup = new ButtonGroup();
         
         Reflections reflections = new Reflections(JANELIA_MODEL_PACKAGE);
-        Set<Class<?>> searchClasses = reflections.getTypesAnnotatedWith(SearchType.class);
-    	        
+        List<Class<?>> searchClasses = new ArrayList<>(reflections.getTypesAnnotatedWith(SearchType.class));
+    	Collections.sort(searchClasses, new Comparator<Class<?>>() {
+            @Override
+            public int compare(Class<?> o1, Class<?> o2) {
+                final String l1 = o1.getAnnotation(SearchType.class).label();
+                final String l2 = o2.getAnnotation(SearchType.class).label();
+                return l1.compareTo(l2);
+            }
+        });        
+        
         for (final Class<?> searchClazz : searchClasses) {
             final String label = searchClazz.getAnnotation(SearchType.class).label();
             JMenuItem menuItem = new JRadioButtonMenuItem(label, searchClazz.equals(DEFAULT_SEARCH_CLASS));
@@ -270,7 +276,9 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
             typeCriteriaButton.getPopupMenu().add(menuItem);
         }
         
-        this.addFilterButton = new SimpleDropDownButton("Add Filter...");
+        this.addCriteriaButton = new SimpleDropDownButton("Add Criteria...");
+        // TODO: we need to support long lists, but this doesnt work because the Jyloo button doesnt want to render the scrollbar
+//        addCriteriaButton.setPopupMenu(new JScrollPopupMenu());
 
         this.inputField = new JComboBox();
         inputField.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
@@ -354,7 +362,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
 
         searchAttrs.clear();
         facets.clear();
-        facets.add(ENTITY_TYPE_FIELD);
+        facets.add(SOLR_TYPE_FIELD);
 
         for (Field field : ReflectionUtils.getAllFields(searchClass)) {
             SearchAttribute searchAttributeAnnot = field.getAnnotation(SearchAttribute.class);
@@ -380,7 +388,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
             }
         });
 
-        populateAddFilterMenu(addFilterButton.getPopupMenu());
+        populateAddFilterMenu(addCriteriaButton.getPopupMenu());
         dirty = true;
         refresh();
     }
@@ -458,7 +466,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
             }
         }
         
-        criteriaPanel.add(addFilterButton);
+        criteriaPanel.add(addCriteriaButton);
         criteriaPanel.revalidate();
     }
     
@@ -546,7 +554,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         final Map<String, Set<String>> filters = new HashMap<>();
         SearchType searchTypeAnnot = searchClass.getAnnotation(SearchType.class);
         String searchType = searchTypeAnnot.key();
-        filters.put(ENTITY_TYPE_FIELD,getSingleItemMap(searchType));
+        filters.put(SOLR_TYPE_FIELD,getSingleItemMap(searchType));
         
         List<Criteria> criteriaList = filter.getCriteriaList();
         if (criteriaList!=null) {
@@ -745,7 +753,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         List<Reference> refs = new ArrayList<>();
         for(SolrDocument doc : qr.getResults()) {
             Long id = new Long(doc.get("id").toString());
-            String type = (String)doc.getFieldValue("entity_type");
+            String type = (String)doc.getFieldValue(SOLR_TYPE_FIELD);
             refs.add(new Reference(type, id));
             ids.add(id);
         }
