@@ -204,7 +204,9 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
 
     public void navigationRelative(Long id, TmNeuron.AnnotationNavigationDirection direction) {
-        setNextParent(annoMgr.relativeAnnotation(id, direction));
+        Anchor anchor = skeleton.getAnchorByID(annoMgr.relativeAnnotation(id, direction));
+        setNextParent(anchor);
+        qvController.setCameraFocus(anchor.getLocation());
     }
 
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {
