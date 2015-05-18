@@ -47,18 +47,26 @@ public class DomainUtils {
         if (files==null) return null;
         String filepath = files.get(fileType);
         if (filepath==null) return null;
+
+        if (filepath.startsWith("/")) {
+            // Already an absolute path, don't need to add prefix
+            return filepath;
+        }
         
         StringBuilder urlSb = new StringBuilder();
 
+        // Add prefix
         if (hasFiles instanceof HasFilepath) {
             String rootPath = ((HasFilepath)hasFiles).getFilepath();
             if (rootPath!=null) {
                 urlSb.append(rootPath);
+                if (!rootPath.endsWith("/")) urlSb.append("/");
             }
         }
         
-        if (urlSb.length()>0) urlSb.append("/");
+        // Add relative path
         urlSb.append(filepath);
+        
         return urlSb.length()>0 ? urlSb.toString() : null;
     }
 

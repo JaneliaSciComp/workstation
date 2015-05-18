@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
+import de.javasoft.swing.JYPopupMenu;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -84,12 +85,12 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
+import org.janelia.it.jacs.model.domain.support.MongoMapped;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator;
-import org.janelia.it.workstation.gui.util.JScrollPopupMenu;
 import org.openide.util.datatransfer.ExTransferable;
 
 /**
@@ -121,6 +122,10 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
     private SimpleDropDownButton addCriteriaButton;
     private JComboBox inputField;    
     
+    // TODO: Move somewhere and factor out of DomainObjectTableViewer
+    protected static final String JANELIA_MODEL_PACKAGE = "org.janelia.it.jacs.model.domain";
+    private final Map<String,String> searchTypeToCollection = new HashMap<>();
+        
     // Search state
     private Filter filter;    
     private boolean dirty = false;
@@ -129,6 +134,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
     private Class<?> searchClass;
     private List<DomainObjectAttribute> searchAttrs = new ArrayList<>();
     private List<String> facets = new ArrayList<>();
+    private Map<String,List<FacetValue>> facetValues = new HashMap<>();
     
     private String displayQueryString;
     private SolrQuery query;
@@ -136,12 +142,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
     // Results
     private SearchResults searchResults;
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
-    
-    // TODO: Move somewhere and factor out of DomainObjectTableViewer
-    protected static final String JANELIA_MODEL_PACKAGE = "org.janelia.it.jacs.model.domain";
-
-    private Map<String,List<FacetValue>> facetValues = new HashMap<>();
-    
     
     public FilterEditorPanel() {
 
@@ -255,6 +255,27 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         
         Reflections reflections = new Reflections(JANELIA_MODEL_PACKAGE);
         List<Class<?>> searchClasses = new ArrayList<>(reflections.getTypesAnnotatedWith(SearchType.class));
+                
+        for(Class<?> searchClazz : searchClasses) {
+            String searchTypeKey = searchClazz.getAnnotation(SearchType.class).key();
+            String collectionName = null;
+            Class<?> clazz = searchClazz;
+            while (clazz!=null) {
+                MongoMapped mongoMapped = clazz.getAnnotation(MongoMapped.class);
+                if (mongoMapped!=null) {
+                    collectionName = mongoMapped.collectionName();
+                    break;
+                }
+                clazz = clazz.getSuperclass();
+            }
+            if (collectionName!=null) {
+                searchTypeToCollection.put(searchTypeKey, collectionName);
+            }
+            else {
+                log.warn("Cannot find collection name for search type "+searchTypeKey);
+            }
+        }
+        
     	Collections.sort(searchClasses, new Comparator<Class<?>>() {
             @Override
             public int compare(Class<?> o1, Class<?> o2) {
@@ -269,6 +290,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
             JMenuItem menuItem = new JRadioButtonMenuItem(label, searchClazz.equals(DEFAULT_SEARCH_CLASS));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
+                    dirty = true;
                     setSearchClass(searchClazz);
                 }
             });
@@ -277,9 +299,10 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         }
         
         this.addCriteriaButton = new SimpleDropDownButton("Add Criteria...");
-        // TODO: we need to support long lists, but this doesnt work because the Jyloo button doesnt want to render the scrollbar
-//        addCriteriaButton.setPopupMenu(new JScrollPopupMenu());
-
+        JYPopupMenu popupMenu = new JYPopupMenu();
+        popupMenu.setVisibleElements(10);
+        addCriteriaButton.setPopupMenu(popupMenu);
+        
         this.inputField = new JComboBox();
         inputField.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
         inputField.setEditable(true);
@@ -327,7 +350,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         filter.setName(DEFAULT_FILTER_NAME);
         filter.setSearchType(DEFAULT_SEARCH_CLASS.getName());
         setSearchClass(DEFAULT_SEARCH_CLASS);
-        saveButton.setVisible(false);
     }
     
     @Override
@@ -335,7 +357,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         this.filter = filter;
         try {
             setSearchClass(Class.forName(filter.getSearchType()));
-            saveButton.setVisible(false);
         }
         catch (ClassNotFoundException e) {
             SessionMgr.getSessionMgr().handleException(e);
@@ -363,7 +384,10 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         searchAttrs.clear();
         facets.clear();
         facets.add(SOLR_TYPE_FIELD);
+        facetValues.clear();
 
+        Set<String> attrNames = new HashSet<>();
+        
         for (Field field : ReflectionUtils.getAllFields(searchClass)) {
             SearchAttribute searchAttributeAnnot = field.getAnnotation(SearchAttribute.class);
             if (searchAttributeAnnot != null) {
@@ -374,9 +398,22 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
                     Method getter = ReflectionHelper.getGetter(searchClass, field.getName());
                     DomainObjectAttribute attr = new DomainObjectAttribute(searchAttributeAnnot.key(), searchAttributeAnnot.label(), searchAttributeAnnot.facet(), searchAttributeAnnot.display(), getter);
                     searchAttrs.add(attr);
+                    attrNames.add(attr.getName());
                 }
                 catch (Exception e) {
                     log.warn("Error getting field "+searchClass.getName()+"."+field.getName(), e);
+                }
+            }
+        }
+        
+        if (filter.hasCriteria()) {
+            for(Iterator<Criteria> i=filter.getCriteriaList().iterator(); i.hasNext(); ) {
+                Criteria criteria = i.next();
+                if (criteria instanceof AttributeCriteria) {
+                   AttributeCriteria ac = (AttributeCriteria)criteria;
+                   if (!attrNames.contains(ac.getAttributeName())) {
+                       i.remove();
+                   }
                 }
             }
         }
@@ -389,7 +426,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         });
 
         populateAddFilterMenu(addCriteriaButton.getPopupMenu());
-        dirty = true;
         refresh();
     }
 
@@ -410,7 +446,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
     }
 
     private void refresh() {
-        log.info("refresh");
+        log.trace("refresh");
         
         String inputFieldValue = getInputFieldValue();
         
@@ -420,9 +456,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         
         filter.setSearchString(inputFieldValue);
         
-        if (dirty) {
-            saveButton.setVisible(true);
-        }
+        saveButton.setVisible(dirty && !filter.getName().equals(DEFAULT_FILTER_NAME));
         
         performSearch(0, true);
     }
@@ -754,8 +788,14 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         for(SolrDocument doc : qr.getResults()) {
             Long id = new Long(doc.get("id").toString());
             String type = (String)doc.getFieldValue(SOLR_TYPE_FIELD);
-            refs.add(new Reference(type, id));
-            ids.add(id);
+            String collectionName = searchTypeToCollection.get(type);
+            if (collectionName!=null) {
+                refs.add(new Reference(collectionName, id));
+                ids.add(id);
+            }
+            else {
+                log.warn("Unknown type has no collection mapping: "+type);
+            }
         }
         
         DomainDAO dao = DomainMgr.getDomainMgr().getDao();
