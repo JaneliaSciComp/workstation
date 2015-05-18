@@ -116,6 +116,20 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
      */
     private void createVerticesAndBuffers() throws Exception {
         // Make triangle sources.
+		LineEnclosureFactory factory = new LineEnclosureFactory(6, 8);
+		// Iterate over all the annotations, and add enclosures for each
+		// line segment.
+		
+		// Add the factory to the collection.
+		triangleSources.add(factory);
+		
+		// Establish the indexes.
+		BufferPackager packager = new BufferPackager();
+		RenderBuffersBean rbb = new RenderBuffersBean();
+		rbb.setAttributesBuffer(packager.getVertexAttributes(factory));
+		rbb.setIndexBuffer(packager.getIndices(factory));
+		
+		renderIdToBuffers.put(1L , rbb);
     }
     
 }
