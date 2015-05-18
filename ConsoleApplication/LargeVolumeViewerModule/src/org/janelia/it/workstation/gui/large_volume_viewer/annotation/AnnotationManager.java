@@ -1039,6 +1039,18 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 System.out.println("moving rootward");
                 break;
             case ENDWARD:
+                // if no children (already end), done; if straight, move through
+                //  children until branch or end; if branch, take first child and
+                //  move to branch or end
+                if (ann.isEnd()) {
+                    break;
+                }
+                if (ann.isBranch()) {
+                    ann = neuron.getChildrenOfOrdered(ann).get(0);
+                }
+                while (!ann.isEnd() && !ann.isBranch()) {
+                    ann = neuron.getChildrenOf(ann).get(0);
+                }
                 System.out.println("moving endward");
                 break;
             case NEXT_PARALLEL:
