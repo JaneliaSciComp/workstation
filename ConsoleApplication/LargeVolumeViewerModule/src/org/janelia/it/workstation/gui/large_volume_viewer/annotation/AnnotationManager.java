@@ -1016,6 +1016,43 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         creator.execute();
     }
 
+
+    /**
+     * find an annotation relative to the input annotation in
+     * a given direction; to be used in navigation along the skeleton;
+     * see code for exact behavior
+     */
+    public Long relativeAnnotation(Long annID, TmNeuron.AnnotationNavigationDirection direction) {
+        TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(annID);
+        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annID);
+        switch (direction) {
+            case ROOTWARD:
+                // if root, done; anything else, move to next rootward branch,
+                //  or root if there isn't one
+                if (ann.isRoot()) {
+                    break;
+                }
+                ann = neuron.getParentOf(ann);
+                while (!ann.isRoot() && !ann.isBranch()) {
+                    ann = neuron.getParentOf(ann);
+                }
+                System.out.println("moving rootward");
+                break;
+            case ENDWARD:
+                System.out.println("moving endward");
+                break;
+            case NEXT_PARALLEL:
+                System.out.println("moving next parallel");
+                break;
+            case PREV_PARALLEL:
+                System.out.println("moving prev parallel");
+                break;
+        }
+
+        return ann.getId();
+    }
+
+
     /**
      * pop a dialog to choose neuron style; three variants work together to operate
      * from different input sources
