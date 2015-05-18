@@ -58,7 +58,7 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeSourceI, VertexExpor
         // Now have a full complement of triangles and vertices.  For this renderable, can traverse the
         // vertices, making a "composite normal" based on the normals of all entangling triangles.
         NormalCompositor normalCompositor = new NormalCompositor();
-        normalCompositor.createGouraudNormals(factory);
+        normalCompositor.combineAxialNormals(factory);
 
         triangleSources.add(factory);
         BufferPackager packager = new BufferPackager();

@@ -8,13 +8,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
@@ -24,7 +20,6 @@ import javax.swing.ImageIcon;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
-import java.util.Vector;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
@@ -39,11 +34,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.shader.PathShader;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
-import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
-import org.janelia.it.workstation.tracing.VoxelPosition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * SkeletonActor is responsible for painting neuron traces in the large volume
@@ -71,8 +62,6 @@ public class SkeletonActor
         }
     }
     
-    private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
-
     // semantic constants for allocating byte arrays
     private static final int FLOAT_BYTE_COUNT = 4;
     private static final int VERTEX_FLOAT_COUNT = 3;
@@ -96,7 +85,6 @@ public class SkeletonActor
     private boolean verticesNeedCopy = false;
 
     // Vertex buffer objects need indices
-    private Map<Anchor, Integer> neuronAnchorIndices = new HashMap<>();
     private Map<Long, Map<Integer, Anchor>> neuronIndexAnchors = new HashMap<>();
     private Map<Long, IntBuffer> neuronPointIndices = new HashMap<>();
     private Map<Long, IntBuffer> neuronLineIndices = new HashMap<>();
@@ -121,6 +109,8 @@ public class SkeletonActor
     
     //
     private boolean bIsVisible = true;
+    
+    private SkeletonSegmentManager skeletonSegmentManager;
 
     private Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments = new HashMap<>();
 
@@ -172,7 +162,7 @@ public class SkeletonActor
     }
 
     private synchronized void displayLines(GLAutoDrawable glDrawable) {
-        if (neuronLineIndices.size() == 0) {
+        if (neuronLineIndices.isEmpty()) {
             return;
         }
 
@@ -297,14 +287,14 @@ public class SkeletonActor
             int tempIndex;
             Anchor hoverAnchor = skeleton.getHoverAnchor();
             if (hoverAnchor != null && hoverAnchor.getNeuronID().equals(neuronID)) {
-                tempIndex = getIndexForAnchor(hoverAnchor);
+                tempIndex = skeletonSegmentManager.getIndexForAnchor(hoverAnchor);
             } else {
                 tempIndex = -1;
             }
             anchorShader.setUniform(gl, "highlightAnchorIndex", tempIndex);
             Anchor nextParent = skeleton.getNextParent();
             if (nextParent != null && nextParent.getNeuronID().equals(neuronID)) {
-                tempIndex = getIndexForAnchor(nextParent);
+                tempIndex = skeletonSegmentManager.getIndexForAnchor(nextParent);
             } else {
                 tempIndex = -1;
             }
@@ -478,16 +468,6 @@ public class SkeletonActor
         lineShader.unload(gl2);
     }
 
-    public int getIndexForAnchor(Anchor anchor) {
-        if (anchor == null) {
-            return -1;
-        }
-        if (neuronAnchorIndices.containsKey(anchor)) {
-            return neuronAnchorIndices.get(anchor);
-        }
-        return -1;
-    }
-
     @Override
     public BoundingBox3d getBoundingBox3d() {
         return bb; // TODO actually populate bounding box
@@ -510,6 +490,7 @@ public class SkeletonActor
             return;
         }
         this.skeleton = skeleton;
+        skeletonSegmentManager = new SkeletonSegmentManager( skeleton, updater );
         updateAnchors();
     }
 
@@ -593,7 +574,7 @@ public class SkeletonActor
             neuronColors.get(neuronID).rewind();
         }
 
-        neuronAnchorIndices.clear();
+        skeletonSegmentManager.clearAnchorIndices();
         neuronIndexAnchors.clear();
         Map<Long, Integer> neuronVertexIndex = new HashMap<>();
         int currentVertexIndex;
@@ -619,7 +600,7 @@ public class SkeletonActor
                 currentVertexIndex = 0;
                 neuronVertexIndex.put(neuronID, currentVertexIndex);
             }
-            neuronAnchorIndices.put(anchor, currentVertexIndex);
+            skeletonSegmentManager.putIndexForAnchor(anchor, currentVertexIndex);
 
             if (!neuronIndexAnchors.containsKey(neuronID)) {
                 neuronIndexAnchors.put(neuronID, new HashMap<Integer, Anchor>());
@@ -639,12 +620,12 @@ public class SkeletonActor
             neuronPointIndices.get(neuronID).rewind();
         }
         for (Anchor anchor : skeleton.getAnchors()) {
-            int i1 = neuronAnchorIndices.get(anchor);
+            int i1 = skeletonSegmentManager.getIndexForAnchor(anchor);
             neuronPointIndices.get(anchor.getNeuronID()).put(i1);
         }
 
         // automatically traced paths
-        updateTracedPaths();
+        skeletonSegmentManager.updateTracedPaths();
 
         // lines between points, if no path (must be done after path updates so
         //  we know where the paths are!)
@@ -658,43 +639,11 @@ public class SkeletonActor
     }
 
     private void updateLines() {
-        // iterate through anchors and record lines where there are no traced
-        //  paths; then copy the line indices you get into an array
-        // note: I believe this works because we process the points and
-        //  lines in exactly the same order (the order skeleton.getAnchors()
-        //  returns them in)
-
-        Map<Long, List<Integer>> tempLineIndices = new HashMap<>();
-        for (Anchor anchor : skeleton.getAnchors()) {
-            int i1 = getIndexForAnchor(anchor);
-            if (i1 < 0) {
-                continue;
-            }
-            for (Anchor neighbor : anchor.getNeighbors()) {
-                int i2 = getIndexForAnchor(neighbor);
-                if (i2 < 0) {
-                    continue;
-                }
-                if (i1 >= i2) {
-                    continue; // only use ascending pairs, for uniqueness
-                }
-                SegmentIndex segmentIndex = new SegmentIndex(anchor.getGuid(), neighbor.getGuid());
-                // if neuron has any paths, check and don't draw line
-                //  where there's already a traced segment
-                if (neuronTracedSegments.containsKey(anchor.getNeuronID())
-                        && neuronTracedSegments.get(anchor.getNeuronID()).containsKey(segmentIndex)) {
-                    continue;
-                }
-                if (!tempLineIndices.containsKey(anchor.getNeuronID())) {
-                    tempLineIndices.put(anchor.getNeuronID(), new Vector<Integer>());
-                }
-                tempLineIndices.get(anchor.getNeuronID()).add(i1);
-                tempLineIndices.get(anchor.getNeuronID()).add(i2);
-            }
-        }
-
+        
         // loop over neurons and fill the arrays
         neuronLineIndices.clear();
+        skeletonSegmentManager.updateLines();
+        Map<Long, List<Integer>> tempLineIndices = skeletonSegmentManager.getLineIndices();
         for (Long neuronID : tempLineIndices.keySet()) {
             ByteBuffer lineBytes = ByteBuffer.allocateDirect(tempLineIndices.get(neuronID).size() * INT_BYTE_COUNT);
             lineBytes.order(ByteOrder.nativeOrder());
@@ -711,6 +660,7 @@ public class SkeletonActor
         verticesNeedCopy = true;
     }
 
+    /*
     private void updateTracedPaths() {
         // Update Traced path actors
 
@@ -789,6 +739,7 @@ public class SkeletonActor
             }
         }
     }
+    */
 
     public void setTileFormat(TileFormat tileFormat) {
         this.tileFormat = tileFormat;
@@ -973,7 +924,7 @@ public class SkeletonActor
         if (dragAnchor == null) {
             return;
         }
-        int index = getIndexForAnchor(dragAnchor);
+        int index = skeletonSegmentManager.getIndexForAnchor(dragAnchor);
         if (index < 0) {
             return;
         }

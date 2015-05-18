@@ -16,6 +16,7 @@ import org.janelia.it.jacs.shared.mesh_loader.Triangle;
 import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
 import org.janelia.it.jacs.shared.mesh_loader.VertexInfoBean;
 import org.janelia.it.jacs.shared.mesh_loader.VertexInfoKey;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,7 @@ import org.slf4j.LoggerFactory;
  */
 public class LineEnclosureFactory implements TriangleSource {
     
-    private static Logger logger = LoggerFactory.getLogger(LineEnclosureFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger(LineEnclosureFactory.class);
 	public static final double ZERO_TOLERANCE = 0.0001;
 	private static final double RADIANS_90 = Math.PI / 2.0;
     private static final int X = 0, Y = 1, Z = 2;
@@ -56,7 +57,7 @@ public class LineEnclosureFactory implements TriangleSource {
         this.zAxisAlignedPrototypePolygon = createZAxisAlignedPrototypeEndPolygon();  
         axisAlignedPrototypePolygons.put(2, this.zAxisAlignedPrototypePolygon);
     }
-
+    
     /**
      * Makes a set of triangles (geometry) to make a "pipe" around
      * the pair of starting/ending coords.  May make overhangs for "elbow
@@ -107,7 +108,6 @@ public class LineEnclosureFactory implements TriangleSource {
 	 */
     protected List<VertexInfoBean> addVertices(double[][] poly) {
 		List<VertexInfoBean> polyBeans = new ArrayList<>();
-        int coordCount = 0;
         for (int i = 0; i < poly.length; i++) {
             VertexInfoBean bean = new VertexInfoBean();
             VertexInfoKey key = new VertexInfoKey();
@@ -116,7 +116,6 @@ public class LineEnclosureFactory implements TriangleSource {
             vertices.add(bean);
 			polyBeans.add(bean);
             logger.info("Adding vertex {},{},{}", key.getPosition()[X], key.getPosition()[Y], key.getPosition()[Z]);
-            coordCount += 3;
         }
         return polyBeans;
     }
@@ -133,9 +132,16 @@ public class LineEnclosureFactory implements TriangleSource {
 			// +---------2
 			final int nextEdgeOffset = (polygonVertex + 1) % vertsPerPoly;
 			Triangle triangle = new Triangle();
-			triangle.addVertex(startingVertices.get( polygonVertex ));
-			triangle.addVertex(endingVertices.get( nextEdgeOffset));
-			triangle.addVertex(endingVertices.get( polygonVertex ));
+
+            final VertexInfoBean topLeft = startingVertices.get( polygonVertex );
+			triangle.addVertex(topLeft);
+            
+            final VertexInfoBean bottomRight = endingVertices.get(polygonVertex);
+            triangle.addVertex( bottomRight );
+
+            final VertexInfoBean topRight = endingVertices.get( nextEdgeOffset);
+			triangle.addVertex( topRight );
+            
 			triangles.add( triangle );
 			
 			// Add a triangle that demarks the leading edge of the rectangle,
@@ -146,9 +152,13 @@ public class LineEnclosureFactory implements TriangleSource {
 			// |xxxxx    |
 			// 5xxxxxxxxx6
 			triangle = new Triangle();
-			triangle.addVertex(startingVertices.get( polygonVertex ));
-			triangle.addVertex( endingVertices.get(nextEdgeOffset) );
-			triangle.addVertex( startingVertices.get( nextEdgeOffset ));
+			triangle.addVertex( topLeft );
+            
+            final VertexInfoBean bottomLeft = startingVertices.get( nextEdgeOffset );
+			triangle.addVertex( bottomLeft );
+            
+			triangle.addVertex( bottomRight );
+            
 			triangles.add( triangle );
 			
 		}
@@ -326,12 +336,6 @@ public class LineEnclosureFactory implements TriangleSource {
 	}
 
     private double[] getPlanarProjections( double[] lineDelta ) {
-        // Applies signs, multiplied, to get sometimes-negative projections.
-//        double[] signums = new double[] {
-//            Math.signum(lineDelta[X]),
-//            Math.signum(lineDelta[Y]),
-//            Math.signum(lineDelta[Z])
-//        };
         return new double[] {
             Math.sqrt(lineDelta[Y] * lineDelta[Y] + lineDelta[Z] * lineDelta[Z]),
             Math.sqrt(lineDelta[Z] * lineDelta[Z] + lineDelta[X] * lineDelta[X]),
@@ -357,11 +361,6 @@ public class LineEnclosureFactory implements TriangleSource {
         for ( int i = 0; i < startCoords.length; i++ ) {
             delta[ i ] = startCoords[ i ] - endCoords[ i ];
         }
-//        if (delta[2] < 0) {
-//            for (int i = 0; i < 3; i++) {
-//                delta[i] *= -1;
-//            }
-//        }
         return delta;
     }
     
