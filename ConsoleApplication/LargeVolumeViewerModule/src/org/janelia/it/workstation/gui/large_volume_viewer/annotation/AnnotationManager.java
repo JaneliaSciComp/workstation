@@ -1054,9 +1054,28 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 System.out.println("moving endward");
                 break;
             case NEXT_PARALLEL:
+                // on end, nothing; on root with one child, nothing
+                // on link descendant of root with no branches, nothing
+                // on branch, first child of branch
+                // on link that has a rootward branch point: move to first
+                //  link after next child of that branch
+                if (ann.isEnd()) {
+                    break;
+                }
+                if (ann.isRoot() && neuron.getChildrenOf(ann).size() == 1) {
+                    break;
+                }
+
+
+                // this is going to be complicated; break it out into a method,
+                //  and let it be called with a direction, so we don't have
+
+
+
                 System.out.println("moving next parallel");
                 break;
             case PREV_PARALLEL:
+                // same behavior as NEXT_PARALLEL but opposite order of children
                 System.out.println("moving prev parallel");
                 break;
         }
