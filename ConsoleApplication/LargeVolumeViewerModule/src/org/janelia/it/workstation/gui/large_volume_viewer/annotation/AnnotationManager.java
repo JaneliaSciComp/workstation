@@ -31,12 +31,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1036,7 +1035,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 while (!ann.isRoot() && !ann.isBranch()) {
                     ann = neuron.getParentOf(ann);
                 }
-                System.out.println("moving rootward");
                 break;
             case ENDWARD:
                 // if no children (already end), done; if straight, move through
@@ -1051,32 +1049,45 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 while (!ann.isEnd() && !ann.isBranch()) {
                     ann = neuron.getChildrenOf(ann).get(0);
                 }
-                System.out.println("moving endward");
                 break;
             case NEXT_PARALLEL:
-                // on end, nothing; on root with one child, nothing
-                // on link descendant of root with no branches, nothing
-                // on branch, first child of branch
-                // on link that has a rootward branch point: move to first
-                //  link after next child of that branch
-                if (ann.isEnd()) {
-                    break;
-                }
+            case PREV_PARALLEL:
+                // easy cases first:
+                //  on root with one child, nothing
+                //  on branch, first child of branch
                 if (ann.isRoot() && neuron.getChildrenOf(ann).size() == 1) {
                     break;
                 }
+                if (ann.isBranch()) {
+                    ann = neuron.getChildrenOfOrdered(ann).get(0);
+                    break;
+                }
 
+                // harder cases:
+                //  on link descendant of root with no branches, nothing
+                //  on link that has a rootward branch point: move to first
+                //      link after next child of that branch
 
-                // this is going to be complicated; break it out into a method,
-                //  and let it be called with a direction, so we don't have
+                // by now we're on a link; find the next branch/root up, and
+                //  keep track of the first child after the branch
+                TmGeoAnnotation previous = ann;
+                TmGeoAnnotation current= ann;
+                while (!current.isBranch() && !current.isRoot()) {
+                    previous = current;
+                    current = neuron.getParentOf(previous);
+                }
 
+                // is it the root with one child?
+                if (current.isRoot() && neuron.getChildrenOf(current).size() == 1) {
+                    break;
+                }
 
-
-                System.out.println("moving next parallel");
-                break;
-            case PREV_PARALLEL:
-                // same behavior as NEXT_PARALLEL but opposite order of children
-                System.out.println("moving prev parallel");
+                // now we're on a branch (possibly the root) that has multiple children;
+                //  find the next after the one we've got
+                List<TmGeoAnnotation> children = neuron.getChildrenOfOrdered(current);
+                int offset = (direction == TmNeuron.AnnotationNavigationDirection.NEXT_PARALLEL) ? 1 : -1;
+                Collections.rotate(children, -children.indexOf(previous) + offset);
+                ann = children.get(0);
                 break;
         }
 
