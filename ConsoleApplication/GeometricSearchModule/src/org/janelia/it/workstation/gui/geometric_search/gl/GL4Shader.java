@@ -20,9 +20,13 @@ import java.nio.IntBuffer;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL4;
+import javax.media.opengl.glu.GLU;
 
 public abstract class GL4Shader
 {
+
+    protected static GLU glu = new GLU();
+
     private int vertexShader = 0;
     private int fragmentShader = 0;
     private int shaderProgram = 0;
@@ -227,6 +231,14 @@ public abstract class GL4Shader
         public ShaderCreationException( String message, Throwable ex ) {
             super( message, ex );
         }
+    }
+
+    protected void checkGlError(GL4 gl, String message) {
+        int errorNumber = gl.glGetError();
+        if (errorNumber <= 0)
+            return;
+        String errorStr = glu.gluErrorString(errorNumber);
+        logger.error( "OpenGL Error " + errorNumber + ": " + errorStr + ": " + message );
     }
 
 }

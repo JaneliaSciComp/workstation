@@ -10,8 +10,7 @@ import java.nio.IntBuffer;
 /**
  * Created by murphys on 5/14/15.
  */
-public class
-        TexelActor extends GL4SimpleActor {
+public class TexelActor extends GL4SimpleActor {
 
     private final Logger logger = LoggerFactory.getLogger(TexelActor.class);
 
