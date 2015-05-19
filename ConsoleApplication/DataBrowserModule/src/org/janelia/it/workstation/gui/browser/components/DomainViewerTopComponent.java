@@ -4,6 +4,7 @@ import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import javax.swing.JComponent;
+import org.apache.commons.lang.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -155,7 +156,7 @@ public final class DomainViewerTopComponent extends TopComponent {
     public void loadDomainObject(DomainObjectSelectionEvent event) {
 
         // We only care about events if we're active
-        if (!isActive(this)) {
+        if (!isActive(this) || !isVisible()) {
             log.debug("Viewer is not active");
             return;
         }
@@ -177,10 +178,11 @@ public final class DomainViewerTopComponent extends TopComponent {
             return;
         }
         
-        requestVisible();
-        
-        final DomainObject domainObject = event.getDomainObject();
-
+//        requestVisible();
+        loadDomainObject(event.getDomainObject());
+    }
+    
+    public void loadDomainObject(DomainObject domainObject) {
         // Do we already have the given node loaded?
         if (!setCurrent(domainObject)) {
             return;
@@ -195,7 +197,8 @@ public final class DomainViewerTopComponent extends TopComponent {
             setEditorClass(editorClass);
         }
         editor.loadDomainObject(domainObject);
-        setName(domainObject.getName());
+        setName(StringUtils.abbreviate(domainObject.getName(), 30));
+        
     }
 
     private boolean hasAncestorWithType(Component component, Class<?> clazz) {

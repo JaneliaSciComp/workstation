@@ -223,7 +223,6 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
                     c.weighty = 0.9;
                     PipelineResultPanel resultPanel = new PipelineResultPanel(objective, spr);
                     resultPanels.add(resultPanel);
-                    log.info("Adding "+spr.getName());
                     dataPanel.add(resultPanel);
                 }
             }

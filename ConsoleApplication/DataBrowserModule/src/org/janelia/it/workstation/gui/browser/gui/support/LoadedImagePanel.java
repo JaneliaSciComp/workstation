@@ -42,6 +42,7 @@ public class LoadedImagePanel extends JPanel {
         setLayout(new BorderLayout());
         setOpaque(false);
         
+        
         loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);
         loadingLabel.setIcon(Icons.getLoadingIcon());
@@ -68,13 +69,14 @@ public class LoadedImagePanel extends JPanel {
                
 //        setBorder(BorderFactory.createLineBorder(Color.ORANGE));
         
-        setImageLabel(loadingLabel);
-        
-        load();
+        if (imageFilename!=null) {
+            load();
+        }
     }
 
     private void load() {
         
+        setImageLabel(loadingLabel);
         loadWorker = new LoadImageWorker(imageFilename) {
 
             @Override

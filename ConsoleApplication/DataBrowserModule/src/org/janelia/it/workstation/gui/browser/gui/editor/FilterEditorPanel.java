@@ -257,7 +257,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         List<Class<?>> searchClasses = new ArrayList<>(reflections.getTypesAnnotatedWith(SearchType.class));
                 
         for(Class<?> searchClazz : searchClasses) {
-            String searchTypeKey = searchClazz.getAnnotation(SearchType.class).key();
+            String searchTypeKey = searchClazz.getAnnotation(SearchType.class).label();
             String collectionName = null;
             Class<?> clazz = searchClazz;
             while (clazz!=null) {
@@ -587,7 +587,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
 
         final Map<String, Set<String>> filters = new HashMap<>();
         SearchType searchTypeAnnot = searchClass.getAnnotation(SearchType.class);
-        String searchType = searchTypeAnnot.key();
+        String searchType = searchTypeAnnot.label();
         filters.put(SOLR_TYPE_FIELD,getSingleItemMap(searchType));
         
         List<Criteria> criteriaList = filter.getCriteriaList();

@@ -85,6 +85,10 @@ public abstract class TableViewer<T,S> extends JPanel {
         this.selectionModel = selectionModel;
     }
     
+    public SelectionModel<T,S> getSelectionModel() {
+        return selectionModel;
+    }
+    
 //    protected abstract JPopupMenu getContextualPopupMenu();
     
     protected abstract Object getValue(T object, String column);

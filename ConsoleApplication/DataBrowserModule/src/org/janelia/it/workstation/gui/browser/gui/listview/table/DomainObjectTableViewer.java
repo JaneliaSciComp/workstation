@@ -42,6 +42,11 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
     }
     
     @Override
+    public DomainObjectSelectionModel getSelectionModel() {
+        return (DomainObjectSelectionModel)super.getSelectionModel();
+    }
+    
+    @Override
     public void showDomainObjects(AnnotatedDomainObjectList domainObjectList) {
         
         this.domainObjectList = domainObjectList;

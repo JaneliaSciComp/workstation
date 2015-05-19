@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
@@ -17,10 +18,15 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
+import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.openide.windows.Mode;
+import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +61,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
         super.setSelectionModel(selectionModel);
+    }
+    
+    @Override
+    public DomainObjectSelectionModel getSelectionModel() {
+        return (DomainObjectSelectionModel)super.getSelectionModel();
     }
     
     @Override
@@ -120,8 +131,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected void buttonDrillDown(AnnotatedImageButton button) {
-        DomainObject domainObject = (DomainObject)button.getImageObject();
-        // TODO: to we even drill down anymore?
+        final DomainObject domainObject = (DomainObject)button.getImageObject();
+        
     }
     
     @Override

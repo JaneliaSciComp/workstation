@@ -29,4 +29,10 @@ public interface AnnotatedDomainObjectListViewer {
      * @param selectionModel 
      */
     public void setSelectionModel(DomainObjectSelectionModel selectionModel);
+    
+    /**
+     * Returns the current selection mode used in the list viewer. 
+     * @return Selection Model
+     */
+    public DomainObjectSelectionModel getSelectionModel();
 }

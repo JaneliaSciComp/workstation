@@ -204,11 +204,11 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
                 return;
             }
             AnnotatedImageButton<T> button = getButtonAncestor(e.getComponent());
-            // Select the button first
-            T imageObject = button.getImageObject();
+            // Make sure the button is selected
             if (!button.isSelected()) {
-                selectImageObject(imageObject, true);
+                buttonSelection(button, false, false);
             }
+//            log.info("popupTriggered: {}",button.getImageObject());
             getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
             e.consume();
         }
@@ -219,8 +219,8 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
                 return;
             }
             AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+//            log.info("doubleLeftClicked: {}",button.getImageObject());
             buttonDrillDown(button);
-            // Double-clicking an image in gallery view triggers an outline selection
             e.consume();
         }
 
@@ -231,11 +231,13 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
                 return;
             }
             AnnotatedImageButton button = getButtonAncestor(e.getComponent());
-            if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
+            if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 1) {
                 return;
             }
+//            log.info("mouseReleased: {}",button.getImageObject());
 //            hud.setKeyListener(keyListener);
             buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
+            e.consume();
         }
     };
 
@@ -515,6 +517,10 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
     public void setSelectionModel(SelectionModel<T,S> selectionModel) {
         selectionModel.setSource(this);
         this.selectionModel = selectionModel;
+    }
+    
+    public SelectionModel<T,S> getSelectionModel() {
+        return selectionModel;
     }
     
 //    @Subscribe
