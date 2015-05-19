@@ -16,7 +16,6 @@ import org.janelia.it.jacs.shared.mesh_loader.Triangle;
 import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
 import org.janelia.it.jacs.shared.mesh_loader.VertexInfoBean;
 import org.janelia.it.jacs.shared.mesh_loader.VertexInfoKey;
-import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,7 +125,7 @@ public class LineEnclosureFactory implements TriangleSource {
             }
             vertices.add(bean);
 			polyBeans.add(bean);
-            logger.info("Adding vertex {},{},{}", key.getPosition()[X], key.getPosition()[Y], key.getPosition()[Z]);
+            logger.debug("Adding vertex {},{},{}", key.getPosition()[X], key.getPosition()[Y], key.getPosition()[Z]);
         }
         return polyBeans;
     }
@@ -206,7 +205,7 @@ public class LineEnclosureFactory implements TriangleSource {
         double aboutY = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Z]);
         double aboutZ = lineUnitVector[X] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[X]);
 				
-		System.out.println(String.format("Using angles: %f, %f, %f", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ)));
+		logger.info("Using angles: {}, {}, {}.", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ));
 
 		int axialAlignment = getAxialAlignmentByLineDelta(lineDelta);
 		

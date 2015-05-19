@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,7 +19,9 @@ import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
 import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
 import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
+import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -28,6 +29,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handle any mesh's vertex attributes.
@@ -37,23 +40,39 @@ import org.janelia.it.workstation.tracing.VoxelPosition;
 public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     // The skeleton and neuron styles constitute the 'model' to be studied
     // in creating the 3D representation of annotations.
-    private Skeleton skeleton;
-    private NeuronStyleModel neuronStyleModel;
+    private AnnotationSkeletonDataSourceI dataSource;
 
     // The sources and render buffers will be created, based on the contents
     // of the 'model'.
-    private List<TriangleSource> triangleSources = new ArrayList<>();
-    private Map<Long, RenderBuffersBean> renderIdToBuffers = new HashMap<>();
+    private final List<TriangleSource> triangleSources = new ArrayList<>();
+    private final Map<Long, RenderBuffersBean> renderIdToBuffers = new HashMap<>();
+    
+    private final Logger log = LoggerFactory.getLogger( NeuronTraceVtxAttribMgr.class );
     
     /**
      * Call this whenever something in the 'model' has been changed.
      * 
-     * @return
+     * @return sources created.
      * @throws Exception 
      */
     @Override
-    public List<TriangleSource> execute() throws Exception {
-        if ( skeleton == null  ||  neuronStyleModel == null ) {
+    public synchronized List<TriangleSource> execute() throws Exception {
+        // Can re-execute this.
+        renderIdToBuffers.clear();
+        triangleSources.clear();
+    
+        Skeleton skeleton = dataSource.getSkeleton();
+        NeuronStyleModel neuronStyleModel = dataSource.getNeuronStyleModel();
+        if ( dataSource == null  ||  skeleton == null  ||  neuronStyleModel == null ) {
+            if (dataSource == null) {
+                log.warn("No data source set");
+            }
+            if (skeleton == null) {
+                log.warn("No skeleton in data source");
+            }
+            if ( neuronStyleModel == null ) {
+                log.warn("No neuron style model.");
+            }
             throw new Exception("Please set all model information before execution.");
         }
         
@@ -75,47 +94,56 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     }
 
     @Override
-    public Map<Long, RenderBuffersBean> getRenderIdToBuffers() {
+    public synchronized Map<Long, RenderBuffersBean> getRenderIdToBuffers() {
         return renderIdToBuffers;
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         renderIdToBuffers.clear();
         triangleSources.clear();
     }
 
     @Override
     public void exportVertices(File outputLocation, String filenamePrefix) throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");
+        OBJWriter objWriter = new OBJWriter();
+        Skeleton skeleton = dataSource.getSkeleton();
+        if (skeleton == null || skeleton.getAnchors().isEmpty()) {
+            throw new IllegalStateException("Nothing to export.");
+        }
+        Anchor anAnchor = skeleton.getAnchors().iterator().next();
+        Long id = anAnchor.getNeuronID();
+        for (TriangleSource triangleSource : triangleSources) {
+            objWriter.writeVertices(
+                    outputLocation, 
+                    filenamePrefix,
+                    OBJWriter.FILE_SUFFIX,
+                    id,
+                    triangleSource
+            );
+        }
     }
 
+    public void setDataSource(AnnotationSkeletonDataSourceI dataSource) {
+        this.dataSource = dataSource;
+    }
+    
     /**
      * @return the skeleton
      */
     public Skeleton getSkeleton() {
-        return skeleton;
-    }
-
-    /**
-     * @param skeleton the skeleton to set
-     */
-    public void setSkeleton(Skeleton skeleton) {
-        this.skeleton = skeleton;
+        if (dataSource == null) {
+            return null;
+        }
+        return dataSource.getSkeleton();
     }
 
     /**
      * @return the neuronStyleModel
      */
     public NeuronStyleModel getNeuronStyleModel() {
-        return neuronStyleModel;
-    }
+        return dataSource.getNeuronStyleModel();
 
-    /**
-     * @param neuronStyleModel the neuronStyleModel to set
-     */
-    public void setNeuronStyleModel(NeuronStyleModel neuronStyleModel) {
-        this.neuronStyleModel = neuronStyleModel;
     }
 
     /**
@@ -124,7 +152,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
      * 
      * @throws Exception 
      */
-    private void createVerticesAndBuffers() throws Exception {
+    private synchronized void createVerticesAndBuffers() throws Exception {
         // Make triangle sources.
 		LineEnclosureFactory tracedSegmentEnclosureFactory = new LineEnclosureFactory(6, 8);
         LineEnclosureFactory manualSegmentEnclosureFactory = new LineEnclosureFactory(5, 4);
@@ -132,7 +160,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
         
 		// Iterate over all the traced segments, and add enclosures for each.
-        for ( AnchoredVoxelPath voxelPath: skeleton.getTracedSegments() ) {            
+        for ( AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {            
             final SegmentIndex segmentIndex = voxelPath.getSegmentIndex();
             if (segmentIndex == null) {
                 continue;
@@ -143,7 +171,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             //  path is also gone (happens when neurons deleted, merged)
             //  [from earlier code]
             Long anchorGuid = segmentIndex.getAnchor1Guid();
-            Anchor anchor = skeleton.getAnchorByID(anchorGuid);
+            Anchor anchor = getSkeleton().getAnchorByID(anchorGuid);
             if ( anchor == null ) {
                 continue;
             }
@@ -201,10 +229,10 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         int currentIndex = 0;
         Set<SegmentIndex> existing = new HashSet<>();
         Map<Anchor,Integer> anchorToIndex = new HashMap<>();
-        for (Anchor anchor: skeleton.getAnchors()) {
+        for (Anchor anchor: getSkeleton().getAnchors()) {
             anchorToIndex.put(anchor, currentIndex++);
         }
-        for (Anchor anchor: skeleton.getAnchors()) {
+        for (Anchor anchor: getSkeleton().getAnchors()) {
             NeuronStyle style = getNeuronStyle(anchor.getNeuronID());
                     
             Integer i1 = anchorToIndex.get( anchor );
@@ -230,7 +258,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     }
 
     private NeuronStyle getNeuronStyle(Long neuronId) {
-        NeuronStyle style = neuronStyleModel.get(neuronId);
+        NeuronStyle style = dataSource.getNeuronStyleModel().get(neuronId);
         if (style == null) {
             style = NeuronStyle.getStyleForNeuron(neuronId);
         }

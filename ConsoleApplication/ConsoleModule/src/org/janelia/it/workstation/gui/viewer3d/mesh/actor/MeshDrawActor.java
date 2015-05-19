@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.Map;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
@@ -139,6 +140,8 @@ public class MeshDrawActor implements GLActor {
         
         if (bBuffersNeedUpload) {
             try {
+                bBuffersNeedUpload = false;
+                configurator.getVertexAttributeManager().execute();
                 if (configurator.getMatrixScope() == MatrixScope.LOCAL) {
                     matrixManager = this.matrixManager = new MatrixManager(
                             configurator.getContext(),
@@ -151,7 +154,6 @@ public class MeshDrawActor implements GLActor {
                 initializeShaderValues(gl);
                 uploadBuffers(gl);
 
-                bBuffersNeedUpload = false;
             } catch ( Exception ex ) {
                 SessionMgr.getSessionMgr().handleException( ex );
             }
@@ -163,6 +165,9 @@ public class MeshDrawActor implements GLActor {
 
     @Override
     public void display(GLAutoDrawable glDrawable) {
+        if (bBuffersNeedUpload) {
+            init(glDrawable);
+        }
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
         reportError(gl, "Display of mesh-draw-actor upon entry");
 
@@ -235,6 +240,10 @@ public class MeshDrawActor implements GLActor {
     public void dispose(GLAutoDrawable glDrawable) {
 
     }
+    
+    public void refresh() {
+        bBuffersNeedUpload = true;
+    }
 
     private void initializeShaderValues(GL2GL3 gl) {
         try {
@@ -283,6 +292,7 @@ public class MeshDrawActor implements GLActor {
     }
 
     private void uploadBuffers(GL2GL3 gl) {
+        dropBuffers(gl);
         // Push the coords over to GPU.
         // Make handles for subsequent use.
         int[] handleArr = new int[ 1 ];
@@ -292,38 +302,113 @@ public class MeshDrawActor implements GLActor {
         gl.glGenBuffers( 1, handleArr, 0 );
         inxBufferHandle = handleArr[ 0 ];
 
-        // Bind data to the handle, and upload it to the GPU.
-        gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
         reportError( gl, "Bind buffer" );
-        RenderBuffersBean buffersBean =
-                configurator.getVertexAttributeManager()
-                        .getRenderIdToBuffers()
-                        .get(configurator.getRenderableId());
-        FloatBuffer attribBuffer = buffersBean.getAttributesBuffer();
-        long bufferBytes = (long) (attribBuffer.capacity() * (BYTES_PER_FLOAT));
-        attribBuffer.rewind();
+        final Map<Long, RenderBuffersBean> renderIdToBuffers =
+                configurator.getVertexAttributeManager().getRenderIdToBuffers();
+        long verticesOffset = 0;
+        long indicesOffset = 0;
+        long combinedVtxSize = 0L;
+        long combinedInxSize = 0L;
+        
+        // One pass for size.
+        for ( Long renderId: renderIdToBuffers.keySet() ) {
+            RenderBuffersBean buffersBean = renderIdToBuffers.get(renderId);
+            FloatBuffer attribBuffer = buffersBean.getAttributesBuffer();
+            if (attribBuffer != null  &&  attribBuffer.capacity() > 0) {
+                long bufferBytes = (long) (attribBuffer.capacity() * (BYTES_PER_FLOAT));
+                combinedVtxSize += bufferBytes;
+
+                IntBuffer inxBuf = buffersBean.getIndexBuffer();
+                bufferBytes = inxBuf.capacity() * BYTES_PER_INT;
+                combinedInxSize += bufferBytes;
+                logger.info("Found attributes for {}.", renderId);
+            }
+            else {
+                logger.warn("No attributes for renderer id: {}.", renderId);
+            }
+        }
+        
+        logger.info("Allocating buffers");
+        
+        // Allocate enough remote buffer data for all the vertices/attributes
+        // to be thrown across in segments.
+        gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
         gl.glBufferData(
                 GL2GL3.GL_ARRAY_BUFFER,
-                bufferBytes,
-                attribBuffer,
+                combinedVtxSize,
+                null,
                 GL2GL3.GL_STATIC_DRAW
         );
-        reportError( gl, "Buffer Data" );
-
-        IntBuffer inxBuf = buffersBean.getIndexBuffer();
-        inxBuf.rewind();
-        indexCount = inxBuf.capacity();
+        reportError(gl, "Allocate Vertex Buffer");
+        
+        // Allocate enough remote buffer data for all the indices to be
+        // thrown across in segments.
         gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
-        reportError(gl, "Bind Inx Buf");
-
         gl.glBufferData(
                 GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
-                (long)(inxBuf.capacity() * BYTES_PER_INT),
-                inxBuf,
+                combinedInxSize,
+                null,
                 GL2GL3.GL_STATIC_DRAW
         );
+        reportError(gl, "Allocate Index Buffer");
 
-        configurator.getVertexAttributeManager().close();
+        logger.info("Buffers allocated.");
+        for ( Long renderId: renderIdToBuffers.keySet() ) {
+            RenderBuffersBean buffersBean = renderIdToBuffers.get( renderId );
+            FloatBuffer attribBuffer = buffersBean.getAttributesBuffer();
+            if (attribBuffer != null  &&  attribBuffer.capacity() > 0) {
+                long bufferBytes = (long) (attribBuffer.capacity() * (BYTES_PER_FLOAT));
+                attribBuffer.rewind();
+                gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
+                reportError(gl, "Bind Attribs Buf");
+                logger.info("Uploading chunk of vertex attributes data.");
+                gl.glBufferSubData(
+                        GL2GL3.GL_ARRAY_BUFFER,
+                        verticesOffset,
+                        bufferBytes,
+                        attribBuffer
+                );
+                reportError(gl, "Buffer Data");
+
+                IntBuffer inxBuf = buffersBean.getIndexBuffer();
+                inxBuf.rewind();
+                indexCount += inxBuf.capacity();
+                bufferBytes = (long) (inxBuf.capacity() * BYTES_PER_INT);
+                indicesOffset += bufferBytes;
+
+                gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
+                reportError(gl, "Bind Inx Buf");
+                logger.info("Uploading chunk of element array.");
+                gl.glBufferSubData(
+                        GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
+                        bufferBytes,
+                        indicesOffset,
+                        inxBuf
+                );
+                reportError(gl, "Upload index buffer segment.");
+            }
+        }
+
+        //configurator.getVertexAttributeManager().close();
+    }
+
+    protected void dropBuffers(GL2GL3 gl) {
+        if (vtxAttribBufferHandle > -1) {
+            gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
+            tempBuffer.rewind();
+            tempBuffer.put(vtxAttribBufferHandle);
+            tempBuffer.rewind();
+            gl.glDeleteBuffers(1, tempBuffer);
+            gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, 0);
+        }
+        if (inxBufferHandle > -1) {
+            gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
+            tempBuffer.rewind();
+            tempBuffer.put(inxBufferHandle);
+            tempBuffer.rewind();
+            gl.glDeleteBuffers(1, tempBuffer);
+            gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, 0);
+        }
     }
 
     private void reportError(GL gl, String source) {

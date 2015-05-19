@@ -22,6 +22,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.DirectionalReferenceAxesActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.NeuronTraceVtxAttribMgr;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
@@ -30,8 +31,6 @@ import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer;
 import org.janelia.it.workstation.gui.viewer3d.ResetPositionerI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
-import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr;
-import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr.Scenario;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
 
@@ -100,13 +99,13 @@ public class AnnotationSkeletonPanel extends JPanel {
             viewer.setResetFirstRedraw(true);
             final BoundingBox3d originalBoundingBox = tileFormat.calcBoundingBox();
 
-            GLActor meshDrawActor = buildMeshDrawActor( context, originalBoundingBox );
-            
+            GLActor meshDrawActor = buildMeshDrawActor( context, originalBoundingBox );            
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
+            
             viewer.addActor(axesActor);
             viewer.addActor(actor);
             viewer.addActor(refAxisActor);
-//            viewer.addActor(meshDrawActor);
+            viewer.addActor(meshDrawActor);
             viewer.addMenuAction(new BackgroundPickAction(viewer));
             this.add(viewer, BorderLayout.CENTER);
             validate();
@@ -152,16 +151,11 @@ public class AnnotationSkeletonPanel extends JPanel {
         configurator.setAxisLengths( new double[] { boundingBox.getMaxX(), boundingBox.getMaxY(), boundingBox.getMaxZ() } );
         //configurator.setAxisLengths(new double[]{100.0, 100.0, 100.0});
         configurator.setContext(context);
-        configurator.setRenderableId( 777L );
         configurator.setMatrixScope(MeshDrawActor.MatrixScope.LOCAL);                  
         
-        final FewVoxelVtxAttribMgr fewVoxelVtxAttribMgr = new FewVoxelVtxAttribMgr( 777L, Scenario.whole );
-        try {
-            fewVoxelVtxAttribMgr.execute();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-        configurator.setVertexAttributeManager(fewVoxelVtxAttribMgr);
+        final NeuronTraceVtxAttribMgr attributeManager = new NeuronTraceVtxAttribMgr();        
+        attributeManager.setDataSource(dataSource);
+        configurator.setVertexAttributeManager(attributeManager);
         
         MeshDrawActor meshDraw = new MeshDrawActor(configurator);
         return meshDraw;
