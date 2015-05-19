@@ -58,6 +58,10 @@ public class LineEnclosureFactory implements TriangleSource {
         axisAlignedPrototypePolygons.put(2, this.zAxisAlignedPrototypePolygon);
     }
     
+    public int addEnclosure(double[] startingCoords, double[] endingCoords) {
+        return addEnclosure(startingCoords, endingCoords, null);
+    }
+    
     /**
      * Makes a set of triangles (geometry) to make a "pipe" around
      * the pair of starting/ending coords.  May make overhangs for "elbow
@@ -65,9 +69,10 @@ public class LineEnclosureFactory implements TriangleSource {
      * 
      * @param startingCoords one end.
      * @param endingCoords other end.
+     * @param color applied to each vertex.
      * @return number of coordinates created here.
      */
-    public int addEnclosure( double[] startingCoords, double[] endingCoords ) {
+    public int addEnclosure( double[] startingCoords, double[] endingCoords, float[] color ) {
         if ( startingCoords.length != 3 ) {
             throw new IllegalArgumentException("3-D starting coords only.");
         }
@@ -78,9 +83,9 @@ public class LineEnclosureFactory implements TriangleSource {
         List<double[][]> endCaps = makeEndPolygons(startingCoords, endingCoords);
         //List<double[][]> endCaps = makeEndPolygonsNoTrig( startingCoords, endingCoords );
         int coordCount = 0;
-        List<VertexInfoBean> startVertices = addVertices(endCaps.get(0));
+        List<VertexInfoBean> startVertices = addVertices(endCaps.get(0), color);
 		coordCount += startVertices.size();
-        List<VertexInfoBean> endVertices = addVertices(endCaps.get(1));
+        List<VertexInfoBean> endVertices = addVertices(endCaps.get(1), color);
 		coordCount += endVertices.size();
         createCCWTriangles(startVertices, endVertices);
         return coordCount;
@@ -103,16 +108,22 @@ public class LineEnclosureFactory implements TriangleSource {
 	 * that represents this polygon.
 	 * 
 	 * @param poly simple array of coord triples.
-	 * @param polyBeans one for each coord triple.
+     * @param color dimension 3; applied to every vertex created from polygon.
 	 * @return list of coord beans.
 	 */
-    protected List<VertexInfoBean> addVertices(double[][] poly) {
+    protected List<VertexInfoBean> addVertices(double[][] poly, float[] color) {
 		List<VertexInfoBean> polyBeans = new ArrayList<>();
         for (int i = 0; i < poly.length; i++) {
             VertexInfoBean bean = new VertexInfoBean();
             VertexInfoKey key = new VertexInfoKey();
             key.setPosition(poly[i]);
             bean.setKey(key);
+            // Color is optional, depending on application/caller.
+            if ( color != null ) {
+                bean.setAttribute(
+                        VertexInfoBean.KnownAttributes.color.name(), color, 3
+                );
+            }
             vertices.add(bean);
 			polyBeans.add(bean);
             logger.info("Adding vertex {},{},{}", key.getPosition()[X], key.getPosition()[Y], key.getPosition()[Z]);

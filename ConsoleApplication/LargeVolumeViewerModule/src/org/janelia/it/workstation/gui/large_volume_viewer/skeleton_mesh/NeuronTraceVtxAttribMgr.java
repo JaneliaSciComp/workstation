@@ -131,10 +131,25 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
         
-		// Iterate over all the annotations, and add enclosures for each
-		// line segment.
-        for ( AnchoredVoxelPath voxelPath: skeleton.getTracedSegments() ) {
-            voxelPathAnchorPairs.add( voxelPath.getSegmentIndex() );
+		// Iterate over all the traced segments, and add enclosures for each.
+        for ( AnchoredVoxelPath voxelPath: skeleton.getTracedSegments() ) {            
+            final SegmentIndex segmentIndex = voxelPath.getSegmentIndex();
+            if (segmentIndex == null) {
+                continue;
+            }
+            voxelPathAnchorPairs.add( segmentIndex );            
+            // need neuron ID; get it from the anchor at either end of the
+            //  traced path; if there isn't an anchor, just move on--that
+            //  path is also gone (happens when neurons deleted, merged)
+            //  [from earlier code]
+            Long anchorGuid = segmentIndex.getAnchor1Guid();
+            Anchor anchor = skeleton.getAnchorByID(anchorGuid);
+            if ( anchor == null ) {
+                continue;
+            }
+            Long neuronId = anchor.getNeuronID();
+            NeuronStyle style = getNeuronStyle(neuronId);
+
             double[] previousCoords = null; 
             for ( VoxelPosition voxelPos: voxelPath.getPath() ) {
                 double[] currentCoords = new double[] {
@@ -142,7 +157,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                 };
                 if ( previousCoords != null ) {                    
                     tracedSegmentEnclosureFactory.addEnclosure(
-                            previousCoords, currentCoords
+                            previousCoords, currentCoords, style.getColorAsFloatArray()
                     );
                 }                
                 previousCoords = currentCoords;
@@ -150,12 +165,12 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         }
 
         // Now get the lines.
-        Collection<Collection<Vec3>> anchorLines = getAnchorLines(voxelPathAnchorPairs);
-        for ( Collection<Vec3> coordPair: anchorLines ) {
-            final Iterator<Vec3> iterator = coordPair.iterator();
+        Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);
+        for ( AnchorLinesReturn anchorLine: anchorLines ) {            
             manualSegmentEnclosureFactory.addEnclosure(
-                    toDoubleArr(iterator.next()),
-                    toDoubleArr(iterator.next())
+                    anchorLine.getStart(),
+                    anchorLine.getEnd(),
+                    anchorLine.getStyle().getColorAsFloatArray()
             );
         }
 
@@ -175,14 +190,14 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             renderIdToBuffers.put(i++, rbb);
         }
     }
-    
+
     private double[] toDoubleArr( Vec3 input ) {
         return new double[] { input.getX(), input.getY(), input.getZ() };
     }
     
     //TODO return different value in collection.  Needs to have location and style.
-    private Collection<Collection<Vec3>> getAnchorLines(Set<SegmentIndex> tracedPathPairs) {
-        Collection<Collection<Vec3>> rtnVal = new ArrayList<>();
+    private Collection<AnchorLinesReturn> getAnchorLines(Set<SegmentIndex> tracedPathPairs) {
+        Collection<AnchorLinesReturn> rtnVal = new ArrayList<>();
         int currentIndex = 0;
         Set<SegmentIndex> existing = new HashSet<>();
         Map<Anchor,Integer> anchorToIndex = new HashMap<>();
@@ -190,10 +205,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             anchorToIndex.put(anchor, currentIndex++);
         }
         for (Anchor anchor: skeleton.getAnchors()) {
-            NeuronStyle style = neuronStyleModel.get(anchor.getNeuronID());
-            if ( style == null ) {
-                style = NeuronStyle.getStyleForNeuron(anchor.getNeuronID());
-            }
+            NeuronStyle style = getNeuronStyle(anchor.getNeuronID());
                     
             Integer i1 = anchorToIndex.get( anchor );
             for (Anchor neighbor: anchor.getNeighbors() ) {
@@ -203,10 +215,11 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                     Integer i2 = anchorToIndex.get(neighbor);
                     // Only proceed in ascending order to avoid dups.
                     if (i1 < i2) {
-                        Collection<Vec3> coords = new ArrayList<>();
-                        coords.add( anchor.getLocation() );
-                        coords.add( neighbor.getLocation() );
-                        rtnVal.add( coords );
+                        AnchorLinesReturn traceRtn = new AnchorLinesReturn();
+                        traceRtn.setStart( toDoubleArr(anchor.getLocation()) );
+                        traceRtn.setEnd( toDoubleArr(neighbor.getLocation()) );
+                        traceRtn.setStyle( style );
+                        rtnVal.add( traceRtn );
                     }
                     existing.add( pathTestInx );
                 }
@@ -215,5 +228,61 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         
         return rtnVal;
     }
-    
+
+    private NeuronStyle getNeuronStyle(Long neuronId) {
+        NeuronStyle style = neuronStyleModel.get(neuronId);
+        if (style == null) {
+            style = NeuronStyle.getStyleForNeuron(neuronId);
+        }
+        return style;
+    }
+
+    private static class AnchorLinesReturn {
+        private double[] start;
+        private double[] end;
+        private NeuronStyle style;
+
+        /**
+         * @return the start
+         */
+        public double[] getStart() {
+            return start;
+        }
+
+        /**
+         * @param start the start to set
+         */
+        public void setStart(double[] start) {
+            this.start = start;
+        }
+
+        /**
+         * @return the end
+         */
+        public double[] getEnd() {
+            return end;
+        }
+
+        /**
+         * @param end the end to set
+         */
+        public void setEnd(double[] end) {
+            this.end = end;
+        }
+
+        /**
+         * @return the style
+         */
+        public NeuronStyle getStyle() {
+            return style;
+        }
+
+        /**
+         * @param style the style to set
+         */
+        public void setStyle(NeuronStyle style) {
+            this.style = style;
+        }
+        
+    }
 }
