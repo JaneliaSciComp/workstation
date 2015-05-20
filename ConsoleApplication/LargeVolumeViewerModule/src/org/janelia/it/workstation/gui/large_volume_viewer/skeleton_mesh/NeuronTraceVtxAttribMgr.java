@@ -79,15 +79,17 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         createVerticesAndBuffers();
 
         // Build triangle sources and render buffers, from input neuron info.
+        Long sourceNumber = 0L;
         for ( TriangleSource factory: triangleSources ) {
-            // Now have a full complement of triangles and vertices.  For this renderable, can traverse the
+            // Now have a full complement of triangles and vertices.  For this source, can traverse the
             // vertices, making a "composite normal" based on the normals of all entangling triangles.
             NormalCompositor normalCompositor = new NormalCompositor();
             normalCompositor.combineCustomNormals(factory);
             BufferPackager packager = new BufferPackager();
-            RenderBuffersBean rbb = new RenderBuffersBean();
+            RenderBuffersBean rbb = renderIdToBuffers.get( sourceNumber );
             rbb.setAttributesBuffer(packager.getVertexAttributes(factory));
             rbb.setIndexBuffer(packager.getIndices(factory));
+            sourceNumber++;
         }
         
         return triangleSources;

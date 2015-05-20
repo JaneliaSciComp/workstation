@@ -156,6 +156,7 @@ public class AnnotationSkeletonPanel extends JPanel {
         final NeuronTraceVtxAttribMgr attributeManager = new NeuronTraceVtxAttribMgr();        
         attributeManager.setDataSource(dataSource);
         configurator.setVertexAttributeManager(attributeManager);
+        configurator.setColoringStrategy(MeshDrawActor.ColoringStrategy.ATTRIBUTE);
         
         MeshDrawActor meshDraw = new MeshDrawActor(configurator);
         return meshDraw;

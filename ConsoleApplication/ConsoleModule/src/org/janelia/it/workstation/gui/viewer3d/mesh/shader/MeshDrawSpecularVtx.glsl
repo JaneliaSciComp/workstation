@@ -3,12 +3,16 @@
 
 attribute vec4 vertexAttribute;
 attribute vec4 normalAttribute;
+attribute vec4 colorAttribute;
 
 uniform mat4 projection;
 uniform mat4 modelView;
 uniform mat4 normalMatrix;
+uniform vec4 color;
+uniform int colorStrategy;
 
 varying vec4 normVar;
+varying vec4 colorVar;
 varying vec4 diffuseLightMag;
 varying vec4 specularLightMag;
 varying vec4 homogeniousCoordPos;
@@ -17,6 +21,14 @@ void main(void)
 {
     homogeniousCoordPos = projection * modelView * vertexAttribute;
     normVar = normalize( normalMatrix * normalAttribute );
+    if (colorStrategy == 1) 
+    {
+        colorVar = colorAttribute;
+    }
+    else
+    {
+        colorVar = color;
+    }
 
     vec4 lightPosition = vec4( 0, 0.0, 100.0, 0 );
     vec4 lightSource = normalize( lightPosition );  // Behind "zNear".

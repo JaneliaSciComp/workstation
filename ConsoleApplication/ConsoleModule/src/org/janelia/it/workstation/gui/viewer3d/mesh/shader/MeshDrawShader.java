@@ -11,8 +11,10 @@ import javax.media.opengl.GL2GL3;
  */
 public class MeshDrawShader extends AbstractShader {
     public static final String COLOR_UNIFORM_NAME = "color";
+    public static final String COLOR_STRATEGY_UNIFORM = "colorStrategy";
     public static final String VERTEX_ATTRIBUTE_NAME = "vertexAttribute";
     public static final String NORMAL_ATTRIBUTE_NAME = "normalAttribute";
+    public static final String COLOR_ATTRIBUTE_NAME = "colorAttribute";
     public static final String VERTEX_SHADER =   "MeshDrawSpecularVtx.glsl";
     public static final String FRAGMENT_SHADER = "MeshDrawSpecularFrg.glsl";
 //    public static final String VERTEX_SHADER =   "MeshDrawVtx.glsl";
@@ -59,6 +61,15 @@ public class MeshDrawShader extends AbstractShader {
             return false;
         gl.glUniformMatrix4fv( uniformLoc, 1, transpose, data, 0 );
         return true;
+    }
+    
+    /** By default, coloring will be done via a uniform. */
+    public void setColorByAttribute(GL2GL3 gl, boolean flag) {
+        int uniformLoc = gl.glGetUniformLocation(getShaderProgram(), COLOR_STRATEGY_UNIFORM);
+        if (uniformLoc < 0) {
+            throw new RuntimeException("Failed to set color-by-attribute to " + flag);
+        }
+        gl.glUniform1i(uniformLoc, flag? 1 : 0);
     }
 
     @Override

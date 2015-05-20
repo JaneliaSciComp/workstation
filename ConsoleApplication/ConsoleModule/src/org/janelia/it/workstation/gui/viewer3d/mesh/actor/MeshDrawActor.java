@@ -27,6 +27,9 @@ import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
  */
 public class MeshDrawActor implements GLActor {
     public enum MatrixScope { LOCAL, EXTERNAL }
+    // Set a uniform, and color everything the same way, vs
+    // have a color attribute for each vertex.
+    public enum ColoringStrategy { UNIFORM, ATTRIBUTE }
     
     private static final String MODEL_VIEW_UNIFORM_NAME = "modelView";
     private static final String PROJECTION_UNIFORM_NAME = "projection";
@@ -43,12 +46,14 @@ public class MeshDrawActor implements GLActor {
     private int vtxAttribBufferHandle = -1;
     private int vertexAttributeLoc = -1;
     private int normalAttributeLoc = -1;
+    private int colorAttributeLoc = -1;
+    
     private BoundingBox3d boundingBox;
     private int indexCount;
 
     private MeshDrawActorConfigurator configurator;
 
-    private AbstractShader shader;
+    private MeshDrawShader shader;
 
     private IntBuffer tempBuffer = IntBuffer.allocate(1);
     private MatrixManager matrixManager;
@@ -68,6 +73,7 @@ public class MeshDrawActor implements GLActor {
         private VertexAttributeSourceI vtxAttribMgr;
         private double[] axisLengths;
         private MatrixScope matrixScope = MatrixScope.EXTERNAL;
+        private ColoringStrategy coloringStrategy = ColoringStrategy.UNIFORM;
 
         public void setAxisLengths( double[] axisLengths ) {
             this.axisLengths = axisLengths;
@@ -75,6 +81,23 @@ public class MeshDrawActor implements GLActor {
 
         public void setContext( MeshViewContext context ) {
             this.context = context;
+        }
+
+        /**
+         * @return the coloringStrategy
+         */
+        public ColoringStrategy getColoringStrategy() {
+            return coloringStrategy;
+        }
+
+        /**
+         * Tell if color will be set by pushing a uniform to shader, or if
+         * instead it will be seen in the attributes, as a color-per-vertex.
+         *
+         * @param coloringStrategy the coloringStrategy to set
+         */
+        public void setColoringStrategy(ColoringStrategy coloringStrategy) {
+            this.coloringStrategy = coloringStrategy;
         }
 
         public void setRenderableId( Long renderableId ) {
@@ -143,7 +166,7 @@ public class MeshDrawActor implements GLActor {
                 bBuffersNeedUpload = false;
                 configurator.getVertexAttributeManager().execute();
                 if (configurator.getMatrixScope() == MatrixScope.LOCAL) {
-                    matrixManager = this.matrixManager = new MatrixManager(
+                    this.matrixManager = new MatrixManager(
                             configurator.getContext(),
                             windowDef,
                             MatrixManager.FocusBehavior.DYNAMIC // *** TEMP ***
@@ -189,37 +212,48 @@ public class MeshDrawActor implements GLActor {
             matrixManager.recalculate(gl);
 
         ViewMatrixSupport vms = new ViewMatrixSupport();
-        if (shader instanceof MeshDrawShader) {
-            MeshDrawShader mdShader = (MeshDrawShader)shader;
-            final MeshViewContext context = configurator.getContext();
-            mdShader.setUniformMatrix4v(gl, PROJECTION_UNIFORM_NAME, false, context.getPerspectiveMatrix());
-            mdShader.setUniformMatrix4v(gl, MODEL_VIEW_UNIFORM_NAME, false, context.getModelViewMatrix());
-            mdShader.setUniformMatrix4v(gl, NORMAL_MATRIX_UNIFORM_NAME, false, vms.computeNormalMatrix(context.getModelViewMatrix()));
-        }
+        MeshDrawShader mdShader = shader;
+        final MeshViewContext context = configurator.getContext();
+        mdShader.setUniformMatrix4v(gl, PROJECTION_UNIFORM_NAME, false, context.getPerspectiveMatrix());
+        mdShader.setUniformMatrix4v(gl, MODEL_VIEW_UNIFORM_NAME, false, context.getModelViewMatrix());
+        mdShader.setUniformMatrix4v(gl, NORMAL_MATRIX_UNIFORM_NAME, false, vms.computeNormalMatrix(context.getModelViewMatrix()));
+        reportError(gl, "Pushing matrix uniforms.");
+        shader.setColorByAttribute(gl, true);
+        reportError(gl, "Telling shader to use attribute coloring.");
 
         // TODO : make it possible to establish an arbitrary group of vertex attributes programmatically.
         // 3 floats per coord. Stride is 1 normal (3 floats=3 coords), offset to first is 0.
         gl.glEnableVertexAttribArray(vertexAttributeLoc);
 
-        int stride = 6 * BYTES_PER_FLOAT;
+        int numberFloatsInStride = 6;
+        if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
+            numberFloatsInStride += 3;
+        }
+        int stride = numberFloatsInStride * BYTES_PER_FLOAT;
         int storagePerVertex = 3 * BYTES_PER_FLOAT;
+        int storagePerVertexNormal = 2 * 3 * BYTES_PER_FLOAT;
 
         gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, stride, 0);
         reportError( gl, "Display of mesh-draw-actor 2" );
 
-        // 3 floats per normal. Stride is 1 vertex loc (3 floats=3 coords), offset to first is 1 vertex worth.
+        // 3 floats per normal. Stride is size of all data combined, offset to first is 1 vertex worth.
         gl.glEnableVertexAttribArray(normalAttributeLoc);
         gl.glVertexAttribPointer(normalAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertex);
-        reportError( gl, "Display of mesh-draw-actor 2a" );
+        reportError( gl, "Display of mesh-draw-actor 3" );
 
+        if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
+            // 3 floats per color. Stride is size of all data combined, offset to first is 1 vertex + 1 normal worth.
+            gl.glEnableVertexAttribArray(colorAttributeLoc);
+            gl.glVertexAttribPointer(colorAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertexNormal);
+            reportError(gl, "Display of mesh-draw-actor 3-opt");
+
+        }
         gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle );
-        reportError(gl, "Display of mesh-draw-actor 3.");
-
-        setColoring( gl );
+        reportError(gl, "Display of mesh-draw-actor 4.");
 
         // One triangle every three indices.  But count corresponds to the number of vertices.
         gl.glDrawElements( GL2.GL_TRIANGLES, indexCount, GL2.GL_UNSIGNED_INT, 0 );
-        reportError( gl, "Display of mesh-draw-actor 4" );
+        reportError( gl, "Display of mesh-draw-actor 5" );
 
         gl.glUseProgram( oldProgram );
 
@@ -255,6 +289,13 @@ public class MeshDrawActor implements GLActor {
             normalAttributeLoc = gl.glGetAttribLocation(shader.getShaderProgram(), MeshDrawShader.NORMAL_ATTRIBUTE_NAME);
             reportError(gl, "Obtaining the in-shader locations-2.");
 
+            if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
+                colorAttributeLoc = gl.glGetAttribLocation(shader.getShaderProgram(), MeshDrawShader.COLOR_ATTRIBUTE_NAME);
+                reportError(gl, "Obtaining the in-shader locations-3.");
+
+            } else {
+                setColoring(gl);
+            }
 
         } catch ( AbstractShader.ShaderCreationException sce ) {
             sce.printStackTrace();
@@ -279,14 +320,19 @@ public class MeshDrawActor implements GLActor {
     private void setColoring(GL2GL3 gl) {
         // Must upload the color value for display, at init time.
         //TODO get a meaningful coloring.
-        if (shader instanceof MeshDrawShader) {
-            boolean wasSet = ((MeshDrawShader)shader).setUniform4v(gl, MeshDrawShader.COLOR_UNIFORM_NAME, 1, new float[]{
-                1.0f, 0.5f, 0.25f, 1.0f
-            });
-            if (!wasSet) {
-                logger.error("Failed to set the " + MeshDrawShader.COLOR_UNIFORM_NAME + " to desired value.");
-            }
+        this.tempBuffer.rewind();
+        gl.glGetIntegerv(GL2GL3.GL_CURRENT_PROGRAM, tempBuffer);
+        tempBuffer.rewind();
+        int oldShader = tempBuffer.get();
+        
+        gl.glUseProgram(shader.getShaderProgram());
+        boolean wasSet = ((MeshDrawShader) shader).setUniform4v(gl, MeshDrawShader.COLOR_UNIFORM_NAME, 1, new float[]{
+            1.0f, 0.5f, 0.25f, 1.0f
+        });
+        if (!wasSet) {
+            logger.error("Failed to set the {} to desired value.", MeshDrawShader.COLOR_UNIFORM_NAME);
         }
+        gl.glUseProgram(oldShader);
 
         reportError( gl, "Set coloring." );
     }
@@ -305,8 +351,6 @@ public class MeshDrawActor implements GLActor {
         reportError( gl, "Bind buffer" );
         final Map<Long, RenderBuffersBean> renderIdToBuffers =
                 configurator.getVertexAttributeManager().getRenderIdToBuffers();
-        long verticesOffset = 0;
-        long indicesOffset = 0;
         long combinedVtxSize = 0L;
         long combinedInxSize = 0L;
         
@@ -352,6 +396,8 @@ public class MeshDrawActor implements GLActor {
         );
         reportError(gl, "Allocate Index Buffer");
 
+        long verticesOffset = 0;
+        long indicesOffset = 0;
         logger.info("Buffers allocated.");
         for ( Long renderId: renderIdToBuffers.keySet() ) {
             RenderBuffersBean buffersBean = renderIdToBuffers.get( renderId );
@@ -368,13 +414,13 @@ public class MeshDrawActor implements GLActor {
                         bufferBytes,
                         attribBuffer
                 );
+                verticesOffset += bufferBytes;
                 reportError(gl, "Buffer Data");
 
                 IntBuffer inxBuf = buffersBean.getIndexBuffer();
                 inxBuf.rewind();
                 indexCount += inxBuf.capacity();
                 bufferBytes = (long) (inxBuf.capacity() * BYTES_PER_INT);
-                indicesOffset += bufferBytes;
 
                 gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
                 reportError(gl, "Bind Inx Buf");
@@ -385,6 +431,7 @@ public class MeshDrawActor implements GLActor {
                         indicesOffset,
                         inxBuf
                 );
+                indicesOffset += bufferBytes;
                 reportError(gl, "Upload index buffer segment.");
             }
         }
