@@ -1052,26 +1052,17 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 break;
             case NEXT_PARALLEL:
             case PREV_PARALLEL:
-                // easy cases first:
-                //  on root with one child, nothing
-                //  on branch, first child of branch
+                // easy case first: on root with one child, nothing
                 if (ann.isRoot() && neuron.getChildrenOf(ann).size() == 1) {
                     break;
                 }
-                if (ann.isBranch()) {
-                    ann = neuron.getChildrenOfOrdered(ann).get(0);
-                    break;
-                }
 
-                // harder cases:
-                //  on link descendant of root with no branches, nothing
-                //  on link that has a rootward branch point: move to first
+                //  on annotation descendant of root with no branches, nothing
+                //  on annotation that has a rootward branch point: move to first
                 //      link after next child of that branch
-
-                // by now we're on a link; find the next branch/root up, and
-                //  keep track of the first child after the branch
+                // find the next branch/root up, and keep track of the first child after the branch
                 TmGeoAnnotation previous = ann;
-                TmGeoAnnotation current= ann;
+                TmGeoAnnotation current= neuron.getParentOf(previous);
                 while (!current.isBranch() && !current.isRoot()) {
                     previous = current;
                     current = neuron.getParentOf(previous);
