@@ -12,6 +12,8 @@ import java.nio.IntBuffer;
  */
 public class OITMeshSortShader extends GL4Shader {
 
+    private final Logger logger = LoggerFactory.getLogger(OITMeshSortShader.class);
+
     int headPointerTextureId=0;
     int fragmentStorageBufferId=0;
 
@@ -33,11 +35,7 @@ public class OITMeshSortShader extends GL4Shader {
         return "OITMeshSortFragment.glsl";
     }
 
-    private final Logger logger = LoggerFactory.getLogger(OITMeshSortShader.class);
-
-
     IntBuffer quadDataBufferId=IntBuffer.allocate(1);
-    IntBuffer quadVertexBufferId=IntBuffer.allocate(1);
     FloatBuffer quadFb;
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
 
@@ -47,7 +45,13 @@ public class OITMeshSortShader extends GL4Shader {
         super.display(gl);
         checkGlError(gl, "d super.display() error");
 
-     //   gl.glBindTexture(GL4.GL_TEXTURE_2D, textureId.get(0));
+        int uniformLoc1 = gl.glGetUniformLocation(getShaderProgram(), "head_pointer_image");
+        gl.glUniform1i(uniformLoc1, headPointerTextureId);
+
+        int uniformLoc2 = gl.glGetUniformLocation(getShaderProgram(), "list_buffer");
+        gl.glUniform1i(uniformLoc2, fragmentStorageBufferId);
+
+        gl.glBindTexture(GL4.GL_TEXTURE_2D, headPointerTextureId);
         checkGlError(gl, "d glBindTexture() error");
 
         gl.glBindVertexArray(vertexArrayId.get(0));
@@ -77,13 +81,13 @@ public class OITMeshSortShader extends GL4Shader {
     public void init(GL4 gl) {
 
      //   gl.glBindTexture(GL4.GL_TEXTURE_2D, textureId.get(0));
-        checkGlError(gl, "i glBindTexture() error");
+     //   checkGlError(gl, "i glBindTexture() error");
 
-        gl.glTexStorage2D(GL4.GL_TEXTURE_2D,
-                1,
-                GL4.GL_RGBA32F,
-                4, 4);
-        checkGlError(gl, "i glTexStorage2D() error");
+//        gl.glTexStorage2D(GL4.GL_TEXTURE_2D,
+//                1,
+//                GL4.GL_RGBA32F,
+//                4, 4);
+//        checkGlError(gl, "i glTexStorage2D() error");
 
 //        gl.glTexSubImage2D(GL4.GL_TEXTURE_2D,
 //                0,
@@ -92,7 +96,7 @@ public class OITMeshSortShader extends GL4Shader {
 //                GL4.GL_RGBA,
 //                GL4.GL_FLOAT,
 //                textureFb);
-        checkGlError(gl, "i glTexSubImage error");
+//        checkGlError(gl, "i glTexSubImage error");
 
 
         // QUAD ////////////////////////
