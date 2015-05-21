@@ -4,6 +4,8 @@ import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A shader for drawing a computed mesh "cage".
@@ -17,6 +19,8 @@ public class MeshDrawShader extends AbstractShader {
     public static final String COLOR_ATTRIBUTE_NAME = "colorAttribute";
     public static final String VERTEX_SHADER =   "MeshDrawSpecularVtx.glsl";
     public static final String FRAGMENT_SHADER = "MeshDrawSpecularFrg.glsl";
+    
+    private Logger logger = LoggerFactory.getLogger( MeshDrawShader.class );
 //    public static final String VERTEX_SHADER =   "MeshDrawVtx.glsl";
 //    public static final String FRAGMENT_SHADER = "MeshDrawFrg.glsl";
 
@@ -67,7 +71,7 @@ public class MeshDrawShader extends AbstractShader {
     public void setColorByAttribute(GL2GL3 gl, boolean flag) {
         int uniformLoc = gl.glGetUniformLocation(getShaderProgram(), COLOR_STRATEGY_UNIFORM);
         if (uniformLoc < 0) {
-            throw new RuntimeException("Failed to set color-by-attribute to " + flag);
+            logger.warn("Failed to set color-by-attribute to " + flag);
         }
         gl.glUniform1i(uniformLoc, flag? 1 : 0);
     }

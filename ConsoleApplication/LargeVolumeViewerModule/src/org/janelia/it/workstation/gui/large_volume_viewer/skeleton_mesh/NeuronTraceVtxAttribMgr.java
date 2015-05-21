@@ -91,6 +91,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             rbb.setIndexBuffer(packager.getIndices(factory));
             sourceNumber++;
         }
+        exportVertices(new File("/Users/fosterl/"), "NeuronTraceVtxAttribMgr_Test");
         
         return triangleSources;
     }

@@ -111,6 +111,7 @@ public class LineEnclosureFactory implements TriangleSource {
      * @param color dimension 3; applied to every vertex created from polygon.
 	 * @return list of coord beans.
 	 */
+    private int currentVertexNumber = 0;
     protected List<VertexInfoBean> addVertices(double[][] poly, float[] color) {
 		List<VertexInfoBean> polyBeans = new ArrayList<>();
         for (int i = 0; i < poly.length; i++) {
@@ -118,6 +119,9 @@ public class LineEnclosureFactory implements TriangleSource {
             VertexInfoKey key = new VertexInfoKey();
             key.setPosition(poly[i]);
             bean.setKey(key);
+            // Provide the offset, for use in making triangle indices.
+            bean.setVtxBufOffset(currentVertexNumber++);
+
             // Color is optional, depending on application/caller.
             if ( color != null ) {
                 bean.setAttribute(
@@ -147,10 +151,10 @@ public class LineEnclosureFactory implements TriangleSource {
             final VertexInfoBean topLeft = startingVertices.get( polygonVertex );
 			triangle.addVertex(topLeft);
             
-            final VertexInfoBean bottomRight = endingVertices.get(polygonVertex);
+            final VertexInfoBean bottomRight = endingVertices.get( nextEdgeOffset );
             triangle.addVertex( bottomRight );
 
-            final VertexInfoBean topRight = endingVertices.get( nextEdgeOffset);
+            final VertexInfoBean topRight = endingVertices.get( polygonVertex );
 			triangle.addVertex( topRight );
             
 			triangles.add( triangle );
