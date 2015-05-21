@@ -157,8 +157,8 @@ public class VolumeLoader implements VolumeLoaderI {
                 textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
             }
             else if ( FileType.H264.equals( fileType )  ||  FileType.H265.equals( fileType ) ) {
-                textureData.setExplicitInternalFormat( GL2.GL_RGB );
-                textureData.setExplicitVoxelComponentOrder( GL2.GL_RGB );
+                textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE8 );
+                textureData.setExplicitVoxelComponentOrder( GL2.GL_LUMINANCE );
                 textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
             }
 

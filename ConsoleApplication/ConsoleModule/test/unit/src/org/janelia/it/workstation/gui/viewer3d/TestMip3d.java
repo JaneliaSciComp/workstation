@@ -53,7 +53,7 @@ public class TestMip3d {
                     // WORKING:
                     // Compartment masks.
                     // Checked 11/7/2014 (all).
-                    String guideBase = "/Volumes/nobackup/jacs/jacsData/filestore/MaskResources/Compartment/guide/";
+                    //String guideBase = "/Volumes/nobackup/jacs/jacsData/filestore/MaskResources/Compartment/guide/";
                     //String fn = guideBase + "LOP_R.v3dpbd";
                     //String fn = "/Volumes/jacs/jacsShare/H264SamplesForReview/C1-tile-2033803516857811042.v3dpbd.v3draw.avi.mp4";
                     String fn = "/Volumes/jacs/jacsShare/H265SamplesForReview/ffmpeg_hdf/test_output.h5j";
