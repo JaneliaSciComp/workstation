@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.framework.outline;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -30,7 +28,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 import javax.swing.ProgressMonitor;
-import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -144,7 +141,6 @@ public class EntityContextMenu extends JPopupMenu {
         add(getCopyIdToClipboardItem());
         add(getPasteAnnotationItem());
         add(getDetailsItem());
-        add(getPermissionItem());
         add(getSetSortCriteriaItem());
         add(getGotoRelatedItem());
         
@@ -259,22 +255,6 @@ public class EntityContextMenu extends JPopupMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 new EntityDetailsDialog().showForRootedEntity(rootedEntity);
-            }
-        });
-        return detailsMenuItem;
-    }
-
-    protected JMenuItem getPermissionItem() {
-        if (multiple) return null;
-        if (virtual) return null;
-        
-        if (!ModelMgrUtils.isOwner(rootedEntity.getEntity())) return null;
-        
-        JMenuItem detailsMenuItem = new JMenuItem("  Change Permissions");
-        detailsMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new EntityDetailsDialog().showForRootedEntity(rootedEntity, EntityDetailsPanel.TAB_NAME_PERMISSIONS);
             }
         });
         return detailsMenuItem;
