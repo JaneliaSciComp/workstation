@@ -6,13 +6,11 @@ import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.UnitVec3;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.geometric_search.gl.GL3ShaderActionSequence;
-import org.janelia.it.workstation.gui.geometric_search.gl.GL3SimpleActor;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderActionSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL3;
+import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
@@ -23,12 +21,12 @@ import java.util.List;
 /**
  * Created by murphys on 4/10/15.
  */
-public class GL3Renderer implements GLEventListener
+public class GL4Renderer implements GLEventListener
 {
     public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2000;
 
     protected GLU glu = new GLU();
-    protected List<GL3ShaderActionSequence> shaderActionList = new ArrayList<GL3ShaderActionSequence>();
+    protected List<GL4ShaderActionSequence> shaderActionList = new ArrayList<GL4ShaderActionSequence>();
     protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
     protected Camera3d camera;
 
@@ -45,14 +43,14 @@ public class GL3Renderer implements GLEventListener
     private double defaultHeightInPixels = 400.0;
     private double widthInPixels = defaultHeightInPixels;
     private double heightInPixels = defaultHeightInPixels;
-    private GL3Model model;
+    private GL4Model model;
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;
 
     Matrix4 viewMatrix;
     Matrix4 projectionMatrix;
 
-    private Logger logger = LoggerFactory.getLogger(GL3Renderer.class);
+    private Logger logger = LoggerFactory.getLogger(GL4Renderer.class);
 
     public Matrix4 getViewMatrix() {
         return viewMatrix;
@@ -63,16 +61,16 @@ public class GL3Renderer implements GLEventListener
     }
 
     // scene objects
-    public GL3Renderer(GL3Model model) {
+    public GL4Renderer(GL4Model model) {
         this.model=model;
         camera=model.getCamera3d();
     }
 
-    public void addShaderAction(GL3ShaderActionSequence shaderAction) {
+    public void addShaderAction(GL4ShaderActionSequence shaderAction) {
         shaderActionList.add(shaderAction);
     }
 
-    protected void displayBackground(GL3 gl)
+    protected void displayBackground(GL4 gl)
     {
         // paint solid background color
         gl.glClearColor(
@@ -80,7 +78,7 @@ public class GL3Renderer implements GLEventListener
                 backgroundColor.getGreen()/255.0f,
                 backgroundColor.getBlue()/255.0f,
                 backgroundColor.getAlpha()/255.0f);
-        gl.glClear(GL3.GL_COLOR_BUFFER_BIT);
+        gl.glClear(GL4.GL_COLOR_BUFFER_BIT);
     }
 
 //    public void displayChanged(GLAutoDrawable gLDrawable, boolean modeChanged, boolean deviceChanged)
@@ -91,13 +89,13 @@ public class GL3Renderer implements GLEventListener
     @Override
     public void dispose(GLAutoDrawable glDrawable)
     {
-        final GL3 gl = glDrawable.getGL().getGL3();
+        final GL4 gl = glDrawable.getGL().getGL4();
 
-        for (GL3ShaderActionSequence shaderAction : shaderActionList)
+        for (GL4ShaderActionSequence shaderAction : shaderActionList)
             shaderAction.dispose(gl);
     }
 
-    public List<GL3ShaderActionSequence> getShaderActionList() {
+    public List<GL4ShaderActionSequence> getShaderActionList() {
         return shaderActionList;
     }
 
@@ -112,9 +110,9 @@ public class GL3Renderer implements GLEventListener
     @Override
     public void init(GLAutoDrawable glDrawable)
     {
-        final GL3 gl = glDrawable.getGL().getGL3();
+        final GL4 gl = glDrawable.getGL().getGL4();
 
-        for (GL3ShaderActionSequence shaderAction : shaderActionList) {
+        for (GL4ShaderActionSequence shaderAction : shaderActionList) {
             try {
                 shaderAction.init(gl);
             } catch (Exception ex) {
@@ -154,10 +152,10 @@ public class GL3Renderer implements GLEventListener
         float[] backgroundClrArr = model.getBackgroundColorFArr();
         this.backgroundColor = new Color( backgroundClrArr[ 0 ], backgroundClrArr[ 1 ], backgroundClrArr[ 2 ] );
 
-        final GL3 gl = glDrawable.getGL().getGL3();
+        final GL4 gl = glDrawable.getGL().getGL4();
         displayBackground(gl);
-        gl.glClear(GL3.GL_DEPTH_BUFFER_BIT);
-        gl.glEnable(GL3.GL_DEPTH_TEST);
+        gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
+        gl.glEnable(GL4.GL_DEPTH_TEST);
 
         widthInPixels = glDrawable.getWidth();
         heightInPixels = glDrawable.getHeight();
@@ -193,7 +191,7 @@ public class GL3Renderer implements GLEventListener
         updateProjection(gl);
 
         // Copy member list of actors local for independent iteration.
-        for (GL3ShaderActionSequence shaderAction : shaderActionList)
+        for (GL4ShaderActionSequence shaderAction : shaderActionList)
             shaderAction.display(gl);
 
     }
@@ -205,7 +203,7 @@ public class GL3Renderer implements GLEventListener
     public void resetView() {
         camera.resetRotation();
         camera.setFocus(0.0, 0.0, 0.5);
-        model.setCameraDepth(new Vec3(0.0, 0.0, GL3Model.DEFAULT_CAMERA_FOCUS_DISTANCE));
+        model.setCameraDepth(new Vec3(0.0, 0.0, GL4Model.DEFAULT_CAMERA_FOCUS_DISTANCE));
     }
 
     @Override
@@ -213,7 +211,7 @@ public class GL3Renderer implements GLEventListener
         this.widthInPixels = width;
         this.heightInPixels = height;
 
-        final GL3 gl = glDrawable.getGL().getGL3();
+        final GL4 gl = glDrawable.getGL().getGL4();
 
         updateProjection(gl);
     }
@@ -247,7 +245,7 @@ public class GL3Renderer implements GLEventListener
         );
     }
 
-    public void updateProjection(GL3 gl) {
+    public void updateProjection(GL4 gl) {
         //gl.glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = model.getCameraFocusDistance();
@@ -311,7 +309,7 @@ public class GL3Renderer implements GLEventListener
         zoom(zoomRatio);
     }
 
-    public GL3Model getModel() {
+    public GL4Model getModel() {
         return model;
     }
 

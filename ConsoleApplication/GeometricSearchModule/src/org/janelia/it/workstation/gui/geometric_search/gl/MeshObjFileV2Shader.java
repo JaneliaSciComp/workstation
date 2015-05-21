@@ -2,12 +2,12 @@ package org.janelia.it.workstation.gui.geometric_search.gl;
 
 import org.janelia.geometry3d.Matrix4;
 
-import javax.media.opengl.GL3;
+import javax.media.opengl.GL4;
 
 /**
  * Created by murphys on 4/20/15.
  */
-public class MeshObjFileV2Shader extends GL3Shader {
+public class MeshObjFileV2Shader extends GL4Shader {
     @Override
     public String getVertexShaderResourceName() {
         return "MeshObjFileV2Vertex.glsl";
@@ -18,15 +18,15 @@ public class MeshObjFileV2Shader extends GL3Shader {
         return "MeshObjFileV2Fragment.glsl";
     }
 
-    public void setProjection(GL3 gl, Matrix4 projection) {
+    public void setProjection(GL4 gl, Matrix4 projection) {
         setUniformMatrix4fv(gl, "proj", false, projection.asArray());
     }
 
-    public void setView(GL3 gl, Matrix4 view) {
+    public void setView(GL4 gl, Matrix4 view) {
         setUniformMatrix4fv(gl, "view", false, view.asArray());
     }
 
-    public void setModel(GL3 gl, Matrix4 model) {
+    public void setModel(GL4 gl, Matrix4 model) {
         setUniformMatrix4fv(gl, "model", false, model.asArray());
     }
 
