@@ -29,28 +29,21 @@ import org.openide.windows.TopComponent;
  */
 public class ProgressMeterPanel extends JPanel {
     
-    public static final Dimension PREFERRED_DIMENSION = new Dimension(800, 600);
-
     private static final Logger log = LoggerFactory.getLogger(ProgressMeterPanel.class);
     
-    private static final int LABEL_COLUMN_WIDTH = 400;
-    private static final int PROGRESS_COLUMN_WIDTH = 150;
-    private static final int PROGRESS_BAR_HEIGHT = 12;
-    
-    private static final Font statusFont = new Font("Sans Serif", Font.PLAIN, 10);
+    private static final int PROGRESS_BAR_WIDTH = 40;
+    private static final int PROGRESS_BAR_HEIGHT = 16;
+    private static final Font STATUS_FONT = new Font("Sans Serif", Font.PLAIN, 10);
     
     private static ProgressMeterPanel instance;
     
     private final JPanel mainPanel;
     private final JButton clearButton;
-
-    private final ImageIcon animatedIcon = Icons.getIcon("cog_small_anim_orange.gif");
-    private final ImageIcon staticIcon = Icons.getIcon("cog_small.gif");
-    private ImageIcon currIcon = staticIcon;
+    
+    private final Component glue = Box.createVerticalGlue();
     
     private ProgressMeterPanel() {
         
-        setPreferredSize(PREFERRED_DIMENSION);
         setLayout(new BorderLayout());
         
         this.mainPanel = new JPanel();
@@ -60,10 +53,11 @@ public class ProgressMeterPanel extends JPanel {
         scrollLayer.add(mainPanel, BorderLayout.CENTER);
         scrollLayer.add(Box.createVerticalStrut(20), BorderLayout.SOUTH);
         
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(scrollLayer);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        reglueMainPanel();
         
         setLayout(new BorderLayout());
         add(scrollPane, BorderLayout.CENTER);
@@ -85,6 +79,11 @@ public class ProgressMeterPanel extends JPanel {
         buttonPane.add(clearButton);
 
         add(buttonPane, BorderLayout.SOUTH);
+    }
+    
+    private void reglueMainPanel() {
+        mainPanel.remove(glue);
+        mainPanel.add(glue);
     }
 
     public static ProgressMeterPanel getSingletonInstance() {
@@ -121,6 +120,7 @@ public class ProgressMeterPanel extends JPanel {
     
     public void addWorker(BackgroundWorker worker) {
         mainPanel.add(new MonitoredWorkerPanel(worker));
+        reglueMainPanel();
         refresh();
     }
     
@@ -162,43 +162,15 @@ public class ProgressMeterPanel extends JPanel {
     }
         
     private void updateMenuLabel(boolean showProgress) {
-        if (hasWorkersInProgress()) {
-            currIcon = animatedIcon;
-        }
-        else {
-            currIcon = staticIcon;
-        }
-        
         TopComponent tc = WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
         if (tc!=null) {
             tc.open();
-            
-            // TODO: figure out a way to apply a custom BusyTabsSupport to the rightSlidingPane, so that we can use a custom busy icon
-//            if (hasWorkersInProgress()) {
-//                tc.makeBusy(true);
-//            }
-//            else {
-//                tc.makeBusy(false);
-//            }
-            
             if (showProgress) {
                 tc.requestVisible();
             }
         }
     }
-    
-    public ImageIcon getStaticIcon() {
-        return staticIcon;
-    }
-    
-    public ImageIcon getAnimatedIcon() {
-        return animatedIcon;
-    }
-    
-    public ImageIcon getCurrentIcon() {
-        return currIcon;
-    }
-    
+        
     @SuppressWarnings("UnusedDeclaration") // event bus usage not detected by IDE
     @Subscribe
     public void processEvent(WorkerStartedEvent e) {
@@ -243,11 +215,11 @@ public class ProgressMeterPanel extends JPanel {
     
     private class MonitoredWorkerPanel extends JPanel {
 
-        private JLabel nameLabel;
-        private JLabel statusLabel;
-        private JProgressBar progressBar;
-        private JButton nextButton;
-        private JButton closeButton;
+        private final JLabel nameLabel;
+        private final JLabel statusLabel;
+        private final JProgressBar progressBar;
+        private final JButton nextButton;
+        private final JButton closeButton;
         
         private Long endedAt;
         private boolean cancelled = false;
@@ -260,7 +232,6 @@ public class ProgressMeterPanel extends JPanel {
             setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
             
             JPanel textPanel = new JPanel();
-            textPanel.setPreferredSize(new Dimension(LABEL_COLUMN_WIDTH, 20));
             textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
             textPanel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 10));
             add(textPanel);
@@ -269,17 +240,18 @@ public class ProgressMeterPanel extends JPanel {
             textPanel.add(nameLabel);
             
             this.statusLabel = new JLabel(worker.getStatus());
-            statusLabel.setFont(statusFont);
+            statusLabel.setFont(STATUS_FONT);
             textPanel.add(statusLabel);
             
             this.progressBar = new JProgressBar(1, 100);
-            progressBar.setPreferredSize(new Dimension(PROGRESS_COLUMN_WIDTH, PROGRESS_BAR_HEIGHT));
+            progressBar.setPreferredSize(new Dimension(PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT));
             progressBar.setIndeterminate(true);
             progressBar.setUI(new BasicProgressBarUI());
             add(progressBar);
             
             this.nextButton = new JButton();
             nextButton.setIcon(Icons.getIcon("arrow_forward.gif"));
+            nextButton.setPreferredSize(new Dimension(32, 32));
             nextButton.setFocusable(false);
             nextButton.setBorderPainted(false);
             nextButton.setToolTipText("View results");
@@ -294,6 +266,7 @@ public class ProgressMeterPanel extends JPanel {
             
             this.closeButton = new JButton();
             closeButton.setIcon(Icons.getIcon("close_red.png"));
+            closeButton.setPreferredSize(new Dimension(32, 32));
             closeButton.setFocusable(false);
             closeButton.setBorderPainted(false);
             closeButton.setToolTipText("Cancel");
