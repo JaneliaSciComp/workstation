@@ -481,14 +481,24 @@ implements MouseMode, KeyListener
 		*/
 		case KeyEvent.VK_LEFT:
 			if (nextParent != null) {
+				if (event.isAltDown()) {
 				controller.navigationRelative(nextParent.getGuid(),
-						TmNeuron.AnnotationNavigationDirection.ROOTWARD);
+						TmNeuron.AnnotationNavigationDirection.ROOTWARD_STEP);
+				} else {
+					controller.navigationRelative(nextParent.getGuid(),
+							TmNeuron.AnnotationNavigationDirection.ROOTWARD_JUMP);
+				}
 			}
 			break;
 		case KeyEvent.VK_RIGHT:
 			if (nextParent != null) {
-				controller.navigationRelative(nextParent.getGuid(),
-						TmNeuron.AnnotationNavigationDirection.ENDWARD);
+				if (event.isAltDown()) {
+					controller.navigationRelative(nextParent.getGuid(),
+							TmNeuron.AnnotationNavigationDirection.ENDWARD_STEP);
+				} else {
+					controller.navigationRelative(nextParent.getGuid(),
+							TmNeuron.AnnotationNavigationDirection.ENDWARD_JUMP);
+				}
 			}
 			break;
 		case KeyEvent.VK_UP:

@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -1025,18 +1024,23 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(annID);
         TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annID);
         switch (direction) {
-            case ROOTWARD:
+            case ROOTWARD_JUMP:
+            case ROOTWARD_STEP:
                 // if root, done; anything else, move to next rootward branch,
                 //  or root if there isn't one
                 if (ann.isRoot()) {
                     break;
                 }
                 ann = neuron.getParentOf(ann);
+                if (direction == TmNeuron.AnnotationNavigationDirection.ROOTWARD_STEP) {
+                    break;
+                }
                 while (!ann.isRoot() && !ann.isBranch()) {
                     ann = neuron.getParentOf(ann);
                 }
                 break;
-            case ENDWARD:
+            case ENDWARD_JUMP:
+            case ENDWARD_STEP:
                 // if no children (already end), done; if straight, move through
                 //  children until branch or end; if branch, take first child and
                 //  move to branch or end
@@ -1048,6 +1052,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 }
                 while (!ann.isEnd() && !ann.isBranch()) {
                     ann = neuron.getChildrenOf(ann).get(0);
+                    // bit inefficient, but oh, well
+                    if (direction == TmNeuron.AnnotationNavigationDirection.ENDWARD_STEP) {
+                        break;
+                    }
                 }
                 break;
             case NEXT_PARALLEL:
