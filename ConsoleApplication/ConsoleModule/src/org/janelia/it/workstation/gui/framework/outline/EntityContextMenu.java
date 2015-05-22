@@ -152,6 +152,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getDeleteItem());
         add(getDeleteInBackgroundItem());
         add(getMarkForReprocessingItem());
+        add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getVerificationMovieItem());
         
@@ -802,6 +803,121 @@ public class EntityContextMenu extends JPopupMenu {
         return blockItem;
     }
 
+    protected JMenuItem getSampleCompressionTypeItem() {
+    
+        String compressionType = null;
+        
+        final List<Entity> samples = new ArrayList<>();
+        for (RootedEntity rootedEntity : rootedEntityList) {
+            Entity sample = rootedEntity.getEntity();
+            if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
+                if (!sample.getName().contains("~")) {
+                    samples.add(sample);
+                    String type = sample.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMRESSION_TYPE);
+                    if (compressionType!=null && !compressionType.equals(type)) {
+                        log.info("No consensus for compression type ("+compressionType+"!="+type+")");
+                        break;
+                    }
+                    compressionType = type;
+                }
+            }
+        }
+        
+        if (samples.isEmpty()) return null;
+        
+        final int count = samples.size();
+        final String samplesText = multiple?count+" Samples":"Sample";
+        final boolean isLossless = EntityConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J.equals(compressionType) || EntityConstants.VALUE_COMPRESSION_LOSSLESS.equals(compressionType);
+        final String compText = isLossless ? "Visually Lossless" : "Lossless";
+        final String targetCompression = isLossless ? EntityConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS_AND_PBD : EntityConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J;
+        
+        JMenuItem menuItem = new JMenuItem("  Change "+samplesText+" To "+compText+" Compression");
+        menuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                
+                String message = isLossless 
+                        ? "Are you sure you want to convert "+count+" to Visually Lossless (H5J) format?" 
+                        : "Are you sure you want to reprocess "+count+" sample(s) to Lossless (V3DPBD) format?";
+                int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
+                
+                if (result != 0) return;
+
+                SimpleWorker worker = new SimpleWorker() {
+                    
+                    StringBuilder sampleIdBuf = new StringBuilder();
+                        
+                    @Override
+                    protected void doStuff() throws Exception {
+                        for(final Entity sample : samples) {
+                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_COMRESSION_TYPE, targetCompression);
+                            if (isLossless) {
+                                // Target is Visually Lossless, just run the compression service
+                                if (sampleIdBuf.length()>0) sampleIdBuf.append(",");
+                                sampleIdBuf.append(sample.getId());
+                            }
+                            else {
+                                // Target is Lossless, need to rerun sample
+                                ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
+                            }
+                        }
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {  
+                        if (sampleIdBuf.length()==0) return;
+                        
+                        Task task;
+                        try {
+                            HashSet<TaskParameter> taskParameters = new HashSet<>();
+                            taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
+                            task = ModelMgr.getModelMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
+                        }
+                        catch (Exception e) {
+                            SessionMgr.getSessionMgr().handleException(e);
+                            return;
+                        }
+                        
+                        TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
+
+                            @Override
+                            public String getName() {
+                                return "Compressing "+samples.size()+" samples";
+                            }
+
+                            @Override
+                            protected void doStuff() throws Exception {
+                                setStatus("Executing");
+                                super.doStuff();
+                                for(Entity sample : samples) {
+                                    ModelMgr.getModelMgr().invalidateCache(sample, true);
+                                }
+                            }
+                        };
+
+                        taskWorker.executeWithEvents();
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                
+                worker.execute();
+            }
+        });
+
+        for(RootedEntity rootedEntity : rootedEntityList) {
+            Entity sample = rootedEntity.getEntity();
+            if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
+                menuItem.setEnabled(false);
+                break;
+            }
+        }
+
+        return menuItem;
+    }
+    
     protected JMenuItem getMarkForReprocessingItem() {
 
         final List<Entity> samples = new ArrayList<>();
