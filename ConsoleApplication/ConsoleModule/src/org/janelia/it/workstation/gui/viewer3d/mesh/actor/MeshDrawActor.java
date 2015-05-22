@@ -208,6 +208,9 @@ public class MeshDrawActor implements GLActor {
         gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
         reportError( gl, "Display of mesh-draw-actor 1" );
         
+        gl.glDisable(GL2.GL_CULL_FACE);
+        gl.glFrontFace(GL2.GL_CCW);
+        
         if (matrixManager != null)
             matrixManager.recalculate(gl);
 

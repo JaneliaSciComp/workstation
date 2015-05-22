@@ -76,21 +76,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             throw new Exception("Please set all model information before execution.");
         }
         
-        createVerticesAndBuffers();
-
-        // Build triangle sources and render buffers, from input neuron info.
-        Long sourceNumber = 0L;
-        for ( TriangleSource factory: triangleSources ) {
-            // Now have a full complement of triangles and vertices.  For this source, can traverse the
-            // vertices, making a "composite normal" based on the normals of all entangling triangles.
-            NormalCompositor normalCompositor = new NormalCompositor();
-            normalCompositor.combineCustomNormals(factory);
-            BufferPackager packager = new BufferPackager();
-            RenderBuffersBean rbb = renderIdToBuffers.get( sourceNumber );
-            rbb.setAttributesBuffer(packager.getVertexAttributes(factory));
-            rbb.setIndexBuffer(packager.getIndices(factory));
-            sourceNumber++;
-        }
+        createVertices();
+        populateNormals(triangleSources, renderIdToBuffers);
         exportVertices(new File("/Users/fosterl/"), "NeuronTraceVtxAttribMgr_Test");
         
         return triangleSources;
@@ -109,16 +96,30 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 
     @Override
     public void exportVertices(File outputLocation, String filenamePrefix) throws Exception {
-        OBJWriter objWriter = new OBJWriter();
         Skeleton skeleton = dataSource.getSkeleton();
         if (skeleton == null || skeleton.getAnchors().isEmpty()) {
             throw new IllegalStateException("Nothing to export.");
         }
         Anchor anAnchor = skeleton.getAnchors().iterator().next();
         Long id = anAnchor.getNeuronID();
+        exportVertices(outputLocation, filenamePrefix, triangleSources, id);
+    }
+    
+    /**
+     * This is a test-accessible function which does not rely on the skeleton
+     * as a data source.
+     * 
+     * @param outputLocation where to place file.
+     * @param filenamePrefix prefix for its name.
+     * @param triangleSources iterate for OBJ content.
+     * @param id also in the name
+     * @throws Exception thrown by called methods.
+     */
+    public void exportVertices(File outputLocation, String filenamePrefix, List<TriangleSource> triangleSources, Long id) throws Exception {
+        OBJWriter objWriter = new OBJWriter();
         for (TriangleSource triangleSource : triangleSources) {
             objWriter.writeVertices(
-                    outputLocation, 
+                    outputLocation,
                     filenamePrefix,
                     OBJWriter.FILE_SUFFIX,
                     id,
@@ -150,12 +151,41 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     }
 
     /**
+     * Test accessible method which does not rely on skeleton data.  Will
+     * calculate the normal vectors for the triangles in the triangle source.
+     * 
+     * @param triangleSources iterated for normals data.
+     * @param renderIdToBuffers populated with normals data.
+     */
+    public void populateNormals(
+            List<TriangleSource> triangleSources,
+            Map<Long, RenderBuffersBean> renderIdToBuffers
+    ) {
+        Long sourceNumber = 0L;
+        BufferPackager packager = new BufferPackager();
+        for (TriangleSource factory : triangleSources) {
+            // Now have a full complement of triangles and vertices.  For this source, can traverse the
+            // vertices, making a "composite normal" based on the normals of all entangling triangles.
+            NormalCompositor normalCompositor = new NormalCompositor();
+            normalCompositor.combineCustomNormals(factory);
+            RenderBuffersBean rbb = renderIdToBuffers.get(sourceNumber);
+            if ( rbb == null ) {
+                rbb = new RenderBuffersBean();
+                renderIdToBuffers.put( sourceNumber, rbb );
+            }
+            rbb.setAttributesBuffer(packager.getVertexAttributes(factory));
+            rbb.setIndexBuffer(packager.getIndices(factory));
+            sourceNumber++;
+        }
+    }
+
+    /**
      * Here is where the 'model' is transformed into vertices and render
      * buffers.
      * 
      * @throws Exception 
      */
-    private synchronized void createVerticesAndBuffers() throws Exception {
+    private synchronized void createVertices() throws Exception {
         // Make triangle sources.
 		LineEnclosureFactory tracedSegmentEnclosureFactory = new LineEnclosureFactory(6, 8);
         LineEnclosureFactory manualSegmentEnclosureFactory = new LineEnclosureFactory(5, 4);
@@ -209,17 +239,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 		triangleSources.add(tracedSegmentEnclosureFactory);
         triangleSources.add(manualSegmentEnclosureFactory);
 		
-		// Establish the indexes.
-		BufferPackager packager = new BufferPackager();
-        long i = 0;
-        for ( TriangleSource source: triangleSources ) {
-            RenderBuffersBean rbb = new RenderBuffersBean();
-            rbb.setAttributesBuffer(packager.getVertexAttributes(source));
-            rbb.setIndexBuffer(packager.getIndices(source));
-
-            rbb = new RenderBuffersBean();
-            renderIdToBuffers.put(i++, rbb);
-        }
     }
 
     private double[] toDoubleArr( Vec3 input ) {
