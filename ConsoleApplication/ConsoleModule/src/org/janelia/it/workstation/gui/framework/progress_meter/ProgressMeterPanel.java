@@ -232,6 +232,7 @@ public class ProgressMeterPanel extends JPanel {
             setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
             
             JPanel textPanel = new JPanel();
+            textPanel.setPreferredSize(new Dimension(300, 20));
             textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
             textPanel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 10));
             add(textPanel);
