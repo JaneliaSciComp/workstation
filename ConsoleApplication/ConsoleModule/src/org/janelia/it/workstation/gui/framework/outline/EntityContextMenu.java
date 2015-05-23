@@ -17,6 +17,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -786,6 +787,17 @@ public class EntityContextMenu extends JPopupMenu {
                             ModelMgr.getModelMgr().invalidateCache(sample, true);
                         }
                     }
+
+                    @Override
+                    public Callable<Void> getSuccessCallback() {
+                        return new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                SessionMgr.getBrowser().getEntityOutline().refresh();
+                                return null;
+                            }
+                        };
+                    }
                 };
 
                 taskWorker.executeWithEvents();
@@ -802,42 +814,34 @@ public class EntityContextMenu extends JPopupMenu {
         
         return blockItem;
     }
-
-    protected JMenuItem getSampleCompressionTypeItem() {
     
-        String compressionType = null;
-        
+    private List<Entity> getSelectedSamples() {
         final List<Entity> samples = new ArrayList<>();
         for (RootedEntity rootedEntity : rootedEntityList) {
             Entity sample = rootedEntity.getEntity();
-            if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
-                if (!sample.getName().contains("~")) {
-                    samples.add(sample);
-                    String type = sample.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMRESSION_TYPE);
-                    if (compressionType!=null && !compressionType.equals(type)) {
-                        log.info("No consensus for compression type ("+compressionType+"!="+type+")");
-                        break;
-                    }
-                    compressionType = type;
-                }
+            if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE) && !sample.getName().contains("~")) {
+                samples.add(sample);
             }
         }
-        
+        return samples;
+    }
+
+    protected JMenuItem getSampleCompressionTypeItem() {
+    
+        final List<Entity> samples = getSelectedSamples();
         if (samples.isEmpty()) return null;
+        
+        JMenu submenu = new JMenu("  Change Sample Compression Strategy");
         
         final int count = samples.size();
         final String samplesText = multiple?count+" Samples":"Sample";
-        final boolean isLossless = EntityConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J.equals(compressionType) || EntityConstants.VALUE_COMPRESSION_LOSSLESS.equals(compressionType);
-        final String compText = isLossless ? "Visually Lossless" : "Lossless";
-        final String targetCompression = isLossless ? EntityConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS_AND_PBD : EntityConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J;
         
-        JMenuItem menuItem = new JMenuItem("  Change "+samplesText+" To "+compText+" Compression");
-        menuItem.addActionListener(new ActionListener() {
+        JMenuItem vllMenuItem = new JMenuItem("Visually Lossless (h5j)");
+        vllMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 
-                String message = isLossless 
-                        ? "Are you sure you want to convert "+count+" to Visually Lossless (H5J) format?" 
-                        : "Are you sure you want to reprocess "+count+" sample(s) to Lossless (V3DPBD) format?";
+                final String targetCompression = EntityConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS_AND_PBD;
+                String message = "Are you sure you want to convert "+samplesText+" to Visually Lossless (h5j) format?";
                 int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
                 
                 if (result != 0) return;
@@ -850,15 +854,9 @@ public class EntityContextMenu extends JPopupMenu {
                     protected void doStuff() throws Exception {
                         for(final Entity sample : samples) {
                             ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_COMRESSION_TYPE, targetCompression);
-                            if (isLossless) {
-                                // Target is Visually Lossless, just run the compression service
-                                if (sampleIdBuf.length()>0) sampleIdBuf.append(",");
-                                sampleIdBuf.append(sample.getId());
-                            }
-                            else {
-                                // Target is Lossless, need to rerun sample
-                                ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
-                            }
+                            // Target is Visually Lossless, just run the compression service
+                            if (sampleIdBuf.length()>0) sampleIdBuf.append(",");
+                            sampleIdBuf.append(sample.getId());
                         }
                     }
                     
@@ -892,6 +890,17 @@ public class EntityContextMenu extends JPopupMenu {
                                     ModelMgr.getModelMgr().invalidateCache(sample, true);
                                 }
                             }
+                            
+                            @Override
+                            public Callable<Void> getSuccessCallback() {
+                                return new Callable<Void>() {
+                                    @Override
+                                    public Void call() throws Exception {
+                                        SessionMgr.getBrowser().getEntityOutline().refresh();
+                                        return null;
+                                    }
+                                };
+                            }
                         };
 
                         taskWorker.executeWithEvents();
@@ -906,16 +915,56 @@ public class EntityContextMenu extends JPopupMenu {
                 worker.execute();
             }
         });
+        
+        submenu.add(vllMenuItem);
 
-        for(RootedEntity rootedEntity : rootedEntityList) {
-            Entity sample = rootedEntity.getEntity();
+        JMenuItem llMenuItem = new JMenuItem("Lossless (v3dpbd)");
+        llMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                
+                final String targetCompression = EntityConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J;
+                String message = "Are you sure you want to mark "+samplesText+" for reprocessing into Lossless (v3dpbd) format?";
+                int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
+                
+                if (result != 0) return;
+
+                SimpleWorker worker = new SimpleWorker() {
+                    
+                    StringBuilder sampleIdBuf = new StringBuilder();
+                        
+                    @Override
+                    protected void doStuff() throws Exception {
+                        for(final Entity sample : samples) {
+                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_COMRESSION_TYPE, targetCompression);
+                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
+                        }
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {  
+                         JOptionPane.showMessageDialog(mainFrame, samplesText+" are marked for reprocessing to (v3dpbd) Lossless format",  "Marked Samples", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                
+                worker.execute();
+            }
+        });
+        
+        submenu.add(llMenuItem);
+        
+        for(Entity sample : samples) {
             if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
-                menuItem.setEnabled(false);
+                vllMenuItem.setEnabled(false);
                 break;
             }
         }
 
-        return menuItem;
+        return submenu;
     }
     
     protected JMenuItem getMarkForReprocessingItem() {
