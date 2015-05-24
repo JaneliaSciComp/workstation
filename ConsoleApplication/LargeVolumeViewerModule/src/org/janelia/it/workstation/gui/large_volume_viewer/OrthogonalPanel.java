@@ -79,7 +79,7 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 		viewer.setSliceActor(new SliceActor(viewTileManager));
 		spinner.setModel(spinnerNumberModel);
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-		add(viewer);
+		add(viewer.getComponent());
 		scanPanel.setLayout(new BoxLayout(scanPanel, BoxLayout.X_AXIS));
 		scanPanel.add(new JLabel(" "+axis.getName()));
 		scanPanel.add(new ToolButton(new OrthogonalViewer.PreviousSliceAction(viewer)));

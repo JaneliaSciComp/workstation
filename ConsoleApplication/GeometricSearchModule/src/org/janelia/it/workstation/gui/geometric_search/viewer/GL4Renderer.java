@@ -6,13 +6,11 @@ import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.UnitVec3;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.geometric_search.gl.GL3ShaderActionSequence;
-import org.janelia.it.workstation.gui.geometric_search.gl.GL3SimpleActor;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderActionSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL3;
+import javax.media.opengl.GL4;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
@@ -23,20 +21,20 @@ import java.util.List;
 /**
  * Created by murphys on 4/10/15.
  */
-public class GL3Renderer implements GLEventListener
+public class GL4Renderer implements GLEventListener
 {
     public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2000;
 
     protected GLU glu = new GLU();
-    protected List<GL3ShaderActionSequence> shaderActionList = new ArrayList<GL3ShaderActionSequence>();
+    protected List<GL4ShaderActionSequence> shaderActionList = new ArrayList<GL4ShaderActionSequence>();
     protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
     protected Camera3d camera;
 
-    public static final double MAX_PIXELS_PER_VOXEL = 100000.0;
-    public static final double MIN_PIXELS_PER_VOXEL = 0.001;
-    private static final double MIN_CAMERA_FOCUS_DISTANCE = -1000000.0;
-    private static final double MAX_CAMERA_FOCUS_DISTANCE = -0.001;
-    private static final Vec3 UP_IN_CAMERA = new Vec3(0,-1,0);
+//    public static final double MAX_PIXELS_PER_VOXEL = 100000.0;
+//    public static final double MIN_PIXELS_PER_VOXEL = 0.001;
+    private static final double MAX_CAMERA_FOCUS_DISTANCE = 1000000.0;
+    private static final double MIN_CAMERA_FOCUS_DISTANCE = 0.001;
+    private static final Vec3 UP_IN_CAMERA = new Vec3(0,1,0);
     private static double FOV_Y_DEGREES = 45.0f;
     private float FOV_TERM = new Float(Math.tan( (Math.PI/180.0) * (FOV_Y_DEGREES/2.0) ) );
 
@@ -45,14 +43,14 @@ public class GL3Renderer implements GLEventListener
     private double defaultHeightInPixels = 400.0;
     private double widthInPixels = defaultHeightInPixels;
     private double heightInPixels = defaultHeightInPixels;
-    private GL3Model model;
+    private GL4Model model;
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;
 
     Matrix4 viewMatrix;
     Matrix4 projectionMatrix;
 
-    private Logger logger = LoggerFactory.getLogger(GL3Renderer.class);
+    private Logger logger = LoggerFactory.getLogger(GL4Renderer.class);
 
     public Matrix4 getViewMatrix() {
         return viewMatrix;
@@ -63,16 +61,16 @@ public class GL3Renderer implements GLEventListener
     }
 
     // scene objects
-    public GL3Renderer(GL3Model model) {
+    public GL4Renderer(GL4Model model) {
         this.model=model;
         camera=model.getCamera3d();
     }
 
-    public void addShaderAction(GL3ShaderActionSequence shaderAction) {
+    public void addShaderAction(GL4ShaderActionSequence shaderAction) {
         shaderActionList.add(shaderAction);
     }
 
-    protected void displayBackground(GL3 gl)
+    protected void displayBackground(GL4 gl)
     {
         // paint solid background color
         gl.glClearColor(
@@ -80,30 +78,30 @@ public class GL3Renderer implements GLEventListener
                 backgroundColor.getGreen()/255.0f,
                 backgroundColor.getBlue()/255.0f,
                 backgroundColor.getAlpha()/255.0f);
-        gl.glClear(GL3.GL_COLOR_BUFFER_BIT);
+        gl.glClear(GL4.GL_COLOR_BUFFER_BIT);
     }
 
-    public void displayChanged(GLAutoDrawable gLDrawable, boolean modeChanged, boolean deviceChanged)
-    {
-        // System.out.println("displayChanged called");
-    }
+//    public void displayChanged(GLAutoDrawable gLDrawable, boolean modeChanged, boolean deviceChanged)
+//    {
+//        // System.out.println("displayChanged called");
+//    }
 
     @Override
     public void dispose(GLAutoDrawable glDrawable)
     {
-        final GL3 gl = glDrawable.getGL().getGL3();
+        final GL4 gl = glDrawable.getGL().getGL4();
 
-        for (GL3ShaderActionSequence shaderAction : shaderActionList)
+        for (GL4ShaderActionSequence shaderAction : shaderActionList)
             shaderAction.dispose(gl);
     }
 
-    public List<GL3ShaderActionSequence> getShaderActionList() {
+    public List<GL4ShaderActionSequence> getShaderActionList() {
         return shaderActionList;
     }
 
-    public Color getBackgroundColor() {
-        return backgroundColor;
-    }
+//    public Color getBackgroundColor() {
+//        return backgroundColor;
+//    }
 
     public Camera3d getCamera() {
         return camera;
@@ -112,9 +110,9 @@ public class GL3Renderer implements GLEventListener
     @Override
     public void init(GLAutoDrawable glDrawable)
     {
-        final GL3 gl = glDrawable.getGL().getGL3();
+        final GL4 gl = glDrawable.getGL().getGL4();
 
-        for (GL3ShaderActionSequence shaderAction : shaderActionList) {
+        for (GL4ShaderActionSequence shaderAction : shaderActionList) {
             try {
                 shaderAction.init(gl);
             } catch (Exception ex) {
@@ -154,13 +152,15 @@ public class GL3Renderer implements GLEventListener
         float[] backgroundClrArr = model.getBackgroundColorFArr();
         this.backgroundColor = new Color( backgroundClrArr[ 0 ], backgroundClrArr[ 1 ], backgroundClrArr[ 2 ] );
 
-        final GL3 gl = glDrawable.getGL().getGL3();
+        final GL4 gl = glDrawable.getGL().getGL4();
         displayBackground(gl);
+        gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
+        gl.glEnable(GL4.GL_DEPTH_TEST);
 
         widthInPixels = glDrawable.getWidth();
         heightInPixels = glDrawable.getHeight();
         if (resetFirstRedraw && (! hasBeenReset)) {
-            resetView();
+            //resetView();
             hasBeenReset = true;
         }
 
@@ -171,7 +171,9 @@ public class GL3Renderer implements GLEventListener
 
         //Vec3 c = f.plus(rotation.times(model.getCameraDepth().times(unitsPerPixel))); // camera position
 
-        Vec3 c = f.plus(rotation.times(model.getCameraDepth())); // camera position
+        Vec3 md = model.getCameraDepth();
+
+        Vec3 c = f.plus(rotation.times(md)); // camera position
 
         Vec3 u = rotation.times(UP_IN_CAMERA); // up vector
 
@@ -179,13 +181,17 @@ public class GL3Renderer implements GLEventListener
         Vector3 c3 = new Vector3(new Float(c.getX()), new Float(c.getY()), new Float(c.getZ()));
         Vector3 u3 = new Vector3(new Float(u.getX()), new Float(u.getY()), new Float(u.getZ()));
 
+//        logger.info("camera= "+c3.getX()+" "+c3.getY()+" "+c3.getZ());
+//        logger.info("focus=  "+f3.getX()+" "+f3.getY()+" "+f3.getZ());
+//        logger.info("up=     "+u3.getX()+" "+u3.getY()+" "+u3.getZ());
+
         viewMatrix = lookAt(c3, f3, u3);
 
         // Projection matrix
         updateProjection(gl);
 
         // Copy member list of actors local for independent iteration.
-        for (GL3ShaderActionSequence shaderAction : shaderActionList)
+        for (GL4ShaderActionSequence shaderAction : shaderActionList)
             shaderAction.display(gl);
 
     }
@@ -195,13 +201,9 @@ public class GL3Renderer implements GLEventListener
     }
 
     public void resetView() {
-        // Adjust view to fit the actual objects present
-//        BoundingBox3d boundingBox = getBoundingBox();
-//        camera.setFocus(boundingBox.getCenter());
         camera.resetRotation();
-        camera.setFocus(0.0, 0.0, 0.0);
-        model.setCameraDepth(new Vec3(0.0, 0.0, -GL3Model.DEFAULT_CAMERA_FOCUS_DISTANCE));
-//        resetCameraDepth(boundingBox);
+        camera.setFocus(0.0, 0.0, 0.5);
+        model.setCameraDepth(new Vec3(0.0, 0.0, GL4Model.DEFAULT_CAMERA_FOCUS_DISTANCE));
     }
 
     @Override
@@ -209,7 +211,7 @@ public class GL3Renderer implements GLEventListener
         this.widthInPixels = width;
         this.heightInPixels = height;
 
-        final GL3 gl = glDrawable.getGL().getGL3();
+        final GL4 gl = glDrawable.getGL().getGL4();
 
         updateProjection(gl);
     }
@@ -220,7 +222,7 @@ public class GL3Renderer implements GLEventListener
         double dragDistance = Math.sqrt(dy * dy + dx * dx + dz * dz);
         if (dragDistance <= 0.0)
             return;
-        UnitVec3 rotationAxis = new UnitVec3(dy, -dx, dz);
+        UnitVec3 rotationAxis = new UnitVec3(dy, dx, dz);
         double windowSize = Math.sqrt(
                 widthInPixels * widthInPixels
                         + heightInPixels * heightInPixels);
@@ -236,19 +238,19 @@ public class GL3Renderer implements GLEventListener
 
     public void translatePixels(double dx, double dy, double dz) {
         // trackball translate
-        Vec3 t = new Vec3(-dx, -dy, -dz);
+        Vec3 t = new Vec3(-dx, dy, -dz);
         t.multEquals(glUnitsPerPixel());
         model.getCamera3d().getFocus().plusEquals(
                 camera.getRotation().times(t)
         );
     }
 
-    public void updateProjection(GL3 gl) {
+    public void updateProjection(GL4 gl) {
         //gl.glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = model.getCameraFocusDistance();
         float scaledFocusDistance = new Float(Math.abs(cameraFocusDistance));
-        projectionMatrix = computeProjection(h, 0.5f * scaledFocusDistance, 2.0f * scaledFocusDistance);
+        projectionMatrix = computeProjection(h, 0.5f*scaledFocusDistance, 2.0f*scaledFocusDistance);
     }
 
     Matrix4 computeProjection(float aspectRatio, float near, float far) {
@@ -264,6 +266,7 @@ public class GL3Renderer implements GLEventListener
                 0f,                               (2f * near) / (top - bottom),   (top + bottom) / (top - bottom),         0f,
                 0f,                               0f,                             -1f * ((far + near) / (far - near)),    -1f * ((2f * far * near) / (far - near)),
                 0f,                               0f,                             -1f,                                     0f);
+        projection.transpose();
 
         return projection;
     }
@@ -288,7 +291,7 @@ public class GL3Renderer implements GLEventListener
 
         model.setCameraDepth(new Vec3(0.0, 0.0, cameraFocusDistance));
 
-        logger.info("ZOOM  glUnitsPerPixel="+glUnitsPerPixel()+" cameraFocusDistance="+cameraFocusDistance);
+//        logger.info("ZOOM  glUnitsPerPixel=" + glUnitsPerPixel() + " cameraFocusDistance=" + cameraFocusDistance);
 
     }
 
@@ -298,7 +301,7 @@ public class GL3Renderer implements GLEventListener
                 oldPoint.y - heightInPixels/2.0};
         double[] p1 = {newPoint.x - widthInPixels/2.0,
                 newPoint.y - heightInPixels/2.0};
-        double dC0 = Math.sqrt(p0[0]*p0[0]+p0[1]*p0[1]);
+        double dC0 = Math.sqrt(p0[0] * p0[0] + p0[1] * p0[1]);
         double dC1 = Math.sqrt(p1[0]*p1[0]+p1[1]*p1[1]);
         double dC = dC1 - dC0; // positive means away
         double denom = Math.max(20.0, dC1);
@@ -306,51 +309,13 @@ public class GL3Renderer implements GLEventListener
         zoom(zoomRatio);
     }
 
-    public GL3Model getModel() {
+    public GL4Model getModel() {
         return model;
     }
 
-    private double maxAspectRatio(BoundingBox3d boundingBox) {
-
-        double boundingAspectRatio = Math.max(
-                boundingBox.getWidth() / boundingBox.getHeight(), boundingBox.getHeight() / boundingBox.getWidth()
-        );
-        boolean horizontalBox = boundingBox.getWidth() > boundingBox.getHeight();
-
-        double glAspectRatio = Math.max(
-                widthInPixels / heightInPixels, heightInPixels / widthInPixels
-        );
-        boolean horizontalGl = widthInPixels > heightInPixels;
-
-        if ( horizontalGl && horizontalBox ) {
-            return Math.max(
-                    boundingAspectRatio, glAspectRatio
-            );
-
-        }
-        else {
-            return boundingAspectRatio * glAspectRatio;
-        }
-
-    }
 
     public void setResetFirstRedraw(boolean resetFirstRedraw) {
         this.resetFirstRedraw = resetFirstRedraw;
-    }
-
-    private double getMaxZoom() {
-        double maxRes = getMaxRes();
-        return MAX_PIXELS_PER_VOXEL / maxRes; // This many pixels per voxel is probably zoomed enough...
-    }
-
-    private double getMaxRes() {
-        return (double) Math.min(
-                model.getVoxelMicrometers()[0],
-                Math.min(
-                        model.getVoxelMicrometers()[1],
-                        model.getVoxelMicrometers()[2]
-                )
-        );
     }
 
     // c = camera position
@@ -364,9 +329,9 @@ public class GL3Renderer implements GLEventListener
         Vector3 up=computeNormalOfPlane(sn, fn);
         Matrix4 lam = new Matrix4();
 
-        lam.set( sn.getX(),   up.getX(),    fn.getX(),   0.0f,
-                 sn.getY(),   up.getY(),    fn.getY(),   0.0f,
-                 sn.getZ(),   up.getZ(),    fn.getZ(),   0.0f,
+        lam.set( sn.getX(),   up.getX(),    -1f*fn.getX(),   0.0f,
+                 sn.getY(),   up.getY(),    -1f*fn.getY(),   0.0f,
+                 sn.getZ(),   up.getZ(),    -1f*fn.getZ(),   0.0f,
                  0.0f,         0.0f,        0.0f,        1.0f);
 
         Matrix4 tm = new Matrix4();
@@ -376,7 +341,7 @@ public class GL3Renderer implements GLEventListener
                 0f, 0f, 1f, 0f,
                 -1f*c.getX(), -1f*c.getY(), -1f*c.getZ(), 1f);
 
-        Matrix4 result = lam.multiply(tm);
+        Matrix4 result = tm.multiply(lam);
         return result;
     }
 
