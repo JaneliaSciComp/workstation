@@ -112,9 +112,13 @@ implements StaticVolumeBrickSource
     }
 
     private Double getNearbyResolution(Double targetRes) {
+        if (targetRes == null)
+            return targetRes;
         if (resMap.containsKey(targetRes))
             return targetRes;
         for (Double oldRes : resMap.keySet() ) {
+            if (oldRes == null)
+                continue;
             double ratio = targetRes / oldRes;
             final double threshold = 1.30;
             if ( (ratio > 1.0/threshold) && (ratio < threshold) )

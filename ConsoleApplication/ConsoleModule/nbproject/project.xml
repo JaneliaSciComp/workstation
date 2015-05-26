@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.10</specification-version>
+                        <specification-version>1.12</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -21,7 +21,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.10</specification-version>
+                        <specification-version>1.12</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -30,7 +30,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.10</specification-version>
+                        <specification-version>1.12</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -159,7 +159,6 @@
                 <package>org.janelia.it.workstation.gui.dialogs</package>
                 <package>org.janelia.it.workstation.gui.dialogs.choose</package>
                 <package>org.janelia.it.workstation.gui.dialogs.search</package>
-                <package>org.janelia.it.workstation.gui.framework.access</package>
                 <package>org.janelia.it.workstation.gui.framework.actions</package>
                 <package>org.janelia.it.workstation.gui.framework.bookmark</package>
                 <package>org.janelia.it.workstation.gui.framework.console</package>
@@ -182,19 +181,11 @@
                 <package>org.janelia.it.workstation.gui.framework.viewer</package>
                 <package>org.janelia.it.workstation.gui.framework.viewer.baseball_card</package>
                 <package>org.janelia.it.workstation.gui.framework.viewer.search</package>
-                <package>org.janelia.it.workstation.gui.large_volume_viewer</package>
-                <package>org.janelia.it.workstation.gui.large_volume_viewer.action</package>
-                <package>org.janelia.it.workstation.gui.large_volume_viewer.annotation</package>
-                <package>org.janelia.it.workstation.gui.large_volume_viewer.color_slider</package>
-                <package>org.janelia.it.workstation.gui.large_volume_viewer.generator</package>
-                <package>org.janelia.it.workstation.gui.large_volume_viewer.shader</package>
-                <package>org.janelia.it.workstation.gui.large_volume_viewer.skeleton</package>
                 <package>org.janelia.it.workstation.gui.ontology</package>
                 <package>org.janelia.it.workstation.gui.opengl</package>
                 <package>org.janelia.it.workstation.gui.opengl.demo</package>
                 <package>org.janelia.it.workstation.gui.opengl.shader</package>
                 <package>org.janelia.it.workstation.gui.opengl.stereo3d</package>
-                <package>org.janelia.it.workstation.gui.passive_3d</package>
                 <package>org.janelia.it.workstation.gui.static_view</package>
                 <package>org.janelia.it.workstation.gui.static_view.shader</package>
                 <package>org.janelia.it.workstation.gui.top_component</package>
@@ -203,6 +194,7 @@
                 <package>org.janelia.it.workstation.gui.util.server_status</package>
                 <package>org.janelia.it.workstation.gui.util.swing_models</package>
                 <package>org.janelia.it.workstation.gui.viewer3d</package>
+                <package>org.janelia.it.workstation.gui.viewer3d.axes</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.buffering</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.error_trap</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.events</package>
@@ -210,11 +202,15 @@
                 <package>org.janelia.it.workstation.gui.viewer3d.learning</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.loader</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.masking</package>
+                <package>org.janelia.it.workstation.gui.viewer3d.matrix_support</package>
+                <package>org.janelia.it.workstation.gui.viewer3d.mesh</package>
+                <package>org.janelia.it.workstation.gui.viewer3d.mesh.actor</package>
+                <package>org.janelia.it.workstation.gui.viewer3d.mesh.shader</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.renderable</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.resolver</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.scaled_image</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.shader</package>
-                <package>org.janelia.it.workstation.gui.viewer3d.stream</package>
+                <package>org.janelia.it.workstation.gui.viewer3d.text</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.texture</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.volume_builder</package>
                 <package>org.janelia.it.workstation.lifecycle</package>
@@ -236,7 +232,6 @@
                 <package>org.janelia.it.workstation.shared.util.text_component</package>
                 <package>org.janelia.it.workstation.shared.workers</package>
                 <package>org.janelia.it.workstation.signal</package>
-                <package>org.janelia.it.workstation.tracing</package>
                 <package>org.janelia.it.workstation.units</package>
                 <package>org.janelia.it.workstation.web</package>
                 <package>org.janelia.it.workstation.ws</package>

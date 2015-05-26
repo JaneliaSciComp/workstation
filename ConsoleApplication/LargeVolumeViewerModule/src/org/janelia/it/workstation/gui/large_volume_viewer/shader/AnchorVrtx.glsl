@@ -4,6 +4,9 @@
 // Sometimes one anchor gets highlighted, when the mouse hovers over it.
 uniform int highlightAnchorIndex = -1;
 uniform int parentAnchorIndex = -1;
+uniform int isDiscardNonParent = -1;
+uniform float startingPointSize = 12.0;
+uniform float maxPointSize = 4.0;
 uniform float zThickness = 100.0;
 uniform vec3 focus = vec3(0,0,0);
 
@@ -27,8 +30,8 @@ void main(void)
     fog = min(1.0, abs(relZ));
     
     // smaller points are further away; bigger ones closer
-    gl_PointSize = 12.0 - 5.0 * relZ; 
-    gl_PointSize = max(4.0, gl_PointSize);
+    gl_PointSize = startingPointSize - 5.0 * relZ; 
+    gl_PointSize = max(maxPointSize, gl_PointSize);
 
     // Larger shape when mouse is over anchor
     if (highlightAnchorIndex == gl_VertexID)
@@ -38,4 +41,8 @@ void main(void)
     isParent = 0;
     if (parentAnchorIndex == gl_VertexID)
         isParent = 1;
+
+    // Can setup to discard anything that is not a parent.
+    if (isParent == 0 && isDiscardNonParent >= 1)
+        fog = 1.1;
 }

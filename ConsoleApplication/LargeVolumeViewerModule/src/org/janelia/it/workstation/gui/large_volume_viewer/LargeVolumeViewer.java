@@ -17,6 +17,10 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.ZScanMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorStateUpdater;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
@@ -25,7 +29,6 @@ import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesChooser;
 import javax.media.opengl.GLContext;
-import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -38,15 +41,13 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
 import java.util.List;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorStateUpdater;
+import org.apache.commons.lang.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class LargeVolumeViewer
-extends GLJPanel
+// extends GLJPanel
 implements MouseModalWidget, TileConsumer, RepaintListener
 {
 	private static final Logger log = LoggerFactory.getLogger(LargeVolumeViewer.class);
@@ -61,7 +62,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	protected Viewport viewport = renderer.getViewport();
 	protected RubberBand rubberBand = new RubberBand();
 	protected SkeletonActor skeletonActor = new SkeletonActor();
-	
 
 	SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
 	protected TileServer tileServer = new TileServer(sharedVolumeImage);
@@ -74,14 +74,43 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     
 	// Popup menu
 	MenuItemGenerator systemMenuItemGenerator;
-	MenuItemGenerator modeMenuItemGenerator;    
+	MenuItemGenerator modeMenuItemGenerator;
+    
+    // May 2015 extend by containment, not inheritance
+    // Store GLCanvas or GLJPanel in terms of these interfaces:
+    GLDrawableWrapper glCanvas;
 	
-	public LargeVolumeViewer(GLCapabilities capabilities,
-                             GLCapabilitiesChooser chooser,
-                             GLContext sharedContext,
+	public LargeVolumeViewer(final GLCapabilities capabilities,
+                             final GLCapabilitiesChooser chooser,
+                             final GLContext sharedContext,
                              ObservableCamera3d camera)
 	{
-		super(capabilities, chooser, sharedContext);
+        // Use GLCanvas on Linux, for better frame rate on EnginFrame
+        // But not on Windows, so we could still use Java2D decorations
+        // if (false)
+        // if (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX) 
+        if (SystemUtils.IS_OS_LINUX) 
+        {
+            glCanvas = new GLCanvasWrapper(capabilities, chooser, sharedContext) {
+                    @Override
+                    public void paintComponent(Graphics g) {
+                        super.paintComponent(g);
+                        Graphics2D g2 = (Graphics2D)g;
+                        rubberBand.paint(g2);
+                    }
+            };            
+        }
+        else {
+            glCanvas = new GLJPanelWrapper(capabilities, chooser, sharedContext) {
+                    @Override
+                    public void paintComponent(Graphics g) {
+                        super.paintComponent(g);
+                        Graphics2D g2 = (Graphics2D)g;
+                        rubberBand.paint(g2);
+                    }
+            };
+        }
+        
 		init(camera);
 	}
 	
@@ -93,13 +122,13 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     }
 
 	private void init(ObservableCamera3d camera) {
-        addMouseListener(this);
-        addMouseMotionListener(this);
-        addMouseWheelListener(this);
-        addKeyListener(this);
+        glCanvas.getInnerAwtComponent().addMouseListener(this);
+        glCanvas.getInnerAwtComponent().addMouseMotionListener(this);
+        glCanvas.getInnerAwtComponent().addMouseWheelListener(this);
+        glCanvas.getInnerAwtComponent().addKeyListener(this);
 	    setMouseMode(MouseMode.Mode.PAN);
 	    setWheelMode(WheelMode.Mode.SCAN);
-		addGLEventListener(renderer);
+		glCanvas.getGLAutoDrawable().addGLEventListener(renderer);
 		setCamera(camera);
 		//
 		ViewTileManager viewTileManager = new ViewTileManager(this);
@@ -113,7 +142,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		// renderer.setBackgroundColor(Color.white);
 		// black background for production
 		renderer.setBackgroundColor(Color.black);
-        setPreferredSize( new Dimension( 600, 600 ) );
+        glCanvas.getInnerAwtComponent().setPreferredSize( new Dimension( 600, 600 ) );
         rubberBand.setRepaintListener(this);
         // setToolTipText("Double click to center on a point.");
         renderer.addActor(sliceActor);
@@ -125,10 +154,10 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         renderer.addActor(skeletonActor);
         SkeletonActorStateUpdater sasUpdater = skeletonActor.getUpdater();
         sasUpdater.addListener(this);
-        skeletonActor.setZThicknessInPixels(viewport.getDepth());
+        skeletonActor.setZThicknessInPixels(viewport.getDepth());        
 		//
         // PopupMenu
-        addMouseListener(new MouseHandler() {
+        glCanvas.getInnerAwtComponent().addMouseListener(new MouseHandler() {
             @Override
             protected void popupTriggered(MouseEvent e) {
                 // System.out.println("popup");
@@ -222,8 +251,8 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 
 	@Override
 	public Point2D getPixelOffsetFromCenter(Point2D point) {
-		double dx = point.getX() - getWidth() / 2.0;
-		double dy = point.getY() - getHeight() / 2.0;
+		double dx = point.getX() - glCanvas.getInnerAwtComponent().getWidth() / 2.0;
+		double dy = point.getY() - glCanvas.getInnerAwtComponent().getHeight() / 2.0;
 		return new Point2D.Double(dx, dy);
 	}
 
@@ -278,13 +307,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	public void mouseWheelMoved(MouseWheelEvent event) {
 		this.wheelMode.mouseWheelMoved(event);
 	}
-
-	@Override
-	protected void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		Graphics2D g2 = (Graphics2D)g;
-		rubberBand.paint(g2);
-	}
 	
     //------------------------IMPLEMENTS MouseWheelModeListener
     @Override
@@ -310,7 +332,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         }
         this.mouseMode.setCamera(camera);
         this.mouseMode.setWidget(this, true);
-        this.setToolTipText(mouseMode.getToolTipText());        
+        glCanvas.getOuterJComponent().setToolTipText(mouseMode.getToolTipText());        
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
     
@@ -350,7 +372,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		mouseMode.setCamera(camera);
 		wheelMode.setCamera(camera);
 		pointComputer.setCamera(camera);
-		skeletonActor.setCamera(camera);
+        skeletonActor.setCamera(camera);
 	}
     public CameraListenerAdapter cameraListener;
 	
@@ -364,6 +386,10 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		this.imageColorModel = imageColorModel;
 		sliceActor.setImageColorModel(imageColorModel);
 	}
+    
+    public void setNeuronStyleModel(NeuronStyleModel nsModel) {
+        skeletonActor.setNeuronStyleModel(nsModel);
+    }
 	
 	public Skeleton getSkeleton() {
 		return skeletonActor.getSkeleton();
@@ -388,7 +414,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 
     @Override
 	public JComponent getComponent() {
-		return this;
+		return glCanvas.getOuterJComponent();
 	}
 
 	@Override
@@ -431,5 +457,17 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	public void keyReleased(KeyEvent event) {
 		mouseMode.keyPressed(event);
 	}
+
+    @Override
+    public boolean isShowing()
+    {
+        return glCanvas.getInnerAwtComponent().isShowing();
+    }
+
+    @Override
+    public void repaint()
+    {
+        glCanvas.repaint();
+    }
 
 }

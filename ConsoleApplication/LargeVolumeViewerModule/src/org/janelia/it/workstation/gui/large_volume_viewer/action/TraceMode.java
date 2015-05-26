@@ -16,6 +16,7 @@ import javax.swing.JMenuItem;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.MenuItemGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.MouseModalWidget;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
@@ -29,6 +30,7 @@ implements MouseMode, KeyListener
 {
 	private Skeleton skeleton;
 	private SkeletonActor skeletonActor;
+    private SkeletonController controller = SkeletonController.getInstance();
 	private Anchor hoverAnchor = null;
 	private Vec3 popupXyz = null;
 	// Sometimes users move an anchor with the mouse
@@ -114,7 +116,7 @@ implements MouseMode, KeyListener
 		}
 		else if (event.getButton() == MouseEvent.BUTTON1) {
 			if (hoverAnchor != null) {
-				skeletonActor.setNextParent(hoverAnchor);
+				controller.setNextParent(hoverAnchor);
 			}
 		}
 	}
@@ -347,7 +349,7 @@ implements MouseMode, KeyListener
 	                            private static final long serialVersionUID = 1L;
 	                            @Override
 	                            public void actionPerformed(ActionEvent e) {
-	                                skeletonActor.setNextParent(getHoverAnchor());
+                                    controller.setNextParent(getHoverAnchor());
 	                            }
 	                        }));
                         }
@@ -432,7 +434,7 @@ implements MouseMode, KeyListener
                         result.add(new JMenuItem(new AbstractAction("Clear current parent anchor") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                skeletonActor.setNextParent(null);
+                                controller.setNextParent((Long)null);
                             }
                         }));                     
                     }
@@ -474,6 +476,13 @@ implements MouseMode, KeyListener
 		case KeyEvent.VK_RIGHT:
 			// System.out.println("next");
 			historyAnchor = skeleton.getHistory().next();
+			break;
+		case KeyEvent.VK_A:
+			// add/edit note dialog
+			Anchor nextParent = skeletonActor.getNextParent();
+			if (nextParent != null) {
+				skeleton.addEditNoteRequest(nextParent);
+			}
 			break;
 		}
 		if (historyAnchor != null)
