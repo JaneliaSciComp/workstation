@@ -69,9 +69,9 @@ public class TestMeshRender {
             //renderId = MeshRenderTestFacilities.NEURON_RENDERABLE_ID;
             renderId = MeshRenderTestFacilities.COMPARTMENT_RENDERABLE_ID;
             attribMgr =
-                    new VtxAttribMgr( MeshRenderTestFacilities.getCompartmentMaskChanRenderableDatas() );
+                    //new VtxAttribMgr( MeshRenderTestFacilities.getCompartmentMaskChanRenderableDatas() );
                     //new VtxAttribMgr( MeshRenderTestFacilities.getNeuronMaskChanRenderableDatas() );
-                    //new FewVoxelVtxAttribMgr( renderId );
+                    new FewVoxelVtxAttribMgr( renderId );
             attribMgr.execute();
 
         }
