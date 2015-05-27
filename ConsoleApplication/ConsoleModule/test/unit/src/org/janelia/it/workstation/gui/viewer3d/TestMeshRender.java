@@ -82,10 +82,12 @@ public class TestMeshRender {
             MeshDrawActor.MeshDrawActorConfigurator configurator = new MeshDrawActor.MeshDrawActorConfigurator();
             configurator.setAxisLengths( new double[] {200, 200, 200} );
             configurator.setContext( viewerWidget.getMeshViewContext() ); 
+            configurator.setMatrixScope(MeshDrawActor.MatrixScope.EXTERNAL);
 
             configurator.setVertexAttributeManager(attribMgr);
             //configurator.setRenderableId( MeshRenderTestFacilities.COMPARTMENT_RENDERABLE_ID);
             configurator.setRenderableId( renderId );
+            configurator.setColoringStrategy(MeshDrawActor.ColoringStrategy.ATTRIBUTE);
             MeshDrawActor actor = new MeshDrawActor( configurator );
             viewerWidget.clear();
             viewerWidget.addActor( actor );

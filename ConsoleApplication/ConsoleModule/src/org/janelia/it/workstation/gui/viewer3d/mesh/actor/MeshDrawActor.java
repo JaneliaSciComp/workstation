@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d.mesh.actor;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.opengl.GLActor;
@@ -196,6 +198,8 @@ public class MeshDrawActor implements GLActor {
 
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
         gl.glDepthFunc(GL2GL3.GL_LESS);
+        gl.glDisable(GL2GL3.GL_CULL_FACE);
+        gl.glFrontFace(GL2.GL_CCW);
 
         reportError( gl, "Display of mesh-draw-actor render characteristics" );
 
@@ -223,16 +227,16 @@ public class MeshDrawActor implements GLActor {
 
         // TODO : make it possible to establish an arbitrary group of vertex attributes programmatically.
         // 3 floats per coord. Stride is 1 normal (3 floats=3 coords), offset to first is 0.
-        gl.glEnableVertexAttribArray(vertexAttributeLoc);
-
         int numberFloatsInStride = 6;
         if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
             numberFloatsInStride += 3;
         }
         int stride = numberFloatsInStride * BYTES_PER_FLOAT;
+        logger.info("Stride for upload is " + stride);
         int storagePerVertex = 3 * BYTES_PER_FLOAT;
-        int storagePerVertexNormal = 2 * 3 * BYTES_PER_FLOAT;
+        int storagePerVertexNormal = 2 * storagePerVertex;
 
+        gl.glEnableVertexAttribArray(vertexAttributeLoc);
         gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, stride, 0);
         reportError( gl, "Display of mesh-draw-actor 2" );
 
@@ -242,6 +246,7 @@ public class MeshDrawActor implements GLActor {
         reportError( gl, "Display of mesh-draw-actor 3" );
 
         if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
+            logger.info("Also doing color attribute.");
             // 3 floats per color. Stride is size of all data combined, offset to first is 1 vertex + 1 normal worth.
             gl.glEnableVertexAttribArray(colorAttributeLoc);
             gl.glVertexAttribPointer(colorAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertexNormal);
@@ -336,8 +341,195 @@ public class MeshDrawActor implements GLActor {
 
         reportError( gl, "Set coloring." );
     }
+    
 
+    /** This uploads a simplistic single triangle for testing. */
     private void uploadBuffers(GL2GL3 gl) {
+ 
+        logger.info("Uploading buffers");
+        //dropBuffers(gl);
+        
+        int[] handleArr = new int[1];
+        gl.glGenBuffers(1, handleArr, 0);
+        vtxAttribBufferHandle = handleArr[ 0];
+
+        gl.glGenBuffers(1, handleArr, 0);
+        inxBufferHandle = handleArr[ 0];
+        // Borrowed from the successful upload method.
+        final float[] vtxData = new float[]{
+            -0.5f, -0.5f, 0.5f,
+            -0.57735026f, -0.57735026f, 0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            -0.5f, 0.5f, 0.5f,
+            -0.70710677f, 0.0f, 0.70710677f,
+            0.0f, 1.0f, 1.0f,
+            -0.5f, 0.5f, -0.5f,
+            -0.70710677f, 0.0f, -0.70710677f,
+            0.0f, 1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,
+            -0.57735026f, -0.57735026f, -0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            0.5f, 0.5f, 0.5f,
+            0.0f, -1.0f, 0.0f,
+            0.0f, 1.0f, 1.0f,
+            0.5f, -0.5f, 0.5f,
+            0.57735026f, -0.57735026f, 0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            0.5f, -0.5f, -0.5f,
+            0.57735026f, -0.57735026f, -0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            0.5f, 0.5f, -0.5f,
+            0.70710677f, 0.0f, -0.70710677f,
+            0.0f, 1.0f, 1.0f,
+            -0.5f, 1.5f, 0.5f,
+            -0.57735026f, 0.57735026f, 0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            0.5f, 1.5f, 0.5f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 1.0f,
+            0.5f, 1.5f, -0.5f,
+            0.57735026f, 0.57735026f, -0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            -0.5f, 1.5f, -0.5f,
+            -0.57735026f, 0.57735026f, -0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            0.5f, 1.5f, 1.5f,
+            -0.57735026f, 0.57735026f, 0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            1.5f, 1.5f, 1.5f,
+            0.57735026f, 0.57735026f, 0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            1.5f, 1.5f, 0.5f,
+            0.57735026f, 0.57735026f, -0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            0.5f, 0.5f, 1.5f,
+            -0.57735026f, -0.57735026f, 0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            1.5f, 0.5f, 1.5f,
+            0.57735026f, -0.57735026f, 0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            1.5f, 0.5f, 0.5f,
+            0.57735026f, -0.57735026f, -0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            -0.5f, 0.5f, 5.5f,
+            -0.57735026f, 0.57735026f, 0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            0.5f, 0.5f, 5.5f,
+            0.57735026f, 0.57735026f, 0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            0.5f, 0.5f, 4.5f,
+            0.57735026f, 0.57735026f, -0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            -0.5f, 0.5f, 4.5f,
+            -0.57735026f, 0.57735026f, -0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            -0.5f, -0.5f, 5.5f,
+            -0.57735026f, -0.57735026f, 0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            -0.5f, -0.5f, 4.5f,
+            -0.57735026f, -0.57735026f, -0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            0.5f, -0.5f, 5.5f,
+            0.57735026f, -0.57735026f, 0.57735026f,
+            0.0f, 1.0f, 1.0f,
+            0.5f, -0.5f, 4.5f,
+            0.57735026f, -0.57735026f, -0.57735026f,
+            0.0f, 1.0f, 1.0f,
+        };
+        final int combinedVtxSize = vtxData.length * BYTES_PER_FLOAT;
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
+                combinedVtxSize);
+        byteBuffer.order(ByteOrder.nativeOrder());
+        byteBuffer.rewind();
+        FloatBuffer vertexAttribBuffer = byteBuffer.asFloatBuffer();
+        vertexAttribBuffer.put( vtxData );
+
+        //dumpFloatBuffer(vertexAttribBuffer);
+        
+        vertexAttribBuffer.rewind();
+        long bufferBytes = vertexAttribBuffer.capacity() * BYTES_PER_FLOAT;
+        vertexAttribBuffer.rewind();
+        // Bind buffer, and push buffer data.
+        gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
+        gl.glBufferData(
+                GL2GL3.GL_ARRAY_BUFFER,
+                bufferBytes,
+                vertexAttribBuffer,
+                GL2GL3.GL_STATIC_DRAW
+        );
+        reportError(gl, "Push Vertex Buffer");
+                
+        final int[] indices = new int[]{
+            0, 1, 2,
+            2, 3, 0,
+            4, 1, 0,
+            0, 5, 4,
+            5, 0, 3,
+            3, 6, 5,
+            6, 3, 2,
+            2, 7, 6,
+            5, 6, 7,
+            7, 4, 5,
+            8, 9, 10,
+            10, 11, 8,
+            1, 8, 11,
+            11, 2, 1,
+            9, 8, 1,
+            1, 4, 9,
+            7, 2, 11,
+            11, 10, 7,
+            4, 7, 10,
+            10, 9, 4,
+            12, 13, 14,
+            14, 9, 12,
+            15, 12, 9,
+            9, 4, 15,
+            13, 12, 15,
+            15, 16, 13,
+            16, 15, 4,
+            4, 17, 16,
+            17, 4, 9,
+            9, 14, 17,
+            16, 17, 14,
+            14, 13, 16,
+            18, 19, 20,
+            20, 21, 18,
+            22, 18, 21,
+            21, 23, 22,
+            19, 18, 22,
+            22, 24, 19,
+            24, 22, 23,
+            23, 25, 24,
+            25, 23, 21,
+            21, 20, 25,
+            24, 25, 20,
+            20, 19, 24,
+        };
+        final int combinedIndexSize = indices.length * BYTES_PER_INT;
+        byteBuffer = ByteBuffer.allocateDirect(combinedIndexSize);
+        byteBuffer.order(ByteOrder.nativeOrder());
+        byteBuffer.rewind();
+        IntBuffer indexBuffer = byteBuffer.asIntBuffer();
+        indexBuffer.put( indices );
+        indexBuffer.rewind();
+        bufferBytes = indexBuffer.capacity() * BYTES_PER_INT;
+        indexCount = indexBuffer.capacity();
+        logger.info("Index Count = " + indexCount);
+        //dumpIntBuffer(indexBuffer);
+        indexBuffer.rewind();
+                
+        gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
+        gl.glBufferData(
+                GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
+                bufferBytes,
+                indexBuffer,
+                GL2GL3.GL_STATIC_DRAW
+        );
+        reportError(gl, "Push Index Buffer");
+        logger.info("Done uploading buffers");
+    }
+
+    private void uploadBuffers(GL2GL3 gl, boolean later) {
         dropBuffers(gl);
         // Push the coords over to GPU.
         // Make handles for subsequent use.
