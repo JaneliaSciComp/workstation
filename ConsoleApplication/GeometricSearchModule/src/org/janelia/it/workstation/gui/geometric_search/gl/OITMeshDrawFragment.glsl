@@ -1,4 +1,4 @@
-#version 430
+#version 410
 
 // vertex to fragment shader io
 in vec3 N;
