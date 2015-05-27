@@ -1,15 +1,13 @@
 package org.janelia.it.workstation.gui.geometric_search.search;
 
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Rotation;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 
-import javax.media.opengl.GL3;
+import javax.media.opengl.GL4;
 import javax.swing.*;
 
 import org.janelia.it.workstation.gui.geometric_search.gl.*;
-import org.janelia.it.workstation.gui.geometric_search.viewer.GL3Viewer;
-import org.janelia.it.workstation.gui.viewer3d.Mip3d;
+import org.janelia.it.workstation.gui.geometric_search.viewer.GL4Viewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,13 +21,13 @@ import java.io.File;
 public class GeometricSearchPanel extends JPanel implements Refreshable {
 
     private final Logger logger = LoggerFactory.getLogger(GeometricSearchPanel.class);
-    GL3Viewer viewer;
+    GL4Viewer viewer;
 
     @Override
     public void refresh() {
 
         if ( viewer == null ) {
-            createGL3Viewer();
+            createGL4Viewer();
         }
 
         viewer.refresh();
@@ -40,84 +38,22 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         refresh();
     }
 
-    private void createGL3Viewer() {
+    private void createGL4Viewer() {
 
         if ( viewer != null ) {
             viewer.releaseMenuActions();
         }
-        viewer = new GL3Viewer();
+        viewer = new GL4Viewer();
         viewer.setPreferredSize(new Dimension(1200, 900));
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
 
-        GL3ShaderActionSequence glSequence = new GL3ShaderActionSequence("Lattice");
-        final PassthroughShader passthroughShader = new PassthroughShader();
+        GL4ShaderActionSequence actionSequence = new GL4ShaderActionSequence("Experimental Shader Action Sequence");
 
-        passthroughShader.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL3 gl) {
-                Matrix4 viewMatrix=viewer.getRenderer().getViewMatrix();
-                //viewMatrix.identity();
-                passthroughShader.setView(gl, viewMatrix);
-                Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
-                projMatrix.identity();
-                passthroughShader.setProjection(gl, projMatrix);
-            }
-        });
-
-        final LatticeActor latticeActor = new LatticeActor();
-
-//        Rotation r = new Rotation();
-//        r.setRotationFromAngleAboutY(new Float(Math.PI/8.0));
-//        latticeActor.setModel(r.asTransform());
-
-        latticeActor.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL3 gl) {
-                Matrix4 actorModel=latticeActor.getModel();
-                passthroughShader.setModel(gl, actorModel);
-            }
-        });
-
-        glSequence.setShader(passthroughShader);
-        glSequence.getActorSequence().add(latticeActor);
+        setupTexelExperiment(actionSequence);
 
         logger.info("Adding glSequence...");
-        viewer.addShaderAction(glSequence);
-
-
-        ///////////////////////////////////////////////////////////////////////////////
-
-//        GL3ShaderActionSequence meshSequence=new GL3ShaderActionSequence("Mesh");
-//        final MeshObjFileV2Shader meshShader = new MeshObjFileV2Shader();
-//
-//        meshShader.setUpdateCallback(new GLDisplayUpdateCallback() {
-//            @Override
-//            public void update(GL3 gl) {
-//                Matrix4 viewMatrix=viewer.getRenderer().getViewMatrix();
-//                meshShader.setView(gl, viewMatrix);
-//                Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
-//                meshShader.setProjection(gl, projMatrix);
-//            }
-//        });
-//
-//        final MeshObjFileV2Actor meshActor =  new MeshObjFileV2Actor(new File("/Users/murphys/simple_cube.obj"));
-//
-//        meshActor.setUpdateCallback(new GLDisplayUpdateCallback() {
-//            @Override
-//            public void update(GL3 gl) {
-//                Matrix4 actorModel=meshActor.getModel();
-//                meshShader.setModel(gl, actorModel);
-//            }
-//        });
-//
-//        //MeshObjFileActor meshActor =  new MeshObjFileActor(new File("/Users/murphys/compartment_62.obj"));
-//        meshActor.setDrawLines(false);
-//
-//        meshSequence.setShader(meshShader);
-//        meshSequence.getActorSequence().add(meshActor);
-//
-//        viewer.addShaderAction(meshSequence);
+        viewer.addShaderAction(actionSequence);
 
         add(viewer, BorderLayout.CENTER);
 
@@ -125,10 +61,65 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
     public void displayReady() {
         if (viewer==null) {
-            createGL3Viewer();
+            createGL4Viewer();
         }
         viewer.resetView();
         viewer.refresh();
+    }
+
+    private void setupTexelExperiment(GL4ShaderActionSequence actionSequence) {
+        final TexelShader shader = new TexelShader();
+
+        shader.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                int uniformLoc = gl.glGetUniformLocation(shader.getShaderProgram(), "tex");
+                gl.glUniform1i(uniformLoc, 0);
+            }
+        });
+
+        final TexelActor texelActor = new TexelActor();
+
+        actionSequence.setShader(shader);
+        actionSequence.getActorSequence().add(texelActor);
+    }
+
+    private void setupMeshExperiment(GL4ShaderActionSequence actionSequence) {
+        final MeshObjFileV2Shader shader = new MeshObjFileV2Shader();
+
+        shader.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                Matrix4 viewMatrix=viewer.getRenderer().getViewMatrix();
+                shader.setView(gl, viewMatrix);
+                Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
+                shader.setProjection(gl, projMatrix);
+            }
+        });
+
+        final MeshObjFileV2Actor meshActor1 = new MeshObjFileV2Actor(new File("/Users/murphys/meshes/compartment_62.obj"));
+
+        meshActor1.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                Matrix4 actorModel = meshActor1.getModel();
+                shader.setModel(gl, actorModel);
+            }
+        });
+
+        final MeshObjFileV2Actor meshActor2 = new MeshObjFileV2Actor(new File("/Users/murphys/meshes/compartment_39.obj"));
+
+        meshActor2.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                Matrix4 actorModel = meshActor2.getModel();
+                shader.setModel(gl, actorModel);
+            }
+        });
+
+        actionSequence.setShader(shader);
+        actionSequence.getActorSequence().add(meshActor1);
+        actionSequence.getActorSequence().add(meshActor2);
     }
 
 }

@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.framework.outline;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -19,6 +17,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -30,7 +29,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 import javax.swing.ProgressMonitor;
-import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -144,7 +142,6 @@ public class EntityContextMenu extends JPopupMenu {
         add(getCopyIdToClipboardItem());
         add(getPasteAnnotationItem());
         add(getDetailsItem());
-        add(getPermissionItem());
         add(getSetSortCriteriaItem());
         add(getGotoRelatedItem());
         
@@ -156,6 +153,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getDeleteItem());
         add(getDeleteInBackgroundItem());
         add(getMarkForReprocessingItem());
+        add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getVerificationMovieItem());
         
@@ -259,22 +257,6 @@ public class EntityContextMenu extends JPopupMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 new EntityDetailsDialog().showForRootedEntity(rootedEntity);
-            }
-        });
-        return detailsMenuItem;
-    }
-
-    protected JMenuItem getPermissionItem() {
-        if (multiple) return null;
-        if (virtual) return null;
-        
-        if (!ModelMgrUtils.isOwner(rootedEntity.getEntity())) return null;
-        
-        JMenuItem detailsMenuItem = new JMenuItem("  Change Permissions");
-        detailsMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new EntityDetailsDialog().showForRootedEntity(rootedEntity, EntityDetailsPanel.TAB_NAME_PERMISSIONS);
             }
         });
         return detailsMenuItem;
@@ -805,6 +787,17 @@ public class EntityContextMenu extends JPopupMenu {
                             ModelMgr.getModelMgr().invalidateCache(sample, true);
                         }
                     }
+
+                    @Override
+                    public Callable<Void> getSuccessCallback() {
+                        return new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                SessionMgr.getBrowser().getEntityOutline().refresh();
+                                return null;
+                            }
+                        };
+                    }
                 };
 
                 taskWorker.executeWithEvents();
@@ -821,7 +814,159 @@ public class EntityContextMenu extends JPopupMenu {
         
         return blockItem;
     }
+    
+    private List<Entity> getSelectedSamples() {
+        final List<Entity> samples = new ArrayList<>();
+        for (RootedEntity rootedEntity : rootedEntityList) {
+            Entity sample = rootedEntity.getEntity();
+            if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE) && !sample.getName().contains("~")) {
+                samples.add(sample);
+            }
+        }
+        return samples;
+    }
 
+    protected JMenuItem getSampleCompressionTypeItem() {
+    
+        final List<Entity> samples = getSelectedSamples();
+        if (samples.isEmpty()) return null;
+        
+        JMenu submenu = new JMenu("  Change Sample Compression Strategy");
+        
+        final int count = samples.size();
+        final String samplesText = multiple?count+" Samples":"Sample";
+        
+        JMenuItem vllMenuItem = new JMenuItem("Visually Lossless (h5j)");
+        vllMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                
+                final String targetCompression = EntityConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS_AND_PBD;
+                String message = "Are you sure you want to convert "+samplesText+" to Visually Lossless (h5j) format?";
+                int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
+                
+                if (result != 0) return;
+
+                SimpleWorker worker = new SimpleWorker() {
+                    
+                    StringBuilder sampleIdBuf = new StringBuilder();
+                        
+                    @Override
+                    protected void doStuff() throws Exception {
+                        for(final Entity sample : samples) {
+                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_COMRESSION_TYPE, targetCompression);
+                            // Target is Visually Lossless, just run the compression service
+                            if (sampleIdBuf.length()>0) sampleIdBuf.append(",");
+                            sampleIdBuf.append(sample.getId());
+                        }
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {  
+                        if (sampleIdBuf.length()==0) return;
+                        
+                        Task task;
+                        try {
+                            HashSet<TaskParameter> taskParameters = new HashSet<>();
+                            taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
+                            task = ModelMgr.getModelMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
+                        }
+                        catch (Exception e) {
+                            SessionMgr.getSessionMgr().handleException(e);
+                            return;
+                        }
+                        
+                        TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
+
+                            @Override
+                            public String getName() {
+                                return "Compressing "+samples.size()+" samples";
+                            }
+
+                            @Override
+                            protected void doStuff() throws Exception {
+                                setStatus("Executing");
+                                super.doStuff();
+                                for(Entity sample : samples) {
+                                    ModelMgr.getModelMgr().invalidateCache(sample, true);
+                                }
+                            }
+                            
+                            @Override
+                            public Callable<Void> getSuccessCallback() {
+                                return new Callable<Void>() {
+                                    @Override
+                                    public Void call() throws Exception {
+                                        SessionMgr.getBrowser().getEntityOutline().refresh();
+                                        return null;
+                                    }
+                                };
+                            }
+                        };
+
+                        taskWorker.executeWithEvents();
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                
+                worker.execute();
+            }
+        });
+        
+        submenu.add(vllMenuItem);
+
+        JMenuItem llMenuItem = new JMenuItem("Lossless (v3dpbd)");
+        llMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                
+                final String targetCompression = EntityConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J;
+                String message = "Are you sure you want to mark "+samplesText+" for reprocessing into Lossless (v3dpbd) format?";
+                int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
+                
+                if (result != 0) return;
+
+                SimpleWorker worker = new SimpleWorker() {
+                    
+                    StringBuilder sampleIdBuf = new StringBuilder();
+                        
+                    @Override
+                    protected void doStuff() throws Exception {
+                        for(final Entity sample : samples) {
+                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_COMRESSION_TYPE, targetCompression);
+                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
+                        }
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {  
+                         JOptionPane.showMessageDialog(mainFrame, samplesText+" are marked for reprocessing to (v3dpbd) Lossless format",  "Marked Samples", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                
+                worker.execute();
+            }
+        });
+        
+        submenu.add(llMenuItem);
+        
+        for(Entity sample : samples) {
+            if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
+                vllMenuItem.setEnabled(false);
+                break;
+            }
+        }
+
+        return submenu;
+    }
+    
     protected JMenuItem getMarkForReprocessingItem() {
 
         final List<Entity> samples = new ArrayList<>();

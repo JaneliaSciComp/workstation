@@ -21,7 +21,7 @@ import org.openide.util.NbBundle.Messages;
 )
 @TopComponent.Description(
         preferredID = ProgressTopComponent.PREFERRED_ID,
-        //iconBase = "images/cog_small_anim.gif",
+        iconBase = "images/cog.png",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, position=30)
@@ -40,22 +40,24 @@ public final class ProgressTopComponent extends TopComponent {
 
     public static final String PREFERRED_ID = "ProgressTopComponent";
     
-    private final ProgressMeterPanel progressMeter = ProgressMeterPanel.getSingletonInstance();
-    
     public ProgressTopComponent() {
         initComponents();
         setName(Bundle.CTL_ProgressTopComponent());
         setToolTipText(Bundle.HINT_ProgressTopComponentTopComponent());
+        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, true);
+        putClientProperty(TopComponent.PROP_SLIDING_DISABLED, false);
+        putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, true);
+        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, true);
+        putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, true);
+        putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, false);
+        add(ProgressMeterPanel.getSingletonInstance(), BorderLayout.CENTER);
     }
     
     @Override
-    public Image getIcon() {
-        // TODO: figure out a way to reliably repaint the TopComponent's icon, 
-        // and use getCurrentIcon to get either the static or animated icon.
-        // For now we'll just show the static icon always.
-        return progressMeter.getStaticIcon().getImage();
+    public boolean canClose() { 
+        return false; 
     }
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -64,33 +66,18 @@ public final class ProgressTopComponent extends TopComponent {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        mainPanel = new javax.swing.JPanel();
-
-        mainPanel.setLayout(new java.awt.BorderLayout());
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 222, Short.MAX_VALUE)
-        );
+        setLayout(new java.awt.BorderLayout());
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel mainPanel;
     // End of variables declaration//GEN-END:variables
+    
     @Override
     public void componentOpened() {
-        mainPanel.add(progressMeter, BorderLayout.CENTER);
     }
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
     }
 
     void writeProperties(Properties p) {

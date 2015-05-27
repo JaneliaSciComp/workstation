@@ -11,7 +11,7 @@ import java.util.Collection;
 /**
  * Created by murphys on 4/10/15.
  */
-public class GL3Model {
+public class GL4Model {
 
     public static final float[] DEFAULT_BACKGROUND_COLOR = {0.0f, 0.0f, 0.0f};
     public static final boolean DEFAULT_SHOWING_AXES = true;
@@ -23,7 +23,7 @@ public class GL3Model {
     private int[] voxelDimensions;
     private boolean showAxes = DEFAULT_SHOWING_AXES;
 
-    public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 1.0;
+    public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 2.0;
 
 
     public interface UpdateListener {
@@ -34,10 +34,10 @@ public class GL3Model {
 
     private Collection<UpdateListener> listeners = new ArrayList<>();
 
-    public GL3Model() {
+    public GL4Model() {
         camera3d = new BasicObservableCamera3d();
         camera3d.setFocus(0.0,0.0,0.5);
-        cameraDepth = new Vec3(0.0, 0.0, -DEFAULT_CAMERA_FOCUS_DISTANCE);
+        cameraDepth = new Vec3(0.0, 0.0, DEFAULT_CAMERA_FOCUS_DISTANCE);
     }
 
     /** This may be useful for situations like the HUD, which retains a reference to

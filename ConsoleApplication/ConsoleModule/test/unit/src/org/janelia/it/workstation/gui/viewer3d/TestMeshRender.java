@@ -72,7 +72,7 @@ public class TestMeshRender {
                     //new VtxAttribMgr( MeshRenderTestFacilities.getCompartmentMaskChanRenderableDatas() );
                     //new VtxAttribMgr( MeshRenderTestFacilities.getNeuronMaskChanRenderableDatas() );
                     new FewVoxelVtxAttribMgr( renderId );
-            attribMgr.execute();
+            //attribMgr.execute();
 
         }
 
@@ -80,16 +80,18 @@ public class TestMeshRender {
         protected void hadSuccess() {
             logger.info("Successful vtx attrib manager.");
             MeshDrawActor.MeshDrawActorConfigurator configurator = new MeshDrawActor.MeshDrawActorConfigurator();
-            configurator.setAxisLengths( new double[] {1024, 512, 218} );
+            configurator.setAxisLengths( new double[] {200, 200, 200} );
             configurator.setContext( viewerWidget.getMeshViewContext() ); 
+            configurator.setMatrixScope(MeshDrawActor.MatrixScope.EXTERNAL);
 
             configurator.setVertexAttributeManager(attribMgr);
             //configurator.setRenderableId( MeshRenderTestFacilities.COMPARTMENT_RENDERABLE_ID);
             configurator.setRenderableId( renderId );
+            configurator.setColoringStrategy(MeshDrawActor.ColoringStrategy.ATTRIBUTE);
             MeshDrawActor actor = new MeshDrawActor( configurator );
             viewerWidget.clear();
             viewerWidget.addActor( actor );
-
+            
             JFrame frame = new JFrame("Test Mesh Render");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             JLabel label = new JLabel("Test Mesh Render");
