@@ -151,7 +151,7 @@ public class AnnotationSkeletonPanel extends JPanel {
         configurator.setAxisLengths( new double[] { boundingBox.getMaxX(), boundingBox.getMaxY(), boundingBox.getMaxZ() } );
         //configurator.setAxisLengths(new double[]{100.0, 100.0, 100.0});
         configurator.setContext(context);
-        configurator.setMatrixScope(MeshDrawActor.MatrixScope.LOCAL);                  
+        configurator.setMatrixScope(MeshDrawActor.MatrixScope.EXTERNAL);                  
         
         final NeuronTraceVtxAttribMgr attributeManager = new NeuronTraceVtxAttribMgr();        
         attributeManager.setDataSource(dataSource);

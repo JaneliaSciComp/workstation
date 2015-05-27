@@ -347,7 +347,7 @@ public class MeshDrawActor implements GLActor {
     
 
     /** This uploads a simplistic single triangle for testing. */
-    private void uploadBuffers(GL2GL3 gl) {
+    private void uploadBuffers(GL2GL3 gl, boolean flag) {
  
         logger.info("Uploading buffers");
         //dropBuffers(gl);
@@ -439,6 +439,20 @@ public class MeshDrawActor implements GLActor {
             0.57735026f, -0.57735026f, -0.57735026f,
             0.0f, 1.0f, 1.0f,
         };
+        // Adjust for local matrix conditions.
+        /*
+        for (int i = 0; i < vtxData.length; i++) {
+            if (i % 9 == 0) {
+                vtxData[i] += 200;
+            }
+            if (i % 9 == 1) {
+                vtxData[i] += 200;
+            }
+            if (i % 9 == 2) {
+                vtxData[i] += 200;
+            }
+        }
+        */
         final int combinedVtxSize = vtxData.length * BYTES_PER_FLOAT;
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
                 combinedVtxSize);
@@ -532,7 +546,7 @@ public class MeshDrawActor implements GLActor {
         logger.info("Done uploading buffers");
     }
 
-    private void uploadBuffers(GL2GL3 gl, boolean later) {
+    private void uploadBuffers(GL2GL3 gl) {
         dropBuffers(gl);
         // Push the coords over to GPU.
         // Make handles for subsequent use.
