@@ -269,10 +269,11 @@ public class FilteredAnnotationList extends JPanel {
         filteredTable.setRowSelectionAllowed(false);
 
 
-        // bit inelegant, but hand-tune some widths (default is 75):
-        // ...and they seems to be ignored, ugh
-        filteredTable.getColumnModel().getColumn(0).setPreferredWidth(45);
-        filteredTable.getColumnModel().getColumn(1).setPreferredWidth(40);
+        // inelegant, but hand-tune column widths (finally seems to work):
+        filteredTable.getColumnModel().getColumn(0).setPreferredWidth(60);
+        filteredTable.getColumnModel().getColumn(1).setPreferredWidth(50);
+        filteredTable.getColumnModel().getColumn(2).setPreferredWidth(115);
+        filteredTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
         JScrollPane scrollPane = new JScrollPane(filteredTable);
         filteredTable.setFillsViewportHeight(true);
