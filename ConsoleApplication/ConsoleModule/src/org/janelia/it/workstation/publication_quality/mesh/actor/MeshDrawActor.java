@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.publication_quality.mesh.actor;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.opengl.GLActor;
@@ -130,6 +132,8 @@ public class MeshDrawActor implements GLActor {
         gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
         gl.glDepthFunc(GL2GL3.GL_LESS);
+        
+        gl.glDisable(GL2GL3.GL_CULL_FACE);
 
         reportError( gl, "Display of mesh-draw-actor render characteristics" );
 
@@ -234,7 +238,78 @@ public class MeshDrawActor implements GLActor {
         reportError( gl, "Set coloring." );
     }
 
+    /** This uploads a simplistic single triangle for testing. */
     private void uploadBuffers(GL2GL3 gl) {
+ 
+        logger.info("Uploading buffers");
+        //dropBuffers(gl);
+        
+        int[] handleArr = new int[1];
+        gl.glGenBuffers(1, handleArr, 0);
+        vtxAttribBufferHandle = handleArr[ 0];
+
+        gl.glGenBuffers(1, handleArr, 0);
+        inxBufferHandle = handleArr[ 0];
+        // One little triangle.
+        // Three coords, 3 normals.
+        final float[] vtxData = new float[]{
+            0.0f, 0.0f, 0.0f, // Coord 1
+            0.0f, 0.0f, -1.0f, // Normal 1
+            230.0f, 0.0f, 0.0f, // Coord 2            
+            0.0f, 0.0f, -1.0f, // Normal 2
+            -230.0f, 230.0f, 0.0f, // Coord 3
+            0.0f, 0.0f, -1.0f, // Normal 3
+        };
+        final int combinedVtxSize = vtxData.length * BYTES_PER_FLOAT;
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
+                combinedVtxSize);
+        byteBuffer.order(ByteOrder.nativeOrder());
+        byteBuffer.rewind();
+        FloatBuffer vertexAttribBuffer = byteBuffer.asFloatBuffer();
+        vertexAttribBuffer.put( vtxData );
+
+        vertexAttribBuffer.rewind();
+        long bufferBytes = vertexAttribBuffer.capacity() * BYTES_PER_FLOAT;
+        vertexAttribBuffer.rewind();
+        // Allocate enough remote buffer data for all the vertices/attributes
+        // to be thrown across in segments.
+        gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
+//        RenderBuffersBean buffersBean
+//                = configurator.getVertexAttributeManager()
+//                .getRenderIdToBuffers()
+//                .get(configurator.getRenderableId());
+        gl.glBufferData(
+                GL2GL3.GL_ARRAY_BUFFER,
+                bufferBytes,
+                vertexAttribBuffer,
+                GL2GL3.GL_STATIC_DRAW
+        );
+        reportError(gl, "Push Vertex Buffer");
+                
+        final int[] indices = new int[]{0, 1, 2, 0, 2, 1};
+        final int combinedIndexSize = indices.length * BYTES_PER_INT;
+        byteBuffer = ByteBuffer.allocateDirect(
+                combinedIndexSize);
+        byteBuffer.rewind();
+        IntBuffer indexBuffer = byteBuffer.asIntBuffer();
+        indexBuffer.put( indices );
+        indexCount = indices.length;
+        indexBuffer.rewind();
+        bufferBytes = indexBuffer.capacity() * BYTES_PER_INT;
+        indexBuffer.rewind();
+                
+        gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
+        gl.glBufferData(
+                GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
+                bufferBytes,
+                indexBuffer,
+                GL2GL3.GL_STATIC_DRAW
+        );
+        reportError(gl, "Push Index Buffer");
+        logger.info("Done uploading buffers");
+    }
+    
+    private void uploadBuffers(GL2GL3 gl, boolean flag) {
         // Push the coords over to GPU.
         // Make handles for subsequent use.
         int[] handleArr = new int[ 1 ];
@@ -267,10 +342,11 @@ public class MeshDrawActor implements GLActor {
         indexCount = inxBuf.capacity();
         gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
         reportError(gl, "Bind Inx Buf");
-
+        bufferBytes = (long)(inxBuf.capacity() * BYTES_PER_INT);
+        inxBuf.rewind();
         gl.glBufferData(
                 GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
-                (long)(inxBuf.capacity() * BYTES_PER_INT),
+                bufferBytes,
                 inxBuf,
                 GL2GL3.GL_STATIC_DRAW
         );
