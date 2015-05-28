@@ -125,7 +125,7 @@ public class LineEnclosureFactory implements TriangleSource {
             // Color is optional, depending on application/caller.
             if ( color != null ) {
                 bean.setAttribute(
-                        VertexInfoBean.KnownAttributes.color.name(), color, 3
+                        VertexInfoBean.KnownAttributes.b_color.name(), color, 3
                 );
             }
             vertices.add(bean);

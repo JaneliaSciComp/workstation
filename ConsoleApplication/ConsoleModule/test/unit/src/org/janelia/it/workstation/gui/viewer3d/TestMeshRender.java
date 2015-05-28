@@ -83,6 +83,16 @@ public class TestMeshRender {
             configurator.setAxisLengths( new double[] {200, 200, 200} );
             configurator.setContext( viewerWidget.getMeshViewContext() ); 
             configurator.setMatrixScope(MeshDrawActor.MatrixScope.EXTERNAL);
+            /*
+             *  Ordinarily, the bounding box will be set from without, to
+             *  correspond to the caller's data space.  This test does not
+             *  have such a natural source.
+             */
+            // NOTE: bounding box must match conditions in attributes mgr.
+            BoundingBox3d bb = new BoundingBox3d();
+            bb.setMin( 73000, 47000, 17000 );
+            bb.setMax( 75000, 49000, 21000 );
+            configurator.setBoundingBox( bb );
 
             configurator.setVertexAttributeManager(attribMgr);
             //configurator.setRenderableId( MeshRenderTestFacilities.COMPARTMENT_RENDERABLE_ID);
@@ -90,8 +100,10 @@ public class TestMeshRender {
             configurator.setColoringStrategy(MeshDrawActor.ColoringStrategy.ATTRIBUTE);
             MeshDrawActor actor = new MeshDrawActor( configurator );
             viewerWidget.clear();
-            viewerWidget.addActor( actor );
-            
+            viewerWidget.addActor( actor );            
+            final Vec3 center = actor.getBoundingBox3d().getCenter();
+            viewerWidget.getMeshViewContext().getCamera3d().setFocus(center);
+
             JFrame frame = new JFrame("Test Mesh Render");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             JLabel label = new JLabel("Test Mesh Render");

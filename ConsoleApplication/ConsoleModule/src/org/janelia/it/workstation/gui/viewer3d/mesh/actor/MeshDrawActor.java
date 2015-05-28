@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.Iterator;
 import java.util.Map;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
@@ -50,7 +51,6 @@ public class MeshDrawActor implements GLActor {
     private int normalAttributeLoc = -1;
     private int colorAttributeLoc = -1;
     
-    private BoundingBox3d boundingBox;
     private int indexCount;
 
     private MeshDrawActorConfigurator configurator;
@@ -76,6 +76,7 @@ public class MeshDrawActor implements GLActor {
         private double[] axisLengths;
         private MatrixScope matrixScope = MatrixScope.EXTERNAL;
         private ColoringStrategy coloringStrategy = ColoringStrategy.UNIFORM;
+        private BoundingBox3d boundingBox;
 
         public void setAxisLengths( double[] axisLengths ) {
             this.axisLengths = axisLengths;
@@ -144,6 +145,20 @@ public class MeshDrawActor implements GLActor {
             this.matrixScope = matrixScope;
         }
 
+        /**
+         * @return the boundingBox
+         */
+        public BoundingBox3d getBoundingBox() {
+            return boundingBox;
+        }
+
+        /**
+         * @param boundingBox the boundingBox to set
+         */
+        public void setBoundingBox(BoundingBox3d boundingBox) {
+            this.boundingBox = boundingBox;
+        }
+
     }
 
     @Override
@@ -198,8 +213,9 @@ public class MeshDrawActor implements GLActor {
 
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
         gl.glDepthFunc(GL2GL3.GL_LESS);
-        gl.glDisable(GL2GL3.GL_CULL_FACE);
+
         gl.glFrontFace(GL2.GL_CCW);
+        gl.glEnable(GL2.GL_CULL_FACE);
 
         reportError( gl, "Display of mesh-draw-actor render characteristics" );
 
@@ -211,9 +227,6 @@ public class MeshDrawActor implements GLActor {
         gl.glUseProgram( shader.getShaderProgram() );
         gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
         reportError( gl, "Display of mesh-draw-actor 1" );
-        
-        gl.glDisable(GL2.GL_CULL_FACE);
-        gl.glFrontFace(GL2.GL_CCW);
         
         if (matrixManager != null)
             matrixManager.recalculate(gl);
@@ -235,7 +248,7 @@ public class MeshDrawActor implements GLActor {
             numberFloatsInStride += 3;
         }
         int stride = numberFloatsInStride * BYTES_PER_FLOAT;
-        logger.info("Stride for upload is " + stride);
+        logger.debug("Stride for upload is " + stride);
         int storagePerVertex = 3 * BYTES_PER_FLOAT;
         int storagePerVertexNormal = 2 * storagePerVertex;
 
@@ -249,7 +262,7 @@ public class MeshDrawActor implements GLActor {
         reportError( gl, "Display of mesh-draw-actor 3" );
 
         if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
-            logger.info("Also doing color attribute.");
+            logger.debug("Also doing color attribute.");
             // 3 floats per color. Stride is size of all data combined, offset to first is 1 vertex + 1 normal worth.
             gl.glEnableVertexAttribArray(colorAttributeLoc);
             gl.glVertexAttribPointer(colorAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertexNormal);
@@ -272,10 +285,10 @@ public class MeshDrawActor implements GLActor {
 
     @Override
     public BoundingBox3d getBoundingBox3d() {
-        if ( boundingBox == null ) {
+        if ( configurator.getBoundingBox() == null ) {
             setupBoundingBox();
         }
-        return boundingBox;
+        return configurator.getBoundingBox();
     }
 
     @Override
@@ -322,7 +335,7 @@ public class MeshDrawActor implements GLActor {
 
         result.include(half.minus());
         result.include(half);
-        boundingBox = result;
+        configurator.setBoundingBox(result);
     }
 
     private void setColoring(GL2GL3 gl) {
@@ -345,7 +358,6 @@ public class MeshDrawActor implements GLActor {
         reportError( gl, "Set coloring." );
     }
     
-
     /** This uploads a simplistic single triangle for testing. */
     private void uploadBuffers(GL2GL3 gl, boolean flag) {
  
@@ -359,100 +371,101 @@ public class MeshDrawActor implements GLActor {
         gl.glGenBuffers(1, handleArr, 0);
         inxBufferHandle = handleArr[ 0];
         // Borrowed from the successful upload method.
+        float offset = 20.0f;
         final float[] vtxData = new float[]{
-            -0.5f, -0.5f, 0.5f,
+            -offset, -offset, offset,
             -0.57735026f, -0.57735026f, 0.57735026f,
             0.0f, 1.0f, 1.0f,
-            -0.5f, 0.5f, 0.5f,
+            -offset, offset, offset,
             -0.70710677f, 0.0f, 0.70710677f,
             0.0f, 1.0f, 1.0f,
-            -0.5f, 0.5f, -0.5f,
+            -offset, offset, -offset,
             -0.70710677f, 0.0f, -0.70710677f,
             0.0f, 1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,
+            -offset, -offset, -offset,
             -0.57735026f, -0.57735026f, -0.57735026f,
             0.0f, 1.0f, 1.0f,
-            0.5f, 0.5f, 0.5f,
+            offset, offset, offset,
             0.0f, -1.0f, 0.0f,
             0.0f, 1.0f, 1.0f,
-            0.5f, -0.5f, 0.5f,
+            offset, -offset, offset,
             0.57735026f, -0.57735026f, 0.57735026f,
             0.0f, 1.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,
+            offset, -offset, -offset,
             0.57735026f, -0.57735026f, -0.57735026f,
             0.0f, 1.0f, 1.0f,
-            0.5f, 0.5f, -0.5f,
+            offset, offset, -offset,
             0.70710677f, 0.0f, -0.70710677f,
             0.0f, 1.0f, 1.0f,
-            -0.5f, 1.5f, 0.5f,
+            -offset, offset * 3, offset,
             -0.57735026f, 0.57735026f, 0.57735026f,
             0.0f, 1.0f, 1.0f,
-            0.5f, 1.5f, 0.5f,
+            offset, offset * 3, offset,
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 1.0f,
-            0.5f, 1.5f, -0.5f,
+            offset, offset* 3, -offset,
             0.57735026f, 0.57735026f, -0.57735026f,
             0.0f, 1.0f, 1.0f,
-            -0.5f, 1.5f, -0.5f,
+            -offset, offset * 3, -offset,
             -0.57735026f, 0.57735026f, -0.57735026f,
             0.0f, 1.0f, 1.0f,
-            0.5f, 1.5f, 1.5f,
+            offset, offset * 3, offset * 3,
             -0.57735026f, 0.57735026f, 0.57735026f,
             0.0f, 1.0f, 1.0f,
-            1.5f, 1.5f, 1.5f,
+            offset * 3, offset * 3, offset * 3,
             0.57735026f, 0.57735026f, 0.57735026f,
             0.0f, 1.0f, 1.0f,
-            1.5f, 1.5f, 0.5f,
+            offset * 3, offset * 3, offset,
             0.57735026f, 0.57735026f, -0.57735026f,
             0.0f, 1.0f, 1.0f,
-            0.5f, 0.5f, 1.5f,
+            offset, offset, offset * 3,
             -0.57735026f, -0.57735026f, 0.57735026f,
             0.0f, 1.0f, 1.0f,
-            1.5f, 0.5f, 1.5f,
+            offset * 3, offset, offset * 3,
             0.57735026f, -0.57735026f, 0.57735026f,
             0.0f, 1.0f, 1.0f,
-            1.5f, 0.5f, 0.5f,
+            offset * 3, offset, offset,
             0.57735026f, -0.57735026f, -0.57735026f,
             0.0f, 1.0f, 1.0f,
-            -0.5f, 0.5f, 5.5f,
+            -offset, offset, offset * 11,
             -0.57735026f, 0.57735026f, 0.57735026f,
             0.0f, 1.0f, 1.0f,
-            0.5f, 0.5f, 5.5f,
+            offset, offset, offset * 11,
             0.57735026f, 0.57735026f, 0.57735026f,
             0.0f, 1.0f, 1.0f,
-            0.5f, 0.5f, 4.5f,
+            offset, offset, offset * 9,
             0.57735026f, 0.57735026f, -0.57735026f,
             0.0f, 1.0f, 1.0f,
-            -0.5f, 0.5f, 4.5f,
+            -offset, offset, offset * 9,
             -0.57735026f, 0.57735026f, -0.57735026f,
             0.0f, 1.0f, 1.0f,
-            -0.5f, -0.5f, 5.5f,
+            -offset, -offset, offset * 11,
             -0.57735026f, -0.57735026f, 0.57735026f,
             0.0f, 1.0f, 1.0f,
-            -0.5f, -0.5f, 4.5f,
+            -offset, -offset, offset * 9,
             -0.57735026f, -0.57735026f, -0.57735026f,
             0.0f, 1.0f, 1.0f,
-            0.5f, -0.5f, 5.5f,
+            offset, -offset, offset * 11,
             0.57735026f, -0.57735026f, 0.57735026f,
             0.0f, 1.0f, 1.0f,
-            0.5f, -0.5f, 4.5f,
+            offset, -offset, offset * 9,
             0.57735026f, -0.57735026f, -0.57735026f,
             0.0f, 1.0f, 1.0f,
         };
         // Adjust for local matrix conditions.
-        /*
         for (int i = 0; i < vtxData.length; i++) {
             if (i % 9 == 0) {
-                vtxData[i] += 200;
+                vtxData[i] += 74000;
             }
             if (i % 9 == 1) {
-                vtxData[i] += 200;
+                vtxData[i] += 48200;
             }
             if (i % 9 == 2) {
-                vtxData[i] += 200;
+                vtxData[i] += 19500;
             }
         }
-        */
+        /*
+         */
         final int combinedVtxSize = vtxData.length * BYTES_PER_FLOAT;
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(
                 combinedVtxSize);
@@ -546,6 +559,36 @@ public class MeshDrawActor implements GLActor {
         logger.info("Done uploading buffers");
     }
 
+    private void dumpFloatBuffer(FloatBuffer attribBuffer) {
+        attribBuffer.rewind();
+        StringBuilder bldr = new StringBuilder();
+        for (int i = 0; i < attribBuffer.capacity(); i++) {
+            if (i % 3 == 0) {
+                bldr.append("\n");
+            }
+            float nextF = attribBuffer.get();
+            bldr.append(nextF + "f, ");
+        }
+        System.out.println("[------------- Buffer Contents -------------]");
+        logger.info(bldr.toString());
+        attribBuffer.rewind();
+    }
+
+    private void dumpIntBuffer(IntBuffer inxBuf) {
+        inxBuf.rewind();
+        StringBuilder bldr = new StringBuilder();
+        for (int i = 0; i < inxBuf.capacity(); i++) {
+            if (i % 3 == 0) {
+                bldr.append("\n");
+            }
+            int nextI = inxBuf.get();
+            bldr.append(nextI + ", ");
+        }
+        System.out.println("[------------- Index Buffer Contents -------------]");
+        logger.info(bldr.toString());
+        inxBuf.rewind();
+    }
+    
     private void uploadBuffers(GL2GL3 gl) {
         dropBuffers(gl);
         // Push the coords over to GPU.
@@ -566,7 +609,7 @@ public class MeshDrawActor implements GLActor {
         // One pass for size.
         for ( Long renderId: renderIdToBuffers.keySet() ) {
             RenderBuffersBean buffersBean = renderIdToBuffers.get(renderId);
-            FloatBuffer attribBuffer = buffersBean.getAttributesBuffer();
+            FloatBuffer attribBuffer = buffersBean.getAttributesBuffer();            
             if (attribBuffer != null  &&  attribBuffer.capacity() > 0) {
                 long bufferBytes = (long) (attribBuffer.capacity() * (BYTES_PER_FLOAT));
                 combinedVtxSize += bufferBytes;
@@ -585,25 +628,34 @@ public class MeshDrawActor implements GLActor {
         
         // Allocate enough remote buffer data for all the vertices/attributes
         // to be thrown across in segments.
+final Iterator<RenderBuffersBean> iterator = renderIdToBuffers.values().iterator();
+iterator.next();
+RenderBuffersBean bean = iterator.next();
+//dumpFloatBuffer(bean.getAttributesBuffer());
+//dumpIntBuffer(bean.getIndexBuffer());
+        bean.getAttributesBuffer().rewind();
         gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
         gl.glBufferData(
                 GL2GL3.GL_ARRAY_BUFFER,
                 combinedVtxSize,
-                null,
+                bean.getAttributesBuffer(), // null
                 GL2GL3.GL_STATIC_DRAW
         );
         reportError(gl, "Allocate Vertex Buffer");
         
         // Allocate enough remote buffer data for all the indices to be
         // thrown across in segments.
+        indexCount = bean.getIndexBuffer().capacity();
+        bean.getIndexBuffer().rewind();
         gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
         gl.glBufferData(
                 GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
                 combinedInxSize,
-                null,
+                bean.getIndexBuffer(),  // null
                 GL2GL3.GL_STATIC_DRAW
         );
         reportError(gl, "Allocate Index Buffer");
+if (0==0)return;       // TEMP
 
         long verticesOffset = 0;
         long indicesOffset = 0;

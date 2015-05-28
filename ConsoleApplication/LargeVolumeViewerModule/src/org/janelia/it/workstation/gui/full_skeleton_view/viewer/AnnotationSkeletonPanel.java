@@ -103,7 +103,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
             
             viewer.addActor(axesActor);
-            viewer.addActor(actor);
+            //viewer.addActor(actor);  TEMP
             viewer.addActor(refAxisActor);
             viewer.addActor(meshDrawActor);
             viewer.addMenuAction(new BackgroundPickAction(viewer));
@@ -148,7 +148,12 @@ public class AnnotationSkeletonPanel extends JPanel {
     private GLActor buildMeshDrawActor(MeshViewContext context, BoundingBox3d boundingBox) {
         MeshDrawActorConfigurator configurator = new MeshDrawActorConfigurator();
         //configurator.setAxisLengths( new double[] { boundingBox.getWidth(), boundingBox.getHeight(), boundingBox.getDepth() } );
-        configurator.setAxisLengths( new double[] { boundingBox.getMaxX(), boundingBox.getMaxY(), boundingBox.getMaxZ() } );
+        configurator.setAxisLengths( new double[] {
+            boundingBox.getMaxX() - boundingBox.getMinX(),
+            boundingBox.getMaxY() - boundingBox.getMinY(),
+            boundingBox.getMaxZ() - boundingBox.getMinZ() 
+        } );
+        
         //configurator.setAxisLengths(new double[]{100.0, 100.0, 100.0});
         configurator.setContext(context);
         configurator.setMatrixScope(MeshDrawActor.MatrixScope.LOCAL);                  
@@ -157,6 +162,7 @@ public class AnnotationSkeletonPanel extends JPanel {
         attributeManager.setDataSource(dataSource);
         configurator.setVertexAttributeManager(attributeManager);
         configurator.setColoringStrategy(MeshDrawActor.ColoringStrategy.ATTRIBUTE);
+        configurator.setBoundingBox(boundingBox);
         
         MeshDrawActor meshDraw = new MeshDrawActor(configurator);
         return meshDraw;

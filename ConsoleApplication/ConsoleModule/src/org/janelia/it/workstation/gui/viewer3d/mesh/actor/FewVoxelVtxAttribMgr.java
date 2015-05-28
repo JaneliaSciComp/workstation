@@ -38,9 +38,9 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeSourceI, VertexExpor
         triangleSources = new ArrayList<>();
         renderIdToBuffers = new HashMap<>();
 
-        int startingX = 0;
-        int startingY = 0;
-        int startingZ = 0;
+        int startingX = 74000;
+        int startingY = 48200;
+        int startingZ = 19500;
 
         EnclosedVoxelVertexFactory factory = new EnclosedVoxelVertexFactory();
         switch (scenario) {
@@ -54,11 +54,14 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeSourceI, VertexExpor
                 establishSimplestScenario(startingX, startingY, startingZ, factory);
                 break;
         }
-
+        
         // Now have a full complement of triangles and vertices.  For this renderable, can traverse the
         // vertices, making a "composite normal" based on the normals of all entangling triangles.
         NormalCompositor normalCompositor = new NormalCompositor();
         normalCompositor.combineAxialNormals(factory);
+
+        // Add same colors to all vertices, as an afterthought.
+        addColor(factory);
 
         triangleSources.add(factory);
         BufferPackager packager = new BufferPackager();
@@ -179,6 +182,19 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeSourceI, VertexExpor
         voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
         factory.addEnclosure(voxelInfoBean);
 
+    }
+    
+    private void addColor(EnclosedVoxelVertexFactory factory) {
+        float[] colorAttribute = new float[] {
+            1.0f, 0.0f, 1.0f
+        };
+        for (VertexInfoBean vertex: factory.getVertices()) {
+            vertex.setAttribute(
+                    VertexInfoBean.KnownAttributes.b_color.name(), 
+                    colorAttribute, 
+                    3
+            );
+        }
     }
 
     /**
