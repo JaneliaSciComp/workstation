@@ -43,37 +43,51 @@ public class OITMeshSortShader extends GL4Shader {
     @Override
     public void display(GL4 gl) {
         super.display(gl);
-        checkGlError(gl, "d super.display() error");
+        checkGlError(gl, "d1 super.display() error");
 
         int uniformLoc1 = gl.glGetUniformLocation(getShaderProgram(), "head_pointer_image");
+        checkGlError(gl, "d2 glGetUniformLocation() error");
+
+        if (uniformLoc1<0) {
+            logger.error("uniformLoc1 less than 0");
+        }
         gl.glUniform1i(uniformLoc1, headPointerTextureId);
+        checkGlError(gl, "d3 glUniform1i() error");
+
 
         int uniformLoc2 = gl.glGetUniformLocation(getShaderProgram(), "list_buffer");
+        checkGlError(gl, "d4 glGetUniformLocation() error");
+
+        if (uniformLoc2<0) {
+            logger.error("uniformLoc2 less than 0");
+        }
         gl.glUniform1i(uniformLoc2, fragmentStorageBufferId);
+        checkGlError(gl, "d5 glUniform1i() error");
+
 
         gl.glBindTexture(GL4.GL_TEXTURE_2D, headPointerTextureId);
-        checkGlError(gl, "d glBindTexture() error");
+        checkGlError(gl, "d6 glBindTexture() error");
 
         gl.glBindVertexArray(vertexArrayId.get(0));
-        checkGlError(gl, "d glBindVertexArray() error");
+        checkGlError(gl, "d7 glBindVertexArray() error");
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, quadDataBufferId.get(0));
-        checkGlError(gl, "d glBindBuffer error");
+        checkGlError(gl, "d8 glBindBuffer error");
 
         gl.glVertexAttribPointer(0, 4, GL4.GL_FLOAT, false, 0, 0);
-        checkGlError(gl, "d glVertexAttribPointer 0 () error");
+        checkGlError(gl, "d9 glVertexAttribPointer 0 () error");
 
         gl.glEnableVertexAttribArray(0);
-        checkGlError(gl, "d glEnableVertexAttribArray 0 () error");
+        checkGlError(gl, "d10 glEnableVertexAttribArray 0 () error");
 
         gl.glVertexAttribPointer(1, 2, GL4.GL_FLOAT, false, 0, 16 * 4);
-        checkGlError(gl, "d glVertexAttribPointer 1 () error");
+        checkGlError(gl, "d11 glVertexAttribPointer 1 () error");
 
         gl.glEnableVertexAttribArray(1);
-        checkGlError(gl, "d glEnableVertexAttribArray 1 () error");
+        checkGlError(gl, "d12 glEnableVertexAttribArray 1 () error");
 
         gl.glDrawArrays(GL4.GL_TRIANGLE_FAN, 0, 4);
-        checkGlError(gl, "d glDrawArrays() error");
+        checkGlError(gl, "d13 glDrawArrays() error");
 
     }
 
@@ -114,19 +128,19 @@ public class OITMeshSortShader extends GL4Shader {
 
         // VERTEX ARRAY
         gl.glGenVertexArrays(1, vertexArrayId);
-        checkGlError(gl, "i glGenVertexArrays error");
+        checkGlError(gl, "i1 glGenVertexArrays error");
 
         gl.glBindVertexArray(vertexArrayId.get(0));
-        checkGlError(gl, "i glBindVertexArray error");
+        checkGlError(gl, "i2 glBindVertexArray error");
 
         gl.glGenBuffers(1, quadDataBufferId);
-        checkGlError(gl, "i glGenBuffers() error");
+        checkGlError(gl, "i3 glGenBuffers() error");
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, quadDataBufferId.get(0));
-        checkGlError(gl, "i glBindBuffer error");
+        checkGlError(gl, "i4 glBindBuffer error");
 
         gl.glBufferData(GL4.GL_ARRAY_BUFFER, quadFb.capacity() * 4, quadFb, GL4.GL_STATIC_DRAW);
-        checkGlError(gl, "d glBufferData error");
+        checkGlError(gl, "i5 glBufferData error");
 
     }
 

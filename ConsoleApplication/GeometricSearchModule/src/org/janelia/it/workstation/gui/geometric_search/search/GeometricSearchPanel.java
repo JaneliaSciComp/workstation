@@ -48,12 +48,14 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
 
-        GL4ShaderActionSequence actionSequence = new GL4ShaderActionSequence("Experimental Shader Action Sequence");
+        setupOITMeshExperiment();
 
-        setupTexelExperiment(actionSequence);
-
-        logger.info("Adding glSequence...");
-        viewer.addShaderAction(actionSequence);
+//        GL4ShaderActionSequence actionSequence = new GL4ShaderActionSequence("Experimental Shader Action Sequence");
+//
+//        setupTexelExperiment(actionSequence);
+//
+//        logger.info("Adding glSequence...");
+//        viewer.addShaderAction(actionSequence);
 
         add(viewer, BorderLayout.CENTER);
 
@@ -65,6 +67,63 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         }
         viewer.resetView();
         viewer.refresh();
+    }
+
+    private void setupOITMeshExperiment() {
+
+        // First create the OITMeshDrawShader
+        GL4ShaderActionSequence drawSequence = new GL4ShaderActionSequence("Draw Phase");
+        GL4ShaderActionSequence sortSequence = new GL4ShaderActionSequence("Sort Phase");
+
+        final OITMeshDrawShader drawShader = new OITMeshDrawShader();
+        final OITMeshSortShader sortShader = new OITMeshSortShader();
+
+        // Setup Draw Shader  //////////////////////////////
+
+        drawShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                sortShader.setHeadPointerTextureId(drawShader.getHeadPointerTextureId());
+                sortShader.setFragmentStorageBufferId(drawShader.getFragmentStorageBufferId());
+
+                Matrix4 viewMatrix = viewer.getRenderer().getViewMatrix();
+                drawShader.setView(gl, viewMatrix);
+                Matrix4 projMatrix = viewer.getRenderer().getProjectionMatrix();
+                drawShader.setProjection(gl, projMatrix);
+            }
+        });
+
+        final MeshObjFileV2Actor meshActor1 = new MeshObjFileV2Actor(new File("/Users/murphys/meshes/compartment_62.obj"));
+
+        meshActor1.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                Matrix4 actorModel = meshActor1.getModel();
+                drawShader.setModel(gl, actorModel);
+            }
+        });
+
+        final MeshObjFileV2Actor meshActor2 = new MeshObjFileV2Actor(new File("/Users/murphys/meshes/compartment_39.obj"));
+
+        meshActor2.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                Matrix4 actorModel = meshActor2.getModel();
+                drawShader.setModel(gl, actorModel);
+            }
+        });
+
+        drawSequence.setShader(drawShader);
+        drawSequence.getActorSequence().add(meshActor1);
+        drawSequence.getActorSequence().add(meshActor2);
+
+        viewer.addShaderAction(drawSequence);
+
+        // Setup Sort Shader ///////////////////////////////////////
+
+        sortSequence.setShader(sortShader);
+        viewer.addShaderAction(sortSequence);
+
     }
 
     private void setupTexelExperiment(GL4ShaderActionSequence actionSequence) {
