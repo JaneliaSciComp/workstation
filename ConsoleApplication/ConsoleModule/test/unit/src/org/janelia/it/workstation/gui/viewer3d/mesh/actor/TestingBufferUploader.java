@@ -11,6 +11,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import javax.media.opengl.GL2GL3;
+import org.janelia.it.workstation.gui.viewer3d.OpenGLUtils;
 import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
 import static org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.BYTES_PER_FLOAT;
 import static org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.BYTES_PER_INT;
@@ -146,7 +147,7 @@ public class TestingBufferUploader implements BufferUploader {
         FloatBuffer vertexAttribBuffer = byteBuffer.asFloatBuffer();
         vertexAttribBuffer.put(vtxData);
 
-        dumpFloatBuffer(vertexAttribBuffer);
+        OpenGLUtils.dumpFloatBuffer(vertexAttribBuffer);
         vertexAttribBuffer.rewind();
         long bufferBytes = vertexAttribBuffer.capacity() * BYTES_PER_FLOAT;
         vertexAttribBuffer.rewind();
@@ -215,7 +216,7 @@ public class TestingBufferUploader implements BufferUploader {
         bufferBytes = indexBuffer.capacity() * BYTES_PER_INT;
         indexCount = indexBuffer.capacity();
         logger.info("Index Count = " + indexCount);
-        dumpIntBuffer(indexBuffer);
+        OpenGLUtils.dumpIntBuffer(indexBuffer);
         indexBuffer.rewind();
 
         gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
@@ -242,36 +243,6 @@ public class TestingBufferUploader implements BufferUploader {
     @Override
     public int getIndexCount() {
         return this.indexCount;
-    }
-
-    public void dumpFloatBuffer(FloatBuffer attribBuffer) {
-        attribBuffer.rewind();
-        StringBuilder bldr = new StringBuilder();
-        for (int i = 0; i < attribBuffer.capacity(); i++) {
-            if (i % 3 == 0) {
-                bldr.append("\n");
-            }
-            float nextF = attribBuffer.get();
-            bldr.append(nextF + "f, ");
-        }
-        System.out.println("[------------- Buffer Contents -------------]");
-        logger.info(bldr.toString());
-        attribBuffer.rewind();
-    }
-
-    public void dumpIntBuffer(IntBuffer inxBuf) {
-        inxBuf.rewind();
-        StringBuilder bldr = new StringBuilder();
-        for (int i = 0; i < inxBuf.capacity(); i++) {
-            if (i % 3 == 0) {
-                bldr.append("\n");
-            }
-            int nextI = inxBuf.get();
-            bldr.append(nextI + ", ");
-        }
-        System.out.println("[------------- Index Buffer Contents -------------]");
-        logger.info(bldr.toString());
-        inxBuf.rewind();
     }
 
 }

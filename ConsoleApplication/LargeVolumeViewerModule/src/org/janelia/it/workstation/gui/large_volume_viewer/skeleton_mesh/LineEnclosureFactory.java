@@ -127,6 +127,7 @@ public class LineEnclosureFactory implements TriangleSource {
                 bean.setAttribute(
                         VertexInfoBean.KnownAttributes.b_color.name(), color, 3
                 );
+                logger.debug("Color attribute = [" + color[0] + "," + color[1] + "," + color[2] + "]");
             }
             vertices.add(bean);
 			polyBeans.add(bean);
@@ -177,25 +178,44 @@ public class LineEnclosureFactory implements TriangleSource {
 			triangles.add( triangle );
 			
 		}
-		
-        // Now treating the end caps.
-		// Winding to point close end away from tube.
+
+        /*
+        // Now treating the end caps. Their surface normals must be
+        // treated differently from those of the surrounding cylinder.
+        List<VertexInfoBean> startingVerticesClone = new ArrayList<>();
+        for ( VertexInfoBean bean: startingVertices ) {
+            final VertexInfoBean clonedBean = bean.cloneIt();            
+            startingVerticesClone.add( clonedBean); 
+            vertices.add( clonedBean );
+        }
+        // Winding to point close end away from tube.
 		for ( int i = 0; i < (vertsPerPoly - 2); i++ ) {
 			final Triangle triangle = new Triangle();
-			triangle.addVertex( startingVertices.get(0) );			
-			triangle.addVertex( startingVertices.get( i + 2 ) );
-			triangle.addVertex( startingVertices.get( i + 1 ) );
+            triangle.addVertex(startingVerticesClone.get(0));
+            triangle.addVertex(startingVerticesClone.get(i + 2));
+            triangle.addVertex(startingVerticesClone.get(i + 1));
+            // End cap polygons must not affect the vertex normals.
+            triangle.setNormalCombinationParticant(false);
 			triangles.add( triangle );
 		}
-			
+        
+		List<VertexInfoBean> endingVerticesClone = new ArrayList<>();
+        for (VertexInfoBean bean: endingVertices) {
+            final VertexInfoBean clonedBean = bean.cloneIt();
+            endingVerticesClone.add( clonedBean);
+            vertices.add( clonedBean );
+        }
 		// Winding to point far end away from tube.
 		for ( int i = 0; i < (vertsPerPoly - 2); i++ ) {
 			final Triangle triangle = new Triangle();
-			triangle.addVertex( endingVertices.get(0) );
-			triangle.addVertex( endingVertices.get( i + 1 ) );
-			triangle.addVertex( endingVertices.get( i + 2 ) );
+            triangle.addVertex(endingVerticesClone.get(0));
+            triangle.addVertex(endingVerticesClone.get(i + 1));
+            triangle.addVertex(endingVerticesClone.get(i + 2));
+            // End cap polygons must not affect the vertex normals.
+            triangle.setNormalCombinationParticant(false);
 			triangles.add( triangle );
 		}
+        */
 	}
 
     private List<double[][]> makeEndPolygons( double[] startCoords, double[] endCoords ) {
@@ -272,6 +292,7 @@ public class LineEnclosureFactory implements TriangleSource {
         return endCapPolygonsHolder;
     }
 	
+    /*
     private List<double[][]> makeEndPolygonsNoTrig(double[] startCoords, double[] endCoords) {
 
         endCapPolygonsHolder.clear();
@@ -311,6 +332,25 @@ public class LineEnclosureFactory implements TriangleSource {
         endCapPolygonsHolder.add( producePolygon( transformMatrix, prototypePolygon ) );
         return endCapPolygonsHolder;
     }
+	private int getAxialAlignment(double[] planarProjections) {
+        int axialAlignment = -1;
+        for (int i = 0; i < planarProjections.length; i++) {
+            if (Math.abs(planarProjections[i]) < ZERO_TOLERANCE) {
+                axialAlignment = i;
+            }
+         }
+         return axialAlignment;
+    }
+    
+    private double[] getPlanarProjections( double[] lineDelta ) {
+        return new double[] {
+            Math.sqrt(lineDelta[Y] * lineDelta[Y] + lineDelta[Z] * lineDelta[Z]),
+            Math.sqrt(lineDelta[Z] * lineDelta[Z] + lineDelta[X] * lineDelta[X]),
+            Math.sqrt(lineDelta[Y] * lineDelta[Y] + lineDelta[X] * lineDelta[X]),
+        };
+    }
+
+     */
 
 	private int getAxialAlignmentByLineDelta(double[] lineDelta) {
 		double deltaX = Math.abs(lineDelta[X]);
@@ -333,30 +373,12 @@ public class LineEnclosureFactory implements TriangleSource {
 		}
 	}
 	
-	private int getAxialAlignment(double[] planarProjections) {
-		int axialAlignment = -1;
-		for (int i = 0; i < planarProjections.length; i++) {
-			if (Math.abs(planarProjections[i]) < ZERO_TOLERANCE) {
-				axialAlignment = i;
-			}
-		}
-		return axialAlignment;
-	}
-    
 	private double[][] getPrototypePolygon(int axialAlignment) {
 		if (axisAlignedPrototypePolygons.get(axialAlignment) == null) {
 			axisAlignedPrototypePolygons.put(axialAlignment, createAxisAlignedPrototypeEndPolygon(axialAlignment));
 		}
 		return axisAlignedPrototypePolygons.get(axialAlignment);
 	}
-
-    private double[] getPlanarProjections( double[] lineDelta ) {
-        return new double[] {
-            Math.sqrt(lineDelta[Y] * lineDelta[Y] + lineDelta[Z] * lineDelta[Z]),
-            Math.sqrt(lineDelta[Z] * lineDelta[Z] + lineDelta[X] * lineDelta[X]),
-            Math.sqrt(lineDelta[Y] * lineDelta[Y] + lineDelta[X] * lineDelta[X]),
-        };
-    }
 
     private double[] normalize( double[] distance ) {
         double magnitude = getMagnitude( distance );

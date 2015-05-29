@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.Map;
 import javax.media.opengl.GL2GL3;
 import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
+import org.janelia.it.workstation.gui.viewer3d.OpenGLUtils;
 import static org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.BYTES_PER_FLOAT;
 import static org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.BYTES_PER_INT;
 import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
@@ -113,6 +114,8 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 );
                 verticesOffset += bufferBytes;
                 reportError(gl, "Buffer Data");
+
+                //OpenGLUtils.dumpFloatBuffer(attribBuffer);
 
                 IntBuffer inxBuf = buffersBean.getIndexBuffer();
                 indexCount = getIndexCount() + inxBuf.capacity();

@@ -187,11 +187,11 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
      */
     private synchronized void createVertices() throws Exception {
         // Make triangle sources.
-		LineEnclosureFactory tracedSegmentEnclosureFactory = new LineEnclosureFactory(8, 8);
-        LineEnclosureFactory manualSegmentEnclosureFactory = new LineEnclosureFactory(6, 4);
+		LineEnclosureFactory tracedSegmentEnclosureFactory = new LineEnclosureFactory(10, 12);
+        LineEnclosureFactory manualSegmentEnclosureFactory = new LineEnclosureFactory(8, 8);
         
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
-        
+                
 		// Iterate over all the traced segments, and add enclosures for each.
         for ( AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {            
             final SegmentIndex segmentIndex = voxelPath.getSegmentIndex();
@@ -210,6 +210,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             }
             Long neuronId = anchor.getNeuronID();
             NeuronStyle style = getNeuronStyle(neuronId);
+            final float[] colorAsFloatArray = style.getColorAsFloatArray();
 
             double[] previousCoords = null; 
             for ( VoxelPosition voxelPos: voxelPath.getPath() ) {
@@ -218,8 +219,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                 };
                 if ( previousCoords != null ) {                    
                     tracedSegmentEnclosureFactory.addEnclosure(
-                            previousCoords, currentCoords, style.getColorAsFloatArray()
-                    );
+                            previousCoords, currentCoords, colorAsFloatArray);
                 }                
                 previousCoords = currentCoords;
             }
@@ -233,6 +233,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                     anchorLine.getEnd(),
                     anchorLine.getStyle().getColorAsFloatArray()
             );
+            
+            //break; // TEMP: add only a single enclosure, so dump is easier to understand.
         }
 
 		// Add each factory to the collection.
