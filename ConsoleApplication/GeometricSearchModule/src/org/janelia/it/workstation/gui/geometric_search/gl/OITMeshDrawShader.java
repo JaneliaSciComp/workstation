@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.geometric_search.gl;
 
+import java.nio.ByteBuffer;
 import org.janelia.geometry3d.Matrix4;
 
 import javax.media.opengl.GL4;
@@ -155,12 +156,43 @@ public class OITMeshDrawShader extends GL4Shader {
         checkGlError(gl, "d5 OITMeshDrawShader glBindImageTexture() error");
 
         // Bind and reset the atomic counter
-        gl.glBindBufferBase(GL4.GL_ATOMIC_COUNTER_BUFFER, 0, atomicCounterId.get(0));
-        checkGlError(gl, "d6 OITMeshDrawShader glBindBufferBase() error");
+//        gl.glBindBufferBase(GL4.GL_ATOMIC_COUNTER_BUFFER, 0, atomicCounterId.get(0));
+//        checkGlError(gl, "d6 OITMeshDrawShader glBindBufferBase() error");
+//
+//        gl.glBufferSubData(GL4.GL_ATOMIC_COUNTER_BUFFER, 0, 4, zeroValueBuffer);
+//        checkGlError(gl, "d7 OITMeshDrawShader glBufferSubData() error");
+        
+               gl.glBindBuffer(GL4.GL_ATOMIC_COUNTER_BUFFER, atomicCounterId.get(0));
+        checkGlError(gl, "d6a OITMeshDrawShader glBindBuffer() error");
 
-        gl.glBufferSubData(GL4.GL_ATOMIC_COUNTER_BUFFER, 0, 4, zeroValueBuffer);
-        checkGlError(gl, "d7 OITMeshDrawShader glBufferSubData() error");
 
+//        gl.glBufferData(GL4.GL_ATOMIC_COUNTER_BUFFER,
+//                4, zeroValueBuffer, GL4.GL_DYNAMIC_COPY);
+//        checkGlError(gl, "d7a OITMeshDrawShader glBufferData() error");
+        
+/////////////////// Lighthouse Example       
+//            glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, ac_buffer);
+//    GLuint* ptr = (GLuint*)glMapBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint),
+//                                            GL_MAP_WRITE_BIT | 
+//                                            GL_MAP_INVALIDATE_BUFFER_BIT | 
+//                                            GL_MAP_UNSYNCHRONIZED_BIT);
+//    ptr[0] = value;
+//    glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
+//    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+        
+  //      ByteBuffer bb = gl.glMapBufferRange(GL4.GL_ATOMIC_COUNTER_BUFFER, 0, 4, GL4.GL_MAP_WRITE_BIT | GL4.GL_MAP_INVALIDATE_BUFFER_BIT | GL4.GL_MAP_UNSYNCHRONIZED_BIT);
+        ByteBuffer bb = gl.glMapBufferRange(GL4.GL_ATOMIC_COUNTER_BUFFER, 0, 4, GL4.GL_MAP_WRITE_BIT);
+         checkGlError(gl, "d7a OITMeshDrawShader glMapBufferRange() error");
+       
+        IntBuffer ib = bb.asIntBuffer();
+         checkGlError(gl, "d8a OITMeshDrawShader bb.asIntBuffer() error");
+       
+        ib.put(0, 0);
+         checkGlError(gl, "d9a OITMeshDrawShader ib.put() error");
+       
+        gl.glUnmapBuffer(GL4.GL_ATOMIC_COUNTER_BUFFER);
+         checkGlError(gl, "d10a OITMeshDrawShader glUnmapBuffer() error");
+       
     }
 
 }

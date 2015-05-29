@@ -1,4 +1,4 @@
-#version 410
+#version 430
 
 // vertex to fragment shader io
 in vec3 N;
@@ -11,9 +11,9 @@ in vec4 Cs;
 //uniform float ambient;
 
 layout (early_fragment_tests) in;
-layout (binding=0, offset=0) uniform atomic_uint index_counter;
-layout (binding=0, rgba32ui) uniform imageBuffer list_buffer;
-layout (binding=1, r32ui) uniform imageRect head_pointer_image;
+layout (binding = 0, offset = 0) uniform atomic_uint index_counter;
+layout (binding = 0, rgba32ui) uniform uimageBuffer list_buffer;
+layout (binding = 1, r32ui) uniform uimage2D head_pointer_image;
 
 // entry point
 void main()
@@ -45,6 +45,8 @@ void main()
 
     item.w = 0;
 
-    imageStore(list_buffer, index, item);
+    int iIndex=int(new_index);
+
+    imageStore(list_buffer, iIndex, item);
 
 }
