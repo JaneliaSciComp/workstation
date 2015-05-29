@@ -72,48 +72,39 @@ public class AttributeManagerBufferUploader implements BufferUploader {
 
         // Allocate enough remote buffer data for all the vertices/attributes
         // to be thrown across in segments.
-        final Iterator<RenderBuffersBean> iterator = renderIdToBuffers.values().iterator();
-        iterator.next();
-        RenderBuffersBean bean = iterator.next();
-//dumpFloatBuffer(bean.getAttributesBuffer());
-//dumpIntBuffer(bean.getIndexBuffer());
-        bean.getAttributesBuffer().rewind();
         gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, getVtxAttribBufferHandle());
         gl.glBufferData(
                 GL2GL3.GL_ARRAY_BUFFER,
                 combinedVtxSize,
-                bean.getAttributesBuffer(), // null
+                null,
                 GL2GL3.GL_STATIC_DRAW
         );
         reportError(gl, "Allocate Vertex Buffer");
 
         // Allocate enough remote buffer data for all the indices to be
         // thrown across in segments.
-        indexCount = bean.getIndexBuffer().capacity();
-        bean.getIndexBuffer().rewind();
         gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, getInxBufferHandle());
         gl.glBufferData(
                 GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
                 combinedInxSize,
-                bean.getIndexBuffer(), // null
+                null,
                 GL2GL3.GL_STATIC_DRAW
         );
         reportError(gl, "Allocate Index Buffer");
-        if (0 == 0) {
-            return;       // TEMP
-        }
+        logger.info("Buffers allocated.");
+
         long verticesOffset = 0;
         long indicesOffset = 0;
-        logger.info("Buffers allocated.");
+        indexCount = 0;
         for (Long renderId : renderIdToBuffers.keySet()) {
             RenderBuffersBean buffersBean = renderIdToBuffers.get(renderId);
             FloatBuffer attribBuffer = buffersBean.getAttributesBuffer();
             if (attribBuffer != null && attribBuffer.capacity() > 0) {
                 long bufferBytes = (long) (attribBuffer.capacity() * (BYTES_PER_FLOAT));
-                attribBuffer.rewind();
                 gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, getVtxAttribBufferHandle());
                 reportError(gl, "Bind Attribs Buf");
                 logger.info("Uploading chunk of vertex attributes data.");
+                attribBuffer.rewind();
                 gl.glBufferSubData(
                         GL2GL3.GL_ARRAY_BUFFER,
                         verticesOffset,
@@ -124,17 +115,17 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 reportError(gl, "Buffer Data");
 
                 IntBuffer inxBuf = buffersBean.getIndexBuffer();
-                inxBuf.rewind();
                 indexCount = getIndexCount() + inxBuf.capacity();
                 bufferBytes = (long) (inxBuf.capacity() * BYTES_PER_INT);
 
                 gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, getInxBufferHandle());
                 reportError(gl, "Bind Inx Buf");
                 logger.info("Uploading chunk of element array.");
+                inxBuf.rewind();
                 gl.glBufferSubData(
                         GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
-                        bufferBytes,
                         indicesOffset,
+                        bufferBytes,
                         inxBuf
                 );
                 indicesOffset += bufferBytes;

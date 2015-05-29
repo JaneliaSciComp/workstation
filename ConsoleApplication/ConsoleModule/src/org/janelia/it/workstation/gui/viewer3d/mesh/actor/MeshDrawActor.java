@@ -208,6 +208,10 @@ public class MeshDrawActor implements GLActor {
 
     @Override
     public void display(GLAutoDrawable glDrawable) {
+        if (! bBuffersNeedUpload && shader == null) {
+            // Cover strange, overlapping-display-attempts case.
+            return;
+        }
         BufferUploader bufferUploader = configurator.getBufferUploader();
         if (bBuffersNeedUpload) {
             init(glDrawable);

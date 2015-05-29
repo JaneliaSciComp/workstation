@@ -104,7 +104,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
             
             viewer.addActor(axesActor);
-            //viewer.addActor(actor);  TEMP
+            viewer.addActor(actor);  //TEMP
             viewer.addActor(refAxisActor);
             viewer.addActor(meshDrawActor);
             viewer.addMenuAction(new BackgroundPickAction(viewer));
