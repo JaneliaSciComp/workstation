@@ -31,6 +31,7 @@ import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer;
 import org.janelia.it.workstation.gui.viewer3d.ResetPositionerI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.AttributeManagerBufferUploader;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
 
@@ -145,9 +146,16 @@ public class AnnotationSkeletonPanel extends JPanel {
         return axes;
     }
     
+    /**
+     * Creates the actor to draw the "wrapped geometry" or "suit of armor"
+     * rendition of the traces.
+     * 
+     * @param context various info used during draw.
+     * @param boundingBox contains whole in-use space.
+     * @return fully-configured actor, ready for drawing.
+     */
     private GLActor buildMeshDrawActor(MeshViewContext context, BoundingBox3d boundingBox) {
         MeshDrawActorConfigurator configurator = new MeshDrawActorConfigurator();
-        //configurator.setAxisLengths( new double[] { boundingBox.getWidth(), boundingBox.getHeight(), boundingBox.getDepth() } );
         configurator.setAxisLengths( new double[] {
             boundingBox.getMaxX() - boundingBox.getMinX(),
             boundingBox.getMaxY() - boundingBox.getMinY(),
@@ -163,6 +171,11 @@ public class AnnotationSkeletonPanel extends JPanel {
         configurator.setVertexAttributeManager(attributeManager);
         configurator.setColoringStrategy(MeshDrawActor.ColoringStrategy.ATTRIBUTE);
         configurator.setBoundingBox(boundingBox);
+        // This is the testing opportunity.  This may be swapped with a different
+        // buffer uploader, if doubt should arise re: the accuracy of the geometry.
+        configurator.setBufferUploader(
+                new AttributeManagerBufferUploader(configurator)
+        );
         
         MeshDrawActor meshDraw = new MeshDrawActor(configurator);
         return meshDraw;

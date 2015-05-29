@@ -7,6 +7,7 @@
 package org.janelia.it.workstation.gui.viewer3d;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,5 +38,14 @@ public class OpenGLUtils {
         }
     }
 
+    public static void reportError(GL2GL3 gl, String source) {
+        int errNum = gl.glGetError();
+        if (errNum > 0) {
+            logger.warn(
+                    "Error {}/0x0{} encountered in " + source,
+                    errNum, Integer.toHexString(errNum)
+            );
+        }
+    }
 
 }
