@@ -93,7 +93,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             }
         });
 
-        final MeshObjFileV2Actor meshActor1 = new MeshObjFileV2Actor(new File("/Users/murphys/meshes/compartment_62.obj"));
+        final MeshObjFileV2Actor meshActor1 = new MeshObjFileV2Actor(new File("U:\\compartment_62.obj"));
 
         meshActor1.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
@@ -103,7 +103,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             }
         });
 
-        final MeshObjFileV2Actor meshActor2 = new MeshObjFileV2Actor(new File("/Users/murphys/meshes/compartment_39.obj"));
+        final MeshObjFileV2Actor meshActor2 = new MeshObjFileV2Actor(new File("U:\\compartment_39.obj"));
 
         meshActor2.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
