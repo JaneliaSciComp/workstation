@@ -1,5 +1,9 @@
 #version 430
 
+//layout (binding = 0, offset = 0) uniform atomic_uint index_counter;
+//layout (binding = 0, rgba32ui) uniform uimageBuffer list_buffer;
+//layout (binding = 1, r32ui) uniform uimage2D head_pointer_image;
+
 uniform sampler2D head_pointer_image;
 
 uniform samplerBuffer list_buffer;

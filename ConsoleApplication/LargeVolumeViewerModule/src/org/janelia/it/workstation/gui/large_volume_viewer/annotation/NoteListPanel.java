@@ -74,7 +74,11 @@ public class NoteListPanel extends JPanel {
         JList noteListBox = new JList(noteListModel) {
             public String getToolTipText(MouseEvent event) {
                 int location = locationToIndex(event.getPoint());
-                return getModel().getElementAt(location).toString();
+                if (location >= 0) {
+                    return getModel().getElementAt(location).toString();
+                } else {
+                    return null;
+                }
             }
         };
 
