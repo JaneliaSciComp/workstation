@@ -187,8 +187,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
      */
     private synchronized void createVertices() throws Exception {
         // Make triangle sources.
-		LineEnclosureFactory tracedSegmentEnclosureFactory = new LineEnclosureFactory(10, 12);
-        LineEnclosureFactory manualSegmentEnclosureFactory = new LineEnclosureFactory(8, 8);
+		LineEnclosureFactory tracedSegmentEnclosureFactory = new LineEnclosureFactory(10, 3);
+        LineEnclosureFactory manualSegmentEnclosureFactory = new LineEnclosureFactory(8, 2);
         
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
                 

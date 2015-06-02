@@ -29,8 +29,9 @@ import org.slf4j.LoggerFactory;
 public class LineEnclosureFactory implements TriangleSource {
     
     private static final Logger logger = LoggerFactory.getLogger(LineEnclosureFactory.class);
-	public static final double ZERO_TOLERANCE = 0.0001;
+	public static final double ZERO_TOLERANCE = 0.3;
 	private static final double RADIANS_90 = Math.PI / 2.0;
+    private static final double RADIANS_45 = Math.PI / 4.0;
     private static final int X = 0, Y = 1, Z = 2;
 	private static final int PERPENDICULAR_ALIGNMENT = 100;
     private static final int YZ = 0;
@@ -179,7 +180,6 @@ public class LineEnclosureFactory implements TriangleSource {
 			
 		}
 
-        /*
         // Now treating the end caps. Their surface normals must be
         // treated differently from those of the surrounding cylinder.
         List<VertexInfoBean> startingVerticesClone = new ArrayList<>();
@@ -202,7 +202,7 @@ public class LineEnclosureFactory implements TriangleSource {
 		List<VertexInfoBean> endingVerticesClone = new ArrayList<>();
         for (VertexInfoBean bean: endingVertices) {
             final VertexInfoBean clonedBean = bean.cloneIt();
-            endingVerticesClone.add( clonedBean);
+            endingVerticesClone.add( clonedBean );
             vertices.add( clonedBean );
         }
 		// Winding to point far end away from tube.
@@ -215,6 +215,7 @@ public class LineEnclosureFactory implements TriangleSource {
             triangle.setNormalCombinationParticant(false);
 			triangles.add( triangle );
 		}
+        /*        
         */
 	}
 
@@ -226,13 +227,14 @@ public class LineEnclosureFactory implements TriangleSource {
         // Get the three angles: about X, about Y, about Z.
         double[] lineUnitVector = normalize(lineDelta);
         
-        double aboutX = lineUnitVector[Z] == 0 ? 0 : -Math.atan(lineUnitVector[Y] / lineUnitVector[Z]);
+        double aboutX = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[Z]);
         double aboutY = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Z]);
         double aboutZ = lineUnitVector[X] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[X]);
 				
 		logger.debug("Using angles: {}, {}, {}.", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ));
 
 		int axialAlignment = getAxialAlignmentByLineDelta(lineDelta);
+        logger.debug("Aligned along the #{} axis.", axialAlignment);
 		
 		if (axialAlignment == -1) {
 			// Now that we have our angles, we make transforms.
@@ -259,10 +261,10 @@ public class LineEnclosureFactory implements TriangleSource {
 			// Special case: new normal lies in the xy plane, but not on an axis.
 			// Only spin about Z.
 			Matrix transform = matrixUtils.getTransform3D(
-					0f, 0f, -aboutZ,
+					0f, 0f, aboutZ,
 					startCoords[X], startCoords[Y], startCoords[Z]
 			);
-			double[][] prototypePolygon = getPrototypePolygon(Y);
+			double[][] prototypePolygon = getPrototypePolygon(X);
 			final double[][] startEndPolygon = clonePrototypePolygon(prototypePolygon);
 			transformPolygon(startEndPolygon, transform);		
 			endCapPolygonsHolder.add(startEndPolygon);
@@ -292,66 +294,6 @@ public class LineEnclosureFactory implements TriangleSource {
         return endCapPolygonsHolder;
     }
 	
-    /*
-    private List<double[][]> makeEndPolygonsNoTrig(double[] startCoords, double[] endCoords) {
-
-        endCapPolygonsHolder.clear();
-
-        // Establish the positioning matrix.
-        double[] lineDelta = getLineDelta(endCoords, startCoords);
-        double[] planarProjections = getPlanarProjections( lineDelta );
-		int axialAlignment = getAxialAlignment(planarProjections);
-        
-        Matrix transformMatrix;
-        double[][] prototypePolygon;
-        if (axialAlignment == -1) {
-            transformMatrix = matrixUtils.getTransform3D(
-                    lineDelta[Y] / planarProjections[YZ], lineDelta[Z] / planarProjections[YZ],
-                    lineDelta[Z] / planarProjections[ZX], lineDelta[X] / planarProjections[ZX],
-                    lineDelta[Y] / planarProjections[XY], lineDelta[X] / planarProjections[XY],
-                    startCoords[X], startCoords[Y], startCoords[Z]);
-            prototypePolygon = zAxisAlignedPrototypePolygon;
-        }
-        else {
-            // Special case: aligned right along some axis.  Trig assumptions won't help.
-            if (axisAlignedPrototypePolygons.get(axialAlignment) == null) {
-                axisAlignedPrototypePolygons.put(axialAlignment, createAxisAlignedPrototypeEndPolygon(axialAlignment));
-            }
-            transformMatrix = matrixUtils.getTransform3D(
-                    0f,
-                    0f,
-                    0f,
-                    startCoords[X], startCoords[Y], startCoords[Z]);
-            prototypePolygon = axisAlignedPrototypePolygons.get(axialAlignment);
-        }
-        
-        endCapPolygonsHolder.add( producePolygon( transformMatrix, prototypePolygon ) );
-        transformMatrix.set(0, 3, endCoords[X]);
-        transformMatrix.set(1, 3, endCoords[Y]);
-        transformMatrix.set(2, 3, endCoords[Z]);
-        endCapPolygonsHolder.add( producePolygon( transformMatrix, prototypePolygon ) );
-        return endCapPolygonsHolder;
-    }
-	private int getAxialAlignment(double[] planarProjections) {
-        int axialAlignment = -1;
-        for (int i = 0; i < planarProjections.length; i++) {
-            if (Math.abs(planarProjections[i]) < ZERO_TOLERANCE) {
-                axialAlignment = i;
-            }
-         }
-         return axialAlignment;
-    }
-    
-    private double[] getPlanarProjections( double[] lineDelta ) {
-        return new double[] {
-            Math.sqrt(lineDelta[Y] * lineDelta[Y] + lineDelta[Z] * lineDelta[Z]),
-            Math.sqrt(lineDelta[Z] * lineDelta[Z] + lineDelta[X] * lineDelta[X]),
-            Math.sqrt(lineDelta[Y] * lineDelta[Y] + lineDelta[X] * lineDelta[X]),
-        };
-    }
-
-     */
-
 	private int getAxialAlignmentByLineDelta(double[] lineDelta) {
 		double deltaX = Math.abs(lineDelta[X]);
 		double deltaY = Math.abs(lineDelta[Y]);
@@ -425,11 +367,10 @@ public class LineEnclosureFactory implements TriangleSource {
 
     private double[][] createAxisAlignedPrototypeEndPolygon(int axis) {
         double[][] prototypeEndPolygon = new double[endPolygonSides][];
-        prototypeEndPolygon[0] = new double[]{-endPolygonRadius, 0f, 0f};
         double fullcircle = Math.PI * 2.0;
         double thetaIncrement = fullcircle / endPolygonSides;
         double theta = Math.PI;  // Position of first polygon point.
-        for (int i = 1; i < endPolygonSides; i++) {
+        for (int i = 0; i < endPolygonSides; i++) {
             theta += thetaIncrement;
             theta = theta % fullcircle;
             float[] calculatedCoords = new float[2];
