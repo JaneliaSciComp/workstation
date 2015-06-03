@@ -83,6 +83,10 @@ public class LineEnclosureFactory implements TriangleSource {
         }
         
         List<double[][]> endCaps = makeEndPolygons(startingCoords, endingCoords);
+        // End caps can be null, if start/end are identical.
+        if (endCaps == null) {
+            return 0;
+        }
         //List<double[][]> endCaps = makeEndPolygonsNoTrig( startingCoords, endingCoords );
         int coordCount = 0;
         List<VertexInfoBean> startVertices = addVertices(endCaps.get(0), color);
@@ -147,6 +151,9 @@ public class LineEnclosureFactory implements TriangleSource {
             }
             vertices.add(bean);
 			polyBeans.add(bean);
+            if (Double.isNaN(key.getPosition()[X]) || Double.isNaN(key.getPosition()[Y]) || Double.isNaN(key.getPosition()[Z])) {
+                logger.error("Not-a-number in coordinate.");
+            }
             logger.debug("Adding vertex {},{},{}", key.getPosition()[X], key.getPosition()[Y], key.getPosition()[Z]);
         }
         return polyBeans;
@@ -241,6 +248,9 @@ public class LineEnclosureFactory implements TriangleSource {
         
         // Get the three angles: about X, about Y, about Z.
         double[] lineUnitVector = normalize(lineDelta);
+        if (lineUnitVector == null) {
+            return null;
+        }
         
         double aboutX = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[Z]);
         double aboutY = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Z]);
@@ -339,6 +349,9 @@ public class LineEnclosureFactory implements TriangleSource {
 
     private double[] normalize( double[] distance ) {
         double magnitude = getMagnitude( distance );
+        if (magnitude < 0.000001) {
+            return null;
+        }
         distance[0] /= magnitude;
         distance[1] /= magnitude;
         distance[2] /= magnitude;
