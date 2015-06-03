@@ -21,7 +21,7 @@ public class GL4ShaderActionSequence {
         return name;
     }
 
-    public GL4Shader getShader(String name) {
+    public GL4Shader getShader() {
         return shader;
     }
 
