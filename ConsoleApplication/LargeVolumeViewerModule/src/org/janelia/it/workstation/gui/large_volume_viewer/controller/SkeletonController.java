@@ -136,7 +136,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 		skeletonChanged();
     }
 
-    //--------------------------------IMPLEMENTS NextParentListener    
+    //--------------------------------IMPLEMENTS NextParentListener
     @Override
     public void setNextParent(Long id) {
         nextParentId = id;
@@ -211,7 +211,13 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void pathTraceRequested(Long id) {
         qvController.pathTraceRequested(id);
     }
-    
+
+    public void navigationRelative(Long id, TmNeuron.AnnotationNavigationDirection direction) {
+        Anchor anchor = skeleton.getAnchorByID(annoMgr.relativeAnnotation(id, direction));
+        setNextParent(anchor);
+        qvController.setCameraFocus(anchor.getLocation());
+    }
+
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {
 
         @Override

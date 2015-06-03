@@ -204,7 +204,7 @@ public class VolumeLoader implements VolumeLoaderI {
         else if (extension.startsWith(VolumeFileLoaderI.H264_EXT) || filename.contains(VolumeFileLoaderI.H264_EXT)) {
             return FileType.H264;
         }
-        else if (extension.startsWith(VolumeFileLoaderI.H265_EXT) || filename.contains(VolumeFileLoaderI.H265_EXT)) {
+        else if (extension.startsWith(VolumeFileLoaderI.H265_EXT) || filename.contains(VolumeFileLoaderI.H265_EXT)  ||  extension.equals(VolumeFileLoaderI.H5J_EXT)) {
             return FileType.H265;
         }
         else if (extension.startsWith(VolumeFileLoaderI.MP4_EXT)) {
