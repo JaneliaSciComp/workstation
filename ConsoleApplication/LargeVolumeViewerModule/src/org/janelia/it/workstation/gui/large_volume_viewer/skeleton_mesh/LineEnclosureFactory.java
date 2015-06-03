@@ -38,6 +38,8 @@ public class LineEnclosureFactory implements TriangleSource {
     private static final int ZX = 1;
     private static final int XY = 2;
     
+    private int currentVertexNumber = 0;
+
     private static final double[] PROTOTYPE_NORMAL = {0, 0, -1};
     private List<VertexInfoBean> vertices = new ArrayList<>();
     private List<Triangle> triangles = new ArrayList<>();
@@ -91,6 +93,20 @@ public class LineEnclosureFactory implements TriangleSource {
         return coordCount;
     }
 
+    /**
+     * @return the currentVertexNumber
+     */
+    public int getCurrentVertexNumber() {
+        return currentVertexNumber;
+    }
+
+    /**
+     * @param currentVertexNumber the currentVertexNumber to set
+     */
+    public void setCurrentVertexNumber(int currentVertexNumber) {
+        this.currentVertexNumber = currentVertexNumber;
+    }
+
     //--------------------------------------------IMPLEMENT TriangleSource
     @Override
     public List<VertexInfoBean> getVertices() {
@@ -112,7 +128,6 @@ public class LineEnclosureFactory implements TriangleSource {
      * @param color dimension 3; applied to every vertex created from polygon.
 	 * @return list of coord beans.
 	 */
-    private int currentVertexNumber = 0;
     protected List<VertexInfoBean> addVertices(double[][] poly, float[] color) {
 		List<VertexInfoBean> polyBeans = new ArrayList<>();
         for (int i = 0; i < poly.length; i++) {

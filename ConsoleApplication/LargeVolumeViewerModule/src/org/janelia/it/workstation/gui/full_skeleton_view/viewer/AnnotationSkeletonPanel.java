@@ -52,43 +52,43 @@ public class AnnotationSkeletonPanel extends JPanel {
     
     public void establish3D() {
         if (viewer == null  &&  dataSource.getSkeleton() != null  &&  dataSource.getSkeleton().getTileFormat() != null) {
-            SkeletonActor actor = new SkeletonActor();
-            actor.setParentAnchorImageName( SkeletonActor.ParentAnchorImage.LARGE );
-            actor.setNeuronStyleModel( dataSource.getNeuronStyleModel() );
-            actor.setShowOnlyParentAnchors( true );
-            actor.setAnchorsVisible(true);
-            actor.setFocusOnNextParent(true);
+            SkeletonActor linesDrawActor = new SkeletonActor();
+            linesDrawActor.setParentAnchorImageName( SkeletonActor.ParentAnchorImage.LARGE );
+            linesDrawActor.setNeuronStyleModel( dataSource.getNeuronStyleModel() );
+            linesDrawActor.setShowOnlyParentAnchors( true );
+            linesDrawActor.setAnchorsVisible(true);
+            linesDrawActor.setFocusOnNextParent(true);
             TileFormat tileFormat = dataSource.getSkeleton().getTileFormat();
             final BoundingBox3d boundingBox = tileFormat.calcBoundingBox();
             Vec3 yExtender = new Vec3(0, 0.75 * boundingBox.getHeight(), 0);
-            actor.getBoundingBox3d().setMax( boundingBox.getMax().plus( yExtender ) );
-            actor.getBoundingBox3d().setMin( boundingBox.getMin().minus( yExtender ) );
+            linesDrawActor.getBoundingBox3d().setMax( boundingBox.getMax().plus( yExtender ) );
+            linesDrawActor.getBoundingBox3d().setMin( boundingBox.getMin().minus( yExtender ) );
             OcclusiveRenderer renderer = new OcclusiveRenderer();
             final SkeletalBoundsResetPositioner skeletalBoundsResetPositioner = new SkeletalBoundsResetPositioner(dataSource.getSkeleton());
             renderer.setResetPositioner( skeletalBoundsResetPositioner);
             viewer = new OcclusiveViewer(renderer);
             skeletalBoundsResetPositioner.setViewer(viewer);
             skeletalBoundsResetPositioner.setRenderer(renderer);
-            skeletalBoundsResetPositioner.setActor(actor);
+            skeletalBoundsResetPositioner.setActor(linesDrawActor);
             MeshViewContext context = new MeshViewContext();
             viewer.setVolumeModel(context);
             VolumeModel volumeModel = viewer.getVolumeModel();
-            actor.setSkeleton(dataSource.getSkeleton());
-            actor.setCamera(volumeModel.getCamera3d());
-            actor.setTileFormat(tileFormat);
-            actor.setRenderInterpositionMethod(
+            linesDrawActor.setSkeleton(dataSource.getSkeleton());
+            linesDrawActor.setCamera(volumeModel.getCamera3d());
+            linesDrawActor.setTileFormat(tileFormat);
+            linesDrawActor.setRenderInterpositionMethod(
                     SkeletonActor.RenderInterpositionMethod.Occlusion
             );
             volumeModel.setBackgroundColor(new float[] {
                 0.0f, 0.0f, 0.0f
             });
             // Set maximal thickness.  Z-fade is not practical for 3D rotations.
-            actor.setZThicknessInPixels( Long.MAX_VALUE );
-            actor.updateAnchors();
+            linesDrawActor.setZThicknessInPixels( Long.MAX_VALUE );
+            linesDrawActor.updateAnchors();
 
             // This should be done after establishing the skeleton.
             SkeletonController controller = SkeletonController.getInstance();
-            controller.registerForEvents(actor);
+            controller.registerForEvents(linesDrawActor);
 
             DirectionalReferenceAxesActor refAxisActor = new DirectionalReferenceAxesActor(
                     new float[] { 100.0f, 100.0f, 100.0f },
@@ -104,7 +104,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
             
             viewer.addActor(axesActor);
-            //viewer.addActor(actor);  //TEMP
+            // viewer.addActor(linesDrawActor);
             viewer.addActor(refAxisActor);
             viewer.addActor(meshDrawActor);
             viewer.addMenuAction(new BackgroundPickAction(viewer));

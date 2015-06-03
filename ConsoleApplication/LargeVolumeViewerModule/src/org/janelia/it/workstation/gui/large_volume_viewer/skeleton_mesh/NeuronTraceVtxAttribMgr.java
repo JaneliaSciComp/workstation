@@ -20,8 +20,10 @@ import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
 import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
+import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -191,7 +193,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         LineEnclosureFactory manualSegmentEnclosureFactory = new LineEnclosureFactory(8, 2);
         
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
-                
+        TileFormat tileFormat = dataSource.getTileFormat();
+
 		// Iterate over all the traced segments, and add enclosures for each.
         for ( AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {            
             final SegmentIndex segmentIndex = voxelPath.getSegmentIndex();
@@ -211,12 +214,26 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             Long neuronId = anchor.getNeuronID();
             NeuronStyle style = getNeuronStyle(neuronId);
             final float[] colorAsFloatArray = style.getColorAsFloatArray();
-
-            double[] previousCoords = null; 
+            
+            double[] previousCoords = null;
             for ( VoxelPosition voxelPos: voxelPath.getPath() ) {
                 double[] currentCoords = new double[] {
                     voxelPos.getX(), voxelPos.getY(), voxelPos.getZ()
                 };
+
+                TileFormat.MicrometerXyz microns = tileFormat.micrometerXyzForVoxelXyz(
+                        new TileFormat.VoxelXyz(
+                                (int)currentCoords[0],
+                                (int)currentCoords[1],
+                                (int)currentCoords[2]
+                        ),
+                        CoordinateAxis.Z
+                );
+                Vec3 v = tileFormat.centerJustifyMicrometerCoordsAsVec3(microns);
+                currentCoords = new double[] {
+                    v.getX(), v.getY(), v.getZ()
+                };
+                
                 if ( previousCoords != null ) {                    
                     tracedSegmentEnclosureFactory.addEnclosure(
                             previousCoords, currentCoords, colorAsFloatArray);
@@ -225,7 +242,12 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             }
         }
 
-        // Now get the lines.
+        // Now get the lines.  Must offset to latest vertex number, so that
+        // the triangle pointers are contiguous across factories.
+        manualSegmentEnclosureFactory.setCurrentVertexNumber(
+                tracedSegmentEnclosureFactory.getCurrentVertexNumber() 
+        );
+
         Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);
         for ( AnchorLinesReturn anchorLine: anchorLines ) {            
             manualSegmentEnclosureFactory.addEnclosure(
@@ -247,7 +269,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         return new double[] { input.getX(), input.getY(), input.getZ() };
     }
     
-    //TODO return different value in collection.  Needs to have location and style.
     private Collection<AnchorLinesReturn> getAnchorLines(Set<SegmentIndex> tracedPathPairs) {
         Collection<AnchorLinesReturn> rtnVal = new ArrayList<>();
         int currentIndex = 0;
@@ -256,6 +277,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         for (Anchor anchor: getSkeleton().getAnchors()) {
             anchorToIndex.put(anchor, currentIndex++);
         }
+        int tracedPairSkipCount = 0;
         for (Anchor anchor: getSkeleton().getAnchors()) {
             NeuronStyle style = getNeuronStyle(anchor.getNeuronID());
                     
@@ -273,11 +295,21 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                         traceRtn.setStyle( style );
                         rtnVal.add( traceRtn );
                     }
+                    else {
+                        System.err.println("Skipped one line--i2 >= i1.  i1=" + i1 +", i2=" + i2);                        
+                    }
                     existing.add( pathTestInx );
+                }
+                else {
+                    if (tracedPathPairs.contains(pathTestInx)) {
+                        System.err.println("Skipped one line--in traced pairs: " + pathTestInx);
+                        tracedPairSkipCount ++;
+                    }
                 }
             }
         }
         
+        System.err.println("Skipped " + tracedPairSkipCount + " for being in a traced pair.");
         return rtnVal;
     }
 

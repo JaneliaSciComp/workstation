@@ -8,7 +8,6 @@ package org.janelia.it.workstation.gui.viewer3d.mesh.actor;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.Iterator;
 import java.util.Map;
 import javax.media.opengl.GL2GL3;
 import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
@@ -114,7 +113,6 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 );
                 verticesOffset += bufferBytes;
                 reportError(gl, "Buffer Data");
-
                 //OpenGLUtils.dumpFloatBuffer(attribBuffer);
 
                 IntBuffer inxBuf = buffersBean.getIndexBuffer();
@@ -133,6 +131,7 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 );
                 indicesOffset += bufferBytes;
                 reportError(gl, "Upload index buffer segment.");
+                //OpenGLUtils.dumpIntBuffer(inxBuf);
             }
         }
 

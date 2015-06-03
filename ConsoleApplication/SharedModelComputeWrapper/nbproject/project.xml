@@ -31,6 +31,7 @@
                 <package>org.janelia.it.jacs.model.download</package>
                 <package>org.janelia.it.jacs.model.entity</package>
                 <package>org.janelia.it.jacs.model.entity.cv</package>
+                <package>org.janelia.it.jacs.model.entity.json</package>
                 <package>org.janelia.it.jacs.model.genomics</package>
                 <package>org.janelia.it.jacs.model.lsm</package>
                 <package>org.janelia.it.jacs.model.metadata</package>
