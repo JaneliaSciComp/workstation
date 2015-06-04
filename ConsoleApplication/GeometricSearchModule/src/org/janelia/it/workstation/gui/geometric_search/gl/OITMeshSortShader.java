@@ -91,7 +91,9 @@ public class OITMeshSortShader extends GL4Shader {
     }
 
     @Override
-    public void init(GL4 gl) {
+    public void init(GL4 gl) throws ShaderCreationException {
+        super.init(gl);
+        gl.glUseProgram(getShaderProgram());
 
      //   gl.glBindTexture(GL4.GL_TEXTURE_2D, textureId.get(0));
      //   checkGlError(gl, "i glBindTexture() error");

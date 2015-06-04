@@ -15,7 +15,7 @@ layout (binding = 0, offset = 0) uniform atomic_uint index_counter;
 layout (binding = 0, rgba32ui) uniform coherent uimageBuffer list_buffer;
 layout (binding = 1, r32ui) uniform coherent uimage2D head_pointer_image;
 
-//out vec4 debugColor;
+out vec4 debugColor;
 
 // entry point
 void main()
@@ -31,9 +31,6 @@ void main()
     vec4 color =  opac * Cs;
     color.a = opac;
 
-    //vec4 debugColor = vec4(1.0, 1.0, 1.0, 0.0) * opac;
-    //debugColor.a = opac;
-
     // Update head image and linked list
 
     uint new_index = atomicCounterIncrement(index_counter);
@@ -44,7 +41,6 @@ void main()
 
     item.x = old_head;
 
-    //item.y = packUnorm4x8(debugColor);
     item.y = packUnorm4x8(color);
 
     item.z = floatBitsToUint(gl_FragCoord.z);
@@ -54,5 +50,7 @@ void main()
     int iIndex=int(new_index);
 
     imageStore(list_buffer, iIndex, item);
+
+    debugColor = vec4(0.0, 0.0, 0.0, 0.0);
 
 }
