@@ -124,7 +124,8 @@ public class SampleDownloadWorker extends SimpleWorker {
         }
         
         if (checkForAlreadyDownloadedFiles(localFileName)) {
-            if (sourceFile == null) {
+            // TODO: the Scality path check can go away once our WebDAV can handle Scality paths
+            if (sourceFile == null || sourceFilePath.startsWith(EntityConstants.SCALITY_PATH_PREFIX)) {
                 convertOnServer(localFilePrefix);
             } 
             else {
