@@ -93,9 +93,8 @@ public class AttributeManagerBufferUploader implements BufferUploader {
         reportError(gl, "Allocate Index Buffer");
         logger.info("Buffers allocated.");
 
-        long verticesOffset = 0;
-        long indicesOffset = 0;
         indexCount = 0;
+        int vertexCount = 0;
         for (Long renderId : renderIdToBuffers.keySet()) {
             RenderBuffersBean buffersBean = renderIdToBuffers.get(renderId);
             FloatBuffer attribBuffer = buffersBean.getAttributesBuffer();
@@ -107,16 +106,15 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 attribBuffer.rewind();
                 gl.glBufferSubData(
                         GL2GL3.GL_ARRAY_BUFFER,
-                        verticesOffset,
+                        vertexCount,
                         bufferBytes,
                         attribBuffer
                 );
-                verticesOffset += bufferBytes;
+                vertexCount += attribBuffer.capacity();
                 reportError(gl, "Buffer Data");
-                //OpenGLUtils.dumpFloatBuffer(attribBuffer);
+                OpenGLUtils.dumpFloatBuffer(attribBuffer);
 
                 IntBuffer inxBuf = buffersBean.getIndexBuffer();
-                indexCount = getIndexCount() + inxBuf.capacity();
                 bufferBytes = (long) (inxBuf.capacity() * BYTES_PER_INT);
 
                 gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, getInxBufferHandle());
@@ -125,13 +123,13 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 inxBuf.rewind();
                 gl.glBufferSubData(
                         GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
-                        indicesOffset,
+                        getIndexCount(),
                         bufferBytes,
                         inxBuf
                 );
-                indicesOffset += bufferBytes;
+                indexCount = getIndexCount() + inxBuf.capacity();
                 reportError(gl, "Upload index buffer segment.");
-                //OpenGLUtils.dumpIntBuffer(inxBuf);
+                OpenGLUtils.dumpIntBuffer(inxBuf);
             }
         }
 

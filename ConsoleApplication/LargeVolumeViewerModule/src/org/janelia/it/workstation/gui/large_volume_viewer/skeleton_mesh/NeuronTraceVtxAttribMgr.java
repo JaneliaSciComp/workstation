@@ -195,7 +195,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
         TileFormat tileFormat = dataSource.getTileFormat();
 
-		// Iterate over all the traced segments, and add enclosures for each.
+		// Iterate over all the traced segments, and add enclosures for each.           
         for ( AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {            
             final SegmentIndex segmentIndex = voxelPath.getSegmentIndex();
             if (segmentIndex == null) {
@@ -216,29 +216,34 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             final float[] colorAsFloatArray = style.getColorAsFloatArray();
             
             double[] previousCoords = null;
+            VoxelPosition previousVoxelPos = null;
             for ( VoxelPosition voxelPos: voxelPath.getPath() ) {
-                double[] currentCoords = new double[] {
-                    voxelPos.getX(), voxelPos.getY(), voxelPos.getZ()
-                };
-
                 TileFormat.MicrometerXyz microns = tileFormat.micrometerXyzForVoxelXyz(
                         new TileFormat.VoxelXyz(
-                                (int)currentCoords[0],
-                                (int)currentCoords[1],
-                                (int)currentCoords[2]
+                                voxelPos.getX(),
+                                voxelPos.getY(),
+                                voxelPos.getZ()
                         ),
                         CoordinateAxis.Z
                 );
                 Vec3 v = tileFormat.centerJustifyMicrometerCoordsAsVec3(microns);
-                currentCoords = new double[] {
+                double[] currentCoords = new double[] {
                     v.getX(), v.getY(), v.getZ()
                 };
                 
                 if ( previousCoords != null ) {                    
-                    tracedSegmentEnclosureFactory.addEnclosure(
+                    int coordsAdded = tracedSegmentEnclosureFactory.addEnclosure(
                             previousCoords, currentCoords, colorAsFloatArray);
-                }                
+                    if (coordsAdded == 0) {
+                        if (previousVoxelPos != null) {
+                            log.info("Encountered identical endpoints: " + fmtVoxelPos(previousVoxelPos) + ":" + fmtVoxelPos(voxelPos) + 
+                                     ".  Encountered identical converted coords: " + fmtCoords(previousCoords) + ":" + fmtCoords(currentCoords) +
+                                     ".  Found in segment index: " + voxelPath.getSegmentIndex() + ", and in neuron " + neuronId + ".");
+                        }
+                    }
+                }
                 previousCoords = currentCoords;
+                previousVoxelPos = voxelPos;
             }
         }
 
@@ -263,6 +268,14 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 		triangleSources.add(tracedSegmentEnclosureFactory);
         triangleSources.add(manualSegmentEnclosureFactory);
 		
+    }
+    
+    private String fmtVoxelPos( VoxelPosition pos ) {
+        return String.format("[%d,%d,%d]", pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    private String fmtCoords(double[] coords) {
+        return String.format("[%f,%f,%f]", coords[0], coords[1], coords[2]);
     }
 
     private double[] toDoubleArr( Vec3 input ) {
@@ -294,16 +307,20 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                         traceRtn.setEnd( toDoubleArr(neighbor.getLocation()) );
                         traceRtn.setStyle( style );
                         rtnVal.add( traceRtn );
+                        log.info("Adding anchor line: " + i1 + "->" + i2);
                     }
                     else {
-                        System.err.println("Skipped one line--i2 >= i1.  i1=" + i1 +", i2=" + i2);                        
+                        log.info("Skipped one line--i2 >= i1.  i1=" + i1 +", i2=" + i2);                        
                     }
                     existing.add( pathTestInx );
                 }
                 else {
                     if (tracedPathPairs.contains(pathTestInx)) {
-                        System.err.println("Skipped one line--in traced pairs: " + pathTestInx);
+                        log.info("Skipped one line--in traced pairs: " + pathTestInx);
                         tracedPairSkipCount ++;
+                    }
+                    else {
+                        log.info("Skipped one line--existing: " + pathTestInx);
                     }
                 }
             }

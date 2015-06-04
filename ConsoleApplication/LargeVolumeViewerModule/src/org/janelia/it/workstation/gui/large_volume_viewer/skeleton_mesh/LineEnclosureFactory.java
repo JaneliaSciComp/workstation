@@ -139,9 +139,6 @@ public class LineEnclosureFactory implements TriangleSource {
             VertexInfoKey key = new VertexInfoKey();
             key.setPosition(poly[i]);
             bean.setKey(key);
-            // Provide the offset, for use in making triangle indices.
-            bean.setVtxBufOffset(currentVertexNumber++);
-
             // Color is optional, depending on application/caller.
             if ( color != null ) {
                 bean.setAttribute(
@@ -149,7 +146,7 @@ public class LineEnclosureFactory implements TriangleSource {
                 );
                 logger.debug("Color attribute = [" + color[0] + "," + color[1] + "," + color[2] + "]");
             }
-            vertices.add(bean);
+            addVertex(bean);
 			polyBeans.add(bean);
             if (Double.isNaN(key.getPosition()[X]) || Double.isNaN(key.getPosition()[Y]) || Double.isNaN(key.getPosition()[Z])) {
                 logger.error("Not-a-number in coordinate.");
@@ -207,8 +204,8 @@ public class LineEnclosureFactory implements TriangleSource {
         List<VertexInfoBean> startingVerticesClone = new ArrayList<>();
         for ( VertexInfoBean bean: startingVertices ) {
             final VertexInfoBean clonedBean = bean.cloneIt();            
-            startingVerticesClone.add( clonedBean); 
-            vertices.add( clonedBean );
+            startingVerticesClone.add( clonedBean);
+            addVertex( clonedBean );
         }
         // Winding to point close end away from tube.
 		for ( int i = 0; i < (vertsPerPoly - 2); i++ ) {
@@ -225,7 +222,7 @@ public class LineEnclosureFactory implements TriangleSource {
         for (VertexInfoBean bean: endingVertices) {
             final VertexInfoBean clonedBean = bean.cloneIt();
             endingVerticesClone.add( clonedBean );
-            vertices.add( clonedBean );
+            addVertex( clonedBean );
         }
 		// Winding to point far end away from tube.
 		for ( int i = 0; i < (vertsPerPoly - 2); i++ ) {
@@ -240,7 +237,7 @@ public class LineEnclosureFactory implements TriangleSource {
         /*        
         */
 	}
-
+    
     private List<double[][]> makeEndPolygons( double[] startCoords, double[] endCoords ) {
         
         endCapPolygonsHolder.clear();
@@ -419,6 +416,12 @@ public class LineEnclosureFactory implements TriangleSource {
 
     private double[][] createZAxisAlignedPrototypeEndPolygon() {
         return createAxisAlignedPrototypeEndPolygon(Z);
+    }
+
+    private void addVertex(VertexInfoBean vertex) {
+        vertex.setVtxBufOffset(getCurrentVertexNumber());
+        setCurrentVertexNumber(getCurrentVertexNumber() + 1);
+        vertices.add(vertex);
     }
 
     @SuppressWarnings("unused")

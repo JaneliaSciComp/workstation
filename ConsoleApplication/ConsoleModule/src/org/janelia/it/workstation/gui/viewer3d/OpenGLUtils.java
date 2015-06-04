@@ -8,6 +8,8 @@ package org.janelia.it.workstation.gui.viewer3d;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.Set;
+import java.util.TreeSet;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
 import org.slf4j.Logger;
@@ -67,16 +69,37 @@ public class OpenGLUtils {
 
     public static void dumpIntBuffer(IntBuffer inxBuf) {
         inxBuf.rewind();
-        StringBuilder bldr = new StringBuilder();
+        Set<Integer> indicesInUse = new TreeSet<>();
+        StringBuilder allIndicesBuilder = new StringBuilder();
         for (int i = 0; i < inxBuf.capacity(); i++) {
             if (i % 3 == 0) {
-                bldr.append("\n");
+                allIndicesBuilder.append("\n");
             }
             int nextI = inxBuf.get();
-            bldr.append(nextI + ", ");
+            allIndicesBuilder.append(nextI).append(", ");
+            indicesInUse.add( nextI );
         }
+        Integer previousIndex = -1;
+        StringBuilder outOfOrderBuilder = new StringBuilder();
+        for (Integer nextI: indicesInUse) {
+            if (nextI - previousIndex != 1) {
+                if (outOfOrderBuilder.length() > 0) {
+                    outOfOrderBuilder.append(",");
+                }
+                outOfOrderBuilder.append(nextI);
+                if (nextI % 10 == 1) {
+                    outOfOrderBuilder.append("\n");
+                }
+            }
+            previousIndex = nextI;
+        }
+        if (inxBuf.capacity() % 3 != 0) {
+            logger.warn("Count of integers in Index Buffer is not a multiple of 3.");
+        }
+        System.out.println("[--------------Out of order/Missing Indices-------]");
+        logger.info(outOfOrderBuilder.toString());
         System.out.println("[------------- Index Buffer Contents -------------]");
-        logger.info(bldr.toString());
+        logger.info(allIndicesBuilder.toString());
         inxBuf.rewind();
     }
 
