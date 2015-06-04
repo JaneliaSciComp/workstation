@@ -1519,31 +1519,22 @@ public class EntityContextMenu extends JPopupMenu {
     
     protected JMenuItem getDownloadMenu() {
 
+        boolean allLsm = true;
         List<Entity> entitiesWithFilepaths = new ArrayList<>();
         for(final RootedEntity re : rootedEntityList) {
-            final Entity targetEntity = re.getEntity();
-            final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+            final Entity entity = re.getEntity();
+            final String filepath = EntityUtils.getDefault3dImageFilePath(entity);
             if (filepath!=null) {
-                entitiesWithFilepaths.add(targetEntity);
+                entitiesWithFilepaths.add(entity);
+                if (!EntityConstants.TYPE_LSM_STACK.equals(entity.getEntityTypeName())) {
+                    allLsm = false;
+                }
             }
         }
         if (entitiesWithFilepaths.isEmpty()) {
             return null;
         }
         
-        boolean allLsm = true;
-        boolean allLsmBz2 = true;
-        for(Entity entity : entitiesWithFilepaths) {
-            if (!EntityConstants.TYPE_LSM_STACK.equals(entity.getEntityTypeName())) {
-                allLsm = false;
-                allLsmBz2 = false;
-            }
-            String filepath = EntityUtils.getDefault3dImageFilePath(entity);
-            if (!filepath.endsWith(Utils.EXTENSION_LSM_BZ2)) {
-                allLsmBz2 = false;
-            }
-        }
-
         String[] DOWNLOAD_EXTENSIONS = {"tif", "v3draw", "v3dpbd", "mp4", "h5j"};
         String itemTitle;
         if (entitiesWithFilepaths.size()>1) {
@@ -1557,10 +1548,7 @@ public class EntityContextMenu extends JPopupMenu {
         
         if (allLsm) {
             add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_LSM));
-        }
-        
-        if (allLsmBz2) {
-            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_BZ2));
+            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_LSM_BZ2));
         }
         
         for(String extension : DOWNLOAD_EXTENSIONS) {
@@ -1580,18 +1568,18 @@ public class EntityContextMenu extends JPopupMenu {
         String itemTitle;
         if (splitChannels) {
             if (multiple) {
-                itemTitle = "Split Channel "+extension+" Files";
+                itemTitle = "Split Channel "+extension;
             }
             else {
-                itemTitle = "Split Channel "+extension+" File";
+                itemTitle = "Split Channel "+extension;
             }
         }
         else {
             if (multiple) {
-                itemTitle = extension+" Files";
+                itemTitle = extension;
             }
             else {
-                itemTitle = extension+" File";
+                itemTitle = extension;
             }
         }
         
