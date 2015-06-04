@@ -1122,8 +1122,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             //  possible Linux prefixes are we looking at?
             // OK to compare as strings, because we know the
             //  input path is Linux
-            String [] mbmPrefixes = {"/groups/mousebrainmicro/mousebrainmicro/",
-                    "/nobackup/mousebrainmicro/"};
+            String [] mbmPrefixes = {
+                    "/groups/mousebrainmicro/mousebrainmicro/",
+                    "/nobackup/mousebrainmicro/",
+                    "/tier2/mousebrainmicro/mousebrainmicro/"
+            };
             Path linuxPrefix = null;
             for (String testPrefix: mbmPrefixes) {
                 if (canonicalLinuxPath.startsWith(testPrefix)) {
@@ -1179,8 +1182,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         // by now, if we ain't got the path, we ain't got the path
         if (!testFile.exists()) {
             JOptionPane.showMessageDialog(this.getParent(),
-                    "Error opening folder " + testFile.getName()
-                    +" \nIs the file share mounted?",
+                    "Error opening folder " + testFile.getPath() +
+                    " \nIs the file share mounted?",
                     "Folder does not exist.",
                     JOptionPane.ERROR_MESSAGE);
             return false;
