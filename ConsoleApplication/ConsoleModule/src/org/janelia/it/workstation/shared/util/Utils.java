@@ -37,8 +37,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.openide.util.Mutex;
 import org.openide.windows.WindowManager;
 
 /**
