@@ -10,9 +10,6 @@ uvec4 fragments[MAX_FRAGMENTS];
 
 layout (location=0) out vec4 output_color;
 
-
-
-
 int build_local_fragment_list(void)
 {
     uint current;
@@ -89,6 +86,12 @@ void main(void) {
 
     output_color = calculate_final_color(frag_count);
 
-    output_color = vec4(1.0, 0.0, 0.0, 1.0);
+    if (frag_count > 0) {
+
+        output_color = vec4(1.0, 0.0, 0.0, 1.0);
+
+     } else {
+        output_color = vec4(0.0, 0.0, 1.0, 1.0);
+     }
 
 }

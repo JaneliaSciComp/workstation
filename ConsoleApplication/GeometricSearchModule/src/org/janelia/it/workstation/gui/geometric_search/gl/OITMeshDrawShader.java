@@ -58,13 +58,31 @@ public class OITMeshDrawShader extends GL4Shader {
         super.display(gl);
         checkGlError(gl, "d1 OITMeshDrawShader super.display() error");
 
+//        int hpLocation = gl.glGetUniformLocation(getShaderProgram(), "head_pointer_image");
+//        gl.glUniform1i(hpLocation, 1);
+
 
         // Clear the headPointerTexture
 //        gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, headPointerInitializerId.get(0));
 //        checkGlError(gl, "d2 OITMeshDrawShader glBindBuffer() error");
         
-        gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, 0);
-
+               // Try moving the above command after glTexImage2D...        
+        gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, tc.getHeadPointerInitializerId());
+        checkGlError(gl, "d2 OITMeshDrawShader glBindBuffer() error");
+        
+        /// DEBUG
+        
+        ByteBuffer b2 = gl.glMapBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, GL4.GL_READ_ONLY);
+        
+        for (int i=0;i<16;i++) {
+            byte b = b2.get(i);
+            logger.info("i="+i+" b="+b);
+        }
+        
+        gl.glUnmapBuffer(GL4.GL_PIXEL_UNPACK_BUFFER);
+        
+        // END DEBUG
+        
         gl.glBindTexture(GL4.GL_TEXTURE_2D, tc.getHeadPointerTextureId());
         checkGlError(gl, "d3 OITMeshDrawShader glBindTexture() error");
         
@@ -76,20 +94,18 @@ public class OITMeshDrawShader extends GL4Shader {
                 0,
                 GL4.GL_RED_INTEGER,
                 GL4.GL_UNSIGNED_INT,
-                null);
+                0);
         checkGlError(gl, "d4 OITMeshDrawShader glTexImage2D() error");
        
-        // Try moving the above command after glTexImage2D...
-        gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, tc.getHeadPointerInitializerId());
-        checkGlError(gl, "d2 OITMeshDrawShader glBindBuffer() error");
+         gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, 0);
         
                // Bind the headPointerTexture for read-write
         gl.glBindImageTexture(1, tc.getHeadPointerTextureId(), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_R32UI);
         checkGlError(gl, "d5 OITMeshDrawShader glBindImageTexture() error");
-       
+               
         gl.glBindBuffer(GL4.GL_TEXTURE_BUFFER, tc.getFragmentStorageBufferId());
         checkGlError(gl, "d5.3 OITMeshDrawShader glBindBuffer() error");
-        
+                
         // Bind and reset the atomic counter
 //        gl.glBindBufferBase(GL4.GL_ATOMIC_COUNTER_BUFFER, 0, atomicCounterId.get(0));
 //        checkGlError(gl, "d6 OITMeshDrawShader glBindBufferBase() error");

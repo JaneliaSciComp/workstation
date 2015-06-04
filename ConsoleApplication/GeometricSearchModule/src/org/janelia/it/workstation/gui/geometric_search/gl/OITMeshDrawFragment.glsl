@@ -31,26 +31,38 @@ void main()
     vec4 color =  opac * Cs;
     color.a = opac;
 
+    ivec2 dl = ivec2(0,0);
+
+    //uint preItem = imageLoad(head_pointer_image, ivec2(gl_FragCoord.xy)).x;
+    uint preItem = imageLoad(head_pointer_image, dl).x;
+
+    if (preItem==0) {
+        debugColor = vec4(0.0, 0.0, 1.0, 0.0);
+    } else {
+        debugColor = vec4(0.0, 1.0, 0.0, 0.0);
+    }
+
+
     // Update head image and linked list
 
-    uint new_index = atomicCounterIncrement(index_counter);
+    //uint new_index = atomicCounterIncrement(index_counter);
 
-    uint old_head = imageAtomicExchange(head_pointer_image, ivec2(gl_FragCoord.xy), new_index);
+    //int iNewIndex = int(new_index);
 
-    uvec4 item;
+    //uint old_head = imageAtomicExchange(head_pointer_image, ivec2(gl_FragCoord.xy), new_index);
 
-    item.x = old_head;
+    //uvec4 item;
 
-    item.y = packUnorm4x8(color);
+    //item.x = old_head;
 
-    item.z = floatBitsToUint(gl_FragCoord.z);
+    //item.y = packUnorm4x8(color);
 
-    item.w = 0;
+    //item.z = floatBitsToUint(gl_FragCoord.z);
 
-    int iIndex=int(new_index);
+    //item.w = 0;
 
-    imageStore(list_buffer, iIndex, item);
+    //int iIndex=int(new_index);
 
-    debugColor = vec4(0.0, 0.0, 0.0, 0.0);
+    //imageStore(list_buffer, iIndex, item);
 
 }

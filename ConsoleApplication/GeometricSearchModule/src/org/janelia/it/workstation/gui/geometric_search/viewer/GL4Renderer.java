@@ -209,8 +209,14 @@ public class GL4Renderer implements GLEventListener
         updateProjection(gl);
 
         // Copy member list of actors local for independent iteration.
-        for (GL4ShaderActionSequence shaderAction : shaderActionList) 
+        //logger.info("Display shader sequence starting");
+        for (GL4ShaderActionSequence shaderAction : shaderActionList) {
+//            GL4Shader s = shaderAction.getShader();
+//            String fsName = s.getFragmentShaderResourceName();
+            //logger.info("Loading "+fsName);
             shaderAction.display(gl);
+           // logger.info("Done with "+fsName);
+        }
 
     }
 
