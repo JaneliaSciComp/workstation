@@ -172,7 +172,7 @@ public class SkeletonActor
     }
 
     private synchronized void displayLines(GLAutoDrawable glDrawable) {
-        if (neuronLineIndices.size() == 0) {
+        if (neuronLineIndices.isEmpty()) {
             return;
         }
 

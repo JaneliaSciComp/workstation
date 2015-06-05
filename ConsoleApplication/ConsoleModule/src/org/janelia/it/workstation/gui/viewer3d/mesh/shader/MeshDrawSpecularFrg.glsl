@@ -1,13 +1,13 @@
 // Fragment shader for drawing mesh/triangles.
 #version 120
-uniform vec4 color;
+varying vec4 colorVar;
 varying vec4 diffuseLightMag;
 varying vec4 homogeniousCoordPos;
 varying vec4 normVar;
 
 void main()
 {
-    vec4 finalColor = (color * diffuseLightMag);
+    vec4 finalColor = (colorVar * diffuseLightMag);
 
     // Calculate the specular component.
     // Using unnormalized version of eye-normal.
@@ -19,7 +19,7 @@ void main()
         toLight = normalize(toLight);
         vec4 halfVector = normalize(toV + toLight);
 
-        specularLightMag = vec4(1.0,1.0,1.0,0.0) * pow(max(0.0, -dot(halfVector, normVar)), 64.0);
+        specularLightMag = vec4(0.3,0.3,0.3,0.0) * pow(max(0.0, -dot(halfVector, normVar)), 4.0);
     }
 
     if ( length(specularLightMag) > 0 )

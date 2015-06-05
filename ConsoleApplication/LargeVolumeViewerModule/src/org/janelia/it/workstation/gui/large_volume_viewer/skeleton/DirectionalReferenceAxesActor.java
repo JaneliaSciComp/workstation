@@ -94,7 +94,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
             init(glDrawable);
         }
         
-        reportError(gl, "Display of axes-actor upon entry");
+        reportError(gl, "Display of directional-ref-actor upon entry");
         
         // Exchange shader programs.
         gpuToCpuBuffer.rewind();
@@ -106,62 +106,76 @@ public class DirectionalReferenceAxesActor implements GLActor {
         // Rendering characteristics / 'draw' state.
         gl.glDisable(GL2.GL_CULL_FACE);
         gl.glFrontFace(GL2.GL_CW);
-        reportError(gl, "Display of axes-actor cull-face");
+        if (reportError(gl, "Display of directional-ref-actor cull-face"))
+            return;
 
-        reportError(gl, "Display of axes-actor lighting 1");
+        if (reportError(gl, "Display of directional-ref-actor lighting 1"))
+            return;
         gl.glShadeModel(GL2.GL_FLAT);
-        reportError(gl, "Display of axes-actor lighting 2");
+        if (reportError(gl, "Display of directional-ref-actor lighting 2"))
+            return;
         gl.glDisable(GL2.GL_LIGHTING);
-        reportError(gl, "Display of axes-actor lighting 3");
+        if (reportError(gl, "Display of directional-ref-actor lighting 3"))
+            return;
         setRenderMode(gl, true);
         
         gl.glEnable(GL2.GL_LINE_SMOOTH);                     // May not be in v2
         gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);   // May not be in v2
 
         gl.glLineWidth(1.0f);
-        reportError(gl, "Display of axes-actor end characteristics");
+        if (reportError(gl, "Display of directional-ref-actor end characteristics"))
+            return;
 
         // Deal with positioning matrices here, rather than in the renderer.
         matrixManager.recalculate(gl);
 
         shader.setUniformMatrix4v(gl, DirectionalReferenceAxesShader.PROJECTION_UNIFORM_NAME, false, context.getPerspectiveMatrix());
         shader.setUniformMatrix4v(gl, DirectionalReferenceAxesShader.MODEL_VIEW_UNIFORM_NAME, false, context.getModelViewMatrix());
-        reportError(gl, "Display of axes-actor uniforms");
+        if (reportError(gl, "Display of directional-ref-actor uniforms"))
+            return;
 
         // Draw the little lines.
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, lineBufferHandle);
-        reportError(gl, "Display of axes-actor 1");                
+        if (reportError(gl, "Display of directional-ref-actor 1"))
+            return;                
 
         // 3 floats per coord. Stride is 0, offset to first is 0.
         gl.glEnableVertexAttribArray( shader.getVertexAttribLoc() );
         gl.glVertexAttribPointer( shader.getVertexAttribLoc(), 3, GL2.GL_FLOAT, false, 0, 0 );
-        reportError(gl, "Display of axes-actor 3");
+        if (reportError(gl, "Display of directional-ref-actor 3"))
+            return;
 
         // Color the little lines.
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBufferHandle);
-        reportError(gl, "Display of axes-actor 3a");
+        if (reportError(gl, "Display of directional-ref-actor 3a"))
+            return;
         
         // 4 byte values per color/coord.  Stride is 0, offset to first is 0.
         gl.glEnableVertexAttribArray( shader.getColorAttribLoc() );
         gl.glVertexAttribPointer( shader.getColorAttribLoc(), 4, GL2.GL_UNSIGNED_BYTE, true, 0, 0 );
-        reportError(gl, "Display of axes-actor 3b");
+        if (reportError(gl, "Display of directional-ref-actor 3b"))
+            return;
         
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
-        reportError(gl, "Display of axes-actor 4.");
+        if (reportError(gl, "Display of directional-ref-actor 4."))
+            return;
 
         gl.glDrawElements(GL2.GL_LINES, lineBufferVertexCount, GL2.GL_UNSIGNED_INT, 0);
-        reportError(gl, "Display of axes-actor 5");
+        if (reportError(gl, "Display of directional-ref-actor 5"))
+            return;
 
         // Tear down 'draw' state.
         gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);   // Prob: not in v2
         gl.glDisable(GL2.GL_LINE_SMOOTH);               // May not be in v2
-        reportError(gl, "Display of axes-actor 6");
+        if (reportError(gl, "Display of directional-ref-actor 6"))
+            return;
 
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, 0);
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
 
         setRenderMode(gl, false);
-        reportError(gl, "Axes-actor, end of display.");
+        if (reportError(gl, "Axes-actor, end of display."))
+            return;
 
         // Switch back to previous shader.
         gl.glUseProgram(previousShader);
@@ -377,7 +391,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
             // set blending to enable transparent voxels
             gl.glEnable(GL2.GL_DEPTH_TEST);
             gl.glDepthFunc(GL2.GL_LESS);
-            reportError(gl, "Display of axes-actor depth");
+            reportError(gl, "Display of directional-ref-actor depth");
         } else {
             gl.glDisable(GL2.GL_DEPTH_TEST);
         }

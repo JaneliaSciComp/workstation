@@ -38,11 +38,11 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeSourceI, VertexExpor
         triangleSources = new ArrayList<>();
         renderIdToBuffers = new HashMap<>();
 
-        int startingX = 0;
-        int startingY = 0;
-        int startingZ = 0;
+        int startingX = 74000;
+        int startingY = 48200;
+        int startingZ = 19500;
 
-        VertexFactory factory = new VertexFactory();
+        EnclosedVoxelVertexFactory factory = new EnclosedVoxelVertexFactory();
         switch (scenario) {
             case whole:
                 establishStackedScenario(startingX, startingY, startingZ, factory);
@@ -54,11 +54,14 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeSourceI, VertexExpor
                 establishSimplestScenario(startingX, startingY, startingZ, factory);
                 break;
         }
-
+        
         // Now have a full complement of triangles and vertices.  For this renderable, can traverse the
         // vertices, making a "composite normal" based on the normals of all entangling triangles.
         NormalCompositor normalCompositor = new NormalCompositor();
-        normalCompositor.createGouraudNormals(factory);
+        normalCompositor.combineAxialNormals(factory);
+
+        // Add same colors to all vertices, as an afterthought.
+        addColor(factory);
 
         triangleSources.add(factory);
         BufferPackager packager = new BufferPackager();
@@ -90,7 +93,7 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeSourceI, VertexExpor
         triangleSources.clear();
     }
 
-    private void establishStackedScenario(int startingX, int startingY, int startingZ, VertexFactory factory) {
+    private void establishStackedScenario(int startingX, int startingY, int startingZ, EnclosedVoxelVertexFactory factory) {
         //NOTE: the definitions below appear very similar.  However, they differ in the important aspect,
         // that the exposed face list tells which are out-facing.  Attempting to call functions and add
         // single voxels will be compounded by this.
@@ -180,12 +183,25 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeSourceI, VertexExpor
         factory.addEnclosure(voxelInfoBean);
 
     }
+    
+    private void addColor(EnclosedVoxelVertexFactory factory) {
+        float[] colorAttribute = new float[] {
+            1.0f, 0.0f, 1.0f
+        };
+        for (VertexInfoBean vertex: factory.getVertices()) {
+            vertex.setAttribute(
+                    VertexInfoBean.KnownAttributes.b_color.name(), 
+                    colorAttribute, 
+                    3
+            );
+        }
+    }
 
     /**
      * Makes a stacked pair of boxes, joined on one line-corner to another box, and with another box in empty space
      * unattached to those three.
      */
-    private void establishSmallScenario(int startingX, int startingY, int startingZ, VertexFactory factory) {
+    private void establishSmallScenario(int startingX, int startingY, int startingZ, EnclosedVoxelVertexFactory factory) {
         //NOTE: the definitions below appear very similar.  However, they differ in the important aspect,
         // that the exposed face list tells which are out-facing.  Attempting to call functions and add
         // single voxels will be compounded by this.
@@ -241,7 +257,7 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeSourceI, VertexExpor
      * Makes a stacked pair of boxes, joined on one line-corner to another box, and with another box in empty space
      * unattached to those three.
      */
-    private void establishSimplestScenario(int startingX, int startingY, int startingZ, VertexFactory factory) {
+    private void establishSimplestScenario(int startingX, int startingY, int startingZ, EnclosedVoxelVertexFactory factory) {
         //NOTE: the definitions below appear very similar.  However, they differ in the important aspect,
         // that the exposed face list tells which are out-facing.  Attempting to call functions and add
         // single voxels will be compounded by this.

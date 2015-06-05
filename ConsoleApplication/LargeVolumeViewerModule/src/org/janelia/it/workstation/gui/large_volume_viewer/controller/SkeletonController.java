@@ -17,6 +17,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 
 /**
@@ -27,6 +28,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         NextParentListener, NeuronStyleChangeListener {
     private Skeleton skeleton;
     private List<SkeletonActor> actors = new ArrayList<>();
+    private MeshDrawActor meshDrawActor;
     private SkeletonAnchorListener skeletonAnchorListener;
     private AnnotationManager annoMgr;
     private LargeVolumeViewerTranslator lvvTranslator;
@@ -66,6 +68,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     
     public void registerForEvents(QuadViewController qvController) {
         this.qvController = qvController;
+    }
+    
+    public void registerForEvents(MeshDrawActor meshDrawActor) {
+        this.meshDrawActor = meshDrawActor;
     }
 
     //---------------------------------IMPLEMENTS AnchoredVoxelPathListener
@@ -160,6 +166,9 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void skeletonChanged() {
         for (SkeletonActor actor: actors) {
             actor.updateAnchors();
+        }
+        if (meshDrawActor != null) {
+            meshDrawActor.refresh();
         }
     }
 

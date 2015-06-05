@@ -1,12 +1,10 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
-import java.io.File;
-import java.io.FileReader;
 
 import org.apache.commons.io.IOUtils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.shared.util.WorkstationFile;
 
 /**
  * This viewer displays text file entities.
@@ -22,7 +20,7 @@ public class TextFileViewer extends TextViewer {
     @Override
     public String getText(RootedEntity rootedEntity) throws Exception {
         String filepath = rootedEntity.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
-        File file = SessionMgr.getCachedFile(filepath, false);
-        return IOUtils.toString(new FileReader(file));
+        WorkstationFile wfile = new WorkstationFile(filepath);
+        return IOUtils.toString(wfile.getStream());
     }
 }

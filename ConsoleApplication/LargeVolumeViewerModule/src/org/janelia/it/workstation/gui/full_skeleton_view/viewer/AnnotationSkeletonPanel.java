@@ -22,6 +22,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.DirectionalReferenceAxesActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.NeuronTraceVtxAttribMgr;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
@@ -30,8 +31,7 @@ import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer;
 import org.janelia.it.workstation.gui.viewer3d.ResetPositionerI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
-import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr;
-import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr.Scenario;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.AttributeManagerBufferUploader;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
 
@@ -52,43 +52,43 @@ public class AnnotationSkeletonPanel extends JPanel {
     
     public void establish3D() {
         if (viewer == null  &&  dataSource.getSkeleton() != null  &&  dataSource.getSkeleton().getTileFormat() != null) {
-            SkeletonActor actor = new SkeletonActor();
-            actor.setParentAnchorImageName( SkeletonActor.ParentAnchorImage.LARGE );
-            actor.setNeuronStyleModel( dataSource.getNeuronStyleModel() );
-            actor.setShowOnlyParentAnchors( true );
-            actor.setAnchorsVisible(true);
-            actor.setFocusOnNextParent(true);
+            SkeletonActor linesDrawActor = new SkeletonActor();
+            linesDrawActor.setParentAnchorImageName( SkeletonActor.ParentAnchorImage.LARGE );
+            linesDrawActor.setNeuronStyleModel( dataSource.getNeuronStyleModel() );
+            linesDrawActor.setShowOnlyParentAnchors( true );
+            linesDrawActor.setAnchorsVisible(true);
+            linesDrawActor.setFocusOnNextParent(true);
             TileFormat tileFormat = dataSource.getSkeleton().getTileFormat();
             final BoundingBox3d boundingBox = tileFormat.calcBoundingBox();
             Vec3 yExtender = new Vec3(0, 0.75 * boundingBox.getHeight(), 0);
-            actor.getBoundingBox3d().setMax( boundingBox.getMax().plus( yExtender ) );
-            actor.getBoundingBox3d().setMin( boundingBox.getMin().minus( yExtender ) );
+            linesDrawActor.getBoundingBox3d().setMax( boundingBox.getMax().plus( yExtender ) );
+            linesDrawActor.getBoundingBox3d().setMin( boundingBox.getMin().minus( yExtender ) );
             OcclusiveRenderer renderer = new OcclusiveRenderer();
             final SkeletalBoundsResetPositioner skeletalBoundsResetPositioner = new SkeletalBoundsResetPositioner(dataSource.getSkeleton());
             renderer.setResetPositioner( skeletalBoundsResetPositioner);
             viewer = new OcclusiveViewer(renderer);
             skeletalBoundsResetPositioner.setViewer(viewer);
             skeletalBoundsResetPositioner.setRenderer(renderer);
-            skeletalBoundsResetPositioner.setActor(actor);
+            skeletalBoundsResetPositioner.setActor(linesDrawActor);
             MeshViewContext context = new MeshViewContext();
             viewer.setVolumeModel(context);
             VolumeModel volumeModel = viewer.getVolumeModel();
-            actor.setSkeleton(dataSource.getSkeleton());
-            actor.setCamera(volumeModel.getCamera3d());
-            actor.setTileFormat(tileFormat);
-            actor.setRenderInterpositionMethod(
+            linesDrawActor.setSkeleton(dataSource.getSkeleton());
+            linesDrawActor.setCamera(volumeModel.getCamera3d());
+            linesDrawActor.setTileFormat(tileFormat);
+            linesDrawActor.setRenderInterpositionMethod(
                     SkeletonActor.RenderInterpositionMethod.Occlusion
             );
             volumeModel.setBackgroundColor(new float[] {
                 0.0f, 0.0f, 0.0f
             });
             // Set maximal thickness.  Z-fade is not practical for 3D rotations.
-            actor.setZThicknessInPixels( Long.MAX_VALUE );
-            actor.updateAnchors();
+            linesDrawActor.setZThicknessInPixels( Long.MAX_VALUE );
+            linesDrawActor.updateAnchors();
 
             // This should be done after establishing the skeleton.
             SkeletonController controller = SkeletonController.getInstance();
-            controller.registerForEvents(actor);
+            controller.registerForEvents(linesDrawActor);
 
             DirectionalReferenceAxesActor refAxisActor = new DirectionalReferenceAxesActor(
                     new float[] { 100.0f, 100.0f, 100.0f },
@@ -100,13 +100,13 @@ public class AnnotationSkeletonPanel extends JPanel {
             viewer.setResetFirstRedraw(true);
             final BoundingBox3d originalBoundingBox = tileFormat.calcBoundingBox();
 
-            GLActor meshDrawActor = buildMeshDrawActor( context, originalBoundingBox );
-            
+            GLActor meshDrawActor = buildMeshDrawActor( context, originalBoundingBox );            
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
+            
             viewer.addActor(axesActor);
-            viewer.addActor(actor);
+            // viewer.addActor(linesDrawActor);
             viewer.addActor(refAxisActor);
-//            viewer.addActor(meshDrawActor);
+            viewer.addActor(meshDrawActor);
             viewer.addMenuAction(new BackgroundPickAction(viewer));
             this.add(viewer, BorderLayout.CENTER);
             validate();
@@ -146,22 +146,36 @@ public class AnnotationSkeletonPanel extends JPanel {
         return axes;
     }
     
+    /**
+     * Creates the actor to draw the "wrapped geometry" or "suit of armor"
+     * rendition of the traces.
+     * 
+     * @param context various info used during draw.
+     * @param boundingBox contains whole in-use space.
+     * @return fully-configured actor, ready for drawing.
+     */
     private GLActor buildMeshDrawActor(MeshViewContext context, BoundingBox3d boundingBox) {
         MeshDrawActorConfigurator configurator = new MeshDrawActorConfigurator();
-        //configurator.setAxisLengths( new double[] { boundingBox.getWidth(), boundingBox.getHeight(), boundingBox.getDepth() } );
-        configurator.setAxisLengths( new double[] { boundingBox.getMaxX(), boundingBox.getMaxY(), boundingBox.getMaxZ() } );
+        configurator.setAxisLengths( new double[] {
+            boundingBox.getMaxX() - boundingBox.getMinX(),
+            boundingBox.getMaxY() - boundingBox.getMinY(),
+            boundingBox.getMaxZ() - boundingBox.getMinZ() 
+        } );
+        
         //configurator.setAxisLengths(new double[]{100.0, 100.0, 100.0});
         configurator.setContext(context);
-        configurator.setRenderableId( 777L );
         configurator.setMatrixScope(MeshDrawActor.MatrixScope.LOCAL);                  
         
-        final FewVoxelVtxAttribMgr fewVoxelVtxAttribMgr = new FewVoxelVtxAttribMgr( 777L, Scenario.whole );
-        try {
-            fewVoxelVtxAttribMgr.execute();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-        configurator.setVertexAttributeManager(fewVoxelVtxAttribMgr);
+        final NeuronTraceVtxAttribMgr attributeManager = new NeuronTraceVtxAttribMgr();        
+        attributeManager.setDataSource(dataSource);
+        configurator.setVertexAttributeManager(attributeManager);
+        configurator.setColoringStrategy(MeshDrawActor.ColoringStrategy.ATTRIBUTE);
+        configurator.setBoundingBox(boundingBox);
+        // This is the testing opportunity.  This may be swapped with a different
+        // buffer uploader, if doubt should arise re: the accuracy of the geometry.
+        configurator.setBufferUploader(
+                new AttributeManagerBufferUploader(configurator)
+        );
         
         MeshDrawActor meshDraw = new MeshDrawActor(configurator);
         return meshDraw;
