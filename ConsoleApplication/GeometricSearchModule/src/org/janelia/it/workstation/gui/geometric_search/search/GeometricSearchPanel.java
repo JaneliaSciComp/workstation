@@ -119,7 +119,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         // Setup Sort Shader ///////////////////////////////////////
 
         sortSequence.setShader(sortShader);
-        viewer.addShaderAction(sortSequence); //DEBUG AND SEE WHAT HAPPENS
+        //viewer.addShaderAction(sortSequence); //DEBUG AND SEE WHAT HAPPENS
 
     }
 
