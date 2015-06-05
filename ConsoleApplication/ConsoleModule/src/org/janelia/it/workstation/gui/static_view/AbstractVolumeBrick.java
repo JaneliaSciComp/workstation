@@ -114,6 +114,9 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 
         if (bTexturesNeedUploaded) {            
             uploadAllTextures(gl);
+            if (reportError(gl, "AVB, after uploading all textures.")) {
+                return;
+            }
         }
 		if (bUseShader) {
             try {
@@ -128,10 +131,14 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
             try {
                 // This vertex-build must be done here, now that all information is set.
                 getBufferManager().buildBuffers();
-                reportError( gl, "building buffers" );
+                if (reportError( gl, "building buffers" )) {
+                    return;
+                }
 
                 getBufferManager().enableBuffers( gl );
-                reportError( gl, "uploading buffers" );
+                if (reportError( gl, "enabling buffers" )) {
+                    return;
+                }
                 getBufferManager().dropBuffers();
 
                 bBuffersNeedUpload = false;
@@ -152,7 +159,9 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 	 */
 	public void displayVolumeSlices(GL2 gl) {
 
-        reportError(gl, "Display Volume Slices, on entry.");
+        if (reportError(gl, "Display Volume Slices, on entry.")) {
+            return;
+        }
 		// Get the view vector, so we can choose the slice direction,
 		// along one of the three principal axes(X,Y,Z), and either forward
 		// or backward.
@@ -168,7 +177,9 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 		if ( Math.abs(vv.z()) > Math.abs(vv.get(a1.index())) )
 			a1 = CoordinateAxis.Z; // Alright, it's definitely Z principal.
         
-        setupTextures(gl);
+        if (! setupTextures(gl)) {
+            return;
+        }
 
 		// If principal axis points away from viewer, draw slices front to back,
 		// instead of back to front.
@@ -176,7 +187,9 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 		if (vv.get(a1.index()) < 0.0) 
 			direction = -1.0; // points toward, front to back, 0 to n
         getBufferManager().draw( gl, a1, direction );
-        reportError(gl, "Volume Brick, after draw.");
+        if (reportError(gl, "Volume Brick, after draw.")) {
+            return;
+        }
 
     }
 
@@ -314,20 +327,15 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
         bTexturesNeedUploaded = false;
     }
 
-    protected void setupTextures(GL2 gl) {
+    protected boolean setupTextures(GL2 gl) {
+        boolean rtnVal = true;
         for ( TextureMediator textureMediator: textureMediators ) {
-            textureMediator.setupTexture(gl);
+            if (! textureMediator.setupTexture(gl) ) {
+                rtnVal = false;
+                break;
+            }
         }
-    }
-
-    protected void reportError(GL2 gl, String source) {
-        int errNum = gl.glGetError();
-        if ( errNum > 0 ) {
-            logger.warn(
-                    "Error {}/0x0{} encountered in " + source,
-                    errNum, Integer.toHexString(errNum)
-            );
-        }
+        return rtnVal;
     }
 
     protected int[] getTextureIds() {
