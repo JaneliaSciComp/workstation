@@ -10,10 +10,12 @@ in vec4 Cs;
 //uniform float intensity;
 //uniform float ambient;
 
-layout (early_fragment_tests) in;
-layout (binding = 0, offset = 0) uniform atomic_uint index_counter;
-layout (binding = 0, rgba32ui) uniform uimageBuffer list_buffer;
-layout (binding = 1, r32ui) uniform uimage2D head_pointer_image;
+//layout (early_fragment_tests) in;
+//layout (binding = 0, offset = 0) uniform atomic_uint index_counter;
+//layout (binding = 0, rgba32ui) uniform coherent uimageBuffer list_buffer;
+layout (binding = 3, r32ui) uniform uimage2D head_pointer_image;
+
+out vec4 debugColor;
 
 // entry point
 void main()
@@ -29,24 +31,44 @@ void main()
     vec4 color =  opac * Cs;
     color.a = opac;
 
+    //ivec2 dl = ivec2(0,0);
+    ivec2 dl = ivec2(gl_FragCoord.xy);
+
+    uvec4 preItemV = imageLoad(head_pointer_image, dl);
+    uint preItem = preItemV.x; 
+
+    if (preItem==0) {
+        debugColor = vec4(0.0, 0.0, 1.0, 0.0);
+    } else if (preItem==0xFFFFFFFF) {
+        debugColor = vec4(1.0, 0.0, 1.0, 0.0);
+    } else {
+        debugColor = vec4(0.0, 1.0, 0.0, 0.0);
+    }
+
+    preItemV.x = 0xFFFFFFFF;
+    imageStore(head_pointer_image, dl, preItemV);
+
+
     // Update head image and linked list
 
-    uint new_index = atomicCounterIncrement(index_counter);
+    //uint new_index = atomicCounterIncrement(index_counter);
 
-    uint old_head = imageAtomicExchange(head_pointer_image, ivec2(gl_FragCoord.xy), new_index);
+    //int iNewIndex = int(new_index);
 
-    uvec4 item;
+    //uint old_head = imageAtomicExchange(head_pointer_image, ivec2(gl_FragCoord.xy), new_index);
 
-    item.x = old_head;
+    //uvec4 item;
 
-    item.y = packUnorm4x8(color);
+    //item.x = old_head;
 
-    item.z = floatBitsToUint(gl_FragCoord.z);
+    //item.y = packUnorm4x8(color);
 
-    item.w = 0;
+    //item.z = floatBitsToUint(gl_FragCoord.z);
 
-    int iIndex=int(new_index);
+    //item.w = 0;
 
-    imageStore(list_buffer, iIndex, item);
+    //int iIndex=int(new_index);
+
+    //imageStore(list_buffer, iIndex, item);
 
 }

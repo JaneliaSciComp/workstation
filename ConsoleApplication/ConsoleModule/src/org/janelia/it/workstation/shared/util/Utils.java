@@ -37,7 +37,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
-import org.openide.util.Mutex;
 import org.openide.windows.WindowManager;
 
 /**
@@ -560,6 +559,11 @@ public class Utils {
 
             @Override
             protected void doStuff() throws Exception {
+//                if (filePath.startsWith(EntityConstants.SCALITY_PATH_PREFIX)) {
+//                    String bpid = filePath.replaceFirst(EntityConstants.SCALITY_PATH_PREFIX, "");
+//                    String url = ConsoleProperties.getString("console.ScalityProxyURL")+bpid;
+//                    File remoteFile = new File(url);
+//                }
                 file = SessionMgr.getCachedFile(filePath, false);
             }
 
@@ -590,7 +594,7 @@ public class Utils {
      * remote file system is mounted, or after caching the file locally.
      */
     public static void processStandardFilepath(final String filePath, final FileCallable callback) {
-
+        
         final File file = new File(PathTranslator.convertPath(filePath));
         if (file.canRead()) {
             try {

@@ -83,9 +83,6 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         drawShader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
-                sortShader.setHeadPointerTextureId(drawShader.getHeadPointerTextureId());
-                sortShader.setFragmentStorageBufferId(drawShader.getFragmentStorageBufferId());
-
                 Matrix4 viewMatrix = viewer.getRenderer().getViewMatrix();
                 drawShader.setView(gl, viewMatrix);
                 Matrix4 projMatrix = viewer.getRenderer().getProjectionMatrix();
@@ -122,7 +119,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         // Setup Sort Shader ///////////////////////////////////////
 
         sortSequence.setShader(sortShader);
-        viewer.addShaderAction(sortSequence);
+        //viewer.addShaderAction(sortSequence); //DEBUG AND SEE WHAT HAPPENS
 
     }
 

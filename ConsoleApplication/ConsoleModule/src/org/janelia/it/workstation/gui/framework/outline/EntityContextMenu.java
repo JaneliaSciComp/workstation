@@ -73,6 +73,7 @@ import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
+import org.janelia.it.workstation.shared.workers.SampleDownloadWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.ws.ExternalClient;
@@ -173,7 +174,6 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getSortBySimilarityItem());
         add(getMergeItem());
-        add(getLsmDownloadMenu());
         add(getDownloadMenu());
         add(getImportItem());
 
@@ -1519,22 +1519,23 @@ public class EntityContextMenu extends JPopupMenu {
     
     protected JMenuItem getDownloadMenu() {
 
+        boolean allLsm = true;
         List<Entity> entitiesWithFilepaths = new ArrayList<>();
         for(final RootedEntity re : rootedEntityList) {
-            final Entity targetEntity = re.getEntity();
-            final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+            final Entity entity = re.getEntity();
+            final String filepath = EntityUtils.getDefault3dImageFilePath(entity);
             if (filepath!=null) {
-                // conversion pipeline can't handle bz2 (yet), so filter them out
-                if (! filepath.endsWith(Utils.EXTENSION_BZ2)) {
-                    entitiesWithFilepaths.add(targetEntity);
+                entitiesWithFilepaths.add(entity);
+                if (!EntityConstants.TYPE_LSM_STACK.equals(entity.getEntityTypeName())) {
+                    allLsm = false;
                 }
             }
         }
         if (entitiesWithFilepaths.isEmpty()) {
             return null;
         }
-
-        String[] DOWNLOAD_EXTENSIONS = {"tif", "v3draw", "v3dpbd", "mp4"};
+        
+        String[] DOWNLOAD_EXTENSIONS = {"tif", "v3draw", "v3dpbd", "mp4", "h5j"};
         String itemTitle;
         if (entitiesWithFilepaths.size()>1) {
             itemTitle = "  Download "+entitiesWithFilepaths.size()+" 3D Images As...";
@@ -1544,52 +1545,19 @@ public class EntityContextMenu extends JPopupMenu {
         }
         
         JMenu downloadMenu = new JMenu(itemTitle);
+        
+        if (allLsm) {
+            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_LSM));
+            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_LSM_BZ2));
+        }
+        
         for(String extension : DOWNLOAD_EXTENSIONS) {
             add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, extension));
         }
         for(String extension : DOWNLOAD_EXTENSIONS) {
             add(downloadMenu, getDownloadItem(entitiesWithFilepaths, true, extension));
         }
-        return downloadMenu;
-    }
-
-    protected JMenuItem getLsmDownloadMenu() {
-
-        boolean foundAtLeastOneBzippedFile = false;
-
-        List<Entity> entitiesWithFilepaths = new ArrayList<>();
-        for (RootedEntity re : rootedEntityList) {
-            Entity targetEntity = re.getEntity();
-            String filePath = EntityUtils.getDefault3dImageFilePath(targetEntity);
-            if (filePath != null) {
-                // only include .lsm or .lsm.bz2 files
-                if (filePath.endsWith(Utils.EXTENSION_LSM)) {
-                    entitiesWithFilepaths.add(targetEntity);
-                } else if (filePath.endsWith(Utils.EXTENSION_LSM_BZ2)) {
-                    foundAtLeastOneBzippedFile = true;
-                    entitiesWithFilepaths.add(targetEntity);
-                }
-            }
-        }
-
-        if (entitiesWithFilepaths.isEmpty()) {
-            return null;
-        }
-
-        String itemTitle;
-        if (entitiesWithFilepaths.size()>1) {
-            itemTitle = "  Download " + entitiesWithFilepaths.size() + " LSMs As...";
-        }
-        else {
-            itemTitle = "  Download LSM As...";
-        }
-
-        JMenu downloadMenu = new JMenu(itemTitle);
-        add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_LSM));
-        if (foundAtLeastOneBzippedFile) {
-            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_BZ2));
-        }
-
+        
         return downloadMenu;
     }
 
@@ -1600,18 +1568,18 @@ public class EntityContextMenu extends JPopupMenu {
         String itemTitle;
         if (splitChannels) {
             if (multiple) {
-                itemTitle = "Split Channel "+extension+" Files (Background Task)";
+                itemTitle = "Split Channel "+extension;
             }
             else {
-                itemTitle = "Split Channel "+extension+" File (Background Task)";
+                itemTitle = "Split Channel "+extension;
             }
         }
         else {
             if (multiple) {
-                itemTitle = extension+" Files (Background Task)";
+                itemTitle = extension;
             }
             else {
-                itemTitle = extension+" File (Background Task)";
+                itemTitle = extension;
             }
         }
         
@@ -1621,8 +1589,8 @@ public class EntityContextMenu extends JPopupMenu {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
                     for (Entity entity : entitiesWithFilepaths) {
-                        org.janelia.it.workstation.shared.workers.SampleDownloadWorker sampleDownloadWorker =
-                                new org.janelia.it.workstation.shared.workers.SampleDownloadWorker(entity, extension, splitChannels, copyFileLock);
+                        SampleDownloadWorker sampleDownloadWorker =
+                                new SampleDownloadWorker(entity, extension, splitChannels, copyFileLock);
                         sampleDownloadWorker.execute();
                     }
                 } catch (Exception e) {

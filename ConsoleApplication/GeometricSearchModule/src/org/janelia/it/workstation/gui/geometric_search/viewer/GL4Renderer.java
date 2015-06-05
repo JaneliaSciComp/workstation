@@ -17,6 +17,9 @@ import javax.media.opengl.glu.GLU;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.janelia.it.workstation.gui.geometric_search.gl.GL4Shader;
+import org.janelia.it.workstation.gui.geometric_search.gl.OITMeshDrawShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.OITMeshSortShader;
 
 /**
  * Created by murphys on 4/10/15.
@@ -26,6 +29,7 @@ public class GL4Renderer implements GLEventListener
     public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2000;
 
     protected GLU glu = new GLU();
+    protected GL4TransparencyContext tc = new GL4TransparencyContext();
     protected List<GL4ShaderActionSequence> shaderActionList = new ArrayList<GL4ShaderActionSequence>();
     protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
     protected Camera3d camera;
@@ -111,9 +115,23 @@ public class GL4Renderer implements GLEventListener
     public void init(GLAutoDrawable glDrawable)
     {
         final GL4 gl = glDrawable.getGL().getGL4();
+        
+        try {
+            tc.init(gl);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
         for (GL4ShaderActionSequence shaderAction : shaderActionList) {
             try {
+                GL4Shader shader = shaderAction.getShader();
+                if (shader instanceof OITMeshDrawShader) {
+                    OITMeshDrawShader s = (OITMeshDrawShader)shader;
+                    s.setTransparencyContext(tc);
+                } else if (shader instanceof OITMeshSortShader) {
+                    OITMeshSortShader s = (OITMeshSortShader)shader;
+                    s.setTransparencyContext(tc);
+                }
                 shaderAction.init(gl);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -191,8 +209,14 @@ public class GL4Renderer implements GLEventListener
         updateProjection(gl);
 
         // Copy member list of actors local for independent iteration.
-        for (GL4ShaderActionSequence shaderAction : shaderActionList)
+        //logger.info("Display shader sequence starting");
+        for (GL4ShaderActionSequence shaderAction : shaderActionList) {
+//            GL4Shader s = shaderAction.getShader();
+//            String fsName = s.getFragmentShaderResourceName();
+            //logger.info("Loading "+fsName);
             shaderAction.display(gl);
+           // logger.info("Done with "+fsName);
+        }
 
     }
 

@@ -1,43 +1,32 @@
 #version 430
 
-//layout (binding = 0, offset = 0) uniform atomic_uint index_counter;
-//layout (binding = 0, rgba32ui) uniform uimageBuffer list_buffer;
-//layout (binding = 1, r32ui) uniform uimage2D head_pointer_image;
 
-uniform sampler2D head_pointer_image;
-
-uniform samplerBuffer list_buffer;
+layout (binding = 0, r32ui) coherent uniform uimage2D head_pointer_image;
+layout (binding = 1) uniform samplerBuffer list_buffer;
 
 #define MAX_FRAGMENTS 15
 
-uvec fragments[MAX_FRAGMENTS];
+uvec4 fragments[MAX_FRAGMENTS];
 
 layout (location=0) out vec4 output_color;
-
-void main(void) {
-
-    int frag_count;
-
-    frag_count = build_local_fragment_list();
-
-    sort_fragment_list(frag_count);
-
-    output_color = calculate_final_color(frag_count);
-
-}
-
 
 int build_local_fragment_list(void)
 {
     uint current;
     int frag_count=0;
 
-    current = texelFetch(head_pointer_image, ivec2(gl_FragCoord.xy), 0);
+    current = imageLoad(head_pointer_image, ivec2(gl_FragCoord.xy)).x;
 
     while( current != 0xFFFFFFFF && frag_count < MAX_FRAGMENTS) {
-        item = texelFetch(list_buffer, current);
+        int iCurrent = int(current);
+        vec4 fitem = texelFetch(list_buffer, iCurrent);
+        uvec4 item;
+        item.x = floatBitsToUint(fitem.r);
+        item.y = floatBitsToUint(fitem.g);
+        item.z = floatBitsToUint(fitem.b);
+        item.w = floatBitsToUint(fitem.a);
         current = item.x;
-        uvec4 fragments[frag_count] = item;
+        fragments[frag_count] = item;
         frag_count++;
     }
 
@@ -84,4 +73,25 @@ vec4 calculate_final_color(int frag_count) {
     }
 
     return final_color;
+}
+
+void main(void) {
+
+
+   int frag_count;
+
+    frag_count = build_local_fragment_list();
+
+    sort_fragment_list(frag_count);
+
+    output_color = calculate_final_color(frag_count);
+
+    if (frag_count > 0) {
+
+        output_color = vec4(1.0, 0.0, 0.0, 1.0);
+
+     } else {
+        output_color = vec4(0.0, 0.0, 1.0, 1.0);
+     }
+
 }
