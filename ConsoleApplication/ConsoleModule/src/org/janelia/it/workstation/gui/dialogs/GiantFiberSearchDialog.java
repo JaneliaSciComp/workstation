@@ -1,5 +1,40 @@
 package org.janelia.it.workstation.gui.dialogs;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+
 import org.janelia.it.jacs.model.common.SystemConfigurationProperties;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -11,21 +46,10 @@ import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.util.WorkstationFile;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.net.URL;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Created by IntelliJ IDEA.
@@ -90,8 +114,8 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
     private final SimpleWorker quantifierLoaderWorker=createQuantifierLoaderWorker();
 
-    private final Map<String, Map<String, MinMaxModel>> filterSetMap=new HashMap<String, Map<String, MinMaxModel>>();
-    private final Map<String, MinMaxSelectionRow> minMaxRowMap=new HashMap<String, MinMaxSelectionRow>();
+    private final Map<String, Map<String, MinMaxModel>> filterSetMap=new HashMap<>();
+    private final Map<String, MinMaxSelectionRow> minMaxRowMap=new HashMap<>();
 
     static boolean quantifierDataIsLoading=false;
 
@@ -106,7 +130,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
     List<String> compartmentAbbreviationList;
     boolean currentSetInitialized=false;
-    final List<Boolean> currentListModified = new ArrayList<Boolean>();
+    final List<Boolean> currentListModified = new ArrayList<>();
     Set<Long> membershipSampleSet;
 
     public class PercentileScore implements Comparable {
@@ -344,16 +368,16 @@ public class GiantFiberSearchDialog extends ModalDialog {
                                 SystemConfigurationProperties.getString("FlyScreen.PatternAnnotationQuantifierSummaryFile"));
                 final String maskNameIndexPath =
                         getPath(giantFiberResourcePath, "maskNameIndex.txt");
-
-                URL maskSummaryFile = SessionMgr.getURL(maskSummaryPath);
-                URL maskNameIndexFile = SessionMgr.getURL(maskNameIndexPath);
                 try {
-                    maskManager.loadMaskCompartmentList(maskNameIndexFile);
-                    maskManager.loadMaskSummaryFile(maskSummaryFile);
+                    WorkstationFile maskNameIndexFile = new WorkstationFile(maskNameIndexPath);
+                    WorkstationFile maskSummaryFile = new WorkstationFile(maskSummaryPath);
+                    maskManager.loadMaskCompartmentList(maskNameIndexFile.getStream());
+                    maskManager.loadMaskSummaryFile(maskSummaryFile.getStream());
                     compartmentAbbreviationList = maskManager.getCompartmentListInstance();
-                } catch ( Exception ex ) {
+                } 
+                catch ( Exception ex ) {
                     JOptionPane.showMessageDialog( SessionMgr.getMainFrame(), "Failed to load Giant Fiber Compartments");
-                    ex.printStackTrace();
+                    log.error("Error loading Giant Fiber Compartments",ex);
                 }
             }
 
@@ -454,7 +478,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
     }
 
     private void createOpenFilterSet(String filterSetName) {
-        Map<String, MinMaxModel> openFilterSetMap=new HashMap<String, MinMaxModel>();
+        Map<String, MinMaxModel> openFilterSetMap=new HashMap<>();
         MinMaxModel globalModel=getOpenMinMaxModelInstance();
         openFilterSetMap.put(GLOBAL, globalModel);
         List<String> compartmentAbbreviationList= maskManager.getCompartmentListInstance();
@@ -708,7 +732,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
                 Long elapsedTime=new Date().getTime() - startTime;
 //                System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() end - elapsedTime="+elapsedTime);
             } catch (Exception ex) {
-                ex.printStackTrace();
+                log.error("Error loading pattern annotation quantifier maps from summary",ex);
             }
             quantifierDataIsLoading=false;
         } else {
@@ -749,17 +773,17 @@ public class GiantFiberSearchDialog extends ModalDialog {
     protected void computeScores() {
         long totalComputeCount=0;
         if (intensityScoreMap==null) {
-            intensityScoreMap=new HashMap<Long, Map<String, Double>>();
+            intensityScoreMap=new HashMap<>();
         }
         if (distributionScoreMap==null) {
-            distributionScoreMap=new HashMap<Long, Map<String, Double>>();
+            distributionScoreMap=new HashMap<>();
         }
         for (Long sampleId : quantifierInfoMap.keySet()) {
             List<Double> quantifierList = quantifierInfoMap.get(sampleId);
-            Map<String, Double> intensityMap = new HashMap<String, Double>();
-            Map<String, Double> distributionMap = new HashMap<String, Double>();
-            List<Double> globalList = new ArrayList<Double>();
-            List<Double> compartmentList = new ArrayList<Double>();
+            Map<String, Double> intensityMap = new HashMap<>();
+            Map<String, Double> distributionMap = new HashMap<>();
+            List<Double> globalList = new ArrayList<>();
+            List<Double> compartmentList = new ArrayList<>();
             // We assume the compartment list here matches the order of the quantifierList
             final int GLOBAL_LIST_SIZE=9;
             for (int g=0;g<GLOBAL_LIST_SIZE;g++) {
@@ -773,7 +797,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
                 for (int c=startPosition;c<endPosition;c++) {
                     compartmentList.add(quantifierList.get(c));
                 }
-                Object[] scores =maskManager.getCompartmentScoresByQuantifiers(globalList, compartmentList);
+                Object[] scores = MaskAnnotationDataManager.getCompartmentScoresByQuantifiers(globalList, compartmentList);
                 totalComputeCount++;
                 intensityMap.put(compartmentAbbreviation, (Double)scores[0]);
                 distributionMap.put(compartmentAbbreviation, (Double)scores[1]);
@@ -787,15 +811,15 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
     protected void computePercentiles() {
         if (intensityPercentileMap==null) {
-            intensityPercentileMap=new HashMap<Long, Map<String, Double>>();
+            intensityPercentileMap=new HashMap<>();
         }
         if (distributionPercentileMap==null) {
-            distributionPercentileMap=new HashMap<Long, Map<String, Double>>();
+            distributionPercentileMap=new HashMap<>();
         }
-        List<PercentileScore> intensityList = new ArrayList<PercentileScore>();
-        List<PercentileScore> distributionList = new ArrayList<PercentileScore>();
-        Map<Long, Double> percIntensityMap=new HashMap<Long, Double>();
-        Map<Long, Double> percDistMap=new HashMap<Long, Double>();
+        List<PercentileScore> intensityList = new ArrayList<>();
+        List<PercentileScore> distributionList = new ArrayList<>();
+        Map<Long, Double> percIntensityMap=new HashMap<>();
+        Map<Long, Double> percDistMap=new HashMap<>();
         for (String compartmentAbbreviation : compartmentAbbreviationList) {
             intensityList.clear();
             distributionList.clear();
@@ -836,7 +860,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
             for (Long sampleId : intensityScoreMap.keySet()) {
                 Map<String, Double> piMap=intensityPercentileMap.get(sampleId);
                 if (piMap==null) {
-                    piMap=new HashMap<String, Double>();
+                    piMap=new HashMap<>();
                     intensityPercentileMap.put(sampleId, piMap);
                 }
                 piMap.put(compartmentAbbreviation, percIntensityMap.get(sampleId));
@@ -844,7 +868,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
             for (Long sampleId : distributionScoreMap.keySet()) {
                 Map<String, Double> pdMap=distributionPercentileMap.get(sampleId);
                 if (pdMap==null) {
-                    pdMap=new HashMap<String, Double>();
+                    pdMap=new HashMap<>();
                     distributionPercentileMap.put(sampleId, pdMap);
                 }
                 pdMap.put(compartmentAbbreviation, percDistMap.get(sampleId));
@@ -867,7 +891,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
     }
 
     List<Long> getValidSamplesForCompartment(String compartmentAbbreviation) {
-        List<Long> validSamples=new ArrayList<Long>();
+        List<Long> validSamples=new ArrayList<>();
         if (quantifierDataIsLoading) {
             return validSamples;
         } else {
@@ -907,7 +931,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
     }
 
     protected void refreshCompartmentTable() {
-        List<Integer> rowUpdateList=new ArrayList<Integer>();
+        List<Integer> rowUpdateList=new ArrayList<>();
         for (int rowIndex=0;rowIndex<compartmentAbbreviationList.size();rowIndex++) {
             rowUpdateList.add(rowIndex);
         }
@@ -918,8 +942,8 @@ public class GiantFiberSearchDialog extends ModalDialog {
     protected Set<Long> generateMembershipListForCurrentSet() {
         setStatusMessage("Computing result membership");
         Long compartmentListSize= (long) compartmentAbbreviationList.size();
-        Set<Long> sampleSet=new HashSet<Long>();
-        Map<Long, Long> sampleCompartmentCountMap=new HashMap<Long, Long>();
+        Set<Long> sampleSet=new HashSet<>();
+        Map<Long, Long> sampleCompartmentCountMap=new HashMap<>();
         for (String compartment : compartmentAbbreviationList) {
             List<Long> samples=getValidSamplesForCompartment(compartment);
             for (Long sampleId : samples) {
@@ -948,7 +972,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
     }
 
     protected void updateRowImpactOnCounts(int rowIndex) {
-        List<Integer> rowList=new ArrayList<Integer>();
+        List<Integer> rowList=new ArrayList<>();
         rowList.add(rowIndex);
         updateRowImpactOnCounts(rowList);
     }
@@ -984,7 +1008,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
                 }
 
                 ModelMgr.getModelMgr().addChildren(newFolder.getId(),
-                        new ArrayList<Long>(membershipSampleSet), EntityConstants.ATTRIBUTE_ENTITY);
+                        new ArrayList<>(membershipSampleSet), EntityConstants.ATTRIBUTE_ENTITY);
             }
 
             @Override
