@@ -101,6 +101,7 @@ public class GL4TransparencyContext {
         gl.glTexStorage2D(GL4.GL_TEXTURE_2D, 1, GL4.GL_R32UI, MAX_WIDTH, MAX_HEIGHT);
         checkGlError(gl, "OITMeshDrawShader glTexStorage2D() error");
         
+        // WHY IS THIS TRIGGERING AN INVALID ERROR? - may be harmless since working (?) in display stage
         gl.glTexSubImage2D(GL4.GL_TEXTURE_2D, 
                 0,
                 GL4.GL_R32UI,
@@ -110,7 +111,7 @@ public class GL4TransparencyContext {
                 GL4.GL_RED_INTEGER,
                 GL4.GL_UNSIGNED_INT,
                 0);
-        checkGlError(gl, "GL4TransparencyContext glTexImage2D() error");
+        checkGlError(gl, "i0 GL4TransparencyContext glTexSubImage2D() error");
                 
        gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, 0);
        checkGlError(gl, "i1 GL4TransparencyContext glBindBuffer() error");
