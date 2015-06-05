@@ -22,37 +22,71 @@ import org.slf4j.LoggerFactory;
 public class OpenGLUtils {
     private static final Logger logger = LoggerFactory.getLogger( OpenGLUtils.class );
 
-    public static final void reportError( String operation, GL2 gl, int textureName ) {
+    /**
+     * Checks for, and logs any errors encountered from most recent opengl
+     * operation.  Specific to texture operations.
+     *
+     * @param textureName a texture whose failure might be reported. 
+     * @param gl required for proper checking state.
+     * @param operation message to decode output.
+     * @return True if error found; false otherwise.
+     */
+    public static final boolean reportError( String operation, GL2 gl, int textureName ) {
         int errorNum = gl.glGetError();
+        boolean rtnVal = false;
         String hexErrorNum = Integer.toHexString( errorNum );
         if ( errorNum > 0 ) {
             logger.error( "Error " + errorNum + "/x0" + hexErrorNum + " during " + operation +
                           " on texture (by 'name' id) " + textureName );
             new Exception("reportError").printStackTrace();
+            rtnVal = true;
         }
+        return rtnVal;
     }
     
-    public static void reportError(GL2 gl, String source) {
+    /**
+     * Checks for, and logs any errors encountered from most recent opengl
+     * operation.
+     *
+     * @param gl required for proper checking state.
+     * @param source message to decode output.
+     * @return True if error found; false otherwise.
+     */
+    public static final boolean reportError(GL2 gl, String source) {
+        boolean rtnVal = false;
         int errNum = gl.glGetError();
         if ( errNum > 0 ) {
             logger.warn(
                     "Error {}/0x0{} encountered in " + source,
                     errNum, Integer.toHexString(errNum)
             );
+            rtnVal = true;
         }
+        return rtnVal;
     }
 
-    public static void reportError(GL2GL3 gl, String source) {
+    /**
+     * Checks for, and logs any errors encountered from most recent
+     * opengl operation.
+     * 
+     * @param gl required for proper checking state.
+     * @param source message to decode output.
+     * @return True if error found; false otherwise.
+     */
+    public static final boolean reportError(GL2GL3 gl, String source) {
+        boolean rtnVal = false;
         int errNum = gl.glGetError();
         if (errNum > 0) {
             logger.warn(
                     "Error {}/0x0{} encountered in " + source,
                     errNum, Integer.toHexString(errNum)
             );
+            rtnVal = true;
         }
+        return rtnVal;
     }
 
-    public static void dumpFloatBuffer(FloatBuffer attribBuffer) {
+    public static final void dumpFloatBuffer(FloatBuffer attribBuffer) {
         attribBuffer.rewind();
         StringBuilder bldr = new StringBuilder();
         for (int i = 0; i < attribBuffer.capacity(); i++) {
@@ -67,7 +101,7 @@ public class OpenGLUtils {
         attribBuffer.rewind();
     }
 
-    public static void dumpIntBuffer(IntBuffer inxBuf) {
+    public static final void dumpIntBuffer(IntBuffer inxBuf) {
         inxBuf.rewind();
         Set<Integer> indicesInUse = new TreeSet<>();
         StringBuilder allIndicesBuilder = new StringBuilder();

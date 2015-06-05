@@ -37,7 +37,7 @@ public class AttributeManagerBufferUploader implements BufferUploader {
     }
     
     @Override
-    public void uploadBuffers(GL2GL3 gl) {
+    public void uploadBuffers(GL2GL3 gl) throws BufferStateException {
         // Push the coords over to GPU.
         // Make handles for subsequent use.
         int[] handleArr = new int[2];
@@ -45,7 +45,9 @@ public class AttributeManagerBufferUploader implements BufferUploader {
         this.vtxAttribBufferHandle = handleArr[0];
         this.inxBufferHandle = handleArr[1];
 
-        reportError(gl, "Bind buffer");
+        if (reportError(gl, "Bind buffer")) {
+            throw new BufferStateException();
+        }
         final Map<Long, RenderBuffersBean> renderIdToBuffers
                 = configurator.getVertexAttributeManager().getRenderIdToBuffers();
         long combinedVtxSize = 0L;
@@ -79,7 +81,9 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 null,
                 GL2GL3.GL_STATIC_DRAW
         );
-        reportError(gl, "Allocate Vertex Buffer");
+        if (reportError(gl, "Allocate Vertex Buffer")) {
+            throw new BufferStateException();
+        }
 
         // Allocate enough remote buffer data for all the indices to be
         // thrown across in segments.
@@ -90,7 +94,9 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 null,
                 GL2GL3.GL_STATIC_DRAW
         );
-        reportError(gl, "Allocate Index Buffer");
+        if (reportError(gl, "Allocate Index Buffer")) {
+            throw new BufferStateException();
+        }
         logger.info("Buffers allocated.");
 
         indexCount = 0;
@@ -101,7 +107,9 @@ public class AttributeManagerBufferUploader implements BufferUploader {
             if (attribBuffer != null && attribBuffer.capacity() > 0) {
                 long bufferBytes = (long) (attribBuffer.capacity() * (BYTES_PER_FLOAT));
                 gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, getVtxAttribBufferHandle());
-                reportError(gl, "Bind Attribs Buf");
+                if (reportError(gl, "Bind Attribs Buf")) {
+                    throw new BufferStateException();
+                }
                 logger.info("Uploading chunk of vertex attributes data.");
                 attribBuffer.rewind();
                 gl.glBufferSubData(
@@ -111,14 +119,18 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                         attribBuffer
                 );
                 vertexCount += attribBuffer.capacity();
-                reportError(gl, "Buffer Data");
-                OpenGLUtils.dumpFloatBuffer(attribBuffer);
+                if (reportError(gl, "Buffer Data")) {
+                    throw new BufferStateException();
+                }
+                //OpenGLUtils.dumpFloatBuffer(attribBuffer);
 
                 IntBuffer inxBuf = buffersBean.getIndexBuffer();
                 bufferBytes = (long) (inxBuf.capacity() * BYTES_PER_INT);
 
                 gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, getInxBufferHandle());
-                reportError(gl, "Bind Inx Buf");
+                if (reportError(gl, "Bind Inx Buf")) {
+                    throw new BufferStateException();
+                }
                 logger.info("Uploading chunk of element array.");
                 inxBuf.rewind();
                 gl.glBufferSubData(
@@ -128,8 +140,10 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                         inxBuf
                 );
                 indexCount = getIndexCount() + inxBuf.capacity();
-                reportError(gl, "Upload index buffer segment.");
-                OpenGLUtils.dumpIntBuffer(inxBuf);
+                if (reportError(gl, "Upload index buffer segment.")) {
+                    throw new BufferStateException();
+                }
+                //OpenGLUtils.dumpIntBuffer(inxBuf);
             }
         }
 

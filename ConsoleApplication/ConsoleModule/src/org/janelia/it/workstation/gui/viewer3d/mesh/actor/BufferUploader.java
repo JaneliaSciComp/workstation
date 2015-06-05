@@ -14,7 +14,7 @@ import javax.media.opengl.GL2GL3;
  * @author fosterl
  */
 public interface BufferUploader {
-    void uploadBuffers (GL2GL3 gl);
+    void uploadBuffers (GL2GL3 gl) throws BufferStateException;
     /**
      * @return the vtxAttribBufferHandle
      */

@@ -307,26 +307,26 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                         traceRtn.setEnd( toDoubleArr(neighbor.getLocation()) );
                         traceRtn.setStyle( style );
                         rtnVal.add( traceRtn );
-                        log.info("Adding anchor line: " + i1 + "->" + i2);
+                        log.debug("Adding anchor line: " + i1 + "->" + i2);
                     }
                     else {
-                        log.info("Skipped one line--i2 >= i1.  i1=" + i1 +", i2=" + i2);                        
+                        log.debug("Skipped one line--i2 >= i1.  i1=" + i1 +", i2=" + i2);                        
                     }
                     existing.add( pathTestInx );
                 }
                 else {
                     if (tracedPathPairs.contains(pathTestInx)) {
-                        log.info("Skipped one line--in traced pairs: " + pathTestInx);
+                        log.debug("Skipped one line--in traced pairs: " + pathTestInx);
                         tracedPairSkipCount ++;
                     }
                     else {
-                        log.info("Skipped one line--existing: " + pathTestInx);
+                        log.debug("Skipped one line--existing: " + pathTestInx);
                     }
                 }
             }
         }
         
-        System.err.println("Skipped " + tracedPairSkipCount + " for being in a traced pair.");
+        log.debug("Skipped " + tracedPairSkipCount + " for being in a traced pair.");
         return rtnVal;
     }
 
