@@ -241,10 +241,7 @@ public class MeshDrawActor implements GLActor {
 
         // Draw the little triangles.
         tempBuffer.rewind();
-        gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, tempBuffer);
-        int oldProgram = tempBuffer.get();
-
-        gl.glUseProgram( shader.getShaderProgram() );
+        shader.load(gl.getGL2());
         gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, bufferUploader.getVtxAttribBufferHandle());
         if (reportError( gl, "Display of mesh-draw-actor 1" ))
             return;
@@ -304,7 +301,7 @@ public class MeshDrawActor implements GLActor {
         if (reportError( gl, "Display of mesh-draw-actor 5" ))
             return;
 
-        gl.glUseProgram( oldProgram );
+        shader.unload(gl.getGL2());
 
         if (reportError(gl, "mesh-draw-actor, end of display."))
             return;
@@ -322,7 +319,14 @@ public class MeshDrawActor implements GLActor {
 
     @Override
     public void dispose(GLAutoDrawable glDrawable) {
+        GL2 gl = glDrawable.getGL().getGL2();
 
+        // Retarded JOGL GLJPanel frequently reallocates the GL context
+        // during resize. So we need to be ready to reinitialize everything.
+        bBuffersNeedUpload = true;
+        shader.unload(gl);
+        shader = null;
+        dropBuffers(gl);
     }
     
     public void refresh() {
