@@ -206,7 +206,9 @@ public class VtxCoordBufMgr {
     public boolean enableBuffers(GL2 gl) throws Exception {
         boolean rtnVal = true;
         geometryVertexBufferHandles = enableBuffersOfType(gl, geometryCoordBuf, GL2.GL_ARRAY_BUFFER);
-        textureCoordBufferHandles = enableBuffersOfType(gl, texCoordBuf, GL2.GL_ARRAY_BUFFER);
+		if (geometryVertexBufferHandles != null) {
+	        textureCoordBufferHandles = enableBuffersOfType(gl, texCoordBuf, GL2.GL_ARRAY_BUFFER);
+		}
         if (geometryVertexBufferHandles == null  ||  textureCoordBufferHandles == null) {
             rtnVal = false;
         }
@@ -315,7 +317,7 @@ public class VtxCoordBufMgr {
 
     /** Convenience method to cut down on repeated code. */
     @NotThreadSafe(why="glBufferData uses glBindBuffer result as state, and should only be called from GL thread")
-    private int[] enableBuffersOfType(GL2 gl, Buffer[] buffers, int type ) {
+    private int[] enableBuffersOfType(GL2 gl, Buffer[] buffers, int type ) {		
         // Make handles for subsequent use.
         int[] rtnVal = new int[ NUM_BUFFERS_PER_TYPE ];
         gl.glGenBuffers( NUM_BUFFERS_PER_TYPE, rtnVal, 0 );
