@@ -333,7 +333,7 @@ public class VtxCoordBufMgr {
                 }
                 else {
 					final long bufferSize = (long) (buffers[ i ].capacity() * classSize);
-					logger.info("glBufferData: type={}, bufferSize={}, sizeof buffer={}, thread={}", 
+					logger.debug("glBufferData: type={}, bufferSize={}, sizeof buffer={}, thread={}", 
 							type, 
 							bufferSize, 
 							buffers[i].capacity(),
