@@ -104,10 +104,22 @@ public class AnnotationSkeletonPanel extends JPanel {
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
             
             viewer.addActor(axesActor);
-            // viewer.addActor(linesDrawActor);
+            //viewer.addActor(linesDrawActor);
+            // NOTE: refAxisActor is forcing all 'conventional' actors which
+            // display after it, into the same confined corner of the screen.
+            // The 'meshDrawActor' may be permitted to follow it, but the
+            // others may not.
             viewer.addActor(refAxisActor);
             viewer.addActor(meshDrawActor);
             viewer.addMenuAction(new BackgroundPickAction(viewer));
+            viewer.addMenuAction(
+                new ActorSwapAction(
+                    viewer,
+                    meshDrawActor, "Mesh Draw",
+                    linesDrawActor, "Lines Draw",
+                    refAxisActor
+                )
+            );
             this.add(viewer, BorderLayout.CENTER);
             validate();
             repaint();
@@ -204,6 +216,57 @@ public class AnnotationSkeletonPanel extends JPanel {
             }
         }
         
+    }
+    
+    public static class ActorSwapAction extends AbstractAction {
+        private final static String SWAP_FORMAT = "Replace %s with %s.";
+        private final GLActor firstActor;
+        private final GLActor secondActor;
+        private final String firstLabel;
+        private final String secondLabel;
+        
+        private final GLActor mustBeLastActor;
+        
+        private OcclusiveViewer viewer;
+        
+        private GLActor currentActor;
+        
+        public ActorSwapAction(
+                OcclusiveViewer viewer, 
+                GLActor firstActor, String firstActorLabel, 
+                GLActor secondActor, String secondActorLabel,
+                GLActor mustBeLastActor
+        ) {
+            this.viewer = viewer;
+            this.firstActor = firstActor;
+            this.secondActor = secondActor;            
+            this.firstLabel = String.format( SWAP_FORMAT, firstActorLabel, secondActorLabel );
+            this.secondLabel = String.format( SWAP_FORMAT, secondActorLabel, firstActorLabel );
+            
+            this.mustBeLastActor = mustBeLastActor;
+            
+            this.currentActor = firstActor;
+            
+            putValue( Action.NAME, firstLabel );
+                   
+        }
+        
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            viewer.removeActor(currentActor);
+            viewer.removeActor(mustBeLastActor);
+            if (currentActor == firstActor) {
+                currentActor = secondActor;
+                putValue(Action.NAME, secondLabel);
+            }
+            else {
+                currentActor = firstActor;
+                putValue(Action.NAME, firstLabel);
+            }
+            viewer.addActor(currentActor);
+            viewer.addActor(mustBeLastActor);
+        }
+       
     }
     
     public static class SkeletalBoundsResetPositioner implements ResetPositionerI {

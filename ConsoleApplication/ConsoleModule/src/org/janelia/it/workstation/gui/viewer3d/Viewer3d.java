@@ -89,6 +89,10 @@ public class Viewer3d extends BaseGLViewer implements ActionListener {
     public void addActor(GLActor actor) {
         addActorToRenderer(actor);
     }
+    
+    public void removeActor(GLActor actor) {
+        removeActorFromRenderer(actor);
+    }
 
     public void setGamma( float gamma ) {
         renderer.getVolumeModel().setGammaAdjustment( gamma );
@@ -170,6 +174,13 @@ public class Viewer3d extends BaseGLViewer implements ActionListener {
     private void addActorToRenderer(GLActor actor) {
         synchronized ( this ) {
             renderer.addActor(actor);
+            renderer.resetView();
+        }
+    }
+    
+    private void removeActorFromRenderer(GLActor actor) {
+        synchronized ( this ) {
+            renderer.actors.remove(actor);
             renderer.resetView();
         }
     }
