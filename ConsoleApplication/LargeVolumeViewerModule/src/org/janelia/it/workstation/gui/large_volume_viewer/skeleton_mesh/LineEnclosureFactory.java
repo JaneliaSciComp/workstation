@@ -30,28 +30,23 @@ public class LineEnclosureFactory implements TriangleSource {
     
     private static final Logger logger = LoggerFactory.getLogger(LineEnclosureFactory.class);
 	public static final double ZERO_TOLERANCE = 0.3;
-	private static final double RADIANS_90 = Math.PI / 2.0;
-    private static final double RADIANS_45 = Math.PI / 4.0;
     private static final int X = 0, Y = 1, Z = 2;
 	private static final int PERPENDICULAR_ALIGNMENT = 100;
-    private static final int YZ = 0;
-    private static final int ZX = 1;
-    private static final int XY = 2;
+    private static final String COORD_DUMP_FORMAT = "(%f,%f,%f)";
     
     private int currentVertexNumber = 0;
 
-    private static final double[] PROTOTYPE_NORMAL = {0, 0, -1};
-    private List<VertexInfoBean> vertices = new ArrayList<>();
-    private List<Triangle> triangles = new ArrayList<>();
-    private ViewMatrixSupport matrixUtils = new ViewMatrixSupport();
+    private final List<VertexInfoBean> vertices = new ArrayList<>();
+    private final List<Triangle> triangles = new ArrayList<>();
+    private final ViewMatrixSupport matrixUtils = new ViewMatrixSupport();
     
     private int endPolygonSides = -1;
-    private double endPolygonRadius; 
+    private final double endPolygonRadius; 
     
-    private Map<Integer,double[][]> axisAlignedPrototypePolygons = new HashMap<>();
-    private double[][] zAxisAlignedPrototypePolygon;
+    private final Map<Integer,double[][]> axisAlignedPrototypePolygons = new HashMap<>();
+    private final double[][] zAxisAlignedPrototypePolygon;
 
-    private List<double[][]> endCapPolygonsHolder = new ArrayList<>();
+    private final List<double[][]> endCapPolygonsHolder = new ArrayList<>();
     
     public LineEnclosureFactory(int endPolygonSides, double endPolygonRadius) {
         this.endPolygonSides = endPolygonSides;
@@ -255,7 +250,7 @@ public class LineEnclosureFactory implements TriangleSource {
 				
 		logger.debug("Using angles: {}, {}, {}.", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ));
 
-		int axialAlignment = getAxialAlignmentByLineDelta(lineDelta);
+		int axialAlignment = getAxialAlignmentByLineDelta(lineUnitVector);
         logger.debug("Aligned along the #{} axis.", axialAlignment);
 		
 		if (axialAlignment == -1) {
@@ -282,6 +277,12 @@ public class LineEnclosureFactory implements TriangleSource {
 		else if (axialAlignment == PERPENDICULAR_ALIGNMENT) {
 			// Special case: new normal lies in the xy plane, but not on an axis.
 			// Only spin about Z.
+            if (lineUnitVector[X] > 0) {
+                // Switch start/end order if facing in negative direction.
+                double[] tempCoords = startCoords;
+                startCoords = endCoords;
+                endCoords = tempCoords;
+            }
 			Matrix transform = matrixUtils.getTransform3D(
 					0f, 0f, aboutZ,
 					startCoords[X], startCoords[Y], startCoords[Z]
@@ -299,6 +300,12 @@ public class LineEnclosureFactory implements TriangleSource {
 			endCapPolygonsHolder.add(endingEndPolygon);
 		}
 		else {
+            if (lineUnitVector[axialAlignment] > 0) {
+                // Switch start/end order if facing in negative direction.
+                double[] tempCoords = startCoords;
+                startCoords = endCoords;
+                endCoords = tempCoords;
+            }
 			// Special case: aligned right along some axis.  Trig assumptions won't help.
 			Matrix transform = matrixUtils.getTransform3D(
 					0f,
@@ -390,10 +397,25 @@ public class LineEnclosureFactory implements TriangleSource {
 		}
 	}
 
+    /**
+     * Here is where the prototype polygons--those whose positions are
+     * modified by angle transforms--are initially created.
+     * 
+     * @param axis tells along which axis this prototype will align.
+     * @return array of endPolygonSides, each of which is a coord triple.
+     */
     private double[][] createAxisAlignedPrototypeEndPolygon(int axis) {
         double[][] prototypeEndPolygon = new double[endPolygonSides][];
         double fullcircle = Math.PI * 2.0;
         double thetaIncrement = fullcircle / endPolygonSides;
+        if (axis == Z  ||  axis == Y) {
+            // Negation of increment is required, to force the vertices
+            // to be laid out in clockwise fashion.  When end-caps are
+            // created, their "outside widings" are counter clockwise,
+            // which requires the overall polygon to be clockwise.
+            thetaIncrement = -thetaIncrement;
+            fullcircle = -fullcircle;
+        }
         double theta = Math.PI;  // Position of first polygon point.
         for (int i = 0; i < endPolygonSides; i++) {
             theta += thetaIncrement;
@@ -407,10 +429,10 @@ public class LineEnclosureFactory implements TriangleSource {
             prototypeEndPolygon[i] = new double[3];
             int calcNum = 0;
             for (int coord = 0; coord < 3; coord++) {
-                prototypeEndPolygon[i][coord] = coord == axis ? 0: calculatedCoords[ calcNum++ ];
+                prototypeEndPolygon[i][coord] = (coord == axis) ? 0: calculatedCoords[ calcNum++ ];
             }
         }
-
+        dumpPolygon("Prototype: axis=" + axis, prototypeEndPolygon);
         return prototypeEndPolygon;
     }
 
@@ -433,6 +455,17 @@ public class LineEnclosureFactory implements TriangleSource {
             }
             System.out.println();
         }
+    }
+    
+    @SuppressWarnings("unused")
+    private void dumpPolygon(String label, double[][] polygon) {
+        StringBuilder outBldr = new StringBuilder();
+        outBldr.append("-------------------").append(label).append("\n");
+        for (double[] vertex: polygon) {
+            outBldr.append(String.format(COORD_DUMP_FORMAT, vertex[0], vertex[1], vertex[2]));
+            outBldr.append("\n");
+        }
+        System.out.print(outBldr);
     }
 
 }
