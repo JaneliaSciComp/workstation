@@ -432,7 +432,7 @@ public class LineEnclosureFactory implements TriangleSource {
                 prototypeEndPolygon[i][coord] = (coord == axis) ? 0: calculatedCoords[ calcNum++ ];
             }
         }
-        dumpPolygon("Prototype: axis=" + axis, prototypeEndPolygon);
+        //dumpPolygon("Prototype: axis=" + axis, prototypeEndPolygon);
         return prototypeEndPolygon;
     }
 
