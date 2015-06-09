@@ -89,6 +89,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             // This should be done after establishing the skeleton.
             SkeletonController controller = SkeletonController.getInstance();
             controller.registerForEvents(linesDrawActor);
+            controller.registerForEvents(viewer);
 
             DirectionalReferenceAxesActor refAxisActor = new DirectionalReferenceAxesActor(
                     new float[] { 100.0f, 100.0f, 100.0f },
@@ -123,6 +124,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             this.add(viewer, BorderLayout.CENTER);
             validate();
             repaint();
+            controller.registerForEvents(this);
         }
     }
     
@@ -190,6 +192,8 @@ public class AnnotationSkeletonPanel extends JPanel {
         );
         
         MeshDrawActor meshDraw = new MeshDrawActor(configurator);
+        SkeletonController.getInstance().registerForEvents(meshDraw);
+
         return meshDraw;
     }
     
