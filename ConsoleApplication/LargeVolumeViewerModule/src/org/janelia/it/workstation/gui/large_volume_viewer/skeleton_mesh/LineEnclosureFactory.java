@@ -41,7 +41,7 @@ public class LineEnclosureFactory implements TriangleSource {
     private final ViewMatrixSupport matrixUtils = new ViewMatrixSupport();
     
     private int endPolygonSides = -1;
-    private final double endPolygonRadius; 
+    private double endPolygonRadius; 
     
     private final Map<Integer,double[][]> axisAlignedPrototypePolygons = new HashMap<>();
     private final double[][] zAxisAlignedPrototypePolygon;
@@ -53,6 +53,11 @@ public class LineEnclosureFactory implements TriangleSource {
         this.endPolygonRadius = endPolygonRadius;
         this.zAxisAlignedPrototypePolygon = createZAxisAlignedPrototypeEndPolygon();  
         axisAlignedPrototypePolygons.put(2, this.zAxisAlignedPrototypePolygon);
+    }
+    
+    public void setCharacteristics( int endPolygonSides, double endPolygonRadius ) {
+        this.endPolygonSides = endPolygonSides;
+        this.endPolygonRadius = endPolygonRadius;
     }
     
     public int addEnclosure(double[] startingCoords, double[] endingCoords) {

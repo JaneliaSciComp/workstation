@@ -447,6 +447,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         return neuronStyleModel;
     }
     
+    public AnnotationModel getAnnotationModel() {
+        return annotationModel;
+    }
+    
 	public void clearCache() {
 		tileServer.clearCache();
 	}

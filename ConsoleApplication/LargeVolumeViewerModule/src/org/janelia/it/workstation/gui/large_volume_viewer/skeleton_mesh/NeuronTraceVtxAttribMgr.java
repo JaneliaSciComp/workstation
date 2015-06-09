@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
 import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
 import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
@@ -24,6 +25,10 @@ import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationGeometry;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -40,6 +45,25 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
+    private static final double MANUAL_SEGMENT_RADIUS = 2;
+    private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
+    private static final double TRACED_SEGMENT_RADIUS = 3;
+    private static final int TRACED_SEGMENT_POLYGON_SIDES = 10;
+    private static final double ANNO_END_RADIUS = TRACED_SEGMENT_RADIUS * 8;
+    private static final int ANNO_END_POLYGON_SIDES = 4;
+
+    private static final float[] UNFINISHED_ANNO_COLOR = new float[]{
+        1.0f, 1.0f, 1.0f
+    };
+    
+    private static final float[] SPECIAL_ANNO_COLOR = new float[]{
+        250.0f/256.0f, 218.0f/256.0f, 94.0f/256.0f
+    };
+    
+    private static final float[] BRANCH_ANNO_COLOR = new float[]{
+        0.1f, 1.0f, 1.0f
+    };
+
     // The skeleton and neuron styles constitute the 'model' to be studied
     // in creating the 3D representation of annotations.
     private AnnotationSkeletonDataSourceI dataSource;
@@ -154,7 +178,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     }
 
     /**
-     * Test accessible method which does not rely on skeleton data.  Will
+     * Test-accessible method which does not rely on skeleton data.  Will
      * calculate the normal vectors for the triangles in the triangle source.
      * 
      * @param triangleSources iterated for normals data.
@@ -166,10 +190,10 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     ) {
         Long sourceNumber = 0L;
         BufferPackager packager = new BufferPackager();
+        NormalCompositor normalCompositor = new NormalCompositor();
         for (TriangleSource factory : triangleSources) {
             // Now have a full complement of triangles and vertices.  For this source, can traverse the
             // vertices, making a "composite normal" based on the normals of all entangling triangles.
-            NormalCompositor normalCompositor = new NormalCompositor();
             normalCompositor.combineCustomNormals(factory);
             RenderBuffersBean rbb = renderIdToBuffers.get(sourceNumber);
             if ( rbb == null ) {
@@ -190,19 +214,119 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
      */
     private synchronized void createVertices() throws Exception {
         // Make triangle sources.
-		LineEnclosureFactory tracedSegmentEnclosureFactory = new LineEnclosureFactory(10, 3);
-        LineEnclosureFactory manualSegmentEnclosureFactory = new LineEnclosureFactory(8, 2);
+		LineEnclosureFactory tracedSegmentEnclosureFactory = new LineEnclosureFactory(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
+        LineEnclosureFactory manualSegmentEnclosureFactory = tracedSegmentEnclosureFactory;//new LineEnclosureFactory(MANUAL_SEGMENT_POLYGON_SIDES, MANUAL_SEGMENT_RADIUS);
+        LineEnclosureFactory interestingAnnotationEnclosureFactory = tracedSegmentEnclosureFactory;//new LineEnclosureFactory(ANNO_END_POLYGON_SIDES, ANNO_END_RADIUS);
         
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
         TileFormat tileFormat = dataSource.getTileFormat();
 
-		// Iterate over all the traced segments, and add enclosures for each.           
-        for ( AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {            
+        // Must always offset to latest vertex number, so that the triangle
+        // pointers are contiguous across factories.
+        int currentVertexNumber = 0;
+        interestingAnnotationEnclosureFactory.setCurrentVertexNumber(
+                currentVertexNumber
+        );
+        // Look at 'interesting annotations'.  What can be presented there?
+        tracedSegmentEnclosureFactory.setCharacteristics(ANNO_END_POLYGON_SIDES, ANNO_END_RADIUS);
+        calculateInterestingAnnotationVertices(tileFormat, interestingAnnotationEnclosureFactory);
+        currentVertexNumber = interestingAnnotationEnclosureFactory.getCurrentVertexNumber();
+
+        // Get the auto-traced segments.
+        tracedSegmentEnclosureFactory.setCurrentVertexNumber(currentVertexNumber);
+        tracedSegmentEnclosureFactory.setCharacteristics(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
+        calculateTracedSegmentVertices(voxelPathAnchorPairs, tileFormat, tracedSegmentEnclosureFactory);
+        currentVertexNumber = tracedSegmentEnclosureFactory.getCurrentVertexNumber();
+        
+        // Now get the lines.
+        manualSegmentEnclosureFactory.setCurrentVertexNumber(
+                currentVertexNumber
+        );
+        manualSegmentEnclosureFactory.setCharacteristics(MANUAL_SEGMENT_POLYGON_SIDES, MANUAL_SEGMENT_RADIUS);
+        calculateManualLineVertices(voxelPathAnchorPairs, manualSegmentEnclosureFactory);
+        currentVertexNumber = manualSegmentEnclosureFactory.getCurrentVertexNumber();
+        
+        log.info("Number of vertices is {}.", currentVertexNumber);
+        
+		// Add each factory to the collection.
+		triangleSources.add(tracedSegmentEnclosureFactory);
+//        triangleSources.add(manualSegmentEnclosureFactory);
+//		triangleSources.add(interestingAnnotationEnclosureFactory);
+    }
+
+    protected void calculateInterestingAnnotationVertices(TileFormat tileFormat, LineEnclosureFactory interestingAnnotationEnclosureFactory) {
+        AnnotationModel annoMdl = dataSource.getAnnotationModel();
+        if (annoMdl != null) {
+            FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
+            for (int i = 0; i < filteredModel.getRowCount(); i++) {
+                InterestingAnnotation anno = filteredModel.getAnnotationAtRow(i);
+                long annotationId = anno.getAnnotationID();
+                TmGeoAnnotation geoAnno = annoMdl.getGeoAnnotationFromID(annotationId);
+                final AnnotationGeometry geometry = anno.getGeometry();
+                if (!(geometry == AnnotationGeometry.BRANCH || geometry == AnnotationGeometry.END || geometry == AnnotationGeometry.LINK)) {
+                    continue;
+                }
+
+                TileFormat.MicrometerXyz microns = tileFormat.micrometerXyzForVoxelXyz(
+                        new TileFormat.VoxelXyz(
+                                geoAnno.getX().intValue(),
+                                geoAnno.getY().intValue(),
+                                geoAnno.getZ().intValue()
+                        ),
+                        CoordinateAxis.Z
+                );
+                Vec3 v = tileFormat.centerJustifyMicrometerCoordsAsVec3(microns);
+                double[] start = new double[] {
+                    v.getX(),
+                    v.getY(),
+                    v.getZ() - (ANNO_END_RADIUS)
+                };
+                double[] end = new double[] {
+                    v.getX(),
+                    v.getY(),
+                    v.getZ() + (ANNO_END_RADIUS)
+                };
+
+                if (geometry == AnnotationGeometry.BRANCH) {
+                    interestingAnnotationEnclosureFactory.addEnclosure(
+                            start, end, BRANCH_ANNO_COLOR
+                    );
+                }
+                else if (anno.getGeometry() == AnnotationGeometry.END) {
+                    interestingAnnotationEnclosureFactory.addEnclosure(
+                            start, end, UNFINISHED_ANNO_COLOR
+                    );
+                }
+                else if (anno.getGeometry() == AnnotationGeometry.LINK) {
+                    interestingAnnotationEnclosureFactory.addEnclosure(
+                            start, end, SPECIAL_ANNO_COLOR
+                    );
+                }
+            }
+        }
+    }
+
+    protected void calculateManualLineVertices(Set<SegmentIndex> voxelPathAnchorPairs, LineEnclosureFactory manualSegmentEnclosureFactory) {
+        Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);
+        for ( AnchorLinesReturn anchorLine: anchorLines ) {
+            manualSegmentEnclosureFactory.addEnclosure(
+                    anchorLine.getStart(),
+                    anchorLine.getEnd(),
+                    anchorLine.getStyle().getColorAsFloatArray()
+            );
+            
+            //break; // TEMP: add only a single enclosure, so dump is easier to understand.
+        }
+    }
+
+    protected void calculateTracedSegmentVertices(Set<SegmentIndex> voxelPathAnchorPairs, TileFormat tileFormat, LineEnclosureFactory tracedSegmentEnclosureFactory) {
+        // Iterate over all the traced segments, and add enclosures for each.
+        for ( AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {
             final SegmentIndex segmentIndex = voxelPath.getSegmentIndex();
             if (segmentIndex == null) {
                 continue;
             }
-            voxelPathAnchorPairs.add( segmentIndex );            
+            voxelPathAnchorPairs.add( segmentIndex );
             // need neuron ID; get it from the anchor at either end of the
             //  traced path; if there isn't an anchor, just move on--that
             //  path is also gone (happens when neurons deleted, merged)
@@ -232,14 +356,14 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                     v.getX(), v.getY(), v.getZ()
                 };
                 
-                if ( previousCoords != null ) {                    
+                if ( previousCoords != null ) {
                     int coordsAdded = tracedSegmentEnclosureFactory.addEnclosure(
                             previousCoords, currentCoords, colorAsFloatArray);
                     if (coordsAdded == 0) {
                         if (previousVoxelPos != null) {
-                            log.info("Encountered identical endpoints: " + fmtVoxelPos(previousVoxelPos) + ":" + fmtVoxelPos(voxelPos) + 
-                                     ".  Encountered identical converted coords: " + fmtCoords(previousCoords) + ":" + fmtCoords(currentCoords) +
-                                     ".  Found in segment index: " + voxelPath.getSegmentIndex() + ", and in neuron " + neuronId + ".");
+                            log.info("Encountered identical endpoints: " + fmtVoxelPos(previousVoxelPos) + ":" + fmtVoxelPos(voxelPos) +
+                                    ".  Encountered identical converted coords: " + fmtCoords(previousCoords) + ":" + fmtCoords(currentCoords) +
+                                    ".  Found in segment index: " + voxelPath.getSegmentIndex() + ", and in neuron " + neuronId + ".");
                         }
                     }
                 }
@@ -247,28 +371,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                 previousVoxelPos = voxelPos;
             }
         }
-
-        // Now get the lines.  Must offset to latest vertex number, so that
-        // the triangle pointers are contiguous across factories.
-        manualSegmentEnclosureFactory.setCurrentVertexNumber(
-                tracedSegmentEnclosureFactory.getCurrentVertexNumber() 
-        );
-
-        Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);
-        for ( AnchorLinesReturn anchorLine: anchorLines ) {            
-            manualSegmentEnclosureFactory.addEnclosure(
-                    anchorLine.getStart(),
-                    anchorLine.getEnd(),
-                    anchorLine.getStyle().getColorAsFloatArray()
-            );
-            
-            //break; // TEMP: add only a single enclosure, so dump is easier to understand.
-        }
-
-		// Add each factory to the collection.
-		triangleSources.add(tracedSegmentEnclosureFactory);
-        triangleSources.add(manualSegmentEnclosureFactory);
-		
     }
     
     private String fmtVoxelPos( VoxelPosition pos ) {
