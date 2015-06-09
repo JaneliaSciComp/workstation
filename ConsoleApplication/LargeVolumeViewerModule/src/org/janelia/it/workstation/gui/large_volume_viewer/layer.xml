@@ -6,6 +6,7 @@
             <file name="large_volume_viewer_plugin.wsgrp" url="Groups/large_volume_viewer_plugin.wsgrp"/>
             <folder name="large_volume_viewer_plugin">
                 <file name="LargeVolumeViewerTopComponent.wstcgrp" url="Groups/large_volume_viewer_plugin/LargeVolumeViewerTopComponent.wstcgrp"/>
+                <file name="AnnotationSkeletalViewTopComponent.wstcgrp" url="Groups/large_volume_viewer_plugin/AnnotationSkeletalViewTopComponent.wstcgrp"/>
                 <file name="Snapshot3dTopComponent.wstcgrp" url="Groups/large_volume_viewer_plugin/Snapshot3dTopComponent.wstcgrp"/>
             </folder>
         </folder>

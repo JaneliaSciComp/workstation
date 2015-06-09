@@ -143,10 +143,14 @@ public class WorkstationFile {
     }
 
     /**
-     * The length of the file in bytes. Only available after get(false) is called.
-     * @return
+     * Returns the stream of the file content. 
+     * @return stream of bytes
+     * @throws Exception if getting stream fails
      */
-    public InputStream getStream() {
+    public InputStream getStream() throws Exception {
+        if (stream==null) {
+            get();
+        }
         return stream;
     }
     

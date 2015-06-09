@@ -8,6 +8,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JComponent;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
@@ -17,6 +18,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 
 /**
@@ -27,6 +29,8 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         NextParentListener, NeuronStyleChangeListener {
     private Skeleton skeleton;
     private List<SkeletonActor> actors = new ArrayList<>();
+    private List<JComponent> updateListeners = new ArrayList<>();
+    private MeshDrawActor meshDrawActor;
     private SkeletonAnchorListener skeletonAnchorListener;
     private AnnotationManager annoMgr;
     private LargeVolumeViewerTranslator lvvTranslator;
@@ -57,7 +61,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     public void registerForEvents(SkeletonActor actor) {
         this.actors.add(actor);
-        actor.setNextParentByID(nextParentId);
+        actor.setNextParentByID(nextParentId);        
     }
     
     public void registerForEvents(LargeVolumeViewerTranslator lvvTranslator) {
@@ -66,6 +70,14 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     
     public void registerForEvents(QuadViewController qvController) {
         this.qvController = qvController;
+    }
+    
+    public void registerForEvents(MeshDrawActor meshDrawActor) {
+        this.meshDrawActor = meshDrawActor;
+    }
+    
+    public void registerForEvents(JComponent component) {
+        updateListeners.add(component);
     }
 
     //---------------------------------IMPLEMENTS AnchoredVoxelPathListener
@@ -137,6 +149,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         for (SkeletonActor actor: actors) {
             actor.setNextParentByID(id);
         }
+        fireComponentUpdate();
     }
     
     @Override
@@ -144,6 +157,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         for (SkeletonActor actor : actors) {
             actor.setNextParent(parent);
         }
+        fireComponentUpdate();
     }
 
     @Override
@@ -151,6 +165,8 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         for (SkeletonActor actor: actors) {
             actor.changeNeuronStyle(neuron, style);
         }
+        updateMeshDrawActor();
+        fireComponentUpdate();
     }
 
     public void annotationSelected( Long guid ) {
@@ -161,6 +177,8 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         for (SkeletonActor actor: actors) {
             actor.updateAnchors();
         }
+        updateMeshDrawActor();
+        fireComponentUpdate();
     }
 
     public void deleteSubtreeRequested(Anchor anchor) {
@@ -207,6 +225,19 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         Anchor anchor = skeleton.getAnchorByID(annoMgr.relativeAnnotation(id, direction));
         setNextParent(anchor);
         qvController.setCameraFocus(anchor.getLocation());
+    }
+
+    private void fireComponentUpdate() {
+        for (JComponent updateListener : updateListeners) {
+            updateListener.validate();
+            updateListener.repaint();
+        }
+    }
+
+    private void updateMeshDrawActor() {
+        if (meshDrawActor != null) {
+            meshDrawActor.refresh();
+        }
     }
 
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {

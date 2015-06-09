@@ -9,13 +9,13 @@ import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 
 /**
  * Testing class - a regression test vehicle, for looking at mesh rendering over existing volumes.
@@ -72,7 +72,7 @@ public class TestMeshRender {
                     //new VtxAttribMgr( MeshRenderTestFacilities.getCompartmentMaskChanRenderableDatas() );
                     //new VtxAttribMgr( MeshRenderTestFacilities.getNeuronMaskChanRenderableDatas() );
                     new FewVoxelVtxAttribMgr( renderId );
-            attribMgr.execute();
+            //attribMgr.execute();
 
         }
 
@@ -80,15 +80,29 @@ public class TestMeshRender {
         protected void hadSuccess() {
             logger.info("Successful vtx attrib manager.");
             MeshDrawActor.MeshDrawActorConfigurator configurator = new MeshDrawActor.MeshDrawActorConfigurator();
-            configurator.setAxisLengths( new double[] {1024, 512, 218} );
+            configurator.setAxisLengths( new double[] {200, 200, 200} );
             configurator.setContext( viewerWidget.getMeshViewContext() ); 
+            configurator.setMatrixScope(MeshDrawActor.MatrixScope.EXTERNAL);
+            /*
+             *  Ordinarily, the bounding box will be set from without, to
+             *  correspond to the caller's data space.  This test does not
+             *  have such a natural source.
+             */
+            // NOTE: bounding box must match conditions in attributes mgr.
+            BoundingBox3d bb = new BoundingBox3d();
+            bb.setMin( 73000, 47000, 17000 );
+            bb.setMax( 75000, 49000, 21000 );
+            configurator.setBoundingBox( bb );
 
             configurator.setVertexAttributeManager(attribMgr);
             //configurator.setRenderableId( MeshRenderTestFacilities.COMPARTMENT_RENDERABLE_ID);
             configurator.setRenderableId( renderId );
+            configurator.setColoringStrategy(MeshDrawActor.ColoringStrategy.ATTRIBUTE);
             MeshDrawActor actor = new MeshDrawActor( configurator );
             viewerWidget.clear();
-            viewerWidget.addActor( actor );
+            viewerWidget.addActor( actor );            
+            final Vec3 center = actor.getBoundingBox3d().getCenter();
+            viewerWidget.getMeshViewContext().getCamera3d().setFocus(center);
 
             JFrame frame = new JFrame("Test Mesh Render");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

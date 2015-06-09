@@ -61,11 +61,11 @@ public class OITMeshSortShader extends GL4Shader {
 //        checkGlError(gl, "d5 glUniform1i() error");
 
 
-        gl.glBindTexture(GL4.GL_TEXTURE_2D, tc.getHeadPointerTextureId());
-        checkGlError(gl, "d6 OITMeshSortShader glBindTexture() error");
+        //gl.glBindTexture(GL4.GL_TEXTURE_2D, tc.getHeadPointerTextureId());
+        //checkGlError(gl, "d6 OITMeshSortShader glBindTexture() error");
         
-        gl.glBindBuffer(GL4.GL_TEXTURE_BUFFER, tc.getFragmentStorageBufferId());
-        checkGlError(gl, "d 6.1 OITMeshSortShader glBindBuffer() error");
+        //gl.glBindBuffer(GL4.GL_TEXTURE_BUFFER, tc.getFragmentStorageBufferId());
+        //checkGlError(gl, "d 6.1 OITMeshSortShader glBindBuffer() error");
 
         gl.glBindVertexArray(vertexArrayId.get(0));
         checkGlError(gl, "d7 OITMeshSortShader glBindVertexArray() error");

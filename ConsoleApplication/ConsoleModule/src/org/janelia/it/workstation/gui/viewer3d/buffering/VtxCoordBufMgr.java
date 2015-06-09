@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.viewer3d.buffering;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 import org.janelia.it.workstation.shared.annotations.NotThreadSafe;
+import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -199,14 +200,25 @@ public class VtxCoordBufMgr {
      * be designated, and pointers need to be saved.
      *
      * @param gl for graphic-oriented operations.
+     * @return True if buffers enabled, false if it failed.
      * @throws Exception thrown by any called code.
      */
-    public void enableBuffers(GL2 gl) throws Exception {
-        geometryVertexBufferHandles = enableBuffersOfType(gl, geometryCoordBuf, GL2.GL_ARRAY_BUFFER);
-        textureCoordBufferHandles = enableBuffersOfType(gl, texCoordBuf, GL2.GL_ARRAY_BUFFER);
-        if ( drawWithElements ) {
-            indexBufferHandles = enableBuffersOfType(gl, indexBuf, GL2.GL_ELEMENT_ARRAY_BUFFER);
+    public boolean enableBuffers(GL2 gl) throws Exception {
+        boolean rtnVal = true;
+        geometryVertexBufferHandles = enableBuffersOfType(gl, geometryCoordBuf, GL2.GL_ARRAY_BUFFER, Float.SIZE / Byte.SIZE);
+		if (geometryVertexBufferHandles != null) {
+	        textureCoordBufferHandles = enableBuffersOfType(gl, texCoordBuf, GL2.GL_ARRAY_BUFFER, Float.SIZE / Byte.SIZE);
+		}
+        if (geometryVertexBufferHandles == null  ||  textureCoordBufferHandles == null) {
+            rtnVal = false;
         }
+        else if ( drawWithElements ) {
+            indexBufferHandles = enableBuffersOfType(gl, indexBuf, GL2.GL_ELEMENT_ARRAY_BUFFER, Short.SIZE / Byte.SIZE);
+            if (indexBufferHandles == null) {
+                rtnVal = false;
+            }
+        }
+        return rtnVal;
     }
 
     public void releaseBuffers(GL2 gl) {
@@ -305,30 +317,50 @@ public class VtxCoordBufMgr {
 
     /** Convenience method to cut down on repeated code. */
     @NotThreadSafe(why="glBufferData uses glBindBuffer result as state, and should only be called from GL thread")
-    private int[] enableBuffersOfType(GL2 gl, Buffer[] buffers, int type ) {
+    private int[] enableBuffersOfType(GL2 gl, Buffer[] buffers, int type, int classSize ) {		
         // Make handles for subsequent use.
         int[] rtnVal = new int[ NUM_BUFFERS_PER_TYPE ];
         gl.glGenBuffers( NUM_BUFFERS_PER_TYPE, rtnVal, 0 );
+        if (reportError(gl, "Generating GL buffers")) {
+            rtnVal = null;
+        }
+        else {
+            // Bind data to the handles, and upload it to the GPU.
+            for (int i = 0; i < NUM_BUFFERS_PER_TYPE; i++) {
+                gl.glBindBuffer(type, rtnVal[ i ]);                
+                if (reportError(gl, "Binding buffer " + i)) {
+                    rtnVal = null;
+                }
+                else {
+					final long bufferSize = (long) (buffers[ i ].capacity() * classSize);
+					logger.debug("glBufferData: type={}, bufferSize={}, sizeof buffer={}, thread={}", 
+							type, 
+							bufferSize, 
+							buffers[i].capacity(),
+							Thread.currentThread().getName()
+					);
+                    // NOTE: this operates on the most recent "bind".  Therefore unless
+                    // synchronization is in use, this makes the method un-thread-safe.
+                    // Imagine multiple "bind" and "buffer-data" calls in parallel threads...disaster!
+	                buffers[ i ].rewind();
+                    gl.glBufferData(
+                            type,
+							bufferSize,
+                            buffers[ i ],
+                            GL2.GL_STATIC_DRAW
+                    );
+                    if (reportError(gl, "Pushing buffer " + i)) {
+                        rtnVal = null;
+                    }
+                }
 
-        // Bind data to the handles, and upload it to the GPU.
-        for ( int i = 0; i < NUM_BUFFERS_PER_TYPE; i++ ) {
-            buffers[ i ].rewind();
-            gl.glBindBuffer(type, rtnVal[ i ]);
-            // NOTE: this operates on the most recent "bind".  Therefore unless
-            // synchronization is in use, this makes the method un-thread-safe.
-            // Imagine multiple "bind" and "buffer-data" calls in parallel threads...disaster!
-            gl.glBufferData(
-                    type,
-                    (long)(buffers[ i ].capacity() * (Float.SIZE/8)),
-                    buffers[ i ],
-                    GL2.GL_STATIC_DRAW
-            );
+            }
 
+            if (logger.isDebugEnabled()) {
+                dumpBuffer(buffers);
+            }
         }
 
-        if ( logger.isDebugEnabled() ) {
-            dumpBuffer( buffers );
-        }
         return rtnVal;
     }
 

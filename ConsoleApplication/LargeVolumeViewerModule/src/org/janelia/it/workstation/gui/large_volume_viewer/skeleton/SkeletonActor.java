@@ -172,7 +172,7 @@ public class SkeletonActor
     }
 
     private synchronized void displayLines(GLAutoDrawable glDrawable) {
-        if (neuronLineIndices.size() == 0) {
+        if (neuronLineIndices.isEmpty()) {
             return;
         }
 
@@ -492,7 +492,7 @@ public class SkeletonActor
     public BoundingBox3d getBoundingBox3d() {
         return bb; // TODO actually populate bounding box
     }
-
+    
     public Camera3d getCamera() {
         return camera;
     }

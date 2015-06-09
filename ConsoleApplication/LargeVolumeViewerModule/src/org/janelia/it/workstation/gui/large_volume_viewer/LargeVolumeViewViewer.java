@@ -16,6 +16,8 @@ import java.awt.*;
 import java.net.MalformedURLException;
 import java.util.concurrent.Callable;
 import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
@@ -171,6 +173,16 @@ public class LargeVolumeViewViewer extends JPanel {
             add(viewUI);
             revalidate();
             repaint();
+            
+            // Need to popup the skeletal viewer.
+            AnnotationSkeletalViewTopComponent asvtc =
+                    (AnnotationSkeletalViewTopComponent)WindowLocator.getByName(
+                            AnnotationSkeletalViewTopComponent.PREFERRED_ID
+                    );
+            if (asvtc != null) {
+                asvtc.revalidate();
+                asvtc.repaint();
+            }
         }
     }    
 

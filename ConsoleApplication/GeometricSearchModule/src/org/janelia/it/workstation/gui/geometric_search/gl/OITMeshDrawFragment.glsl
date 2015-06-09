@@ -12,10 +12,10 @@ in vec4 Cs;
 
 layout (early_fragment_tests) in;
 layout (binding = 0, offset = 0) uniform atomic_uint index_counter;
-layout (binding = 0, rgba32ui) uniform coherent uimageBuffer list_buffer;
-layout (binding = 1, r32ui) uniform coherent uimage2D head_pointer_image;
+layout (binding = 0, r32ui) uniform uimage2D head_pointer_image;
+layout (binding = 1, rgba32ui) uniform coherent uimageBuffer list_buffer;
 
-out vec4 debugColor;
+out vec4 blankOut;
 
 // entry point
 void main()
@@ -31,38 +31,17 @@ void main()
     vec4 color =  opac * Cs;
     color.a = opac;
 
-    ivec2 dl = ivec2(0,0);
+    ivec2 fl = ivec2(gl_FragCoord.xy);
+    uint new_index = atomicCounterIncrement(index_counter);
+    int iNewIndex = int(new_index);
+    uint old_head = imageAtomicExchange(head_pointer_image, fl, new_index);
+    uvec4 item;
+    item.x = old_head;
+    item.y = packUnorm4x8(color);
+    item.z = floatBitsToUint(gl_FragCoord.z);
+    item.w = 0;
+    imageStore(list_buffer, iNewIndex, item);
 
-    //uint preItem = imageLoad(head_pointer_image, ivec2(gl_FragCoord.xy)).x;
-    uint preItem = imageLoad(head_pointer_image, dl).x;
-
-    if (preItem==0) {
-        debugColor = vec4(0.0, 0.0, 1.0, 0.0);
-    } else {
-        debugColor = vec4(0.0, 1.0, 0.0, 0.0);
-    }
-
-
-    // Update head image and linked list
-
-    //uint new_index = atomicCounterIncrement(index_counter);
-
-    //int iNewIndex = int(new_index);
-
-    //uint old_head = imageAtomicExchange(head_pointer_image, ivec2(gl_FragCoord.xy), new_index);
-
-    //uvec4 item;
-
-    //item.x = old_head;
-
-    //item.y = packUnorm4x8(color);
-
-    //item.z = floatBitsToUint(gl_FragCoord.z);
-
-    //item.w = 0;
-
-    //int iIndex=int(new_index);
-
-    //imageStore(list_buffer, iIndex, item);
+    blankOut = vec4(0.0, 0.0, 0.0, 0.0);
 
 }
