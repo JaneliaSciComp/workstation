@@ -37,9 +37,11 @@ public class SliceScanAction extends AbstractAction
 	public void actionPerformed(ActionEvent e) 
 	{
 	    int axisIx = sliceAxis.index();
+		double halfVoxel = 0.5 * image.getResolution(axisIx);
 		Vec3 oldFocus = camera.getFocus();
 		double oldVal = oldFocus.get(axisIx);
-		int oldSliceIndex = (int)(Math.round(oldVal / image.getResolution(axisIx)) - 0.5);
+		// this needs to be done carefully; don't let the cast also act as a round (see JW-3241)
+		int oldSliceIndex = (int) Math.round((oldVal - halfVoxel ) / image.getResolution(axisIx));
 
 		// Take larger steps at lower octree zoom levels
 		int zoomedSliceCount = sliceCount;
@@ -49,9 +51,9 @@ public class SliceScanAction extends AbstractAction
 			int deltaSlice = (int)Math.pow(2, zoom);
 			zoomedSliceCount = sliceCount * deltaSlice;
 		}
-		
+
 		int newSliceIndex = oldSliceIndex + zoomedSliceCount;
-		
+
 		// Scoot to next multiple of 10, for (apparent) performance
 		int sliceIncrement = Math.abs(sliceCount);
 		if (sliceIncrement == 10) {
@@ -62,7 +64,6 @@ public class SliceScanAction extends AbstractAction
 			assert newSliceIndex % sliceIncrement == 0;
 		}
 
-		double halfVoxel = 0.5 * image.getResolution(axisIx);
 		double newSlice = newSliceIndex * image.getResolution(axisIx) + halfVoxel;
 		double maxSlice = image.getBoundingBox3d().getMax().get(axisIx) - halfVoxel;
 		double minSlice = image.getBoundingBox3d().getMin().get(axisIx) + halfVoxel;
@@ -75,7 +76,6 @@ public class SliceScanAction extends AbstractAction
 			return; // no change
 		Vec3 newFocus = new Vec3(oldFocus.getX(), oldFocus.getY(), oldFocus.getZ());
 		newFocus.set(axisIx, newSlice);
-		// System.out.println(newFocus.get(axisIx)+", "+newSliceIndex);
 		// TODO - disallow camera.getFocus().setZ(), which bypasses camera signaling
 		camera.setFocus(newFocus);
 	}
