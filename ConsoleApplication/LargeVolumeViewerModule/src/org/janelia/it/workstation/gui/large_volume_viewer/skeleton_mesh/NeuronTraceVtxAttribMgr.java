@@ -214,44 +214,31 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
      */
     private synchronized void createVertices() throws Exception {
         // Make triangle sources.
-		LineEnclosureFactory tracedSegmentEnclosureFactory = new LineEnclosureFactory(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
-        LineEnclosureFactory manualSegmentEnclosureFactory = tracedSegmentEnclosureFactory;//new LineEnclosureFactory(MANUAL_SEGMENT_POLYGON_SIDES, MANUAL_SEGMENT_RADIUS);
-        LineEnclosureFactory interestingAnnotationEnclosureFactory = tracedSegmentEnclosureFactory;//new LineEnclosureFactory(ANNO_END_POLYGON_SIDES, ANNO_END_RADIUS);
+        LineEnclosureFactory lineEnclosureFactory = new LineEnclosureFactory(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
         
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
         TileFormat tileFormat = dataSource.getTileFormat();
 
-        // Must always offset to latest vertex number, so that the triangle
-        // pointers are contiguous across factories.
         int currentVertexNumber = 0;
-        interestingAnnotationEnclosureFactory.setCurrentVertexNumber(
+        lineEnclosureFactory.setCurrentVertexNumber(
                 currentVertexNumber
         );
         // Look at 'interesting annotations'.  What can be presented there?
-        tracedSegmentEnclosureFactory.setCharacteristics(ANNO_END_POLYGON_SIDES, ANNO_END_RADIUS);
-        calculateInterestingAnnotationVertices(tileFormat, interestingAnnotationEnclosureFactory);
-        currentVertexNumber = interestingAnnotationEnclosureFactory.getCurrentVertexNumber();
+        lineEnclosureFactory.setCharacteristics(ANNO_END_POLYGON_SIDES, ANNO_END_RADIUS);
+        calculateInterestingAnnotationVertices(tileFormat, lineEnclosureFactory);
 
         // Get the auto-traced segments.
-        tracedSegmentEnclosureFactory.setCurrentVertexNumber(currentVertexNumber);
-        tracedSegmentEnclosureFactory.setCharacteristics(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
-        calculateTracedSegmentVertices(voxelPathAnchorPairs, tileFormat, tracedSegmentEnclosureFactory);
-        currentVertexNumber = tracedSegmentEnclosureFactory.getCurrentVertexNumber();
+        lineEnclosureFactory.setCharacteristics(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
+        calculateTracedSegmentVertices(voxelPathAnchorPairs, tileFormat, lineEnclosureFactory);
         
         // Now get the lines.
-        manualSegmentEnclosureFactory.setCurrentVertexNumber(
-                currentVertexNumber
-        );
-        manualSegmentEnclosureFactory.setCharacteristics(MANUAL_SEGMENT_POLYGON_SIDES, MANUAL_SEGMENT_RADIUS);
-        calculateManualLineVertices(voxelPathAnchorPairs, manualSegmentEnclosureFactory);
-        currentVertexNumber = manualSegmentEnclosureFactory.getCurrentVertexNumber();
+        lineEnclosureFactory.setCharacteristics(MANUAL_SEGMENT_POLYGON_SIDES, MANUAL_SEGMENT_RADIUS);
+        calculateManualLineVertices(voxelPathAnchorPairs, lineEnclosureFactory);
         
-        log.info("Number of vertices is {}.", currentVertexNumber);
+        log.info("Number of vertices is {}.", lineEnclosureFactory.getCurrentVertexNumber());
         
 		// Add each factory to the collection.
-		triangleSources.add(tracedSegmentEnclosureFactory);
-//        triangleSources.add(manualSegmentEnclosureFactory);
-//		triangleSources.add(interestingAnnotationEnclosureFactory);
+		triangleSources.add(lineEnclosureFactory);
     }
 
     protected void calculateInterestingAnnotationVertices(TileFormat tileFormat, LineEnclosureFactory interestingAnnotationEnclosureFactory) {

@@ -44,20 +44,21 @@ public class LineEnclosureFactory implements TriangleSource {
     private double endPolygonRadius; 
     
     private final Map<Integer,double[][]> axisAlignedPrototypePolygons = new HashMap<>();
-    private final double[][] zAxisAlignedPrototypePolygon;
+    private double[][] zAxisAlignedPrototypePolygon;
 
     private final List<double[][]> endCapPolygonsHolder = new ArrayList<>();
     
     public LineEnclosureFactory(int endPolygonSides, double endPolygonRadius) {
-        this.endPolygonSides = endPolygonSides;
-        this.endPolygonRadius = endPolygonRadius;
-        this.zAxisAlignedPrototypePolygon = createZAxisAlignedPrototypeEndPolygon();  
-        axisAlignedPrototypePolygons.put(2, this.zAxisAlignedPrototypePolygon);
+        setCharacteristics(endPolygonSides, endPolygonRadius);
     }
     
-    public void setCharacteristics( int endPolygonSides, double endPolygonRadius ) {
+    public final void setCharacteristics( int endPolygonSides, double endPolygonRadius ) {
+        axisAlignedPrototypePolygons.clear();
+        
         this.endPolygonSides = endPolygonSides;
         this.endPolygonRadius = endPolygonRadius;
+        this.zAxisAlignedPrototypePolygon = createZAxisAlignedPrototypeEndPolygon();
+        axisAlignedPrototypePolygons.put(2, this.zAxisAlignedPrototypePolygon);
     }
     
     public int addEnclosure(double[] startingCoords, double[] endingCoords) {
