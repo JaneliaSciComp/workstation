@@ -100,7 +100,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     public void exportVertices(File outputLocation, String filenamePrefix) throws Exception {
         Skeleton skeleton = dataSource.getSkeleton();
         if (skeleton == null || skeleton.getAnchors().isEmpty()) {
-            throw new IllegalStateException("Nothing to export.");
+            log.warn("Nothing to export");
+            return;
         }
         Anchor anAnchor = skeleton.getAnchors().iterator().next();
         Long id = anAnchor.getNeuronID();

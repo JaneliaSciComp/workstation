@@ -269,6 +269,8 @@ public class AnnotationSkeletonPanel extends JPanel {
             }
             viewer.addActor(currentActor);
             viewer.addActor(mustBeLastActor);
+            viewer.validate();
+            viewer.repaint();
         }
        
     }
