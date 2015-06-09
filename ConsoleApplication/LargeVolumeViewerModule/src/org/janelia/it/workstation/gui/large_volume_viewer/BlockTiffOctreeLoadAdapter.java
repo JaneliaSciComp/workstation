@@ -300,6 +300,14 @@ extends AbstractTextureLoadAdapter
 	}
 	
     private File getOsPath(String linuxPath) {
+        if (topFolder.exists()) {
+            return topFolder;
+        } else {
+            return null;
+        }
+
+
+        /*
         // TODO - non-Windows
         File testFile = new File(linuxPath);
         if (testFile.exists()) return testFile; // If the folder exists, use it
@@ -319,13 +327,11 @@ extends AbstractTextureLoadAdapter
             }
         }
         return null;
+        */
     }
     
-    private boolean sniffOriginAndScaleFromFolder(String path, int [] origin, double [] scale) {
-        File localPath = getOsPath(path);
-        if (localPath == null)
-            return false;
-        File transformFile = new File(localPath, "transform.txt");
+    private boolean sniffOriginAndScaleFromFolder(int [] origin, double [] scale) {
+        File transformFile = new File(getTopFolder(), "transform.txt");
         if (! transformFile.exists())
             return false;
         try {
@@ -380,7 +386,7 @@ extends AbstractTextureLoadAdapter
             origin = transform.getOrigin();
             scale = transform.getScale();
         } catch ( Exception ex ) {
-            if (! sniffOriginAndScaleFromFolder(remoteBasePath, origin, scale))
+            if (! sniffOriginAndScaleFromFolder(origin, scale))
                 throw new DataSourceInitializeException(
                         "Failed to find metadata", ex
                 );
