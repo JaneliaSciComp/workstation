@@ -136,7 +136,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         StaticVolumeBrickSource volumeSource = null;
         try {
             uri = focusUrl.toURI();
-            String yamlUrlString = new URL(focusUrl, BASE_YML_FILE).toString();
+            String yamlUrlString = new URL(focusUrl, BASE_YML_FILE).getPath();
             URI yamlUri = new URI(
                     uri.getScheme(),
                     uri.getAuthority(),
