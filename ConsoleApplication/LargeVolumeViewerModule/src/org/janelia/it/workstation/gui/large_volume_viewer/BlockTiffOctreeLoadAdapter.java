@@ -298,37 +298,6 @@ extends AbstractTextureLoadAdapter
         }
 		return decoders;
 	}
-	
-    private File getOsPath(String linuxPath) {
-        if (topFolder.exists()) {
-            return topFolder;
-        } else {
-            return null;
-        }
-
-
-        /*
-        // TODO - non-Windows
-        File testFile = new File(linuxPath);
-        if (testFile.exists()) return testFile; // If the folder exists, use it
-        Map<String, String> prefixMappings = new HashMap<>();
-        
-        // TODO - need more mappings
-        prefixMappings.put("/nobackup/", "//fxt/nobackup/"); // Windows
-        prefixMappings.put("/tier2/", "//tier2/"); // Windows
-        prefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "//dm11/mousebrainmicro/"); // Windows
-        
-        for (String linuxPrefix : prefixMappings.keySet()) {
-            if (linuxPath.startsWith(linuxPrefix)) {
-                String testPath = linuxPath.replace(linuxPrefix, prefixMappings.get(linuxPrefix));
-                testFile = new File(testPath);
-                if (testFile.exists())
-                    return testFile;
-            }
-        }
-        return null;
-        */
-    }
     
     private boolean sniffOriginAndScaleFromFolder(int [] origin, double [] scale) {
         File transformFile = new File(getTopFolder(), "transform.txt");
