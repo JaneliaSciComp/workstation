@@ -9,9 +9,15 @@ package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JComponent;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.TableModel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
@@ -35,6 +41,8 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     private AnnotationManager annoMgr;
     private LargeVolumeViewerTranslator lvvTranslator;
     private QuadViewController qvController;
+    private NVTTableModelListener nvtTableModelListener;
+    private TableModel nvtTableModel;
     
     private static SkeletonController instance = new SkeletonController();
     
@@ -72,8 +80,14 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         this.qvController = qvController;
     }
     
-    public void registerForEvents(MeshDrawActor meshDrawActor) {
+    public void registerForEvents(MeshDrawActor meshDrawActor, TableModel tableModel) {
+        if (nvtTableModelListener != null) {
+            if (nvtTableModel != null)
+            nvtTableModel.removeTableModelListener(nvtTableModelListener);
+        }
         this.meshDrawActor = meshDrawActor;
+        nvtTableModel = tableModel;
+        nvtTableModel.addTableModelListener(new NVTTableModelListener());
     }
     
     public void registerForEvents(JComponent component) {
@@ -157,6 +171,9 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         for (SkeletonActor actor : actors) {
             actor.setNextParent(parent);
         }
+        // Must rebuild everything, each time the anchor is selected.
+        // TODO consider making a second such actor.
+        updateMeshDrawActor();
         fireComponentUpdate();
     }
 
@@ -255,4 +272,18 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         
     }
 	
+    /**
+     * This listener will update for changes made on the table of special
+     * annotations.
+     */
+    private class NVTTableModelListener implements TableModelListener {
+
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            updateMeshDrawActor();
+            fireComponentUpdate();
+        }
+
+    }
+
 }

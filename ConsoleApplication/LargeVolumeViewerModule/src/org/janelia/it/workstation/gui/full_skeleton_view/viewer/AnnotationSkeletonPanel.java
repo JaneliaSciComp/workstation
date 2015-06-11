@@ -192,7 +192,9 @@ public class AnnotationSkeletonPanel extends JPanel {
         );
         
         MeshDrawActor meshDraw = new MeshDrawActor(configurator);
-        SkeletonController.getInstance().registerForEvents(meshDraw);
+        SkeletonController.getInstance().registerForEvents(
+                meshDraw, dataSource.getAnnotationModel().getFilteredAnnotationModel()
+        );
 
         return meshDraw;
     }
