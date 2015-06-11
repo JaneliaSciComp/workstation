@@ -215,6 +215,7 @@ public class GL4Renderer implements GLEventListener
 //            String fsName = s.getFragmentShaderResourceName();
             //logger.info("Loading "+fsName);
             shaderAction.display(gl);
+
            // logger.info("Done with "+fsName);
         }
 

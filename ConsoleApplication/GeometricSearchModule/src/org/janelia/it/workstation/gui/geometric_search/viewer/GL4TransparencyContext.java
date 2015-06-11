@@ -25,25 +25,33 @@ public class GL4TransparencyContext {
  
     public static final int MAX_HEIGHT = 2048;
     public static final int MAX_WIDTH = 2048;
+    public static final int MAX_NODES = MAX_HEIGHT * MAX_WIDTH * 2;
+    public static final int NODE_SIZE = 24; // 4 float color vector, 1 depth float, 1 next pointer
+    
     int headPointerTotalPixels=0;
 
     IntBuffer headPointerId = IntBuffer.allocate(1);
     IntBuffer headPointerInitializerId = IntBuffer.allocate(1);
     IntBuffer atomicCounterId = IntBuffer.allocate(1);
-    IntBuffer fragmentStorageTexture = IntBuffer.allocate(1);
-    IntBuffer fragmentStorageBuffer = IntBuffer.allocate(1);
+    //IntBuffer fragmentStorageTexture = IntBuffer.allocate(1);
+    //IntBuffer fragmentStorageBuffer = IntBuffer.allocate(1);
+    IntBuffer fragmentSSBO = IntBuffer.allocate(1);
     IntBuffer zeroValueBuffer = IntBuffer.allocate(1);
     
     public int getHeadPointerTextureId() {
         return headPointerId.get(0);
     }
 
-    public int getFragmentStorageBufferId() {
-        return fragmentStorageBuffer.get(0);
-    }
+//    public int getFragmentStorageBufferId() {
+//        return fragmentStorageBuffer.get(0);
+//    }
     
-    public int getFragmentStorageTextureId() {
-        return fragmentStorageTexture.get(0);
+//    public int getFragmentStorageTextureId() {
+//        return fragmentStorageTexture.get(0);
+//    }
+    
+    public int getFragmentSSBOId() {
+        return fragmentSSBO.get(0);
     }
     
     public int getAtomicCounterId() {
@@ -80,9 +88,6 @@ public class GL4TransparencyContext {
 
         gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, headPointerInitializerId.get(0));
         checkGlError(gl, "i2 GL4TransparencyContext glBindBuffer() error");
-        
-        gl.glBufferData(GL4.GL_PIXEL_UNPACK_BUFFER, headPointerTotalPixels * 4, null, GL4.GL_STATIC_DRAW);
-        checkGlError(gl, "i9 GL4TransparencyContext glBufferData() error");
 
         gl.glBufferData(GL4.GL_PIXEL_UNPACK_BUFFER,
                 headPointerTotalPixels * 4,
@@ -104,10 +109,10 @@ public class GL4TransparencyContext {
         // WHY IS THIS TRIGGERING AN INVALID ERROR? - may be harmless since working (?) in display stage
         gl.glTexSubImage2D(GL4.GL_TEXTURE_2D, 
                 0,
-                GL4.GL_R32UI,
+                0,
+                0,
                 MAX_HEIGHT,
                 MAX_WIDTH,
-                0,
                 GL4.GL_RED_INTEGER,
                 GL4.GL_UNSIGNED_INT,
                 0);
@@ -127,25 +132,36 @@ public class GL4TransparencyContext {
                 4, null, GL4.GL_DYNAMIC_COPY);
         checkGlError(gl, "i6 GL4TransparencyContext glBufferData() error");
 
-        // Fragment storage buffer       
-        gl.glGenBuffers(1, fragmentStorageBuffer);
-        checkGlError(gl, "i7 GL4TransparencyContext glGenBuffers() error");
-
-        gl.glBindBuffer(GL4.GL_TEXTURE_BUFFER, fragmentStorageBuffer.get(0));
-        checkGlError(gl, "i8 GL4TransparencyContext glBindBuffer() error");
-
-        gl.glBufferData(GL4.GL_TEXTURE_BUFFER,
-                2 * headPointerTotalPixels * 16, null, GL4.GL_DYNAMIC_COPY);
-        checkGlError(gl, "i9 GL4TransparencyContext glBufferData() error");
+        // Fragment storage buffer
         
-        gl.glGenTextures(1, fragmentStorageTexture);
-        checkGlError(gl, "i10 GL4TransparencyContext glGenTextures() error");
+        // TEXTURE_BUFFER
         
-        gl.glBindTexture(GL4.GL_TEXTURE_BUFFER, fragmentStorageTexture.get(0));
-        checkGlError(gl, "i11 GL4TransparencyContext glBindTexture() error");
+//        gl.glGenBuffers(1, fragmentStorageBuffer);
+//        checkGlError(gl, "i7 GL4TransparencyContext glGenBuffers() error");
+//
+//        gl.glBindBuffer(GL4.GL_TEXTURE_BUFFER, fragmentStorageBuffer.get(0));
+//        checkGlError(gl, "i8.1 GL4TransparencyContext glBindBuffer() error");
+//
+//        gl.glBufferData(GL4.GL_TEXTURE_BUFFER,
+//                2 * headPointerTotalPixels * 16, null, GL4.GL_DYNAMIC_COPY);
+//        checkGlError(gl, "i9 GL4TransparencyContext glBufferData() error");
         
-        gl.glTexBuffer(GL4.GL_TEXTURE_BUFFER, GL4.GL_RGBA32UI, fragmentStorageBuffer.get(0));
-        checkGlError(gl, "i12 GL4TransparencyContext glTexBuffer() error");
+        // TEXTURE
+        
+//        gl.glGenTextures(1, fragmentStorageTexture);
+//        checkGlError(gl, "i10 GL4TransparencyContext glGenTextures() error");
+//        
+//        gl.glBindTexture(GL4.GL_TEXTURE_1D, fragmentStorageTexture.get(0));
+//        checkGlError(gl, "i11 GL4TransparencyContext glBindTexture() error");
+//        
+//        gl.glTexStorage1D(GL4.GL_TEXTURE_1D, 1, GL4.GL_RGBA32UI, 16000);
+//        checkGlError(gl, "OITMeshDrawShader i12 glTexStorage1D() error");
+        
+        // SSBO
+        
+        gl.glGenBuffers(1, fragmentSSBO);
+        gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 0, fragmentSSBO.get(0));
+        gl.glBufferData(GL4.GL_SHADER_STORAGE_BUFFER, MAX_NODES * NODE_SIZE, null, GL4.GL_DYNAMIC_DRAW);
                
     }
 
