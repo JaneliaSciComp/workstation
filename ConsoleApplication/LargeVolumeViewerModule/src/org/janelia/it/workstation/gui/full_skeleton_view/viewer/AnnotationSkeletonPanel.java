@@ -10,11 +10,18 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JColorChooser;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JPanel;
+import javax.swing.filechooser.FileFilter;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
@@ -101,7 +108,8 @@ public class AnnotationSkeletonPanel extends JPanel {
             viewer.setResetFirstRedraw(true);
             final BoundingBox3d originalBoundingBox = tileFormat.calcBoundingBox();
 
-            GLActor meshDrawActor = buildMeshDrawActor( context, originalBoundingBox );            
+            MDReturn meshDrawResults = buildMeshDrawActor( context, originalBoundingBox );
+            GLActor meshDrawActor = meshDrawResults.getActor();
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
             
             viewer.addActor(axesActor);
@@ -121,6 +129,12 @@ public class AnnotationSkeletonPanel extends JPanel {
                     refAxisActor
                 )
             );
+            
+            // Reserve the menu actions from mesh draw, until last.
+            for (Action menuAction: meshDrawResults.getMenuActions()) {
+                viewer.addMenuAction(menuAction);
+            }
+            
             this.add(viewer, BorderLayout.CENTER);
             validate();
             repaint();
@@ -168,7 +182,7 @@ public class AnnotationSkeletonPanel extends JPanel {
      * @param boundingBox contains whole in-use space.
      * @return fully-configured actor, ready for drawing.
      */
-    private GLActor buildMeshDrawActor(MeshViewContext context, BoundingBox3d boundingBox) {
+    private MDReturn buildMeshDrawActor(MeshViewContext context, BoundingBox3d boundingBox) {
         MeshDrawActorConfigurator configurator = new MeshDrawActorConfigurator();
         configurator.setAxisLengths( new double[] {
             boundingBox.getMaxX() - boundingBox.getMinX(),
@@ -195,8 +209,87 @@ public class AnnotationSkeletonPanel extends JPanel {
         SkeletonController.getInstance().registerForEvents(
                 meshDraw, dataSource.getAnnotationModel().getFilteredAnnotationModel()
         );
+        
+        MDReturn rtnVal = new MDReturn();
+        rtnVal.setActor(meshDraw);
+        
+        rtnVal.getMenuActions().add( new SerializeWaveFrontAction(attributeManager, AnnotationSkeletonPanel.this) );
+        
+        return rtnVal;
+    }
+    
+    /** 
+     * Bean to hold what is created to build mesh-draw actor, so the contents
+     * do not have to become fields.
+     */
+    private static class MDReturn {
+        private GLActor actor;
+        private Collection<Action> menuActions = new ArrayList<>();
 
-        return meshDraw;
+        /**
+         * @return the actor
+         */
+        public GLActor getActor() {
+            return actor;
+        }
+
+        /**
+         * @param actor the actor to set
+         */
+        public void setActor(GLActor actor) {
+            this.actor = actor;
+        }
+
+        /**
+         * @return the menuActions
+         */
+        public Collection<Action> getMenuActions() {
+            return menuActions;
+        }
+
+    }
+    
+    public static class SerializeWaveFrontAction extends AbstractAction {
+
+        private NeuronTraceVtxAttribMgr attributeManager;
+        private JComponent parentComponent;
+        
+        public SerializeWaveFrontAction( NeuronTraceVtxAttribMgr attributeManager, JComponent parentComponent ) {
+            this.attributeManager = attributeManager;
+            this.parentComponent = parentComponent;
+            putValue(Action.NAME, "Save Skeleton Mesh to Wavefront/OBJ");
+        }
+        
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.addChoosableFileFilter(new FileFilter() {
+
+                    @Override
+                    public boolean accept(File f) {
+                        return f.isFile();
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "Please choose an output directory and filename root.  Multiple output files may be created at that location.";
+                    }
+                    
+                });
+
+                int fcOption = fileChooser.showSaveDialog(parentComponent);
+                if (fcOption == JFileChooser.APPROVE_OPTION) {
+                    attributeManager.exportVertices(
+                            fileChooser.getSelectedFile().getParentFile(),
+                            fileChooser.getSelectedFile().getName()
+                    );
+                }
+            } catch ( Exception ex ) {
+                SessionMgr.getSessionMgr().handleException(ex);
+            }
+        }
+        
     }
     
     public static class BackgroundPickAction extends AbstractAction {

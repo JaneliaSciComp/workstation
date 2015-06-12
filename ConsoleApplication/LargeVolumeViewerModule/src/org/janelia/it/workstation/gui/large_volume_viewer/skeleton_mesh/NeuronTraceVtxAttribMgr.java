@@ -78,8 +78,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     // in creating the 3D representation of annotations.
     private AnnotationSkeletonDataSourceI dataSource;
     
-    private TableModelListener localListener;
-
     // The sources and render buffers will be created, based on the contents
     // of the 'model'.
     private final List<TriangleSource> triangleSources = new ArrayList<>();
@@ -141,7 +139,9 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         }
         Anchor anAnchor = skeleton.getAnchors().iterator().next();
         Long id = anAnchor.getNeuronID();
+        this.execute();  // Ensure contents.
         exportVertices(outputLocation, filenamePrefix, triangleSources, id);
+        this.close(); // Ensure cleanup.
     }
     
     /**
