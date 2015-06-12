@@ -6,10 +6,13 @@
 
 package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 
+import Jama.Matrix;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +41,7 @@ import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer;
 import org.janelia.it.workstation.gui.viewer3d.ResetPositionerI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
+import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.AttributeManagerBufferUploader;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
@@ -51,6 +55,7 @@ import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDraw
 public class AnnotationSkeletonPanel extends JPanel {
     private final AnnotationSkeletonDataSourceI dataSource;
     private OcclusiveViewer viewer;
+    private MeshViewContext context;
     
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
@@ -77,7 +82,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             skeletalBoundsResetPositioner.setViewer(viewer);
             skeletalBoundsResetPositioner.setRenderer(renderer);
             skeletalBoundsResetPositioner.setActor(linesDrawActor);
-            MeshViewContext context = new MeshViewContext();
+            context = new MeshViewContext();
             viewer.setVolumeModel(context);
             VolumeModel volumeModel = viewer.getVolumeModel();
             linesDrawActor.setSkeleton(dataSource.getSkeleton());
@@ -109,7 +114,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             final BoundingBox3d originalBoundingBox = tileFormat.calcBoundingBox();
 
             MDReturn meshDrawResults = buildMeshDrawActor( context, originalBoundingBox );
-            GLActor meshDrawActor = meshDrawResults.getActor();
+            MeshDrawActor meshDrawActor = meshDrawResults.getActor();
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
             
             viewer.addActor(axesActor);
@@ -129,6 +134,15 @@ public class AnnotationSkeletonPanel extends JPanel {
                     refAxisActor
                 )
             );
+            
+            /*
+            viewer.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseReleased(MouseEvent me) {
+                    select(me.getX(), me.getY());
+                }
+            });
+            */
             
             // Reserve the menu actions from mesh draw, until last.
             for (Action menuAction: meshDrawResults.getMenuActions()) {
@@ -218,25 +232,123 @@ public class AnnotationSkeletonPanel extends JPanel {
         return rtnVal;
     }
     
+    /**
+     * Attempt to select an 'interesting object' at the location given.
+     * Should be either the currently (otherwise) selected anchor, or
+     * an interesting annotation.
+     * 
+     * @param mouseX mouse pos x.
+     * @param mouseY mouse pos y.
+     */
+    private void select(int mouseX, int mouseY) {
+        if (context != null) {
+            // For technique, 
+            // @see http://antongerdelan.net/opengl/raycasting.html
+            double x = (2.0 * mouseX) / (viewer.getWidth() - 1.0);
+            double y = 1.0 - (2.0f * mouseY) / viewer.getHeight();
+            double[] rayClip = new double[]{
+                x, y, -1.0, 1.0
+            };
+
+            // Getting inverses of matrices.
+            float[] transposedProjectionMatrix = new float[context.getPerspectiveMatrix().length];
+            ViewMatrixSupport.transposeM(transposedProjectionMatrix, 0, context.getPerspectiveMatrix(), 0);            
+            float[] invertedProjectionMatrix = new float[context.getPerspectiveMatrix().length];
+            ViewMatrixSupport.invertM(invertedProjectionMatrix, 0, transposedProjectionMatrix, 0);
+            
+            float[] transposedMM = new float[context.getModelViewMatrix().length];
+            ViewMatrixSupport.transposeM(transposedMM, 0, context.getModelViewMatrix(), 0);            
+            float[] invertedModelViewMatrix = new float[context.getModelViewMatrix().length];
+            ViewMatrixSupport.invertM(invertedModelViewMatrix, 0, transposedMM, 0);
+            
+            System.out.println("\n\n\n");
+            // Moving to JAMA representation.
+            Matrix invProjJama = toJamaMatrix(invertedProjectionMatrix);
+            dumpJama(invProjJama, "Inverted Projection");
+            Matrix invMMJama = toJamaMatrix(invertedModelViewMatrix);
+            dumpJama(invMMJama, "Inverted ModelView");
+            Matrix rayClipJama = toJamaVector(rayClip);
+            dumpJama(rayClipJama, "Ray Clip");
+            
+            // Multiplying the inverted projection matrix by the ray clip,
+            // and adjusting as a ray (not a point).
+            Matrix rayEye = invProjJama.times(rayClipJama);
+            rayEye.set(2, 0, -1.0);
+            rayEye.set(3, 0, 0.0);
+            
+            Matrix rayWorld = invMMJama.times(rayEye);
+            rayWorld.set(3, 0, 0.0);  // Again, trunc away W.
+            dumpJama(rayWorld, "Ray-World");
+            double normalizer = rayWorld.normF();
+            
+            Matrix normalizedRayWorld = rayWorld.times(1.0 / normalizer);
+            //dumpJama(normalizedRayWorld, "Normalized Ray-World");
+        }
+        
+    }
+
+    protected void dumpJama(Matrix rayWorld, String label) {
+        System.out.println(label + "=================");
+        for (int row = 0; row < rayWorld.getRowDimension(); row++) {
+            for (int col = 0; col < rayWorld.getColumnDimension(); col++) {
+                System.out.print(rayWorld.get(row, col) + " ");
+            }
+            System.out.println();
+        }
+    }
+    
+    /** Turns 1D matrix into 2D.  Also handles any transpose details.  */
+    private Matrix toJamaMatrix( float[] onedMatrix ) {
+        //float[] transpose = new float[ onedMatrix.length ];
+        //ViewMatrixSupport.transposeM(transpose, 0, onedMatrix, 0);
+        double[][] jamaRaw = new double[][] {
+            new double[4],
+            new double[4],
+            new double[4],
+            new double[4]
+        };
+        
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 4; col++) {
+                jamaRaw[row][col] = onedMatrix[ row * 4 + col ];
+            }
+        }
+        
+        Matrix matrix = new Matrix(jamaRaw);
+        return matrix;
+    }
+    
+    private Matrix toJamaVector( double[] onedMatrix ) {
+        double[][] jamaRaw = new double[][] {
+            new double[1], new double[1], new double[1], new double[1]
+        };
+        Matrix matrix = new Matrix(jamaRaw);
+        for (int row = 0; row < 4; row++) {
+            jamaRaw[row][0] = onedMatrix[ row ];
+        }
+        
+        return matrix;
+    }
+    
     /** 
      * Bean to hold what is created to build mesh-draw actor, so the contents
      * do not have to become fields.
      */
     private static class MDReturn {
-        private GLActor actor;
+        private MeshDrawActor actor;
         private Collection<Action> menuActions = new ArrayList<>();
 
         /**
          * @return the actor
          */
-        public GLActor getActor() {
+        public MeshDrawActor getActor() {
             return actor;
         }
 
         /**
          * @param actor the actor to set
          */
-        public void setActor(GLActor actor) {
+        public void setActor(MeshDrawActor actor) {
             this.actor = actor;
         }
 
