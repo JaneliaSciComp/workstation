@@ -32,7 +32,7 @@ int build_local_fragment_list(void)
         frags[frag_count] = nodes[current];
         current = nodes[current].next;
         frag_count++;
-    
+    }
     return frag_count;
 }
 

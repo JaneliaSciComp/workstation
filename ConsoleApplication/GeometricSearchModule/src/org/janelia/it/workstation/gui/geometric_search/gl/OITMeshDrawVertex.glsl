@@ -23,4 +23,7 @@ void main()
     mat3 normalMatrix = mat3(transpose(inverse(mview)));
     N  = normalMatrix * norm;
     gl_Position = proj * P;
+    if (gl_Position.z > 0.5) {
+        Cs = vec4(0.0, 1.0, 0.0, 1.0);
+    }
 }
