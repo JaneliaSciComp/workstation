@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.viewer3d.matrix_support;
 
+import Jama.Matrix;
 import org.janelia.it.workstation.geom.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,6 +152,107 @@ public class ViewMatrixSupport {
         };
         return identity;
     }
+    
+    /**
+     * All angles are expected to be in radians.  Returns a 4x4 matrix, with
+     * final column zeros, final row zeros, except final row x col = 1.
+     * 
+     * @param aboutX angle of rotation about X axis.
+     * @param aboutY about Y axis.
+     * @param aboutZ about Z axis.
+     * @param translateX push x
+     * @param translateY push y
+     * @param translateZ push z
+     * @return suitable for rotation multiplication with some 3-vector.
+     */
+    public Matrix getTransform3D( 
+            double aboutX, 
+            double aboutY, 
+            double aboutZ,
+            double translateX,
+            double translateY,
+            double translateZ
+    ) {        
+        double sinAboutX = Math.sin(aboutX);
+        double cosAboutX = Math.cos(aboutX);
+        
+        double sinAboutY = Math.sin(aboutY);
+        double cosAboutY = Math.cos(aboutY);
+
+        double sinAboutZ = Math.sin(aboutZ);
+        double cosAboutZ = Math.cos(aboutZ);
+        return getTransform3D(
+                sinAboutX, cosAboutX, 
+                sinAboutY, cosAboutY, 
+                sinAboutZ, cosAboutZ, 
+                translateX, translateY, translateZ);
+    }
+
+    /**
+     * Pre-computed cosines and sines provided for faster calculation.
+     * 
+     * @param cosAboutX cosine of rotation about X axis
+     * @param sinAboutX sin about X
+     * @param cosAboutY cos about Y
+     * @param sinAboutY sin about Y
+     * @param cosAboutZ cos about Z
+     * @param sinAboutZ sin about Z
+     * @param translateX move to this pos X
+     * @param translateY pos Y
+     * @param translateZ pos Z
+     * @return matrix, ready to transform points.
+     */
+    public Matrix getTransform3D(
+            double sinAboutX, double cosAboutX, 
+            double sinAboutY, double cosAboutY,
+            double sinAboutZ, double cosAboutZ, 
+            double translateX, double translateY, double translateZ) {
+        Matrix xRot = Matrix.identity(4, 4);
+        xRot.set(1, 1, cosAboutX);
+        xRot.set(1, 2, -sinAboutX);
+        xRot.set(2, 1, sinAboutX);
+        xRot.set(2, 2, cosAboutX);
+        
+        Matrix yRot = Matrix.identity(4, 4);
+        yRot.set(0, 0, cosAboutY);
+        yRot.set(0, 2, sinAboutY);
+        yRot.set(2, 0, -sinAboutY);
+        yRot.set(2, 2, cosAboutY);
+
+        Matrix zRot = Matrix.identity(4, 4);
+        zRot.set(0, 0, cosAboutZ);
+        zRot.set(0, 1, -sinAboutZ);
+        zRot.set(1, 0, sinAboutZ);
+        zRot.set(1, 1, cosAboutZ);
+
+        Matrix fullTransform = xRot.times(yRot).times(zRot);
+        fullTransform.set(0, 3, translateX);
+        fullTransform.set(1, 3, translateY);
+        fullTransform.set(2, 3, translateZ);
+        return fullTransform;
+    }
+
+    /**
+     * Given you have a transform matrix, use it on  point, and return result.
+     * 
+     * @see #getTransform3D(double, double, double, double, double, double) 
+     * @see #getTransform3D(double, double, double, double, double, double, double, double, double) 
+     * @param transformMatrix as created with a getTransform3D
+     * @param point from some geometry that needs be moved.
+     * @return resulting transformed point.
+     */
+    public double[] transform( Matrix transformMatrix, double[] point ) {
+        double[] expandedPoint = new double[4];
+        System.arraycopy(point, 0, expandedPoint, 0, point.length);
+        expandedPoint[3] = 1.0;
+        Matrix pointMatrix = new Matrix( expandedPoint, 4 );
+        
+        Matrix result = transformMatrix.times(pointMatrix);
+        if ( result.getRowPackedCopy().length < 3 ) {
+            throw new IllegalStateException("Failed to produce right-sized array.");
+        }
+        return result.getRowPackedCopy();
+    }
 
     /**
      * Works like "gluLookAt". Will assume 'previous matrix' is identity.
@@ -239,7 +341,7 @@ public class ViewMatrixSupport {
             mTrans[i + 12 + mTransOffset] = m[mBase + 3];
         }
     }
-
+    
     public static boolean invertM(float[] mInv, int mInvOffset, float[] m,
                                   int mOffset) {
         // Invert a 4 x 4 matrix using Cramer's Rule

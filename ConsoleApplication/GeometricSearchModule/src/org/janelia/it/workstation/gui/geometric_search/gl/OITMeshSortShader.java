@@ -61,11 +61,23 @@ public class OITMeshSortShader extends GL4Shader {
 //        checkGlError(gl, "d5 glUniform1i() error");
 
 
-        gl.glBindTexture(GL4.GL_TEXTURE_2D, tc.getHeadPointerTextureId());
-        checkGlError(gl, "d6 OITMeshSortShader glBindTexture() error");
+//        gl.glBindTexture(GL4.GL_TEXTURE_2D, tc.getHeadPointerTextureId());
+//        checkGlError(gl, "d6 OITMeshSortShader glBindTexture() error");
+//        
+//        gl.glBindBuffer(GL4.GL_TEXTURE_BUFFER, tc.getFragmentStorageBufferId());
+//        checkGlError(gl, "d 6.1 OITMeshSortShader glBindBufferBase() error");
         
-        gl.glBindBuffer(GL4.GL_TEXTURE_BUFFER, tc.getFragmentStorageBufferId());
-        checkGlError(gl, "d 6.1 OITMeshSortShader glBindBuffer() error");
+       // Bind the headPointerTexture for read-write
+       gl.glBindImageTexture(1, tc.getHeadPointerTextureId(), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_R32UI);
+       checkGlError(gl, "d6.2 OITMeshSortShader glBindImageTexture() error");
+       
+       // Bind the fragment list texture for read-write
+//       gl.glBindImageTexture(0, tc.getFragmentStorageTextureId(), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_RGBA32UI);
+//       checkGlError(gl, "d6.3 OITMeshSortShader glBindImageTexture() error");
+                
+        // Bind and reset the atomic counter       
+//        gl.glBindBuffer(GL4.GL_ATOMIC_COUNTER_BUFFER, tc.getAtomicCounterId());
+//        checkGlError(gl, "d6.4 OITMeshSortShader glBindBuffer() error");
 
         gl.glBindVertexArray(vertexArrayId.get(0));
         checkGlError(gl, "d7 OITMeshSortShader glBindVertexArray() error");
@@ -91,7 +103,9 @@ public class OITMeshSortShader extends GL4Shader {
     }
 
     @Override
-    public void init(GL4 gl) {
+    public void init(GL4 gl) throws ShaderCreationException {
+        super.init(gl);
+        gl.glUseProgram(getShaderProgram());
 
      //   gl.glBindTexture(GL4.GL_TEXTURE_2D, textureId.get(0));
      //   checkGlError(gl, "i glBindTexture() error");

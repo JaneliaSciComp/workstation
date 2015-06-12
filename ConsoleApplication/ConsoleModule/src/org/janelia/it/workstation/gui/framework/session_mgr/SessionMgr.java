@@ -863,7 +863,7 @@ public final class SessionMgr {
             }
         }
         else {
-            log.error("Local file cache is not available");
+            log.warn("Local file cache is not available");
         }
 
         return file;

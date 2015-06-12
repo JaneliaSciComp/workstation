@@ -37,8 +37,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.openide.util.Mutex;
 import org.openide.windows.WindowManager;
 
 /**
@@ -561,11 +559,6 @@ public class Utils {
 
             @Override
             protected void doStuff() throws Exception {
-//                if (filePath.startsWith(EntityConstants.SCALITY_PATH_PREFIX)) {
-//                    String bpid = filePath.replaceFirst(EntityConstants.SCALITY_PATH_PREFIX, "");
-//                    String url = ConsoleProperties.getString("console.ScalityProxyURL")+bpid;
-//                    File remoteFile = new File(url);
-//                }
                 file = SessionMgr.getCachedFile(filePath, false);
             }
 
@@ -641,8 +634,6 @@ public class Utils {
         WorkstationFile wfile = new WorkstationFile(standardPath);
 
         try {
-            wfile.get();
-
             input = wfile.getStream();
             long length = wfile.getLength();
 
