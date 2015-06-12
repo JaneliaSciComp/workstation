@@ -35,7 +35,7 @@ void main()
     // Actual fragment shading step
     float edgefalloff=1.0;
     float intensity=0.5;
-    float ambient=0.01;
+    float ambient=0.1;
 
     float opac = dot(normalize(-N), normalize(-I));
     opac = abs(opac);

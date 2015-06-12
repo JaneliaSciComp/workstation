@@ -1,5 +1,7 @@
 #version 430
 
+layout (early_fragment_tests) in;
+
 in vec2 vs_tex_coord;
 
 struct NodeType {
