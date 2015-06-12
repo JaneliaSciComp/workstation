@@ -73,6 +73,8 @@ public class GL4ShaderActionSequence {
 
 //        //gl.glEnable(GL4.GL_DEPTH_TEST);
 //        gl.glDisable(GL4.GL_BLEND);
+        
+        gl.glMemoryBarrier(GL4.GL_ALL_BARRIER_BITS);
 
         shader.unload(gl);
     }
