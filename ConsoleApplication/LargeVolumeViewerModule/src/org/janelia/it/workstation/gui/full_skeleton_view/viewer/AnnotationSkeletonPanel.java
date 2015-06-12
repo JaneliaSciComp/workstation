@@ -273,7 +273,7 @@ public class AnnotationSkeletonPanel extends JPanel {
 
                     @Override
                     public String getDescription() {
-                        return "Please choose an output directory and filename root.  Multiple output files may be created at that location.";
+                        return "Please choose an output directory and filename root.  Output file will have '.obj' suffix, and will include the id of an anchor from the current workspace.";
                     }
                     
                 });
