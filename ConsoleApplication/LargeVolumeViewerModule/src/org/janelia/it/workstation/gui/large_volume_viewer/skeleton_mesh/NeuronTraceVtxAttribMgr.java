@@ -251,7 +251,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         lineEnclosureFactory.setCharacteristics(CURRENT_SELECTION_POLYGON_SIDES, CURRENT_SELECTION_RADIUS);
         calculateCurrentSelectionVertices(lineEnclosureFactory);
 
-		// TESTING calculateAngleIllustrativeVertices(lineEnclosureFactory);
+		// TESTING 
+		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
         log.info("Number of vertices is {}.", lineEnclosureFactory.getCurrentVertexNumber());
         
 		// Add each factory to the collection.
@@ -261,41 +262,51 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 	@SuppressWarnings("unused")
 	private void calculateAngleIllustrativeVertices( LineEnclosureFactory lef ) {
 		lef.setCharacteristics(5, 50);
+    	double r = 500.0;
+
 		// Numbers should be around 74000, 49000, and 19000
 		double[] startingCoords = new double[] { 74000, 47000, 19000 };
 		double[] endingCoords = new double[3];
 
 		float[] extraColor = new float[]{1.0f, 0.0f, 1.0f};
+		xyPlaneFan(endingCoords, startingCoords, r, lef, extraColor);
+		yzPlaneFan(startingCoords, endingCoords, r, lef, extraColor);
+		xzPlaneFan(startingCoords, endingCoords, r, lef, extraColor);
+	
+	}
 
-		// Expect values to fan from left to top.
-		double r = 500.0;
-		endingCoords[0] = startingCoords[0] - r;
+	private void xzPlaneFan(double[] startingCoords, double[] endingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
+		// Side-to-side
+		startingCoords[1] = 48000;
+		endingCoords[0] = startingCoords[0];
 		endingCoords[1] = startingCoords[1];
-		endingCoords[2] = startingCoords[2];
-		for (double theta = 0.01; theta < Math.PI / 2.0; theta += 0.2 ) {
+		endingCoords[2] = startingCoords[2] - r;
+		for (double theta = 0.01; theta < Math.PI / 2.0; theta += 0.2) {
 			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
-			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
 			lef.addEnclosure(startingCoords, endingCoords, BRANCH_ANNO_COLOR);
-		}		
+		}
 
 		for (double theta = 3 * Math.PI / 2.0; theta < 2 * Math.PI; theta += 0.2) {
 			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
-			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
 			lef.addEnclosure(startingCoords, endingCoords, UNFINISHED_ANNO_COLOR);
 		}
-		
+
 		for (double theta = Math.PI / 2.0 + 0.01; theta < Math.PI; theta += 0.2) {
 			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
-			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
 			lef.addEnclosure(startingCoords, endingCoords, SPECIAL_ANNO_COLOR);
 		}
 
-		for (double theta = Math.PI; theta < 3*Math.PI / 2.0; theta += 0.2) {
+		for (double theta = Math.PI; theta < 3 * Math.PI / 2.0; theta += 0.2) {
 			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
-			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
 			lef.addEnclosure(startingCoords, endingCoords, extraColor);
 		}
-		
+	}
+
+	private void yzPlaneFan(double[] startingCoords, double[] endingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
 		// Move this aside to make it easier to see everything.
 		startingCoords[1] = 45000;
 		endingCoords[0] = startingCoords[0];
@@ -320,6 +331,33 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 		for (double theta = Math.PI; theta < 3 * Math.PI / 2.0; theta += 0.2) {
 			endingCoords[1] = startingCoords[1] + r * Math.cos(theta);
 			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, extraColor);
+		}
+	}
+
+	private void xyPlaneFan(double[] endingCoords, double[] startingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
+		// Expect values to fan from left to top.
+		endingCoords[0] = startingCoords[0] - r;
+		endingCoords[1] = startingCoords[1];
+		endingCoords[2] = startingCoords[2];
+		for (double theta = 0.01; theta < Math.PI / 2.0; theta += 0.2 ) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, BRANCH_ANNO_COLOR);
+		}
+		for (double theta = 3 * Math.PI / 2.0; theta < 2 * Math.PI; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, UNFINISHED_ANNO_COLOR);
+		}
+		for (double theta = Math.PI / 2.0 + 0.01; theta < Math.PI; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, SPECIAL_ANNO_COLOR);
+		}
+		for (double theta = Math.PI; theta < 3*Math.PI / 2.0; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
 			lef.addEnclosure(startingCoords, endingCoords, extraColor);
 		}
 	}

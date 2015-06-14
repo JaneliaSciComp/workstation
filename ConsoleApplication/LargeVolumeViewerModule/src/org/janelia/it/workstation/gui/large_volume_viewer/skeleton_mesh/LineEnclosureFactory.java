@@ -254,15 +254,22 @@ public class LineEnclosureFactory implements TriangleSource {
         double aboutY = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Z]);
         double aboutZ = lineUnitVector[X] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[X]);
 				
-		logger.debug("Using angles: {}, {}, {}.", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ));
+		logger.info("Using angles: {}, {}, {}.", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ));
 
 		int axialAlignment = getAxialAlignmentByLineDelta(lineUnitVector);
         logger.debug("Aligned along the #{} axis.", axialAlignment);
 		
 		if (axialAlignment == -1) {
+			// Unknown if this helps.
+//			if (lineUnitVector[X] > 0 || lineUnitVector[Y] < 0) {
+//				// Switch start/end order if facing in negative direction.
+//				double[] tempCoords = startCoords;
+//				startCoords = endCoords;
+//				endCoords = tempCoords;
+//			}
 			// Now that we have our angles, we make transforms.
 			Matrix transform1 = matrixUtils.getTransform3D(
-					aboutX, aboutY, 0,
+					-aboutX, aboutY, 0,
 					0, 0, 0);
 			final double[][] startEndPolygon = clonePrototypePolygon(zAxisAlignedPrototypePolygon);
 			transformPolygon(startEndPolygon, transform1);
@@ -306,12 +313,12 @@ public class LineEnclosureFactory implements TriangleSource {
 			endCapPolygonsHolder.add(endingEndPolygon);
 		}
 		else {
-            if (lineUnitVector[axialAlignment] > 0) {
-                // Switch start/end order if facing in negative direction.
-                double[] tempCoords = startCoords;
-                startCoords = endCoords;
-                endCoords = tempCoords;
-            }
+			if (lineUnitVector[axialAlignment] < 0) {
+				// Switch start/end order if facing in negative direction.
+				double[] tempCoords = startCoords;
+				startCoords = endCoords;
+				endCoords = tempCoords;
+			}
 			// Special case: aligned right along some axis.  Trig assumptions won't help.
 			Matrix transform = matrixUtils.getTransform3D(
 					0f,
