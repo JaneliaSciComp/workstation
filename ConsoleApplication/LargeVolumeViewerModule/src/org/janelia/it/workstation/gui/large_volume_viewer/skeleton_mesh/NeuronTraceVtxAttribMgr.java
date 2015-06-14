@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
@@ -25,7 +24,6 @@ import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationGeometry;
@@ -80,6 +78,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     
     private TableModelListener localListener;
 
+	private boolean hasDisplayable = false;
+	
     // The sources and render buffers will be created, based on the contents
     // of the 'model'.
     private final List<TriangleSource> triangleSources = new ArrayList<>();
@@ -115,7 +115,13 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         }
         
         createVertices();
-        populateNormals(triangleSources, renderIdToBuffers);
+		if (hasDisplayable) {
+			populateNormals(triangleSources, renderIdToBuffers);
+		}
+		else {
+			triangleSources.clear();
+			renderIdToBuffers.clear();
+		}
         //exportVertices(new File("/Users/fosterl/"), "NeuronTraceVtxAttribMgr_Test");
         
         return triangleSources;
@@ -254,6 +260,13 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 		// TESTING 
 		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
         log.info("Number of vertices is {}.", lineEnclosureFactory.getCurrentVertexNumber());
+		
+		if (lineEnclosureFactory.getCurrentVertexNumber() > 0) {
+			hasDisplayable = true;
+		}
+		else {
+			hasDisplayable = false;
+		}
         
 		// Add each factory to the collection.
 		triangleSources.add(lineEnclosureFactory);
