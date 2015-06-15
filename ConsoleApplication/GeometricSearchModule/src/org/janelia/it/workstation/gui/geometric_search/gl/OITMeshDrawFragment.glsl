@@ -16,7 +16,7 @@ struct NodeType {
 //uniform float intensity;
 //uniform float ambient;
 
-//layout (early_fragment_tests) in;
+layout (early_fragment_tests) in;
 
 layout (binding=0, offset=0) uniform atomic_uint index_counter;
 layout (binding = 1, r32ui) uniform uimage2D head_pointer_image;
@@ -35,7 +35,7 @@ void main()
     // Actual fragment shading step
     float edgefalloff=1.0;
     float intensity=0.5;
-    float ambient=0.01;
+    float ambient=0.1;
 
     float opac = dot(normalize(-N), normalize(-I));
     opac = abs(opac);

@@ -298,34 +298,9 @@ extends AbstractTextureLoadAdapter
         }
 		return decoders;
 	}
-	
-    private File getOsPath(String linuxPath) {
-        // TODO - non-Windows
-        File testFile = new File(linuxPath);
-        if (testFile.exists()) return testFile; // If the folder exists, use it
-        Map<String, String> prefixMappings = new HashMap<>();
-        
-        // TODO - need more mappings
-        prefixMappings.put("/nobackup/", "//fxt/nobackup/"); // Windows
-        prefixMappings.put("/tier2/", "//tier2/"); // Windows
-        prefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "//dm11/mousebrainmicro/"); // Windows
-        
-        for (String linuxPrefix : prefixMappings.keySet()) {
-            if (linuxPath.startsWith(linuxPrefix)) {
-                String testPath = linuxPath.replace(linuxPrefix, prefixMappings.get(linuxPrefix));
-                testFile = new File(testPath);
-                if (testFile.exists())
-                    return testFile;
-            }
-        }
-        return null;
-    }
     
-    private boolean sniffOriginAndScaleFromFolder(String path, int [] origin, double [] scale) {
-        File localPath = getOsPath(path);
-        if (localPath == null)
-            return false;
-        File transformFile = new File(localPath, "transform.txt");
+    private boolean sniffOriginAndScaleFromFolder(int [] origin, double [] scale) {
+        File transformFile = new File(getTopFolder(), "transform.txt");
         if (! transformFile.exists())
             return false;
         try {
@@ -380,7 +355,7 @@ extends AbstractTextureLoadAdapter
             origin = transform.getOrigin();
             scale = transform.getScale();
         } catch ( Exception ex ) {
-            if (! sniffOriginAndScaleFromFolder(remoteBasePath, origin, scale))
+            if (! sniffOriginAndScaleFromFolder(origin, scale))
                 throw new DataSourceInitializeException(
                         "Failed to find metadata", ex
                 );

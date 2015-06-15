@@ -136,10 +136,11 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         StaticVolumeBrickSource volumeSource = null;
         try {
             uri = focusUrl.toURI();
+            String yamlUrlString = new URL(focusUrl, BASE_YML_FILE).getPath();
             URI yamlUri = new URI(
                     uri.getScheme(),
                     uri.getAuthority(),
-                    uri.getPath() + "/" + BASE_YML_FILE,
+                    yamlUrlString,
                     uri.getFragment()
             );
             logger.info("Constructed URI: {}.", uri);
@@ -148,8 +149,8 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 volumeSource = nttc.loadYaml(stream1, loader, progress);
             } catch (ParseException ex) {
                 JOptionPane.showMessageDialog(nttc, 
-                        "Problem Loading Raw Tile Information from " + focusUrl.getPath() + "/" + BASE_YML_FILE
-                        + "\n  Does the transform contain barycentric coordinates?"
+                        "Problem Loading Raw Tile Information from " + yamlUrlString + 
+                        "\n  Does the transform contain barycentric coordinates?"
                         ,
                         "Tilebase File Problem",
                         JOptionPane.ERROR_MESSAGE);            }
@@ -157,9 +158,9 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             // Something went wrong with loading the Yaml file
             // Exceptions.printStackTrace(ex);
             JOptionPane.showMessageDialog(nttc, 
-                    "Problem Loading Raw Tile Information from " + focusUrl.getPath() + "/" + BASE_YML_FILE
-                    + "\n  Is the render folder drive mounted?"
-                    + "\n  Does the render folder contain a YAML file?"
+                    "Problem Loading Raw Tile Information from " + focusUrl.getPath() +
+                    "\n  Is the render folder drive mounted?"
+                    + "\n  Does the render folder contain a " + BASE_YML_FILE + " file ?"
                     ,
                     "Tilebase File Problem",
                     JOptionPane.ERROR_MESSAGE);

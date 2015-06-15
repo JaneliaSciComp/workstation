@@ -6,6 +6,7 @@ import org.janelia.geometry3d.Matrix4;
 
 import javax.media.opengl.GL4;
 import java.nio.IntBuffer;
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.gui.geometric_search.viewer.GL4TransparencyContext;
 import static org.janelia.it.workstation.gui.geometric_search.viewer.GL4TransparencyContext.MAX_HEIGHT;
 import static org.janelia.it.workstation.gui.geometric_search.viewer.GL4TransparencyContext.MAX_WIDTH;
@@ -35,6 +36,11 @@ public class OITMeshDrawShader extends GL4Shader {
     public void setModel(GL4 gl, Matrix4 model) {
         setUniformMatrix4fv(gl, "model", false, model.asArray());
         checkGlError(gl, "OITMeshDrawShader setModel() error");
+    }
+    
+    public void setDrawColor(GL4 gl, Vector4 drawColor) {
+        setUniform4v(gl, "dcolor", 1, drawColor.toArray());
+        checkGlError(gl, "OITMeshDrawShader setDrawColor() error");
     }
     
     public void setTransparencyContext(GL4TransparencyContext tc) {

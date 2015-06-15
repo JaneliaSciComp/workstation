@@ -50,6 +50,10 @@ public class AttributeManagerBufferUploader implements BufferUploader {
         }
         final Map<Long, RenderBuffersBean> renderIdToBuffers
                 = configurator.getVertexAttributeManager().getRenderIdToBuffers();
+		if (renderIdToBuffers.isEmpty()) {
+			throw new BufferStateException();
+		}
+		
         long combinedVtxSize = 0L;
         long combinedInxSize = 0L;
 
