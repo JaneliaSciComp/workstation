@@ -90,8 +90,10 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             public void update(GL4 gl) {
                 Matrix4 viewMatrix = viewer.getRenderer().getViewMatrix();
                 drawShader.setView(gl, viewMatrix);
+                logger.info("View Matrix:\n"+viewMatrix.toString()+"\n");
                 Matrix4 projMatrix = viewer.getRenderer().getProjectionMatrix();
                 drawShader.setProjection(gl, projMatrix);
+                logger.info("Projection Matrix:\n"+projMatrix.toString()+"\n");
             }
         });
 
@@ -103,9 +105,19 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         drawSequence.setShader(drawShader);
         
         Random rand = new Random();
+        
+        Matrix4 vertexRotation=new Matrix4();
+        
+        // Empirically derived - compatible with results of MeshLab import/export from normalized compartment coordinates
+        vertexRotation.setTranspose(-1.0f,   0.0f,   0.0f,   0.5f,
+                                     0.0f,  -1.0f,   0.0f,   0.25f,
+                                     0.0f,   0.0f,  -1.0f,   0.625f,
+                                     0.0f,   0.0f,   0.0f,   1.0f);
+        
         for (File meshFile : meshFiles) {
             if (meshFile.getName().endsWith(".obj")) {
                 final MeshObjFileV2Actor ma = new MeshObjFileV2Actor(meshFile);
+                ma.setVertexRotation(vertexRotation);
                 ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.5f));
                 ma.setUpdateCallback(new GLDisplayUpdateCallback() {
                     @Override
