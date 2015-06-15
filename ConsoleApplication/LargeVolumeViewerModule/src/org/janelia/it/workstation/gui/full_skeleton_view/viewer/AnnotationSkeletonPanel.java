@@ -22,11 +22,11 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.DirectionalReferenceAxesActor;
@@ -245,7 +245,16 @@ public class AnnotationSkeletonPanel extends JPanel {
     private long select(int mouseX, int mouseY) {
         long rtnVal = -1L;
         if (context != null) {
-            RayCastSelector rayCastSelector = new RayCastSelector( dataSource, context, viewer.getWidth(), viewer.getHeight() );
+            BasicMouseMode pointComputer = new BasicMouseMode();
+            pointComputer.setCamera(context.getCamera3d());
+            //TODO: establish some mouse-modal-widget, possibly against
+            // OcclusiveViewer.  Then can pass in the pointComputer to
+            // the ray cast selector, which can use that to do its origin-of-
+            // ray calculation.
+            //pointComputer.setWidget(viewer, null);
+            RayCastSelector rayCastSelector = new RayCastSelector( 
+                    dataSource, context, viewer.getWidth(), viewer.getHeight() 
+            );
             rtnVal = rayCastSelector.select(mouseX, mouseY);
         }
         return rtnVal;
