@@ -282,7 +282,8 @@ public class GL4Renderer implements GLEventListener
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = model.getCameraFocusDistance();
         float scaledFocusDistance = new Float(Math.abs(cameraFocusDistance));
-        projectionMatrix = computeProjection(h, 0.5f*scaledFocusDistance, 2.0f*scaledFocusDistance);
+        //projectionMatrix = computeProjection(h, 0.5f*scaledFocusDistance, 2.0f*scaledFocusDistance);
+        projectionMatrix = computeProjection(h, 0.01f*scaledFocusDistance, 2.0f*scaledFocusDistance);
     }
 
     Matrix4 computeProjection(float aspectRatio, float near, float far) {

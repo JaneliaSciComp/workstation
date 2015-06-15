@@ -32,6 +32,7 @@ out vec4 blankOut;
 // entry point
 void main()
 {
+
     // Actual fragment shading step
     float edgefalloff=1.0;
     float intensity=0.5;

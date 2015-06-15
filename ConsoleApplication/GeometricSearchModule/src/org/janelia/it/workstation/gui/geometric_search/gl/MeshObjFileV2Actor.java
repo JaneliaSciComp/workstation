@@ -11,6 +11,8 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 
 /**
@@ -27,6 +29,7 @@ public class MeshObjFileV2Actor extends GL4SimpleActor
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
     Vector4 color=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+    Matrix4 vertexRotation=null;
 
     private class vGroup {
 
@@ -69,6 +72,10 @@ public class MeshObjFileV2Actor extends GL4SimpleActor
 
     public void setDrawLines(boolean drawLines) {
         this.drawLines=drawLines;
+    }
+    
+    public void setVertexRotation(Matrix4 rotation) {
+        this.vertexRotation=rotation;
     }
 
     @Override
@@ -136,6 +143,13 @@ public class MeshObjFileV2Actor extends GL4SimpleActor
                 float x=vg.x;
                 float y=vg.y;
                 float z=vg.z;
+                if (vertexRotation!=null) {
+                    Vector4 v = new Vector4(x, y, z, 1.0f);
+                    Vector4 vr = vertexRotation.multiply(v);
+                    x=vr.get(0);
+                    y=vr.get(1);
+                    z=vr.get(2);
+                } 
                 int s=f*9+i*3;
                 fb.put(s, x);
                 fb.put(s+1, y);
