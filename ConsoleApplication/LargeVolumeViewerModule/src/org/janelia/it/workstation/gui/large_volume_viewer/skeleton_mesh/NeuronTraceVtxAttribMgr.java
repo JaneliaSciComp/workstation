@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.swing.event.TableModelListener;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
 import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
