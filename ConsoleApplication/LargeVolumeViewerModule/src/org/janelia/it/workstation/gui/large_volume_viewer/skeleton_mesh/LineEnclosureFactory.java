@@ -252,7 +252,7 @@ public class LineEnclosureFactory implements TriangleSource {
         double aboutY = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Z]);
         double aboutZ = lineUnitVector[X] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[X]);
 				
-		logger.info("Using angles: {}, {}, {}.", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ));
+		logger.debug("Using angles: {}, {}, {}.", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ));
 
 		int axialAlignment = getAxialAlignmentByLineDelta(lineUnitVector);
         logger.debug("Aligned along the #{} axis.", axialAlignment);
