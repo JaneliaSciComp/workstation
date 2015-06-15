@@ -304,13 +304,20 @@ public class LineEnclosureFactory implements TriangleSource {
 			endCapPolygonsHolder.add(endingEndPolygon);
 		}
 		else {
-			if (lineUnitVector[axialAlignment] < 0) {
+			// Special case: aligned right along some axis.  Trig assumptions won't help.
+			boolean mustSwitch = false;
+			if (lineUnitVector[axialAlignment] < 0  &&  axialAlignment == Z) {
+				mustSwitch = true;
+			}
+			else if (lineUnitVector[axialAlignment] > 0  &&  axialAlignment != Z) {
+				mustSwitch = true;
+			}
+			if (mustSwitch) {
 				// Switch start/end order if facing in negative direction.
 				double[] tempCoords = startCoords;
 				startCoords = endCoords;
 				endCoords = tempCoords;
 			}
-			// Special case: aligned right along some axis.  Trig assumptions won't help.
 			Matrix transform = matrixUtils.getTransform3D(
 					0f,
 					0f,
