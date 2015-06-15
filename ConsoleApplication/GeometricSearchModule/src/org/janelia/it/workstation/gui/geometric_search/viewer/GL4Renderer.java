@@ -39,14 +39,13 @@ public class GL4Renderer implements GLEventListener
     private static final double MAX_CAMERA_FOCUS_DISTANCE = 1000000.0;
     private static final double MIN_CAMERA_FOCUS_DISTANCE = 0.001;
     private static final Vec3 UP_IN_CAMERA = new Vec3(0,1,0);
-    private static double FOV_Y_DEGREES = 45.0f;
+    private static double FOV_Y_DEGREES = 45.0f; 
     private float FOV_TERM = new Float(Math.tan( (Math.PI/180.0) * (FOV_Y_DEGREES/2.0) ) );
 
 
     // camera parameters
-    private double defaultHeightInPixels = 400.0;
-    private double widthInPixels = defaultHeightInPixels;
-    private double heightInPixels = defaultHeightInPixels;
+    private double widthInPixels = 1200;
+    private double heightInPixels = 800;
     private GL4Model model;
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;
@@ -73,15 +72,20 @@ public class GL4Renderer implements GLEventListener
     public void addShaderAction(GL4ShaderActionSequence shaderAction) {
         shaderActionList.add(shaderAction);
     }
+    
+    public void setPixelDimensions(double widthInPixels, double heightInPixels) {
+        this.widthInPixels=widthInPixels;
+        this.heightInPixels=heightInPixels;
+    }
 
     protected void displayBackground(GL4 gl)
     {
         // paint solid background color
         gl.glClearColor(
-                backgroundColor.getRed()/255.0f,
-                backgroundColor.getGreen()/255.0f,
-                backgroundColor.getBlue()/255.0f,
-                backgroundColor.getAlpha()/255.0f);
+                backgroundColor.getRed(),
+                backgroundColor.getGreen(),
+                backgroundColor.getBlue(),
+                backgroundColor.getAlpha());
         gl.glClear(GL4.GL_COLOR_BUFFER_BIT);
     }
 
@@ -215,6 +219,7 @@ public class GL4Renderer implements GLEventListener
 //            String fsName = s.getFragmentShaderResourceName();
             //logger.info("Loading "+fsName);
             shaderAction.display(gl);
+
            // logger.info("Done with "+fsName);
         }
 
@@ -271,6 +276,9 @@ public class GL4Renderer implements GLEventListener
 
     public void updateProjection(GL4 gl) {
         //gl.glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
+        
+        logger.info("updateProjection() using widthInPixels="+widthInPixels+" heightInPixels="+heightInPixels);
+        
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = model.getCameraFocusDistance();
         float scaledFocusDistance = new Float(Math.abs(cameraFocusDistance));

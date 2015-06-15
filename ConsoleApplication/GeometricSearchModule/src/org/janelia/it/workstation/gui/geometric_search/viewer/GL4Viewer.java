@@ -56,7 +56,6 @@ public class GL4Viewer extends GLJPanel
         addMouseMotionListener(this);
         addMouseWheelListener(this);
 
-        setPreferredSize( new Dimension( 400, 400 ) );
 
         // Context menu for resetting view
         JMenuItem resetViewItem = new JMenuItem("Reset view");
@@ -64,7 +63,15 @@ public class GL4Viewer extends GLJPanel
         popupMenu.add(resetViewItem);
         model=new GL4Model();
         renderer=new GL4Renderer(model);
+        setPreferredSize( new Dimension( 1200, 800 ) );
+
         addGLEventListener(renderer);
+    }
+    
+    @Override
+    public void setPreferredSize(Dimension preferredSize) {
+        super.setPreferredSize(preferredSize);
+        renderer.setPixelDimensions(preferredSize.getWidth(), preferredSize.getHeight());
     }
 
     @Override

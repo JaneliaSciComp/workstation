@@ -69,6 +69,8 @@ called from a  SimpleWorker thread.
     
     private ViewStateListener viewStateListener;
     private NotesUpdateListener notesUpdateListener;
+    
+    private FilteredAnnotationModel filteredAnnotationModel;
 
     private Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
     private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
@@ -85,7 +87,11 @@ called from a  SimpleWorker thread.
     public AnnotationModel() {
         modelMgr = ModelMgr.getModelMgr();
         sessionMgr = SessionMgr.getSessionMgr();
-
+        filteredAnnotationModel = new FilteredAnnotationModel();
+    }
+    
+    public FilteredAnnotationModel getFilteredAnnotationModel() {
+        return filteredAnnotationModel;
     }
 
     public void addTmGeoAnnotationModListener(TmGeoAnnotationModListener listener) {

@@ -132,11 +132,12 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
                 // This vertex-build must be done here, now that all information is set.
                 getBufferManager().buildBuffers();
                 if (reportError( gl, "building buffers" )) {
+					bTexturesNeedUploaded = true;
                     return;
                 }
 
-                getBufferManager().enableBuffers( gl );
-                if (reportError( gl, "enabling buffers" )) {
+                if (! getBufferManager().enableBuffers( gl )) {
+					bTexturesNeedUploaded = true;
                     return;
                 }
                 getBufferManager().dropBuffers();

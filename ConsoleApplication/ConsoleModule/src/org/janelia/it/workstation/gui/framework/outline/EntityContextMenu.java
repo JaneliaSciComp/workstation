@@ -154,7 +154,8 @@ public class EntityContextMenu extends JPopupMenu {
         add(getDeleteItem());
         add(getDeleteInBackgroundItem());
         add(getMarkForReprocessingItem());
-        add(getSampleCompressionTypeItem());
+        // TODO: reenable this item once we have Visually Lossless samples
+        //add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getVerificationMovieItem());
         
@@ -1682,9 +1683,9 @@ public class EntityContextMenu extends JPopupMenu {
             return null;
         if (!OpenInFinderAction.isSupported())
             return null;
-        String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
+        String path = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
         JMenuItem menuItem = null;
-        if (!StringUtils.isEmpty(filepath)) {
+        if (isLocallyAccessibleFilepath(path)) {
             menuItem = getActionItem(new OpenInFinderAction(rootedEntity.getEntity()) {
                 @Override
                 public String getName() {
@@ -1703,8 +1704,8 @@ public class EntityContextMenu extends JPopupMenu {
             return null;
         if (!OpenWithDefaultAppAction.isSupported())
             return null;
-        String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
-        if (!StringUtils.isEmpty(filepath)) {
+        String path = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
+        if (isLocallyAccessibleFilepath(path)) {
             OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(rootedEntity.getEntity()) {
                 @Override
                 public String getName() {
@@ -1720,7 +1721,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple)
             return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
-        if (path != null) {
+        if (isLocallyAccessibleFilepath(path)) {
             JMenuItem fijiMenuItem = new JMenuItem("  View In Fiji");
             fijiMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -1824,7 +1825,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple)
             return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
-        if (path != null) {
+        if (isLocallyAccessibleFilepath(path)) {
             JMenuItem vaa3dMenuItem = new JMenuItem("  View In Vaa3D Tri-View");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -1846,7 +1847,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple)
             return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
-        if (path != null) {
+        if (isLocallyAccessibleFilepath(path)) {
             JMenuItem vaa3dMenuItem = new JMenuItem("  View In Vaa3D 3D View");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -2021,4 +2022,15 @@ public class EntityContextMenu extends JPopupMenu {
         }
     }
 
+    /**
+     * Checks if the file path is or can be made locally accessible through the 
+     * file cache. This is mainly to filter out Scality files, which we can't 
+     * handle at the moment. In this future this may return true for all file
+     * paths which are not empty. 
+     * @param filepath
+     * @return 
+     */
+    private boolean isLocallyAccessibleFilepath(String filepath) {
+        return !StringUtils.isEmpty(filepath) && !filepath.startsWith(EntityConstants.SCALITY_PATH_PREFIX);
+    }
 }

@@ -330,7 +330,7 @@ public class MeshDrawActor implements GLActor {
     }
     
     public void refresh() {
-        bBuffersNeedUpload = true;
+        bBuffersNeedUpload = true;        
     }
 
     private boolean initializeShaderValues(GL2GL3 gl) {

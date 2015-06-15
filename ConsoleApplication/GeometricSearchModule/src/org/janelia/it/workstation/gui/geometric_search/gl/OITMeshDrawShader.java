@@ -6,6 +6,7 @@ import org.janelia.geometry3d.Matrix4;
 
 import javax.media.opengl.GL4;
 import java.nio.IntBuffer;
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.gui.geometric_search.viewer.GL4TransparencyContext;
 import static org.janelia.it.workstation.gui.geometric_search.viewer.GL4TransparencyContext.MAX_HEIGHT;
 import static org.janelia.it.workstation.gui.geometric_search.viewer.GL4TransparencyContext.MAX_WIDTH;
@@ -35,6 +36,11 @@ public class OITMeshDrawShader extends GL4Shader {
     public void setModel(GL4 gl, Matrix4 model) {
         setUniformMatrix4fv(gl, "model", false, model.asArray());
         checkGlError(gl, "OITMeshDrawShader setModel() error");
+    }
+    
+    public void setDrawColor(GL4 gl, Vector4 drawColor) {
+        setUniform4v(gl, "dcolor", 1, drawColor.toArray());
+        checkGlError(gl, "OITMeshDrawShader setDrawColor() error");
     }
     
     public void setTransparencyContext(GL4TransparencyContext tc) {
@@ -83,15 +89,19 @@ public class OITMeshDrawShader extends GL4Shader {
        gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, 0);
         
        // Bind the headPointerTexture for read-write
-       gl.glBindImageTexture(0, tc.getHeadPointerTextureId(), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_R32UI);
+       gl.glBindImageTexture(1, tc.getHeadPointerTextureId(), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_R32UI);
        checkGlError(gl, "d5 OITMeshDrawShader glBindImageTexture() error");
        
+       // NEED TO CLEAN UP MESS, CLARIFY WHETHER USING TEXTURE OR BUFFER FOR THIS!!!!!
+//        gl.glBindBuffer(GL4.GL_TEXTURE_BUFFER, tc.getFragmentStorageBufferId());
+//        checkGlError(gl, "i8 GL4TransparencyContext glBindBuffer() error");
+       
        // Bind the fragment list texture for read-write
-       gl.glBindImageTexture(1, tc.getFragmentStorageTextureId(), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_RGBA32UI);
-       checkGlError(gl, "d6 OITMeshDrawShader glBindImageTexture() error");
+//       gl.glBindImageTexture(0, tc.getFragmentStorageTextureId(), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_RGBA32UI);
+//       checkGlError(gl, "d6 OITMeshDrawShader glBindImageTexture() error");
                 
         // Bind and reset the atomic counter       
-        gl.glBindBuffer(GL4.GL_ATOMIC_COUNTER_BUFFER, tc.getAtomicCounterId());
+        gl.glBindBufferBase(GL4.GL_ATOMIC_COUNTER_BUFFER, 0, tc.getAtomicCounterId());
         checkGlError(gl, "d6a OITMeshDrawShader glBindBuffer() error");
               
   //      ByteBuffer bb = gl.glMapBufferRange(GL4.GL_ATOMIC_COUNTER_BUFFER, 0, 4, GL4.GL_MAP_WRITE_BIT | GL4.GL_MAP_INVALIDATE_BUFFER_BIT | GL4.GL_MAP_UNSYNCHRONIZED_BIT);

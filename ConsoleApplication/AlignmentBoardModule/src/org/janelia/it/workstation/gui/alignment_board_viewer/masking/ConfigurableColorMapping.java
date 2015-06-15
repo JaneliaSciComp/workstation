@@ -249,7 +249,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
         for ( RenderableBean bean: sortedBeans ) {
             System.out.println("SORTED:: " + bean.getRenderableEntity().getName() + "  " + bean.getType() + "  " + bean.getVoxelCount() );
         }
-            */
+        */
 
         // Remarshall into a list of ids.  They will now be in priority order.
         List<Integer> prioritizedMasks = new ArrayList<>();

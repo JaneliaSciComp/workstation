@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
 import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
 import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
@@ -24,6 +25,10 @@ import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationGeometry;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -40,10 +45,37 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
+    private static final double MANUAL_SEGMENT_RADIUS = 2;
+    private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
+    private static final double TRACED_SEGMENT_RADIUS = 3;
+    private static final int TRACED_SEGMENT_POLYGON_SIDES = 10;
+    private static final double ANNO_END_RADIUS = TRACED_SEGMENT_RADIUS * 4;
+    private static final int ANNO_END_POLYGON_SIDES = 6;
+    
+    private static final int CURRENT_SELECTION_POLYGON_SIDES = 16;
+    private static final double CURRENT_SELECTION_RADIUS = TRACED_SEGMENT_RADIUS * 10;
+
+    private static final float[] UNFINISHED_ANNO_COLOR = new float[]{
+        1.0f, 0.6f, 0.6f
+    };
+    
+    private static final float[] SPECIAL_ANNO_COLOR = new float[]{
+        250.0f/256.0f, 218.0f/256.0f, 94.0f/256.0f
+    };
+    
+    private static final float[] BRANCH_ANNO_COLOR = new float[]{
+        0.6f, 0.6f, 1.0f
+    };
+
+    private static final float[] CURRENT_SELECTION_COLOR = new float[]{
+        1.0f, 1.0f, 1.0f
+    };
+
     // The skeleton and neuron styles constitute the 'model' to be studied
     // in creating the 3D representation of annotations.
     private AnnotationSkeletonDataSourceI dataSource;
-
+    
+	private boolean hasDisplayable = false;	
     // The sources and render buffers will be created, based on the contents
     // of the 'model'.
     private final List<TriangleSource> triangleSources = new ArrayList<>();
@@ -79,8 +111,14 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         }
         
         createVertices();
-        populateNormals(triangleSources, renderIdToBuffers);
-        exportVertices(new File("/Users/fosterl/"), "NeuronTraceVtxAttribMgr_Test");
+		if (hasDisplayable) {
+			populateNormals(triangleSources, renderIdToBuffers);
+		}
+		else {
+			triangleSources.clear();
+			renderIdToBuffers.clear();
+		}
+        //exportVertices(new File("/Users/fosterl/"), "NeuronTraceVtxAttribMgr_Test");
         
         return triangleSources;
     }
@@ -100,11 +138,14 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     public void exportVertices(File outputLocation, String filenamePrefix) throws Exception {
         Skeleton skeleton = dataSource.getSkeleton();
         if (skeleton == null || skeleton.getAnchors().isEmpty()) {
-            throw new IllegalStateException("Nothing to export.");
+            log.warn("Nothing to export");
+            return;
         }
         Anchor anAnchor = skeleton.getAnchors().iterator().next();
         Long id = anAnchor.getNeuronID();
+        this.execute();  // Ensure contents.
         exportVertices(outputLocation, filenamePrefix, triangleSources, id);
+        this.close(); // Ensure cleanup.
     }
     
     /**
@@ -131,7 +172,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     }
 
     public void setDataSource(AnnotationSkeletonDataSourceI dataSource) {
-        this.dataSource = dataSource;
+        this.dataSource = dataSource;        
     }
     
     /**
@@ -153,7 +194,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     }
 
     /**
-     * Test accessible method which does not rely on skeleton data.  Will
+     * Test-accessible method which does not rely on skeleton data.  Will
      * calculate the normal vectors for the triangles in the triangle source.
      * 
      * @param triangleSources iterated for normals data.
@@ -165,10 +206,10 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     ) {
         Long sourceNumber = 0L;
         BufferPackager packager = new BufferPackager();
+        NormalCompositor normalCompositor = new NormalCompositor();
         for (TriangleSource factory : triangleSources) {
             // Now have a full complement of triangles and vertices.  For this source, can traverse the
             // vertices, making a "composite normal" based on the normals of all entangling triangles.
-            NormalCompositor normalCompositor = new NormalCompositor();
             normalCompositor.combineCustomNormals(factory);
             RenderBuffersBean rbb = renderIdToBuffers.get(sourceNumber);
             if ( rbb == null ) {
@@ -189,19 +230,246 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
      */
     private synchronized void createVertices() throws Exception {
         // Make triangle sources.
-		LineEnclosureFactory tracedSegmentEnclosureFactory = new LineEnclosureFactory(10, 3);
-        LineEnclosureFactory manualSegmentEnclosureFactory = new LineEnclosureFactory(8, 2);
+        LineEnclosureFactory lineEnclosureFactory = new LineEnclosureFactory(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
         
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
         TileFormat tileFormat = dataSource.getTileFormat();
 
-		// Iterate over all the traced segments, and add enclosures for each.           
-        for ( AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {            
+        int currentVertexNumber = 0;
+        lineEnclosureFactory.setCurrentVertexNumber(
+                currentVertexNumber
+        );
+        // Look at 'interesting annotations'.  What can be presented there?
+        lineEnclosureFactory.setCharacteristics(ANNO_END_POLYGON_SIDES, ANNO_END_RADIUS);
+        calculateInterestingAnnotationVertices(tileFormat, lineEnclosureFactory);
+        
+        // Get the auto-traced segments.
+        lineEnclosureFactory.setCharacteristics(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
+        calculateTracedSegmentVertices(voxelPathAnchorPairs, tileFormat, lineEnclosureFactory);
+        
+        // Now get the lines.
+        lineEnclosureFactory.setCharacteristics(MANUAL_SEGMENT_POLYGON_SIDES, MANUAL_SEGMENT_RADIUS);
+        calculateManualLineVertices(voxelPathAnchorPairs, lineEnclosureFactory);                        
+
+        // Finally, the current selection.
+        lineEnclosureFactory.setCharacteristics(CURRENT_SELECTION_POLYGON_SIDES, CURRENT_SELECTION_RADIUS);
+        calculateCurrentSelectionVertices(lineEnclosureFactory);
+
+		// TESTING 
+		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
+        log.info("Number of vertices is {}.", lineEnclosureFactory.getCurrentVertexNumber());
+		
+		if (lineEnclosureFactory.getCurrentVertexNumber() > 0) {
+			hasDisplayable = true;
+		}
+		else {
+			hasDisplayable = false;
+		}
+        
+		// Add each factory to the collection.
+		triangleSources.add(lineEnclosureFactory);
+    }
+
+	@SuppressWarnings("unused")
+	private void calculateAngleIllustrativeVertices( LineEnclosureFactory lef ) {
+		lef.setCharacteristics(5, 50);
+    	double r = 500.0;
+
+		// Numbers should be around 74000, 49000, and 19000
+		double[] startingCoords = new double[] { 74000, 47000, 19000 };
+		double[] endingCoords = new double[3];
+
+		float[] extraColor = new float[]{1.0f, 0.0f, 1.0f};
+		xyPlaneFan(endingCoords, startingCoords, r, lef, extraColor);
+		yzPlaneFan(startingCoords, endingCoords, r, lef, extraColor);
+		xzPlaneFan(startingCoords, endingCoords, r, lef, extraColor);
+	
+	}
+
+	private void xzPlaneFan(double[] startingCoords, double[] endingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
+		// Side-to-side
+		startingCoords[1] = 48000;
+		endingCoords[0] = startingCoords[0];
+		endingCoords[1] = startingCoords[1];
+		endingCoords[2] = startingCoords[2] - r;
+		for (double theta = 0.01; theta < Math.PI / 2.0; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, BRANCH_ANNO_COLOR);
+		}
+
+		for (double theta = 3 * Math.PI / 2.0; theta < 2 * Math.PI; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, UNFINISHED_ANNO_COLOR);
+		}
+
+		for (double theta = Math.PI / 2.0 + 0.01; theta < Math.PI; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, SPECIAL_ANNO_COLOR);
+		}
+
+		for (double theta = Math.PI; theta < 3 * Math.PI / 2.0; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, extraColor);
+		}
+	}
+
+	private void yzPlaneFan(double[] startingCoords, double[] endingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
+		// Move this aside to make it easier to see everything.
+		startingCoords[1] = 45000;
+		endingCoords[0] = startingCoords[0];
+		for (double theta = 0.01; theta < Math.PI / 2.0; theta += 0.2) {
+			endingCoords[1] = startingCoords[1] + r * Math.cos(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, BRANCH_ANNO_COLOR);
+		}
+
+		for (double theta = 3 * Math.PI / 2.0; theta < 2 * Math.PI; theta += 0.2) {
+			endingCoords[1] = startingCoords[1] + r * Math.cos(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, UNFINISHED_ANNO_COLOR);
+		}
+
+		for (double theta = Math.PI / 2.0 + 0.01; theta < Math.PI; theta += 0.2) {
+			endingCoords[1] = startingCoords[1] + r * Math.cos(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, SPECIAL_ANNO_COLOR);
+		}
+
+		for (double theta = Math.PI; theta < 3 * Math.PI / 2.0; theta += 0.2) {
+			endingCoords[1] = startingCoords[1] + r * Math.cos(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, extraColor);
+		}
+	}
+
+	private void xyPlaneFan(double[] endingCoords, double[] startingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
+		// Expect values to fan from left to top.
+		endingCoords[0] = startingCoords[0] - r;
+		endingCoords[1] = startingCoords[1];
+		endingCoords[2] = startingCoords[2];
+		for (double theta = 0.01; theta < Math.PI / 2.0; theta += 0.2 ) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, BRANCH_ANNO_COLOR);
+		}
+		for (double theta = 3 * Math.PI / 2.0; theta < 2 * Math.PI; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, UNFINISHED_ANNO_COLOR);
+		}
+		for (double theta = Math.PI / 2.0 + 0.01; theta < Math.PI; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, SPECIAL_ANNO_COLOR);
+		}
+		for (double theta = Math.PI; theta < 3*Math.PI / 2.0; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, extraColor);
+		}
+	}
+	
+    protected void calculateInterestingAnnotationVertices(TileFormat tileFormat, LineEnclosureFactory interestingAnnotationEnclosureFactory) {
+        AnnotationModel annoMdl = dataSource.getAnnotationModel();
+        if (annoMdl != null) {
+            FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
+            for (int i = 0; i < filteredModel.getRowCount(); i++) {
+                InterestingAnnotation anno = filteredModel.getAnnotationAtRow(i);
+                long annotationId = anno.getAnnotationID();
+                TmGeoAnnotation geoAnno = annoMdl.getGeoAnnotationFromID(annotationId);
+                final AnnotationGeometry geometry = anno.getGeometry();
+                if (!(geometry == AnnotationGeometry.BRANCH || geometry == AnnotationGeometry.END || geometry == AnnotationGeometry.LINK)) {
+                    continue;
+                }
+
+                TileFormat.MicrometerXyz microns = tileFormat.micrometerXyzForVoxelXyz(
+                        new TileFormat.VoxelXyz(
+                                geoAnno.getX().intValue(),
+                                geoAnno.getY().intValue(),
+                                geoAnno.getZ().intValue()
+                        ),
+                        CoordinateAxis.Z
+                );
+                Vec3 v = tileFormat.centerJustifyMicrometerCoordsAsVec3(microns);
+                double[] start = getStartAroundPoint(v, ANNO_END_RADIUS);
+                double[] end = getEndAroundPoint(v, ANNO_END_RADIUS);
+
+                if (anno.hasNote()) {
+                    interestingAnnotationEnclosureFactory.addEnclosure(
+                            start, end, SPECIAL_ANNO_COLOR
+                    );
+                }
+                else if (geometry == AnnotationGeometry.BRANCH) {
+                    interestingAnnotationEnclosureFactory.addEnclosure(
+                            start, end, BRANCH_ANNO_COLOR
+                    );
+                }
+                else if (anno.getGeometry() == AnnotationGeometry.END) {
+                    interestingAnnotationEnclosureFactory.addEnclosure(
+                            start, end, UNFINISHED_ANNO_COLOR
+                    );
+                }
+            }
+        }
+    }
+    
+    protected void calculateCurrentSelectionVertices(LineEnclosureFactory currentSelectionEnclosureFactory) {
+        Anchor nextParent = dataSource.getSkeleton().getNextParent();
+        if (nextParent != null) {
+            Vec3 v = nextParent.getLocation();
+            double[] start = getStartAroundPoint(v, CURRENT_SELECTION_RADIUS);
+            double[] end = getEndAroundPoint(v, CURRENT_SELECTION_RADIUS);
+            currentSelectionEnclosureFactory.addEnclosure(
+                    start, end, CURRENT_SELECTION_COLOR
+            );
+            log.info("Next parent at {},{},{}.", v.getX(), v.getY(), v.getZ());
+        }
+        
+    }
+
+    protected double[] getEndAroundPoint(Vec3 v, double radius) {
+        double[] end = new double[] {
+            v.getX() + (radius),
+            v.getY(),
+            v.getZ()
+        };
+        return end;
+    }
+
+    protected double[] getStartAroundPoint(Vec3 v, double radius) {
+        double[] start = new double[] {
+            v.getX() - (radius),
+            v.getY(),
+            v.getZ()
+        };
+        return start;
+    }
+
+    protected void calculateManualLineVertices(Set<SegmentIndex> voxelPathAnchorPairs, LineEnclosureFactory manualSegmentEnclosureFactory) {
+        Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);
+        for ( AnchorLinesReturn anchorLine: anchorLines ) {
+            manualSegmentEnclosureFactory.addEnclosure(
+                    anchorLine.getStart(),
+                    anchorLine.getEnd(),
+                    anchorLine.getStyle().getColorAsFloatArray()
+            );
+            
+            //break; // TEMP: add only a single enclosure, so dump is easier to understand.
+        }
+    }
+
+    protected void calculateTracedSegmentVertices(Set<SegmentIndex> voxelPathAnchorPairs, TileFormat tileFormat, LineEnclosureFactory tracedSegmentEnclosureFactory) {
+        // Iterate over all the traced segments, and add enclosures for each.
+        for ( AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {
             final SegmentIndex segmentIndex = voxelPath.getSegmentIndex();
             if (segmentIndex == null) {
                 continue;
             }
-            voxelPathAnchorPairs.add( segmentIndex );            
+            voxelPathAnchorPairs.add( segmentIndex );
             // need neuron ID; get it from the anchor at either end of the
             //  traced path; if there isn't an anchor, just move on--that
             //  path is also gone (happens when neurons deleted, merged)
@@ -231,14 +499,14 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                     v.getX(), v.getY(), v.getZ()
                 };
                 
-                if ( previousCoords != null ) {                    
+                if ( previousCoords != null ) {
                     int coordsAdded = tracedSegmentEnclosureFactory.addEnclosure(
                             previousCoords, currentCoords, colorAsFloatArray);
                     if (coordsAdded == 0) {
                         if (previousVoxelPos != null) {
-                            log.info("Encountered identical endpoints: " + fmtVoxelPos(previousVoxelPos) + ":" + fmtVoxelPos(voxelPos) + 
-                                     ".  Encountered identical converted coords: " + fmtCoords(previousCoords) + ":" + fmtCoords(currentCoords) +
-                                     ".  Found in segment index: " + voxelPath.getSegmentIndex() + ", and in neuron " + neuronId + ".");
+                            log.info("Encountered identical endpoints: " + fmtVoxelPos(previousVoxelPos) + ":" + fmtVoxelPos(voxelPos) +
+                                    ".  Encountered identical converted coords: " + fmtCoords(previousCoords) + ":" + fmtCoords(currentCoords) +
+                                    ".  Found in segment index: " + voxelPath.getSegmentIndex() + ", and in neuron " + neuronId + ".");
                         }
                     }
                 }
@@ -246,28 +514,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                 previousVoxelPos = voxelPos;
             }
         }
-
-        // Now get the lines.  Must offset to latest vertex number, so that
-        // the triangle pointers are contiguous across factories.
-        manualSegmentEnclosureFactory.setCurrentVertexNumber(
-                tracedSegmentEnclosureFactory.getCurrentVertexNumber() 
-        );
-
-        Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);
-        for ( AnchorLinesReturn anchorLine: anchorLines ) {            
-            manualSegmentEnclosureFactory.addEnclosure(
-                    anchorLine.getStart(),
-                    anchorLine.getEnd(),
-                    anchorLine.getStyle().getColorAsFloatArray()
-            );
-            
-            //break; // TEMP: add only a single enclosure, so dump is easier to understand.
-        }
-
-		// Add each factory to the collection.
-		triangleSources.add(tracedSegmentEnclosureFactory);
-        triangleSources.add(manualSegmentEnclosureFactory);
-		
     }
     
     private String fmtVoxelPos( VoxelPosition pos ) {
@@ -386,4 +632,5 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         }
         
     }
+    
 }

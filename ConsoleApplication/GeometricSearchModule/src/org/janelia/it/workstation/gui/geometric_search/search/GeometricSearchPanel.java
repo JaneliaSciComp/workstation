@@ -13,6 +13,10 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import org.janelia.geometry3d.Vector4;
 
 
 /**
@@ -44,7 +48,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             viewer.releaseMenuActions();
         }
         viewer = new GL4Viewer();
-        viewer.setPreferredSize(new Dimension(1200, 900));
+        viewer.setPreferredSize(new Dimension(1600, 1200));
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
 
@@ -80,7 +84,8 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
         // Setup Draw Shader  //////////////////////////////
 
-        drawShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+
+       drawShader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
                 Matrix4 viewMatrix = viewer.getRenderer().getViewMatrix();
@@ -90,29 +95,29 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             }
         });
 
-        final MeshObjFileV2Actor meshActor1 = new MeshObjFileV2Actor(new File("U:\\compartment_62.obj"));
-
-        meshActor1.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL4 gl) {
-                Matrix4 actorModel = meshActor1.getModel();
-                drawShader.setModel(gl, actorModel);
-            }
-        });
-
-        final MeshObjFileV2Actor meshActor2 = new MeshObjFileV2Actor(new File("U:\\compartment_39.obj"));
-
-        meshActor2.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL4 gl) {
-                Matrix4 actorModel = meshActor2.getModel();
-                drawShader.setModel(gl, actorModel);
-            }
-        });
-
+        
+        File meshDir = new File("U:\\meshes");
+        
+        File[] meshFiles = meshDir.listFiles();
+        
         drawSequence.setShader(drawShader);
-        drawSequence.getActorSequence().add(meshActor1);
-        drawSequence.getActorSequence().add(meshActor2);
+        
+        Random rand = new Random();
+        for (File meshFile : meshFiles) {
+            if (meshFile.getName().endsWith(".obj")) {
+                final MeshObjFileV2Actor ma = new MeshObjFileV2Actor(meshFile);
+                ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.5f));
+                ma.setUpdateCallback(new GLDisplayUpdateCallback() {
+                    @Override
+                    public void update(GL4 gl) {
+                        Matrix4 actorModel = ma.getModel();
+                        drawShader.setModel(gl, actorModel);
+                        drawShader.setDrawColor(gl, ma.getColor());
+                    }
+                });
+                drawSequence.getActorSequence().add(ma);
+            }
+        }
 
         viewer.addShaderAction(drawSequence);
 

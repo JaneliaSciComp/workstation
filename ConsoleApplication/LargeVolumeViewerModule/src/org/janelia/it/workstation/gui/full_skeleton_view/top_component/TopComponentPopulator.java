@@ -12,6 +12,7 @@ import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationS
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
@@ -49,6 +50,7 @@ public class TopComponentPopulator {
 
         private Skeleton skeleton;
         private NeuronStyleModel neuronStyleModel;
+        private AnnotationModel annotationModel;
 
         public SkeletonDataSource() {
         }
@@ -74,10 +76,18 @@ public class TopComponentPopulator {
             return skeleton.getTileFormat();
         }
         
+        @Override
+        public AnnotationModel getAnnotationModel() {
+            if (annotationModel == null) {
+                cacheValues();
+            }
+            return annotationModel;
+        }
+        
         private void cacheValues() {
             // Strategy: get the Large Volume Viewer View.
-            LargeVolumeViewerTopComponent tc
-                    = (LargeVolumeViewerTopComponent) WindowLocator.getByName(
+            LargeVolumeViewerTopComponent tc = 
+                    (LargeVolumeViewerTopComponent) WindowLocator.getByName(
                             LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID
                     );
             if (tc != null) {
@@ -85,6 +95,7 @@ public class TopComponentPopulator {
                 if (ui != null) {
                     skeleton = ui.getSkeleton();
                     neuronStyleModel = ui.getNeuronStyleModel();
+                    annotationModel = ui.getAnnotationModel();
                 }
             }
         }
