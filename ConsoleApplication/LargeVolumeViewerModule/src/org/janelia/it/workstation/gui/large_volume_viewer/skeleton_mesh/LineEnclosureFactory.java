@@ -258,6 +258,13 @@ public class LineEnclosureFactory implements TriangleSource {
         logger.debug("Aligned along the #{} axis.", axialAlignment);
 		
 		if (axialAlignment == -1) {
+			if (lineUnitVector[Z] < 0) {
+				// Switch start/end order if facing in negative direction.
+				double[] tempCoords = startCoords;
+				startCoords = endCoords;
+				endCoords = tempCoords;
+			}
+			
 			// Now that we have our angles, we make transforms.
 			Matrix transform1 = matrixUtils.getTransform3D(
 					-aboutX, aboutY, 0,
