@@ -20,10 +20,21 @@ public class MeshDrawShader extends AbstractShader {
     public static final String VERTEX_SHADER =   "MeshDrawSpecularVtx.glsl";
     public static final String FRAGMENT_SHADER = "MeshDrawSpecularFrg.glsl";
     
+    private int previousShader = -1;
+    
     private Logger logger = LoggerFactory.getLogger( MeshDrawShader.class );
 //    public static final String VERTEX_SHADER =   "MeshDrawVtx.glsl";
 //    public static final String FRAGMENT_SHADER = "MeshDrawFrg.glsl";
 
+    @Override
+    public void init(GL2 gl) throws ShaderCreationException {
+        // Get previous shader value.
+        int buf[] = {0};
+        gl.glGetIntegerv(GL2GL3.GL_CURRENT_PROGRAM, buf, 0);
+        previousShader = buf[0];
+        super.init(gl);
+    }
+    
     @Override
     public String getVertexShader() {
         return VERTEX_SHADER;
@@ -78,11 +89,11 @@ public class MeshDrawShader extends AbstractShader {
 
     @Override
     public void load(GL2 gl) {
-
+        gl.glUseProgram(getShaderProgram());
     }
 
     @Override
     public void unload(GL2 gl) {
-
+        gl.glUseProgram(previousShader);
     }
 }

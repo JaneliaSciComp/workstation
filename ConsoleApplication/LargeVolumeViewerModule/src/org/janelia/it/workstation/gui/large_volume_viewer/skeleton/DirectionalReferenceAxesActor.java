@@ -99,9 +99,15 @@ public class DirectionalReferenceAxesActor implements GLActor {
         // Exchange shader programs.
         gpuToCpuBuffer.rewind();
         gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, gpuToCpuBuffer);
+        if (reportError(gl, "Display of directional-ref-actor get-current-program")) {
+            return;
+        }
         gpuToCpuBuffer.rewind();
         previousShader = gpuToCpuBuffer.get();
         gl.glUseProgram(shader.getShaderProgram());
+        if (reportError(gl, "Display of directional-ref-actor use-program")) {
+            return;
+        }
 
         // Rendering characteristics / 'draw' state.
         gl.glDisable(GL2.GL_CULL_FACE);
@@ -208,15 +214,24 @@ public class DirectionalReferenceAxesActor implements GLActor {
 
     @Override
     public void dispose(GLAutoDrawable glDrawable) {
+        GL2 gl = glDrawable.getGL().getGL2();
+
+		// Retarded JOGL GLJPanel frequently reallocates the GL context
+        // during resize. So we need to be ready to reinitialize everything.
         bIsInitialized = false;
+
+        IntBuffer toRelease = IntBuffer.allocate(3);
+        toRelease.put(lineBufferHandle);
+        toRelease.put(colorBufferHandle);
+        toRelease.put(inxBufferHandle);
+        toRelease.rewind();
+        gl.glDeleteBuffers(3, toRelease);
     }
     
     private void shaderInitialize(GL2GL3 gl) throws ShaderCreationException {
-        if ( shader == null ) {
-            shader = new DirectionalReferenceAxesShader();
-            shader.init(gl.getGL2());
-            reportError(gl.getGL2(), "Initializing shader.");
-        }
+        shader = new DirectionalReferenceAxesShader();
+        shader.init(gl.getGL2());
+        reportError(gl.getGL2(), "Initializing shader.");
     }
 
     private void buildBuffers(GL2GL3 gl) {

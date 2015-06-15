@@ -14,8 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
 import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
@@ -25,7 +23,6 @@ import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationGeometry;
@@ -78,8 +75,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     // in creating the 3D representation of annotations.
     private AnnotationSkeletonDataSourceI dataSource;
     
-    private TableModelListener localListener;
-
+	private boolean hasDisplayable = false;	
     // The sources and render buffers will be created, based on the contents
     // of the 'model'.
     private final List<TriangleSource> triangleSources = new ArrayList<>();
@@ -115,7 +111,13 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         }
         
         createVertices();
-        populateNormals(triangleSources, renderIdToBuffers);
+		if (hasDisplayable) {
+			populateNormals(triangleSources, renderIdToBuffers);
+		}
+		else {
+			triangleSources.clear();
+			renderIdToBuffers.clear();
+		}
         //exportVertices(new File("/Users/fosterl/"), "NeuronTraceVtxAttribMgr_Test");
         
         return triangleSources;
@@ -141,7 +143,9 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         }
         Anchor anAnchor = skeleton.getAnchors().iterator().next();
         Long id = anAnchor.getNeuronID();
+        this.execute();  // Ensure contents.
         exportVertices(outputLocation, filenamePrefix, triangleSources, id);
+        this.close(); // Ensure cleanup.
     }
     
     /**
@@ -251,8 +255,16 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         lineEnclosureFactory.setCharacteristics(CURRENT_SELECTION_POLYGON_SIDES, CURRENT_SELECTION_RADIUS);
         calculateCurrentSelectionVertices(lineEnclosureFactory);
 
-		// TESTING calculateAngleIllustrativeVertices(lineEnclosureFactory);
+		// TESTING 
+		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
         log.info("Number of vertices is {}.", lineEnclosureFactory.getCurrentVertexNumber());
+		
+		if (lineEnclosureFactory.getCurrentVertexNumber() > 0) {
+			hasDisplayable = true;
+		}
+		else {
+			hasDisplayable = false;
+		}
         
 		// Add each factory to the collection.
 		triangleSources.add(lineEnclosureFactory);
@@ -261,41 +273,51 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 	@SuppressWarnings("unused")
 	private void calculateAngleIllustrativeVertices( LineEnclosureFactory lef ) {
 		lef.setCharacteristics(5, 50);
+    	double r = 500.0;
+
 		// Numbers should be around 74000, 49000, and 19000
 		double[] startingCoords = new double[] { 74000, 47000, 19000 };
 		double[] endingCoords = new double[3];
 
 		float[] extraColor = new float[]{1.0f, 0.0f, 1.0f};
+		xyPlaneFan(endingCoords, startingCoords, r, lef, extraColor);
+		yzPlaneFan(startingCoords, endingCoords, r, lef, extraColor);
+		xzPlaneFan(startingCoords, endingCoords, r, lef, extraColor);
+	
+	}
 
-		// Expect values to fan from left to top.
-		double r = 500.0;
-		endingCoords[0] = startingCoords[0] - r;
+	private void xzPlaneFan(double[] startingCoords, double[] endingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
+		// Side-to-side
+		startingCoords[1] = 48000;
+		endingCoords[0] = startingCoords[0];
 		endingCoords[1] = startingCoords[1];
-		endingCoords[2] = startingCoords[2];
-		for (double theta = 0.01; theta < Math.PI / 2.0; theta += 0.2 ) {
+		endingCoords[2] = startingCoords[2] - r;
+		for (double theta = 0.01; theta < Math.PI / 2.0; theta += 0.2) {
 			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
-			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
 			lef.addEnclosure(startingCoords, endingCoords, BRANCH_ANNO_COLOR);
-		}		
+		}
 
 		for (double theta = 3 * Math.PI / 2.0; theta < 2 * Math.PI; theta += 0.2) {
 			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
-			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
 			lef.addEnclosure(startingCoords, endingCoords, UNFINISHED_ANNO_COLOR);
 		}
-		
+
 		for (double theta = Math.PI / 2.0 + 0.01; theta < Math.PI; theta += 0.2) {
 			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
-			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
 			lef.addEnclosure(startingCoords, endingCoords, SPECIAL_ANNO_COLOR);
 		}
 
-		for (double theta = Math.PI; theta < 3*Math.PI / 2.0; theta += 0.2) {
+		for (double theta = Math.PI; theta < 3 * Math.PI / 2.0; theta += 0.2) {
 			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
-			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
 			lef.addEnclosure(startingCoords, endingCoords, extraColor);
 		}
-		
+	}
+
+	private void yzPlaneFan(double[] startingCoords, double[] endingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
 		// Move this aside to make it easier to see everything.
 		startingCoords[1] = 45000;
 		endingCoords[0] = startingCoords[0];
@@ -320,6 +342,33 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 		for (double theta = Math.PI; theta < 3 * Math.PI / 2.0; theta += 0.2) {
 			endingCoords[1] = startingCoords[1] + r * Math.cos(theta);
 			endingCoords[2] = startingCoords[2] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, extraColor);
+		}
+	}
+
+	private void xyPlaneFan(double[] endingCoords, double[] startingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
+		// Expect values to fan from left to top.
+		endingCoords[0] = startingCoords[0] - r;
+		endingCoords[1] = startingCoords[1];
+		endingCoords[2] = startingCoords[2];
+		for (double theta = 0.01; theta < Math.PI / 2.0; theta += 0.2 ) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, BRANCH_ANNO_COLOR);
+		}
+		for (double theta = 3 * Math.PI / 2.0; theta < 2 * Math.PI; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, UNFINISHED_ANNO_COLOR);
+		}
+		for (double theta = Math.PI / 2.0 + 0.01; theta < Math.PI; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, SPECIAL_ANNO_COLOR);
+		}
+		for (double theta = Math.PI; theta < 3*Math.PI / 2.0; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
 			lef.addEnclosure(startingCoords, endingCoords, extraColor);
 		}
 	}

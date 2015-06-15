@@ -235,8 +235,6 @@ public class LineEnclosureFactory implements TriangleSource {
             triangle.setNormalCombinationParticant(false);
 			triangles.add( triangle );
 		}
-        /*        
-        */
 	}
     
     private List<double[][]> makeEndPolygons( double[] startCoords, double[] endCoords ) {
@@ -260,9 +258,16 @@ public class LineEnclosureFactory implements TriangleSource {
         logger.debug("Aligned along the #{} axis.", axialAlignment);
 		
 		if (axialAlignment == -1) {
+			if (lineUnitVector[Z] < 0) {
+				// Switch start/end order if facing in negative direction.
+				double[] tempCoords = startCoords;
+				startCoords = endCoords;
+				endCoords = tempCoords;
+			}
+			
 			// Now that we have our angles, we make transforms.
 			Matrix transform1 = matrixUtils.getTransform3D(
-					aboutX, aboutY, 0,
+					-aboutX, aboutY, 0,
 					0, 0, 0);
 			final double[][] startEndPolygon = clonePrototypePolygon(zAxisAlignedPrototypePolygon);
 			transformPolygon(startEndPolygon, transform1);
@@ -306,13 +311,20 @@ public class LineEnclosureFactory implements TriangleSource {
 			endCapPolygonsHolder.add(endingEndPolygon);
 		}
 		else {
-            if (lineUnitVector[axialAlignment] > 0) {
-                // Switch start/end order if facing in negative direction.
-                double[] tempCoords = startCoords;
-                startCoords = endCoords;
-                endCoords = tempCoords;
-            }
 			// Special case: aligned right along some axis.  Trig assumptions won't help.
+			boolean mustSwitch = false;
+			if (lineUnitVector[axialAlignment] < 0  &&  axialAlignment == Z) {
+				mustSwitch = true;
+			}
+			else if (lineUnitVector[axialAlignment] > 0  &&  axialAlignment != Z) {
+				mustSwitch = true;
+			}
+			if (mustSwitch) {
+				// Switch start/end order if facing in negative direction.
+				double[] tempCoords = startCoords;
+				startCoords = endCoords;
+				endCoords = tempCoords;
+			}
 			Matrix transform = matrixUtils.getTransform3D(
 					0f,
 					0f,
@@ -325,7 +337,6 @@ public class LineEnclosureFactory implements TriangleSource {
 			transform.set(2, 3, endCoords[Z]);
 			endCapPolygonsHolder.add(producePolygon(transform, prototypePolygon));
 		}
-        
         return endCapPolygonsHolder;
     }
 	
