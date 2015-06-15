@@ -235,8 +235,6 @@ public class LineEnclosureFactory implements TriangleSource {
             triangle.setNormalCombinationParticant(false);
 			triangles.add( triangle );
 		}
-        /*        
-        */
 	}
     
     private List<double[][]> makeEndPolygons( double[] startCoords, double[] endCoords ) {
@@ -260,13 +258,6 @@ public class LineEnclosureFactory implements TriangleSource {
         logger.debug("Aligned along the #{} axis.", axialAlignment);
 		
 		if (axialAlignment == -1) {
-			// Unknown if this helps.
-//			if (lineUnitVector[X] > 0 || lineUnitVector[Y] < 0) {
-//				// Switch start/end order if facing in negative direction.
-//				double[] tempCoords = startCoords;
-//				startCoords = endCoords;
-//				endCoords = tempCoords;
-//			}
 			// Now that we have our angles, we make transforms.
 			Matrix transform1 = matrixUtils.getTransform3D(
 					-aboutX, aboutY, 0,
@@ -332,7 +323,6 @@ public class LineEnclosureFactory implements TriangleSource {
 			transform.set(2, 3, endCoords[Z]);
 			endCapPolygonsHolder.add(producePolygon(transform, prototypePolygon));
 		}
-        
         return endCapPolygonsHolder;
     }
 	
