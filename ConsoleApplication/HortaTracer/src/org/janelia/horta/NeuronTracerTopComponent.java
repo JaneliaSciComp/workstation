@@ -981,7 +981,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
-                boolean showLinkToLvv = true; // does not work yet. Might not work on April 1.
+                boolean showLinkToLvv = true;
                 if ( (mouseStageLocation != null) && (showLinkToLvv) ) {
                     // Synchronize with LVV
                     // TODO - is LVV present?
@@ -1033,9 +1033,9 @@ public final class NeuronTracerTopComponent extends TopComponent
         });
     }
 
-    public GL3Actor createBrickActor(BrainTileInfo brainTile) throws IOException 
+    public GL3Actor createBrickActor(BrainTileInfo brainTile, int colorChannel) throws IOException 
     {
-        return new BrickActor(brainTile, brightnessModel, volumeState);
+        return new BrickActor(brainTile, brightnessModel, volumeState, colorChannel);
     }
     
     public double[] getStageLocation() {

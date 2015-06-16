@@ -99,7 +99,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     setCameraLocation(sampleLocation);
                     progress.switchToIndeterminate(); // TODO - enhance tile loading with a progress listener
                     progress.setDisplayName("Loading brain tile image...");
-                    loader.loadTileAtCurrentFocus(volumeSource);
+                    loader.loadTileAtCurrentFocus(volumeSource, sampleLocation.getDefaultColorChannel());
                     sceneWindow.getGLAutoDrawable().display();
                 } catch (final IOException ex) {
                     SwingUtilities.invokeLater(new Runnable() {

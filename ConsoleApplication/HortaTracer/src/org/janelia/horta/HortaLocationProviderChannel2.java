@@ -46,11 +46,14 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 @ServiceProvider(service = Tiled3dSampleLocationProviderAcceptor.class, path=Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH)
-public class HortaLocationProvider implements Tiled3dSampleLocationProviderAcceptor {
+public class HortaLocationProviderChannel2 
+    extends HortaLocationProvider
+    implements Tiled3dSampleLocationProviderAcceptor 
+{
     public static final String UNIQUE_NAME = "Horta";
-    public static final String DESCRIPTION = "Horta (channel 1)";
+    public static final String DESCRIPTION = "Horta (channel 2)";
     
-    private final Logger logger = LoggerFactory.getLogger(HortaLocationProvider.class);
+    private final Logger logger = LoggerFactory.getLogger(HortaLocationProviderChannel2.class);
     
     @Override
     public SampleLocation getSampleLocation() {
@@ -82,15 +85,6 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProviderAccep
     public String getProviderDescription() {
         return DESCRIPTION;
     }
-    
-    protected NeuronTracerTopComponent getNeuronTracer() {
-        return NeuronTracerTopComponent.findThisComponent();
-    }
-
-    @Override
-    public ParticipantType getParticipantType() {
-        return ParticipantType.both;
-    }
 
     @Override
     public void setSampleLocation(SampleLocation sampleLocation) {
@@ -104,7 +98,7 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProviderAccep
         if (nttc.isOpened()) {
             nttc.requestActive();
             try {
-                sampleLocation.setDefaultColorChannel(0);
+                sampleLocation.setDefaultColorChannel(1);
                 nttc.setSampleLocation(sampleLocation);
             } catch (Exception ex) {
                 logger.error(ex.getMessage());
