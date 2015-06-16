@@ -136,7 +136,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             
             viewer.addMouseListener(new MouseAdapter() {
                 @Override
-                public void mouseReleased(MouseEvent me) {
+                public void mouseClicked(MouseEvent me) {
                     long selectedAnnotation = select(me.getX(), me.getY());
                     if (selectedAnnotation > 0) {
                         SkeletonController.getInstance().setNextParent(selectedAnnotation);

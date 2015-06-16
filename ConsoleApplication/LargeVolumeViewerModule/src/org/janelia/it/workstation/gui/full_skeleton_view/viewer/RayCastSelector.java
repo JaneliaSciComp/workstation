@@ -3,7 +3,9 @@ package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 import Jama.Matrix;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
@@ -18,7 +20,7 @@ import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
  * @author fosterl
  */
 public class RayCastSelector {
-    private static final double SPHERE_R_SQUARE = 50.0 * 50.0; //NeuronTraceVtxAttribMgr.ANNO_END_RADIUS * NeuronTraceVtxAttribMgr.ANNO_END_RADIUS;
+    private static final double SPHERE_R_SQUARE = 150.0 * 150.0; //NeuronTraceVtxAttribMgr.ANNO_END_RADIUS * NeuronTraceVtxAttribMgr.ANNO_END_RADIUS;
     private static final boolean DEBUG = false;
     
     private final AnnotationSkeletonDataSourceI dataSource;
@@ -55,6 +57,9 @@ public class RayCastSelector {
         int selectedGlancingRow = -1;  // One intersection with sphere.
         
         //DEBUG System.out.println("-----------------------------------------------");
+        Vec3 smallestOMinusC = new Vec3(Double.MAX_VALUE / 10.0, 0, 0);
+        double smallestOMCMag = mag(smallestOMinusC);
+
         for (int i = 0; i < filteredModel.getRowCount(); i++) {
             TileFormat.MicrometerXyz sphereCenter = getCoords(filteredModel, i, annoMdl, tileFormat);
             Vec3 sphereCenterVec3 = new Vec3(sphereCenter.getX(), sphereCenter.getY(), 0.0);// sphereCenter.getZ());
@@ -63,7 +68,12 @@ public class RayCastSelector {
             // Setting up for quadratic equation.  a==1.
             double b = rayWorldVec3.dot(oMinusC);
             double c = oMinusC.dot(oMinusC) - SPHERE_R_SQUARE;
-            
+
+            double omcMag = mag( oMinusC );
+            if (omcMag < smallestOMCMag) {
+                smallestOMCMag = omcMag;
+                smallestOMinusC = oMinusC;
+            }
             // Pre-emptive bail: quick miss detection. Must be >= 0.
             double bSquareMinusC = b * b - c;
             if (bSquareMinusC >= 0) {
@@ -82,6 +92,9 @@ public class RayCastSelector {
             }
         }
         
+        //System.out.println("Smallest (O-C): " + smallestOMinusC);
+        //System.out.println("RayOrigin: " + rayOrigin);
+        
         // Have found what user selected.
         if (selectedIntoRow > -1) {
             rtnVal = filteredModel.getAnnotationAtRow(selectedIntoRow).getAnnotationID();
@@ -91,6 +104,10 @@ public class RayCastSelector {
         }
         
         return rtnVal;
+    }
+    
+    private double mag( Vec3 v ) {
+        return Math.sqrt( v.getX() * v.getX() + v.getY() * v.getY() + v.getZ() * v.getZ() );
     }
 
     private TileFormat.MicrometerXyz getCoords(FilteredAnnotationModel filteredModel, int i, final AnnotationModel annoMdl, TileFormat tileFormat) {
@@ -162,7 +179,6 @@ public class RayCastSelector {
         ViewMatrixSupport.transposeM(transposedMM, 0, context.getModelViewMatrix(), 0);
         float[] invertedModelViewMatrix = new float[context.getModelViewMatrix().length];
         ViewMatrixSupport.invertM(invertedModelViewMatrix, 0, transposedMM, 0);
-        System.out.println("\n\n\n");
         // Moving to JAMA representation.
         Matrix invProjJama = toJamaMatrix(invertedProjectionMatrix);
         dumpJama(invProjJama, "Inverted Projection");
@@ -189,24 +205,26 @@ public class RayCastSelector {
                 normalizedRayWorld.get(2, 0)
         );
 
-        // Take the eye ray, and turn it back into a point.
-        rtnVal.pickOrigin = new Vec3(
-                rayEye.get(0, 0),
-                rayEye.get(1, 0),
-                0.0               // Z is 0.
-        );
-        rtnVal.pickOrigin
-                = rtnVal.pickOrigin.times(
-                        1.0 / context.getCamera3d().getPixelsPerSceneUnit()
-                );
-        Matrix pickOriginMatrix = toJamaVector(rtnVal.pickOrigin);
-        pickOriginMatrix.set(3, 0, 1.0); // Ensure: point.  W=1
-        pickOriginMatrix = toJamaMatrix(transposedMM).times(pickOriginMatrix);
-        rtnVal.pickOrigin = new Vec3( 
-                Math.abs(pickOriginMatrix.get(0, 0)), 
-                Math.abs(pickOriginMatrix.get(1, 0)), 
-                0.0 //pickOriginMatrix.get(2, 0)
-        );
+        rtnVal.pickOrigin = worldFromPixel(mouseX, mouseY);
+
+//        // Take the eye ray, and turn it back into a point.
+//        rtnVal.pickOrigin = new Vec3(
+//                rayEye.get(0, 0),
+//                rayEye.get(1, 0),
+//                0.0               // Z is 0.
+//        );
+//        rtnVal.pickOrigin
+//                = rtnVal.pickOrigin.times(
+//                        1.0 / context.getCamera3d().getPixelsPerSceneUnit()
+//                );
+//        Matrix pickOriginMatrix = toJamaVector(rtnVal.pickOrigin);
+//        pickOriginMatrix.set(3, 0, 1.0); // Ensure: point.  W=1
+//        pickOriginMatrix = toJamaMatrix(transposedMM).times(pickOriginMatrix);
+//                new Vec3( 
+//                Math.abs(pickOriginMatrix.get(0, 0)), 
+//                Math.abs(pickOriginMatrix.get(1, 0)), 
+//                0.0 //pickOriginMatrix.get(2, 0)
+//        );
         return rtnVal;
     }
 
@@ -268,6 +286,28 @@ public class RayCastSelector {
         }
 
         return matrix;
+    }
+    
+    private Vec3 worldFromPixel(int x, int y) {
+        // Initialize to screen space position
+        Vec3 result = new Vec3(x, y, 0);
+        final Camera3d camera3d = context.getCamera3d();
+        final Vec3 cameraFocus = camera3d.getFocus();
+        // Normalize to screen viewport center
+        //       First step is pro-forma.
+        result = result.minus(new Vec3(0, 0, 0)); // origin for viewport.
+        result = result.minus(new Vec3(width / 2.0, height / 2.0, 0)); // center
+        // Convert from pixel units to world units
+        result = result.times(1.0 / camera3d.getPixelsPerSceneUnit());
+        // Apply viewer orientation, e.g. X/Y/Z orthogonal viewers
+        Rotation3d viewerInGround = camera3d.getRotation();
+        result = viewerInGround.times(result);
+		// TODO - apply rotation, but only for rotatable viewers, UNLIKE large volume viewer
+        // Apply camera focus
+        result = result.plus(cameraFocus);
+        result.setZ(0.0);
+        // System.out.println(pixel + ", " + getCamera().getFocus() + ", " + result);
+        return result;
     }
 
     private static class PickRayAndOrigin {
