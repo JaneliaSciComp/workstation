@@ -13,6 +13,8 @@ out vec3 N;
 out vec3 I;
 out vec4 Cs;
 
+//out float discardFlag;
+
 void main()
 {
     Cs = vec4(dcolor.x, dcolor.y, dcolor.z, 1.0);
@@ -23,7 +25,4 @@ void main()
     mat3 normalMatrix = mat3(transpose(inverse(mview)));
     N  = normalMatrix * norm;
     gl_Position = proj * P;
-    if (gl_Position.z > 0.5) {
-        Cs = vec4(0.0, 1.0, 0.0, 1.0);
-    }
 }

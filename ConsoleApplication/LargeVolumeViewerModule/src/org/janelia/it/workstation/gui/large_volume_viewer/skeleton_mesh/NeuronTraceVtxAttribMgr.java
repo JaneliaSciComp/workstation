@@ -49,7 +49,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
     private static final double TRACED_SEGMENT_RADIUS = 3;
     private static final int TRACED_SEGMENT_POLYGON_SIDES = 10;
-    private static final double ANNO_END_RADIUS = TRACED_SEGMENT_RADIUS * 4;
+    public static final double ANNO_END_RADIUS = TRACED_SEGMENT_RADIUS * 4;
     private static final int ANNO_END_POLYGON_SIDES = 6;
     
     private static final int CURRENT_SELECTION_POLYGON_SIDES = 16;
@@ -382,7 +382,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                 long annotationId = anno.getAnnotationID();
                 TmGeoAnnotation geoAnno = annoMdl.getGeoAnnotationFromID(annotationId);
                 final AnnotationGeometry geometry = anno.getGeometry();
-                if (!(geometry == AnnotationGeometry.BRANCH || geometry == AnnotationGeometry.END || geometry == AnnotationGeometry.LINK)) {
+                if (!(geometry == AnnotationGeometry.BRANCH || geometry == AnnotationGeometry.END || anno.hasNote())) {
                     continue;
                 }
 
