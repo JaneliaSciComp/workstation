@@ -18,7 +18,7 @@ import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
  * @author fosterl
  */
 public class RayCastSelector {
-    private static final double SPHERE_R_SQUARE = 50.0*50.0;//NeuronTraceVtxAttribMgr.ANNO_END_RADIUS * NeuronTraceVtxAttribMgr.ANNO_END_RADIUS;
+    private static final double SPHERE_R_SQUARE = 50.0 * 50.0; //NeuronTraceVtxAttribMgr.ANNO_END_RADIUS * NeuronTraceVtxAttribMgr.ANNO_END_RADIUS;
     private static final boolean DEBUG = false;
     
     private final AnnotationSkeletonDataSourceI dataSource;
@@ -40,13 +40,13 @@ public class RayCastSelector {
     public long select(int mouseX, int mouseY) {
         long rtnVal = -1;
 
-        final AnnotationModel annoMdl = dataSource.getAnnotationModel();
-        final Vec3 rayOrigin = context.getCamera3d().getFocus();
+        final AnnotationModel annoMdl = dataSource.getAnnotationModel();        
         final FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
         final TileFormat tileFormat = dataSource.getTileFormat();
         
-        Matrix rayWorld = getRayIntoWorld(mouseX, mouseY);
-        Vec3 rayWorldVec3 = new Vec3(rayWorld.get(0, 0), rayWorld.get(1, 0), rayWorld.get(2, 0));
+        PickRayAndOrigin rayAndOrigin = getRayIntoWorld(mouseX, mouseY);
+        final Vec3 rayOrigin = rayAndOrigin.pickOrigin;
+        final Vec3 rayWorldVec3 = rayAndOrigin.pickRay;
         
         // Tracking progress.  What to beat.
         double nearestIntoT = Double.MAX_VALUE;
@@ -57,7 +57,7 @@ public class RayCastSelector {
         //DEBUG System.out.println("-----------------------------------------------");
         for (int i = 0; i < filteredModel.getRowCount(); i++) {
             TileFormat.MicrometerXyz sphereCenter = getCoords(filteredModel, i, annoMdl, tileFormat);
-            Vec3 sphereCenterVec3 = new Vec3(sphereCenter.getX(), sphereCenter.getY(), sphereCenter.getZ());
+            Vec3 sphereCenterVec3 = new Vec3(sphereCenter.getX(), sphereCenter.getY(), 0.0);// sphereCenter.getZ());
             final Vec3 oMinusC = rayOrigin.minus(sphereCenterVec3);
                         
             // Setting up for quadratic equation.  a==1.
@@ -143,11 +143,11 @@ public class RayCastSelector {
      *
      * @return d-hat value.
      */
-    private Matrix getRayIntoWorld(int mouseX, int mouseY) {
+    private PickRayAndOrigin getRayIntoWorld(int mouseX, int mouseY) {
         Matrix rayWorld;
         // For technique,
         // @see http://antongerdelan.net/opengl/raycasting.html
-        double x = (2.0 * mouseX) / (width - 1.0);
+        double x = (2.0 * mouseX) / width - 1.0;
         double y = 1.0 - (2.0f * mouseY) / height;
         double[] rayClip = new double[]{
             x, y, -1.0, 1.0
@@ -182,7 +182,32 @@ public class RayCastSelector {
         Matrix normalizedRayWorld = rayWorld.times(1.0 / normalizer);
         //dumpJama(normalizedRayWorld, "Normalized Ray-World");
 
-        return rayWorld;
+        PickRayAndOrigin rtnVal = new PickRayAndOrigin();
+        rtnVal.pickRay = new Vec3(
+                normalizedRayWorld.get(0, 0),
+                normalizedRayWorld.get(1, 0),
+                normalizedRayWorld.get(2, 0)
+        );
+
+        // Take the eye ray, and turn it back into a point.
+        rtnVal.pickOrigin = new Vec3(
+                rayEye.get(0, 0),
+                rayEye.get(1, 0),
+                0.0               // Z is 0.
+        );
+        rtnVal.pickOrigin
+                = rtnVal.pickOrigin.times(
+                        1.0 / context.getCamera3d().getPixelsPerSceneUnit()
+                );
+        Matrix pickOriginMatrix = toJamaVector(rtnVal.pickOrigin);
+        pickOriginMatrix.set(3, 0, 1.0); // Ensure: point.  W=1
+        pickOriginMatrix = toJamaMatrix(transposedMM).times(pickOriginMatrix);
+        rtnVal.pickOrigin = new Vec3( 
+                Math.abs(pickOriginMatrix.get(0, 0)), 
+                Math.abs(pickOriginMatrix.get(1, 0)), 
+                0.0 //pickOriginMatrix.get(2, 0)
+        );
+        return rtnVal;
     }
 
     protected void dumpJama(Matrix rayWorld, String label) {
@@ -233,5 +258,21 @@ public class RayCastSelector {
         return matrix;
     }
 
+    private Matrix toJamaVector(Vec3 vec) {
+        double[][] jamaRaw = new double[][]{
+            new double[1], new double[1], new double[1], new double[1]
+        };
+        Matrix matrix = new Matrix(jamaRaw);
+        for (int row = 0; row < 3; row++) {
+            jamaRaw[row][0] = vec.get(row);
+        }
+
+        return matrix;
+    }
+
+    private static class PickRayAndOrigin {
+        public Vec3 pickRay;
+        public Vec3 pickOrigin;
+    }
 
 }
