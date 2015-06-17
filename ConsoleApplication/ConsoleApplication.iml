@@ -9,16 +9,24 @@
       <sourceFolder url="file://$MODULE_DIR$/AlignmentBoardModule/test/unit/src" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/test/unit/src" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/SplitPickingModule/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/GeometricSearchModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/generated" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Geometry3d/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ConsoleWrapper/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/GLViewerTools/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/QCView/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ViewerAPI/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/SceneWindow/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/HortaTracer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SlideView/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DataViewModule/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/GeometricSearchModule/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/GLViewerTools/src" />
+      <excludeFolder url="file://$MODULE_DIR$/Geometry3d/src" />
+      <excludeFolder url="file://$MODULE_DIR$/HortaTracer/src" />
+      <excludeFolder url="file://$MODULE_DIR$/Jogl213/src" />
+      <excludeFolder url="file://$MODULE_DIR$/Jogl224Lib/src" />
+      <excludeFolder url="file://$MODULE_DIR$/SceneWindow/src" />
+      <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/src" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

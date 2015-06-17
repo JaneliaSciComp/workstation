@@ -7,6 +7,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
 import java.awt.BorderLayout;
 import javax.swing.JComponent;
+import javax.swing.JPopupMenu;
+import javax.swing.ToolTipManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -42,6 +44,11 @@ import org.openide.windows.WindowManager;
     HINT
 })
 public final class LargeVolumeViewerTopComponent extends TopComponent {
+    static {
+        // So popup menu shows over GLCanvas
+        JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+        ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
+    }
     
     private final LargeVolumeViewerTopComponentDynamic state = new LargeVolumeViewerTopComponentDynamic();
     

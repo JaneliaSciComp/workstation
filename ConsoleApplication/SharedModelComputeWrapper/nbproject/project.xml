@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.10</specification-version>
+                        <specification-version>1.13</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>
@@ -41,6 +41,7 @@
                 <package>org.janelia.it.jacs.model.download</package>
                 <package>org.janelia.it.jacs.model.entity</package>
                 <package>org.janelia.it.jacs.model.entity.cv</package>
+                <package>org.janelia.it.jacs.model.entity.json</package>
                 <package>org.janelia.it.jacs.model.genomics</package>
                 <package>org.janelia.it.jacs.model.lsm</package>
                 <package>org.janelia.it.jacs.model.metadata</package>
@@ -135,6 +136,8 @@
                 <package>org.janelia.it.jacs.shared.lucene</package>
                 <package>org.janelia.it.jacs.shared.lucene.data_retrievers</package>
                 <package>org.janelia.it.jacs.shared.lucene.searchers</package>
+                <package>org.janelia.it.jacs.shared.mesh_loader</package>
+                <package>org.janelia.it.jacs.shared.mesh_loader.wavefront_obj</package>
                 <package>org.janelia.it.jacs.shared.node</package>
                 <package>org.janelia.it.jacs.shared.perf</package>
                 <package>org.janelia.it.jacs.shared.processors.recruitment</package>

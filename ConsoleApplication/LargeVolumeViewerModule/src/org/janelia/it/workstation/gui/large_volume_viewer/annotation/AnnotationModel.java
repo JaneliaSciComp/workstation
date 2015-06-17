@@ -69,6 +69,8 @@ called from a  SimpleWorker thread.
     
     private ViewStateListener viewStateListener;
     private NotesUpdateListener notesUpdateListener;
+    
+    private FilteredAnnotationModel filteredAnnotationModel;
 
     private Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
     private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
@@ -85,7 +87,11 @@ called from a  SimpleWorker thread.
     public AnnotationModel() {
         modelMgr = ModelMgr.getModelMgr();
         sessionMgr = SessionMgr.getSessionMgr();
-
+        filteredAnnotationModel = new FilteredAnnotationModel();
+    }
+    
+    public FilteredAnnotationModel getFilteredAnnotationModel() {
+        return filteredAnnotationModel;
     }
 
     public void addTmGeoAnnotationModListener(TmGeoAnnotationModListener listener) {
@@ -196,8 +202,11 @@ called from a  SimpleWorker thread.
     }
 
     // this method sets the current neuron *and*
-    //  updates the UI
+    //  updates the UI; null neuron means deselect
     public void selectNeuron(TmNeuron neuron) {
+        if (neuron != null && getCurrentNeuron() != null && neuron.getId().equals(getCurrentNeuron().getId())) {
+            return;
+        }
         setCurrentNeuron(neuron);
         fireNeuronSelected(neuron);
     }
@@ -463,6 +472,14 @@ called from a  SimpleWorker thread.
             updateCurrentNeuron();
         }
 
+        // the parent may lose some predefined notes (finished end, possible branch)
+        // note 1: probably really ought to have some kind of "annotation connectivity
+        //  changed" listener so we don't need to remember to call this routine
+        //  when appropriate
+
+        // note2 : need to get updated copy of neuron:
+        stripPredefNotes(getNeuronFromAnnotationID(parentAnn.getId()), parentAnn.getId());
+
         if (automatedTracingEnabled()) {
             if (viewStateListener != null)
                 viewStateListener.pathTraceRequested(annotation.getId());
@@ -635,6 +652,11 @@ called from a  SimpleWorker thread.
                 viewStateListener.pathTraceRequested(child.getId());
             }
         }
+
+        // see note in addChildAnnotations re: predef notes
+        // for merge, the target annotation is the one affected; fortunately, the
+        //  neuron has just been refreshed
+        stripPredefNotes(updateTargetNeuron, targetAnnotationID);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -902,6 +924,11 @@ called from a  SimpleWorker thread.
 
         // notify, etc.; don't need to redraw anything, but the neurite list etc. need to be reloaded
         updateCurrentWorkspace();
+
+        // see notes in addChildAnnotation re: the predef notes
+        // in this case, the new root is the only annotation we need to check
+        stripPredefNotes(getNeuronFromAnnotationID(newRootID), newRootID);
+
         if (neuron.getId().equals(getCurrentNeuron().getId())){
             updateCurrentNeuron();
             final TmNeuron updateNeuron = getCurrentNeuron();
@@ -1050,33 +1077,60 @@ called from a  SimpleWorker thread.
         }        
     }
 
+    public String getNote(Long annotationID) {
+        TmNeuron neuron = getNeuronFromAnnotationID(annotationID);
+        final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
+        if (textAnnotation != null) {
+            JsonNode rootNode = textAnnotation.getData();
+            JsonNode noteNode = rootNode.path("note");
+            if (!noteNode.isMissingNode()) {
+                return noteNode.asText();
+            }
+        }
+        return "";
+    }
+
     /**
-     * add or update a note on a geomentric annotation
+     * add or update a note on a geometric annotation
      */
-    public void setNote(TmGeoAnnotation geoAnnotation, String noteString) throws Exception {
+    public synchronized void setNote(TmGeoAnnotation geoAnnotation, String noteString) throws Exception {
         TmNeuron neuron = getNeuronFromAnnotationID(geoAnnotation.getId());
         if (neuron == null) {
             throw new Exception("can't find neuron for annotation with ID " + geoAnnotation.getId());
         }
 
-        // if it's got a structured text annotation already:
         TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(geoAnnotation.getId());
         ObjectMapper mapper = new ObjectMapper();
         if (textAnnotation != null) {
-            // if you've got one, use it; for now, you only get one
+            // if you've got a structured text annotation already, use it; for now, you only get one
             JsonNode rootNode = textAnnotation.getData();
-            ((ObjectNode) rootNode).put("note", noteString);
-
-            modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
+            if (noteString.length() > 0) {
+                ((ObjectNode) rootNode).put("note", noteString);
+                modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
+            } else {
+                // there is a note attached, but we want it gone; if it's the only thing there,
+                //  delete the whole structured text annotation
+                ((ObjectNode) rootNode).remove("note");
+                if (rootNode.size() > 0) {
+                    modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
+                } else {
+                    // otherwise, there's something left, so persist it (note: as of this
+                    //  writing, there aren't any other structured text annotations besides
+                    //  note, but no need to get sloppy!)
+                    modelMgr.deleteStructuredTextAnnotation(textAnnotation.getId());
+                }
+            }
 
         } else {
-            // it doesn't exist
-            ObjectNode rootNode = mapper.createObjectNode();
-            rootNode.put("note", noteString);
+            // it doesn't exist; if input is also null, don't even bother
+            if (noteString.length() > 0) {
+                ObjectNode rootNode = mapper.createObjectNode();
+                rootNode.put("note", noteString);
 
-            modelMgr.addStructuredTextAnnotation(neuron.getId(), geoAnnotation.getId(),
-                    TmStructuredTextAnnotation.GEOMETRIC_ANNOTATION, TmStructuredTextAnnotation.FORMAT_VERSION,
-                    mapper.writeValueAsString(rootNode));
+                modelMgr.addStructuredTextAnnotation(neuron.getId(), geoAnnotation.getId(),
+                        TmStructuredTextAnnotation.GEOMETRIC_ANNOTATION, TmStructuredTextAnnotation.FORMAT_VERSION,
+                        mapper.writeValueAsString(rootNode));
+            }
         }
 
         // updates
@@ -1198,6 +1252,29 @@ called from a  SimpleWorker thread.
         } else {
             return false;
         }
+    }
+
+    /**
+     * examine the input annotation and remove any predefined notes which
+     * are no longer valid
+     */
+    private void stripPredefNotes(TmNeuron neuron, Long annID) throws Exception {
+        String noteText = getNote(annID);
+        boolean modified = false;
+        if (noteText.length() > 0) {
+            List<PredefinedNote> predefList = PredefinedNote.findNotes(noteText);
+            for (PredefinedNote predefNote: predefList) {
+                if (!predefNote.isValid(neuron, annID)) {
+                    // remove it!
+                    noteText = noteText.replace(predefNote.getNoteText(), "");
+                    modified = true;
+                }
+            }
+            if (modified) {
+                setNote(getGeoAnnotationFromID(annID), noteText);
+            }
+        }
+
     }
 
     /**

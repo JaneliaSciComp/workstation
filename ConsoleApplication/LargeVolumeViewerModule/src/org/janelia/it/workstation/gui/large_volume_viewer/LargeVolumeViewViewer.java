@@ -8,15 +8,16 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.concurrent.Callable;
 import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
@@ -35,7 +36,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
     private QuadViewUi viewUI;
     private ModelMgrObserver modelMgrObserver;
-    private Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
+    private final Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
 
     public LargeVolumeViewViewer() {
         super();
@@ -88,7 +89,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     }
 
                 }
-        
+                
             }
 
             @Override
@@ -144,7 +145,14 @@ public class LargeVolumeViewViewer extends JPanel {
     public void setLocation(SampleLocation sampleLocation) {
         viewUI.setSampleLocation(sampleLocation);
     }
-	
+    
+    public QuadViewUi getQuadViewUi() {
+        if (viewUI == null) {
+            refresh();
+        }
+        return viewUI;
+    }
+    
     public void close() {
         logger.info("Closing");
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
@@ -165,13 +173,23 @@ public class LargeVolumeViewViewer extends JPanel {
             add(viewUI);
             revalidate();
             repaint();
+            
+            // Need to popup the skeletal viewer.
+            AnnotationSkeletalViewTopComponent asvtc =
+                    (AnnotationSkeletalViewTopComponent)WindowLocator.getByName(
+                            AnnotationSkeletalViewTopComponent.PREFERRED_ID
+                    );
+            if (asvtc != null) {
+                asvtc.revalidate();
+                asvtc.repaint();
+            }
         }
     }    
 
     public void totalRefresh() {
         refresh();
     }
-
+    
     //------------------------------Private Methods
     private void establishObserver() {
         modelMgrObserver = new ModelMgrListener( this, sliceSample);

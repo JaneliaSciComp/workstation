@@ -78,6 +78,16 @@ public class JaneliaDebugGL2 extends DebugGL2 {
         checkGLGetError("glDeleteTextures");
     }
     
+    @Override
+    public void glEnable( int flag ) {
+        if (flag == GL2.GL_DEPTH_TEST) {
+            System.out.println("Enabling Depth Test");
+        }
+        else if (flag == GL2.GL_BLEND) {
+            System.out.println("Enabling Blend");
+        }
+    }
+    
     /**
      * Must override gl end and begin, simply to know when the process is between these two calls, and avoid
      * doing bad things.

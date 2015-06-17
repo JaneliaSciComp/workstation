@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -31,12 +30,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -121,7 +119,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void anchorAdded(AnchorSeed seed) {
         addAnnotation(seed.getLocation(), seed.getParentGuid());
     }
-    
+
     public void moveAnchor(Anchor anchor) {
         // find closest to new anchor location that isn't the annotation already
         //  associated with anchor; remember that anchors are in micron
@@ -131,10 +129,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                         anchor.getLocation().getY(),anchor.getLocation().getZ()));
         Vec3 anchorVoxelLocation = new Vec3(tempLocation.getX(),
                 tempLocation.getY(), tempLocation.getZ());
-        
+
         TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchorVoxelLocation,
                 annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
-        
+
         // check distance and other restrictions
         if (closest != null && canMergeNeurite(anchor.getGuid(), anchorVoxelLocation, closest.getId())) {
             // check if user wants to merge (expensive to undo) or move (near something that
@@ -198,7 +196,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void volumeLoaded(URL url) {
         onVolumeLoaded();
     }
-    
+
     public TileFormat getTileFormat() {
         return tileServer.getLoadAdapter().getTileFormat();
     }
@@ -682,96 +680,85 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * pop a dialog to add, edit, or delete note at the given annotation
      */
     public void addEditNote(final Long annotationID) {
-        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
+        String noteText = getNote(annotationID);
 
-        // get annotation if it exists, and its note value, if it exists
-        final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
-        String noteText = new String("");
-        if (textAnnotation != null) {
-            JsonNode rootNode = textAnnotation.getData();
-            JsonNode noteNode = rootNode.path("note");
-            if (!noteNode.isMissingNode()) {
-                noteText = noteNode.asText();
+        AddEditNoteDialog testDialog = new AddEditNoteDialog(
+            (Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
+            noteText,
+            annotationModel.getNeuronFromAnnotationID(annotationID),
+            annotationID);
+        testDialog.setVisible(true);
+        if (testDialog.isSuccess()) {
+            String resultText = testDialog.getOutputText().trim();
+            if (resultText.length() > 0) {
+                setNote(annotationID, resultText);
+            } else {
+                // empty string means delete note
+                clearNote(annotationID);
             }
-        }
-
-        // pop dialog, with (possibly) pre-existing text
-        Object[] options = {"Set note",
-            "Delete note",
-            "Cancel"};
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Enter note text:"));
-        JTextField textField = new JTextField(40);
-        textField.setText(noteText);
-        panel.add(textField);
-        int ans = JOptionPane.showOptionDialog(
-                ComponentUtil.getLVVMainWindow(),
-                panel,
-                "Add, edit, or delete note",
-                JOptionPane.YES_NO_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                options,
-                options[0]);
-
-        if (ans == JOptionPane.CANCEL_OPTION) {
-            return;
-        } else if (ans == JOptionPane.NO_OPTION) {
-            // no option = delete note, which we signal by empty note text
-            noteText = "";
         } else {
-            noteText = textField.getText().trim();
+            // canceled
+            return;
         }
+    }
 
-        if (noteText.length() > 0) {
-
-            final String setText = noteText;
-            SimpleWorker setter = new SimpleWorker() {
+    public void clearNote(Long annotationID) {
+        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
+        final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
+        if (textAnnotation != null) {
+            SimpleWorker deleter = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.setNote(annotationModel.getGeoAnnotationFromID(annotationID), setText);
+                    annotationModel.removeNote(textAnnotation);
                 }
 
                 @Override
                 protected void hadSuccess() {
-                    // nothing here
+                    // nothing to see
                 }
 
                 @Override
                 protected void hadError(Throwable error) {
                     presentError(
-                            "Could not set note!",
+                            "Could not remove note!",
                             "Error",
                             error);
                 }
             };
-            setter.execute();
-
-        } else {
-            if (textAnnotation != null) {
-                SimpleWorker deleter = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        annotationModel.removeNote(textAnnotation);
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        // nothing to see
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        presentError(
-                                "Could not remove note!",
-                                "Error",
-                                error);
-                    }
-                };
-                deleter.execute();
-            }
+            deleter.execute();
         }
+    }
 
+    /**
+     * returns the note attached to a given annotation; returns empty
+     * string if there is no note; you'll get an exception if the
+     * annotation ID doesn't exist
+     */
+    public String getNote(Long annotationID) {
+        return annotationModel.getNote(annotationID);
+    }
+
+    public void setNote(final Long annotationID, final String noteText) {
+        SimpleWorker setter = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.setNote(annotationModel.getGeoAnnotationFromID(annotationID), noteText);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                presentError(
+                        "Could not set note!",
+                        "Error",
+                        error);
+            }
+        };
+        setter.execute();
     }
 
     /**
@@ -934,7 +921,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (annotationID == null) {
             return;
         }
-
         TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
         annotationModel.selectNeuron(neuron);
     }
@@ -1027,6 +1013,86 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         };
         creator.execute();
     }
+
+
+    /**
+     * find an annotation relative to the input annotation in
+     * a given direction; to be used in navigation along the skeleton;
+     * see code for exact behavior
+     */
+    public Long relativeAnnotation(Long annID, TmNeuron.AnnotationNavigationDirection direction) {
+        TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(annID);
+        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annID);
+        switch (direction) {
+            case ROOTWARD_JUMP:
+            case ROOTWARD_STEP:
+                // if root, done; anything else, move to next rootward branch,
+                //  or root if there isn't one
+                if (ann.isRoot()) {
+                    break;
+                }
+                ann = neuron.getParentOf(ann);
+                if (direction == TmNeuron.AnnotationNavigationDirection.ROOTWARD_STEP) {
+                    break;
+                }
+                while (!ann.isRoot() && !ann.isBranch()) {
+                    ann = neuron.getParentOf(ann);
+                }
+                break;
+            case ENDWARD_JUMP:
+            case ENDWARD_STEP:
+                // if no children (already end), done; if straight, move through
+                //  children until branch or end; if branch, take first child and
+                //  move to branch or end
+                if (ann.isEnd()) {
+                    break;
+                }
+                if (ann.isBranch()) {
+                    ann = neuron.getChildrenOfOrdered(ann).get(0);
+                }
+                while (!ann.isEnd() && !ann.isBranch()) {
+                    ann = neuron.getChildrenOf(ann).get(0);
+                    // bit inefficient, but oh, well
+                    if (direction == TmNeuron.AnnotationNavigationDirection.ENDWARD_STEP) {
+                        break;
+                    }
+                }
+                break;
+            case NEXT_PARALLEL:
+            case PREV_PARALLEL:
+                // easy case first: on root with one child, nothing
+                if (ann.isRoot() && neuron.getChildrenOf(ann).size() == 1) {
+                    break;
+                }
+
+                //  on annotation descendant of root with no branches, nothing
+                //  on annotation that has a rootward branch point: move to first
+                //      link after next child of that branch
+                // find the next branch/root up, and keep track of the first child after the branch
+                TmGeoAnnotation previous = ann;
+                TmGeoAnnotation current= neuron.getParentOf(previous);
+                while (!current.isBranch() && !current.isRoot()) {
+                    previous = current;
+                    current = neuron.getParentOf(previous);
+                }
+
+                // is it the root with one child?
+                if (current.isRoot() && neuron.getChildrenOf(current).size() == 1) {
+                    break;
+                }
+
+                // now we're on a branch (possibly the root) that has multiple children;
+                //  find the next after the one we've got
+                List<TmGeoAnnotation> children = neuron.getChildrenOfOrdered(current);
+                int offset = (direction == TmNeuron.AnnotationNavigationDirection.NEXT_PARALLEL) ? 1 : -1;
+                Collections.rotate(children, -children.indexOf(previous) + offset);
+                ann = children.get(0);
+                break;
+        }
+
+        return ann.getId();
+    }
+
 
     /**
      * pop a dialog to choose neuron style; three variants work together to operate

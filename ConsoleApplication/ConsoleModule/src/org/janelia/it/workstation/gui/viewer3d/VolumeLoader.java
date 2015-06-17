@@ -156,10 +156,24 @@ public class VolumeLoader implements VolumeLoaderI {
                 textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
                 textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
             }
-            else if ( FileType.H264.equals( fileType )  ||  FileType.H265.equals( fileType ) ) {
-                textureData.setExplicitInternalFormat( GL2.GL_RGB );
-                textureData.setExplicitVoxelComponentOrder( GL2.GL_RGB );
-                textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
+            else if ( FileType.H264.equals( fileType ) ) {
+                textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE8);
+                textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE);
+                textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
+            }
+            else if ( FileType.H265.equals( fileType ) ) {
+//                textureData.setExplicitInternalFormat( GL2.GL_RGB );
+//                textureData.setExplicitVoxelComponentOrder( GL2.GL_RGB );
+//                textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
+// Best yet.
+                textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE8);
+                textureData.setExplicitVoxelComponentOrder(GL2.GL_RGB);
+                textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
+
+// Fluffy overlap effect.                
+//                textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE8);
+//                textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE);
+//                textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
             }
 
             System.out.println("End load volume: " + new java.util.Date());
@@ -190,7 +204,7 @@ public class VolumeLoader implements VolumeLoaderI {
         else if (extension.startsWith(VolumeFileLoaderI.H264_EXT) || filename.contains(VolumeFileLoaderI.H264_EXT)) {
             return FileType.H264;
         }
-        else if (extension.startsWith(VolumeFileLoaderI.H265_EXT) || filename.contains(VolumeFileLoaderI.H265_EXT)) {
+        else if (extension.startsWith(VolumeFileLoaderI.H265_EXT) || filename.contains(VolumeFileLoaderI.H265_EXT)  ||  extension.equals(VolumeFileLoaderI.H5J_EXT)) {
             return FileType.H265;
         }
         else if (extension.startsWith(VolumeFileLoaderI.MP4_EXT)) {

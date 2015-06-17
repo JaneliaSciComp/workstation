@@ -13,22 +13,23 @@ import java.util.Vector;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.MenuItemGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.MouseModalWidget;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TraceMode extends BasicMouseMode 
 implements MouseMode, KeyListener
 {
 	private Skeleton skeleton;
 	private SkeletonActor skeletonActor;
+    private SkeletonController controller = SkeletonController.getInstance();
 	private Anchor hoverAnchor = null;
 	private Vec3 popupXyz = null;
 	// Sometimes users move an anchor with the mouse
@@ -114,7 +115,7 @@ implements MouseMode, KeyListener
 		}
 		else if (event.getButton() == MouseEvent.BUTTON1) {
 			if (hoverAnchor != null) {
-				skeletonActor.setNextParent(hoverAnchor);
+				controller.setNextParent(hoverAnchor);
 			}
 		}
 	}
@@ -347,7 +348,7 @@ implements MouseMode, KeyListener
 	                            private static final long serialVersionUID = 1L;
 	                            @Override
 	                            public void actionPerformed(ActionEvent e) {
-	                                skeletonActor.setNextParent(getHoverAnchor());
+                                    controller.setNextParent(getHoverAnchor());
 	                            }
 	                        }));
                         }
@@ -432,7 +433,7 @@ implements MouseMode, KeyListener
                         result.add(new JMenuItem(new AbstractAction("Clear current parent anchor") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                skeletonActor.setNextParent(null);
+                                controller.setNextParent((Long)null);
                             }
                         }));                     
                     }
@@ -459,14 +460,16 @@ implements MouseMode, KeyListener
 		checkShiftPlusCursor(event);
 		int keyCode = event.getKeyCode();
 		Anchor historyAnchor = null;
+		Anchor nextParent = skeletonActor.getNextParent();
 		switch(keyCode) {
 		case KeyEvent.VK_BACK_SPACE:
 		case KeyEvent.VK_DELETE:
-			Anchor parentAnchor = skeletonActor.getNextParent();
-			if (parentAnchor != null) {
-                skeleton.deleteLinkRequest(parentAnchor);
+			if (nextParent != null) {
+                skeleton.deleteLinkRequest(nextParent);
 			}
 			break;
+		/*
+		// disabling history nav for now
 		case KeyEvent.VK_LEFT:
 			// System.out.println("back");
 			historyAnchor = skeleton.getHistory().back();
@@ -474,6 +477,47 @@ implements MouseMode, KeyListener
 		case KeyEvent.VK_RIGHT:
 			// System.out.println("next");
 			historyAnchor = skeleton.getHistory().next();
+			break;
+		*/
+		case KeyEvent.VK_LEFT:
+			if (nextParent != null) {
+				if (event.isAltDown()) {
+				controller.navigationRelative(nextParent.getGuid(),
+						TmNeuron.AnnotationNavigationDirection.ROOTWARD_STEP);
+				} else {
+					controller.navigationRelative(nextParent.getGuid(),
+							TmNeuron.AnnotationNavigationDirection.ROOTWARD_JUMP);
+				}
+			}
+			break;
+		case KeyEvent.VK_RIGHT:
+			if (nextParent != null) {
+				if (event.isAltDown()) {
+					controller.navigationRelative(nextParent.getGuid(),
+							TmNeuron.AnnotationNavigationDirection.ENDWARD_STEP);
+				} else {
+					controller.navigationRelative(nextParent.getGuid(),
+							TmNeuron.AnnotationNavigationDirection.ENDWARD_JUMP);
+				}
+			}
+			break;
+		case KeyEvent.VK_UP:
+			if (nextParent != null) {
+				controller.navigationRelative(nextParent.getGuid(),
+						TmNeuron.AnnotationNavigationDirection.PREV_PARALLEL);
+			}
+			break;
+		case KeyEvent.VK_DOWN:
+			if (nextParent != null) {
+				controller.navigationRelative(nextParent.getGuid(),
+						TmNeuron.AnnotationNavigationDirection.NEXT_PARALLEL);
+			}
+			break;
+		case KeyEvent.VK_A:
+			// add/edit note dialog
+			if (nextParent != null) {
+				skeleton.addEditNoteRequest(nextParent);
+			}
 			break;
 		}
 		if (historyAnchor != null)

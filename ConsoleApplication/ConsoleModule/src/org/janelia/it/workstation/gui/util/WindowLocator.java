@@ -88,4 +88,18 @@ public class WindowLocator {
         return win;
     }
 
+    public static TopComponent makeVisibleAndGet(final String frameName) {
+        TopComponent topComponent = WindowLocator.getByName(frameName);
+        if ( topComponent != null ) {
+            if ( ! topComponent.isOpened() ) {
+                topComponent.open();
+            }
+            if ( topComponent.isOpened() ) {
+                topComponent.requestActive();
+            }
+
+            topComponent.setVisible(true);
+        }
+        return topComponent;
+    }
 }

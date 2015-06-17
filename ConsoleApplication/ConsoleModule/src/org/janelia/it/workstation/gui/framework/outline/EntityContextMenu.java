@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.framework.outline;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -19,6 +17,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -30,7 +29,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 import javax.swing.ProgressMonitor;
-import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -75,6 +73,7 @@ import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
+import org.janelia.it.workstation.shared.workers.SampleDownloadWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.ws.ExternalClient;
@@ -144,7 +143,6 @@ public class EntityContextMenu extends JPopupMenu {
         add(getCopyIdToClipboardItem());
         add(getPasteAnnotationItem());
         add(getDetailsItem());
-        add(getPermissionItem());
         add(getSetSortCriteriaItem());
         add(getGotoRelatedItem());
         
@@ -156,6 +154,8 @@ public class EntityContextMenu extends JPopupMenu {
         add(getDeleteItem());
         add(getDeleteInBackgroundItem());
         add(getMarkForReprocessingItem());
+        // TODO: reenable this item once we have Visually Lossless samples
+        //add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getVerificationMovieItem());
         
@@ -175,7 +175,6 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getSortBySimilarityItem());
         add(getMergeItem());
-        add(getLsmDownloadMenu());
         add(getDownloadMenu());
         add(getImportItem());
 
@@ -259,22 +258,6 @@ public class EntityContextMenu extends JPopupMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 new EntityDetailsDialog().showForRootedEntity(rootedEntity);
-            }
-        });
-        return detailsMenuItem;
-    }
-
-    protected JMenuItem getPermissionItem() {
-        if (multiple) return null;
-        if (virtual) return null;
-        
-        if (!ModelMgrUtils.isOwner(rootedEntity.getEntity())) return null;
-        
-        JMenuItem detailsMenuItem = new JMenuItem("  Change Permissions");
-        detailsMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new EntityDetailsDialog().showForRootedEntity(rootedEntity, EntityDetailsPanel.TAB_NAME_PERMISSIONS);
             }
         });
         return detailsMenuItem;
@@ -805,6 +788,17 @@ public class EntityContextMenu extends JPopupMenu {
                             ModelMgr.getModelMgr().invalidateCache(sample, true);
                         }
                     }
+
+                    @Override
+                    public Callable<Void> getSuccessCallback() {
+                        return new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                SessionMgr.getBrowser().getEntityOutline().refresh();
+                                return null;
+                            }
+                        };
+                    }
                 };
 
                 taskWorker.executeWithEvents();
@@ -821,7 +815,159 @@ public class EntityContextMenu extends JPopupMenu {
         
         return blockItem;
     }
+    
+    private List<Entity> getSelectedSamples() {
+        final List<Entity> samples = new ArrayList<>();
+        for (RootedEntity rootedEntity : rootedEntityList) {
+            Entity sample = rootedEntity.getEntity();
+            if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE) && !sample.getName().contains("~")) {
+                samples.add(sample);
+            }
+        }
+        return samples;
+    }
 
+    protected JMenuItem getSampleCompressionTypeItem() {
+    
+        final List<Entity> samples = getSelectedSamples();
+        if (samples.isEmpty()) return null;
+        
+        JMenu submenu = new JMenu("  Change Sample Compression Strategy");
+        
+        final int count = samples.size();
+        final String samplesText = multiple?count+" Samples":"Sample";
+        
+        JMenuItem vllMenuItem = new JMenuItem("Visually Lossless (h5j)");
+        vllMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                
+                final String targetCompression = EntityConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS_AND_PBD;
+                String message = "Are you sure you want to convert "+samplesText+" to Visually Lossless (h5j) format?";
+                int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
+                
+                if (result != 0) return;
+
+                SimpleWorker worker = new SimpleWorker() {
+                    
+                    StringBuilder sampleIdBuf = new StringBuilder();
+                        
+                    @Override
+                    protected void doStuff() throws Exception {
+                        for(final Entity sample : samples) {
+                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_COMRESSION_TYPE, targetCompression);
+                            // Target is Visually Lossless, just run the compression service
+                            if (sampleIdBuf.length()>0) sampleIdBuf.append(",");
+                            sampleIdBuf.append(sample.getId());
+                        }
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {  
+                        if (sampleIdBuf.length()==0) return;
+                        
+                        Task task;
+                        try {
+                            HashSet<TaskParameter> taskParameters = new HashSet<>();
+                            taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
+                            task = ModelMgr.getModelMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
+                        }
+                        catch (Exception e) {
+                            SessionMgr.getSessionMgr().handleException(e);
+                            return;
+                        }
+                        
+                        TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
+
+                            @Override
+                            public String getName() {
+                                return "Compressing "+samples.size()+" samples";
+                            }
+
+                            @Override
+                            protected void doStuff() throws Exception {
+                                setStatus("Executing");
+                                super.doStuff();
+                                for(Entity sample : samples) {
+                                    ModelMgr.getModelMgr().invalidateCache(sample, true);
+                                }
+                            }
+                            
+                            @Override
+                            public Callable<Void> getSuccessCallback() {
+                                return new Callable<Void>() {
+                                    @Override
+                                    public Void call() throws Exception {
+                                        SessionMgr.getBrowser().getEntityOutline().refresh();
+                                        return null;
+                                    }
+                                };
+                            }
+                        };
+
+                        taskWorker.executeWithEvents();
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                
+                worker.execute();
+            }
+        });
+        
+        submenu.add(vllMenuItem);
+
+        JMenuItem llMenuItem = new JMenuItem("Lossless (v3dpbd)");
+        llMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                
+                final String targetCompression = EntityConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J;
+                String message = "Are you sure you want to mark "+samplesText+" for reprocessing into Lossless (v3dpbd) format?";
+                int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
+                
+                if (result != 0) return;
+
+                SimpleWorker worker = new SimpleWorker() {
+                    
+                    StringBuilder sampleIdBuf = new StringBuilder();
+                        
+                    @Override
+                    protected void doStuff() throws Exception {
+                        for(final Entity sample : samples) {
+                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_COMRESSION_TYPE, targetCompression);
+                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
+                        }
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {  
+                         JOptionPane.showMessageDialog(mainFrame, samplesText+" are marked for reprocessing to (v3dpbd) Lossless format",  "Marked Samples", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                
+                worker.execute();
+            }
+        });
+        
+        submenu.add(llMenuItem);
+        
+        for(Entity sample : samples) {
+            if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
+                vllMenuItem.setEnabled(false);
+                break;
+            }
+        }
+
+        return submenu;
+    }
+    
     protected JMenuItem getMarkForReprocessingItem() {
 
         final List<Entity> samples = new ArrayList<>();
@@ -1374,22 +1520,23 @@ public class EntityContextMenu extends JPopupMenu {
     
     protected JMenuItem getDownloadMenu() {
 
+        boolean allLsm = true;
         List<Entity> entitiesWithFilepaths = new ArrayList<>();
         for(final RootedEntity re : rootedEntityList) {
-            final Entity targetEntity = re.getEntity();
-            final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+            final Entity entity = re.getEntity();
+            final String filepath = EntityUtils.getDefault3dImageFilePath(entity);
             if (filepath!=null) {
-                // conversion pipeline can't handle bz2 (yet), so filter them out
-                if (! filepath.endsWith(Utils.EXTENSION_BZ2)) {
-                    entitiesWithFilepaths.add(targetEntity);
+                entitiesWithFilepaths.add(entity);
+                if (!EntityConstants.TYPE_LSM_STACK.equals(entity.getEntityTypeName())) {
+                    allLsm = false;
                 }
             }
         }
         if (entitiesWithFilepaths.isEmpty()) {
             return null;
         }
-
-        String[] DOWNLOAD_EXTENSIONS = {"tif", "v3draw", "v3dpbd", "mp4"};
+        
+        String[] DOWNLOAD_EXTENSIONS = {"tif", "v3draw", "v3dpbd", "mp4", "h5j"};
         String itemTitle;
         if (entitiesWithFilepaths.size()>1) {
             itemTitle = "  Download "+entitiesWithFilepaths.size()+" 3D Images As...";
@@ -1399,52 +1546,19 @@ public class EntityContextMenu extends JPopupMenu {
         }
         
         JMenu downloadMenu = new JMenu(itemTitle);
+        
+        if (allLsm) {
+            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_LSM));
+            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_LSM_BZ2));
+        }
+        
         for(String extension : DOWNLOAD_EXTENSIONS) {
             add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, extension));
         }
         for(String extension : DOWNLOAD_EXTENSIONS) {
             add(downloadMenu, getDownloadItem(entitiesWithFilepaths, true, extension));
         }
-        return downloadMenu;
-    }
-
-    protected JMenuItem getLsmDownloadMenu() {
-
-        boolean foundAtLeastOneBzippedFile = false;
-
-        List<Entity> entitiesWithFilepaths = new ArrayList<>();
-        for (RootedEntity re : rootedEntityList) {
-            Entity targetEntity = re.getEntity();
-            String filePath = EntityUtils.getDefault3dImageFilePath(targetEntity);
-            if (filePath != null) {
-                // only include .lsm or .lsm.bz2 files
-                if (filePath.endsWith(Utils.EXTENSION_LSM)) {
-                    entitiesWithFilepaths.add(targetEntity);
-                } else if (filePath.endsWith(Utils.EXTENSION_LSM_BZ2)) {
-                    foundAtLeastOneBzippedFile = true;
-                    entitiesWithFilepaths.add(targetEntity);
-                }
-            }
-        }
-
-        if (entitiesWithFilepaths.isEmpty()) {
-            return null;
-        }
-
-        String itemTitle;
-        if (entitiesWithFilepaths.size()>1) {
-            itemTitle = "  Download " + entitiesWithFilepaths.size() + " LSMs As...";
-        }
-        else {
-            itemTitle = "  Download LSM As...";
-        }
-
-        JMenu downloadMenu = new JMenu(itemTitle);
-        add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_LSM));
-        if (foundAtLeastOneBzippedFile) {
-            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_BZ2));
-        }
-
+        
         return downloadMenu;
     }
 
@@ -1455,18 +1569,18 @@ public class EntityContextMenu extends JPopupMenu {
         String itemTitle;
         if (splitChannels) {
             if (multiple) {
-                itemTitle = "Split Channel "+extension+" Files (Background Task)";
+                itemTitle = "Split Channel "+extension;
             }
             else {
-                itemTitle = "Split Channel "+extension+" File (Background Task)";
+                itemTitle = "Split Channel "+extension;
             }
         }
         else {
             if (multiple) {
-                itemTitle = extension+" Files (Background Task)";
+                itemTitle = extension;
             }
             else {
-                itemTitle = extension+" File (Background Task)";
+                itemTitle = extension;
             }
         }
         
@@ -1476,8 +1590,8 @@ public class EntityContextMenu extends JPopupMenu {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
                     for (Entity entity : entitiesWithFilepaths) {
-                        org.janelia.it.workstation.shared.workers.SampleDownloadWorker sampleDownloadWorker =
-                                new org.janelia.it.workstation.shared.workers.SampleDownloadWorker(entity, extension, splitChannels, copyFileLock);
+                        SampleDownloadWorker sampleDownloadWorker =
+                                new SampleDownloadWorker(entity, extension, splitChannels, copyFileLock);
                         sampleDownloadWorker.execute();
                     }
                 } catch (Exception e) {
@@ -1569,9 +1683,9 @@ public class EntityContextMenu extends JPopupMenu {
             return null;
         if (!OpenInFinderAction.isSupported())
             return null;
-        String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
+        String path = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
         JMenuItem menuItem = null;
-        if (!StringUtils.isEmpty(filepath)) {
+        if (isLocallyAccessibleFilepath(path)) {
             menuItem = getActionItem(new OpenInFinderAction(rootedEntity.getEntity()) {
                 @Override
                 public String getName() {
@@ -1590,8 +1704,8 @@ public class EntityContextMenu extends JPopupMenu {
             return null;
         if (!OpenWithDefaultAppAction.isSupported())
             return null;
-        String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
-        if (!StringUtils.isEmpty(filepath)) {
+        String path = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
+        if (isLocallyAccessibleFilepath(path)) {
             OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(rootedEntity.getEntity()) {
                 @Override
                 public String getName() {
@@ -1607,7 +1721,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple)
             return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
-        if (path != null) {
+        if (isLocallyAccessibleFilepath(path)) {
             JMenuItem fijiMenuItem = new JMenuItem("  View In Fiji");
             fijiMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -1711,7 +1825,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple)
             return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
-        if (path != null) {
+        if (isLocallyAccessibleFilepath(path)) {
             JMenuItem vaa3dMenuItem = new JMenuItem("  View In Vaa3D Tri-View");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -1733,7 +1847,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple)
             return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
-        if (path != null) {
+        if (isLocallyAccessibleFilepath(path)) {
             JMenuItem vaa3dMenuItem = new JMenuItem("  View In Vaa3D 3D View");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -1908,4 +2022,15 @@ public class EntityContextMenu extends JPopupMenu {
         }
     }
 
+    /**
+     * Checks if the file path is or can be made locally accessible through the 
+     * file cache. This is mainly to filter out Scality files, which we can't 
+     * handle at the moment. In this future this may return true for all file
+     * paths which are not empty. 
+     * @param filepath
+     * @return 
+     */
+    private boolean isLocallyAccessibleFilepath(String filepath) {
+        return !StringUtils.isEmpty(filepath) && !filepath.startsWith(EntityConstants.SCALITY_PATH_PREFIX);
+    }
 }

@@ -207,7 +207,7 @@ public class Matrix4 {
     /**
      * Transpose version, to ease transcription from column-major OpenGL specs
      */
-    private Matrix4 setTranspose(
+    public Matrix4 setTranspose(
             float e00,
             float e10,
             float e20,

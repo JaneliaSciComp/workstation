@@ -14,6 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Skeleton {
+    
+    public static final String SKELETON_LOOKUP_PATH = "Skeleton/Node";
+    
 	@SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(Skeleton.class);
 
@@ -59,6 +62,8 @@ public class Skeleton {
     private TileFormat tileFormat;
 
 	private Set<Anchor> anchors = new LinkedHashSet<>();
+    private Anchor nextParent;
+    private Anchor hoverAnchor;
 	
 	private Map<SegmentIndex, AnchoredVoxelPath> tracedSegments =
 			new ConcurrentHashMap<>();
@@ -90,6 +95,10 @@ public class Skeleton {
     public void setTileFormat(TileFormat tileFormat) {
         this.tileFormat = tileFormat;
     }
+    
+    public TileFormat getTileFormat() {
+        return tileFormat;
+    }
 	
 	public void addAnchors(List<Anchor> anchorList) {
         for (Anchor anchor: anchorList) {
@@ -106,6 +115,21 @@ public class Skeleton {
 	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {
         controller.anchorAdded(new AnchorSeed(xyz, parent));
 	}
+    
+    /**
+     * Externally drive focus, given a target anchor.
+     * 
+     * @param annotationID look this up for loc.
+     */
+    public Vec3 setFocusByAnchorID( long annotationID ) {
+        Anchor focusAnchor = getAnchorByID(annotationID);
+        Vec3 location = null;
+        if (focusAnchor != null) {
+            location = focusAnchor.getLocation();
+            controller.setLVVFocus( location );
+        }
+        return location;
+    }
 
 	public boolean connect(Anchor anchor1, Anchor anchor2) {
 		if (! anchors.contains(anchor1))
@@ -118,6 +142,34 @@ public class Skeleton {
 		return true;
 	}
     
+    /**
+     * @return the nextParent
+     */
+    public Anchor getNextParent() {
+        return nextParent;
+    }
+
+    /**
+     * @param nextParent the nextParent to set
+     */
+    public void setNextParent(Anchor nextParent) {
+        this.nextParent = nextParent;
+    }
+
+    /**
+     * @return the hoverAnchor
+     */
+    public Anchor getHoverAnchor() {
+        return hoverAnchor;
+    }
+
+    /**
+     * @param hoverAnchor the hoverAnchor to set
+     */
+    public void setHoverAnchor(Anchor hoverAnchor) {
+        this.hoverAnchor = hoverAnchor;
+    }
+
     public void deleteLinkRequest(Anchor anchor) {
         controller.deleteLinkRequested(anchor);
     }

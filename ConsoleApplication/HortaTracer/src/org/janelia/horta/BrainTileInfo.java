@@ -74,6 +74,9 @@ implements BrickInfo
     Matrix transform; // converts voxels to stage coordinates in nanometers
     private Matrix texCoord_X_stageUm; // cached transform inverse; after conversion to micrometers
     
+    // TODO  colorChannelIndex is a temporary hack that should be removed when we can show more than one channel at once
+    private int colorChannelIndex = 0;
+    
     public BrainTileInfo(Map<String, Object> yamlFragment, String parentPath) throws ParseException 
     {
         this.parentPath = parentPath;
@@ -244,7 +247,22 @@ implements BrickInfo
         File folderPath = new File(parentPath, localPath);
         return folderPath.exists();
     }
+
+    // TODO - remove this hack after we can show more than one channel at a time
+    public int getColorChannelIndex() {
+        return this.colorChannelIndex;
+    }
     
+    public void setColorChannelIndex(int index) {
+        this.colorChannelIndex = index;
+    }
+    
+    public Texture3d loadBrick(double maxEdgePadWidth, int colorChannel) throws IOException
+    {
+        setColorChannelIndex(colorChannel);
+        return loadBrick(maxEdgePadWidth);
+    }
+            
     @Override
     public Texture3d loadBrick(double maxEdgePadWidth) throws IOException
     {
@@ -256,10 +274,11 @@ implements BrickInfo
         
         // That path is just a folder. Now find the actual files.
         // TODO - this just loads the first channel.
+        String imageSuffix = "." + Integer.toString(colorChannelIndex) + ".tif";
         File tileFile = null;
         for (File file : folderPath.listFiles()) {
             // Use the first channel file
-            if (file.getName().endsWith(".0.tif")) {
+            if (file.getName().endsWith(imageSuffix)) {
                 tileFile = file;
                 break;
             }
@@ -296,6 +315,9 @@ implements BrickInfo
             return false;
         }
         BrainTileInfo rhs = (BrainTileInfo) other;
+        if (rhs.getColorChannelIndex() != this.getColorChannelIndex())
+            return false;
+        
         return rhs.parentPath.equals(parentPath) && rhs.localPath.equals(localPath);
 
     }

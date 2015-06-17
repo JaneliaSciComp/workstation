@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 @ServiceProvider(service = Tiled3dSampleLocationProviderAcceptor.class, path=Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH)
 public class HortaLocationProvider implements Tiled3dSampleLocationProviderAcceptor {
     public static final String UNIQUE_NAME = "Horta";
-    public static final String DESCRIPTION = "Horta";
+    public static final String DESCRIPTION = "Horta (channel 1)";
     
     private final Logger logger = LoggerFactory.getLogger(HortaLocationProvider.class);
     
@@ -83,7 +83,7 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProviderAccep
         return DESCRIPTION;
     }
     
-    private NeuronTracerTopComponent getNeuronTracer() {
+    protected NeuronTracerTopComponent getNeuronTracer() {
         return NeuronTracerTopComponent.findThisComponent();
     }
 
@@ -104,6 +104,7 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProviderAccep
         if (nttc.isOpened()) {
             nttc.requestActive();
             try {
+                sampleLocation.setDefaultColorChannel(0);
                 nttc.setSampleLocation(sampleLocation);
             } catch (Exception ex) {
                 logger.error(ex.getMessage());

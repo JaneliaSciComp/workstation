@@ -85,9 +85,11 @@ public class RelocationMenuBuilder {
                 rtnVal.add(new JMenuItem(new PushSampleLocationAction(description, providerAcceptor, originator)));
                 
                 // Tantalize user with future option to continuously synchronize
+                /*
                 JCheckBoxMenuItem synchronizeMenu = new JCheckBoxMenuItem("Continuously Track Location in "+description, false);
                 synchronizeMenu.setEnabled(false); // grayed out for now
                 rtnVal.add(synchronizeMenu);
+                */
             }
         }
         

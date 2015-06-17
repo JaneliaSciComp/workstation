@@ -43,7 +43,7 @@ public class AnnotationPanel extends JPanel
 
 
     // UI components
-    private NeuriteTreePanel neuriteTreePanel;
+    private FilteredAnnotationList filteredList;
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
     private JCheckBoxMenuItem automaticTracingMenuItem;
@@ -134,7 +134,8 @@ public class AnnotationPanel extends JPanel
 
     private void setupSignals() {
         // outgoing from the model:
-        PanelController panelController = new PanelController(this, noteListPanel, neuriteTreePanel, workspaceNeuronList, largeVolumeViewerTranslator);
+        PanelController panelController = new PanelController(this, noteListPanel,
+                filteredList, workspaceNeuronList, largeVolumeViewerTranslator);
         panelController.registerForEvents(annotationModel);
         panelController.registerForEvents(annotationMgr);
         panelController.registerForEvents(workspaceInfoPanel);
@@ -348,16 +349,19 @@ public class AnnotationPanel extends JPanel
         });
 
 
-        // ----- neuron information; show name, whatever attributes, list of neurites
+        // ----- interesting annotations
         add(Box.createRigidArea(new Dimension(0, 20)), cVert);
-        neuriteTreePanel = new NeuriteTreePanel(width);
-        neuriteTreePanel.setAnnotationManager(annotationMgr);
-        add(neuriteTreePanel, cVert);
+        filteredList = new FilteredAnnotationList(annotationMgr, annotationModel, width);
+        add(filteredList, cVert);
 
-        // buttons for acting on annotations or neurites (which are in the list immediately above):
+
+        // buttons for acting on annotations
+        // NOTE: there's only one button and we don't really use it, so this
+        //  is hidden for now (but not removed in case we want it later)
+        // NOTE 2: the same functionality is still available on the right-click menu
         JPanel neuriteButtonsPanel = new JPanel();
         neuriteButtonsPanel.setLayout(new BoxLayout(neuriteButtonsPanel, BoxLayout.LINE_AXIS));
-        add(neuriteButtonsPanel, cVert);
+        // add(neuriteButtonsPanel, cVert);
 
         JButton centerAnnotationButton = new JButton("Center");
         centerAnnotationAction.putValue(Action.NAME, "Center");

@@ -36,64 +36,29 @@ public class SampleDownloadWorker extends SimpleWorker {
     private static final File WS_IMAGES_DIR = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
     private static final File SPLIT_CHANNEL_IMAGES_DIR = new File(SystemInfo.getDownloadsDir(), "Split Channel Images");
 
-    private Entity selectedEntity;
-    private File rootDownloadDir;
-    private String extension;
-    private boolean splitChannels;
-    private Lock copyFileLock;
+    private final ModelMgr modelMgr;
+    private final File rootDownloadDir;
+    private final Entity selectedEntity;
+    private final String extension;
+    private final boolean splitChannels;
+    private final Lock copyFileLock;
 
     private String sampleEntityName;
     private String sourceFilePath;
     private File sampleTargetDir;
     private String localFilePrefix;
 
-    private ModelMgr modelMgr;
-
-    public SampleDownloadWorker(Entity selectedEntity,
-                                String extension,
-                                boolean splitChannels,
-                                Lock copyFileLock) {
-
+    public SampleDownloadWorker(Entity selectedEntity, String extension, boolean splitChannels, Lock copyFileLock) {
+        this.modelMgr = ModelMgr.getModelMgr();
         this.selectedEntity = selectedEntity;
         this.extension = extension;
         this.splitChannels = splitChannels;
         this.copyFileLock = copyFileLock;
-
-        if (splitChannels) {
-            this.rootDownloadDir = SPLIT_CHANNEL_IMAGES_DIR;
-        } else {
-            this.rootDownloadDir = WS_IMAGES_DIR;
-        }
-
-        this.modelMgr = ModelMgr.getModelMgr();
+        this.rootDownloadDir = splitChannels ? SPLIT_CHANNEL_IMAGES_DIR : WS_IMAGES_DIR;
     }
 
     @Override
     protected void doStuff() throws Exception {
-        initSampleData();
-    }
-
-    @Override
-    protected void hadSuccess() {
-        try {
-            final boolean convertFromLsmToBz2 =
-                    Utils.EXTENSION_BZ2.equals(extension) && sourceFilePath.endsWith(Utils.EXTENSION_LSM);
-            if (convertFromLsmToBz2) {
-                log.info("skipping download of {} as bz2 (operation is not currently supported)", sourceFilePath);
-            } else {
-                startDownload();
-            }
-        } catch (Exception e) {
-            hadError(e);
-        }
-    }
-
-    @Override
-    protected void hadError(Throwable error) {
-        SessionMgr.getSessionMgr().handleException(error);
-    }
-
-    private void initSampleData() throws Exception {
         Entity sampleEntity;
         if (EntityConstants.TYPE_SAMPLE.equals(selectedEntity.getEntityTypeName())) {
             sampleEntity = selectedEntity;
@@ -120,6 +85,21 @@ public class SampleDownloadWorker extends SimpleWorker {
         localFilePrefix = sampleEntityName + idStr + "_";
     }
 
+    @Override
+    protected void hadSuccess() {
+        try {
+        startDownload();
+        }
+        catch (Exception e) {
+            hadError(e);
+        }
+    }
+
+    @Override
+    protected void hadError(Throwable error) {
+        SessionMgr.getSessionMgr().handleException(error);
+    }
+
     private void startDownload() throws Exception {
 
         log.info("startDownload: entry, extension={}, sourceFilePath={}", extension, sourceFilePath);
@@ -127,23 +107,28 @@ public class SampleDownloadWorker extends SimpleWorker {
         File sourceFile = null;
         String localFileName = null;
 
-        if (sourceFilePath.endsWith(extension)) {
-            // no conversion needed, simply transfer the file
-            sourceFile = new File(sourceFilePath);
-            localFileName = localFilePrefix + sourceFile.getName();
-        } else if (Utils.EXTENSION_LSM.equals(extension)) {
-            // need to convert bz2 to lsm
-            sourceFile = new File(sourceFilePath);
-            final String compressedSourceName = sourceFile.getName();
-            final String uncompressedSourceName =
-                    compressedSourceName.substring(0, compressedSourceName.lastIndexOf('.'));
-            localFileName = localFilePrefix + uncompressedSourceName;
-        } // else leave sourceFile and localFileName null for server side conversions
-
+        if (!splitChannels) {
+            if (sourceFilePath.endsWith(extension)) {
+                // no conversion needed, simply transfer the file
+                sourceFile = new File(sourceFilePath);
+                localFileName = localFilePrefix + sourceFile.getName();
+            } 
+            else if (Utils.EXTENSION_LSM.equals(extension)) {
+                // need to convert bz2 to lsm
+                sourceFile = new File(sourceFilePath);
+                final String compressedSourceName = sourceFile.getName();
+                final String uncompressedSourceName =
+                        compressedSourceName.substring(0, compressedSourceName.lastIndexOf('.'));
+                localFileName = localFilePrefix + uncompressedSourceName;
+            } // else leave sourceFile and localFileName null for server side conversions
+        }
+        
         if (checkForAlreadyDownloadedFiles(localFileName)) {
-            if (sourceFile == null) {
+            // TODO: the Scality path check can go away once our WebDAV can handle Scality paths
+            if (sourceFile == null || sourceFilePath.startsWith(EntityConstants.SCALITY_PATH_PREFIX)) {
                 convertOnServer(localFilePrefix);
-            } else {
+            } 
+            else {
                 transferAndConvertLocallyAsNeeded(sourceFilePath, localFileName);
             }
         }

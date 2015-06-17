@@ -91,13 +91,13 @@ public class MeshObjFileActor implements GLActor
         gl2.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 
 
-        gl2.glEnable(gl2.GL_DEPTH_TEST);
-        gl2.glDepthFunc(gl2.GL_LEQUAL);
+        gl2.glEnable(GL2.GL_DEPTH_TEST);
+        gl2.glDepthFunc(GL2.GL_LEQUAL);
 
-        gl2.glShadeModel(gl2.GL_SMOOTH);
+        gl2.glShadeModel(GL2.GL_SMOOTH);
         gl2.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);
 
-        float[] lightPos = { -30, 0, 0, 1 };
+        float[] lightPos = { -30, 0, 5, 1 };
         float[] lightAmbient = { 0.3f, 0.3f, 0.3f, 1f };
         float[] lightSpecular = { 0.8f, 0.8f, 0.8f, 1f };
 
@@ -109,9 +109,9 @@ public class MeshObjFileActor implements GLActor
         gl2.glLightfv(GL2.GL_LIGHT1, GL2.GL_SPECULAR, lightSpecular, 0);
 
         float[] rgba = { 0.3f, 0.5f, 1f };
-        gl2.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_AMBIENT, rgba, 0);
-        gl2.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_SPECULAR, rgba, 0);
-        gl2.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_SHININESS, FloatBuffer.wrap(new float[] { 0.5f }));
+        gl2.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, rgba, 0);
+        gl2.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, rgba, 0);
+        gl2.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, FloatBuffer.wrap(new float[] { 0.5f }));
 
         drawTrianglesAndLines(gl2);
 

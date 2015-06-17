@@ -29,12 +29,7 @@
  */
 package org.janelia.horta;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Observable;
-import java.util.Observer;
-import javax.swing.JOptionPane;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -45,11 +40,7 @@ import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
-import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.awt.StatusDisplayer;
-import org.openide.util.Exceptions;
-import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,10 +116,14 @@ public class NeuronTraceLoader {
         return didMove;
     }
 
+    public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource ) throws IOException {
+        return loadTileAtCurrentFocus( volumeSource, 0);
+    }
+    
     /**
      * Helper method toward automatic tile loading
      */
-    public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource ) throws IOException {
+    public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource, int colorChannel ) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
 
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
@@ -161,14 +156,16 @@ public class NeuronTraceLoader {
             if (!(actor instanceof BrickActor))
                 continue;
             BrickActor ba = (BrickActor)actor;
-            if (ba.getBrainTile().isSameBrick(brainTileInfo)) {
+            if ( ba.getBrainTile().isSameBrick(brainTileInfo) 
+                    && (colorChannel == brainTileInfo.getColorChannelIndex()) ) // reload if color changed
+            {
                 tileAlreadyLoaded = true;
                 break;
             }
         }
         
         if (! tileAlreadyLoaded) {
-            GL3Actor boxMesh = nttc.createBrickActor((BrainTileInfo) brickInfo);
+            GL3Actor boxMesh = nttc.createBrickActor((BrainTileInfo) brickInfo, colorChannel);
 
             StatusDisplayer.getDefault().setStatusText(
                     "One TIFF file loaded and processed in "
@@ -176,78 +173,12 @@ public class NeuronTraceLoader {
                     + " seconds."
             );
 
-            // mprActor.addChild(boxMesh);
+            // Clear, so only one tiles is shown at a time (two tiles are in memory during transition)
             neuronMPRenderer.clearVolumeActors();
+            
             neuronMPRenderer.addVolumeActor(boxMesh);
         }
         
         return brickInfo;
     }
-
-    /*
-    private boolean loadExampleTile(BrainTileInfoList tileList, ProgressHandle progress) {
-
-        BrainTileInfo exampleTile = null;
-        // Find first existing tile
-        for (BrainTileInfo tile : tileList) {
-            if (tile.folderExists()) {
-                exampleTile = tile;
-                break;
-            }
-        }
-        
-        if (exampleTile == null) {
-            logger.error("No tiles found");
-            StringBuilder bldr = new StringBuilder("Nonexistent Files List:");
-            for (BrainTileInfo tile: tileList) {
-                bldr.append(" ");
-                bldr.append(
-                    tile.getParentPath()).append("/").append(tile.getLocalPath()
-                );
-            }
-            logger.info(bldr.toString());
-            return false;
-        }
-
-        File tileFile = new File(exampleTile.getParentPath(), exampleTile.getLocalPath());
-        logger.info(tileFile.getAbsolutePath());
-
-        progress.progress("Loading tile file " + tileFile);
-        try {
-            GL3Actor brickActor = nttc.createBrickActor(exampleTile);
-            // mprActor.addChild(brickActor);
-            neuronMPRenderer.addVolumeActor(brickActor);
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-
-        // progress.finish();
-        
-        for (NeuriteActor tracingActor : tracingInteractor.createActors()) {
-            sceneWindow.getRenderer().addActor(tracingActor);
-            tracingActor.getModel().addObserver(new Observer() {
-                @Override
-                public void update(Observable o, Object arg) {
-                    sceneWindow.getInnerComponent().repaint();
-                }
-            });
-        }
-
-        Vantage v = sceneWindow.getVantage();
-        v.centerOn(exampleTile.getBoundingBox());
-        v.setDefaultBoundingBox(exampleTile.getBoundingBox());
-        v.notifyObservers();
-
-        return true;
-    }
-    */
-
-    /* 
-    private void handleException(Exception ex) {
-        Exceptions.printStackTrace(ex);
-        JOptionPane.showMessageDialog(nttc, ex);
-    }
-     */
-    
-
 }
