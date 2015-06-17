@@ -115,6 +115,21 @@ public class Skeleton {
 	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {
         controller.anchorAdded(new AnchorSeed(xyz, parent));
 	}
+    
+    /**
+     * Externally drive focus, given a target anchor.
+     * 
+     * @param annotationID look this up for loc.
+     */
+    public Vec3 setFocusByAnchorID( long annotationID ) {
+        Anchor focusAnchor = getAnchorByID(annotationID);
+        Vec3 location = null;
+        if (focusAnchor != null) {
+            location = focusAnchor.getLocation();
+            controller.setLVVFocus( location );
+        }
+        return location;
+    }
 
 	public boolean connect(Anchor anchor1, Anchor anchor2) {
 		if (! anchors.contains(anchor1))

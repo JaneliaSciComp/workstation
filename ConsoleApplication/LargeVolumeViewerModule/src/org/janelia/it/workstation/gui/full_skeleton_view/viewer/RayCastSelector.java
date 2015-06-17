@@ -11,7 +11,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.NeuronTraceVtxAttribMgr;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 
@@ -57,8 +56,8 @@ public class RayCastSelector {
         int selectedGlancingRow = -1;  // One intersection with sphere.
         
         //DEBUG System.out.println("-----------------------------------------------");
-        Vec3 smallestOMinusC = new Vec3(Double.MAX_VALUE / 10.0, 0, 0);
-        double smallestOMCMag = mag(smallestOMinusC);
+        //Vec3 smallestOMinusC = new Vec3(Double.MAX_VALUE / 10.0, 0, 0);
+        //double smallestOMCMag = mag(smallestOMinusC);
 
         for (int i = 0; i < filteredModel.getRowCount(); i++) {
             TileFormat.MicrometerXyz sphereCenter = getCoords(filteredModel, i, annoMdl, tileFormat);
@@ -69,11 +68,6 @@ public class RayCastSelector {
             double b = rayWorldVec3.dot(oMinusC);
             double c = oMinusC.dot(oMinusC) - SPHERE_R_SQUARE;
 
-            double omcMag = mag( oMinusC );
-            if (omcMag < smallestOMCMag) {
-                smallestOMCMag = omcMag;
-                smallestOMinusC = oMinusC;
-            }
             // Pre-emptive bail: quick miss detection. Must be >= 0.
             double bSquareMinusC = b * b - c;
             if (bSquareMinusC >= 0) {
@@ -106,9 +100,6 @@ public class RayCastSelector {
         return rtnVal;
     }
     
-    private double mag( Vec3 v ) {
-        return Math.sqrt( v.getX() * v.getX() + v.getY() * v.getY() + v.getZ() * v.getZ() );
-    }
 
     private TileFormat.MicrometerXyz getCoords(FilteredAnnotationModel filteredModel, int i, final AnnotationModel annoMdl, TileFormat tileFormat) {
         TileFormat.MicrometerXyz microns;
@@ -207,24 +198,6 @@ public class RayCastSelector {
 
         rtnVal.pickOrigin = worldFromPixel(mouseX, mouseY);
 
-//        // Take the eye ray, and turn it back into a point.
-//        rtnVal.pickOrigin = new Vec3(
-//                rayEye.get(0, 0),
-//                rayEye.get(1, 0),
-//                0.0               // Z is 0.
-//        );
-//        rtnVal.pickOrigin
-//                = rtnVal.pickOrigin.times(
-//                        1.0 / context.getCamera3d().getPixelsPerSceneUnit()
-//                );
-//        Matrix pickOriginMatrix = toJamaVector(rtnVal.pickOrigin);
-//        pickOriginMatrix.set(3, 0, 1.0); // Ensure: point.  W=1
-//        pickOriginMatrix = toJamaMatrix(transposedMM).times(pickOriginMatrix);
-//                new Vec3( 
-//                Math.abs(pickOriginMatrix.get(0, 0)), 
-//                Math.abs(pickOriginMatrix.get(1, 0)), 
-//                0.0 //pickOriginMatrix.get(2, 0)
-//        );
         return rtnVal;
     }
 

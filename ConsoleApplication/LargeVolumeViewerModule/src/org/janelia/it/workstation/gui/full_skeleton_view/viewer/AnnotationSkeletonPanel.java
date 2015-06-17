@@ -113,7 +113,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             final BoundingBox3d originalBoundingBox = tileFormat.calcBoundingBox();
 
             MDReturn meshDrawResults = buildMeshDrawActor( context, originalBoundingBox );
-            MeshDrawActor meshDrawActor = meshDrawResults.getActor();
+            final MeshDrawActor meshDrawActor = meshDrawResults.getActor();
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
             
             viewer.addActor(axesActor);
@@ -139,7 +139,16 @@ public class AnnotationSkeletonPanel extends JPanel {
                 public void mouseClicked(MouseEvent me) {
                     long selectedAnnotation = select(me.getX(), me.getY());
                     if (selectedAnnotation > 0) {
-                        SkeletonController.getInstance().setNextParent(selectedAnnotation);
+                        final SkeletonController skeletonController = SkeletonController.getInstance();
+                        //skeletonController.annotationSelected(selectedAnnotation);
+                        Vec3 focus = skeletonController.getAnnotationPosition(selectedAnnotation);
+                        if (focus != null) {
+                            skeletonController.setLVVFocus(focus);
+                            context.getCamera3d().setFocus(focus);
+                            viewer.invalidate();
+                            viewer.validate();
+                            viewer.repaint();
+                        }
                     }
                 }
             });
