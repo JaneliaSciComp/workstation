@@ -35,17 +35,21 @@ uniform sampler3D volumeTexture; // the confocal image stack
 uniform int levelOfDetail = 0; // volume texture LOD
 
 // Use actual voxelSize, as uniform, for more accurate occlusion
-uniform vec3 volumeMicrometers = vec3(256, 256, 200);
+uniform vec3 volumeMicrometers = vec3(400, 450, 250);
 // TODO - expose occluding path length to user
-uniform float canonicalOccludingPathLengthUm = 2.0; // micrometers
+uniform float canonicalOccludingPathLengthUm = 1.0; // micrometers
 
 // Homogeneous clip plane equations, in texture coordinates
 uniform vec4 nearSlabPlane; // for limiting view to a screen-parallel slab
 uniform vec4 farSlabPlane; // for limiting view to a screen-parallel slab
 
+// Filtering modes
+#define NEAREST_NEIGHBOR 0
+#define TRILINEAR 1
+// (There is no mode 2...)
+#define TRICUBIC 3
 // Expensive beautiful rendering option, for slow, high quality rendering passes
-// TODO - set this dynamically depending on user interaction.
-uniform int filteringOrder = 3; // 0: NEAREST; 1: TRILINEAR; 2: <not used> 3: TRICUBIC
+uniform int filteringOrder = TRICUBIC; // 0: NEAREST; 1: TRILINEAR; 2: <not used> 3: TRICUBIC
 
 // uniform int projectionMode = 0; // 0: maximum intensity; 1: occluding; 2: isosurface
 
@@ -184,7 +188,7 @@ float minElement(vec4 v) {
 float sampleScaledIntensity(sampler3D volume, vec3 uvw, vec3 textureScale) 
 {
     vec4 unscaled;
-    if (filteringOrder == 3)
+    if (filteringOrder == TRICUBIC)
         unscaled = filterFastCubic3D(volume, uvw, textureScale, levelOfDetail);
     else
         unscaled = textureLod(volume, uvw*textureScale, levelOfDetail);
@@ -261,7 +265,10 @@ void main() {
     // Use absolute scale for occluding length parameter
     // TODO - express length parameter in micrometers...
     ivec3 finestVolumeSize = textureSize(volumeTexture, 0);
-    float micrometersPerRay = dot(volumeMicrometers, abs(x1));
+    float micrometersPerRay = 
+        dot(volumeMicrometers, abs(x1));
+        // dot( vec3(volumeMicrometers.xy, 0.25* volumeMicrometers.z), abs(x1));
+        // dot(vec3(200, 200, 200), abs(x1));
 
     // How small a corner are we willing to precisely sample?
     // smaller value => sharper corners/slower progress
@@ -270,7 +277,7 @@ void main() {
     // 0.05 shows subtle artifacts
     // NOTE: minStep is the *minimum* step size, not THE step size, which will
     // typically be roughly voxelStep.
-    float minStep = 0.01 * voxelStep;
+    float minStep = 0.001 * voxelStep;
     vec3 forwardMask = ceil(x1 * 0.99); // each component is now 0 or 1
 
     // Convert ray equation parameters from normalized texture coordinates
@@ -302,7 +309,7 @@ void main() {
 
     // 
     vec3 rayBoxCorner;
-    if (filteringOrder == 0)  // nearest neighbor
+    if (filteringOrder == NEAREST_NEIGHBOR)  // nearest neighbor
     {
         rayBoxCorner = vec3(0, 0, 0); // intersect ray at voxel edge planes, optimal for nearest-neighbor
     } 
@@ -318,22 +325,19 @@ void main() {
 
     float previousDeltaT = 0;
 
-    bool sampleSegmentCenter = false;
-    if (filteringOrder == 0) {
-        sampleSegmentCenter = true;
-    }
-
     const int maxSteps = 500;
     int stepCount = 0;
+    vec4 vecLocalIntensityEnter = vec4(0,0,0,0);
     // BEGIN SLOW PART BELOW - focus optimizations here!
     // This loop could execute hundreds or thousands of times
     // Visit each intersected voxel along the view ray exactly once.
     while (previousEdge <= tMinMax.y) {
         stepCount += 1;
         if (stepCount > maxSteps) break;
+
         // Advance ray by at least minStep, to avoid getting stuck in tiny corners
-        float t = previousEdge + minStep;
-        vec3 currentTexelPos = (x0 + t*x1); // apply ray equation to find new voxel
+        float t0 = previousEdge + minStep;
+        vec3 currentTexelPos = (x0 + t0 * x1); // apply ray equation to find new voxel
 
         // Advance ray to next voxel edge.
         // For NEAREST filter, advance to midplanes between voxel centers.
@@ -345,7 +349,7 @@ void main() {
         // Ray trace to three planar voxel edges at once.
         vec3 candidateSteps = -(x0 - candidateEdges)/x1;
         // Clamp to reasonable range
-        vec3 minT = vec3(t,t,t); // previous step plus some
+        vec3 minT = vec3(t0,t0,t0); // previous step plus some
         candidateSteps = clamp(candidateSteps, minT, minT + 2.0 * vec3(1,1,1)); // does not remove corduroy effect
         // Choose the closest voxel edge.
         float nextEdge = min(candidateSteps.x, min(candidateSteps.y, candidateSteps.z));
@@ -353,23 +357,13 @@ void main() {
         // Next line should be unneccessary, but prevents (sporadic?) driver crash
         nextEdge = max(nextEdge, previousEdge + minStep);
 
-
-        // Average between previousEdge and nextEdge only for NEAREST filtering...
-        // Sample ray at voxel center (midpoint between voxel edge intersections)
-        // if (true) {
-        if (sampleSegmentCenter) {
-            t = mix(previousEdge, nextEdge, 0.5); // voxel center
-        }
-        else {
-            t = previousEdge; // sample voxel trailing edge
-        }
+        // 17Jun2015 use multiple samples per voxel
+        float t_enter = previousEdge;
+        float t_exit = nextEdge;
+        float t_center = mix(previousEdge, nextEdge, 0.5);
 
         float deltaT = nextEdge - previousEdge;
-        float segmentLength = 
-                0.5 * (deltaT + previousDeltaT); // should be correct for trailing edge sample
-        if (sampleSegmentCenter) {
-            segmentLength = deltaT; // perfect for nearest neighbor
-        }
+        float segmentLength = deltaT;
 
         // Update before next iteration; AND before any shortcuts...
         previousEdge = nextEdge;
@@ -379,17 +373,32 @@ void main() {
         if (segmentLength <= 0) continue;
 
         // Apply ray equation to compute texel coordinate from ray parameter.
-        currentTexelPos = (x0 + t*x1); 
-        vec3 texCoord = currentTexelPos * textureScale; // converted back to normalized texture coordinates,
+        vec3 midTexelPos = (x0 + t_center * x1); 
+        vec3 midTexCoord = midTexelPos * textureScale; // converted back to normalized texture coordinates,
+        vec3 exitTexelPos = (x0 + t_exit * x1); 
+        vec3 exitTexCoord = exitTexelPos * textureScale; // converted back to normalized texture coordinates,
         // Fetch texture intensity (EXPENSIVE!)
-        vec4 vecLocalIntensity = vec4(0, 0, 0, 0);
-        if (filteringOrder == 3) {
+        vec4 vecLocalIntensity;
+        if (filteringOrder == NEAREST_NEIGHBOR) {
+            // Only need to measure the middle, for nearest neighbor
+            vecLocalIntensity = textureLod(volumeTexture, midTexCoord, levelOfDetail);
+        }
+        else if (filteringOrder == TRICUBIC) {
             // slow tricubic filtering
-            vecLocalIntensity = filterFastCubic3D(volumeTexture, currentTexelPos, textureScale, levelOfDetail);
+            vec4 vecLocalIntensityMid = filterFastCubic3D(volumeTexture, midTexelPos, textureScale, levelOfDetail);
+            vec4 vecLocalIntensityExit = filterFastCubic3D(volumeTexture, exitTexelPos, textureScale, levelOfDetail);
+            // Average intensity along ray, assuming quadratic variation
+            vecLocalIntensity = 0.6 * vecLocalIntensityMid + 0.2 * vecLocalIntensityExit + 0.2 * vecLocalIntensityEnter; // Simpson's rule
+            // update for next voxel
+            vecLocalIntensityEnter = vecLocalIntensityExit;
         }
         else {
-            // fast linear or nearest-neighbor filtering
-            vecLocalIntensity = textureLod(volumeTexture, texCoord, levelOfDetail);
+            // fast linear filtering
+            vec4 vecLocalIntensityMid = textureLod(volumeTexture, midTexCoord, levelOfDetail);
+            vec4 vecLocalIntensityExit = textureLod(volumeTexture, exitTexCoord, levelOfDetail);
+            vecLocalIntensity = 0.6 * vecLocalIntensityMid + 0.2 * vecLocalIntensityExit + 0.2 * vecLocalIntensityEnter; // Simpson's rule
+            // update for next voxel
+            vecLocalIntensityEnter = vecLocalIntensityExit;
         }
 
         // compute scalar proxy for intensity
@@ -401,10 +410,10 @@ void main() {
         // for occluding projection, incorporation path length into opacity exponent
         #if PROJECTION_MODE == PROJECTION_OCCLUDING
             // Convert segmentLength to micrometers
-            // segmentLength = micrometersPerRay * segmentLength;
-            // float opacityExponent = canonicalOccludingPathLengthUm / segmentLength;
+            segmentLength = micrometersPerRay * segmentLength;
+            float opacityExponent = canonicalOccludingPathLengthUm / segmentLength;
             // opacityExponent = 2.0;
-            // localOpacity = pow(localOpacity, 2.0); // TODO - is this exponential slow?
+            localOpacity = pow(localOpacity, opacityExponent); // TODO - is this exponential slow?
         #endif
 
         // Compute change in intensity
@@ -426,7 +435,7 @@ void main() {
         //    needed in this shader at all. So, for example, without the fade
         //    effect, this entire render pass could be cached and skipped, as
         //    the user drags the opacity parameters. 
-        float rd = (t - tMinSlab) / (tMaxSlab - tMinSlab); // relative depth
+        float rd = (t_center - tMinSlab) / (tMaxSlab - tMinSlab); // relative depth
         const float fadeBuffer = 0.20; // how much of depth slab to include in fading
         float fade = rampstep(0.0, fadeBuffer, rd);
         fade = min(fade, rampstep(1.0, 1.0 - fadeBuffer, rd));
@@ -443,7 +452,7 @@ void main() {
             if  (localOpacity > integratedOpacity) {
                 vecIntegratedIntensity = vecLocalIntensity;
                 integratedOpacity = localOpacity;
-                tMaxAbs = t;
+                tMaxAbs = t_center;
             }
         #elif PROJECTION_MODE == PROJECTION_OCCLUDING
             // vec4 c_src = mix(opacityFunctionMin, vecLocalIntensity, fade);
@@ -467,7 +476,7 @@ void main() {
             float dI = localOpacity * (1.0 - a_dest/a_out);
             if (dI > maxDI) {
                 maxDI = dI;
-                tMaxAbs = t;
+                tMaxAbs = t_center;
             }
         #else // isosurface
             float threshDist = maxElement(vecLocalIntensity - isoThreshold) - 1e-6;
@@ -484,11 +493,11 @@ void main() {
                 // tMaxAbs = mix(previousT, t, alpha);
                 // tMaxAbs = max(tMinMax.x, tMaxAbs);
                 // tMaxAbs = min(tMaxAbs, t);
-                tMaxAbs = mix(previousT, t, alpha);
+                tMaxAbs = mix(t_enter, t_exit, alpha);
                 break;
             }
             previousThreshDist = threshDist; // negative value
-            previousT = t;
+            previousT = t_exit;
         #endif
 
         if ( maxElement(vecIntegratedIntensity - opacityFunctionMax) > 0 ) {
