@@ -215,6 +215,49 @@ vec3 calculateNormalInScreenSpace(sampler3D volume, vec3 uvw, vec3 voxelMicromet
     return normalize(result);
 }
 
+// Compute ray parameter at the next voxel edge.
+// Returns false if the ray should be terminated.
+bool march_ray_step(
+        in vec3 x0, in vec3 x1, // ray equation parameters, p = x0 + t*x1
+        in vec3 rayBoxCorner, // either (0,0,0)(nearest neighbor) or (0.5,0.5,0.5)(trilinear or tricubic)
+        in float minStep, // smallest allowable step
+        in vec3 forwardMask, // for each axis XYZ, zero(0) if view direction is negative, one(1) if positive.
+        inout float rayLocation, // ray position, to be updated by this method
+        inout int stepCount) // number of steps taken so far
+{
+    // Fixed control parameters
+    // TODO - remove these from main() method
+    const int maxSteps = 500;
+
+    // Limit total number of steps taken
+    stepCount += 1;
+    if (stepCount > maxSteps) 
+        return false;
+
+    // Advance ray by at least minStep, to avoid getting stuck in tiny corners
+    float t0 = rayLocation + minStep;
+    vec3 currentTexelPos = (x0 + t0 * x1); // apply ray equation to find new voxel
+
+    // Advance ray to next voxel edge.
+    // For NEAREST filter, advance to midplanes between voxel centers.
+    // For TRILINEAR and TRICUBIC filters, advance to planes connecing voxel centers.
+    vec3 currentTexel = floor(currentTexelPos + rayBoxCorner) - rayBoxCorner;
+
+    // Three out of six total voxel edges represent forward progress
+    vec3 candidateEdges = currentTexel + forwardMask;
+    // Ray trace to three planar voxel edges at once.
+    vec3 candidateSteps = -(x0 - candidateEdges)/x1;
+    // Clamp to reasonable range
+    vec3 minT = vec3(t0,t0,t0); // previous step plus some
+    candidateSteps = clamp(candidateSteps, minT, minT + 2.0 * vec3(1,1,1)); // does not remove corduroy effect
+    // Choose the closest voxel edge.
+    float nextEdge = min(candidateSteps.x, min(candidateSteps.y, candidateSteps.z));
+    // Advance ray by at least minStep, to avoid getting stuck in tiny corners
+    // Next line should be unneccessary, but prevents (sporadic?) driver crash
+    rayLocation = max(nextEdge, rayLocation + minStep);
+    return true;
+}
+
 void main() {
     vec4 vecIntegratedIntensity = vec4(0, 0, 0, 0); // up to 4 color channels
     float integratedOpacity = 0;
@@ -332,30 +375,19 @@ void main() {
     // This loop could execute hundreds or thousands of times
     // Visit each intersected voxel along the view ray exactly once.
     while (previousEdge <= tMinMax.y) {
-        stepCount += 1;
-        if (stepCount > maxSteps) break;
 
-        // Advance ray by at least minStep, to avoid getting stuck in tiny corners
-        float t0 = previousEdge + minStep;
-        vec3 currentTexelPos = (x0 + t0 * x1); // apply ray equation to find new voxel
+        float nextEdge = previousEdge;
 
-        // Advance ray to next voxel edge.
-        // For NEAREST filter, advance to midplanes between voxel centers.
-        // For TRILINEAR and TRICUBIC filters, advance to planes connecing voxel centers.
-        vec3 currentTexel = floor(currentTexelPos + rayBoxCorner) - rayBoxCorner;
-
-        // Three out of six total voxel edges represent forward progress
-        vec3 candidateEdges = currentTexel + forwardMask;
-        // Ray trace to three planar voxel edges at once.
-        vec3 candidateSteps = -(x0 - candidateEdges)/x1;
-        // Clamp to reasonable range
-        vec3 minT = vec3(t0,t0,t0); // previous step plus some
-        candidateSteps = clamp(candidateSteps, minT, minT + 2.0 * vec3(1,1,1)); // does not remove corduroy effect
-        // Choose the closest voxel edge.
-        float nextEdge = min(candidateSteps.x, min(candidateSteps.y, candidateSteps.z));
-        // Advance ray by at least minStep, to avoid getting stuck in tiny corners
-        // Next line should be unneccessary, but prevents (sporadic?) driver crash
-        nextEdge = max(nextEdge, previousEdge + minStep);
+        if (! march_ray_step(
+                x0, x1, // ray equation parameters, p = x0 + t*x1
+                rayBoxCorner, // either (0,0,0)(nearest neighbor) or (0.5,0.5,0.5)(trilinear or tricubic)
+                minStep, // smallest allowable step
+                forwardMask, // for each axis XYZ, zero(0) if view direction is negative, one(1) if positive.
+                nextEdge, // ray position, to be updated by this method
+                stepCount) ) // number of steps taken so far
+        {
+            break;
+        }
 
         // 17Jun2015 use multiple samples per voxel
         float t_enter = previousEdge;
