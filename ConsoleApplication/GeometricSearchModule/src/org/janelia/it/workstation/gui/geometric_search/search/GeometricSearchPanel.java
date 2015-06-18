@@ -52,7 +52,9 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
 
-        setupOITMeshExperiment();
+        setupVolumeExperiment();
+        
+        //setupOITMeshExperiment();
 
 //        GL4ShaderActionSequence actionSequence = new GL4ShaderActionSequence("Experimental Shader Action Sequence");
 //
@@ -71,6 +73,31 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         }
         viewer.resetView();
         viewer.refresh();
+    }
+    
+    private void setupVolumeExperiment() {
+        GL4ShaderActionSequence volumeSequence = new GL4ShaderActionSequence("Volume");
+        final VolumeShader volumeShader = new VolumeShader();
+        
+        volumeShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                Matrix4 viewMatrix = viewer.getRenderer().getViewMatrix();
+                volumeShader.setView(gl, viewMatrix);
+                logger.info("View Matrix:\n"+viewMatrix.toString()+"\n");
+                Matrix4 projMatrix = viewer.getRenderer().getProjectionMatrix();
+                volumeShader.setProjection(gl, projMatrix);
+                logger.info("Projection Matrix:\n"+projMatrix.toString()+"\n");               
+            }
+        });
+                
+        volumeSequence.setShader(volumeShader);
+        
+        final VolumeActor volumeActor = new VolumeActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"));
+        
+        volumeSequence.getActorSequence().add(volumeActor);
+        
+        viewer.addShaderAction(volumeSequence);
     }
 
     private void setupOITMeshExperiment() {
