@@ -328,7 +328,7 @@ public class EntityModel {
         visited.put(entity.getId(), entity);
 
         // Make a copy of the parent set because invalidate() will clear it
-        Collection<Long> parentIds = new HashSet<Long>(parentMap.get(entity.getId()));
+        Collection<Long> parentIds = new HashSet<>(parentMap.get(entity.getId()));
         log.debug("Got parents: {}", parentIds);
 
         entityCache.invalidate(entity.getId());
@@ -343,7 +343,7 @@ public class EntityModel {
                 log.warn("Entity no longer exists: "+entity.getId());
                 return;
             }
-            canonicalEntity = putOrUpdate(entity);
+            canonicalEntity = putOrUpdate(canonicalEntity);
             log.debug("Got new canonical entity: {}", EntityUtils.identify(canonicalEntity));
         }
         catch (Exception e) {

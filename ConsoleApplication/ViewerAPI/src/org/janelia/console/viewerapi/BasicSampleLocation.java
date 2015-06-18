@@ -43,6 +43,7 @@ public class BasicSampleLocation implements SampleLocation
     private double focusYUm = 0;
     private double focusZUm = 0;
     private double micrometersPerWindowHeight = 100;
+    private int defaultColorChannel = 0;
 
     public BasicSampleLocation()
     {
@@ -111,6 +112,18 @@ public class BasicSampleLocation implements SampleLocation
         setFocusXUm(x);
         setFocusYUm(y);
         setFocusZUm(z);
+    }
+
+    @Override
+    public int getDefaultColorChannel()
+    {
+        return defaultColorChannel;
+    }
+
+    @Override
+    public void setDefaultColorChannel(int channelIndex)
+    {
+        defaultColorChannel = channelIndex;
     }
 
 }

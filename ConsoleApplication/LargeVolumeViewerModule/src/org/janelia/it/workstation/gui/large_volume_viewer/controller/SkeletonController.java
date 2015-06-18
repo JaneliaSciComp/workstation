@@ -14,10 +14,8 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
@@ -94,6 +92,19 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         updateListeners.add(component);
     }
 
+    public Vec3 getAnnotationPosition( long annotationID ) {
+        final Anchor anchor = skeleton.getAnchorByID(annotationID);
+        Vec3 location = null;
+        if (anchor != null) {
+            location = anchor.getLocation();
+        }
+        return location;
+    }
+    
+    public void setLVVFocus( Vec3 focus ) {
+        qvController.setCameraFocus(focus);
+    }
+    
     //---------------------------------IMPLEMENTS AnchoredVoxelPathListener
     @Override
     public void addAnchoredVoxelPath(AnchoredVoxelPath path) {
@@ -172,7 +183,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
             actor.setNextParent(parent);
         }
         // Must rebuild everything, each time the anchor is selected.
-        // TODO consider making a second such actor.
         updateMeshDrawActor();
         fireComponentUpdate();
     }
