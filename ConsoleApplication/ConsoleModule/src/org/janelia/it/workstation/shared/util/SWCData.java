@@ -100,10 +100,20 @@ public class SWCData {
      * Validate file contents and write back to target.
      * 
      * @param swcFile target file.
+     * @param offset serial number of output file, if one of many.
      * @throws Exception thrown by called methods.
      */
-    public void write(File swcFile) throws Exception {
+    public void write(File swcFile, int offset) throws Exception {
         if (isValid()) {
+            if (offset != -1) {
+                String newName = swcFile.getName();
+                int periodPos = newName.indexOf('.');
+                if (periodPos > -1) {
+                    newName = newName.substring(0, periodPos) +
+                              '_' + offset + newName.substring(periodPos);
+                }
+                swcFile = new File(swcFile.getParent(), newName);
+            }
             FileWriter writer = new FileWriter(swcFile);
             writeSwcFile(writer);
             this.swcFile = swcFile;
@@ -122,7 +132,17 @@ public class SWCData {
         }
 
     }
-
+    
+    /**
+     * Validate contents and write back to target.
+     * 
+     * @param swcFile one and only file.
+     * @throws Exception thrown by called methods.
+     */
+    public void write(File swcFile) throws Exception {
+        write(swcFile, -1);
+    }
+    
     /**
      * check the swcFile; if false, call getInvalidReason()
      */
