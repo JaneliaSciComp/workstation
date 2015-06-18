@@ -59,6 +59,8 @@ called from a  SimpleWorker thread.
 */
 {
     public static final String STD_SWC_EXTENSION = ".swc";
+    private static final String COLOR_FORMAT = "# COLOR %f,%f,%f";
+    private static final String NAME_FORMAT = "# NAME %s";
 
     private ModelMgr modelMgr;
     private SessionMgr sessionMgr;
@@ -1284,6 +1286,7 @@ called from a  SimpleWorker thread.
     public void exportSWCData(File swcFile, List<Long> neuronIDList, int downsampleModulo) throws Exception {
 
         // get fresh neuron objects from ID list
+        Map<Long,List<String>> neuronHeaders = new HashMap<>();
         ArrayList<TmNeuron> neuronList = new ArrayList<>();
         for (Long ID: neuronIDList) {
             if (ID != null) {
@@ -1291,6 +1294,15 @@ called from a  SimpleWorker thread.
                 for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
                     if (neuron.getId().equals(ID)) {
                         foundNeuron = neuron;
+                        List<String> headers = neuronHeaders.get(ID);
+                        if (headers == null) {
+                            headers = new ArrayList<>();
+                            neuronHeaders.put(ID, headers);
+                        }
+                        NeuronStyle style = getNeuronStyle(neuron);
+                        float[] color = style.getColorAsFloatArray();
+                        headers.add(String.format(COLOR_FORMAT, color[0], color[1], color[2]));
+                        headers.add(String.format(NAME_FORMAT, neuron.getName()));                        
                     }
                 }
                 if (foundNeuron != null) {
@@ -1298,8 +1310,19 @@ called from a  SimpleWorker thread.
                 }
             }
         }
-        // get swcdata via converter, then write
-        SWCData swcData = swcDataConverter.fromTmNeuron(neuronList, downsampleModulo);
+        
+        // get swcdata via converter, then write        
+        // First write one file per neuron.
+        List<SWCData> swcDatas = swcDataConverter.fromTmNeuron(neuronList, neuronHeaders, downsampleModulo);
+        if (swcDatas != null  &&  !swcDatas.isEmpty()) {
+            int i = 0;
+            for (SWCData swcData: swcDatas) {
+                swcData.write(swcFile, i);
+                i++;
+            }
+        }
+        // Next write one file containing all neurons.
+        SWCData swcData = swcDataConverter.fromAllTmNeuron(neuronList, downsampleModulo);
         if (swcData != null) {
             swcData.write(swcFile);
         }
