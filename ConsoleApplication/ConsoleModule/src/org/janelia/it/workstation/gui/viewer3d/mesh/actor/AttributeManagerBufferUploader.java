@@ -11,7 +11,6 @@ import java.nio.IntBuffer;
 import java.util.Map;
 import javax.media.opengl.GL2GL3;
 import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
-import org.janelia.it.workstation.gui.viewer3d.OpenGLUtils;
 import static org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.BYTES_PER_FLOAT;
 import static org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.BYTES_PER_INT;
 import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
@@ -68,13 +67,13 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 IntBuffer inxBuf = buffersBean.getIndexBuffer();
                 bufferBytes = inxBuf.capacity() * BYTES_PER_INT;
                 combinedInxSize += bufferBytes;
-                logger.info("Found attributes for {}.", renderId);
+                logger.debug("Found attributes for {}.", renderId);
             } else {
                 logger.warn("No attributes for renderer id: {}.", renderId);
             }
         }
 
-        logger.info("Allocating buffers");
+        logger.debug("Allocating buffers");
 
         // Allocate enough remote buffer data for all the vertices/attributes
         // to be thrown across in segments.
@@ -101,7 +100,7 @@ public class AttributeManagerBufferUploader implements BufferUploader {
         if (reportError(gl, "Allocate Index Buffer")) {
             throw new BufferStateException();
         }
-        logger.info("Buffers allocated.");
+        logger.debug("Buffers allocated.");
 
         indexCount = 0;
         int vertexCount = 0;
@@ -135,7 +134,7 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 if (reportError(gl, "Bind Inx Buf")) {
                     throw new BufferStateException();
                 }
-                logger.info("Uploading chunk of element array.");
+                logger.debug("Uploading chunk of element array.");
                 inxBuf.rewind();
                 gl.glBufferSubData(
                         GL2GL3.GL_ELEMENT_ARRAY_BUFFER,

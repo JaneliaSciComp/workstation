@@ -5,6 +5,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.awt.Color;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -1301,8 +1302,12 @@ called from a  SimpleWorker thread.
                         }
                         NeuronStyle style = getNeuronStyle(neuron);
                         float[] color = style.getColorAsFloatArray();
-                        headers.add(String.format(COLOR_FORMAT, color[0], color[1], color[2]));
-                        headers.add(String.format(NAME_FORMAT, neuron.getName()));                        
+                        headers.add(String.format(COLOR_FORMAT, color[0], color[1], color[2]));                        
+                        if (neuronIDList.size() > 1) {
+                            // Allow user to pick name as name of file, if saving individual neuron.
+                            // Do not save the internal name.
+                            headers.add(String.format(NAME_FORMAT, neuron.getName()));                        
+                        }
                     }
                 }
                 if (foundNeuron != null) {
@@ -1317,14 +1322,21 @@ called from a  SimpleWorker thread.
         if (swcDatas != null  &&  !swcDatas.isEmpty()) {
             int i = 0;
             for (SWCData swcData: swcDatas) {
-                swcData.write(swcFile, i);
+                if (swcDatas.size() == 1) {
+                    swcData.write(swcFile, -1);
+                }
+                else {
+                    swcData.write(swcFile, i);
+                }
                 i++;
             }
         }
-        // Next write one file containing all neurons.
-        SWCData swcData = swcDataConverter.fromAllTmNeuron(neuronList, downsampleModulo);
-        if (swcData != null) {
-            swcData.write(swcFile);
+        // Next write one file containing all neurons, if there are more than one.
+        if (swcDatas != null  &&  swcDatas.size() > 1) {
+            SWCData swcData = swcDataConverter.fromAllTmNeuron(neuronList, downsampleModulo);
+            if (swcData != null) {
+                swcData.write(swcFile);
+            }
         }
     }
 
@@ -1344,11 +1356,12 @@ called from a  SimpleWorker thread.
         // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
         //  so he added an OFFSET header and recentered on zero when exporting
         // therefore, if that header is present, respect it
-        double[] externalOffset = swcData.parseOffset();
-        double[] internalOffset = swcDataConverter.internalFromExternal(externalOffset);
+        double[] externalOffset = swcData.parseOffset();        
 
         // create one neuron for the file; take name from the filename (strip extension)
-        String neuronName = swcFile.getName();
+        String neuronName = swcData.parseName();
+        if (neuronName == null)
+            neuronName = swcFile.getName();
         if (neuronName.endsWith(STD_SWC_EXTENSION)) {
             neuronName = neuronName.substring(0, neuronName.length() - STD_SWC_EXTENSION.length());
         }
@@ -1398,8 +1411,8 @@ called from a  SimpleWorker thread.
                 worker.setProgress(node.getIndex(), totalLength);
             }
         }
-
-
+        updateNeuronColor(swcData, neuron);
+        
         // update workspace; update and select new neuron; this will draw points as well
         updateCurrentWorkspace();
         final TmWorkspace workspace = getCurrentWorkspace();
@@ -1410,7 +1423,7 @@ called from a  SimpleWorker thread.
             @Override
             public void run() {
                 fireWorkspaceLoaded(workspace);
-                fireNeuronSelected(updateNeuron);
+                fireNeuronSelected(updateNeuron);                
             }
         });
 
@@ -1424,6 +1437,16 @@ called from a  SimpleWorker thread.
     public void fireAnnotationNotMoved(TmGeoAnnotation annotation) {
         for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {
             l.annotationNotMoved(annotation);
+        }
+    }
+
+    private void updateNeuronColor(SWCData swcData, final TmNeuron neuron) throws IOException {
+        float[] colorArr = swcData.parseColorFloats();
+        if (colorArr != null) {
+            NeuronStyle style = new NeuronStyle(
+                    new Color(colorArr[0], colorArr[1], colorArr[2]), true
+            );
+            setNeuronStyle(neuron, style);
         }
     }
 

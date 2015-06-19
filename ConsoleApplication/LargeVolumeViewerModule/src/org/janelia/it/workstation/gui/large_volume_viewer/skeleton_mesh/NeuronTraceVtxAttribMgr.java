@@ -257,7 +257,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 
 		// TESTING 
 		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
-        log.info("Number of vertices is {}.", lineEnclosureFactory.getCurrentVertexNumber());
+        log.debug("Number of vertices is {}.", lineEnclosureFactory.getCurrentVertexNumber());
 		
 		if (lineEnclosureFactory.getCurrentVertexNumber() > 0) {
 			hasDisplayable = true;
@@ -426,7 +426,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             currentSelectionEnclosureFactory.addEnclosure(
                     start, end, CURRENT_SELECTION_COLOR
             );
-            log.info("Next parent at {},{},{}.", v.getX(), v.getY(), v.getZ());
+            log.debug("Next parent at {},{},{}.", v.getX(), v.getY(), v.getZ());
         }
         
     }
