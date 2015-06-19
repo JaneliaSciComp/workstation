@@ -1,0 +1,5 @@
+mongoHost: mongo-db
+mongoPort: 27017
+mongoDatabase: jacs
+mongoUsername: flyportal
+mongoPassword: flyportal
