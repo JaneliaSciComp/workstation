@@ -7,6 +7,9 @@
 // REPLACE THE FOLLOWING LINE WITH CORRECT PROJECTION DEFINE
 #define PROJECTION_MODE PROJECTION_MAXIMUM
 
+// Simpson's rule uses two samples per voxel, instead of one, and might give better integration results
+// #define USE_SIMPSONS_RULE 1
+
 /**
  * Ray casting 3D Maximum Intensity Projection shader.
  * This is my first ray casting shader, but I expect many more
@@ -345,7 +348,7 @@ void main() {
     // float tMaxRel = previousEdge; // ray point where maximum contribution to blended opacity is made
 
     bool hasHitThreshold = false;
-    float previousOpacity = minElement(opacityFunctionMin);
+    float previousOpacity = 0; // minElement(opacityFunctionMin);
     float dIntensity = 0;
     // float edgeFade = 1.0; // default to no fading
     // float fadedIntensity = 0.0;
@@ -366,8 +369,6 @@ void main() {
 
     float maxDI = 0;
 
-    float previousDeltaT = 0;
-
     const int maxSteps = 500;
     int stepCount = 0;
     vec4 vecLocalIntensityEnter = vec4(0,0,0,0);
@@ -376,30 +377,27 @@ void main() {
     // Visit each intersected voxel along the view ray exactly once.
     while (previousEdge <= tMinMax.y) {
 
-        float nextEdge = previousEdge;
+        float t_enter = previousEdge;
+        float t_exit = t_enter;
 
         if (! march_ray_step(
                 x0, x1, // ray equation parameters, p = x0 + t*x1
                 rayBoxCorner, // either (0,0,0)(nearest neighbor) or (0.5,0.5,0.5)(trilinear or tricubic)
                 minStep, // smallest allowable step
                 forwardMask, // for each axis XYZ, zero(0) if view direction is negative, one(1) if positive.
-                nextEdge, // ray position, to be updated by this method
+                t_exit, // ray position, to be updated by this method
                 stepCount) ) // number of steps taken so far
         {
             break;
         }
 
         // 17Jun2015 use multiple samples per voxel
-        float t_enter = previousEdge;
-        float t_exit = nextEdge;
-        float t_center = mix(previousEdge, nextEdge, 0.5);
+        float t_center = mix(t_enter, t_exit, 0.5);
 
-        float deltaT = nextEdge - previousEdge;
-        float segmentLength = deltaT;
+        float segmentLength = t_exit - t_enter;
 
         // Update before next iteration; AND before any shortcuts...
-        previousEdge = nextEdge;
-        previousDeltaT = deltaT;
+        previousEdge = t_exit;
 
         // shortcut
         if (segmentLength <= 0) continue;
@@ -418,23 +416,33 @@ void main() {
         else if (filteringOrder == TRICUBIC) {
             // slow tricubic filtering
             vec4 vecLocalIntensityMid = filterFastCubic3D(volumeTexture, midTexelPos, textureScale, levelOfDetail);
+#ifdef USE_SIMPSONS_RULE
             vec4 vecLocalIntensityExit = filterFastCubic3D(volumeTexture, exitTexelPos, textureScale, levelOfDetail);
             // Average intensity along ray, assuming quadratic variation
             vecLocalIntensity = 0.6 * vecLocalIntensityMid + 0.2 * vecLocalIntensityExit + 0.2 * vecLocalIntensityEnter; // Simpson's rule
             // update for next voxel
             vecLocalIntensityEnter = vecLocalIntensityExit;
+#else
+            vecLocalIntensity = vecLocalIntensityMid; // not Simpson's rule
+#endif
         }
         else {
             // fast linear filtering
             vec4 vecLocalIntensityMid = textureLod(volumeTexture, midTexCoord, levelOfDetail);
+#ifdef USE_SIMPSONS_RULE
             vec4 vecLocalIntensityExit = textureLod(volumeTexture, exitTexCoord, levelOfDetail);
             vecLocalIntensity = 0.6 * vecLocalIntensityMid + 0.2 * vecLocalIntensityExit + 0.2 * vecLocalIntensityEnter; // Simpson's rule
             // update for next voxel
             vecLocalIntensityEnter = vecLocalIntensityExit;
+#else
+            vecLocalIntensity = vecLocalIntensityMid; // not Simpson's rule
+#endif
         }
 
         // compute scalar proxy for intensity
-        float localOpacity = maxElement(rampstep(opacityFunctionMin, opacityFunctionMax, vecLocalIntensity));
+        float localOpacity = 
+                // maxElement(rampstep(opacityFunctionMin, opacityFunctionMax, vecLocalIntensity));
+                rampstep(opacityFunctionMin, opacityFunctionMax, vecLocalIntensity).x; // TODO testing first channel only for now.
 
         // shortcut - skip sufficiently dim intensities
         if (localOpacity <= 0) continue;
@@ -442,10 +450,12 @@ void main() {
         // for occluding projection, incorporation path length into opacity exponent
         #if PROJECTION_MODE == PROJECTION_OCCLUDING
             // Convert segmentLength to micrometers
-            segmentLength = micrometersPerRay * segmentLength;
+            segmentLength = abs(micrometersPerRay * segmentLength);
             float opacityExponent = canonicalOccludingPathLengthUm / segmentLength;
+            // opacityExponent = 1.0;
             // opacityExponent = 2.0;
-            localOpacity = pow(localOpacity, opacityExponent); // TODO - is this exponential slow?
+            localOpacity = clamp(pow(localOpacity, opacityExponent), 0, 1); // TODO - is this exponential slow?
+            // localOpacity = localOpacity * localOpacity;
         #endif
 
         // Compute change in intensity
@@ -495,12 +505,12 @@ void main() {
             vec4 c_dest = vecIntegratedIntensity;
             float a_dest = integratedOpacity;
 
-            float a_out = 1.0 - (1.0 - a_src)*(1.0 - a_dest);
-            vec4 c_out = c_dest*a_dest/a_out + c_src*(1.0 - a_dest/a_out);
+            float a_out = clamp(1.0 - (1.0 - a_src)*(1.0 - a_dest), 0, 1);
+            vec4 c_out = clamp(c_dest*a_dest/a_out + c_src*(1.0 - a_dest/a_out), 0, 1);
             // float a_out = a_dest + (1 - a_dest)*(a_src); // EQUIVALENT TO ABOVE
             // float c_out = c_dest + (1 - a_dest)*a_src*c_src;
 
-            vecIntegratedIntensity = clamp(c_out, 0, 1); // clamp required to avoid black artifacts
+            vecIntegratedIntensity = c_out; // clamp required to avoid black artifacts
             integratedOpacity = a_out;
 
             // Update brightest point along ray
@@ -543,7 +553,7 @@ void main() {
     // END SLOW PART ABOVE
 
     // Draw nothing at all, in cases of low maximum intensity
-    if ( integratedOpacity <= 0 ) // <= opacityFunction.x) 
+    if ( integratedOpacity < 0.001 ) // <= opacityFunction.x) 
     {
         discard;
         return;

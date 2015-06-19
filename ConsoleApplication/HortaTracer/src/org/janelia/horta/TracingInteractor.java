@@ -265,7 +265,7 @@ public class TracingInteractor extends MouseAdapter
     private Point previousHoverPoint = null;
     public void moveHoverCursor(Point screenPoint) {
         // Find nearby brightest point
-        screenPoint = optimizePosition(screenPoint);
+        // screenPoint = optimizePosition(screenPoint);
         
         if (screenPoint == previousHoverPoint)
             return; // no change from last time

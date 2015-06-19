@@ -69,6 +69,8 @@ extends MultipassRenderer
         
         Color topColor = new Color(0.02f, 0.01f, 0.00f, 0.0f);
         Color bottomColor = new Color(0.10f, 0.06f, 0.00f, 0.0f);
+        // Color topColor = new Color(0.8f, 0f, 0.8f, 1f); // magenta, for testing
+        // Color bottomColor = new Color(0.3f, 0f, 0.3f, 1f);
         backgroundActor = new ColorBackgroundActor(
                 topColor, 
                 bottomColor);
