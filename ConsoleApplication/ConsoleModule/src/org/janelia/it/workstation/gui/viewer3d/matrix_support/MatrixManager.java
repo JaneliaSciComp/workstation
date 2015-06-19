@@ -104,7 +104,7 @@ public class MatrixManager {
         ViewMatrixSupport viewMatrixSupport = new ViewMatrixSupport();
         float[] perspective = viewMatrixSupport.getPerspectiveMatrix(
                 verticalApertureInDegrees, h,
-                0.5 * scaledFocusDistance, 2.0 * scaledFocusDistance
+                10.0f, 2.0 * scaledFocusDistance
         );
 
         context.setPerspectiveMatrix(perspective);
