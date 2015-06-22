@@ -120,7 +120,7 @@ public class WebDavClient {
     /**
      * Returns a WebDAV URL for the specified path.
      *
-     * @param  standardPath  standard path for the file.
+     * @param  standardPath  standard path for the file (should always be Linux-style path)
      *
      * @return corresponding WebDAV URL.
      *
@@ -132,6 +132,8 @@ public class WebDavClient {
         URL url;
         try {
             // create URI so that path is properly encoded
+            // always use Linux-style path for WebDAV
+            standardPath = standardPath.replace("\\","/");
             final URI uri = new URI(protocol,
                                     host,
                                     basePath + standardPath,

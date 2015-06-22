@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import javax.media.opengl.GL4;
@@ -81,6 +82,8 @@ public class VolumeActor extends GL4SimpleActor implements VolumeDataAcceptor {
     @Override
     public void init(GL4 gl) {
         
+        logger.info("VolumeActor - init() begin");
+        
         // First, load the file into main memory
         if (!fileLoaded) {
             try {
@@ -102,9 +105,64 @@ public class VolumeActor extends GL4SimpleActor implements VolumeDataAcceptor {
             logger.info("No entries found in textureData from file="+textureData.getFilename());
             return;
         }
-
-        for ( VolumeDataChunk volumeDataChunk : textureData.getTextureData().getVolumeChunks() ) {
-            ByteBuffer data = ByteBuffer.wrap( volumeDataChunk.getData() );
+        
+        logger.info("Texture data - x size="+textureData.getSx());
+        logger.info("Texture data - y size="+textureData.getSy());
+        logger.info("Texture data - z size="+textureData.getSz());
+        logger.info("Texture data - c size="+textureData.getChannelCount());
+        logger.info("Texture data - v size="+textureData.getPixelByteCount());
+        logger.info("Texture data - InternalFormat="+TextureMediator.getConstantName(textureData.getExplicitInternalFormat()));
+        logger.info("Texture data - VoxelComponentOrder="+TextureMediator.getConstantName(textureData.getExplicitVoxelComponentOrder()));
+        logger.info("Texture data - ComponentType="+TextureMediator.getConstantName(textureData.getExplicitVoxelComponentType()));
+        
+        int channelSizeInBytes=textureData.getPixelByteCount() * textureData.getSx() * textureData.getSy() * textureData.getSz(); 
+        
+        logger.info("Using texture channel byte count="+channelSizeInBytes);
+        
+        byte[] channelBuffer = new byte[channelSizeInBytes];
+        VolumeDataChunk[] volumeChunks = textureData.getTextureData().getVolumeChunks();
+        int chunkIndex=0;
+        int chunkOffset=0;
+        
+        for (int channelIndex=0;channelIndex<textureData.getChannelCount();channelIndex++) {
+            logger.error("Populating texture for channel="+channelIndex);
+            int channelOffset=0;
+            while(channelOffset<channelSizeInBytes) {
+                if (chunkIndex==volumeChunks.length) {
+                    logger.error("Unexpectedly ran out of VolumeDataChunk indices");
+                    return;
+                }
+                byte[] chunkData=volumeChunks[chunkIndex].getData();
+                int dataLengthNeeded=channelSizeInBytes-channelOffset;
+                int chunkDataAvailable=chunkData.length-chunkOffset;
+                if (chunkDataAvailable>=dataLengthNeeded) {
+                    System.arraycopy(chunkData, chunkOffset, channelBuffer, channelOffset, dataLengthNeeded);
+                    channelOffset+=dataLengthNeeded;
+                    chunkOffset+=dataLengthNeeded;
+                    if (chunkOffset==chunkData.length) {
+                        chunkIndex++;
+                    }
+                } else {
+                    System.arraycopy(chunkData, chunkOffset, channelBuffer, channelOffset, chunkDataAvailable);
+                    channelOffset+=chunkDataAvailable;
+                    chunkOffset+=chunkDataAvailable;
+                    chunkIndex++;
+                }
+            }
+            
+            if (textureData.getPixelByteCount()==2) {
+                int voxelCount=width*height*depth;
+                byte[] tmpBuffer = new byte[voxelCount];
+                for (int i=0;i<voxelCount;i++) {
+                    int v=256*channelBuffer[i*2] + channelBuffer[i*2+1];
+                    int bv = v/256;
+                    byte b = (byte) (bv & 0x000000ff);
+                    tmpBuffer[i]=b;
+                }
+                channelBuffer=tmpBuffer;
+            }
+             
+            ByteBuffer data = ByteBuffer.wrap( channelBuffer );
             data.rewind();
             
             ChannelStatus cs=new ChannelStatus();
@@ -120,11 +178,13 @@ public class VolumeActor extends GL4SimpleActor implements VolumeDataAcceptor {
 
             gl.glTexStorage3D(GL4.GL_TEXTURE_3D, 
                     1, 
-                    GL4.GL_R8UI, 
+                    GL4.GL_R8, 
                     width, 
                     height, 
                     depth);
-            checkGlError(gl, "VolumeActor  glTexStorage2D() error");
+            checkGlError(gl, "VolumeActor  glTexStorage3D() error");
+            
+            logger.info("Done with glTexStorage3D()");
         
             gl.glTexSubImage3D(GL4.GL_TEXTURE_3D, 
                 0,
@@ -135,9 +195,11 @@ public class VolumeActor extends GL4SimpleActor implements VolumeDataAcceptor {
                 height,
                 depth,
                 GL4.GL_RED,
-                GL4.GL_UNSIGNED_BYTE,
+                GL4.GL_BYTE,
                 data);
-            checkGlError(gl, "i0 GL4TransparencyContext glTexSubImage2D() error");
+            checkGlError(gl, "VolumeActor glTexSubImage3D() error");
+            
+            logger.info("Done loading channel index="+channelIndex);
         }
 
     }
