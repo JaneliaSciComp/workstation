@@ -5,6 +5,8 @@ in vec3 N;
 in vec3 I;
 in vec4 Cs;
 
+in float pointFlag;
+
 struct NodeType {
     vec4 color;
     float depth;
@@ -38,11 +40,15 @@ void main()
     float intensity=0.5;
     float ambient=0.1;
 
-    float opac = dot(normalize(-N), normalize(-I));
-    opac = abs(opac);
-    opac = ambient + intensity*(1.0-pow(opac, edgefalloff));
-    vec4 color =  opac * Cs;
-    color.a = opac;
+    vec4 color = Cs;
+
+    if (pointFlag < 0.5) {
+        float opac = dot(normalize(-N), normalize(-I));
+        opac = abs(opac);
+        opac = ambient + intensity*(1.0-pow(opac, edgefalloff));
+        vec4 color =  opac * Cs;
+        color.a = opac;
+    }
 
     ivec2 fl = ivec2(gl_FragCoord.xy);
     uint new_index = atomicCounterIncrement(index_counter);

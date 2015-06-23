@@ -52,9 +52,9 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
 
-        setupVolumeExperiment();
+        //setupVolumeExperiment();
         
-        //setupOITMeshExperiment();
+        setupOITMeshExperiment();
 
 //        GL4ShaderActionSequence actionSequence = new GL4ShaderActionSequence("Experimental Shader Action Sequence");
 //
@@ -141,22 +141,37 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                                      0.0f,   0.0f,  -1.0f,   0.625f,
                                      0.0f,   0.0f,   0.0f,   1.0f);
         
-        for (File meshFile : meshFiles) {
-            if (meshFile.getName().endsWith(".obj")) {
-                final MeshObjFileV2Actor ma = new MeshObjFileV2Actor(meshFile);
-                ma.setVertexRotation(vertexRotation);
-                ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.5f));
-                ma.setUpdateCallback(new GLDisplayUpdateCallback() {
-                    @Override
-                    public void update(GL4 gl) {
-                        Matrix4 actorModel = ma.getModel();
-                        drawShader.setModel(gl, actorModel);
-                        drawShader.setDrawColor(gl, ma.getColor());
-                    }
-                });
-                drawSequence.getActorSequence().add(ma);
+//        for (File meshFile : meshFiles) {
+//            if (meshFile.getName().endsWith(".obj")) {
+//                final MeshObjFileV2Actor ma = new MeshObjFileV2Actor(meshFile);
+//                ma.setVertexRotation(vertexRotation);
+//                ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.5f));
+//                ma.setUpdateCallback(new GLDisplayUpdateCallback() {
+//                    @Override
+//                    public void update(GL4 gl) {
+//                        Matrix4 actorModel = ma.getModel();
+//                        drawShader.setModel(gl, actorModel);
+//                        drawShader.setDrawColor(gl, ma.getColor());
+//                    }
+//                });
+//                drawSequence.getActorSequence().add(ma);
+//            }
+//        }
+        
+        final SparseVolumePointActor pa = new SparseVolumePointActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0);
+        
+        //pa.setVertexRotation(vertexRotation);
+        pa.setColor(new Vector4(0.2f, 1.0f, 0.2f, 0.5f));
+        pa.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                Matrix4 actorModel = pa.getModel();
+                drawShader.setModel(gl, actorModel);
+                drawShader.setDrawColor(gl, pa.getColor());
             }
-        }
+        });
+        drawSequence.getActorSequence().add(pa);
+        
 
         viewer.addShaderAction(drawSequence);
 
