@@ -30,12 +30,18 @@ public class LociTextureBuilder extends TextureDataBuilder implements VolumeFile
             return new TextureDataBean(textureByteArray, volumeFileLoader.getSx(), volumeFileLoader.getSy(), volumeFileLoader.getSz() );
         }
         else if ( textureByteArrays != null ) {
+            final int pixelByteCount = 4;
+            final int slicesPerSlab = 32;
             // Build up a Texture Data.
-            PiecewiseVolumeDataBean volumeDataBean = new PiecewiseVolumeDataBean( volumeFileLoader.getSx(), volumeFileLoader.getSy(), volumeFileLoader.getSz(), 3, 8 );
+            //  Expect 4 bytes (ARGB) if a huge data file is presented.
+            PiecewiseVolumeDataBean volumeDataBean = new PiecewiseVolumeDataBean( volumeFileLoader.getSx(), volumeFileLoader.getSy(), volumeFileLoader.getSz(), pixelByteCount, slicesPerSlab);
             for (byte[] nextTextureByteArray: textureByteArrays) {
                 volumeDataBean.addData(nextTextureByteArray);
             }
             TextureDataI textureData = new TextureDataBean( volumeDataBean, volumeFileLoader.getSx(), volumeFileLoader.getSy(), volumeFileLoader.getSz() );
+            textureData.setPixelByteCount(pixelByteCount);
+            textureData.setChannelCount(1);  // Force channel count to one.
+            
             return textureData;
         }
         else {
