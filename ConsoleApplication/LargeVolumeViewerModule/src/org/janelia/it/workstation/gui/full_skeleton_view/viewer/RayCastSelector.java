@@ -80,14 +80,11 @@ public class RayCastSelector {
                 else if (t >= 0  &&  t < nearestIntoT) {
                     selectedIntoRow = i;
                 }
-                else {
-                    System.out.println("T==" + t);
-                }
             }
         }
         
         //System.out.println("Smallest (O-C): " + smallestOMinusC);
-        //System.out.println("RayOrigin: " + rayOrigin);
+        System.out.println("RayOrigin: " + rayOrigin);
         
         // Have found what user selected.
         if (selectedIntoRow > -1) {

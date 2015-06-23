@@ -166,9 +166,13 @@ public class VolumeLoader implements VolumeLoaderI {
 //                textureData.setExplicitVoxelComponentOrder( GL2.GL_RGB );
 //                textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
 // Best yet.
-                textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE8);
-                textureData.setExplicitVoxelComponentOrder(GL2.GL_RGB);
+//                textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE8);
+//                textureData.setExplicitVoxelComponentOrder(GL2.GL_RGB);
+//                textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
+                textureData.setExplicitInternalFormat(GL2.GL_RGBA);
+                textureData.setExplicitVoxelComponentOrder(GL2.GL_RGBA);
                 textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
+                textureData.setChannelCount(1);
 
 // Fluffy overlap effect.                
 //                textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE8);

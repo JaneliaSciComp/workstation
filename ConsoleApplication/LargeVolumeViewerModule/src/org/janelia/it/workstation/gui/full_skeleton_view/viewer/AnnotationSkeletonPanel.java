@@ -23,10 +23,10 @@ import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.DirectionalReferenceAxesActor;
@@ -63,6 +63,8 @@ public class AnnotationSkeletonPanel extends JPanel {
     
     public void establish3D() {
         if (viewer == null  &&  dataSource.getSkeleton() != null  &&  dataSource.getSkeleton().getTileFormat() != null) {
+            // Establish the lines-ish version of the skele viewer.
+            // This one also acts as a collector of data.
             SkeletonActor linesDrawActor = new SkeletonActor();
             linesDrawActor.setParentAnchorImageName( SkeletonActor.ParentAnchorImage.LARGE );
             linesDrawActor.setNeuronStyleModel( dataSource.getNeuronStyleModel() );
@@ -74,9 +76,13 @@ public class AnnotationSkeletonPanel extends JPanel {
             Vec3 yExtender = new Vec3(0, 0.75 * boundingBox.getHeight(), 0);
             linesDrawActor.getBoundingBox3d().setMax( boundingBox.getMax().plus( yExtender ) );
             linesDrawActor.getBoundingBox3d().setMin( boundingBox.getMin().minus( yExtender ) );
+
+            // Establish the renderer.
             OcclusiveRenderer renderer = new OcclusiveRenderer();
             final SkeletalBoundsResetPositioner skeletalBoundsResetPositioner = new SkeletalBoundsResetPositioner(dataSource.getSkeleton());
             renderer.setResetPositioner( skeletalBoundsResetPositioner);
+
+            // Establish the viewer.
             viewer = new OcclusiveViewer(renderer);
             skeletalBoundsResetPositioner.setViewer(viewer);
             skeletalBoundsResetPositioner.setRenderer(renderer);
@@ -84,8 +90,11 @@ public class AnnotationSkeletonPanel extends JPanel {
             context = new MeshViewContext();
             viewer.setVolumeModel(context);
             VolumeModel volumeModel = viewer.getVolumeModel();
+            final Camera3d rendererCamera = renderer.getCamera();
+            volumeModel.setCamera3d(rendererCamera);
+
             linesDrawActor.setSkeleton(dataSource.getSkeleton());
-            linesDrawActor.setCamera(volumeModel.getCamera3d());
+            linesDrawActor.setCamera(rendererCamera);
             linesDrawActor.setTileFormat(tileFormat);
             linesDrawActor.setRenderInterpositionMethod(
                     SkeletonActor.RenderInterpositionMethod.Occlusion
@@ -117,7 +126,6 @@ public class AnnotationSkeletonPanel extends JPanel {
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
             
             viewer.addActor(axesActor);
-            //viewer.addActor(linesDrawActor);
             // NOTE: refAxisActor is forcing all 'conventional' actors which
             // display after it, into the same confined corner of the screen.
             // The 'meshDrawActor' may be permitted to follow it, but the
@@ -254,13 +262,6 @@ public class AnnotationSkeletonPanel extends JPanel {
     private long select(int mouseX, int mouseY) {
         long rtnVal = -1L;
         if (context != null) {
-            BasicMouseMode pointComputer = new BasicMouseMode();
-            pointComputer.setCamera(context.getCamera3d());
-            //TODO: establish some mouse-modal-widget, possibly against
-            // OcclusiveViewer.  Then can pass in the pointComputer to
-            // the ray cast selector, which can use that to do its origin-of-
-            // ray calculation.
-            //pointComputer.setWidget(viewer, null);
             RayCastSelector rayCastSelector = new RayCastSelector( 
                     dataSource, context, viewer.getWidth(), viewer.getHeight() 
             );
