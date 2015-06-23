@@ -283,7 +283,35 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 		xyPlaneFan(endingCoords, startingCoords, r, lef, extraColor);
 		yzPlaneFan(startingCoords, endingCoords, r, lef, extraColor);
 		xzPlaneFan(startingCoords, endingCoords, r, lef, extraColor);
+		toeOutFan(startingCoords, endingCoords, r, lef, new float[] { 0.9f, 1.0f, 0.9f });
 	
+	}
+	
+	private void toeOutFan(double[] startingCoords, double[] endingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
+		// Expect values to fan from left to top.
+		endingCoords[0] = startingCoords[0] - r;
+		endingCoords[1] = startingCoords[1] = 50000;
+		endingCoords[2] = startingCoords[2] - 70.0; // Toe-out.
+		for (double theta = 0.01; theta < Math.PI / 2.0; theta += 0.2 ) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, BRANCH_ANNO_COLOR);
+		}
+		for (double theta = 3 * Math.PI / 2.0; theta < 2 * Math.PI; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, UNFINISHED_ANNO_COLOR);
+		}
+		for (double theta = Math.PI / 2.0 + 0.01; theta < Math.PI; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, SPECIAL_ANNO_COLOR);
+		}
+		for (double theta = Math.PI; theta < 3*Math.PI / 2.0; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, extraColor);
+		}
 	}
 
 	private void xzPlaneFan(double[] startingCoords, double[] endingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
