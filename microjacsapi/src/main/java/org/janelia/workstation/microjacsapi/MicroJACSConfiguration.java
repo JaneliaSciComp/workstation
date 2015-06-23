@@ -1,6 +1,7 @@
 package org.janelia.workstation.microjacsapi;
 
 import io.dropwizard.Configuration;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -27,6 +28,8 @@ public class MicroJACSConfiguration extends Configuration {
 
     @JsonProperty
     public String mongoPassword;
-    
+
+    @JsonProperty("swagger")
+    public SwaggerBundleConfiguration swaggerBundleConfiguration;
     
 }

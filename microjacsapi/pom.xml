@@ -44,7 +44,7 @@
 		<dependency>
 			<groupId>org.reflections</groupId>
 			<artifactId>reflections</artifactId>
-			<version>0.9.9-RC1</version>
+			<version>0.9.9-RC2</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -77,13 +77,12 @@
 			<version>0.8.1</version>
 		</dependency>
 
-<!-- 
 		<dependency>
-			<groupId>io.federecio</groupId>
-			<artifactId>dropwizard-swagger</artifactId>
-			<version>0.7.0</version>
+		    <groupId>io.federecio</groupId>
+		    <artifactId>dropwizard-swagger</artifactId>
+		    <version>0.7.0</version>
 		</dependency>
- -->
+
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongo-java-driver</artifactId>

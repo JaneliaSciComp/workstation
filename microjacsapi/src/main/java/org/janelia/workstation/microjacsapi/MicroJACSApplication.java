@@ -4,6 +4,8 @@ import io.dropwizard.Application;
 import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +31,12 @@ public class MicroJACSApplication extends Application<MicroJACSConfiguration> {
 
     @Override
     public void initialize(Bootstrap<MicroJACSConfiguration> bootstrap) {
-        // nothing to do yet
+        bootstrap.addBundle(new SwaggerBundle<MicroJACSConfiguration>() {
+            @Override
+            protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(MicroJACSConfiguration configuration) {
+                return configuration.swaggerBundleConfiguration;
+            }
+        });
     }
     
     @Override

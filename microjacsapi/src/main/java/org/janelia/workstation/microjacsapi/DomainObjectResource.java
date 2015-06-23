@@ -36,9 +36,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 @Path("/domain/{collectionName:\\w+}")
 @Produces(MediaType.APPLICATION_JSON)
+@Api(value = "/domain", description = "Domain object operations")
 public class DomainObjectResource {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectResource.class);
@@ -53,6 +58,13 @@ public class DomainObjectResource {
 
     @GET
     @Path("/{id:\\d+}")
+    @ApiOperation(value = "Find domain object by GUID", 
+                  notes = "Find the domain object with the given GUID in the given collection", 
+                  response = DomainObject.class)
+    @ApiResponses(value = {
+      @ApiResponse(code = 400, message = "Invalid GUID supplied"),
+      @ApiResponse(code = 404, message = "Domain object not found") 
+    })
     public DomainObject getById(@PathParam("collectionName") final String collectionName, @PathParam("id") final Long id) {
 
         final Jongo jongo = mm.getJongo();
@@ -64,12 +76,25 @@ public class DomainObjectResource {
 
     @GET
     @Path("/all")
+    @ApiOperation(value = "Returns all domain objects in a given collection", 
+                  notes = "Streams all the domain objects of a given type", 
+                  response = DomainObject.class, 
+                  responseContainer = "List")
+    @ApiResponses(value = {
+    })
     public Response getAll(@PathParam("collectionName") final String collectionName) {
         return streamObjects(collectionName, "", null);
     }
 
     @POST
     @Path("/search")
+    @ApiOperation(value = "Returns the domain objects matching a given search template", 
+                  notes = "Streams all the domain objects of a given type which match a given template. The template can specify one or more values for any top-level domain attribute.", 
+                  response = DomainObject.class, 
+                  responseContainer = "List")
+    @ApiResponses(value = {
+      @ApiResponse(code = 400, message = "Malformed search template") 
+    })
     public Response search(@PathParam("collectionName") final String collectionName, String data) {
         
         JsonNode rootNode = null;
@@ -154,7 +179,7 @@ public class DomainObjectResource {
         }
         else if (jsonNode.isTextual()) {
             String s = jsonNode.asText();
-            // TOOD: this is a hack needed because we represent Longs as text. We should have a unambiguous marshaling for Longs. 
+            // TOOD: this is a hack needed because we represent Longs as text. We should have a unambiguous marshaling for Longs, then this wouldn't be necessary. 
             if (s.matches("^\\d+$")) {
                 return new Long(s);
             }
@@ -164,7 +189,7 @@ public class DomainObjectResource {
             return jsonNode.asDouble();
         }
         else {
-            throw new IllegalStateException("Cannot parse iuser input "+jsonNode);
+            throw new IllegalStateException("Cannot parse user input "+jsonNode);
         }
     }
 
