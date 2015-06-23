@@ -6,17 +6,20 @@
 
 package org.janelia.it.workstation.gui.viewer3d.volume_builder;
 
+import org.janelia.it.jacs.model.TestCategories;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.experimental.categories.Category;
 
 /**
  *
  * @author fosterl
  */
+@Category(TestCategories.FastTests.class)
 public class PiecewiseVolumeDataBeanTest {
     
     private static PiecewiseVolumeDataBean volumeDataBean;
