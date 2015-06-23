@@ -26,18 +26,19 @@ public class PiecewiseVolumeDataBean implements VolumeDataI {
     private LinearVolumeDataChunk[] chunks;
     
     private long nextInputLocation;
-    private int nextInputChunkNum;
     
-    public PiecewiseVolumeDataBean( int x, int y, int z, int bytesPerVoxel, int chunkCount ) {
+    public PiecewiseVolumeDataBean( int x, int y, int z, int bytesPerVoxel, int targetSlicePerChunk ) {
         this.sx = x;
         this.sy = y;
         this.sz = z;
         this.bytesPerVoxel = bytesPerVoxel;
+        this.slicesPerChunk = targetSlicePerChunk;
         
-        totalSize = (long)(sx * sy * sz * bytesPerVoxel);
+        int chunkCount = (int)Math.ceil((double)sz / (double)slicesPerChunk);
+        
+        totalSize = (long)sx * (long)sy * (long)sz * (long)bytesPerVoxel;
         chunks = new LinearVolumeDataChunk[ chunkCount ];
-        bytesPerChunk = (int)(totalSize / chunkCount);
-        slicesPerChunk = bytesPerChunk / sx / sy / bytesPerVoxel;
+        bytesPerChunk = sx * sy * slicesPerChunk * bytesPerVoxel;
         if (slicesPerChunk < 1) {
             throw new IllegalArgumentException("You are specifying too many chunk divisions for the data size.");
         }
@@ -93,36 +94,40 @@ public class PiecewiseVolumeDataBean implements VolumeDataI {
         if (nextInputLocation + data.length >= totalSize) {
             throw new IllegalArgumentException("Additional data of length " + data.length + " would exceed total size of " + totalSize);
         }
-        LinearVolumeDataChunk chunk = chunks[nextInputChunkNum];
+        LinearVolumeDataChunk chunk = chunks[getChunkNum(nextInputLocation)];
         int ptrInData = 0;
+        if (data.length == 0) {
+            return;
+        }
         if (nextInputLocation + data.length <= chunk.getEndingLinearLocation()) {
-            System.arraycopy(data, ptrInData, chunk.getData(), (int)(nextInputLocation - chunk.getStartingLinearLocation()), data.length);
-            nextInputLocation += data.length;
+            final int readAmount = data.length;
+            if (ptrInData + readAmount > data.length) { //TEMP
+                throw new IllegalStateException("buffer overrun/input data");
+            }
+            final int ptrInChunk = (int) (nextInputLocation - chunk.getStartingLinearLocation());
+            assert ptrInChunk >= 0 :
+                    "Next input location smaller than start of chunk";
+            System.arraycopy(data, ptrInData, chunk.getData(), ptrInChunk, readAmount);
+            nextInputLocation += readAmount;
         }
         else {
             // Start in current chunk.
             while (ptrInData < data.length) {
-                if (nextInputChunkNum >= chunks.length) {
+                if (getChunkNum(nextInputLocation) >= chunks.length) {
                     throw new IllegalArgumentException("Data size exceeds capacity.");
                 }
-                chunk = chunks[ nextInputChunkNum ];
+                chunk = chunks[ getChunkNum(nextInputLocation) ];
                 // Start point in current chunk.
                 int availableInChunk = (int)(chunk.getEndingLinearLocation() - nextInputLocation);
                 int availableInData = data.length - ptrInData;
                 int readAmount = Math.min(availableInChunk, availableInData);
                 
                 int ptrInChunk = (int)(nextInputLocation - chunk.getStartingLinearLocation());
-                if (ptrInData > data.length) { //TEMP
-                    throw new IllegalStateException("buffer overrun/input data");
-                }
-                if (ptrInChunk > chunk.getEndingLinearLocation() - chunk.getStartingLinearLocation()) { //TEMP
-                    throw new IllegalStateException("buffer overrun/output data");
-                }
-                System.arraycopy(data, ptrInData, chunk.getData(), ptrInChunk, readAmount);
-                
+                assert ptrInChunk >= 0 :
+                        "Next input location smaller than start of chunk";
+                System.arraycopy(data, ptrInData, chunk.getData(), ptrInChunk, readAmount);                
                 nextInputLocation += readAmount;
                 ptrInData += readAmount;
-                nextInputChunkNum++;
             }
         }
     }
@@ -145,7 +150,7 @@ public class PiecewiseVolumeDataBean implements VolumeDataI {
             chunk.setHeight(sy);
             // Final chunk can be irregular.
             int slices = slicesPerChunk;
-            if (nextSlice + slicesPerChunk > sz) {
+            if (nextSlice + slices > sz) {
                 slices = sz - nextSlice;
             }
             chunk.setDepth(slices);

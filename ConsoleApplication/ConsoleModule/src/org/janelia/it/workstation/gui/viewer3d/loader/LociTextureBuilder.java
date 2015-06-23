@@ -31,7 +31,7 @@ public class LociTextureBuilder extends TextureDataBuilder implements VolumeFile
         }
         else if ( textureByteArrays != null ) {
             // Build up a Texture Data.
-            PiecewiseVolumeDataBean volumeDataBean = new PiecewiseVolumeDataBean( volumeFileLoader.getSx(), volumeFileLoader.getSy(), volumeFileLoader.getSz(), 4, 8 );
+            PiecewiseVolumeDataBean volumeDataBean = new PiecewiseVolumeDataBean( volumeFileLoader.getSx(), volumeFileLoader.getSy(), volumeFileLoader.getSz(), 3, 8 );
             for (byte[] nextTextureByteArray: textureByteArrays) {
                 volumeDataBean.addData(nextTextureByteArray);
             }

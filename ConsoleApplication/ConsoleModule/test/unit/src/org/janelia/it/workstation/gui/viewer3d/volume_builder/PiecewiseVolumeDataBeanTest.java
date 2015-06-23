@@ -52,7 +52,7 @@ public class PiecewiseVolumeDataBeanTest {
     @Before
     public void setUp() {
         if (volumeDataBean == null)
-            volumeDataBean = new PiecewiseVolumeDataBean(16, 16, 4, 2, 4);
+            volumeDataBean = new PiecewiseVolumeDataBean(16, 16, 4, 2, 1);
         if (allData == null)
             allData = new StringBuilder();
     }
