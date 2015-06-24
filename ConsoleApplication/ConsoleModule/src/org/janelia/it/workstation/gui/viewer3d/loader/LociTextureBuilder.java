@@ -36,7 +36,7 @@ public class LociTextureBuilder extends TextureDataBuilder implements VolumeFile
             //  Expect 4 bytes (ARGB) if a huge data file is presented.
             PiecewiseVolumeDataBean volumeDataBean = new PiecewiseVolumeDataBean( volumeFileLoader.getSx(), volumeFileLoader.getSy(), volumeFileLoader.getSz(), pixelByteCount, slicesPerSlab);
             for (byte[] nextTextureByteArray: textureByteArrays) {
-                volumeDataBean.addData(nextTextureByteArray);
+                volumeDataBean.addData(nextTextureByteArray);                
             }
             TextureDataI textureData = new TextureDataBean( volumeDataBean, volumeFileLoader.getSx(), volumeFileLoader.getSy(), volumeFileLoader.getSz() );
             textureData.setPixelByteCount(pixelByteCount);

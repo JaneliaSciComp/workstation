@@ -162,17 +162,17 @@ public class VolumeLoader implements VolumeLoaderI {
                 textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
             }
             else if ( FileType.H265.equals( fileType ) ) {
-//                textureData.setExplicitInternalFormat( GL2.GL_RGB );
-//                textureData.setExplicitVoxelComponentOrder( GL2.GL_RGB );
-//                textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
+                textureData.setExplicitInternalFormat( GL2.GL_RGB );
+                textureData.setExplicitVoxelComponentOrder( GL2.GL_RGB );
+                textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
 // Best yet.
 //                textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE8);
 //                textureData.setExplicitVoxelComponentOrder(GL2.GL_RGB);
 //                textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
-                textureData.setExplicitInternalFormat(GL2.GL_RGBA);
-                textureData.setExplicitVoxelComponentOrder(GL2.GL_RGBA);
-                textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
-                textureData.setChannelCount(1);
+
+//                textureData.setExplicitInternalFormat(GL2.GL_RGBA);
+//                textureData.setExplicitVoxelComponentOrder(GL2.GL_RGBA);
+//                textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
 
 // Fluffy overlap effect.                
 //                textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE8);
