@@ -192,6 +192,7 @@ public class SparseVolumePointActor extends GL4SimpleActor implements VolumeData
             
             int totalVoxels=0;
             int selectedVoxels=0;
+            int dCount=0;
             if (channelIndex==volumeChannel) {
                 for (int z=0;z<depth;z++) {
                     float fz=(float) (z*1.0/depth*1.0);     
@@ -202,10 +203,18 @@ public class SparseVolumePointActor extends GL4SimpleActor implements VolumeData
                             viGroup vi=new viGroup();
                             int p=z*height*width+y*width+x;
                             int cv=channelBuffer[p] & 0x000000ff;
+                            if (dCount<1000 && channelBuffer[p] < 0) {
+                                logger.info("channelBuffer p="+p+" ="+channelBuffer[p]+" cv="+cv);
+                                dCount++;
+                            }
                             vi.z=fz;
                             vi.y=fy;
                             vi.x=fx;
                             vi.w=(float) (cv*1.0/255.0);
+                            if (dCount<1000 && vi.w < 0.0) {
+                                logger.info("cv="+cv+" vi.w="+vi.w);
+                                dCount++;
+                            }
                             totalVoxels++;
                             if (vi.w > 0.20) {
                                 viList.add(vi);
