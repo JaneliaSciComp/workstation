@@ -8,6 +8,7 @@ import java.util.Timer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.*;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 
 import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.workstation.gui.framework.outline.Annotations;
@@ -161,7 +162,7 @@ public class ImagesPanel extends JScrollPane {
             AnnotatedImageButton button;
 
             String filepath = EntityUtils.getImageFilePath(rootedEntity.getEntity(), iconPanel.getCurrImageRole());
-            if (filepath != null) {
+            if (filepath != null && !filepath.startsWith(EntityConstants.SCALITY_PATH_PREFIX)) {
                 button = new DynamicImageButton(rootedEntity, iconPanel);
             }
             else {
