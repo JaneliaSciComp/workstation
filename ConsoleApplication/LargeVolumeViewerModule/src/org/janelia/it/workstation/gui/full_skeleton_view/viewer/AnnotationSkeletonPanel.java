@@ -83,14 +83,14 @@ public class AnnotationSkeletonPanel extends JPanel {
             renderer.setResetPositioner( skeletalBoundsResetPositioner);
 
             // Establish the viewer.
-            viewer = new OcclusiveViewer(renderer);
+            viewer = new OcclusiveViewer(renderer);            
             skeletalBoundsResetPositioner.setViewer(viewer);
             skeletalBoundsResetPositioner.setRenderer(renderer);
             skeletalBoundsResetPositioner.setActor(linesDrawActor);
             context = new MeshViewContext();
-            viewer.setVolumeModel(context);
+            viewer.setVolumeModel(context);            
             VolumeModel volumeModel = viewer.getVolumeModel();
-            final Camera3d rendererCamera = renderer.getCamera();
+            final Camera3d rendererCamera = volumeModel.getCamera3d();
             volumeModel.setCamera3d(rendererCamera);
 
             linesDrawActor.setSkeleton(dataSource.getSkeleton());

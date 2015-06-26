@@ -236,6 +236,9 @@ public class MeshDrawActor implements GLActor {
         gl.glFrontFace(GL2.GL_CCW);
         gl.glEnable(GL2.GL_CULL_FACE);
 
+        gl.glEnable(GL2.GL_LINE_SMOOTH);                     // May not be in v2
+        gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);   // May not be in v2
+
         if (reportError( gl, "Display of mesh-draw-actor render characteristics" ))
             return;
 
@@ -308,6 +311,7 @@ public class MeshDrawActor implements GLActor {
         if (reportError(gl, "mesh-draw-actor, end of display."))
             return;
         gl.glDisable( GL2.GL_DEPTH_TEST );
+        gl.glDisable( GL2.GL_LINE_SMOOTH );
 
     }
 

@@ -45,9 +45,9 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
-    private static final double MANUAL_SEGMENT_RADIUS = 2;
+    private static final double MANUAL_SEGMENT_RADIUS = 6;
     private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
-    private static final double TRACED_SEGMENT_RADIUS = 3;
+    private static final double TRACED_SEGMENT_RADIUS = 8;
     private static final int TRACED_SEGMENT_POLYGON_SIDES = 10;
     public static final double ANNO_END_RADIUS = TRACED_SEGMENT_RADIUS * 4;
     private static final int ANNO_END_POLYGON_SIDES = 6;
