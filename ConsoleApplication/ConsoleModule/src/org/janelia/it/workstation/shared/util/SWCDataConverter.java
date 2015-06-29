@@ -68,7 +68,39 @@ public class SWCDataConverter {
         return new SWCData(nodeList, headerList);
     }
 
-    public SWCData fromTmNeuron(List<TmNeuron> neuronList, int downsampleModulo) {
+    public List<SWCData> fromTmNeuron(List<TmNeuron> neuronList, Map<Long,List<String>> extraHeaders, int downsampleModulo) {
+        List<SWCData> rtnList = new ArrayList<>();
+        Vec3 com = neuronCenterOfMass(neuronList);
+
+        List<SWCData> dataList = new ArrayList<>();
+        for (TmNeuron neuron: neuronList) {
+            if (neuron != null && neuron.getGeoAnnotationMap().size() > 0) {
+                final SWCData neuronData = fromTmNeuron(neuron, com, downsampleModulo);
+                List<String> headers = extraHeaders.get( neuron.getId() );
+                for (String header: headers) {
+                    if (! header.startsWith("#")) {
+                        header = "# " + header;
+                    }
+                    neuronData.getHeaderList().add(header);
+                }
+                dataList.add(neuronData);
+            }
+        }
+
+        // if more than one in list, merge everything into first one
+        if (dataList.isEmpty()) {
+            return null;
+        } else if (dataList.size() == 1) {
+            rtnList.add(dataList.get(0));
+        } else {
+            for (int i=0; i < dataList.size(); i++) {
+                rtnList.add(dataList.get(i));
+            }
+        }
+        return rtnList;
+    }
+
+    public SWCData fromAllTmNeuron(List<TmNeuron> neuronList, int downsampleModulo) {
         Vec3 com = neuronCenterOfMass(neuronList);
 
         List<SWCData> dataList = new ArrayList<>();
@@ -91,7 +123,7 @@ public class SWCDataConverter {
             return dataList.get(0);
         }
     }
-
+    
     public Vec3 neuronCenterOfMass(TmNeuron neuron) {
         // it is probably not strictly correct, but I'm going
         //  to return the offset for center if the neuron

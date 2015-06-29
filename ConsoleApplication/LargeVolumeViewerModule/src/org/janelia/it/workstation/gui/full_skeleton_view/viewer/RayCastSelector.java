@@ -3,13 +3,14 @@ package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 import Jama.Matrix;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.NeuronTraceVtxAttribMgr;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 
@@ -18,7 +19,7 @@ import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
  * @author fosterl
  */
 public class RayCastSelector {
-    private static final double SPHERE_R_SQUARE = 50.0*50.0;//NeuronTraceVtxAttribMgr.ANNO_END_RADIUS * NeuronTraceVtxAttribMgr.ANNO_END_RADIUS;
+    private static final double SPHERE_R_SQUARE = 150.0 * 150.0; //NeuronTraceVtxAttribMgr.ANNO_END_RADIUS * NeuronTraceVtxAttribMgr.ANNO_END_RADIUS;
     private static final boolean DEBUG = false;
     
     private final AnnotationSkeletonDataSourceI dataSource;
@@ -40,13 +41,13 @@ public class RayCastSelector {
     public long select(int mouseX, int mouseY) {
         long rtnVal = -1;
 
-        final AnnotationModel annoMdl = dataSource.getAnnotationModel();
-        final Vec3 rayOrigin = context.getCamera3d().getFocus();
+        final AnnotationModel annoMdl = dataSource.getAnnotationModel();        
         final FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
         final TileFormat tileFormat = dataSource.getTileFormat();
         
-        Matrix rayWorld = getRayIntoWorld(mouseX, mouseY);
-        Vec3 rayWorldVec3 = new Vec3(rayWorld.get(0, 0), rayWorld.get(1, 0), rayWorld.get(2, 0));
+        PickRayAndOrigin rayAndOrigin = getRayIntoWorld(mouseX, mouseY);
+        final Vec3 rayOrigin = rayAndOrigin.pickOrigin;
+        final Vec3 rayWorldVec3 = rayAndOrigin.pickRay;
         
         // Tracking progress.  What to beat.
         double nearestIntoT = Double.MAX_VALUE;
@@ -55,15 +56,18 @@ public class RayCastSelector {
         int selectedGlancingRow = -1;  // One intersection with sphere.
         
         //DEBUG System.out.println("-----------------------------------------------");
+        //Vec3 smallestOMinusC = new Vec3(Double.MAX_VALUE / 10.0, 0, 0);
+        //double smallestOMCMag = mag(smallestOMinusC);
+
         for (int i = 0; i < filteredModel.getRowCount(); i++) {
             TileFormat.MicrometerXyz sphereCenter = getCoords(filteredModel, i, annoMdl, tileFormat);
-            Vec3 sphereCenterVec3 = new Vec3(sphereCenter.getX(), sphereCenter.getY(), sphereCenter.getZ());
+            Vec3 sphereCenterVec3 = new Vec3(sphereCenter.getX(), sphereCenter.getY(), 0.0);// sphereCenter.getZ());
             final Vec3 oMinusC = rayOrigin.minus(sphereCenterVec3);
                         
             // Setting up for quadratic equation.  a==1.
             double b = rayWorldVec3.dot(oMinusC);
             double c = oMinusC.dot(oMinusC) - SPHERE_R_SQUARE;
-            
+
             // Pre-emptive bail: quick miss detection. Must be >= 0.
             double bSquareMinusC = b * b - c;
             if (bSquareMinusC >= 0) {
@@ -76,11 +80,11 @@ public class RayCastSelector {
                 else if (t >= 0  &&  t < nearestIntoT) {
                     selectedIntoRow = i;
                 }
-                else {
-                    System.out.println("T==" + t);
-                }
             }
         }
+        
+        //System.out.println("Smallest (O-C): " + smallestOMinusC);
+        System.out.println("RayOrigin: " + rayOrigin);
         
         // Have found what user selected.
         if (selectedIntoRow > -1) {
@@ -92,6 +96,7 @@ public class RayCastSelector {
         
         return rtnVal;
     }
+    
 
     private TileFormat.MicrometerXyz getCoords(FilteredAnnotationModel filteredModel, int i, final AnnotationModel annoMdl, TileFormat tileFormat) {
         TileFormat.MicrometerXyz microns;
@@ -143,11 +148,11 @@ public class RayCastSelector {
      *
      * @return d-hat value.
      */
-    private Matrix getRayIntoWorld(int mouseX, int mouseY) {
+    private PickRayAndOrigin getRayIntoWorld(int mouseX, int mouseY) {
         Matrix rayWorld;
         // For technique,
         // @see http://antongerdelan.net/opengl/raycasting.html
-        double x = (2.0 * mouseX) / (width - 1.0);
+        double x = (2.0 * mouseX) / width - 1.0;
         double y = 1.0 - (2.0f * mouseY) / height;
         double[] rayClip = new double[]{
             x, y, -1.0, 1.0
@@ -162,7 +167,6 @@ public class RayCastSelector {
         ViewMatrixSupport.transposeM(transposedMM, 0, context.getModelViewMatrix(), 0);
         float[] invertedModelViewMatrix = new float[context.getModelViewMatrix().length];
         ViewMatrixSupport.invertM(invertedModelViewMatrix, 0, transposedMM, 0);
-        System.out.println("\n\n\n");
         // Moving to JAMA representation.
         Matrix invProjJama = toJamaMatrix(invertedProjectionMatrix);
         dumpJama(invProjJama, "Inverted Projection");
@@ -182,7 +186,16 @@ public class RayCastSelector {
         Matrix normalizedRayWorld = rayWorld.times(1.0 / normalizer);
         //dumpJama(normalizedRayWorld, "Normalized Ray-World");
 
-        return rayWorld;
+        PickRayAndOrigin rtnVal = new PickRayAndOrigin();
+        rtnVal.pickRay = new Vec3(
+                normalizedRayWorld.get(0, 0),
+                normalizedRayWorld.get(1, 0),
+                normalizedRayWorld.get(2, 0)
+        );
+
+        rtnVal.pickOrigin = worldFromPixel(mouseX, mouseY);
+
+        return rtnVal;
     }
 
     protected void dumpJama(Matrix rayWorld, String label) {
@@ -233,5 +246,43 @@ public class RayCastSelector {
         return matrix;
     }
 
+    private Matrix toJamaVector(Vec3 vec) {
+        double[][] jamaRaw = new double[][]{
+            new double[1], new double[1], new double[1], new double[1]
+        };
+        Matrix matrix = new Matrix(jamaRaw);
+        for (int row = 0; row < 3; row++) {
+            jamaRaw[row][0] = vec.get(row);
+        }
+
+        return matrix;
+    }
+    
+    private Vec3 worldFromPixel(int x, int y) {
+        // Initialize to screen space position
+        Vec3 result = new Vec3(x, y, 0);
+        final Camera3d camera3d = context.getCamera3d();
+        final Vec3 cameraFocus = camera3d.getFocus();
+        // Normalize to screen viewport center
+        //       First step is pro-forma.
+        result = result.minus(new Vec3(0, 0, 0)); // origin for viewport.
+        result = result.minus(new Vec3(width / 2.0, height / 2.0, 0)); // center
+        // Convert from pixel units to world units
+        result = result.times(1.0 / camera3d.getPixelsPerSceneUnit());
+        // Apply viewer orientation, e.g. X/Y/Z orthogonal viewers
+        Rotation3d viewerInGround = camera3d.getRotation();
+        result = viewerInGround.times(result);
+		// TODO - apply rotation, but only for rotatable viewers, UNLIKE large volume viewer
+        // Apply camera focus
+        result = result.plus(cameraFocus);
+        result.setZ(0.0);
+        // System.out.println(pixel + ", " + getCamera().getFocus() + ", " + result);
+        return result;
+    }
+
+    private static class PickRayAndOrigin {
+        public Vec3 pickRay;
+        public Vec3 pickOrigin;
+    }
 
 }

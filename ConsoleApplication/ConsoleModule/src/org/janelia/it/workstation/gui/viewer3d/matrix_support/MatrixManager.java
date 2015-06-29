@@ -76,6 +76,14 @@ public class MatrixManager {
         updateProjection(gl);
     }
     
+    /**
+     * Matrices are recalculated from this 'signal'.
+     */
+    public void recalculate(GL2GL3 gl, double near, double far) {
+        updateModelView(gl);
+        updateProjection(gl, near, far);
+    }
+
     private void updateModelView(GL2GL3 gl) {
         // Update Model/View matrix.        
         Vec3 f = focusBehavior == FocusBehavior.FIXED ? focus : context.getCamera3d().getFocus();
@@ -94,17 +102,20 @@ public class MatrixManager {
     }
 
     private void updateProjection(GL2GL3 gl) {
+        double cameraFocusDistance = getFocusDistance();
+        double scaledFocusDistance = Math.abs(cameraFocusDistance) * glUnitsPerPixel();
+        updateProjection(gl, 0.5 * scaledFocusDistance, 2.0 * scaledFocusDistance);
+    }
+    
+    private void updateProjection(GL2GL3 gl, double near, double far) {
         gl.glViewport(0, 0, (int) getWidthInPixels(), (int) getHeightInPixels());
         double verticalApertureInDegrees = 180.0 / Math.PI * 2.0 * Math.abs(
                 Math.atan2(getHeightInPixels() / 2.0, DISTANCE_TO_SCREEN_IN_PIXELS));
         final float h = (float) getWidthInPixels() / (float) getHeightInPixels();
-        double cameraFocusDistance = getFocusDistance();
-        double scaledFocusDistance = Math.abs(cameraFocusDistance) * glUnitsPerPixel();
 
         ViewMatrixSupport viewMatrixSupport = new ViewMatrixSupport();
         float[] perspective = viewMatrixSupport.getPerspectiveMatrix(
-                verticalApertureInDegrees, h,
-                0.5 * scaledFocusDistance, 2.0 * scaledFocusDistance
+                verticalApertureInDegrees, h, near, far
         );
 
         context.setPerspectiveMatrix(perspective);

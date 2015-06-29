@@ -45,9 +45,9 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
-    private static final double MANUAL_SEGMENT_RADIUS = 2;
+    private static final double MANUAL_SEGMENT_RADIUS = 6;
     private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
-    private static final double TRACED_SEGMENT_RADIUS = 3;
+    private static final double TRACED_SEGMENT_RADIUS = 8;
     private static final int TRACED_SEGMENT_POLYGON_SIDES = 10;
     public static final double ANNO_END_RADIUS = TRACED_SEGMENT_RADIUS * 4;
     private static final int ANNO_END_POLYGON_SIDES = 6;
@@ -257,7 +257,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 
 		// TESTING 
 		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
-        log.info("Number of vertices is {}.", lineEnclosureFactory.getCurrentVertexNumber());
+        log.debug("Number of vertices is {}.", lineEnclosureFactory.getCurrentVertexNumber());
 		
 		if (lineEnclosureFactory.getCurrentVertexNumber() > 0) {
 			hasDisplayable = true;
@@ -272,7 +272,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 
 	@SuppressWarnings("unused")
 	private void calculateAngleIllustrativeVertices( LineEnclosureFactory lef ) {
-		lef.setCharacteristics(5, 50);
+		int polygonRadius = 50;
+		lef.setCharacteristics(5, polygonRadius);
     	double r = 500.0;
 
 		// Numbers should be around 74000, 49000, and 19000
@@ -283,7 +284,54 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 		xyPlaneFan(endingCoords, startingCoords, r, lef, extraColor);
 		yzPlaneFan(startingCoords, endingCoords, r, lef, extraColor);
 		xzPlaneFan(startingCoords, endingCoords, r, lef, extraColor);
+		toeOutFan(startingCoords, endingCoords, r, lef, new float[] { 0.9f, 1.0f, 0.9f });
+		rollingFence(startingCoords, r, lef, polygonRadius);
 	
+	}
+	
+	/** This illustrates the flattening effect seen in some of the renderings. */
+	private void rollingFence(double[] startingCoords, double r, LineEnclosureFactory lef, double increment) {
+		double[] endingCoords = new double[3];
+		double[] newStart = new double[3];
+		newStart[1] = startingCoords[1] = 44000;
+		newStart[2] = startingCoords[2];
+		endingCoords[1] = startingCoords[1] + r;
+		double zIncrement = 10.0;
+		for (int i = 0; i < 30; i++) {
+			newStart[0] = startingCoords[0] + 3 * i * increment;
+			endingCoords[0] = newStart[0] - (i%2 == 0 ? 30.0 : 0.0);
+			endingCoords[2] = startingCoords[2] + zIncrement * i;  // Smaller increment.
+			lef.addEnclosure(newStart, endingCoords, BRANCH_ANNO_COLOR);
+			endingCoords[2] = startingCoords[2] - zIncrement * i;   // Smaller increment.
+			lef.addEnclosure(newStart, endingCoords, UNFINISHED_ANNO_COLOR);
+		}
+	}
+	
+	private void toeOutFan(double[] startingCoords, double[] endingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
+		// Expect values to fan from left to top.
+		endingCoords[0] = startingCoords[0] - r;
+		endingCoords[1] = startingCoords[1] = 50000;
+		endingCoords[2] = startingCoords[2] - 70.0; // Toe-out.
+		for (double theta = 0.01; theta < Math.PI / 2.0; theta += 0.2 ) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, BRANCH_ANNO_COLOR);
+		}
+		for (double theta = 3 * Math.PI / 2.0; theta < 2 * Math.PI; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, UNFINISHED_ANNO_COLOR);
+		}
+		for (double theta = Math.PI / 2.0 + 0.01; theta < Math.PI; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, SPECIAL_ANNO_COLOR);
+		}
+		for (double theta = Math.PI; theta < 3*Math.PI / 2.0; theta += 0.2) {
+			endingCoords[0] = startingCoords[0] + r * Math.cos(theta);
+			endingCoords[1] = startingCoords[1] + r * Math.sin(theta);
+			lef.addEnclosure(startingCoords, endingCoords, extraColor);
+		}
 	}
 
 	private void xzPlaneFan(double[] startingCoords, double[] endingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
@@ -426,7 +474,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             currentSelectionEnclosureFactory.addEnclosure(
                     start, end, CURRENT_SELECTION_COLOR
             );
-            log.info("Next parent at {},{},{}.", v.getX(), v.getY(), v.getZ());
+            log.debug("Next parent at {},{},{}.", v.getX(), v.getY(), v.getZ());
         }
         
     }

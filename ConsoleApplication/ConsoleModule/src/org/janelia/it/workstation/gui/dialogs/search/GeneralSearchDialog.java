@@ -348,7 +348,6 @@ public class GeneralSearchDialog extends ModalDialog {
 
         Entity searchResults = EntityUtils.findChildWithNameAndTypeAndOwner(workspace, EntityConstants.NAME_SEARCH_RESULTS, EntityConstants.TYPE_FOLDER, SessionMgr.getSubjectKey());
         if (searchResults == null) {
-            log.warn("Did not find existing search results folder!");
             return EntityConstants.NAME_SEARCH_RESULTS + "/Search Results #1";
         }
 

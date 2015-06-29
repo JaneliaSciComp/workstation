@@ -115,7 +115,7 @@ public class LineEnclosureFactory implements TriangleSource {
     //--------------------------------------------IMPLEMENT TriangleSource
     @Override
     public List<VertexInfoBean> getVertices() {
-        logger.info("Returning {} vertices.", vertices.size());
+        logger.debug("Returning {} vertices.", vertices.size());
         return vertices;
     }
 
