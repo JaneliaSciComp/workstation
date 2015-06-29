@@ -272,7 +272,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 
 	@SuppressWarnings("unused")
 	private void calculateAngleIllustrativeVertices( LineEnclosureFactory lef ) {
-		lef.setCharacteristics(5, 50);
+		int polygonRadius = 50;
+		lef.setCharacteristics(5, polygonRadius);
     	double r = 500.0;
 
 		// Numbers should be around 74000, 49000, and 19000
@@ -284,7 +285,26 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 		yzPlaneFan(startingCoords, endingCoords, r, lef, extraColor);
 		xzPlaneFan(startingCoords, endingCoords, r, lef, extraColor);
 		toeOutFan(startingCoords, endingCoords, r, lef, new float[] { 0.9f, 1.0f, 0.9f });
+		rollingFence(startingCoords, r, lef, polygonRadius);
 	
+	}
+	
+	/** This illustrates the flattening effect seen in some of the renderings. */
+	private void rollingFence(double[] startingCoords, double r, LineEnclosureFactory lef, double increment) {
+		double[] endingCoords = new double[3];
+		double[] newStart = new double[3];
+		newStart[1] = startingCoords[1] = 44000;
+		newStart[2] = startingCoords[2];
+		endingCoords[1] = startingCoords[1] + r;
+		double zIncrement = 10.0;
+		for (int i = 0; i < 30; i++) {
+			newStart[0] = startingCoords[0] + 3 * i * increment;
+			endingCoords[0] = newStart[0] - (i%2 == 0 ? 30.0 : 0.0);
+			endingCoords[2] = startingCoords[2] + zIncrement * i;  // Smaller increment.
+			lef.addEnclosure(newStart, endingCoords, BRANCH_ANNO_COLOR);
+			endingCoords[2] = startingCoords[2] - zIncrement * i;   // Smaller increment.
+			lef.addEnclosure(newStart, endingCoords, UNFINISHED_ANNO_COLOR);
+		}
 	}
 	
 	private void toeOutFan(double[] startingCoords, double[] endingCoords, double r, LineEnclosureFactory lef, float[] extraColor) {
