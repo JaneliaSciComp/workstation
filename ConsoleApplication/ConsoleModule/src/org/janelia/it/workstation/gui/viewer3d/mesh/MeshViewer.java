@@ -18,6 +18,11 @@ import org.janelia.it.workstation.gui.viewer3d.mesh.MeshRenderer;
  */
 public class MeshViewer extends Viewer3d {
     private MeshViewContext context;
+
+    static {
+        capabilities.setSampleBuffers(true);
+        capabilities.setNumSamples(4);
+    }
     
 	public MeshViewer() {
         final MeshRenderer meshRenderer = new MeshRenderer();
