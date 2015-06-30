@@ -42,6 +42,10 @@ import org.openide.windows.WindowManager;
 public class Installer extends ModuleInstall
 {
 
+    /**
+     * Run some tile loading benchmarks (TODO)
+     * "restored()" is the "main()" of Netbeans platform applications.
+     */
     @Override
     public void restored()
     {
