@@ -15,12 +15,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.ByteBuffer;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 
 /**
- *
+ * ClackTiffSliceLoader is based on BlockTiffOctreeLoadAdapter, but with hopefully
+ * fewer responsibilities.
+ * 
  * @author Christopher Bruns
  */
 public class ClackTiffSliceLoader implements BrickSliceLoader
@@ -28,18 +29,36 @@ public class ClackTiffSliceLoader implements BrickSliceLoader
     final static String tiffBaseName = "default";
 
     @Override
-    public ByteBuffer loadSlice(URL brickSource, int sliceNumber) throws IOException
+    public SliceBytes loadSlice(URL brickSource, int sliceNumber) throws IOException
     {
-        // TODO - internal timing
-        
         // 1 - load each channel individually, since that's how Nathan arranged the files
         File folder = fileFromUrl(brickSource);
         int channelCount = countChannels(folder);
-        ImageDecoder[] decoders = createImageDecoders(folder, channelCount);
-        RenderedImage image = renderedImageFromChannelDecoders(decoders, sliceNumber);
+        ImageDecoder[] decoders = channelDecodersFromFolder(folder, channelCount);
         
-        // TODO : 2 - interleave channels
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        // 2 - interleave channels
+        RenderedImage image = renderedImageFromChannelDecoders(decoders, sliceNumber);
+        SliceBytes sliceBytes = new SliceBytes(image, sliceNumber);
+        return sliceBytes;
+    }
+    
+    @Override
+    public SliceBytes[] loadSliceRange(URL brickSource, int beginSlice, int endSlice) throws IOException
+    {
+        File folder = fileFromUrl(brickSource);
+        int channelCount = countChannels(folder);
+        ImageDecoder[] decoders = channelDecodersFromFolder(folder, channelCount);
+        int increment = 1;
+        if (beginSlice > endSlice) increment = -1;
+        int sliceCount = Math.abs(beginSlice - endSlice) + 1;
+        SliceBytes[] result = new SliceBytes[sliceCount];
+        int sliceIndex = 0;
+        for (int s = beginSlice; s <= endSlice; s += increment) {
+            RenderedImage image = renderedImageFromChannelDecoders(decoders, s);
+            result[sliceIndex] = new SliceBytes(image, s);
+            sliceIndex += 1;
+        }
+        return result;
     }
     
     // Each color channel is found in a separate monochromatic tiff file
@@ -53,6 +72,28 @@ public class ClackTiffSliceLoader implements BrickSliceLoader
         return c;
     }
     
+    // https://weblogs.java.net/blog/kohsuke/archive/2007/04/how_to_convert.html
+    public File fileFromUrl(URL url) {
+        File f;
+        try {
+          f = new File(url.toURI());
+        } catch(URISyntaxException e) {
+          f = new File(url.getPath());
+        }
+        return f;
+    }
+    
+    public ImageDecoder[] channelDecodersFromFolder(File folder, int channelCount) throws IOException
+	{
+		ImageDecoder decoders[] = new ImageDecoder[channelCount];
+		for (int c = 0; c < channelCount; ++c) {
+			File tiff = new File(folder, tiffBaseName+"."+c+".tif");
+            SeekableStream s = new FileSeekableStream(tiff);
+            decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
+		}
+		return decoders;
+	}
+
     RenderedImage renderedImageFromChannelDecoders(ImageDecoder[] decoders, int sliceNumber) throws IOException
     {
         int sc = decoders.length;
@@ -71,27 +112,5 @@ public class ClackTiffSliceLoader implements BrickSliceLoader
         }
         return composite;
     }
-    
-    // https://weblogs.java.net/blog/kohsuke/archive/2007/04/how_to_convert.html
-    public File fileFromUrl(URL url) {
-        File f;
-        try {
-          f = new File(url.toURI());
-        } catch(URISyntaxException e) {
-          f = new File(url.getPath());
-        }
-        return f;
-    }
-    
-    public ImageDecoder[] createImageDecoders(File folder, int channelCount) throws IOException
-	{
-		ImageDecoder decoders[] = new ImageDecoder[channelCount];
-		for (int c = 0; c < channelCount; ++c) {
-			File tiff = new File(folder, tiffBaseName+"."+c+".tif");
-            SeekableStream s = new FileSeekableStream(tiff);
-            decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
-		}
-		return decoders;
-	}
 
 }
