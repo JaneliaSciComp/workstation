@@ -33,6 +33,9 @@ public class ClackTiffSliceLoader implements BrickSliceLoader
     {
         // 1 - load each channel individually, since that's how Nathan arranged the files
         File folder = fileFromUrl(brickSource);
+        if (! folder.exists()) {
+            throw new IOException("No such folder: " + folder);
+        }
         int channelCount = countChannels(folder);
         ImageDecoder[] decoders = channelDecodersFromFolder(folder, channelCount);
         
@@ -97,6 +100,7 @@ public class ClackTiffSliceLoader implements BrickSliceLoader
     RenderedImage renderedImageFromChannelDecoders(ImageDecoder[] decoders, int sliceNumber) throws IOException
     {
         int sc = decoders.length;
+        if (sc < 1) return null;
         RenderedImage channels[] = new RenderedImage[sc];
         for (int c = 0; c < sc; ++c) {
             ImageDecoder decoder = decoders[c];
