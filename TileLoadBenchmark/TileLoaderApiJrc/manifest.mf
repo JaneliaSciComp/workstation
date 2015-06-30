@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: janelia.lvv.tileloader
+OpenIDE-Module-Localizing-Bundle: janelia/lvv/tileloader/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+
