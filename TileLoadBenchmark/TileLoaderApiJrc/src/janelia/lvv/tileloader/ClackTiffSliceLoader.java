@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.List;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 
@@ -46,20 +47,18 @@ public class ClackTiffSliceLoader implements BrickSliceLoader
     }
     
     @Override
-    public SliceBytes[] loadSliceRange(URL brickSource, int beginSlice, int endSlice) throws IOException
+    public SliceBytes[] loadSliceRange(URL brickSource, List<Integer> sliceIndices) throws IOException
     {
         File folder = fileFromUrl(brickSource);
         int channelCount = countChannels(folder);
         ImageDecoder[] decoders = channelDecodersFromFolder(folder, channelCount);
-        int increment = 1;
-        if (beginSlice > endSlice) increment = -1;
-        int sliceCount = Math.abs(beginSlice - endSlice) + 1;
+        int sliceCount = sliceIndices.size();
         SliceBytes[] result = new SliceBytes[sliceCount];
-        int sliceIndex = 0;
-        for (int s = beginSlice; s <= endSlice; s += increment) {
+        int ix = 0;
+        for (int s : sliceIndices) {
             RenderedImage image = renderedImageFromChannelDecoders(decoders, s);
-            result[sliceIndex] = new SliceBytes(image, s);
-            sliceIndex += 1;
+            result[ix] = new SliceBytes(image, s);
+            ix += 1;
         }
         return result;
     }

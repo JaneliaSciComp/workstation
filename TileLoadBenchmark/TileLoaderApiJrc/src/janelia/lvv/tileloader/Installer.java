@@ -32,6 +32,8 @@ package janelia.lvv.tileloader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import org.openide.LifecycleManager;
 import org.openide.modules.ModuleInstall;
 import org.openide.util.Exceptions;
@@ -45,20 +47,31 @@ public class Installer extends ModuleInstall
     {
         System.out.println("Running first test load...");
         BrickSliceLoader loader = new ClackTiffSliceLoader();
+        List<Integer> sliceIndices = new ArrayList<Integer>();
+        for (int i = 10; i <= 20; ++i)
+            sliceIndices.add(i);
         try {
             URL rootBrickFolderUrl = new URL("file:////fxt/nobackup/mousebrainmicro/2015-04-24b/");
             long t0 = System.nanoTime();
-            SliceBytes bytes = loader.loadSlice(rootBrickFolderUrl, 10);
+            SliceBytes[] bytes = loader.loadSliceRange(rootBrickFolderUrl, sliceIndices);
             long t1 = System.nanoTime();
             float intervalMs = (t1 - t0)/1e6f;
             System.out.println("Tile load took "+intervalMs+" milliseconds.");
+            int sliceIndex = 0;
+            for (SliceBytes sb : bytes) {
+                sliceIndex += 1;
+                t1 = sb.getFinalLoadedNanoTime();
+                intervalMs = (t1 - t0)/1e6f;
+                System.out.println("Slice "+sliceIndex+" load took "+intervalMs+" milliseconds.");
+                t0 = t1;
+            }
         } catch (MalformedURLException ex) {
             Exceptions.printStackTrace(ex);
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
         }
         
-        
+        // Exit the application after running the tests
         WindowManager.getDefault().invokeWhenUIReady(new Runnable()
         {
             public void run()
