@@ -201,6 +201,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
     }
 
     /** Size of volume mask.  Numbers of voxels in all three directions. */
+    @Override
     public Integer[] getVolumeMaskVoxels() {
         Integer[] voxels = { Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE };
 
@@ -225,10 +226,12 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
         return voxels;
     }
 
+    @Override
     public ByteOrder getPixelByteOrder() {
         return consensusByteOrder;
     }
 
+    @Override
     public int getPixelByteCount() {
         return consensusByteCount;
     }
@@ -300,6 +303,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
      *
      * @return "consensus" texture data object.
      */
+    @Override
     public TextureDataI getCombinedTextureData() {
         TextureDataI rtnVal = new MaskTextureDataBean( this, getVolumeMaskVoxels() );
         rtnVal.setByteOrder(getPixelByteOrder());
@@ -314,6 +318,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
         return rtnVal;
     }
 
+    @Override
     public TextureColorSpace getTextureColorSpace() {
         TextureColorSpace space = null;
         for ( TextureDataI bean: maskingDataBeans ) {
