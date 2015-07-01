@@ -11,12 +11,12 @@ public abstract class FileShare {
     private String mapping;
     private Path path;
     private Authorizer authorizer;
-    private Set<Permission> permissions = new HashSet<Permission>();
+    private Set<Permission> permissions = new HashSet<>();
 
-    public boolean hasAccess (String username, Permission reqPermission) {
+    public boolean hasAccess (Token credentials, Permission reqPermission) {
         if (authorizer != null) {
             try {
-                return authorizer.checkAccess(username) && permissions.contains(reqPermission);
+                return authorizer.checkAccess(credentials) && permissions.contains(reqPermission);
             } catch (RuntimeException re) {
                 re.printStackTrace();
                 return false;
