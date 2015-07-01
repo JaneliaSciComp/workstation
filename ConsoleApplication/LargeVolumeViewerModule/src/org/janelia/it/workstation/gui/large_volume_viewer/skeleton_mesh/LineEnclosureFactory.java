@@ -264,6 +264,8 @@ public class LineEnclosureFactory implements TriangleSource {
 				startCoords = endCoords;
 				endCoords = tempCoords;
 			}
+			// Use different part of triangle to calculate atan, if not special axial alignment.
+	        aboutZ = lineUnitVector[Y] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Y]);
 			
 			// Now that we have our angles, we make transforms.
 			Matrix transform1 = matrixUtils.getTransform3D(
