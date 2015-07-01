@@ -9,10 +9,10 @@ import java.util.Date;
  * Created by schauderd on 7/1/15.
  */
 public class Propstat {
-    @JacksonXmlProperty(namespace = "D",localName = "prop")
+    @JacksonXmlProperty(localName = "D:prop")
     Prop prop;
 
-    @JacksonXmlProperty(namespace = "D",localName = "status")
+    @JacksonXmlProperty(localName = "D:status")
     String status;
 
     public String getStatus() {

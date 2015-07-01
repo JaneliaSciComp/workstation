@@ -41,7 +41,8 @@
             "authorizer": "jacsdata",
             "permissions": [
                 "write",
-                "mkdir"
+                "mkcol",
+                "propfind"
             ]
         },
         "Cluster Data": {
@@ -50,7 +51,8 @@
             "path": "mirror",
             "authorizer": "jacsdata",
             "permissions": [
-                "read"
+                "read",
+                "propfind"
             ]
         },
         "Scality Data": {
@@ -59,7 +61,8 @@
             "path": "mirror",
             "permissions": [
                 "read",
-                "write"
+                "write",
+                "propfind"
             ]
         },
         "Workstation Common": {
@@ -68,7 +71,8 @@
             "path": "mirror",
             "authorizer": "jacsdata",
             "permissions": [
-                "read"
+                "read",
+                "propfind"
             ]
         },
         "Workstation Development": {
@@ -77,7 +81,8 @@
             "path": "mirror",
             "authorizer": "jacsdata",
             "permissions": [
-                "read"
+                "read",
+                "propfind"
             ]
         },
         "Flylight Flip": {
@@ -86,7 +91,8 @@
             "path": "mirror",
             "authorizer": "flylight",
             "permissions": [
-                "read"
+                "read",
+                "propfind"
             ]
         },
         "Flylight Polarity": {
@@ -95,7 +101,8 @@
             "path": "mirror",
             "authorizer": "flylight",
             "permissions": [
-                "read"
+                "read",
+                "propfind"
             ]
         },
         "Flylight SSplit": {
@@ -104,7 +111,8 @@
             "path": "mirror",
             "authorizer": "flylight",
             "permissions": [
-                "read"
+                "read",
+                "propfind"
             ]
         },
         "Dickson Lab Flylight": {
@@ -113,7 +121,8 @@
             "path": "mirror",
             "authorizer": "dickson",
             "permissions": [
-                "read"
+                "read",
+                "propfind"
             ]
         },
         "Dickson Lab Groups Flylight": {
@@ -122,7 +131,8 @@
             "path": "mirror",
             "authorizer": "flylight",
             "permissions": [
-                "read"
+                "read",
+                "propfind"
             ]
         },
         "Dickson Lab Confocal": {
@@ -131,7 +141,8 @@
             "path": "mirror",
             "authorizer": "dickson",
             "permissions": [
-                "read"
+                "read",
+                "propfind"
             ]
         },
         "Leet Lineage Lab": {
@@ -140,7 +151,8 @@
             "path": "mirror",
             "authorizer": "leet",
             "permissions": [
-                "read"
+                "read",
+                "propfind"
             ]
         },
         "Mouse Brain Micro": {
@@ -149,7 +161,8 @@
             "path": "mirror",
             "authorizer": "mousebrain",
             "permissions": [
-                "read"
+                "read",
+                "propfind"
             ]
         },
         "Webdav Test Read": {
@@ -158,7 +171,8 @@
             "path": "mirror",
             "authorizer": "test",
             "permissions": [
-                "read"
+                "read",
+                "propfind"
             ]
         },
         "Webdav Test Write": {
@@ -167,7 +181,7 @@
             "path": "mirror",
             "authorizer": "test",
             "permissions": [
-                "read", "write", "delete"
+                "read", "write", "delete", "propfind", "mkcol"
             ]
         }
     }

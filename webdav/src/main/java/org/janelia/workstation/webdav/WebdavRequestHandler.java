@@ -9,14 +9,10 @@ import javax.ws.rs.Consumes;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.CopyOption;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.util.*;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.*;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -44,9 +40,49 @@ public class WebdavRequestHandler extends ResourceConfig {
                     @Override
                     public Response apply(ContainerRequestContext containerRequestContext) {
                         // generate XML response for propfind
-                        String xmlResponse = propFind();
-                        System.out.println (xmlResponse);
+                        String filepath = "/" + uriInfo.getPath();
+                        FileShare mapping;
+                        try {
+                            mapping = checkPermissions(filepath);
+                        } catch (PermissionsFailureException e) {
+                            e.printStackTrace();
+                            return Response.status(Response.Status.FORBIDDEN).build();
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                            return Response.status(Response.Status.CONFLICT).build();
+                        }
+                        if (!mapping.getPermissions().contains(Permission.PROPFIND)) {
+                            return Response.status(Response.Status.FORBIDDEN).build();
+                        }
+                        String xmlResponse = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+                                propFind();
                         return Response.ok(xmlResponse).build();
+                    }
+                });
+        resourceBuilder.addMethod("MKCOL")
+                .handledBy(new Inflector<ContainerRequestContext, Response>() {
+                    @Override
+                    public Response apply(ContainerRequestContext containerRequestContext) {
+                        String filepath = "/" + uriInfo.getPath();
+                        FileShare mapping;
+                        try {
+                            mapping = checkPermissions(filepath);
+                            if (!mapping.getPermissions().contains(Permission.MKCOL)) {
+                                return Response.status(Response.Status.FORBIDDEN).build();
+                            }
+                            Files.createDirectory(Paths.get(filepath));
+                        } catch (PermissionsFailureException e) {
+                            e.printStackTrace();
+                            return Response.status(Response.Status.FORBIDDEN).build();
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                            return Response.status(Response.Status.CONFLICT).build();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            return Response.status(Response.Status.CONFLICT).build();
+                        }
+
+                        return Response.ok().build();
                     }
                 });
         final Resource resource = resourceBuilder.build();
@@ -59,6 +95,28 @@ public class WebdavRequestHandler extends ResourceConfig {
     @Context
     UriInfo uriInfo;
 
+    private PropfindResponse generatePropMetadata(java.nio.file.Path file) {
+        PropfindResponse fileMeta = new PropfindResponse();
+        try {
+            Propstat propstat = new Propstat();
+            Prop prop = new Prop();
+            prop.setCreationDate(Files.getAttribute(file, "creationTime").toString());
+            prop.setGetContentType(Files.probeContentType(file));
+            prop.setGetLastModified(Files.getLastModifiedTime(file).toString());
+            if (Files.isDirectory(file)) {
+                prop.setResourceType("collection");
+            }
+            propstat.setProp(prop);
+            propstat.setStatus("HTTP/1.1 200 OK");
+            fileMeta.setPropstat(propstat);
+            fileMeta.setHref(file.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+            // problem getting file metadata information
+        }
+        return fileMeta;
+    }
+
     private String propFind() {
         String filepath = "/" + uriInfo.getPath();
         try {
@@ -69,34 +127,41 @@ public class WebdavRequestHandler extends ResourceConfig {
             e.printStackTrace();
         }
 
-        // this only works with blockfileshare; reject if scality
-        // TO DO add response for scality
-        Multistatus properties = new Multistatus();
-        ArrayList<PropfindResponse> responses = new ArrayList<PropfindResponse>();
-        PropfindResponse fooboy = new PropfindResponse();
-        Prop prop = new Prop();
-        prop.setCreationDate(new Date());
-        prop.setGetContentType("contenttype");
-        prop.setGetEtag("etag");
-        prop.setGetLastModified("lastmodified");
-        prop.setResourceType("resourcetype");
-        Propstat propstat = new Propstat();
-        propstat.setProp(prop);
-        propstat.setStatus("status");
-        fooboy.setHref("href");
-        fooboy.setPropstat(propstat);
-        responses.add(fooboy);
-        properties.setResponse(responses);
+        // create Multistatus top level
+        Multistatus propfindContainer = new Multistatus();
+
+        java.nio.file.Path fileHandle = Paths.get(filepath);
+        if (Files.exists(fileHandle)) {
+            propfindContainer.getResponse().add(generatePropMetadata(fileHandle));
+        } else {
+            return "File doesn't exist";
+        }
+
+        // check DEPTH header to check whether to get subdirectory information
+        int directoryDepth;
+        List<String> depth = headers.getRequestHeader("Depth");
+        if (depth != null && depth.size() >0 && depth.get(0).trim().equals("1")) {
+            // if this is a directory recurse through the subdirectory information
+            if (Files.isDirectory(fileHandle)) {
+                try (DirectoryStream<java.nio.file.Path> directoryStream = Files.newDirectoryStream(fileHandle)) {
+                    for (java.nio.file.Path subpath : directoryStream) {
+                        propfindContainer.getResponse().add(generatePropMetadata(subpath));
+                    }
+                } catch (IOException ex) {
+                    // handle issues with reading subdirectory metadata
+                    ex.printStackTrace();
+                }
+            }
+        }
 
         ObjectMapper xmlMapper = new XmlMapper();
         String xml = null;
         try {
-            xml = xmlMapper.writeValueAsString(properties);
+            xml = xmlMapper.writeValueAsString(propfindContainer);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
         return xml;
-        // get DEPTH options
 
     }
 
@@ -115,7 +180,7 @@ public class WebdavRequestHandler extends ResourceConfig {
     }
 
     @PUT
-    @Consumes("application/octet-stream")
+    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public void putFile(InputStream binaryStream) throws PermissionsFailureException,
             FileNotFoundException, FileUploadException {
         String filepath = "/" + uriInfo.getPath();
@@ -129,7 +194,7 @@ public class WebdavRequestHandler extends ResourceConfig {
         try {
             Files.copy(binaryStream,
                     Paths.get(filepath),
-                    new CopyOption[] { StandardCopyOption.REPLACE_EXISTING });
+                    new CopyOption[]{StandardCopyOption.REPLACE_EXISTING });
         } catch (IOException e) {
             e.printStackTrace();
             throw new FileUploadException("Problem creating new file on file share");

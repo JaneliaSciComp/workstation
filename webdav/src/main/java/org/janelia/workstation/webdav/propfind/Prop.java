@@ -7,19 +7,19 @@ import java.util.Date;
  * Created by schauderd on 7/1/15.
  */
 public class Prop {
-    @JacksonXmlProperty(namespace = "lp1",localName = "resourcetype")
+    @JacksonXmlProperty(localName = "lp1:resourcetype")
     String resourceType;
 
-    @JacksonXmlProperty(namespace = "lp1",localName = "creationdate")
-    Date creationDate;
+    @JacksonXmlProperty(localName = "lp1:creationdate")
+    String creationDate;
 
-    @JacksonXmlProperty(namespace = "lp1",localName = "getlastmodified")
+    @JacksonXmlProperty(localName = "lp1:getlastmodified")
     String getLastModified;
 
-    @JacksonXmlProperty(namespace = "lp1",localName = "getetag")
+    @JacksonXmlProperty(localName = "lp1:getetag")
     String getEtag;
 
-    @JacksonXmlProperty(namespace = "D",localName = "getcontenttype")
+    @JacksonXmlProperty(localName = "D:getcontenttype")
     String getContentType;
 
     public String getResourceType() {
@@ -30,11 +30,11 @@ public class Prop {
         this.resourceType = resourceType;
     }
 
-    public Date getCreationDate() {
+    public String getCreationDate() {
         return creationDate;
     }
 
-    public void setCreationDate(Date creationDate) {
+    public void setCreationDate(String creationDate) {
         this.creationDate = creationDate;
     }
 

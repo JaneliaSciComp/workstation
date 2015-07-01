@@ -8,10 +8,10 @@ import java.util.ArrayList;
  * Created by schauderd on 7/1/15.
  */
 public class PropfindResponse {
-    @JacksonXmlProperty(namespace = "D",localName = "href")
+    @JacksonXmlProperty(localName = "D:href")
     String href;
 
-    @JacksonXmlProperty(namespace = "D",localName = "propstat")
+    @JacksonXmlProperty(localName = "D:propstat")
     Propstat propstat;
 
     public Propstat getPropstat() {
