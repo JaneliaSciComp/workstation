@@ -52,12 +52,23 @@ public class Installer extends ModuleInstall
         System.out.println("Running first test load...");
         BrickSliceLoader loader = new ClackTiffSliceLoader();
         List<Integer> sliceIndices = new ArrayList<Integer>();
-        for (int i = 10; i <= 20; ++i)
+        for (int i = 20; i >= 10; --i)
             sliceIndices.add(i);
         try {
             URL rootBrickFolderUrl = new URL("file:////fxt/nobackup/mousebrainmicro/2015-04-24b/");
             long t0 = System.nanoTime();
-            SliceBytes[] bytes = loader.loadSliceRange(rootBrickFolderUrl, sliceIndices);
+            SliceBytes[] bytes;
+            boolean burst = false;
+            if (burst) {
+                bytes = loader.loadSliceRange(rootBrickFolderUrl, sliceIndices);
+            } else {
+                bytes = new SliceBytes[sliceIndices.size()];
+                int ix = 0;
+                for (int i : sliceIndices) {
+                    bytes[ix] = loader.loadSlice(rootBrickFolderUrl, i);
+                    ix += 1;
+                }
+            }
             long t1 = System.nanoTime();
             float intervalMs = (t1 - t0)/1e6f;
             System.out.println("Tile load took "+intervalMs+" milliseconds.");
