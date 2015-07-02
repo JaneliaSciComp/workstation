@@ -45,10 +45,6 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 
     private int[] textureIds;
 
-    /**
-     * Size of our opengl texture, which might be padded with extra voxels
-     * to reach a multiple of 8
-     */
     // OpenGL state
     protected boolean bTexturesNeedUploaded = false;
     private boolean bBuffersNeedUpload = true;

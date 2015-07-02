@@ -23,10 +23,6 @@ public class RGBExcludableVolumeBrick extends AbstractVolumeBrick
 		RenderMethod.MAXIMUM_INTENSITY; // MIP
     private boolean bUseShader = true; // Controls whether to load and use shader program(s).
 
-    /**
-     * Size of our opengl texture, which might be padded with extra voxels
-     * to reach a multiple of 8
-     */
     // OpenGL state
     private boolean bSignalTextureNeedsUpload = false;
 
