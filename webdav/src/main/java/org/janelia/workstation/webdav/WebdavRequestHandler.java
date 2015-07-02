@@ -42,21 +42,22 @@ public class WebdavRequestHandler extends ResourceConfig {
                         // generate XML response for propfind
                         String filepath = "/" + uriInfo.getPath();
                         FileShare mapping;
+                        String xmlResponse;
                         try {
                             mapping = checkPermissions(filepath);
+                            if (!mapping.getPermissions().contains(Permission.PROPFIND)) {
+                                return Response.status(Response.Status.UNAUTHORIZED).build();
+                            }
+                            xmlResponse = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+                                    propFind();
+                            return Response.status(207).entity(xmlResponse).build();
                         } catch (PermissionsFailureException e) {
                             e.printStackTrace();
-                            return Response.status(Response.Status.FORBIDDEN).build();
+                            return Response.status(Response.Status.UNAUTHORIZED).build();
                         } catch (FileNotFoundException e) {
                             e.printStackTrace();
                             return Response.status(Response.Status.CONFLICT).build();
                         }
-                        if (!mapping.getPermissions().contains(Permission.PROPFIND)) {
-                            return Response.status(Response.Status.FORBIDDEN).build();
-                        }
-                        String xmlResponse = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
-                                propFind();
-                        return Response.ok(xmlResponse).build();
                     }
                 });
         resourceBuilder.addMethod("MKCOL")
@@ -68,12 +69,12 @@ public class WebdavRequestHandler extends ResourceConfig {
                         try {
                             mapping = checkPermissions(filepath);
                             if (!mapping.getPermissions().contains(Permission.MKCOL)) {
-                                return Response.status(Response.Status.FORBIDDEN).build();
+                                return Response.status(Response.Status.UNAUTHORIZED).build();
                             }
                             Files.createDirectory(Paths.get(filepath));
                         } catch (PermissionsFailureException e) {
                             e.printStackTrace();
-                            return Response.status(Response.Status.FORBIDDEN).build();
+                            return Response.status(Response.Status.UNAUTHORIZED).build();
                         } catch (FileNotFoundException e) {
                             e.printStackTrace();
                             return Response.status(Response.Status.CONFLICT).build();
@@ -82,7 +83,7 @@ public class WebdavRequestHandler extends ResourceConfig {
                             return Response.status(Response.Status.CONFLICT).build();
                         }
 
-                        return Response.ok().build();
+                        return Response.status(Response.Status.CREATED).build();
                     }
                 });
         final Resource resource = resourceBuilder.build();
@@ -102,14 +103,17 @@ public class WebdavRequestHandler extends ResourceConfig {
             Prop prop = new Prop();
             prop.setCreationDate(Files.getAttribute(file, "creationTime").toString());
             prop.setGetContentType(Files.probeContentType(file));
+            prop.setGetContentLength(Long.toString(Files.size(file)));
             prop.setGetLastModified(Files.getLastModifiedTime(file).toString());
+            String baseURI = uriInfo.getBaseUri().toString();
+            fileMeta.setHref("/Webdav" + file.toString());
             if (Files.isDirectory(file)) {
                 prop.setResourceType("collection");
+                fileMeta.setHref(fileMeta.getHref() + "/");
             }
             propstat.setProp(prop);
             propstat.setStatus("HTTP/1.1 200 OK");
             fileMeta.setPropstat(propstat);
-            fileMeta.setHref(file.toString());
         } catch (IOException e) {
             e.printStackTrace();
             // problem getting file metadata information
@@ -117,41 +121,56 @@ public class WebdavRequestHandler extends ResourceConfig {
         return fileMeta;
     }
 
-    private String propFind() {
+    private void discoverFiles(Multistatus container, java.nio.file.Path file, int depth, int discoveryLevel) {
+        if (depth<discoveryLevel) {
+            if (Files.isDirectory(file)) {
+                depth++;
+                try (DirectoryStream<java.nio.file.Path> directoryStream = Files.newDirectoryStream(file)) {
+                    for (java.nio.file.Path subpath : directoryStream) {
+                        discoverFiles(container, subpath, depth, discoveryLevel);
+                    }
+                }
+                catch (IOException ex) {
+                    // handle issues with reading subdirectory metadata
+                    ex.printStackTrace();
+                }
+            }
+        }
+        container.getResponse().add(generatePropMetadata(file));
+    }
+
+
+    private String propFind() throws FileNotFoundException {
         String filepath = "/" + uriInfo.getPath();
-        try {
+        System.out.println (filepath);
+       /* try {
             FileShare mapping = checkPermissions(filepath);
         } catch (PermissionsFailureException e) {
             e.printStackTrace();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }
+        }*/
 
         // create Multistatus top level
         Multistatus propfindContainer = new Multistatus();
 
         java.nio.file.Path fileHandle = Paths.get(filepath);
         if (Files.exists(fileHandle)) {
-            propfindContainer.getResponse().add(generatePropMetadata(fileHandle));
-        } else {
-            return "File doesn't exist";
-        }
-
-        // check DEPTH header to check whether to get subdirectory information
-        int directoryDepth;
-        List<String> depth = headers.getRequestHeader("Depth");
-        if (depth != null && depth.size() >0 && depth.get(0).trim().equals("1")) {
-            // if this is a directory recurse through the subdirectory information
-            if (Files.isDirectory(fileHandle)) {
-                try (DirectoryStream<java.nio.file.Path> directoryStream = Files.newDirectoryStream(fileHandle)) {
-                    for (java.nio.file.Path subpath : directoryStream) {
-                        propfindContainer.getResponse().add(generatePropMetadata(subpath));
-                    }
-                } catch (IOException ex) {
-                    // handle issues with reading subdirectory metadata
-                    ex.printStackTrace();
+            // check DEPTH header to check whether to get subdirectory information
+            int discoveryLevel = 0;
+            List<String> depth = headers.getRequestHeader("Depth");
+            if (depth != null && depth.size() > 0) {
+                String depthValue = depth.get(0).trim();
+                System.out.println ("Depth is " + depthValue);
+                if (depthValue.toLowerCase().equals("infinity")) {
+                    discoveryLevel = 20; // prevents insanity
+                } else {
+                    discoveryLevel = Integer.parseInt(depthValue);
                 }
             }
+            discoverFiles(propfindContainer, fileHandle, 0, discoveryLevel);
+        } else {
+            throw new FileNotFoundException("File does not exist");
         }
 
         ObjectMapper xmlMapper = new XmlMapper();
@@ -169,12 +188,13 @@ public class WebdavRequestHandler extends ResourceConfig {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public File getFile() throws PermissionsFailureException, FileNotFoundException {
         String filepath = "/" + uriInfo.getPath();
-        FileShare mapping = checkPermissions(filepath);
+        System.out.println (filepath);
+        /*FileShare mapping = checkPermissions(filepath);
 
         // check file share for read permissions
         if (!mapping.getPermissions().contains(Permission.READ)) {
             throw new PermissionsFailureException("Not permitted to read from this file share");
-        }
+        }*/
 
         return new File(filepath);
     }
@@ -184,6 +204,7 @@ public class WebdavRequestHandler extends ResourceConfig {
     public void putFile(InputStream binaryStream) throws PermissionsFailureException,
             FileNotFoundException, FileUploadException {
         String filepath = "/" + uriInfo.getPath();
+        System.out.println (filepath);
         FileShare mapping = checkPermissions(filepath);
 
         // check file share for write permissions
@@ -194,7 +215,7 @@ public class WebdavRequestHandler extends ResourceConfig {
         try {
             Files.copy(binaryStream,
                     Paths.get(filepath),
-                    new CopyOption[]{StandardCopyOption.REPLACE_EXISTING });
+                    new CopyOption[]{StandardCopyOption.REPLACE_EXISTING});
         } catch (IOException e) {
             e.printStackTrace();
             throw new FileUploadException("Problem creating new file on file share");
@@ -205,6 +226,7 @@ public class WebdavRequestHandler extends ResourceConfig {
     public void deleteFile() throws PermissionsFailureException,
             FileNotFoundException, FileUploadException {
         String filepath = "/" + uriInfo.getPath();
+        System.out.println (filepath);
         FileShare mapping = checkPermissions(filepath);
 
         // check file share for write permissions

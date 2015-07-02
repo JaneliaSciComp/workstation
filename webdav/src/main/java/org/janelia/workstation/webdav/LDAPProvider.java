@@ -7,6 +7,7 @@ import org.apache.directory.api.ldap.model.message.*;
 import org.apache.directory.ldap.client.api.LdapConnection;
 import org.apache.directory.ldap.client.api.LdapNetworkConnection;
 import org.apache.directory.api.ldap.model.name.Dn;
+import java.io.IOException;
 
 
 /**
@@ -23,10 +24,11 @@ public class LDAPProvider extends Provider {
 
     @Override
     public void init() {
-        connection = new LdapNetworkConnection( url, 389 );
+
     }
 
     public void openConnection() throws LdapException {
+        connection = new LdapNetworkConnection( url, 389 );
         connection.bind();
     }
 
@@ -43,8 +45,9 @@ public class LDAPProvider extends Provider {
         } else return false;
     }
 
-    public void closeConnection() throws LdapException {
+    public void closeConnection() throws LdapException, IOException {
         connection.unBind();
+        connection.close();
     }
 
     public String getUrl() {

@@ -7,20 +7,23 @@ import java.util.Date;
  * Created by schauderd on 7/1/15.
  */
 public class Prop {
-    @JacksonXmlProperty(localName = "lp1:resourcetype")
+    @JacksonXmlProperty(localName = "D:resourcetype")
     String resourceType;
 
-    @JacksonXmlProperty(localName = "lp1:creationdate")
+    @JacksonXmlProperty(localName = "D:creationdate")
     String creationDate;
 
-    @JacksonXmlProperty(localName = "lp1:getlastmodified")
+    @JacksonXmlProperty(localName = "D:getlastmodified")
     String getLastModified;
 
-    @JacksonXmlProperty(localName = "lp1:getetag")
+    @JacksonXmlProperty(localName = "D:getetag")
     String getEtag;
 
     @JacksonXmlProperty(localName = "D:getcontenttype")
     String getContentType;
+
+    @JacksonXmlProperty(localName = "D:getcontentlength")
+    String getContentLength;
 
     public String getResourceType() {
         return resourceType;
@@ -60,5 +63,13 @@ public class Prop {
 
     public void setGetContentType(String getContentType) {
         this.getContentType = getContentType;
+    }
+
+    public String getGetContentLength() {
+        return getContentLength;
+    }
+
+    public void setGetContentLength(String getContentLength) {
+        this.getContentLength = getContentLength;
     }
 }
