@@ -97,7 +97,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 refresh();
 
                 // be sure we've successfully gotten the sample before loading it!
-                if (sliceSample.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+                if (sliceSample != null && sliceSample.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
                     try {
                         if (!viewUI.loadFile(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH))) {
                             JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
