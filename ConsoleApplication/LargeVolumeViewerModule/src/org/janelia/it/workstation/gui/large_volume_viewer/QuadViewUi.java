@@ -216,7 +216,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
         zScanSlider.setValue(z);
         spinnerValue.setValue(z);
-        //zScanSpinner.setValue(z);
     }
 
     public void zoomChanged(Double zoom) {
@@ -491,7 +490,14 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             final int zOrigin = tileFormat.getOrigin()[2];
             spinnerValue.setOffsetFromZero(zOrigin);
 
-            zScanSpinner.setModel(new SpinnerNumberModel(z - zOrigin, z0 - zOrigin, z1 - zOrigin, 1));
+            zScanSpinner.setModel(
+                new SpinnerNumberModel(
+                    spinnerValue.getInternalValue(z), 
+                    spinnerValue.getInternalValue(z0), 
+                    spinnerValue.getInternalValue(z1),
+                    1
+                )
+            );
             updateSWCDataConverter();
 
             zScanMode.setTileFormat(tileFormat);

@@ -235,15 +235,15 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
             }
             slider.setMajorTickSpacing(tickSpacing);
         }
-        int zOrigin = 0;
-        if ( axis.equals(CoordinateAxis.Z) ) {
-            zOrigin = volume.getLoadAdapter().getTileFormat().getOrigin()[2];
-        }
-        spinnerValue.setOffsetFromZero(zOrigin);
+        spinnerValue.setOffsetFromZero(
+                volume.getLoadAdapter()
+                      .getTileFormat()
+                      .getOrigin()[ axis.index() ]
+        );
         slider.setMinimum(s0);
         slider.setMaximum(s1);
-        spinnerNumberModel.setMinimum(s0 - zOrigin);
-        spinnerNumberModel.setMaximum(s1 - zOrigin);
+        spinnerNumberModel.setMinimum(spinnerValue.getInternalValue(s0));
+        spinnerNumberModel.setMaximum(spinnerValue.getInternalValue(s1));
         // Update slice value
         int s = (int) Math.round(camera.getFocus().get(ix) / res - 0.5);
         if (s < s0) {
@@ -253,7 +253,7 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
             s = s1;
         }
         slider.setValue(s);
-        spinner.setValue(s - zOrigin);
+        spinner.setValue(spinnerValue.getInternalValue(s));
     }
 
 }
