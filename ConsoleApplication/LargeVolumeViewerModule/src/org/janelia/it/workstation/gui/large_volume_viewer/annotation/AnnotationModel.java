@@ -668,6 +668,36 @@ called from a  SimpleWorker thread.
     }
 
     /**
+     * move the neurite containing the input annotation to the given neuron
+     */
+    public void moveNeurite(TmGeoAnnotation annotation, TmNeuron neuron) throws Exception {
+        if (annotation == null || neuron == null) {
+            return;
+        }
+        modelMgr.moveNeurite(annotation, neuron);
+
+        // updates
+        updateCurrentWorkspace();
+        final TmWorkspace workspace = getCurrentWorkspace();
+
+        if (getCurrentNeuron() != null && getCurrentNeuron().getId().equals(neuron.getId())) {
+            updateCurrentNeuron();
+        }
+        final TmNeuron currentNeuron = getCurrentNeuron();
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fireNotesUpdated(workspace);
+                fireNeuronSelected(currentNeuron);
+                fireWorkspaceLoaded(workspace);
+            }
+        });
+
+    }
+
+
+    /**
      * this method deletes a link, which is defined as an annotation with
      * one parent and no more than one child (not a root, not a branch point)
      *

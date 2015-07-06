@@ -536,6 +536,70 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     }
 
+
+    public void moveNeuriteRequested(Anchor anchor) {
+        if (anchor == null) {
+            presentError("Anchor unexpectedly null!", "Can't move neurite");
+            return;
+        }
+
+        // if there's only one neuron, nothing to do
+        if (annotationModel.getCurrentWorkspace().getNeuronList().size() == 1) {
+            // NOTE: in the future, should probably offer the user a chance
+            //  to create a new neuron here and move the neurite to it
+            JOptionPane.showMessageDialog(
+                    ComponentUtil.getLVVMainWindow(),
+                    "Only one neuron--no place to move to!",
+                    "Only one neuron!",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // dialog box with list of neurons, not including current neuron
+        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
+        TmNeuron currentNeuron = annotationModel.getNeuronFromAnnotationID(annotation.getId());
+        ArrayList<TmNeuron> neuronList = new ArrayList<>(annotationModel.getCurrentWorkspace().getNeuronList());
+        neuronList.remove(currentNeuron);
+
+        Object [] choices = neuronList.toArray();
+        final Object choice = JOptionPane.showInputDialog(
+                ComponentUtil.getLVVMainWindow(),
+                "Choose destination neuron:",
+                "Choose neuron",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                choices,
+                choices[0]
+        );
+        if (choice == null) {
+            return;
+        }
+
+        // call annmodel.moveNeurite in thread
+        SimpleWorker mover = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.moveNeurite(annotation, (TmNeuron) choice);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing to see here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                presentError(
+                        "Could not move neurite!",
+                        "Error",
+                        error);
+            }
+        };
+        mover.execute();
+
+    }
+
+
     /**
      * place a new annotation near the annotation with the input ID; place it
      * "nearby" in the direction of its parent if it has one; if it's a root

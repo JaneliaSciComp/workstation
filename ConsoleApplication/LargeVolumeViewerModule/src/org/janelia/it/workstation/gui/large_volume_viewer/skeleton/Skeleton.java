@@ -175,6 +175,10 @@ public class Skeleton {
         controller.addEditNoteRequested(anchor);
     }
 
+    public void moveNeuriteRequest(Anchor anchor) {
+        controller.moveNeuriteRequested(anchor);
+    }
+
     public void changeNeuronStyle(Anchor anchor) {
         controller.changeNeuronStyleRequested(anchor);
     }
