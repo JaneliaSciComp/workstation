@@ -834,16 +834,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        // use a standard neuron name; the user can rename later
-        final String neuronName = getNeuronName(annotationModel.getCurrentWorkspace());
+        // prompt the user for a name, but suggest a standard name
+        final String neuronName = promptForNeuronName(getNeuronName(annotationModel.getCurrentWorkspace()));
 
         // create it:
         SimpleWorker creator = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
                 annotationModel.createNeuron(neuronName);
-                // Renaming neuron here, after selection is done.
-                renameNeuron();
             }
 
             @Override
@@ -911,19 +909,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        final String neuronName = (String) JOptionPane.showInputDialog(
-                ComponentUtil.getLVVMainWindow(),
-                "Neuron name:",
-                "Rename neuron",
-                JOptionPane.PLAIN_MESSAGE,
-                null, // icon
-                null, // choice list; absent = freeform
-                neuron.getName());
-        if (neuronName == null || neuronName.length() == 0) {
+        final String neuronName = promptForNeuronName(neuron.getName());
+        if (neuronName == null) {
             return;
         }
 
-        // validate neuron name?  are there any rules for entity names?
         SimpleWorker renamer = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
@@ -946,6 +936,33 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         renamer.execute();
 
     }
+
+
+    /**
+     * pop a dialog that asks for a name for a neuron;
+     * returns null if the user didn't make a choice
+     */
+    String promptForNeuronName(String suggestedName) {
+        if (suggestedName == null) {
+            suggestedName = "";
+        }
+        String neuronName = (String) JOptionPane.showInputDialog(
+                ComponentUtil.getLVVMainWindow(),
+                "Neuron name:",
+                "Name neuron",
+                JOptionPane.PLAIN_MESSAGE,
+                null, // icon
+                null, // choice list; absent = freeform
+                suggestedName);
+        if (neuronName == null || neuronName.length() == 0) {
+            return null;
+        } else {
+            // if we had any validation to do, we'd do it
+            // here...but we don't
+            return neuronName;
+        }
+    }
+
 
     /**
      * given a workspace, return a new generic neuron name (probably something
