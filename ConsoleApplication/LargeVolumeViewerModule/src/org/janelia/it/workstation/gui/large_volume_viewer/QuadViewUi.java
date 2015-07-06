@@ -56,6 +56,7 @@ import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
@@ -126,6 +127,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	private JPanel zScanPanel = new JPanel();
 	private JSlider zScanSlider = new JSlider();
 	private JSpinner zScanSpinner = new JSpinner();
+    private SpinnerCalculationValue spinnerValue = new SpinnerCalculationValue(zScanSpinner);
 	private JSlider zoomSlider = new JSlider(SwingConstants.VERTICAL, 0, 1000, 500);
 	
 	//private JPanel colorPanel = new JPanel();
@@ -213,7 +215,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public void focusChanged(Vec3 focus) {
         int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
         zScanSlider.setValue(z);
-        zScanSpinner.setValue(z);
+        spinnerValue.setValue(z);
+        //zScanSpinner.setValue(z);
     }
 
     public void zoomChanged(Double zoom) {
@@ -482,9 +485,13 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             zScanSlider.setMinimum(z0);
             zScanSlider.setMaximum(z1);
             zScanSlider.setValue(z);
-            zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
+
             // Allow octree zsteps to depend on zoom
             tileFormat = tileServer.getLoadAdapter().getTileFormat();
+            final int zOrigin = tileFormat.getOrigin()[2];
+            spinnerValue.setOffsetFromZero(zOrigin);
+
+            zScanSpinner.setModel(new SpinnerNumberModel(z - zOrigin, z0 - zOrigin, z1 - zOrigin, 1));
             updateSWCDataConverter();
 
             zScanMode.setTileFormat(tileFormat);
@@ -676,8 +683,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		button_4.setAlignmentX(0.5f);
 		zScanPanel.add(button_4);
 		zScanSpinner.addChangeListener(new ChangeListener() {
+            @Override
 			public void stateChanged(ChangeEvent arg0) {
-				setZSlice((Integer)zScanSpinner.getValue());
+                //(Integer)zScanSpinner.getValue()
+				setZSlice(spinnerValue.getValue());
 			}
 		});
 		
