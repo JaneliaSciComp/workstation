@@ -158,12 +158,14 @@ public class SparseVolumePointActor extends GL4SimpleActor implements VolumeData
             for (int i=0;i<channelSizeInBytes;i++) channelBuffer[i]=0;
             
             int channelOffset=0;
+            
             while(channelOffset<channelSizeInBytes) {
                 if (chunkIndex==volumeChunks.length) {
                     logger.error("Unexpectedly ran out of VolumeDataChunk indices");
                     return;
                 }
                 byte[] chunkData=volumeChunks[chunkIndex].getData();
+                logger.info("Retrieved "+chunkData.length+" bytes from chunk index="+chunkIndex);
                 int dataLengthNeeded=channelSizeInBytes-channelOffset;
                 int chunkDataAvailable=chunkData.length-chunkOffset;
                 if (chunkDataAvailable>=dataLengthNeeded) {
@@ -181,6 +183,8 @@ public class SparseVolumePointActor extends GL4SimpleActor implements VolumeData
                 }
             }
             
+            logger.info("Read "+channelOffset+" bytes for channel "+channelIndex);
+            
             if (textureData.getPixelByteCount()==2) {
                 int voxelCount=width*height*depth;
                 byte[] tmpBuffer = new byte[voxelCount];
@@ -192,7 +196,7 @@ public class SparseVolumePointActor extends GL4SimpleActor implements VolumeData
             
             int totalVoxels=0;
             int selectedVoxels=0;
-            int dCount=0;
+//            int dCount=0;
             if (channelIndex==volumeChannel) {
                 for (int z=0;z<depth;z++) {
                     float fz=(float) (z*1.0/depth*1.0);     
@@ -203,20 +207,26 @@ public class SparseVolumePointActor extends GL4SimpleActor implements VolumeData
                             viGroup vi=new viGroup();
                             int p=z*height*width+y*width+x;
                             int cv=channelBuffer[p] & 0x000000ff;
-                            if (dCount<1000 && channelBuffer[p] < 0) {
-                                logger.info("channelBuffer p="+p+" ="+channelBuffer[p]+" cv="+cv);
-                                dCount++;
-                            }
+//                            if (dCount<1000 && channelBuffer[p] < -1) {
+//                                logger.info("channelBuffer p="+p+" ="+channelBuffer[p]+" cv="+cv);
+//                                dCount++;
+//                            }
                             vi.z=fz;
                             vi.y=fy;
                             vi.x=fx;
-                            vi.w=(float) (cv*1.0/255.0);
-                            if (dCount<1000 && vi.w < 0.0) {
-                                logger.info("cv="+cv+" vi.w="+vi.w);
-                                dCount++;
+                            if (cv<0 || cv>255) {
+                                logger.info("VALUE ERROR cv="+cv);
                             }
+                            vi.w=(float) (cv*1.0/255.0);
+                            if (vi.x>0.99f) {
+                                vi.w=1.0f;
+                            }
+//                            if (dCount<1000 && vi.w > 0.5 && vi.w < 1.0) {
+//                                logger.info("cv="+cv+" vi.w="+vi.w);
+//                                dCount++;
+//                            }
                             totalVoxels++;
-                            if (vi.w > 0.20) {
+                            if (vi.w > 0.80) {
                                 viList.add(vi);
                                 selectedVoxels++;
                             }
@@ -251,7 +261,7 @@ public class SparseVolumePointActor extends GL4SimpleActor implements VolumeData
             float fc=2000000.0f;
             fb.put(v2offset+v*3,fc);
             fb.put(v2offset+v*3+1,fc);
-            fb.put(v2offset+v*3+2,vg.z);
+            fb.put(v2offset+v*3+2,vg.w);
         }        
 
         gl.glGenVertexArrays(1, vertexArrayId);

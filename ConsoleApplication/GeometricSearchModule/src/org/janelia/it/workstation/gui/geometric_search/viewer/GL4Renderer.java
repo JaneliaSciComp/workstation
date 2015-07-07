@@ -277,7 +277,7 @@ public class GL4Renderer implements GLEventListener
     public void updateProjection(GL4 gl) {
         //gl.glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
         
-        logger.info("updateProjection() using widthInPixels="+widthInPixels+" heightInPixels="+heightInPixels);
+        //logger.info("updateProjection() using widthInPixels="+widthInPixels+" heightInPixels="+heightInPixels);
         
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = model.getCameraFocusDistance();
