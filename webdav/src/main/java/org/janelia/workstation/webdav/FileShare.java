@@ -1,8 +1,15 @@
 package org.janelia.workstation.webdav;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Set;
+import org.janelia.workstation.webdav.exception.FileNotFoundException;
+
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.UriInfo;
+import java.io.InputStream;
 
 /**
  * Created by schauderd on 6/26/15.
@@ -25,7 +32,12 @@ public abstract class FileShare {
         return true;
     }
 
-    public void getFile (OutputStream response, String qualifiedFilename) {
+    public StreamingOutput getFile (String qualifiedFilename) throws FileNotFoundException {
+        return null;
+    }
+
+    public String propFind (UriInfo uriInfo, HttpHeaders headers) throws FileNotFoundException {
+        return null;
     }
 
     public String getMapping() {
@@ -59,5 +71,4 @@ public abstract class FileShare {
     public void addPermission(Permission permission) {
         this.permissions.add(permission);
     }
-
 }

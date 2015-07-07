@@ -14,7 +14,6 @@ public class UsersAuthorizer implements Authorizer {
         if (credentials instanceof BasicAuthToken) {
             String username = ((BasicAuthToken) credentials).getUsername();
             String password = ((BasicAuthToken) credentials).getPassword();
-            System.out.println(username);
             if (userPasswords.containsKey(username)) {
                 if (userPasswords.get(username).equals(password)) {
                     return true;
