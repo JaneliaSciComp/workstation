@@ -33,9 +33,9 @@ import java.util.List;
  * @author Eric Trautman
  */
 public class WebDavClient {
-    
-    public static final String JACS_WEBDAV_BASE_URL = "http://jacs-webdav.int.janelia.org/WebDAV";
-    
+
+    public static final String JACS_WEBDAV_BASE_URL = "http://10.37.5.37:8080/Webdav";
+    private int port;
     private String protocol;
     private String host;
     private String basePath;
@@ -64,6 +64,7 @@ public class WebDavClient {
             final URL url = new URL(baseUrl);
             this.protocol = url.getProtocol();
             this.host = url.getHost();
+            this.port = url.getPort();
             this.basePath = url.getPath();
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("failed to parse base URL: " + baseUrl, e);
@@ -74,7 +75,7 @@ public class WebDavClient {
         managerParams.setDefaultMaxConnectionsPerHost(maxConnectionsPerHost); // default is 2
         managerParams.setMaxTotalConnections(maxTotalConnections);            // default is 20
         this.httpClient = new HttpClient(mgr);
-        
+
         setCredentialsUsingAuthenticator();
 
         final HttpState clientState = this.httpClient.getState();
@@ -106,6 +107,7 @@ public class WebDavClient {
     protected WebDavClient() {
         this.protocol = "file";
         this.host = "";
+        this.port = 80;
         this.basePath = "";
         this.httpClient = null;
     }
@@ -120,7 +122,7 @@ public class WebDavClient {
     /**
      * Returns a WebDAV URL for the specified path.
      *
-     * @param  standardPath  standard path for the file (should always be Linux-style path)
+     * @param  standardPath  standard path for the file.
      *
      * @return corresponding WebDAV URL.
      *
@@ -130,20 +132,9 @@ public class WebDavClient {
     public URL getWebDavUrl(String standardPath)
             throws MalformedURLException {
         URL url;
-        try {
-            // create URI so that path is properly encoded
-            // always use Linux-style path for WebDAV
-            standardPath = standardPath.replace("\\","/");
-            final URI uri = new URI(protocol,
-                                    host,
-                                    basePath + standardPath,
-                                    null);
-            url = uri.toURL();
-        } catch (URISyntaxException e) {
-            MalformedURLException wrapped = new MalformedURLException(e.getMessage());
-            wrapped.initCause(e);
-            throw wrapped;
-        }
+        String foobar = JACS_WEBDAV_BASE_URL + standardPath;
+        url = new URL(foobar);
+
         return url;
     }
 
@@ -209,12 +200,12 @@ public class WebDavClient {
         try {
             final PasswordAuthentication defaultAuthentication
                     = Authenticator.requestPasswordAuthentication(
-                            null,
-                            null,
-                            -1,
-                            null,
-                            null,
-                            null);
+                    null,
+                    null,
+                    -1,
+                    null,
+                    null,
+                    null);
 
             if (defaultAuthentication != null) {
 
@@ -225,7 +216,7 @@ public class WebDavClient {
 
                     final UsernamePasswordCredentials credentials
                             = new UsernamePasswordCredentials(userName,
-                                    String.valueOf(password));
+                            String.valueOf(password));
                     setCredentials(credentials);
                 }
             }
@@ -275,7 +266,7 @@ public class WebDavClient {
         final String href = url.toString();
         final int responseCode = getResourceTypeResponseCode(href);
         return ((responseCode == HttpStatus.SC_MULTI_STATUS) ||
-                 (responseCode == HttpStatus.SC_MOVED_PERMANENTLY));
+                (responseCode == HttpStatus.SC_MOVED_PERMANENTLY));
     }
 
     /**
@@ -373,7 +364,7 @@ public class WebDavClient {
 
                 if (responseCode != HttpServletResponse.SC_OK) {
                     throw new WebDavException(responseCode + " returned for GET " + remoteFileUrl,
-                                              responseCode);
+                            responseCode);
                 }
 
                 input = getMethod.getResponseBodyAsStream();
@@ -442,7 +433,7 @@ public class WebDavClient {
 
             if (responseCode != HttpServletResponse.SC_CREATED) {
                 throw new WebDavException(responseCode + " returned for MKCOL " + directoryUrl,
-                                          responseCode);
+                        responseCode);
             }
         } catch (WebDavException e) {
             throw e;
@@ -521,9 +512,9 @@ public class WebDavClient {
             LOG.trace("saveFile: {} returned for PUT {}", responseCode, url);
 
             if ((responseCode != HttpServletResponse.SC_CREATED) &&
-                (responseCode != HttpServletResponse.SC_NO_CONTENT)) {
+                    (responseCode != HttpServletResponse.SC_NO_CONTENT)) {
                 throw new WebDavException(responseCode + " returned for PUT " + url,
-                                          responseCode);
+                        responseCode);
             }
         } catch (WebDavException e) {
             throw e;
@@ -565,12 +556,12 @@ public class WebDavClient {
         PropFindMethod method = null;
         try {
             method = new PropFindMethod(href,
-                                        WebDavFile.PROPERTY_NAMES,
-                                        depth);
+                    WebDavFile.PROPERTY_NAMES,
+                    depth);
 
             final int responseCode = httpClient.executeMethod(method);
             LOG.trace("getResponses: {} returned for PROPFIND {}", responseCode, href);
-            
+
             if (responseCode == HttpStatus.SC_MULTI_STATUS) {
                 final MultiStatus multiStatus = method.getResponseBodyAsMultiStatus();
                 multiStatusResponses = multiStatus.getResponses();
@@ -583,10 +574,10 @@ public class WebDavClient {
                     }
                 }
                 throw new WebDavException(responseCode + " response code returned for " + href,
-                                          responseCode);
+                        responseCode);
             } else {
                 throw new WebDavException(responseCode + " response code returned for " + href,
-                                          responseCode);
+                        responseCode);
             }
 
         } catch (WebDavException e) {
@@ -610,8 +601,8 @@ public class WebDavClient {
         PropFindMethod method = null;
         try {
             method = new PropFindMethod(href,
-                                        RESOURCE_TYPE_PROPERTY_ONLY,
-                                        DavConstants.DEPTH_0);
+                    RESOURCE_TYPE_PROPERTY_ONLY,
+                    DavConstants.DEPTH_0);
             responseCode = httpClient.executeMethod(method);
             LOG.trace("getResourceTypeResponseCode: {} returned for PROPFIND {}", responseCode, href);
         } catch (Exception e) {
