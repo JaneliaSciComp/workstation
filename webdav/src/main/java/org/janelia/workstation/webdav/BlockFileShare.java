@@ -4,18 +4,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.janelia.workstation.webdav.exception.FileNotFoundException;
+import org.janelia.workstation.webdav.exception.FileUploadException;
 import org.janelia.workstation.webdav.propfind.Multistatus;
 import org.janelia.workstation.webdav.propfind.Prop;
 import org.janelia.workstation.webdav.propfind.PropfindResponse;
 import org.janelia.workstation.webdav.propfind.Propstat;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.InputStream;
 import java.nio.file.*;
 import java.util.List;
 
@@ -36,33 +37,46 @@ public class BlockFileShare extends FileShare {
         };
     }
 
-    private PropfindResponse generatePropMetadata(java.nio.file.Path file, UriInfo uriInfo) {
-        PropfindResponse fileMeta = new PropfindResponse();
+    @Override
+    public void putFile(InputStream binaryStream, String filepath) throws FileUploadException {
         try {
-            Propstat propstat = new Propstat();
-            Prop prop = new Prop();
-            prop.setCreationDate(Files.getAttribute(file, "creationTime").toString());
-            prop.setGetContentType(Files.probeContentType(file));
-            prop.setGetContentLength(Long.toString(Files.size(file)));
-            prop.setGetLastModified(Files.getLastModifiedTime(file).toString());
-            String baseURI = uriInfo.getBaseUri().toString();
-            fileMeta.setHref("/Webdav" + file.toString());
-            if (Files.isDirectory(file)) {
-                prop.setResourceType("collection");
-                fileMeta.setHref(fileMeta.getHref() + "/");
-            }
-            propstat.setProp(prop);
-            propstat.setStatus("HTTP/1.1 200 OK");
-            fileMeta.setPropstat(propstat);
+            Files.copy(binaryStream,
+                    Paths.get(filepath),
+                    new CopyOption[]{StandardCopyOption.REPLACE_EXISTING});
         } catch (IOException e) {
             e.printStackTrace();
-            // TO DO throw specific error
+            throw new FileUploadException("Problem creating new file on file share");
         }
+    }
+
+    @Override
+    public void deleteFile(String qualifiedFilename) throws IOException {
+        Files.delete(Paths.get(qualifiedFilename));
+    }
+
+
+    private PropfindResponse generatePropMetadata(java.nio.file.Path file, UriInfo uriInfo) throws IOException {
+        PropfindResponse fileMeta = new PropfindResponse();
+        Propstat propstat = new Propstat();
+        Prop prop = new Prop();
+        prop.setCreationDate(Files.getAttribute(file, "creationTime").toString());
+        prop.setGetContentType(Files.probeContentType(file));
+        prop.setGetContentLength(Long.toString(Files.size(file)));
+        prop.setGetLastModified(Files.getLastModifiedTime(file).toString());
+        fileMeta.setHref("/Webdav" + file.toString());
+        if (Files.isDirectory(file)) {
+            prop.setResourceType("collection");
+            fileMeta.setHref(fileMeta.getHref() + "/");
+        }
+        propstat.setProp(prop);
+        propstat.setStatus("HTTP/1.1 200 OK");
+        fileMeta.setPropstat(propstat);
+
         return fileMeta;
     }
 
     private void discoverFiles(Multistatus container, java.nio.file.Path file,
-                               int depth, int discoveryLevel, UriInfo uriInfo) {
+                               int depth, int discoveryLevel, UriInfo uriInfo) throws IOException {
         if (depth<discoveryLevel) {
             if (Files.isDirectory(file)) {
                 depth++;
@@ -71,17 +85,13 @@ public class BlockFileShare extends FileShare {
                         discoverFiles(container, subpath, depth, discoveryLevel, uriInfo);
                     }
                 }
-                catch (IOException ex) {
-                    // handle issues with reading subdirectory metadata
-                    ex.printStackTrace();
-                }
             }
         }
         container.getResponse().add(generatePropMetadata(file, uriInfo));
     }
 
     @Override
-    public String propFind(UriInfo uriInfo, HttpHeaders headers) throws FileNotFoundException {
+    public String propFind(UriInfo uriInfo, HttpHeaders headers) throws FileNotFoundException, IOException {
         String filepath = "/" + uriInfo.getPath();
 
         // create Multistatus top level

@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Set;
 import org.janelia.workstation.webdav.exception.FileNotFoundException;
+import org.janelia.workstation.webdav.exception.FileUploadException;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.StreamingOutput;
@@ -36,8 +37,16 @@ public abstract class FileShare {
         return null;
     }
 
-    public String propFind (UriInfo uriInfo, HttpHeaders headers) throws FileNotFoundException {
+    public String propFind (UriInfo uriInfo, HttpHeaders headers) throws FileNotFoundException, IOException {
         return null;
+    }
+
+    public void putFile (InputStream binaryStream, String filepath) throws FileUploadException {
+
+    }
+
+    public void deleteFile (String qualifiedFilename) throws IOException {
+
     }
 
     public String getMapping() {

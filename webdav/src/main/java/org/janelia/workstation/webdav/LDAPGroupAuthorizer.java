@@ -31,7 +31,6 @@ public class LDAPGroupAuthorizer implements Authorizer {
         } else {
             return false;
         }
-        System.out.println (username);
 
         // open connection to LDAP Provider
         LDAPProvider provider = (LDAPProvider) WebdavContextManager.getProviders().get("ldap");

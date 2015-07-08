@@ -12,6 +12,8 @@ import java.nio.file.*;
 import java.util.*;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.*;
+
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -55,6 +57,9 @@ public class WebdavRequestHandler extends ResourceConfig {
                         } catch (FileNotFoundException e) {
                             e.printStackTrace();
                             return Response.status(Response.Status.CONFLICT).build();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            return Response.status(Response.Status.CONFLICT).build();
                         }
                     }
                 });
@@ -86,13 +91,15 @@ public class WebdavRequestHandler extends ResourceConfig {
                 });
         final Resource resource = resourceBuilder.build();
         registerResources(resource);
+
+        // register a default logger
+        register(LoggingFilter.class);
     }
 
     @GET
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public StreamingOutput getFile() throws PermissionsFailureException, FileNotFoundException {
         String filepath = "/" + uriInfo.getPath();
-        System.out.println (filepath);
         FileShare mapping = checkPermissions(filepath);
 
         // check file share for read permissions
@@ -109,7 +116,6 @@ public class WebdavRequestHandler extends ResourceConfig {
     public void putFile(InputStream binaryStream) throws PermissionsFailureException,
             FileNotFoundException, FileUploadException {
         String filepath = "/" + uriInfo.getPath();
-        System.out.println (filepath);
         FileShare mapping = checkPermissions(filepath);
 
         // check file share for write permissions
@@ -117,34 +123,21 @@ public class WebdavRequestHandler extends ResourceConfig {
             throw new PermissionsFailureException("Not permitted to write from this file share");
         }
 
-        try {
-            Files.copy(binaryStream,
-                    Paths.get(filepath),
-                    new CopyOption[]{StandardCopyOption.REPLACE_EXISTING});
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new FileUploadException("Problem creating new file on file share");
-        }
+        mapping.putFile(binaryStream, filepath);
     }
 
     @DELETE
     public void deleteFile() throws PermissionsFailureException,
-            FileNotFoundException, FileUploadException {
+            FileNotFoundException, FileUploadException, IOException {
         String filepath = "/" + uriInfo.getPath();
-        System.out.println (filepath);
         FileShare mapping = checkPermissions(filepath);
 
         // check file share for write permissions
         if (!mapping.getPermissions().contains(Permission.DELETE)) {
             throw new PermissionsFailureException("Not permitted to delete from this file share");
         }
-        try {
-            Files.delete(Paths.get(filepath));
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new FileUploadException("Problem removing file from file share");
-        }
 
+        mapping.deleteFile(filepath);
     }
 
     private FileShare checkPermissions(String filepath) throws PermissionsFailureException,FileNotFoundException {

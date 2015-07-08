@@ -38,6 +38,14 @@ public class WebdavContextManager implements ServletContextListener  {
                     ldap.init();
                     providers.put("ldap",ldap);
                 }
+                if (providersConfig.containsKey("scality")) {
+                    ScalityProvider scality = new ScalityProvider();
+                    Map<String, Object> scalityConfig = (Map<String,Object>)providersConfig.get("scality");
+                    scality.setUrl((String)scalityConfig.get("url"));
+                    scality.setDriver((String) scalityConfig.get("driver"));
+                    scality.init();
+                    providers.put("scality",scality);
+                }
             }
 
             // load authorizers

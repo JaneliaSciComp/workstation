@@ -1,7 +1,6 @@
 package org.janelia.workstation.webdav;
 
 import java.io.IOException;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -10,6 +9,7 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.workstation.webdav.exception.FileNotFoundException;
@@ -28,22 +28,16 @@ import javax.ws.rs.core.UriInfo;
  * For now, this works only with Scality.  At some point, we can abstract it to work with any object storage
  */
 public class ObjectFileShare extends FileShare {
-    private static final String SCALITY_BASE_URL = "http://sc101-jrc:81/proxy";
-    private static final String SCALITY_DRIVER = "bparc2";
     private static final String SCALITY_PREPEND = "/Scality";
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 2;
 
     private String getUrlFromBPID(String bpid) {
-        StringBuilder sb = new StringBuilder(SCALITY_BASE_URL);
-        sb.append("/");
-        sb.append(SCALITY_DRIVER);
-        sb.append("/");
-        sb.append(bpid);
-        return sb.toString();
+        ScalityProvider provider = (ScalityProvider) WebdavContextManager.getProviders().get("scality");
+        return provider.getUrlFromBPID(bpid);
     }
 
     @Override
-    public String propFind(UriInfo uriInfo, HttpHeaders headers) throws FileNotFoundException {
+    public String propFind(UriInfo uriInfo, HttpHeaders headers) throws FileNotFoundException, IOException {
         // there is no hierarchical concept in Scality, so always only return existing file info
         String filepath = "/" + uriInfo.getPath();
         String scalityFilepath = filepath.substring(SCALITY_PREPEND.length());
@@ -54,7 +48,6 @@ public class ObjectFileShare extends FileShare {
         propfindContainer.getResponse().add(fileMeta);
         Propstat propstat = new Propstat();
         Prop prop = new Prop();
-
         String url = getUrlFromBPID(scalityFilepath);
         GetMethod get = new GetMethod(url);
         try {
@@ -88,7 +81,7 @@ public class ObjectFileShare extends FileShare {
             System.out.println (xml);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
-            // TO DO throw specific error
+            throw new IOException("Problem parsing out proper meta content");
         }
         return xml;
 
