@@ -268,7 +268,17 @@ public class RayCastSelector {
         result = result.minus(new Vec3(0, 0, 0)); // origin for viewport.
         result = result.minus(new Vec3(width / 2.0, height / 2.0, 0)); // center
         // Convert from pixel units to world units
-        result = result.times(1.0 / camera3d.getPixelsPerSceneUnit());
+        result = result.times(1.0 / camera3d.getPixelsPerSceneUnit() / camera3d.getPixelsPerSceneUnit()); // Inverse square???
+        System.out.println("Difference between focus and center is " + result.toString());
+        System.out.println("Pixels per scene unit="+camera3d.getPixelsPerSceneUnit() + ", 1/psc="+1/camera3d.getPixelsPerSceneUnit());
+//        final float[] voxelMicrometers = context.getVoxelMicrometers();
+//        if (voxelMicrometers != null) {
+//            result = new Vec3(
+//                    result.getX() * (1.0 / voxelMicrometers[0]),
+//                    result.getY() * (1.0 / voxelMicrometers[1]),
+//                    result.getZ() * (1.0 / voxelMicrometers[2])
+//            );            
+//        }
         // Apply viewer orientation, e.g. X/Y/Z orthogonal viewers
         Rotation3d viewerInGround = camera3d.getRotation();
         result = viewerInGround.times(result);
@@ -276,7 +286,6 @@ public class RayCastSelector {
         // Apply camera focus
         result = result.plus(cameraFocus);
         result.setZ(0.0);
-        // System.out.println(pixel + ", " + getCamera().getFocus() + ", " + result);
         return result;
     }
 
