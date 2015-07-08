@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.large_volume_viewer;
+ package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
@@ -16,6 +16,8 @@ import java.awt.*;
 import java.net.MalformedURLException;
 import java.util.concurrent.Callable;
 import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
@@ -95,7 +97,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 refresh();
 
                 // be sure we've successfully gotten the sample before loading it!
-                if (sliceSample.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+                if (sliceSample != null && sliceSample.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
                     try {
                         if (!viewUI.loadFile(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH))) {
                             JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
@@ -171,6 +173,16 @@ public class LargeVolumeViewViewer extends JPanel {
             add(viewUI);
             revalidate();
             repaint();
+            
+            // Need to popup the skeletal viewer.
+            AnnotationSkeletalViewTopComponent asvtc =
+                    (AnnotationSkeletalViewTopComponent)WindowLocator.getByName(
+                            AnnotationSkeletalViewTopComponent.PREFERRED_ID
+                    );
+            if (asvtc != null) {
+                asvtc.revalidate();
+                asvtc.repaint();
+            }
         }
     }    
 

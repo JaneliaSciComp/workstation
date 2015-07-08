@@ -11,6 +11,9 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.Vector4;
 
 /**
  * Created by murphys on 4/9/15.
@@ -18,12 +21,15 @@ import java.util.List;
 public class MeshObjFileV2Actor extends GL4SimpleActor
 {
     private final Logger logger = LoggerFactory.getLogger(MeshObjFileV2Actor.class);
+        
     File objFile;
     boolean loaded=false;
     boolean loadError=false;
     boolean drawLines=false;
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
     IntBuffer vertexBufferId=IntBuffer.allocate(1);
+    Vector4 color=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+    Matrix4 vertexRotation=null;
 
     private class vGroup {
 
@@ -51,7 +57,14 @@ public class MeshObjFileV2Actor extends GL4SimpleActor
     List<vGroup> vnList=new ArrayList<>();
     List<vGroup> vList=new ArrayList<>();
     List<fGroup> fList=new ArrayList<>();
-
+    
+    public void setColor(Vector4 color) {
+        this.color=color;
+    }
+    
+    public Vector4 getColor() {
+        return color;
+    }
 
     public MeshObjFileV2Actor(File objFile) {
         this.objFile=objFile;
@@ -59,6 +72,10 @@ public class MeshObjFileV2Actor extends GL4SimpleActor
 
     public void setDrawLines(boolean drawLines) {
         this.drawLines=drawLines;
+    }
+    
+    public void setVertexRotation(Matrix4 rotation) {
+        this.vertexRotation=rotation;
     }
 
     @Override
@@ -126,6 +143,13 @@ public class MeshObjFileV2Actor extends GL4SimpleActor
                 float x=vg.x;
                 float y=vg.y;
                 float z=vg.z;
+                if (vertexRotation!=null) {
+                    Vector4 v = new Vector4(x, y, z, 1.0f);
+                    Vector4 vr = vertexRotation.multiply(v);
+                    x=vr.get(0);
+                    y=vr.get(1);
+                    z=vr.get(2);
+                } 
                 int s=f*9+i*3;
                 fb.put(s, x);
                 fb.put(s+1, y);
@@ -183,7 +207,7 @@ public class MeshObjFileV2Actor extends GL4SimpleActor
                     }
                 } else if (tline.startsWith("v")) {
                     String[] tArr = tline.split("\\s+");
-                    if (tArr.length == 4) {
+                    if (tArr.length == 4 || tArr.length == 7) { // ignore the last 3 values if length 7
                         vList.add(new vGroup(tArr[1], tArr[2], tArr[3]));
                     }
                 } else if (tline.startsWith("f")) {
@@ -195,7 +219,7 @@ public class MeshObjFileV2Actor extends GL4SimpleActor
                 }
             }
         }
-        logger.info("loadObjFile() loaded " + vnList.size()+" vn "+vList.size()+" v "+fList.size()+" f");
+        logger.info("loadObjFile() loaded " + vnList.size()+" vn "+vList.size()+" v "+fList.size()+" f  file="+objFile.getName());
         reader.close();
     }
 

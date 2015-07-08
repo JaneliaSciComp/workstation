@@ -63,8 +63,11 @@ public class TextureMediator {
         isInitialized = true;
     }
 
-    public void uploadTexture( GL2 gl ) {
-        reportError( "upon entry to uploadTexture", gl, textureName );
+    public boolean uploadTexture( GL2 gl ) {
+        boolean rtnVal = true;
+        if (reportError( "upon entry to uploadTexture", gl, textureName )) {
+            return false;
+        }
         if ( ! isInitialized ) {
             logger.error("Attempted to upload texture before mediator was initialized.");
             throw new RuntimeException("Failed to upload texture");
@@ -87,16 +90,24 @@ public class TextureMediator {
             }
 
             gl.glActiveTexture( textureSymbolicId );
-            reportError( "glActiveTexture", gl, textureName );
+            if (reportError( "glActiveTexture", gl, textureName )) {
+                return false;
+            }
 
             gl.glEnable( GL2.GL_TEXTURE_3D );
-            reportError( "glEnable", gl, textureName );
+            if (reportError( "glEnable", gl, textureName )) {
+                return false;
+            }
 
             gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
-            reportError( "glBindTexture", gl, textureName );
+            if (reportError( "glBindTexture", gl, textureName )) {
+                return false;
+            }
 
             gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
-            reportError( "glTexEnv MODE-REPLACE", gl, textureName );
+            if (reportError( "glTexEnv MODE-REPLACE", gl, textureName )) {
+                return false;
+            }
 
             try {
                 gl.glTexImage3D(
@@ -111,6 +122,9 @@ public class TextureMediator {
                         getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
                         null
                 );
+                if (reportError("Tex-image-allocate", gl, textureName)) {
+                    return false;
+                }
                 
                 if ( 1==1 || logger.isDebugEnabled() ) {
                     dumpGlTexImageCall(
@@ -126,8 +140,8 @@ public class TextureMediator {
                     );
                 }
 
-                int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
-                        * textureData.getPixelByteCount() * textureData.getChannelCount();
+                long expectedRemaining = (long)textureData.getSx() * (long)textureData.getSy() * (long)textureData.getSz()
+                        * (long)textureData.getPixelByteCount() * (long)textureData.getChannelCount();
                 if ( expectedRemaining != textureData.getTextureData().length() ) {
                     logger.warn( "Invalid remainder vs texture data dimensions.  Sx=" + textureData.getSx() +
                             " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
@@ -157,6 +171,9 @@ public class TextureMediator {
                             getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
                             data
                     );
+                    if (reportError("Tex-sub-image", gl, textureName)) {
+                        return false;
+                    }
 
                 }
 
@@ -171,18 +188,22 @@ public class TextureMediator {
                 );
                 exGlTexImage.printStackTrace();
             }
-            reportError( "glTexImage", gl, textureName );
+            if (reportError( "glTexImage", gl, textureName )) {
+                return false;
+            }
             gl.glBindTexture( GL2.GL_TEXTURE_3D, 0 );
             gl.glDisable( GL2.GL_TEXTURE_3D );
-            reportError( "disable-tex", gl, textureName );
+            if (reportError( "disable-tex", gl, textureName )) {
+                return false;
+            }
 
             hasBeenUploaded = true;
 
             // DEBUG
             //if ( expectedRemaining < 1000000 )
-            //    testTextureContents(gl); // Did NOT work for TIF!
+            //    testTextureContents(gl); // NOT for very large files!
         }
-
+        return rtnVal;
     }
 
     @Deprecated
@@ -318,7 +339,9 @@ public class TextureMediator {
         return textureData.getVoxelMicrometers();
     }
 
-    public void setupTexture( GL2 gl ) {
+    /** Carry out all ops to ensure textures ready.  Return False if failed. */
+    public boolean setupTexture( GL2 gl ) {
+        boolean rtnVal = true;
         reportError("Entering setupTexture", gl, textureName);
         logger.debug( "Texture Data for {} has interp of {}.", textureData.getFilename(),
                 getConstantName( textureData.getInterpolationMethod() ) );
@@ -328,20 +351,34 @@ public class TextureMediator {
             throw new RuntimeException( "Texture setup failed." );
         }
         gl.glActiveTexture( textureSymbolicId );
-        reportError( "setupTexture glActiveTexture", gl, textureName );
+        if (reportError( "setupTexture glActiveTexture", gl, textureName )) {
+            return false;
+        }
         gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
-        reportError( "setupTexture glBindTexture", gl, textureName );
+        if (reportError( "setupTexture glBindTexture", gl, textureName )) {
+            return false;
+        }
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, textureData.getInterpolationMethod() );
-        reportError( "setupTexture glTexParam MIN FILTER", gl, textureName );
+        if (reportError( "setupTexture glTexParam MIN FILTER", gl, textureName )) {
+            return false;
+        }
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, textureData.getInterpolationMethod() );
-        reportError( "setupTexture glTexParam MAG_FILTER", gl, textureName );
+        if (reportError( "setupTexture glTexParam MAG_FILTER", gl, textureName )) {
+            return false;
+        }
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
-        reportError( "setupTexture glTexParam TEX-WRAP-R", gl, textureName );
+        if (reportError( "setupTexture glTexParam TEX-WRAP-R", gl, textureName )) {
+            return false;
+        }
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_BORDER);
-        reportError( "setupTexture glTexParam TEX-WRAP-S", gl, textureName );
+        if (reportError( "setupTexture glTexParam TEX-WRAP-S", gl, textureName )) {
+            return false;
+        }
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
-        reportError( "setupTexture glTexParam TEX-WRAP-T", gl, textureName );
-
+        if (reportError( "setupTexture glTexParam TEX-WRAP-T", gl, textureName )) {
+            return false;
+        }
+        return rtnVal;
     }
 
     /**

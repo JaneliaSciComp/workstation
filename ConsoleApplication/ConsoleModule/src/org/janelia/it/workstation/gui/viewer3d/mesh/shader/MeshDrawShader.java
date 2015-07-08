@@ -4,6 +4,8 @@ import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A shader for drawing a computed mesh "cage".
@@ -11,13 +13,28 @@ import javax.media.opengl.GL2GL3;
  */
 public class MeshDrawShader extends AbstractShader {
     public static final String COLOR_UNIFORM_NAME = "color";
+    public static final String COLOR_STRATEGY_UNIFORM = "colorStrategy";
     public static final String VERTEX_ATTRIBUTE_NAME = "vertexAttribute";
     public static final String NORMAL_ATTRIBUTE_NAME = "normalAttribute";
+    public static final String COLOR_ATTRIBUTE_NAME = "colorAttribute";
     public static final String VERTEX_SHADER =   "MeshDrawSpecularVtx.glsl";
     public static final String FRAGMENT_SHADER = "MeshDrawSpecularFrg.glsl";
+    
+    private int previousShader = -1;
+    
+    private Logger logger = LoggerFactory.getLogger( MeshDrawShader.class );
 //    public static final String VERTEX_SHADER =   "MeshDrawVtx.glsl";
 //    public static final String FRAGMENT_SHADER = "MeshDrawFrg.glsl";
 
+    @Override
+    public void init(GL2 gl) throws ShaderCreationException {
+        // Get previous shader value.
+        int buf[] = {0};
+        gl.glGetIntegerv(GL2GL3.GL_CURRENT_PROGRAM, buf, 0);
+        previousShader = buf[0];
+        super.init(gl);
+    }
+    
     @Override
     public String getVertexShader() {
         return VERTEX_SHADER;
@@ -60,14 +77,23 @@ public class MeshDrawShader extends AbstractShader {
         gl.glUniformMatrix4fv( uniformLoc, 1, transpose, data, 0 );
         return true;
     }
+    
+    /** By default, coloring will be done via a uniform. */
+    public void setColorByAttribute(GL2GL3 gl, boolean flag) {
+        int uniformLoc = gl.glGetUniformLocation(getShaderProgram(), COLOR_STRATEGY_UNIFORM);
+        if (uniformLoc < 0) {
+            logger.warn("Failed to set color-by-attribute to " + flag);
+        }
+        gl.glUniform1i(uniformLoc, flag? 1 : 0);
+    }
 
     @Override
     public void load(GL2 gl) {
-
+        gl.glUseProgram(getShaderProgram());
     }
 
     @Override
     public void unload(GL2 gl) {
-
+        gl.glUseProgram(previousShader);
     }
 }

@@ -48,4 +48,8 @@ public interface SampleLocation
     
     double getMicrometersPerWindowHeight();
     void setMicrometersPerWindowHeight(double zoom);
+
+    // TODO - remove this temporary hack once Horta can show all channels
+    int getDefaultColorChannel();
+    void setDefaultColorChannel(int channelIndex);
 }

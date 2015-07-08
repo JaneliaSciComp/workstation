@@ -47,16 +47,20 @@ public class TestMip3d {
                     //String fn = fileBase + "1735579170638921826/ConsolidatedSignal2_25.mp4";
                     // Black as of 11/7/2014.
                     //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/951/842/1742124964321951842/separate/ConsolidatedLabel.v3dpbd";
-                    // Checked 11/7/2014.
-                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/294/370/1742138165818294370/separate/fastLoad/ConsolidatedSignal2_25.mp4";
-
+                    // Checked 7/1/2015.
+                    String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation//002/594/1763505680465002594/separate/fastLoad/ConsolidatedSignal2_25.mp4";
+                    // Flawed: has extra back-slices that are somehow (but not simply) empty.
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/leetlab/Separation/265/762/2154818735297265762/separate/fastLoad/ConsolidatedSignal2_25.mp4";
                     // WORKING:
                     // Compartment masks.
                     // Checked 11/7/2014 (all).
                     //String guideBase = "/Volumes/nobackup/jacs/jacsData/filestore/MaskResources/Compartment/guide/";
                     //String fn = guideBase + "LOP_R.v3dpbd";
                     //String fn = "/Volumes/jacs/jacsShare/H264SamplesForReview/C1-tile-2033803516857811042.v3dpbd.v3draw.avi.mp4";
-                    String fn = "/Volumes/jacs/jacsShare/H265SamplesForReview/ffmpeg_hdf/test_output.h5j";
+                    //String fn = "/Volumes/jacs/jacsShare/H265SamplesForReview/ffmpeg_hdf/test_output.h5j";
+                    //   String fn = "/Volumes/nobackup/jacs/jacsData/filestore/leetlab/Sample/608/546/2128604592181608546/stitch/stitched-2097857285479989255.h5j";
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/leetlab/Sample/613/895/2075966713928613895/stitch/stitched-2075896527250784263.h5j";
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/leetlab/Sample/613//986/2136725860424613986/stitch/stitched-2136712453847777378.h5j";
                     System.out.println("Has JavaCPP? " + System.getProperty("java.class.path").contains("javacpp"));
 
                     //String fn = guideBase + "Mask.v3dpbd";
@@ -80,7 +84,7 @@ public class TestMip3d {
                     // Black as of 11/7/2014.
                     //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/ConsolidatedLabel.v3dpbd";
                     // Checked 11/7/2014.
-                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/143/266/1696292257579143266/separate/ConsolidatedLabel.v3dpbd";
+                    // String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/143/266/1696292257579143266/separate/ConsolidatedLabel.v3dpbd";
                     // Checked 11/7/2014.
                     //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/simpsonlab/Separation/424/805/2018719198523424805/separate/fastLoad/ConsolidatedSignal2_25.mp4";
 

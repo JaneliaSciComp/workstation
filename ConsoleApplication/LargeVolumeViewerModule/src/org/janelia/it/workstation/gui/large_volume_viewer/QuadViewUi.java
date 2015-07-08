@@ -56,6 +56,7 @@ import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
@@ -126,6 +127,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	private JPanel zScanPanel = new JPanel();
 	private JSlider zScanSlider = new JSlider();
 	private JSpinner zScanSpinner = new JSpinner();
+    private SpinnerCalculationValue spinnerValue = new SpinnerCalculationValue(zScanSpinner);
 	private JSlider zoomSlider = new JSlider(SwingConstants.VERTICAL, 0, 1000, 500);
 	
 	//private JPanel colorPanel = new JPanel();
@@ -213,7 +215,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public void focusChanged(Vec3 focus) {
         int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
         zScanSlider.setValue(z);
-        zScanSpinner.setValue(z);
+        spinnerValue.setValue(z);
     }
 
     public void zoomChanged(Double zoom) {
@@ -447,6 +449,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         return neuronStyleModel;
     }
     
+    public AnnotationModel getAnnotationModel() {
+        return annotationModel;
+    }
+    
 	public void clearCache() {
 		tileServer.clearCache();
 	}
@@ -478,9 +484,20 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             zScanSlider.setMinimum(z0);
             zScanSlider.setMaximum(z1);
             zScanSlider.setValue(z);
-            zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
+
             // Allow octree zsteps to depend on zoom
             tileFormat = tileServer.getLoadAdapter().getTileFormat();
+            final int zOrigin = tileFormat.getOrigin()[2];
+            spinnerValue.setOffsetFromZero(zOrigin);
+
+            zScanSpinner.setModel(
+                new SpinnerNumberModel(
+                    spinnerValue.getInternalValue(z), 
+                    spinnerValue.getInternalValue(z0), 
+                    spinnerValue.getInternalValue(z1),
+                    1
+                )
+            );
             updateSWCDataConverter();
 
             zScanMode.setTileFormat(tileFormat);
@@ -672,8 +689,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		button_4.setAlignmentX(0.5f);
 		zScanPanel.add(button_4);
 		zScanSpinner.addChangeListener(new ChangeListener() {
+            @Override
 			public void stateChanged(ChangeEvent arg0) {
-				setZSlice((Integer)zScanSpinner.getValue());
+                //(Integer)zScanSpinner.getValue()
+				setZSlice(spinnerValue.getValue());
 			}
 		});
 		
@@ -1122,8 +1141,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             //  possible Linux prefixes are we looking at?
             // OK to compare as strings, because we know the
             //  input path is Linux
-            String [] mbmPrefixes = {"/groups/mousebrainmicro/mousebrainmicro/",
-                    "/nobackup/mousebrainmicro/"};
+            String [] mbmPrefixes = {
+                    "/groups/mousebrainmicro/mousebrainmicro/",
+                    "/nobackup/mousebrainmicro/",
+                    "/tier2/mousebrainmicro/mousebrainmicro/"
+            };
             Path linuxPrefix = null;
             for (String testPrefix: mbmPrefixes) {
                 if (canonicalLinuxPath.startsWith(testPrefix)) {
@@ -1179,8 +1201,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         // by now, if we ain't got the path, we ain't got the path
         if (!testFile.exists()) {
             JOptionPane.showMessageDialog(this.getParent(),
-                    "Error opening folder " + testFile.getName()
-                    +" \nIs the file share mounted?",
+                    "Error opening folder " + testFile.getPath() +
+                    " \nIs the file share mounted?",
                     "Folder does not exist.",
                     JOptionPane.ERROR_MESSAGE);
             return false;

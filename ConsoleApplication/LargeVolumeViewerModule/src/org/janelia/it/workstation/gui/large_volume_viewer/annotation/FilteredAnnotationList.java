@@ -77,7 +77,8 @@ public class FilteredAnnotationList extends JPanel {
         this.width = width;
 
         // set up model & data-related stuff
-        model = new FilteredAnnotationModel();
+        model = annotationModel.getFilteredAnnotationModel();
+//                new FilteredAnnotationModel();
         setupFilters();
 
 
@@ -514,124 +515,6 @@ public class FilteredAnnotationList extends JPanel {
         return new Dimension(width, height);
     }
 
-}
-
-
-class FilteredAnnotationModel extends AbstractTableModel {
-    private String[] columnNames = {"ID", "geo", "note"};
-
-    private ArrayList<InterestingAnnotation> annotations = new ArrayList<>();
-
-    public void clear() {
-        annotations = new ArrayList<>();
-    }
-
-    public void addAnnotation(InterestingAnnotation ann) {
-        annotations.add(ann);
-    }
-
-    // boilerplate stuff
-    public String getColumnName(int column) {
-        return columnNames[column];
-    }
-
-    public int getColumnCount() {
-        return columnNames.length;
-    }
-
-    public int getRowCount() {
-        return annotations.size();
-    }
-
-    public InterestingAnnotation getAnnotationAtRow(int row) {
-        return annotations.get(row);
-    }
-
-    public Object getValueAt(int row, int column) {
-        switch (column) {
-            case 0:
-                return annotations.get(row).getAnnIDText();
-            case 1:
-                return annotations.get(row).getGeometryText();
-            case 2:
-                return annotations.get(row).getNoteText();
-            default:
-                return null;
-        }
-
-    }
-}
-
-/**
- * this class represents an interesting annotation in a way that
- * is easy to put into the table model; ie, it just contains the
- * specific info the table model needs to display
- */
-class InterestingAnnotation {
-    private Long annotationID;
-    private Long neuronID;
-    private String noteText;
-    private AnnotationGeometry geometry;
-
-    public InterestingAnnotation(Long annotationID, Long neuronID, AnnotationGeometry geometry) {
-        new InterestingAnnotation(annotationID, neuronID, geometry, "");
-    }
-
-    public InterestingAnnotation(Long annotationID, Long neuronID, AnnotationGeometry geometry, String noteText) {
-        this.annotationID = annotationID;
-        this.neuronID = neuronID;
-        this.noteText = noteText;
-        this.geometry = geometry;
-    }
-
-    public Long getAnnotationID() {
-        return annotationID;
-    }
-
-    public Long getNeuronID() {
-        return neuronID;
-    }
-
-    public String getAnnIDText() {
-        String annID = annotationID.toString();
-        return annID.substring(annID.length() - 4);
-    }
-
-    public boolean hasNote() {
-        return getNoteText().length() > 0;
-    }
-
-    public String getNoteText() {
-        return noteText;
-    }
-
-    public AnnotationGeometry getGeometry() {
-        return geometry;
-    }
-
-    public String getGeometryText() {
-        return geometry.getTexticon();
-    }
-}
-
-/**
- * terms for describing annotation geometry
- */
-enum AnnotationGeometry {
-    ROOT        ("o--"),
-    BRANCH      ("--<"),
-    LINK        ("---"),
-    END         ("--o");
-
-    private String texticon;
-
-    AnnotationGeometry(String texticon) {
-        this.texticon = texticon;
-    }
-
-    public String getTexticon() {
-        return texticon;
-    }
 }
 
 /**

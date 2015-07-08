@@ -32,7 +32,7 @@ import org.openide.util.NbBundle.Messages;
 )
 @Messages({
     "CTL_AnnotationSkeletalViewAction=AnnotationSkeletalView",
-    "CTL_AnnotationSkeletalViewTopComponent=LVV Annotation Skeletons",
+    "CTL_AnnotationSkeletalViewTopComponent=LVV Annotation Landmarks",
     "HINT_AnnotationSkeletalViewTopComponent=Skeletal View of LVV Annotations"
 })
 public final class AnnotationSkeletalViewTopComponent extends TopComponent {

@@ -6,6 +6,8 @@
 
 package org.janelia.it.workstation.gui.full_skeleton_view.data_source;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 
@@ -17,4 +19,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel
 public interface AnnotationSkeletonDataSourceI {
     Skeleton getSkeleton();
     NeuronStyleModel getNeuronStyleModel();
+    TileFormat getTileFormat();
+    AnnotationModel getAnnotationModel();
 }

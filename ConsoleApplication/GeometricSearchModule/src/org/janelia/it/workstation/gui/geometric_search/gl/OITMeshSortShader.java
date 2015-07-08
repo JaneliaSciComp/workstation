@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.GL4;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import org.janelia.it.workstation.gui.geometric_search.viewer.GL4TransparencyContext;
 
 /**
  * Created by murphys on 5/15/15.
@@ -14,15 +15,10 @@ public class OITMeshSortShader extends GL4Shader {
 
     private final Logger logger = LoggerFactory.getLogger(OITMeshSortShader.class);
 
-    int headPointerTextureId=0;
-    int fragmentStorageBufferId=0;
-
-    public void setHeadPointerTextureId(int headPointerTextureId) {
-        this.headPointerTextureId=headPointerTextureId;
-    }
-
-    public void setFragmentStorageBufferId(int fragmentStorageBufferId) {
-        this.fragmentStorageBufferId=fragmentStorageBufferId;
+    private GL4TransparencyContext tc;
+    
+    public void setTransparencyContext(GL4TransparencyContext tc) {
+        this.tc=tc;
     }
 
     @Override
@@ -45,54 +41,71 @@ public class OITMeshSortShader extends GL4Shader {
         super.display(gl);
         checkGlError(gl, "d1 super.display() error");
 
-        int uniformLoc1 = gl.glGetUniformLocation(getShaderProgram(), "head_pointer_image");
-        checkGlError(gl, "d2 glGetUniformLocation() error");
+//        int uniformLoc1 = gl.glGetUniformLocation(getShaderProgram(), "head_pointer_image");
+//        checkGlError(gl, "d2 glGetUniformLocation() error");
+//
+//        if (uniformLoc1<0) {
+//            logger.error("uniformLoc1 less than 0");
+//        }
+//        gl.glUniform1i(uniformLoc1, tc.getHeadPointerTextureId());
+//        checkGlError(gl, "d3 glUniform1i() error");
+//
+//
+//        int uniformLoc2 = gl.glGetUniformLocation(getShaderProgram(), "list_buffer");
+//        checkGlError(gl, "d4 glGetUniformLocation() error");
+//
+//        if (uniformLoc2<0) {
+//            logger.error("uniformLoc2 less than 0");
+//        }
+//        gl.glUniform1i(uniformLoc2, tc.getFragmentStorageBufferId());
+//        checkGlError(gl, "d5 glUniform1i() error");
 
-        if (uniformLoc1<0) {
-            logger.error("uniformLoc1 less than 0");
-        }
-        gl.glUniform1i(uniformLoc1, headPointerTextureId);
-        checkGlError(gl, "d3 glUniform1i() error");
 
-
-        int uniformLoc2 = gl.glGetUniformLocation(getShaderProgram(), "list_buffer");
-        checkGlError(gl, "d4 glGetUniformLocation() error");
-
-        if (uniformLoc2<0) {
-            logger.error("uniformLoc2 less than 0");
-        }
-        gl.glUniform1i(uniformLoc2, fragmentStorageBufferId);
-        checkGlError(gl, "d5 glUniform1i() error");
-
-
-        gl.glBindTexture(GL4.GL_TEXTURE_2D, headPointerTextureId);
-        checkGlError(gl, "d6 glBindTexture() error");
+//        gl.glBindTexture(GL4.GL_TEXTURE_2D, tc.getHeadPointerTextureId());
+//        checkGlError(gl, "d6 OITMeshSortShader glBindTexture() error");
+//        
+//        gl.glBindBuffer(GL4.GL_TEXTURE_BUFFER, tc.getFragmentStorageBufferId());
+//        checkGlError(gl, "d 6.1 OITMeshSortShader glBindBufferBase() error");
+        
+       // Bind the headPointerTexture for read-write
+       gl.glBindImageTexture(1, tc.getHeadPointerTextureId(), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_R32UI);
+       checkGlError(gl, "d6.2 OITMeshSortShader glBindImageTexture() error");
+       
+       // Bind the fragment list texture for read-write
+//       gl.glBindImageTexture(0, tc.getFragmentStorageTextureId(), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_RGBA32UI);
+//       checkGlError(gl, "d6.3 OITMeshSortShader glBindImageTexture() error");
+                
+        // Bind and reset the atomic counter       
+//        gl.glBindBuffer(GL4.GL_ATOMIC_COUNTER_BUFFER, tc.getAtomicCounterId());
+//        checkGlError(gl, "d6.4 OITMeshSortShader glBindBuffer() error");
 
         gl.glBindVertexArray(vertexArrayId.get(0));
-        checkGlError(gl, "d7 glBindVertexArray() error");
+        checkGlError(gl, "d7 OITMeshSortShader glBindVertexArray() error");
 
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, quadDataBufferId.get(0));
-        checkGlError(gl, "d8 glBindBuffer error");
+        checkGlError(gl, "d8 OITMeshSortShader glBindBuffer error");
 
         gl.glVertexAttribPointer(0, 4, GL4.GL_FLOAT, false, 0, 0);
-        checkGlError(gl, "d9 glVertexAttribPointer 0 () error");
+        checkGlError(gl, "d9 OITMeshSortShader glVertexAttribPointer 0 () error");
 
         gl.glEnableVertexAttribArray(0);
-        checkGlError(gl, "d10 glEnableVertexAttribArray 0 () error");
+        checkGlError(gl, "d10 OITMeshSortShader glEnableVertexAttribArray 0 () error");
 
         gl.glVertexAttribPointer(1, 2, GL4.GL_FLOAT, false, 0, 16 * 4);
-        checkGlError(gl, "d11 glVertexAttribPointer 1 () error");
+        checkGlError(gl, "d11 OITMeshSortShader glVertexAttribPointer 1 () error");
 
         gl.glEnableVertexAttribArray(1);
-        checkGlError(gl, "d12 glEnableVertexAttribArray 1 () error");
+        checkGlError(gl, "d12 OITMeshSortShader glEnableVertexAttribArray 1 () error");
 
         gl.glDrawArrays(GL4.GL_TRIANGLE_FAN, 0, 4);
-        checkGlError(gl, "d13 glDrawArrays() error");
+        checkGlError(gl, "d13 OITMeshSortShader glDrawArrays() error");
 
     }
 
     @Override
-    public void init(GL4 gl) {
+    public void init(GL4 gl) throws ShaderCreationException {
+        super.init(gl);
+        gl.glUseProgram(getShaderProgram());
 
      //   gl.glBindTexture(GL4.GL_TEXTURE_2D, textureId.get(0));
      //   checkGlError(gl, "i glBindTexture() error");

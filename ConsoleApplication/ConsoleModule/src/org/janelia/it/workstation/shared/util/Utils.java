@@ -37,7 +37,6 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
-import org.openide.util.Mutex;
 import org.openide.windows.WindowManager;
 
 /**
@@ -590,7 +589,7 @@ public class Utils {
      * remote file system is mounted, or after caching the file locally.
      */
     public static void processStandardFilepath(final String filePath, final FileCallable callback) {
-
+        
         final File file = new File(PathTranslator.convertPath(filePath));
         if (file.canRead()) {
             try {
@@ -635,8 +634,6 @@ public class Utils {
         WorkstationFile wfile = new WorkstationFile(standardPath);
 
         try {
-            wfile.get();
-
             input = wfile.getStream();
             long length = wfile.getLength();
 

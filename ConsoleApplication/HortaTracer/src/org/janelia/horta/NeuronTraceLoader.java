@@ -116,10 +116,14 @@ public class NeuronTraceLoader {
         return didMove;
     }
 
+    public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource ) throws IOException {
+        return loadTileAtCurrentFocus( volumeSource, 0);
+    }
+    
     /**
      * Helper method toward automatic tile loading
      */
-    public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource ) throws IOException {
+    public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource, int colorChannel ) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
 
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
@@ -152,14 +156,16 @@ public class NeuronTraceLoader {
             if (!(actor instanceof BrickActor))
                 continue;
             BrickActor ba = (BrickActor)actor;
-            if (ba.getBrainTile().isSameBrick(brainTileInfo)) {
+            if ( ba.getBrainTile().isSameBrick(brainTileInfo) 
+                    && (colorChannel == brainTileInfo.getColorChannelIndex()) ) // reload if color changed
+            {
                 tileAlreadyLoaded = true;
                 break;
             }
         }
         
         if (! tileAlreadyLoaded) {
-            GL3Actor boxMesh = nttc.createBrickActor((BrainTileInfo) brickInfo);
+            GL3Actor boxMesh = nttc.createBrickActor((BrainTileInfo) brickInfo, colorChannel);
 
             StatusDisplayer.getDefault().setStatusText(
                     "One TIFF file loaded and processed in "

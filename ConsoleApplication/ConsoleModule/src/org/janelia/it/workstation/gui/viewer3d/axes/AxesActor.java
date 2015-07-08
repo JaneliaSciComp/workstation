@@ -162,9 +162,9 @@ public class AxesActor implements GLActor
                 );
         
                 // Uploading buffers sufficient to draw the axes, ticks, etc.
-                buildBuffers(gl);
-
-                bBuffersNeedUpload = false;
+                if (buildBuffers(gl)) {
+                    bBuffersNeedUpload = false;
+                }
             } catch ( Exception ex ) {
                 SessionMgr.getSessionMgr().handleException( ex );
             }
@@ -181,16 +181,21 @@ public class AxesActor implements GLActor
             return;
         
         GL2 gl = glDrawable.getGL().getGL2();
-        reportError( gl, "Display of axes-actor upon entry" );
+        if (reportError( gl, "Display of axes-actor upon entry" ))
+            return;
         gl.glDisable(GL2.GL_CULL_FACE);
         gl.glFrontFace(GL2.GL_CW);
-        reportError( gl, "Display of axes-actor cull-face" );
+        if (reportError( gl, "Display of axes-actor cull-face" ))
+            return;
 
-        reportError( gl, "Display of axes-actor lighting 1" );
+        if (reportError( gl, "Display of axes-actor lighting 1" ))
+            return;
 		gl.glShadeModel(GL2.GL_FLAT);
-        reportError( gl, "Display of axes-actor lighting 2" );
+        if (reportError( gl, "Display of axes-actor lighting 2" ))
+            return;
         gl.glDisable(GL2.GL_LIGHTING);
-        reportError( gl, "Display of axes-actor lighting 3" );
+        if (reportError( gl, "Display of axes-actor lighting 3" ))
+            return;
         setRenderMode(gl, true);
 
         gl.glEnable( GL2.GL_LINE_SMOOTH );                     // May not be in v2
@@ -198,7 +203,8 @@ public class AxesActor implements GLActor
 
         // Draw the little lines.
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, lineBufferHandle );
-        reportError( gl, "Display of axes-actor 1" );
+        if (reportError( gl, "Display of axes-actor 1" ))
+            return;
 
         float alpha = 1.0f;
         float[] color = new float[ 3 ];
@@ -214,30 +220,37 @@ public class AxesActor implements GLActor
 
         gl.glLineWidth(1.0f);
         gl.glColor4f( color[ 0 ], color[ 1 ], color[ 2 ], alpha );
-        reportError( gl, "Display of axes-actor 2" );
+        if (reportError( gl, "Display of axes-actor 2" ))
+            return;
 
         gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );  // Prob: not in v2.
-        reportError( gl, "Display of axes-actor 3" );
+        if (reportError( gl, "Display of axes-actor 3" ))
+            return;
 
         // 3 floats per coord. Stride is 0, offset to first is 0.
         gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
-        reportError( gl, "Display of axes-actor 4" );
+        if (reportError( gl, "Display of axes-actor 4" ))
+            return;
 
         gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle );
-        reportError(gl, "Display of axes-actor 4a.");
+        if (reportError(gl, "Display of axes-actor 4a."))
+            return;
 
         gl.glDrawElements( GL2.GL_LINES, lineBufferVertexCount, GL2.GL_UNSIGNED_INT, 0 );
-        reportError( gl, "Display of axes-actor 5" );
+        if (reportError( gl, "Display of axes-actor 5" ))
+            return;
 
         gl.glDisableClientState( GL2.GL_VERTEX_ARRAY );   // Prob: not in v2
         gl.glDisable( GL2.GL_LINE_SMOOTH );               // May not be in v2
-        reportError( gl, "Display of axes-actor 6" );
+        if (reportError( gl, "Display of axes-actor 6" ))
+            return;
         
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
         gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, 0 );
 
         setRenderMode(gl, false);
-        reportError(gl, "Axes-actor, end of display.");                
+        if (reportError(gl, "Axes-actor, end of display."))
+            return;                
 
         gl.glUseProgram(previousShader);
 
@@ -316,7 +329,8 @@ public class AxesActor implements GLActor
         }
     }
 
-    private void buildBuffers(GL2 gl) {
+    private boolean buildBuffers(GL2 gl) {
+        boolean rtnVal = true; // True -> successful.
         BoundingBox3d boundingBox = getBoundingBox3d();
         int nextVertexOffset = 0;
         Geometry axisGeometry = getAxisGeometry(boundingBox, nextVertexOffset);
@@ -410,17 +424,23 @@ public class AxesActor implements GLActor
 
         // Bind data to the handle, and upload it to the GPU.
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, lineBufferHandle);
-        reportError( gl, "Bind buffer" );
+        if (reportError( gl, "Bind buffer" )) {
+            return false;
+        }
         gl.glBufferData(
                 GL2.GL_ARRAY_BUFFER,
                 (long) (lineBuffer.capacity() * (Float.SIZE / 8)),
                 lineBuffer,
                 GL2.GL_STATIC_DRAW
         );
-        reportError( gl, "Buffer Data" );
+        if (reportError( gl, "Buffer Data" )) {
+            return false;
+        }
 
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle );
-        reportError(gl, "Bind Inx Buf");
+        if (reportError(gl, "Bind Inx Buf")) {
+            return false;
+        }
 
         gl.glBufferData(
                 GL2.GL_ELEMENT_ARRAY_BUFFER,
@@ -428,6 +448,11 @@ public class AxesActor implements GLActor
                 inxBuf,
                 GL2.GL_STATIC_DRAW
         );
+        if (reportError(gl, "Push buffers")) {
+            return false;
+        }
+        
+        return rtnVal;
     }
     
     private int createBufferHandle( GL2 gl ) {
@@ -435,8 +460,8 @@ public class AxesActor implements GLActor
         return handleArr[ 0 ];
     }
     
-    private void buildLabelBuffers( GL2 gl ) {
-
+    private boolean buildLabelBuffers( GL2 gl ) {
+        boolean rtnVal = true; // True -> success.
         FloatBuffer labelBuf = null;
         int totalBufferSizeBytes = 0;
         for ( AxisLabel label: labels ) {
@@ -463,15 +488,19 @@ public class AxesActor implements GLActor
         interleavedTexHandle = createBufferHandle(gl);
         // Bind data to the handle, and upload it to the GPU.
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, interleavedTexHandle);
-        reportError( gl, "Interleaved buffer" );
+        if (reportError( gl, "Interleaved buffer" )) {
+            return false;
+        }
         gl.glBufferData(
                 GL2.GL_ARRAY_BUFFER,
                 (long) (labelBuf.capacity() * (Float.SIZE / 8)),
                 labelBuf,
                 GL2.GL_STATIC_DRAW
         );
-        reportError( gl, "Interleaved Data" );
-
+        if (reportError( gl, "Interleaved Data" )) {
+            return false;
+        }
+        return rtnVal;
     }
     
     /** Establish a label for the tick. */

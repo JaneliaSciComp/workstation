@@ -43,6 +43,9 @@ import org.slf4j.LoggerFactory;
  */
 public class SWCData {
 
+    private static final Logger logger = LoggerFactory.getLogger(SWCData.class);
+    private static final String COLOR_HEADER_PREFIX = "COLOR";
+    private static final String NAME_HEADER_PREFIX = "NAME";
     private File swcFile;
 
     private List<SWCNode> nodeList = new ArrayList<>();
@@ -100,29 +103,40 @@ public class SWCData {
      * Validate file contents and write back to target.
      * 
      * @param swcFile target file.
+     * @param offset serial number of output file, if one of many.
      * @throws Exception thrown by called methods.
      */
-    public void write(File swcFile) throws Exception {
+    public void write(File swcFile, int offset) throws Exception {
         if (isValid()) {
+            if (offset != -1) {
+                String newName = swcFile.getName();
+                int periodPos = newName.indexOf('.');
+                if (periodPos > -1) {
+                    newName = newName.substring(0, periodPos) +
+                              '_' + offset + newName.substring(periodPos);
+                }
+                swcFile = new File(swcFile.getParent(), newName);
+            }
             FileWriter writer = new FileWriter(swcFile);
             writeSwcFile(writer);
             this.swcFile = swcFile;
         }
         else {
-            final String message = String.format(
-                    "can't write SWC data; invalid for reason: %s",
-                    getInvalidReason()
-            );
-            Logger logger = LoggerFactory.getLogger(SWCData.class);
-            logger.error(message);
-            if ( logger.isDebugEnabled() ) {
-                writeSwcFile(new OutputStreamWriter(System.err));
-            }
-            throw new IllegalStateException(message);
+            writeErrorSWC();
         }
 
     }
 
+    /**
+     * Validate contents and write back to target.
+     * 
+     * @param swcFile one and only file.
+     * @throws Exception thrown by called methods.
+     */
+    public void write(File swcFile) throws Exception {
+        write(swcFile, -1);
+    }
+    
     /**
      * check the swcFile; if false, call getInvalidReason()
      */
@@ -253,9 +267,59 @@ public class SWCData {
                 offset[2] = Double.parseDouble(items[4]);
             } else {
                 // ignore the line if we can't parse it
+                logger.warn("Failed to parse offset header {}.", offsetHeader);
             }
         }
         return offset;
+    }
+    
+    /**
+     * Newer SWCs may be serialized with the color as a triple.  These triples
+     * are float values along 0.0..1.0. This method obtains the triple from
+     * the header, but leaves color object interpretation for the caller.
+     * 
+     * Expected format:
+     * # COLOR N.mmm N.mm N.mmmmm
+     *   or
+     * # COLOR N.mmm,N.mm,N.mmmmm
+     * 
+     * @return array of normalized rgb values, or null if header not found.
+     */
+    public float[] parseColorFloats() {
+        float[] rgb = null;
+        String rgbHeader = findHeaderLine(COLOR_HEADER_PREFIX);
+        if (rgbHeader != null) {
+            rgb = new float[3];
+            // NOTE: if fewer colors are in header than 3, remainder
+            // are just filled with 0f.
+            int colorHdrOffs = rgbHeader.indexOf(COLOR_HEADER_PREFIX);
+            colorHdrOffs += COLOR_HEADER_PREFIX.length();
+            rgbHeader = rgbHeader.substring(colorHdrOffs).trim();
+            String[] colors = rgbHeader.split("[, ]");
+            for (int i = 0; i < colors.length  &&  i < rgb.length; i++) {
+                try {
+                    rgb[i] = Float.parseFloat(colors[i]);
+                } catch (NumberFormatException nfe) {
+                    // Ignore what we cannot parse.
+                    logger.warn("Failed to parse color value {} of header {}.", i, rgbHeader);
+                }
+            }
+        }
+        return rgb;
+    }
+    
+    /**
+     * Newer SWCs may be serialized with the name from the original neuron.
+     * @return name as written back.
+     */
+    public String parseName() {
+        String name = null;
+        String nameHeader = findHeaderLine(NAME_HEADER_PREFIX);
+        if (nameHeader != null) {
+            int hdrPos = nameHeader.indexOf(NAME_HEADER_PREFIX);
+            name = nameHeader.substring(hdrPos + NAME_HEADER_PREFIX.length()).trim();
+        }
+        return name;
     }
     
     /**
@@ -278,6 +342,18 @@ public class SWCData {
             }
         }
 
+    }
+
+    private void writeErrorSWC() throws IllegalStateException, IOException {
+        final String message = String.format(
+                "can't write SWC data; invalid for reason: %s",
+                getInvalidReason()
+        );
+        logger.error(message);
+        if (logger.isDebugEnabled()) {
+            writeSwcFile(new OutputStreamWriter(System.err));
+        }
+        throw new IllegalStateException(message);
     }
 
 }

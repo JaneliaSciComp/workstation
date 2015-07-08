@@ -17,6 +17,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
@@ -33,6 +34,7 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
     private JPanel scanPanel = new JPanel();
 	private JSlider slider = new JSlider();
 	private JSpinner spinner = new JSpinner();
+    private SpinnerCalculationValue spinnerValue = new SpinnerCalculationValue(spinner);
 	private SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel();
 	private CoordinateAxis axis;	
 	private ObservableCamera3d camera;
@@ -99,11 +101,14 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 		scanPanel.add(spinner);
 		add(scanPanel);
 		spinner.addChangeListener(new ChangeListener() {
+            @Override
 			public void stateChanged(ChangeEvent event) {
-				setSlice((Integer)spinner.getValue());
+				setSlice(spinnerValue.getValue());
+                //Integer)spinner.getValue());
 			}
 		});
 		slider.addChangeListener(new ChangeListener() {
+            @Override
 			public void stateChanged(ChangeEvent event) {
 				setSlice(slider.getValue());
 			}
@@ -230,10 +235,15 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
             }
             slider.setMajorTickSpacing(tickSpacing);
         }
+        spinnerValue.setOffsetFromZero(
+                volume.getLoadAdapter()
+                      .getTileFormat()
+                      .getOrigin()[ axis.index() ]
+        );
         slider.setMinimum(s0);
         slider.setMaximum(s1);
-        spinnerNumberModel.setMinimum(s0);
-        spinnerNumberModel.setMaximum(s1);
+        spinnerNumberModel.setMinimum(spinnerValue.getInternalValue(s0));
+        spinnerNumberModel.setMaximum(spinnerValue.getInternalValue(s1));
         // Update slice value
         int s = (int) Math.round(camera.getFocus().get(ix) / res - 0.5);
         if (s < s0) {
@@ -243,7 +253,7 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
             s = s1;
         }
         slider.setValue(s);
-        spinner.setValue(s);
+        spinner.setValue(spinnerValue.getInternalValue(s));
     }
 
 }

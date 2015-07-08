@@ -17,6 +17,9 @@ import javax.media.opengl.glu.GLU;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.janelia.it.workstation.gui.geometric_search.gl.GL4Shader;
+import org.janelia.it.workstation.gui.geometric_search.gl.OITMeshDrawShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.OITMeshSortShader;
 
 /**
  * Created by murphys on 4/10/15.
@@ -26,6 +29,7 @@ public class GL4Renderer implements GLEventListener
     public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2000;
 
     protected GLU glu = new GLU();
+    protected GL4TransparencyContext tc = new GL4TransparencyContext();
     protected List<GL4ShaderActionSequence> shaderActionList = new ArrayList<GL4ShaderActionSequence>();
     protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
     protected Camera3d camera;
@@ -35,14 +39,13 @@ public class GL4Renderer implements GLEventListener
     private static final double MAX_CAMERA_FOCUS_DISTANCE = 1000000.0;
     private static final double MIN_CAMERA_FOCUS_DISTANCE = 0.001;
     private static final Vec3 UP_IN_CAMERA = new Vec3(0,1,0);
-    private static double FOV_Y_DEGREES = 45.0f;
+    private static double FOV_Y_DEGREES = 45.0f; 
     private float FOV_TERM = new Float(Math.tan( (Math.PI/180.0) * (FOV_Y_DEGREES/2.0) ) );
 
 
     // camera parameters
-    private double defaultHeightInPixels = 400.0;
-    private double widthInPixels = defaultHeightInPixels;
-    private double heightInPixels = defaultHeightInPixels;
+    private double widthInPixels = 1200;
+    private double heightInPixels = 800;
     private GL4Model model;
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;
@@ -69,15 +72,20 @@ public class GL4Renderer implements GLEventListener
     public void addShaderAction(GL4ShaderActionSequence shaderAction) {
         shaderActionList.add(shaderAction);
     }
+    
+    public void setPixelDimensions(double widthInPixels, double heightInPixels) {
+        this.widthInPixels=widthInPixels;
+        this.heightInPixels=heightInPixels;
+    }
 
     protected void displayBackground(GL4 gl)
     {
         // paint solid background color
         gl.glClearColor(
-                backgroundColor.getRed()/255.0f,
-                backgroundColor.getGreen()/255.0f,
-                backgroundColor.getBlue()/255.0f,
-                backgroundColor.getAlpha()/255.0f);
+                backgroundColor.getRed(),
+                backgroundColor.getGreen(),
+                backgroundColor.getBlue(),
+                backgroundColor.getAlpha());
         gl.glClear(GL4.GL_COLOR_BUFFER_BIT);
     }
 
@@ -111,9 +119,23 @@ public class GL4Renderer implements GLEventListener
     public void init(GLAutoDrawable glDrawable)
     {
         final GL4 gl = glDrawable.getGL().getGL4();
+        
+        try {
+            tc.init(gl);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
         for (GL4ShaderActionSequence shaderAction : shaderActionList) {
             try {
+                GL4Shader shader = shaderAction.getShader();
+                if (shader instanceof OITMeshDrawShader) {
+                    OITMeshDrawShader s = (OITMeshDrawShader)shader;
+                    s.setTransparencyContext(tc);
+                } else if (shader instanceof OITMeshSortShader) {
+                    OITMeshSortShader s = (OITMeshSortShader)shader;
+                    s.setTransparencyContext(tc);
+                }
                 shaderAction.init(gl);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -191,8 +213,15 @@ public class GL4Renderer implements GLEventListener
         updateProjection(gl);
 
         // Copy member list of actors local for independent iteration.
-        for (GL4ShaderActionSequence shaderAction : shaderActionList)
+        //logger.info("Display shader sequence starting");
+        for (GL4ShaderActionSequence shaderAction : shaderActionList) {
+//            GL4Shader s = shaderAction.getShader();
+//            String fsName = s.getFragmentShaderResourceName();
+            //logger.info("Loading "+fsName);
             shaderAction.display(gl);
+
+           // logger.info("Done with "+fsName);
+        }
 
     }
 
@@ -247,10 +276,14 @@ public class GL4Renderer implements GLEventListener
 
     public void updateProjection(GL4 gl) {
         //gl.glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
+        
+        //logger.info("updateProjection() using widthInPixels="+widthInPixels+" heightInPixels="+heightInPixels);
+        
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = model.getCameraFocusDistance();
         float scaledFocusDistance = new Float(Math.abs(cameraFocusDistance));
-        projectionMatrix = computeProjection(h, 0.5f*scaledFocusDistance, 2.0f*scaledFocusDistance);
+        //projectionMatrix = computeProjection(h, 0.5f*scaledFocusDistance, 2.0f*scaledFocusDistance);
+        projectionMatrix = computeProjection(h, 0.01f*scaledFocusDistance, 2.0f*scaledFocusDistance);
     }
 
     Matrix4 computeProjection(float aspectRatio, float near, float far) {

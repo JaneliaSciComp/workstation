@@ -48,11 +48,12 @@ public class BrickActor extends MeshActor
     
     public BrickActor(BrainTileInfo brainTile, 
             BrightnessModel brightnessModel, 
-            VolumeState volumeState) throws IOException 
+            VolumeState volumeState, 
+            int colorChannel) throws IOException 
     {
         super(
                 new BrainTileMesh(brainTile), 
-                new BrickMaterial(brainTile, brightnessModel, volumeState),
+                new BrickMaterial(brainTile, brightnessModel, volumeState, colorChannel),
                 null);
         this.brainTile = brainTile;
     }
@@ -67,9 +68,10 @@ public class BrickActor extends MeshActor
         private BrickMaterial(
                 BrainTileInfo brainTile, 
                 BrightnessModel brightnessModel,
-                VolumeState volumeState) throws IOException
+                VolumeState volumeState,
+                int colorChannel) throws IOException
         {
-            super(brainTile.loadBrick(10), brightnessModel);
+            super(brainTile.loadBrick(10, colorChannel), brightnessModel);
             setVolumeState(volumeState);
         }
         

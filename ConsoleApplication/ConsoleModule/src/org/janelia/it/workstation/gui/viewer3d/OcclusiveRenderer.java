@@ -90,10 +90,8 @@ public class OcclusiveRenderer
 
     @Override
     public void resetView() {
-        if (resetPositioner == null) {
-            super.resetView();
-        }
-        else {
+        super.resetView();
+        if (resetPositioner != null) {
             resetPositioner.resetView();
         }
     }
