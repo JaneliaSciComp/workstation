@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class WebDavClient {
 
-    public static final String JACS_WEBDAV_BASE_URL = "http://10.37.5.37:8080/Webdav";
+    public static final String JACS_WEBDAV_BASE_URL = "http://jacs-staging.int.janelia.org:8880/Webdav";
     private int port;
     private String protocol;
     private String host;
