@@ -160,12 +160,12 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 //            }
 //        }
         
-        final SparseVolumePointActor pa = new SparseVolumePointActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0);
+        final SparseVolumePointActor pa = new SparseVolumePointActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);
         //final SparseVolumePointActor pa = new SparseVolumePointActor(new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 1);
 
         
         //pa.setVertexRotation(vertexRotation);
-        pa.setColor(new Vector4(0.2f, 1.0f, 0.2f, 0.5f));
+        pa.setColor(new Vector4(0.0f, 1.0f, 0.0f, 1.0f));
         pa.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {

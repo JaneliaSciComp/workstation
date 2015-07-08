@@ -26,8 +26,8 @@ layout (binding = 0, std430) buffer linkedLists {
     NodeType nodes[];
 };
 
-// 2048 x 2048 x 2
-#define MAX_NODES 8388608 
+// 2048 x 2048 x 20
+#define MAX_NODES 83886080 
 
 out vec4 blankOut;
 
@@ -43,11 +43,14 @@ void main()
     vec4 color = Cs;
 
     if (pointFlag < 0.5) {
+        // Triangle
         float opac = dot(normalize(-N), normalize(-I));
         opac = abs(opac);
         opac = ambient + intensity*(1.0-pow(opac, edgefalloff));
-        vec4 color =  opac * Cs;
+        color =  opac * Cs;
         color.a = opac;
+    } else {
+        // Point - stay with Cs assignment
     }
 
     ivec2 fl = ivec2(gl_FragCoord.xy);
@@ -56,7 +59,7 @@ void main()
         int iNewIndex = int(new_index);
         uint old_head = imageAtomicExchange(head_pointer_image, fl, new_index);
         nodes[new_index].color = color;
-        nodes[new_index].depth = gl_FragCoord.z;
+        nodes[new_index].depth = 1.0 - gl_FragCoord.z;
         nodes[new_index].next = old_head;
     }
 
