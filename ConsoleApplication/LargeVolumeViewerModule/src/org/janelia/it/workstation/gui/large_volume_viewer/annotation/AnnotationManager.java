@@ -548,6 +548,17 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         ArrayList<TmNeuron> neuronList = new ArrayList<>(annotationModel.getCurrentWorkspace().getNeuronList());
         neuronList.remove(sourceNeuron);
+        // not sure alphabetical is the best sort; neuron list is selectable (defaults to creation
+        //  date), but I don't want to figure out how to grab that sort order and use it here;
+        //  however, alphabetical seems reasonable enough (better than arbitrary order)
+        Collections.sort(neuronList, new Comparator<TmNeuron>() {
+            @Override
+            public int compare(TmNeuron tmNeuron, TmNeuron tmNeuron2) {
+                return tmNeuron.getName().compareToIgnoreCase(tmNeuron2.getName());
+            }
+        });
+
+        // add "create new" at top of sorted list
         TmNeuron dummyCreateNewNeuron = new TmNeuron(-1L, "(create new neuron)");
         neuronList.add(0, dummyCreateNewNeuron);
 
