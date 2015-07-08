@@ -32,9 +32,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -543,26 +541,18 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        // if there's only one neuron, nothing to do
-        if (annotationModel.getCurrentWorkspace().getNeuronList().size() == 1) {
-            // NOTE: in the future, should probably offer the user a chance
-            //  to create a new neuron here and move the neurite to it
-            JOptionPane.showMessageDialog(
-                    ComponentUtil.getLVVMainWindow(),
-                    "Only one neuron--no place to move to!",
-                    "Only one neuron!",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // dialog box with list of neurons, not including current neuron
+        // dialog box with list of neurons, not including current neuron; but
+        //  throw in a dummy "create new neuron" option at the top
         final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
-        TmNeuron currentNeuron = annotationModel.getNeuronFromAnnotationID(annotation.getId());
+        TmNeuron sourceNeuron = annotationModel.getNeuronFromAnnotationID(annotation.getId());
+
         ArrayList<TmNeuron> neuronList = new ArrayList<>(annotationModel.getCurrentWorkspace().getNeuronList());
-        neuronList.remove(currentNeuron);
+        neuronList.remove(sourceNeuron);
+        TmNeuron dummyCreateNewNeuron = new TmNeuron(-1L, "(create new neuron)");
+        neuronList.add(0, dummyCreateNewNeuron);
 
         Object [] choices = neuronList.toArray();
-        final Object choice = JOptionPane.showInputDialog(
+        Object choice = JOptionPane.showInputDialog(
                 ComponentUtil.getLVVMainWindow(),
                 "Choose destination neuron:",
                 "Choose neuron",
@@ -575,27 +565,81 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        // call annmodel.moveNeurite in thread
-        SimpleWorker mover = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.moveNeurite(annotation, (TmNeuron) choice);
+        if (((TmNeuron) choice).getId().equals(dummyCreateNewNeuron.getId())) {
+            // create new neuron and move neurite to it
+            final String neuronName = promptForNeuronName(null);
+            if (neuronName == null) {
+                JOptionPane.showMessageDialog(
+                    ComponentUtil.getLVVMainWindow(),
+                    "Neuron rename canceled; move neurite canceled",
+                    "Move neurite canceled",
+                    JOptionPane.ERROR_MESSAGE);
+                return;
             }
 
-            @Override
-            protected void hadSuccess() {
-                // nothing to see here
-            }
+            SimpleWorker mover = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    // need to create neuron, then compare new neuron list to old one,
+                    //  so we can figure out what the new one is, since create neuron
+                    //  can't tell us
+                    Set<Long> oldNeuronIDs = new HashSet<>();
+                    for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+                        oldNeuronIDs.add(neuron.getId());
+                    }
 
-            @Override
-            protected void hadError(Throwable error) {
-                presentError(
-                        "Could not move neurite!",
-                        "Error",
-                        error);
-            }
-        };
-        mover.execute();
+                    annotationModel.createNeuron(neuronName);
+
+                    TmNeuron newNeuron = null;
+                    for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+                        if (!oldNeuronIDs.contains(neuron.getId())) {
+                            newNeuron = neuron;
+                            break;
+                        }
+                    }
+
+                    annotationModel.moveNeurite(annotation, newNeuron);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // nothing to see here
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    presentError(
+                            "Error while moving neurite!",
+                            "Error",
+                            error);
+                }
+            };
+            mover.execute();
+
+        } else {
+            // we're moving to an existing neuron; straightforward!
+            final TmNeuron destinationNeuron = (TmNeuron) choice;
+            SimpleWorker mover = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.moveNeurite(annotation, destinationNeuron);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // nothing to see here
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    presentError(
+                            "Error while moving neurite!",
+                            "Error",
+                            error);
+                }
+            };
+            mover.execute();
+        }
 
     }
 
