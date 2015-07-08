@@ -2031,6 +2031,6 @@ public class EntityContextMenu extends JPopupMenu {
      * @return 
      */
     private boolean isLocallyAccessibleFilepath(String filepath) {
-        return !StringUtils.isEmpty(filepath) && !filepath.startsWith(EntityConstants.SCALITY_PATH_PREFIX);
+        return !StringUtils.isEmpty(filepath);
     }
 }
