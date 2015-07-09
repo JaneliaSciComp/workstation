@@ -3,6 +3,10 @@
         "ldap": {
             "url": "ldap-vip1.int.janelia.org",
             "groupattribute": "memberUid"
+        },
+        "scality": {
+            "url": "http://sc101-jrc:81/proxy",
+            "driver":  "bparc2"
         }
     },
     "authorizers": {
