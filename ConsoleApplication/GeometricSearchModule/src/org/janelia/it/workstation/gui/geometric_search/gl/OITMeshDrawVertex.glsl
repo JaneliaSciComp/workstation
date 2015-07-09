@@ -24,15 +24,15 @@ void main()
      mat4 mview = view * model;
      vec4 P = mview * centeredIv;
      I  = P.xyz - vec3 (0);
-     mat3 normalMatrix = mat3(transpose(inverse(mview)));
      if (norm.x<1000000.0) { // Triangle
+        mat3 normalMatrix = mat3(transpose(inverse(mview)));
         pointFlag=0.0;
         N  = normalMatrix * norm;
      } else { // Point
         pointFlag=1.0;
-        N = normalMatrix * vec3(0.0, 0.0, 0.0);
+        N = vec3(0.0, 0.0, 0.0);
         Cs = Cs * norm.z;
-        Cs.a = norm.z;
+        Cs.a = 1.0;
      }
      gl_Position = proj * P;
 }

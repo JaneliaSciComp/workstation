@@ -15,17 +15,17 @@ import org.apache.directory.api.ldap.model.name.Dn;
  */
 @WebListener
 public class WebdavContextManager implements ServletContextListener  {
-    private static Map<String, Provider> providers = new HashMap<String, Provider>();
-    private static Map<String, Authorizer> authorizers = new HashMap<String, Authorizer>();
-    private static Map<String, FileShare> resourcesByMapping = new HashMap<String, FileShare>();
-    private static Map<String, FileShare> resourcesByLogical = new HashMap<String, FileShare>();
+    private static Map<String, Provider> providers = new HashMap<>();
+    private static Map<String, Authorizer> authorizers = new HashMap<>();
+    private static Map<String, FileShare> resourcesByMapping = new HashMap<>();
+    private static Map<String, FileShare> resourcesByLogical = new HashMap<>();
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             ObjectMapper mapper = new ObjectMapper();
-            Map<String, Object> config = mapper.readValue(new File(classLoader.getResource("resources.json").getFile()), Map.class);
+            Map<String, Object> config = (Map<String,Object>)mapper.readValue(new File(classLoader.getResource("resources.json").getFile()), Map.class);
 
             // load providers
             Map<String, Object> providersConfig = (Map<String,Object>)config.get("providers");
@@ -38,6 +38,14 @@ public class WebdavContextManager implements ServletContextListener  {
                     ldap.init();
                     providers.put("ldap",ldap);
                 }
+                if (providersConfig.containsKey("scality")) {
+                    ScalityProvider scality = new ScalityProvider();
+                    Map<String, Object> scalityConfig = (Map<String,Object>)providersConfig.get("scality");
+                    scality.setUrl((String)scalityConfig.get("url"));
+                    scality.setDriver((String) scalityConfig.get("driver"));
+                    scality.init();
+                    providers.put("scality",scality);
+                }
             }
 
             // load authorizers
@@ -46,9 +54,9 @@ public class WebdavContextManager implements ServletContextListener  {
                 Iterator<String> authIter = authorizeConfig.keySet().iterator();
                 while (authIter.hasNext()) {
                     String authKey = authIter.next();
-                    Map<String,String> newAuth = (Map<String,String>)authorizeConfig.get(authKey);
+                    Map<String,Object> newAuth = (Map<String,Object>)authorizeConfig.get(authKey);
                     if (newAuth.get("type").equals("ldapgroup")) {
-                        String group = newAuth.get("group");
+                        String group = (String)newAuth.get("group");
                         try {
                             LDAPGroupAuthorizer ldapAuth = new LDAPGroupAuthorizer();
                             ldapAuth.setGroupDN(new Dn(group));
@@ -56,6 +64,11 @@ public class WebdavContextManager implements ServletContextListener  {
                         } catch (LdapInvalidDnException e) {
                             throw new RuntimeException("DN used for group attribute " + group + " is not a valid DN");
                         }
+                    } else if (newAuth.get("type").equals("user")) {
+                        Map<String, String> users = (Map<String, String>)newAuth.get("users");
+                        UsersAuthorizer userAuth = new UsersAuthorizer();
+                        userAuth.setUserPasswords(users);
+                        authorizers.put(authKey, userAuth);
                     }
                 }
             }

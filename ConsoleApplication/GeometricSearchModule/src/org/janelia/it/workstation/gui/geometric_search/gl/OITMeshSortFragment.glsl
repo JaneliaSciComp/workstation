@@ -20,7 +20,7 @@ layout(binding=0, std430) buffer linkedLists {
 
 layout (location=0) out vec4 output_color;
 
-#define MAX_FRAGMENTS 75
+#define MAX_FRAGMENTS 150
 
 struct NodeType frags[MAX_FRAGMENTS];
 
