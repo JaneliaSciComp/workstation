@@ -20,6 +20,7 @@ import javax.media.opengl.GLProfile;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import org.janelia.it.workstation.gui.viewer3d.DirectionalAxis;
 import org.janelia.it.workstation.gui.viewer3d.shader.TexturedShader;
 
 /**
@@ -162,28 +163,15 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 		// Get the view vector, so we can choose the slice direction,
 		// along one of the three principal axes(X,Y,Z), and either forward
 		// or backward.
-		// "InGround" means in the WORLD object reference frame.
-		// (the view vector in the EYE reference frame is always [0,0,-1])
-		Vec3 viewVectorInGround = volumeModel.getCamera3d().getRotation().times(new Vec3(0,0,1));
+        DirectionalAxis directionalAxis = DirectionalAxis.findAxis( volumeModel.getCamera3d().getRotation() );
 
-		// Compute the principal axis of the view direction; that's the direction we will slice along.
-		CoordinateAxis a1 = CoordinateAxis.X; // First guess principal axis is X.  Who knows?
-		Vec3 vv = viewVectorInGround;
-		if ( Math.abs(vv.y()) > Math.abs(vv.get(a1.index())) )
-			a1 = CoordinateAxis.Y; // OK, maybe Y axis is principal
-		if ( Math.abs(vv.z()) > Math.abs(vv.get(a1.index())) )
-			a1 = CoordinateAxis.Z; // Alright, it's definitely Z principal.
-        
         if (! setupTextures(gl)) {
             return;
         }
 
 		// If principal axis points away from viewer, draw slices front to back,
 		// instead of back to front.
-		double direction = 1.0; // points away from viewer, render back to front, n to 0
-		if (vv.get(a1.index()) < 0.0) 
-			direction = -1.0; // points toward, front to back, 0 to n
-        getBufferManager().draw( gl, a1, direction );
+        getBufferManager().draw( gl, directionalAxis.getCoordinateAxis(), directionalAxis.getDirection() );
         if (reportError(gl, "Volume Brick, after draw.")) {
             return;
         }
