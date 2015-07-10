@@ -104,7 +104,6 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
             @Override
 			public void stateChanged(ChangeEvent event) {
 				setSlice(spinnerValue.getValue());
-                //Integer)spinner.getValue());
 			}
 		});
 		slider.addChangeListener(new ChangeListener() {

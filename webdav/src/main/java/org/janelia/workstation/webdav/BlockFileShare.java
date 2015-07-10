@@ -24,8 +24,6 @@ import java.util.List;
  * Created by schauderd on 6/26/15.
  */
 public class BlockFileShare extends FileShare {
-    String baseURL;
-
     @Override
     public StreamingOutput getFile(String qualifiedFilename) throws FileNotFoundException {
         final String filename = qualifiedFilename;

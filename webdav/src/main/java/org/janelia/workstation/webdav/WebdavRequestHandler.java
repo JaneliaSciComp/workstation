@@ -1,5 +1,7 @@
 package org.janelia.workstation.webdav;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.DELETE;
@@ -31,6 +33,9 @@ public class WebdavRequestHandler extends ResourceConfig {
 
     @Context
     UriInfo uriInfo;
+
+    @Context
+    HttpServletRequest request;
 
     public WebdavRequestHandler() {
         resourceBuilder = Resource.builder();
@@ -91,9 +96,6 @@ public class WebdavRequestHandler extends ResourceConfig {
                 });
         final Resource resource = resourceBuilder.build();
         registerResources(resource);
-
-        // register a default logger
-        register(LoggingFilter.class);
     }
 
     @GET
@@ -144,11 +146,14 @@ public class WebdavRequestHandler extends ResourceConfig {
         Token credentials = getCredentials();
         FileShare mapping = mapResource(filepath);
 
-        // parse out request path
         // make sure user has access to this file share
-        if (mapping.getAuthorizer() != null && !mapping.getAuthorizer().checkAccess(credentials)) {
+        if (!mapping.hasAccess(credentials)) {
             throw new PermissionsFailureException("Not allowed to access this file share");
         }
+
+        // since the check passed, store the authorized FileShare in the session
+        HttpSession session = request.getSession();
+        session.setAttribute(mapping.getMapping(), mapping);
         return mapping;
     }
 
@@ -167,6 +172,17 @@ public class WebdavRequestHandler extends ResourceConfig {
     }
 
     private FileShare mapResource(String filepath) throws FileNotFoundException {
+        // if user already requested this resource, skip the mapping and permissions checks
+        HttpSession session = request.getSession();
+        Enumeration<String> mapNames = session.getAttributeNames();
+        while (mapNames.hasMoreElements()) {
+            String attName = mapNames.nextElement();
+            System.out.println (attName);
+            if (filepath.startsWith(attName)) {
+                return (FileShare)session.getAttribute(attName);
+            }
+        }
+
         // check out resources and find first matching
         Map<String,FileShare> resourceMap = WebdavContextManager.getResourcesByMapping();
         Iterator<String> mappings = resourceMap.keySet().iterator();
@@ -181,7 +197,8 @@ public class WebdavRequestHandler extends ResourceConfig {
         if (mappedResource == null) {
             throw new FileNotFoundException("no file share mapped for the file requested.");
         }
-        return mappedResource;
+
+        return (FileShare)mappedResource.clone();
     }
 
     private BasicAuthToken getBasicAuthUser(String basicRequestHeader) {

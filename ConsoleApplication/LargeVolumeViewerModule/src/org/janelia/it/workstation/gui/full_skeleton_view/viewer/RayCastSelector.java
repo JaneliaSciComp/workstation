@@ -11,6 +11,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
+import org.janelia.it.workstation.gui.viewer3d.DirectionalAxis;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 
@@ -259,24 +260,48 @@ public class RayCastSelector {
     }
     
     private Vec3 worldFromPixel(int x, int y) {
+        final Camera3d camera3d = context.getCamera3d();
+        Rotation3d viewerInGround = camera3d.getRotation();
+        DirectionalAxis directionalAxis = DirectionalAxis.findAxis(viewerInGround);
+        CoordinateAxis axis = directionalAxis.getCoordinateAxis();
+        //double direction = directionalAxis.getDirection();
+
         // Initialize to screen space position
         Vec3 result = new Vec3(x, y, 0);
-        final Camera3d camera3d = context.getCamera3d();
         final Vec3 cameraFocus = camera3d.getFocus();
         // Normalize to screen viewport center
         //       First step is pro-forma.
         result = result.minus(new Vec3(0, 0, 0)); // origin for viewport.
-        result = result.minus(new Vec3(width / 2.0, height / 2.0, 0)); // center
+        int widthCoord = 0;
+        int heightCoord = 1;
+        int zeroCoord = 2;
+        if (axis == CoordinateAxis.Y) {
+            widthCoord = 0;
+            heightCoord = 2;
+            zeroCoord = 1;
+        }
+        if (axis == CoordinateAxis.Z) {
+            widthCoord = 1;
+            heightCoord = 2;
+            zeroCoord = 0;
+        }
+
+        final Vec3 viewPortVec = new Vec3();
+        viewPortVec.set(widthCoord, width / 2.0);
+        viewPortVec.set(heightCoord, height / 2.0);
+        viewPortVec.set(zeroCoord, 0.0);        
+        result = result.minus(viewPortVec); // center        
         // Convert from pixel units to world units
-        result = result.times(1.0 / camera3d.getPixelsPerSceneUnit());
+        result = result.times(1.0 / camera3d.getPixelsPerSceneUnit() / camera3d.getPixelsPerSceneUnit()); // Inverse square???
+        System.out.println("Difference between focus and center is " + result.toString());
+        System.out.println("Pixels per scene unit="+camera3d.getPixelsPerSceneUnit() + ", 1/psc="+1/camera3d.getPixelsPerSceneUnit());
+
         // Apply viewer orientation, e.g. X/Y/Z orthogonal viewers
-        Rotation3d viewerInGround = camera3d.getRotation();
         result = viewerInGround.times(result);
-		// TODO - apply rotation, but only for rotatable viewers, UNLIKE large volume viewer
+        
         // Apply camera focus
         result = result.plus(cameraFocus);
         result.setZ(0.0);
-        // System.out.println(pixel + ", " + getCamera().getFocus() + ", " + result);
         return result;
     }
 

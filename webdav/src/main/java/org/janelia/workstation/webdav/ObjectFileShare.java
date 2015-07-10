@@ -29,7 +29,7 @@ import javax.ws.rs.core.UriInfo;
  */
 public class ObjectFileShare extends FileShare {
     private static final String SCALITY_PREPEND = "/Scality";
-    private static final int DEFAULT_BUFFER_SIZE = 1024 * 2;
+    private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024 * 2;
 
     private String getUrlFromBPID(String bpid) {
         ScalityProvider provider = (ScalityProvider) WebdavContextManager.getProviders().get("scality");

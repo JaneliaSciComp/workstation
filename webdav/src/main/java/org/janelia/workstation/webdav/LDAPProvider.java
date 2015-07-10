@@ -37,6 +37,7 @@ public class LDAPProvider extends Provider {
         LdapConnectionConfig config = new LdapConnectionConfig();
         config.setLdapHost( url );
         config.setLdapPort(389);
+        config.setTimeout(1000);
         factory = new DefaultPoolableLdapConnectionFactory( config );
         pool = new LdapConnectionPool( factory );
     }

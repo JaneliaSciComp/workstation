@@ -20,11 +20,16 @@ public abstract class FileShare {
     private Path path;
     private Authorizer authorizer;
     private Set<Permission> permissions = new HashSet<>();
+    private boolean isAuthorized = false;
 
-    public boolean hasAccess (Token credentials, Permission reqPermission) {
-        if (authorizer != null) {
+    public boolean hasAccess (Token credentials) {
+        if (!isAuthorized && authorizer != null) {
             try {
-                return authorizer.checkAccess(credentials) && permissions.contains(reqPermission);
+                if (authorizer.checkAccess(credentials)) {
+                    isAuthorized = true;
+                } else {
+                    return false;
+                }
             } catch (RuntimeException re) {
                 re.printStackTrace();
                 return false;
@@ -79,5 +84,27 @@ public abstract class FileShare {
 
     public void addPermission(Permission permission) {
         this.permissions.add(permission);
+    }
+
+    public void setPermissions(Set<Permission> permissions) {
+        this.permissions = permissions;
+    }
+
+    @Override
+    public Object clone() {
+        try {
+            FileShare userCopy = this.getClass().newInstance();
+            userCopy.setPath(this.getPath());
+            userCopy.setMapping(this.getMapping());
+            userCopy.setAuthorizer(this.getAuthorizer());
+            userCopy.setPermissions(this.getPermissions());
+            return userCopy;
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+            return null;
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
