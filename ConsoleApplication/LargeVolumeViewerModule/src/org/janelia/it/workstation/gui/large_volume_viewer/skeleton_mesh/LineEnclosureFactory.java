@@ -32,7 +32,6 @@ public class LineEnclosureFactory implements TriangleSource {
 	public static final double ZERO_TOLERANCE = 0.3;
     private static final int X = 0, Y = 1, Z = 2;
 	private static final int PERPENDICULAR_ALIGNMENT = 100;
-    private static final String COORD_DUMP_FORMAT = "(%f,%f,%f)";
     
     private int currentVertexNumber = 0;
 
@@ -437,15 +436,4 @@ public class LineEnclosureFactory implements TriangleSource {
         }
     }
     
-    @SuppressWarnings("unused")
-    private void dumpPolygon(String label, double[][] polygon) {
-        StringBuilder outBldr = new StringBuilder();
-        outBldr.append("-------------------").append(label).append("\n");
-        for (double[] vertex: polygon) {
-            outBldr.append(String.format(COORD_DUMP_FORMAT, vertex[0], vertex[1], vertex[2]));
-            outBldr.append("\n");
-        }
-        System.out.print(outBldr);
-    }
-
 }

@@ -13,6 +13,7 @@ public class PolygonSource {
     private static final int X = 0;
     private static final int Y = 1;
     private static final int Z = 2;
+    private static final String COORD_DUMP_FORMAT = "(%f,%f,%f)";
     
     private int endPolygonSides;
     private double endPolygonRadius;
@@ -63,5 +64,15 @@ public class PolygonSource {
         return createAxisAlignedPrototypeEndPolygon(Z);
     }
 
+    @SuppressWarnings("unused")
+    private void dumpPolygon(String label, double[][] polygon) {
+        StringBuilder outBldr = new StringBuilder();
+        outBldr.append("-------------------").append(label).append("\n");
+        for (double[] vertex : polygon) {
+            outBldr.append(String.format(COORD_DUMP_FORMAT, vertex[0], vertex[1], vertex[2]));
+            outBldr.append("\n");
+        }
+        System.out.print(outBldr);
+    }
 
 }
