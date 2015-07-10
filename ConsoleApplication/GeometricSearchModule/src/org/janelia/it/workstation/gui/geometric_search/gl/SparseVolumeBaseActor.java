@@ -43,6 +43,16 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
     Matrix4 vertexRotation=null;
 
     protected class viGroup {
+        
+        public viGroup() {}
+        
+        public viGroup(float x, float y, float z, float w) {
+            this.x=x;
+            this.y=y;
+            this.z=z;
+            this.w=w;
+        }
+        
         public float x;
         public float y;
         public float z;
@@ -165,13 +175,14 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
             int totalVoxels=0;
             int selectedVoxels=0;
 //            int dCount=0;
+            float vs = getVoxelUnitSize();
             if (channelIndex==volumeChannel) {
                 for (int z=0;z<depth;z++) {
-                    float fz=(float) (z*1.0/width*1.0);
+                    float fz=z*vs;
                     for (int y=0;y<height;y++) {
-                        float fy=(float) (y*1.0/width*1.0);
+                        float fy=y*vs;
                         for (int x=0;x<width;x++) {
-                            float fx=(float) (x*1.0/width*1.0);
+                            float fx=x*vs;
                             viGroup vi=new viGroup();
                             int p=z*height*width+y*width+x;
                             int cv=channelBuffer[p] & 0x000000ff;
@@ -234,6 +245,14 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
     @Override
     public void addTextureData(TextureDataI textureData) {
         // do nothing
+    }
+    
+    public float getVoxelUnitSize() {
+        if (width==0.0f) {
+            return 0.0f;
+        } else {
+            return 1.0f/width;
+        }
     }
 
 }
