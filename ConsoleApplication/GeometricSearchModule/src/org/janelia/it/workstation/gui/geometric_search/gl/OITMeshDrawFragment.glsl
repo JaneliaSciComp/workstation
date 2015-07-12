@@ -44,13 +44,15 @@ void main()
 
     if (pointFlag < 0.5) {
         // Triangle
-        float opac = dot(normalize(-N), normalize(-I));
-        opac = abs(opac);
-        opac = ambient + intensity*(1.0-pow(opac, edgefalloff));
-        color =  opac * Cs;
-        color.a = opac;
+        //float opac = dot(normalize(-N), normalize(-I));
+        //opac = abs(opac);
+        //opac = ambient + intensity*(1.0-pow(opac, edgefalloff));
+        //color =  opac * color;
+        //color.a = opac;
+        //color = vec4(0.0, 1.0, 0.0, 0.10);
     } else {
         // Point - stay with Cs assignment
+        color = vec4(1.0, 0.0, 0.0,  1.0);
     }
 
     ivec2 fl = ivec2(gl_FragCoord.xy);
@@ -60,6 +62,7 @@ void main()
         uint old_head = imageAtomicExchange(head_pointer_image, fl, new_index);
         nodes[new_index].color = color;
         nodes[new_index].depth = 1.0 - gl_FragCoord.z;
+       //nodes[new_index].depth = gl_FragCoord.z;
         nodes[new_index].next = old_head;
     }
 
