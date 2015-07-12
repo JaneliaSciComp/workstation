@@ -32,7 +32,6 @@ public class LineEnclosureFactory implements TriangleSource {
 	public static final double ZERO_TOLERANCE = 0.3;
     private static final int X = 0, Y = 1, Z = 2;
 	private static final int PERPENDICULAR_ALIGNMENT = 100;
-    private static final String COORD_DUMP_FORMAT = "(%f,%f,%f)";
     
     private int currentVertexNumber = 0;
 
@@ -48,16 +47,19 @@ public class LineEnclosureFactory implements TriangleSource {
 
     private final List<double[][]> endCapPolygonsHolder = new ArrayList<>();
     
+    private PolygonSource polygonSource;
+    
     public LineEnclosureFactory(int endPolygonSides, double endPolygonRadius) {
         setCharacteristics(endPolygonSides, endPolygonRadius);
     }
     
     public final void setCharacteristics( int endPolygonSides, double endPolygonRadius ) {
+        polygonSource = new PolygonSource(endPolygonSides, endPolygonRadius);
         axisAlignedPrototypePolygons.clear();
         
         this.endPolygonSides = endPolygonSides;
         this.endPolygonRadius = endPolygonRadius;
-        this.zAxisAlignedPrototypePolygon = createZAxisAlignedPrototypeEndPolygon();
+        this.zAxisAlignedPrototypePolygon = polygonSource.createZAxisAlignedPrototypeEndPolygon();
         axisAlignedPrototypePolygons.put(2, this.zAxisAlignedPrototypePolygon);
     }
     
@@ -366,7 +368,7 @@ public class LineEnclosureFactory implements TriangleSource {
 	
 	private double[][] getPrototypePolygon(int axialAlignment) {
 		if (axisAlignedPrototypePolygons.get(axialAlignment) == null) {
-			axisAlignedPrototypePolygons.put(axialAlignment, createAxisAlignedPrototypeEndPolygon(axialAlignment));
+			axisAlignedPrototypePolygons.put(axialAlignment, polygonSource.createAxisAlignedPrototypeEndPolygon(axialAlignment));
 		}
 		return axisAlignedPrototypePolygons.get(axialAlignment);
 	}
@@ -417,49 +419,6 @@ public class LineEnclosureFactory implements TriangleSource {
 		}
 	}
 
-    /**
-     * Here is where the prototype polygons--those whose positions are
-     * modified by angle transforms--are initially created.
-     * 
-     * @param axis tells along which axis this prototype will align.
-     * @return array of endPolygonSides, each of which is a coord triple.
-     */
-    private double[][] createAxisAlignedPrototypeEndPolygon(int axis) {
-        double[][] prototypeEndPolygon = new double[endPolygonSides][];
-        double fullcircle = Math.PI * 2.0;
-        double thetaIncrement = fullcircle / endPolygonSides;
-        if (axis == Z  ||  axis == Y) {
-            // Negation of increment is required, to force the vertices
-            // to be laid out in clockwise fashion.  When end-caps are
-            // created, their "outside widings" are counter clockwise,
-            // which requires the overall polygon to be clockwise.
-            thetaIncrement = -thetaIncrement;
-            fullcircle = -fullcircle;
-        }
-        double theta = Math.PI;  // Position of first polygon point.
-        for (int i = 0; i < endPolygonSides; i++) {
-            theta += thetaIncrement;
-            theta = theta % fullcircle;
-            float[] calculatedCoords = new float[2];
-            calculatedCoords[0] = (float) (Math.cos(theta) * endPolygonRadius);
-            calculatedCoords[1] = (float) (Math.sin(theta) * endPolygonRadius);
-            //System.out.println(String.format(
-            //   "Theta=%f, x=%f, y=%f, cos=%f, sin=%f.  Iteration=%d\n", 
-            //   theta, x, y, Math.cos(theta), Math.sin(theta), i));
-            prototypeEndPolygon[i] = new double[3];
-            int calcNum = 0;
-            for (int coord = 0; coord < 3; coord++) {
-                prototypeEndPolygon[i][coord] = (coord == axis) ? 0: calculatedCoords[ calcNum++ ];
-            }
-        }
-        //dumpPolygon("Prototype: axis=" + axis, prototypeEndPolygon);
-        return prototypeEndPolygon;
-    }
-
-    private double[][] createZAxisAlignedPrototypeEndPolygon() {
-        return createAxisAlignedPrototypeEndPolygon(Z);
-    }
-
     private void addVertex(VertexInfoBean vertex) {
         vertex.setVtxBufOffset(getCurrentVertexNumber());
         setCurrentVertexNumber(getCurrentVertexNumber() + 1);
@@ -477,15 +436,4 @@ public class LineEnclosureFactory implements TriangleSource {
         }
     }
     
-    @SuppressWarnings("unused")
-    private void dumpPolygon(String label, double[][] polygon) {
-        StringBuilder outBldr = new StringBuilder();
-        outBldr.append("-------------------").append(label).append("\n");
-        for (double[] vertex: polygon) {
-            outBldr.append(String.format(COORD_DUMP_FORMAT, vertex[0], vertex[1], vertex[2]));
-            outBldr.append("\n");
-        }
-        System.out.print(outBldr);
-    }
-
 }
