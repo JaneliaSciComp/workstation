@@ -80,7 +80,7 @@ public class PointPrototypeHelper {
             }
             pm.set(3, 0, 1.0); //Ensures transforms have something to work with.
             Matrix result = transform.times(pm);
-            dumpPointMatrix(result);
+            //dumpPointMatrix(result);
             points.add(result);
         }
     }

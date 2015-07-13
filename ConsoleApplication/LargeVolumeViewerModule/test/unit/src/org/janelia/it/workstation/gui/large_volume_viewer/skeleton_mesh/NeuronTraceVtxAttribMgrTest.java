@@ -70,7 +70,7 @@ public class NeuronTraceVtxAttribMgrTest {
         triangleSources.add( factory );
         
         NeuronTraceVtxAttribMgr attribMgr = new NeuronTraceVtxAttribMgr();
-        attribMgr.populateNormals(triangleSources, renderIdToBuffers);
+        attribMgr.handleRenderBuffers(triangleSources, renderIdToBuffers);
         attribMgr.exportVertices(new File("/Users/fosterl/"), "UnitTest_VtxAttribMgr", triangleSources, 500L);
     }
     

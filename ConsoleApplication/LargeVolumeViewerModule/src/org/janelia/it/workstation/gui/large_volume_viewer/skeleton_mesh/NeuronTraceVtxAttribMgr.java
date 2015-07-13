@@ -112,7 +112,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         
         createVertices();
 		if (hasDisplayable) {
-			populateNormals(triangleSources, renderIdToBuffers);
+			handleRenderBuffers(triangleSources, renderIdToBuffers);
 		}
 		else {
 			triangleSources.clear();
@@ -200,7 +200,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
      * @param triangleSources iterated for normals data.
      * @param renderIdToBuffers populated with normals data.
      */
-    public void populateNormals(
+    public void handleRenderBuffers(
             List<TriangleSource> triangleSources,
             Map<Long, RenderBuffersBean> renderIdToBuffers
     ) {
@@ -237,15 +237,16 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         TileFormat tileFormat = dataSource.getTileFormat();
 
         int currentVertexNumber = 0;
-        lineEnclosureFactory.setCurrentVertexNumber(
-                currentVertexNumber
-        );
-        currentVertexNumber = lineEnclosureFactory.getCurrentVertexNumber();        
+
         // Look at 'interesting annotations'.  What can be presented there?
         pointEnclosureFactory.setCharacteristics(ANNO_END_POLYGON_SIDES, ANNO_END_RADIUS);
         pointEnclosureFactory.setCurrentVertexNumber(currentVertexNumber);
         calculateInterestingAnnotationVertices(tileFormat, pointEnclosureFactory);
         
+        // The current selection.
+        pointEnclosureFactory.setCharacteristics(CURRENT_SELECTION_POLYGON_SIDES, CURRENT_SELECTION_RADIUS);
+        calculateCurrentSelectionVertices(pointEnclosureFactory);
+
         // Get the auto-traced segments.
         lineEnclosureFactory.setCharacteristics(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
         lineEnclosureFactory.setCurrentVertexNumber(pointEnclosureFactory.getCurrentVertexNumber());
@@ -255,13 +256,9 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         lineEnclosureFactory.setCharacteristics(MANUAL_SEGMENT_POLYGON_SIDES, MANUAL_SEGMENT_RADIUS);
         calculateManualLineVertices(voxelPathAnchorPairs, lineEnclosureFactory);                        
 
-        // Finally, the current selection.
-        pointEnclosureFactory.setCharacteristics(CURRENT_SELECTION_POLYGON_SIDES, CURRENT_SELECTION_RADIUS);
-        calculateCurrentSelectionVertices(pointEnclosureFactory);
-
 		// TESTING 
 		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
-        log.debug("Number of vertices is {}.", lineEnclosureFactory.getCurrentVertexNumber());
+        log.info("Number of vertices is {}.", pointEnclosureFactory.getCurrentVertexNumber());
 
 		if (lineEnclosureFactory.getCurrentVertexNumber() > 0) {
 			hasDisplayable = true;
@@ -271,8 +268,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 		}
         
 		// Add each factory to the collection.
-		triangleSources.add(lineEnclosureFactory);
         triangleSources.add(pointEnclosureFactory);
+		triangleSources.add(lineEnclosureFactory);
     }
 
 	@SuppressWarnings("unused")
