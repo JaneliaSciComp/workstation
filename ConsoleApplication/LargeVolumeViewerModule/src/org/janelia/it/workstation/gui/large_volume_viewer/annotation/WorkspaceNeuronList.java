@@ -149,6 +149,8 @@ public class WorkspaceNeuronList extends JPanel {
         neuronTable.getColumnModel().getColumn(1).setPreferredWidth(50);
         neuronTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
+        neuronTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
         // hide columns that we only maintain for sorting (eg, creation date)
         neuronTable.removeColumn(neuronTable.getColumnModel().getColumn(2));
 
