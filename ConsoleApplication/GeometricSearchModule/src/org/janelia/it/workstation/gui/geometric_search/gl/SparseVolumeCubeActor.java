@@ -47,12 +47,12 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
         
         List<viGroup> multiColorCube = new ArrayList<>();
         
-        viGroup bottomColor = new viGroup(1.0f, 0.0f, 0.0f, 1.0f);
-        viGroup topColor    = new viGroup(0.0f, 1.0f, 0.0f, 1.0f);
-        viGroup backColor   = new viGroup(0.0f, 0.0f, 1.0f, 1.0f);
-        viGroup frontColor  = new viGroup(0.0f, 0.3f, 0.0f, 1.0f);
-        viGroup leftColor   = new viGroup(1.0f, 1.0f, 0.0f, 1.0f);
-        viGroup rightColor  = new viGroup(0.5f, 0.5f, 0.5f, 1.0f);
+        viGroup bottomColor = new viGroup(1.0f, 0.0f, 0.0f, 0.1f);
+        viGroup topColor    = new viGroup(0.0f, 1.0f, 0.0f, 0.5f);
+        viGroup backColor   = new viGroup(0.0f, 0.0f, 1.0f, 0.0f);
+        viGroup frontColor  = new viGroup(0.0f, 0.3f, 0.0f, 0.0f);
+        viGroup leftColor   = new viGroup(1.0f, 1.0f, 0.0f, 0.0f);
+        viGroup rightColor  = new viGroup(0.5f, 0.5f, 0.5f, 0.0f);
         
         multiColorCube.add(bottomColor);
         multiColorCube.add(topColor);
@@ -63,7 +63,7 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
         
         viColorList.add(multiColorCube);
         
-        viGroup transparentColor = new viGroup(0.1f, 0.1f, 0.1f, 0.2f);
+        viGroup transparentColor = new viGroup(1.0f, 0.0f, 0.0f, 0.1f);
         
         List<viGroup> transparentColorCube = new ArrayList<>();
         
@@ -346,6 +346,8 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
     @Override
     public void display(GL4 gl) {
         super.display(gl);
+        
+        gl.glDisable(GL4.GL_DEPTH_TEST);
 
 //        gl.glDisable(GL4.GL_DEPTH_TEST);
 ////        gl.glShadeModel(GL4.GL_SMOOTH);

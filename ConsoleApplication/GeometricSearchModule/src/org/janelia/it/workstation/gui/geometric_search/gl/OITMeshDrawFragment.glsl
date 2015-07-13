@@ -62,9 +62,10 @@ void main()
         uint old_head = imageAtomicExchange(head_pointer_image, fl, new_index);
         nodes[new_index].color = color;
         nodes[new_index].depth = 1.0 - gl_FragCoord.z;
-       //nodes[new_index].depth = gl_FragCoord.z;
         nodes[new_index].next = old_head;
     }
+
+ 
 
     blankOut = vec4(0.0, 0.0, 0.0, 0.0);
 
