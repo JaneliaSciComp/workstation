@@ -33,16 +33,21 @@ public class PointPrototypeHelper {
         final int ringCount = (int) (double) (numSides / 2.0);
         double angleOffset = Math.PI / 20.0;
         double angularIteration
-                = ((Math.PI / 2.0) - 2 * angleOffset) / ringCount;
+                = ((Math.PI / 2.0) - angleOffset) / ringCount;
         double angle = angleOffset;
         // Growing forward, to midline.
+        boolean positiveY = true;
         for (int i = 0; i < ringCount; i++) {
             double y = Math.sin(angle) * hypot;
             double z = -Math.cos(angle) * hypot;
             PolygonSource polygonSource = new PolygonSource(numSides, y);
             double[][] polygon = polygonSource.createZAxisAlignedPrototypeEndPolygon();
-            Matrix transform = createPrototypeTransform(hypot, y, z);
+            Matrix transform = createPrototypeTransform(hypot, 0.0, z);
             addResult(polygon, transform, prototypePoints);
+            // Switch transform direction after traversing an x intercept.
+            if ( y < 0.1 ) {
+                positiveY = !positiveY;
+            }
 
             angle += angularIteration;
         }
@@ -50,13 +55,19 @@ public class PointPrototypeHelper {
         angle -= angularIteration; // Push back in other direction.
 
         // Growing beyond midline.        
+        positiveY = true;
         for (int i = 0; i < ringCount; i++) {
             double y = Math.sin(angle) * hypot;
             double z = Math.cos(angle) * hypot;
             PolygonSource polygonSource = new PolygonSource(numSides, y);
             double[][] polygon = polygonSource.createZAxisAlignedPrototypeEndPolygon();
-            Matrix transform = createPrototypeTransform(hypot, y, z);
+            Matrix transform = createPrototypeTransform(hypot, 0.0, z);
             addResult(polygon, transform, prototypePoints);
+            // Switch transform direction after traversing an x intercept.
+            if (y < 0.1) {
+                positiveY = !positiveY;
+            }
+
             angle -= angularIteration;
         }
     }
@@ -69,6 +80,7 @@ public class PointPrototypeHelper {
             }
             pm.set(3, 0, 1.0); //Ensures transforms have something to work with.
             Matrix result = transform.times(pm);
+            dumpPointMatrix(result);
             points.add(result);
         }
     }

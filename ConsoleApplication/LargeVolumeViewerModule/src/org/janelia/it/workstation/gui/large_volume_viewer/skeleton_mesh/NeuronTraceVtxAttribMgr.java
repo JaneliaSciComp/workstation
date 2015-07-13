@@ -50,9 +50,9 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     private static final double TRACED_SEGMENT_RADIUS = 8;
     private static final int TRACED_SEGMENT_POLYGON_SIDES = 10;
     public static final double ANNO_END_RADIUS = TRACED_SEGMENT_RADIUS * 4;
-    private static final int ANNO_END_POLYGON_SIDES = 6;
+    private static final int ANNO_END_POLYGON_SIDES = 24;
     
-    private static final int CURRENT_SELECTION_POLYGON_SIDES = 16;
+    private static final int CURRENT_SELECTION_POLYGON_SIDES = 24;
     private static final double CURRENT_SELECTION_RADIUS = TRACED_SEGMENT_RADIUS * 10;
 
     private static final float[] UNFINISHED_ANNO_COLOR = new float[]{
@@ -240,9 +240,10 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         lineEnclosureFactory.setCurrentVertexNumber(
                 currentVertexNumber
         );
+        currentVertexNumber = lineEnclosureFactory.getCurrentVertexNumber();        
         // Look at 'interesting annotations'.  What can be presented there?
         pointEnclosureFactory.setCharacteristics(ANNO_END_POLYGON_SIDES, ANNO_END_RADIUS);
-        pointEnclosureFactory.setCurrentVertexNumber(lineEnclosureFactory.getCurrentVertexNumber());
+        pointEnclosureFactory.setCurrentVertexNumber(currentVertexNumber);
         calculateInterestingAnnotationVertices(tileFormat, pointEnclosureFactory);
         
         // Get the auto-traced segments.
@@ -261,7 +262,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 		// TESTING 
 		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
         log.debug("Number of vertices is {}.", lineEnclosureFactory.getCurrentVertexNumber());
-		
+
 		if (lineEnclosureFactory.getCurrentVertexNumber() > 0) {
 			hasDisplayable = true;
 		}

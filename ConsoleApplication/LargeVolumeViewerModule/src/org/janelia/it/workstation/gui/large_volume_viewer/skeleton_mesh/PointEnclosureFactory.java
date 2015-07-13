@@ -105,8 +105,8 @@ public class PointEnclosureFactory implements TriangleSource  {
         key.setPosition(new double[] { point.get(0, 0), point.get(1, 0), point.get(2, 0) });
         bean.setKey(key);
         bean.setAttribute( VertexInfoBean.KnownAttributes.b_color.toString(), color, 3 );
-        offsetToVertex.put( currentVertexNumber, bean);
-        bean.setVtxBufOffset(currentVertexNumber ++);
+        offsetToVertex.put( currentVertexNumber, bean );
+        bean.setVtxBufOffset(currentVertexNumber++);
         
         vtxInfoBeans.add( bean );
         return bean;
@@ -115,21 +115,18 @@ public class PointEnclosureFactory implements TriangleSource  {
     private void createTriangles(int numSides, int offset) {
         List<Matrix> prototypePoints = prototypeHelper.getPrototypePoints();
 
-        // Must apply modulo op, to allow triangles to include points from
-        // either end of the total.
-        int totalVertexCount = offsetToVertex.size();
         // Now create triangles.
-        for (int i = 0; i < prototypePoints.size(); i++) {
+        for (int i = 0; i < prototypePoints.size() - numSides - 1; i++) {
             Triangle triangle = new Triangle();
-            triangle.addVertex(offsetToVertex.get((offset + i) % totalVertexCount));
-            triangle.addVertex(offsetToVertex.get((offset + i + 1)  % totalVertexCount));
-            triangle.addVertex(offsetToVertex.get((offset + i + numSides) % totalVertexCount));
+            triangle.addVertex(offsetToVertex.get(offset + i));
+            triangle.addVertex(offsetToVertex.get(offset + i + numSides));
+            triangle.addVertex(offsetToVertex.get(offset + i + 1));
             triangles.add(triangle);
 
             triangle = new Triangle();
-            triangle.addVertex(offsetToVertex.get((offset + i + 1) % totalVertexCount));
-            triangle.addVertex(offsetToVertex.get((offset + i + numSides + 1) % totalVertexCount));
-            triangle.addVertex(offsetToVertex.get((offset + i + numSides) % totalVertexCount));
+            triangle.addVertex(offsetToVertex.get(offset + i + 1));
+            triangle.addVertex(offsetToVertex.get(offset + i + numSides));
+            triangle.addVertex(offsetToVertex.get(offset + i + numSides + 1));
             triangles.add(triangle);
         }
 
@@ -137,9 +134,9 @@ public class PointEnclosureFactory implements TriangleSource  {
         // Winding to point close end away from sphere.
         for (int i = 0; i < (numSides - 2); i++) {
             Triangle triangle = new Triangle();
-            triangle.addVertex(offsetToVertex.get((offset + 0) % totalVertexCount));
-            triangle.addVertex(offsetToVertex.get((offset + (numSides - i - 1)) % totalVertexCount));
-            triangle.addVertex(offsetToVertex.get((offset + (numSides - i - 2)) % totalVertexCount));
+            triangle.addVertex(offsetToVertex.get(offset + 0));
+            triangle.addVertex(offsetToVertex.get(offset + (numSides - i - 2)));
+            triangle.addVertex(offsetToVertex.get(offset + (numSides - i - 1)));
             triangles.add(triangle);
         }
 
@@ -147,9 +144,9 @@ public class PointEnclosureFactory implements TriangleSource  {
         for (int i = 0; i < (numSides - 2); i++) {
             Triangle triangle = new Triangle();
             int initialVertex = prototypePoints.size() - numSides;
-            triangle.addVertex(offsetToVertex.get((offset + initialVertex) % totalVertexCount));
-            triangle.addVertex(offsetToVertex.get((offset + initialVertex + i + 2) % totalVertexCount));
-            triangle.addVertex(offsetToVertex.get((offset + initialVertex + i + 1) % totalVertexCount));
+            triangle.addVertex(offsetToVertex.get(offset + initialVertex));
+            triangle.addVertex(offsetToVertex.get(offset + initialVertex + i + 2));
+            triangle.addVertex(offsetToVertex.get(offset + initialVertex + i + 1));
             triangles.add(triangle);
         }
     }
