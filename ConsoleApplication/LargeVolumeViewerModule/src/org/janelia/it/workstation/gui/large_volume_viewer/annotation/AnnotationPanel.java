@@ -241,7 +241,7 @@ public class AnnotationPanel extends JPanel
 
 
         // list of neurons in workspace
-        workspaceNeuronList = new WorkspaceNeuronList(width);
+        workspaceNeuronList = new WorkspaceNeuronList(annotationMgr, annotationModel, width);
         add(workspaceNeuronList, cVert);
 
         // testing

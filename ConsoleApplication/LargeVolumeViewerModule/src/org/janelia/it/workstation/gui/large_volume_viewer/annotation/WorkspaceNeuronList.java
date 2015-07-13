@@ -1,8 +1,11 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -22,8 +25,14 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronSelec
  */
 public class WorkspaceNeuronList extends JPanel {
 
+    // old
     private JList neuronListBox;
     private DefaultListModel neuronListModel;
+    // new
+    private JTable neuronTable;
+    private NeuronTableModel neuronTableModel;
+    private AnnotationManager annotationManager;
+    private AnnotationModel annotationModel;
     private CameraPanToListener panListener;
     private NeuronSelectedListener neuronSelectedListener;
 
@@ -43,7 +52,10 @@ public class WorkspaceNeuronList extends JPanel {
     public enum NeuronSortOrder {ALPHABETICAL, CREATIONDATE};
     private NeuronSortOrder neuronSortOrder;
 
-    public WorkspaceNeuronList(int width) {
+    public WorkspaceNeuronList(AnnotationManager annotationManager,
+        AnnotationModel annotationModel, int width) {
+        this.annotationManager = annotationManager;
+        this.annotationModel = annotationModel;
         this.width = width;
         setupUI();
     }
@@ -81,7 +93,7 @@ public class WorkspaceNeuronList extends JPanel {
 
         neuronListModel = new DefaultListModel();
         neuronListBox = new JList(neuronListModel);
-        JScrollPane neuronScrollPane = new JScrollPane(neuronListBox);
+        final JScrollPane neuronScrollPane = new JScrollPane(neuronListBox);
         neuronListBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         neuronListBox.getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
@@ -123,14 +135,76 @@ public class WorkspaceNeuronList extends JPanel {
         c2.weighty = 1.0;
         c2.anchor = GridBagConstraints.PAGE_START;
         c2.fill = GridBagConstraints.BOTH;
-        add(neuronScrollPane, c2);
+        // add(neuronScrollPane, c2);
+
+
+
+        // new table
+        neuronTableModel = new NeuronTableModel();
+        neuronTableModel.setAnnotationModel(annotationModel);
+        neuronTable = new JTable(neuronTableModel);
+
+        neuronTable.getColumnModel().getColumn(0).setPreferredWidth(175);
+        neuronTable.getColumnModel().getColumn(1).setPreferredWidth(50);
+        neuronTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+
+
+
+        neuronTable.setDefaultRenderer(Color.class, new ColorCellRenderer(true));
+
+        neuronTable.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent me) {
+                JTable table = (JTable) me.getSource();
+                int viewRow = table.rowAtPoint(me.getPoint());
+                if (viewRow >= 0) {
+                    int modelRow = neuronTable.convertRowIndexToModel(viewRow);
+                    TmNeuron selectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
+                    if (me.getClickCount() == 1) {
+                        // which column?
+                        int viewColumn = table.columnAtPoint(me.getPoint());
+                        int modelColumn = neuronTable.convertColumnIndexToModel(viewColumn);
+                        if (modelColumn == 0) {
+                            // single click, select neuron
+                            if (neuronSelectedListener != null)
+                                neuronSelectedListener.selectNeuron(selectedNeuron);
+                        } else if (modelColumn == 1) {
+                            // single click, edit
+                            annotationManager.chooseNeuronStyle(selectedNeuron);
+
+                            // what update?
+
+
+                        }
+                    } else if (me.getClickCount() == 2) {
+                        // double click, go to neuron
+                        onNeuronDoubleClicked(selectedNeuron);
+                    }
+                }
+            }
+        });
+
+
+
+        JScrollPane scrollPane = new JScrollPane(neuronTable);
+        neuronTable.setFillsViewportHeight(true);
+
+        GridBagConstraints c3 = new GridBagConstraints();
+        c3.gridx = 0;
+        c3.gridy = GridBagConstraints.RELATIVE;
+        c3.weighty = 1.0;
+        c3.anchor = GridBagConstraints.PAGE_START;
+        c3.fill = GridBagConstraints.BOTH;
+        add(scrollPane, c3);
+
+
 
         loadWorkspace(null);
 
     }
 
     /**
-     * called when current neuron changes
+     * called when current neuron changes; both selects the neuron visually
+     * as well as replaces the old neuron in the model with the new one
      */
     public void selectNeuron(TmNeuron neuron) {
         if (neuron == null) {
@@ -155,6 +229,16 @@ public class WorkspaceNeuronList extends JPanel {
             neuronListModel.setElementAt(neuron, index);
             neuronListBox.setSelectedValue(neuron, true);
         }
+
+        // new
+        updateModel(neuron);
+        int neuronRow = neuronTableModel.getRowForNeuron(neuron);
+        if (neuronRow >= 0) {
+            neuronTable.setRowSelectionInterval(neuronRow, neuronRow);
+        } else {
+            neuronTable.clearSelection();
+        }
+
     }
 
     /**
@@ -192,6 +276,10 @@ public class WorkspaceNeuronList extends JPanel {
                 neuronListModel.addElement(tmNeuron);
             }
         }
+
+        // new
+        updateModel(workspace);
+
     }
 
     private void sortNeuronList(Vector<TmNeuron> neuronVector) {
@@ -215,6 +303,32 @@ public class WorkspaceNeuronList extends JPanel {
         }
     }
 
+    /**
+     * update the table model given a new workspace
+     */
+    private void updateModel(TmWorkspace workspace) {
+        neuronTableModel.clear();
+        if (workspace != null) {
+            for (TmNeuron neuron: workspace.getNeuronList()) {
+                neuronTableModel.addNeuron(neuron);
+            }
+        }
+    }
+
+
+    /**
+     * update the table neuron with a new version of an
+     * existing neuron (replaces in place)
+     */
+    private void updateModel(TmNeuron neuron) {
+
+
+
+
+        neuronTableModel.fireTableDataChanged();
+    }
+
+
     private void onNeuronDoubleClicked(TmNeuron neuron) {
         // should pan to center of neuron; let's call that the center
         //  of the bounding cube for its annotations
@@ -232,3 +346,123 @@ public class WorkspaceNeuronList extends JPanel {
     }
 
 }
+
+class NeuronTableModel extends AbstractTableModel {
+
+    private String[] columnNames = {"Name", "Style"};
+
+    private ArrayList<TmNeuron> neurons = new ArrayList<>();
+
+    // need this to retrieve colors!
+    private AnnotationModel annotationModel;
+
+    public void setAnnotationModel(AnnotationModel annotationModel) {
+        this.annotationModel = annotationModel;
+    }
+
+    public void clear() {
+        neurons = new ArrayList<>();
+    }
+
+    public void addNeuron(TmNeuron neuron) {
+        neurons.add(neuron);
+    }
+
+    public void updateNeuron(TmNeuron neuron) {
+        int neuronRow = getRowForNeuron(neuron);
+        neurons.set(neuronRow, neuron);
+    }
+
+    // boilerplate stuff
+    public String getColumnName(int column) {
+        return columnNames[column];
+    }
+
+    public int getColumnCount() {
+        return columnNames.length;
+    }
+
+    public int getRowCount() {
+        return neurons.size();
+    }
+
+    public TmNeuron getNeuronAtRow(int row) {
+        return neurons.get(row);
+    }
+
+    public int getRowForNeuron(TmNeuron neuron) {
+        // we're matching by ID, not object identity
+        TmNeuron foundNeuron = null;
+        for (TmNeuron n: neurons) {
+            if (n.getId().equals(neuron.getId())) {
+                foundNeuron = n;
+                break;
+            }
+        }
+        if (foundNeuron != null) {
+            return neurons.indexOf(foundNeuron);
+        } else {
+            return -1;
+        }
+    }
+
+    // needed to get color to work right
+    public Class getColumnClass(int c) {
+        return getValueAt(0, c).getClass();
+    }
+
+    public Object getValueAt(int row, int column) {
+        switch (column) {
+            case 0:
+                return neurons.get(row);
+            case 1:
+                return annotationModel.getNeuronStyle(neurons.get(row)).getColor();
+            default:
+                return null;
+        }
+
+    }
+
+}
+
+// pretty much taken from Oracle Java Table tutorial
+class ColorCellRenderer extends JLabel implements TableCellRenderer {
+    Border unselectedBorder = null;
+    Border selectedBorder = null;
+    boolean isBordered = true;
+
+
+    public ColorCellRenderer(boolean isBordered) {
+        this.isBordered = isBordered;
+        setOpaque(true);
+    }
+
+    public Component getTableCellRendererComponent(JTable table, Object color,
+            boolean isSelected, boolean hasFocus, int row, int column) {
+        Color newColor = (Color) color;
+        setBackground(newColor);
+
+        if (isBordered) {
+            if (isSelected) {
+                if (selectedBorder == null) {
+                    selectedBorder = BorderFactory.createMatteBorder(2,5,2,5,
+                            table.getSelectionBackground());
+                }
+                setBorder(selectedBorder);
+            } else {
+                if (unselectedBorder == null) {
+                    unselectedBorder = BorderFactory.createMatteBorder(2,5,2,5,
+                            table.getBackground());
+                }
+                setBorder(unselectedBorder);
+            }
+        }
+
+        setToolTipText("RGB value: " + newColor.getRed() + ", "
+                + newColor.getGreen() + ", "
+                + newColor.getBlue());
+        return this;
+    }
+
+}
+
