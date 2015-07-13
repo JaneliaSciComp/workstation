@@ -6,6 +6,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableModel;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -31,6 +32,7 @@ public class WorkspaceNeuronList extends JPanel {
     // new
     private JTable neuronTable;
     private NeuronTableModel neuronTableModel;
+    private DefaultRowSorter<TableModel, String> sorter;
     private AnnotationManager annotationManager;
     private AnnotationModel annotationModel;
     private CameraPanToListener panListener;
@@ -148,8 +150,14 @@ public class WorkspaceNeuronList extends JPanel {
         neuronTable.getColumnModel().getColumn(1).setPreferredWidth(50);
         neuronTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
+        // sort, but only programmatically
+        neuronTable.setAutoCreateRowSorter(true);
+        sorter = (DefaultRowSorter<TableModel, String>) neuronTable.getRowSorter();
+        for (int i=0 ; i<neuronTable.getColumnCount() ; i++) {
+            sorter.setSortable(i, false);
+        }
 
-
+        // color swatches
         neuronTable.setDefaultRenderer(Color.class, new ColorCellRenderer(true));
 
         neuronTable.addMouseListener(new MouseAdapter() {
@@ -260,7 +268,21 @@ public class WorkspaceNeuronList extends JPanel {
             for (TmNeuron tmNeuron: neuronVector) {
                 neuronListModel.addElement(tmNeuron);
             }
+
+            // new
+            switch(neuronSortOrder) {
+                case ALPHABETICAL:
+                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
+                    break;
+                case CREATIONDATE:
+
+                    // test
+                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(0, SortOrder.DESCENDING)));
+
+                    break;
+            }
         }
+
     }
 
     /**
