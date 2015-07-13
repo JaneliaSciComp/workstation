@@ -312,7 +312,6 @@ public class AnnotationPanel extends JPanel
 
         // initial sort order:
         creationSortButton.setSelected(true);
-        workspaceNeuronList.sortOrderChanged(WorkspaceNeuronList.NeuronSortOrder.CREATIONDATE);
 
         // buttons for acting on neurons (which are in the list immediately above):
         JPanel neuronButtonsPanel = new JPanel();

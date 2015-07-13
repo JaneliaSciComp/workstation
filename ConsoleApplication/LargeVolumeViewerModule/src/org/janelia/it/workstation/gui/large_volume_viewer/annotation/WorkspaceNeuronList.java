@@ -49,10 +49,9 @@ public class WorkspaceNeuronList extends JPanel {
     }
 
     // to add new sort order: add to enum here, add menu in AnnotationPanel.java,
-    //  and implement the sort in sortNeuronList below
-    // default set in AnnotationPanel as well
+    //  and implement the sort in sortOrderChanged, below
     public enum NeuronSortOrder {ALPHABETICAL, CREATIONDATE};
-    private NeuronSortOrder neuronSortOrder;
+    private NeuronSortOrder neuronSortOrder = NeuronSortOrder.CREATIONDATE;
 
     public WorkspaceNeuronList(AnnotationManager annotationManager,
         AnnotationModel annotationModel, int width) {
@@ -149,6 +148,9 @@ public class WorkspaceNeuronList extends JPanel {
         neuronTable.getColumnModel().getColumn(0).setPreferredWidth(175);
         neuronTable.getColumnModel().getColumn(1).setPreferredWidth(50);
         neuronTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+
+        // hide columns that we only maintain for sorting (eg, creation date)
+        neuronTable.removeColumn(neuronTable.getColumnModel().getColumn(2));
 
         // sort, but only programmatically
         neuronTable.setAutoCreateRowSorter(true);
@@ -257,6 +259,10 @@ public class WorkspaceNeuronList extends JPanel {
             return;
         }
         this.neuronSortOrder = sortOrder;
+        setSortOrder(sortOrder);
+    }
+
+    private void setSortOrder(NeuronSortOrder sortOrder) {
         if (neuronListModel.size() > 0) {
             // this can't be the best way to do this...
             Vector<TmNeuron> neuronVector = new Vector<TmNeuron>(neuronListModel.size());
@@ -275,14 +281,10 @@ public class WorkspaceNeuronList extends JPanel {
                     sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
                     break;
                 case CREATIONDATE:
-
-                    // test
-                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(0, SortOrder.DESCENDING)));
-
+                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(2, SortOrder.ASCENDING)));
                     break;
             }
         }
-
     }
 
     /**
@@ -301,6 +303,7 @@ public class WorkspaceNeuronList extends JPanel {
 
         // new
         updateModel(workspace);
+        setSortOrder(neuronSortOrder);
 
     }
 
@@ -371,7 +374,8 @@ public class WorkspaceNeuronList extends JPanel {
 
 class NeuronTableModel extends AbstractTableModel {
 
-    private String[] columnNames = {"Name", "Style"};
+    // note: creation date column will be hidden!
+    private String[] columnNames = {"Name", "Style", "Creation Date"};
 
     private ArrayList<TmNeuron> neurons = new ArrayList<>();
 
@@ -436,9 +440,14 @@ class NeuronTableModel extends AbstractTableModel {
     public Object getValueAt(int row, int column) {
         switch (column) {
             case 0:
+                // neuron itself, which will display as name
                 return neurons.get(row);
             case 1:
+                // color, from style
                 return annotationModel.getNeuronStyle(neurons.get(row)).getColor();
+            case 2:
+                // creation date, hidden, but there for sorting
+                return neurons.get(row).getCreationDate();
             default:
                 return null;
         }
