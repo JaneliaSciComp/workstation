@@ -242,9 +242,10 @@ public class WorkspaceNeuronList extends JPanel {
 
         // new
         updateModel(neuron);
-        int neuronRow = neuronTableModel.getRowForNeuron(neuron);
-        if (neuronRow >= 0) {
-            neuronTable.setRowSelectionInterval(neuronRow, neuronRow);
+        int neuronModelRow = neuronTableModel.getRowForNeuron(neuron);
+        if (neuronModelRow >= 0) {
+            int neuronTableRow = neuronTable.convertRowIndexToView(neuronModelRow);
+            neuronTable.setRowSelectionInterval(neuronTableRow, neuronTableRow);
         } else {
             neuronTable.clearSelection();
         }
