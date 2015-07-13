@@ -89,24 +89,28 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
 
         if (!fileLoaded) {
             try {
-                loadVolumeFile();
+                //loadVolumeFile();
             } catch (Exception ex) {
                 logger.error("Could not load file "+volumeFile.getAbsolutePath());
                 ex.printStackTrace();
                 fileLoadError=true;
                 return;
             }
-            width=textureData.getSx();
-            height=textureData.getSy();
-            depth=textureData.getSz();
+            //width=textureData.getSx();
+            //height=textureData.getSy();
+            //depth=textureData.getSz();
             fileLoaded=true;
         }
+        
+        if (textureData==null) return;
 
         // We want to do two passes through the volume data. On the first pass, we will
         // count how many vertices qualify as over-threshold. On the second pass, we will
         // populate the vertex array buffer.
 
         // Next, iterate through channels and create textureIds
+        
+        
         if ( textureData.getTextureData().getVolumeChunks() == null ) {
             logger.info("No entries found in textureData from file="+textureData.getFilename());
             return;

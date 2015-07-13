@@ -8,6 +8,7 @@ uniform vec4 dcolor;
 
 layout (location=0) in vec3 iv;
 layout (location=1) in vec3 norm;
+layout (location=2) in vec4 carr;
 
 out vec3 N;
 out vec3 I;
@@ -19,7 +20,8 @@ out float pointFlag;
 
 void main()
 {
-     Cs = vec4(dcolor.x, dcolor.y, dcolor.z, 1.0);
+     //Cs = vec4(dcolor.x, dcolor.y, dcolor.z, dcolor.w);
+     Cs = carr;
      vec4 centeredIv = vec4( iv.x, iv.y, iv.z, 1.0);
      mat4 mview = view * model;
      vec4 P = mview * centeredIv;
