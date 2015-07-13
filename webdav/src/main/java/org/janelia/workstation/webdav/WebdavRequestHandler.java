@@ -76,6 +76,7 @@ public class WebdavRequestHandler extends ResourceConfig {
                         FileShare mapping;
                         try {
                             mapping = checkPermissions(filepath);
+                            System.out.println (mapping.getPermissions());
                             if (!mapping.getPermissions().contains(Permission.MKCOL)) {
                                 return Response.status(Response.Status.UNAUTHORIZED).build();
                             }
@@ -175,25 +176,35 @@ public class WebdavRequestHandler extends ResourceConfig {
         // if user already requested this resource, skip the mapping and permissions checks
         HttpSession session = request.getSession();
         Enumeration<String> mapNames = session.getAttributeNames();
+        String bestMatch = null;
         while (mapNames.hasMoreElements()) {
             String attName = mapNames.nextElement();
-            System.out.println (attName);
             if (filepath.startsWith(attName)) {
-                return (FileShare)session.getAttribute(attName);
+                if (bestMatch==null || attName.length()>bestMatch.length())
+                    bestMatch = attName;
             }
+        }
+        if (bestMatch!=null) {
+            return (FileShare)session.getAttribute(bestMatch);
         }
 
         // check out resources and find first matching
         Map<String,FileShare> resourceMap = WebdavContextManager.getResourcesByMapping();
         Iterator<String> mappings = resourceMap.keySet().iterator();
         FileShare mappedResource = null;
+        bestMatch = null;
         while (mappings.hasNext()) {
             String mappingBase = (String)mappings.next();
             if (filepath.startsWith(mappingBase)) {
-                mappedResource = resourceMap.get(mappingBase);
-                break;
+                if (bestMatch==null || mappingBase.length()>bestMatch.length()) {
+                    bestMatch = mappingBase;
+                }
             }
         }
+        if (bestMatch!=null) {
+            mappedResource = resourceMap.get(bestMatch);
+        }
+
         if (mappedResource == null) {
             throw new FileNotFoundException("no file share mapped for the file requested.");
         }

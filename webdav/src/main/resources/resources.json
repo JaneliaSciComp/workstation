@@ -42,11 +42,8 @@
             "mapping": "/nobackup/jacs/jacsData/filestore/upload",
             "type": "block",
             "path": "mirror",
-            "authorizer": "jacsdata",
             "permissions": [
-                "write",
-                "mkcol",
-                "propfind"
+                "read", "write", "delete", "propfind", "mkcol"
             ]
         },
         "Cluster Data": {
