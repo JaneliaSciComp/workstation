@@ -1,3 +1,4 @@
+
 #version 430
 
 uniform mat4 proj;
@@ -35,7 +36,9 @@ void main()
 
 
     vec3 ecPosition = vec3(mview * vertexPosition);
+
     vec3 tnorm = normalize(normalMatrix * norm);
+
     vec3 lightVec = normalize(lightPosition - ecPosition);
     vec3 viewVec = normalize(eyePosition - ecPosition);
     vec3 hvec = normalize(viewVec + lightVec);
@@ -43,7 +46,15 @@ void main()
     float spec = abs(dot(hvec, tnorm));
     spec = pow(spec, 16.0);
 
-    diffuseColor = lightColor * vec3(Kd * abs(dot(lightVec, tnorm)));
+    //spec = 2.0;
+    //if (norm.x < 0.0) {
+    //    spec = 0.1;
+    //}
+
+    diffuseColor = lightColor * vec3(Kd * abs(dot(lightVec, tnorm))); 
+
+    //diffuseColor = vec3(0.5, 0.5, 0.1);
+
     diffuseColor = clamp(ambient + diffuseColor, 0.0, 1.0);
     specularColor = clamp( (lightColor * specular * spec), 0.0, 1.0);
 
