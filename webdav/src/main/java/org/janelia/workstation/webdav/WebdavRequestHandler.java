@@ -173,43 +173,41 @@ public class WebdavRequestHandler extends ResourceConfig {
     }
 
     private FileShare mapResource(String filepath) throws FileNotFoundException {
-        // if user already requested this resource, skip the mapping and permissions checks
-        HttpSession session = request.getSession();
-        Enumeration<String> mapNames = session.getAttributeNames();
-        String bestMatch = null;
-        while (mapNames.hasMoreElements()) {
-            String attName = mapNames.nextElement();
-            if (filepath.startsWith(attName)) {
-                if (bestMatch==null || attName.length()>bestMatch.length())
-                    bestMatch = attName;
-            }
-        }
-        if (bestMatch!=null) {
-            return (FileShare)session.getAttribute(bestMatch);
-        }
-
-        // check out resources and find first matching
-        Map<String,FileShare> resourceMap = WebdavContextManager.getResourcesByMapping();
-        Iterator<String> mappings = resourceMap.keySet().iterator();
+        Map resourceMap = WebdavContextManager.getResourcesByMapping();
+        Iterator mappings = resourceMap.keySet().iterator();
         FileShare mappedResource = null;
-        bestMatch = null;
-        while (mappings.hasNext()) {
-            String mappingBase = (String)mappings.next();
-            if (filepath.startsWith(mappingBase)) {
-                if (bestMatch==null || mappingBase.length()>bestMatch.length()) {
-                    bestMatch = mappingBase;
-                }
-            }
-        }
-        if (bestMatch!=null) {
-            mappedResource = resourceMap.get(bestMatch);
-        }
+        String bestMatch = null;
 
-        if (mappedResource == null) {
-            throw new FileNotFoundException("no file share mapped for the file requested.");
-        }
+        while(true) {
+            String session;
+            do {
+                do {
+                    if(!mappings.hasNext()) {
+                        if(bestMatch != null) {
+                            HttpSession session1 = this.request.getSession();
+                            if(session1.getAttribute(bestMatch) != null) {
+                                return (FileShare)session1.getAttribute(bestMatch);
+                            }
 
-        return (FileShare)mappedResource.clone();
+                            mappedResource = (FileShare)resourceMap.get(bestMatch);
+                        }
+
+                        if(mappedResource == null) {
+                            throw new FileNotFoundException("no file share mapped for the file requested.");
+                        }
+
+                        return (FileShare)mappedResource.clone();
+                    }
+
+                    session = (String)mappings.next();
+                } while(!filepath.startsWith(session));
+
+                System.out.println(session);
+                System.out.println(bestMatch);
+            } while(bestMatch != null && session.length() <= bestMatch.length());
+
+            bestMatch = session;
+        }
     }
 
     private BasicAuthToken getBasicAuthUser(String basicRequestHeader) {
