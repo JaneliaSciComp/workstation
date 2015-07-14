@@ -50,7 +50,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     private static final double TRACED_SEGMENT_RADIUS = 8;
     private static final int TRACED_SEGMENT_POLYGON_SIDES = 10;
     public static final double ANNO_END_RADIUS = TRACED_SEGMENT_RADIUS * 4;
-    private static final int ANNO_END_POLYGON_SIDES = 24;
+    private static final int ANNO_END_POLYGON_SIDES = 12;
     
     private static final int CURRENT_SELECTION_POLYGON_SIDES = 24;
     private static final double CURRENT_SELECTION_RADIUS = TRACED_SEGMENT_RADIUS * 10;
