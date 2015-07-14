@@ -94,8 +94,8 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
                 viGroup vc2 = vcl.get(v4);
                 int v5 = nOffset + (v * 36 + (v4-36)) * 3;
                 fb.put(v5, vc2.x);
-                fb.put(v5, vc2.y);
-                fb.put(v5, vc2.z);
+                fb.put(v5+1, vc2.y);
+                fb.put(v5+2, vc2.z);
             }
             for (int c1=0;c1<36;c1++) {
                 int v6 = cOffset + v*144 + c1*4;
@@ -142,107 +142,109 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
         // We will generate a generic 0-based set of coordinates, and then just
         // add the offsets for the return. The normals are indpendent of position.
         
+        float nl = (float)Math.sqrt(3.0);
+        
         // Bottom
         viGroup b11 = new viGroup(0.0f, 0.0f, 0.0f, 1.0f);
         viGroup b12 = new viGroup(  vs, 0.0f, 0.0f, 1.0f);
         viGroup b13 = new viGroup(  vs, 0.0f,   vs, 1.0f);
         
-        viGroup b11f = new viGroup( -1.0f, -1.0f, -1.0f, 1.0f); // updated
-        viGroup b12f = new viGroup(  1.0f, -1.0f, -1.0f, 1.0f); // updated
-        viGroup b13f = new viGroup(  1.0f, -1.0f,  1.0f, 1.0f); // updated
+        viGroup b11f = new viGroup( -nl, -nl, -nl, 1.0f); // updated
+        viGroup b12f = new viGroup(  nl, -nl, -nl, 1.0f); // updated
+        viGroup b13f = new viGroup(  nl, -nl,  nl, 1.0f); // updated
         
         viGroup b21 = new viGroup(vs, 0.0f, vs, 1.0f);
         viGroup b22 = new viGroup(0.0f, 0.0f, vs, 1.0f);
         viGroup b23 = new viGroup(0.0f, 0.0f, 0.0f, 1.0f);
         
-        viGroup b21f = new viGroup(  1.0f, -1.0f,  1.0f, 1.0f); // updated
-        viGroup b22f = new viGroup( -1.0f, -1.0f,  1.0f, 1.0f); // updated
-        viGroup b23f = new viGroup( -1.0f, -1.0f, -1.0f, 1.0f); // updated
+        viGroup b21f = new viGroup(  nl, -nl,  nl, 1.0f); // updated
+        viGroup b22f = new viGroup( -nl, -nl,  nl, 1.0f); // updated
+        viGroup b23f = new viGroup( -nl, -nl, -nl, 1.0f); // updated
         
         // Top
         viGroup t11 = new viGroup(0.0f, vs, 0.0f, 1.0f);
         viGroup t12 = new viGroup(vs, vs, 0.0f, 1.0f);
         viGroup t13 = new viGroup(vs, vs, vs, 1.0f);
         
-        viGroup t11f = new viGroup( -1.0f, 1.0f, -1.0f, 1.0f); // updated
-        viGroup t12f = new viGroup(  1.0f, 1.0f, -1.0f, 1.0f); // updated
-        viGroup t13f = new viGroup(  1.0f, 1.0f,  1.0f, 1.0f); // updated
+        viGroup t11f = new viGroup( -nl, nl, -nl, 1.0f); // updated
+        viGroup t12f = new viGroup(  nl, nl, -nl, 1.0f); // updated
+        viGroup t13f = new viGroup(  nl, nl,  nl, 1.0f); // updated
         
         viGroup t21 = new viGroup(vs, vs, vs, 1.0f);
         viGroup t22 = new viGroup(0.0f, vs, vs, 1.0f);
         viGroup t23 = new viGroup(0.0f, vs, 0.0f, 1.0f);
         
-        viGroup t21f = new viGroup(  1.0f, 1.0f,  1.0f, 1.0f); // updated
-        viGroup t22f = new viGroup( -1.0f, 1.0f,  1.0f, 1.0f); // updated
-        viGroup t23f = new viGroup( -1.0f, 1.0f, -1.0f, 1.0f); // updated
+        viGroup t21f = new viGroup(  nl, nl,  nl, 1.0f); // updated
+        viGroup t22f = new viGroup( -nl, nl,  nl, 1.0f); // updated
+        viGroup t23f = new viGroup( -nl, nl, -nl, 1.0f); // updated
         
         // Back
         viGroup ba11 = new viGroup(0.0f, 0.0f, 0.0f, 1.0f);
         viGroup ba12 = new viGroup(0.0f, vs, 0.0f, 1.0f);
         viGroup ba13 = new viGroup(vs, 0.0f, 0.0f, 1.0f);
         
-        viGroup ba11f = new viGroup( -1.0f, -1.0f, -1.0f, 1.0f); // updated
-        viGroup ba12f = new viGroup( -1.0f,  1.0f, -1.0f, 1.0f); // updated
-        viGroup ba13f = new viGroup(  1.0f, -1.0f, -1.0f, 1.0f); // updated
+        viGroup ba11f = new viGroup( -nl, -nl, -nl, 1.0f); // updated
+        viGroup ba12f = new viGroup( -nl,  nl, -nl, 1.0f); // updated
+        viGroup ba13f = new viGroup(  nl, -nl, -nl, 1.0f); // updated
         
         viGroup ba21 = new viGroup(vs, 0.0f, 0.0f, 1.0f);
         viGroup ba22 = new viGroup(vs, vs, 0.0f, 1.0f);
         viGroup ba23 = new viGroup(0.0f, vs, 0.0f, 1.0f);
         
-        viGroup ba21f = new viGroup(  1.0f, -1.0f, -1.0f, 1.0f); // updated
-        viGroup ba22f = new viGroup(  1.0f,  1.0f, -1.0f, 1.0f); // updated
-        viGroup ba23f = new viGroup( -1.0f,  1.0f, -1.0f, 1.0f); // updated
+        viGroup ba21f = new viGroup(  nl, -nl, -nl, 1.0f); // updated
+        viGroup ba22f = new viGroup(  nl,  nl, -nl, 1.0f); // updated
+        viGroup ba23f = new viGroup( -nl,  nl, -nl, 1.0f); // updated
         
         // Front
-        viGroup f13 = new viGroup(vs, 0.0f, vs, 1.0f);        
-        viGroup f11 = new viGroup(0.0f, 0.0f, vs, 1.0f);
-        viGroup f12 = new viGroup(0.0f, vs, vs, 1.0f);
+        viGroup f11 = new viGroup(vs, 0.0f, vs, 1.0f);        
+        viGroup f12 = new viGroup(0.0f, 0.0f, vs, 1.0f);
+        viGroup f13 = new viGroup(0.0f, vs, vs, 1.0f);
         
-        viGroup f11f = new viGroup(  1.0f, -1.0f,  1.0f, 1.0f); // updated
-        viGroup f12f = new viGroup( -1.0f, -1.0f,  1.0f, 1.0f); // updated
-        viGroup f13f = new viGroup( -1.0f, 1.0f,  1.0f, 1.0f); // updated
+        viGroup f11f = new viGroup(  nl, -nl,  nl, 1.0f); // updated
+        viGroup f12f = new viGroup( -nl, -nl,  nl, 1.0f); // updated
+        viGroup f13f = new viGroup( -nl,  nl,  nl, 1.0f); // updated
         
         viGroup f21 = new viGroup(vs, 0.0f, vs, 1.0f);
         viGroup f22 = new viGroup(vs, vs, vs, 1.0f);
         viGroup f23 = new viGroup(0.0f, vs, vs, 1.0f);
         
-        viGroup f21f = new viGroup(  1.0f, -1.0f,  1.0f, 1.0f); // updated
-        viGroup f22f = new viGroup(  1.0f,  1.0f,  1.0f, 1.0f); // updated       
-        viGroup f23f = new viGroup( -1.0f, 1.0f,  1.0f, 1.0f); // updated  
+        viGroup f21f = new viGroup(  nl, -nl,  nl, 1.0f); // updated
+        viGroup f22f = new viGroup(  nl,  nl,  nl, 1.0f); // updated       
+        viGroup f23f = new viGroup( -nl,  nl,  nl, 1.0f); // updated  
         
         // Left
         viGroup l11 = new viGroup(0.0f, 0.0f, 0.0f, 1.0f);
         viGroup l12 = new viGroup(0.0f, vs, 0.0f, 1.0f);
         viGroup l13 = new viGroup(0.0f, 0.0f, vs, 1.0f);
         
-        viGroup l11f = new viGroup( -1.0f, -1.0f, -1.0f, 1.0f); // updated
-        viGroup l12f = new viGroup( -1.0f,  1.0f, -1.0f, 1.0f); // updated
-        viGroup l13f = new viGroup( -1.0f, -1.0f,  1.0f, 1.0f); // updated
+        viGroup l11f = new viGroup( -nl, -nl, -nl, 1.0f); // updated
+        viGroup l12f = new viGroup( -nl,  nl, -nl, 1.0f); // updated
+        viGroup l13f = new viGroup( -nl, -nl,  nl, 1.0f); // updated
        
         viGroup l21 = new viGroup(0.0f, 0.0f, vs, 1.0f);
         viGroup l22 = new viGroup(0.0f, vs, vs, 1.0f);
         viGroup l23 = new viGroup(0.0f, vs, 0.0f, 1.0f);
         
-        viGroup l21f = new viGroup( -1.0f, -1.0f,  1.0f, 1.0f); // updated
-        viGroup l22f = new viGroup( -1.0f, 1.0f,  1.0f, 1.0f); // updated
-        viGroup l23f = new viGroup( -1.0f, 1.0f, -1.0f, 1.0f); // updated        
+        viGroup l21f = new viGroup( -nl, -nl,  nl, 1.0f); // updated
+        viGroup l22f = new viGroup( -nl, nl,  nl, 1.0f); // updated
+        viGroup l23f = new viGroup( -nl, nl, -nl, 1.0f); // updated        
         
          // Right
         viGroup r11 = new viGroup(vs, 0.0f, 0.0f, 1.0f);
         viGroup r12 = new viGroup(vs, vs, 0.0f, 1.0f);
         viGroup r13 = new viGroup(vs, 0.0f, vs, 1.0f);
         
-        viGroup r11f = new viGroup(  1.0f, -1.0f, -1.0f, 1.0f); // updated
-        viGroup r12f = new viGroup(  1.0f, 1.0f, -1.0f, 1.0f); // updated
-        viGroup r13f = new viGroup(  1.0f, -1.0f,  1.0f, 1.0f); // updated
+        viGroup r11f = new viGroup(  nl, -nl, -nl, 1.0f); // updated
+        viGroup r12f = new viGroup(  nl, nl, -nl, 1.0f); // updated
+        viGroup r13f = new viGroup(  nl, -nl,  nl, 1.0f); // updated
        
         viGroup r21 = new viGroup(vs, 0.0f, vs, 1.0f);
         viGroup r22 = new viGroup(vs, vs, vs, 1.0f);
         viGroup r23 = new viGroup(vs, vs, 0.0f, 1.0f);
         
-        viGroup r21f = new viGroup(  1.0f, -1.0f,  1.0f, 1.0f); // updated
-        viGroup r22f = new viGroup(  1.0f,  1.0f,  1.0f, 1.0f); // updated
-        viGroup r23f = new viGroup(  1.0f,  1.0f, -1.0f, 1.0f); // updated
+        viGroup r21f = new viGroup(  nl, -nl,  nl, 1.0f); // updated
+        viGroup r22f = new viGroup(  nl,  nl,  nl, 1.0f); // updated
+        viGroup r23f = new viGroup(  nl,  nl, -nl, 1.0f); // updated
         
         // Vertices - total of 36
         
