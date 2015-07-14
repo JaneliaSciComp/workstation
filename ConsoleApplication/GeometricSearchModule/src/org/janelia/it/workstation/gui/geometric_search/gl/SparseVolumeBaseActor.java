@@ -89,16 +89,16 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
 
         if (!fileLoaded) {
             try {
-                //loadVolumeFile();
+                loadVolumeFile();
             } catch (Exception ex) {
                 logger.error("Could not load file "+volumeFile.getAbsolutePath());
                 ex.printStackTrace();
                 fileLoadError=true;
                 return;
             }
-            //width=textureData.getSx();
-            //height=textureData.getSy();
-            //depth=textureData.getSz();
+            width=textureData.getSx();
+            height=textureData.getSy();
+            depth=textureData.getSz();
             fileLoaded=true;
         }
         

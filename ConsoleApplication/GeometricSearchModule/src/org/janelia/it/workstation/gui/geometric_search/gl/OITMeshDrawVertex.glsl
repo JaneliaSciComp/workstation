@@ -8,26 +8,26 @@ uniform mat4 model;
 uniform vec4 dcolor;
 
 layout (location=0) in vec3 iv;
-layout (location=1) in vec3 norm;
-layout (location=2) in vec4 carr;
+//layout (location=1) in vec3 norm;
+//layout (location=2) in vec4 carr;
 
 //out vec3 N;
 //out vec3 I;
-//out vec4 Cs;
+out vec4 Cs;
 
-out vec3 diffuseColor;
-out vec3 specularColor;
+//flat out vec3 diffuseColor;
+//flat out vec3 specularColor;
 
 
 void main()
 {
 
-    vec3 lightPosition = vec3(4.0, 4.0, 4.0);
-    vec3 lightColor = vec3(1.0, 1.0, 0.8);
-    vec3 eyePosition = vec3(0.0, 0.0, 4.0);
-    vec3 specular = vec3(0.2, 0.2, 0.0);
-    vec3 ambient = vec3(0.2, 0.2, 0.0);
-    float Kd = 0.8;
+    //vec3 lightPosition = vec3(4.0, 4.0, 4.0);
+    //vec3 lightColor = vec3(1.0, 1.0, 0.8);
+    //vec3 eyePosition = vec3(0.0, 0.0, 4.0);
+    //vec3 specular = vec3(0.2, 0.2, 0.0);
+    //vec3 ambient = vec3(0.2, 0.2, 0.0);
+    //float Kd = 0.8;
 
     mat4 mview = view * model;
     vec4 vertexPosition = vec4( iv.x, iv.y, iv.z, 1.0);
@@ -35,32 +35,34 @@ void main()
 
 
 
-    vec3 ecPosition = vec3(mview * vertexPosition);
+    //vec3 ecPosition = vec3(mview * vertexPosition);
 
-    vec3 tnorm = normalize(normalMatrix * norm);
+    //vec3 tnorm = normalize(normalMatrix * norm);
 
-    vec3 lightVec = normalize(lightPosition - ecPosition);
-    vec3 viewVec = normalize(eyePosition - ecPosition);
-    vec3 hvec = normalize(viewVec + lightVec);
+    //vec3 lightVec = normalize(lightPosition - ecPosition);
+    //vec3 viewVec = normalize(eyePosition - ecPosition);
+    //vec3 hvec = normalize(viewVec + lightVec);
 
-    float spec = abs(dot(hvec, tnorm));
-    spec = pow(spec, 16.0);
+    //float spec = abs(dot(hvec, tnorm));
+    //spec = pow(spec, 16.0);
 
     //spec = 2.0;
     //if (norm.x < 0.0) {
     //    spec = 0.1;
     //}
 
-    diffuseColor = lightColor * vec3(Kd * abs(dot(lightVec, tnorm))); 
+    //diffuseColor = lightColor * vec3(Kd * abs(dot(lightVec, tnorm))); 
 
     //diffuseColor = vec3(0.5, 0.5, 0.1);
 
-    diffuseColor = clamp(ambient + diffuseColor, 0.0, 1.0);
-    specularColor = clamp( (lightColor * specular * spec), 0.0, 1.0);
+    //diffuseColor = clamp(ambient + diffuseColor, 0.0, 1.0);
+    //specularColor = clamp( (lightColor * specular * spec), 0.0, 1.0);
 
     vec4 P = mview * vertexPosition;
 
     gl_Position = proj * P;
+
+    Cs = vec4(0.7, 0.7, 0.0, 0.02);
 
 
     // X-ray

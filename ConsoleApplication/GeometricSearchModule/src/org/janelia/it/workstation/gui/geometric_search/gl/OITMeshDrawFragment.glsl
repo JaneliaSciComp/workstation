@@ -3,10 +3,10 @@
 // vertex to fragment shader io
 //in vec3 N;
 //in vec3 I;
-//in vec4 Cs;
+in vec4 Cs;
 
-in vec3 diffuseColor;
-in vec3 specularColor;
+//flat in vec3 diffuseColor;
+//flat in vec3 specularColor;
 
 struct NodeType {
     vec4 color;
@@ -36,16 +36,16 @@ out vec4 blankOut;
 void main()
 {
 
-    float scaleS = 10.0;
-    float scaleT = 10.0;
+    //float scaleS = 10.0;
+    //float scaleT = 10.0;
 
-    float thresholdS = 0.13;
-    float thresholdT = 0.13;
+    //float thresholdS = 0.13;
+    //float thresholdT = 0.13;
 
-    vec3 surfaceColor = vec3(0.8, 0.8, 0.7);
+    //vec3 surfaceColor = vec3(0.8, 0.8, 0.7);
 
-    vec3 finalColor = surfaceColor * diffuseColor + specularColor;
-    vec4 color = vec4(finalColor, 1.0);
+    //vec3 finalColor = surfaceColor * diffuseColor + specularColor;
+    //vec4 color = vec4(finalColor, 0.01);
 
 
 
@@ -56,7 +56,7 @@ void main()
     //float intensity=0.5;
     //float ambient=0.1;
 
-    //vec4 color = Cs;
+    vec4 color = Cs;
 
         //float opac = dot(normalize(-N), normalize(-I)); 
         //opac = abs(opac);

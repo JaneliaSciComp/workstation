@@ -32,36 +32,36 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
         // For debugging purposes, we are adding another 36x4=144 values to indicate the color for
         // each vertex.
         
-        viList.clear();
-        viList.add(new viGroup(0.0f, 0.0f, 0.0f, 1.0f));
-        viList.add(new viGroup(0.0f, 0.0f, 0.5f, 1.0f));
+        //viList.clear();
+        //viList.add(new viGroup(0.0f, 0.0f, 0.0f, 1.0f));
+        //viList.add(new viGroup(0.0f, 0.0f, 0.5f, 1.0f));
         
         List<List<viGroup>> viColorList = new ArrayList<List<viGroup>>();
         
         FloatBuffer fb=FloatBuffer.allocate(viList.size()*(216+144));
         
-        //float vs = getVoxelUnitSize();
-        float vs = 0.2f;
+        float vs = getVoxelUnitSize();
+        //float vs = 0.2f;
         
         logger.info("init() using vs="+vs+", viList size="+viList.size());
         
-        List<viGroup> multiColorCube = new ArrayList<>();
-        
-        viGroup bottomColor = new viGroup(1.0f, 0.0f, 0.0f, 0.5f);
-        viGroup topColor    = new viGroup(0.0f, 1.0f, 0.0f, 0.5f);
-        viGroup backColor   = new viGroup(0.0f, 0.0f, 1.0f, 0.5f);
-        viGroup frontColor  = new viGroup(0.0f, 0.3f, 0.0f, 0.5f);
-        viGroup leftColor   = new viGroup(1.0f, 1.0f, 0.0f, 0.5f);
-        viGroup rightColor  = new viGroup(0.5f, 0.5f, 0.5f, 0.5f);
-        
-        multiColorCube.add(bottomColor);
-        multiColorCube.add(topColor);
-        multiColorCube.add(backColor);
-        multiColorCube.add(frontColor);
-        multiColorCube.add(leftColor);
-        multiColorCube.add(rightColor);
-        
-        viColorList.add(multiColorCube);
+//        List<viGroup> multiColorCube = new ArrayList<>();
+//        
+//        viGroup bottomColor = new viGroup(1.0f, 0.0f, 0.0f, 0.5f);
+//        viGroup topColor    = new viGroup(0.0f, 1.0f, 0.0f, 0.5f);
+//        viGroup backColor   = new viGroup(0.0f, 0.0f, 1.0f, 0.5f);
+//        viGroup frontColor  = new viGroup(0.0f, 0.3f, 0.0f, 0.5f);
+//        viGroup leftColor   = new viGroup(1.0f, 1.0f, 0.0f, 0.5f);
+//        viGroup rightColor  = new viGroup(0.5f, 0.5f, 0.5f, 0.5f);
+//        
+//        multiColorCube.add(bottomColor);
+//        multiColorCube.add(topColor);
+//        multiColorCube.add(backColor);
+//        multiColorCube.add(frontColor);
+//        multiColorCube.add(leftColor);
+//        multiColorCube.add(rightColor);
+//        
+//        viColorList.add(multiColorCube);
         
         viGroup transparentColor = new viGroup(1.0f, 0.0f, 0.0f, 0.1f);
         
@@ -74,7 +74,9 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
         transparentColorCube.add(transparentColor);
         transparentColorCube.add(transparentColor);
         
-        viColorList.add(transparentColorCube);
+        for (viGroup v : viList) {
+            viColorList.add(transparentColorCube);
+        }
              
         // First, vertex information
         int nOffset = viList.size() * 36 * 3;
@@ -113,7 +115,7 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
                 } else if (c1<36) {
                     colorGroup=colorList.get(5);
                 }
-                    fb.put(v6, colorGroup.x);
+                     fb.put(v6, colorGroup.x);
                     fb.put(v6+1, colorGroup.y);
                     fb.put(v6+2, colorGroup.z);
                     fb.put(v6+3, colorGroup.w);
@@ -145,22 +147,22 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
         float nl = (float)Math.sqrt(3.0);
         
         // Bottom
-        viGroup b11 = new viGroup(0.0f, 0.0f, 0.0f, 1.0f);
+        viGroup b11 = new viGroup(  vs, 0.0f,   vs, 1.0f);
         viGroup b12 = new viGroup(  vs, 0.0f, 0.0f, 1.0f);
-        viGroup b13 = new viGroup(  vs, 0.0f,   vs, 1.0f);
+        viGroup b13 = new viGroup(0.0f, 0.0f, 0.0f, 1.0f);
         
-        viGroup b11f = new viGroup( -nl, -nl, -nl, 1.0f); // updated
+        viGroup b11f = new viGroup(  nl, -nl,  nl, 1.0f); // updated
         viGroup b12f = new viGroup(  nl, -nl, -nl, 1.0f); // updated
-        viGroup b13f = new viGroup(  nl, -nl,  nl, 1.0f); // updated
-        
+        viGroup b13f = new viGroup( -nl, -nl, -nl, 1.0f); // updated
+ 
         viGroup b21 = new viGroup(vs, 0.0f, vs, 1.0f);
         viGroup b22 = new viGroup(0.0f, 0.0f, vs, 1.0f);
         viGroup b23 = new viGroup(0.0f, 0.0f, 0.0f, 1.0f);
-        
+
         viGroup b21f = new viGroup(  nl, -nl,  nl, 1.0f); // updated
         viGroup b22f = new viGroup( -nl, -nl,  nl, 1.0f); // updated
         viGroup b23f = new viGroup( -nl, -nl, -nl, 1.0f); // updated
-        
+       
         // Top
         viGroup t11 = new viGroup(0.0f, vs, 0.0f, 1.0f);
         viGroup t12 = new viGroup(vs, vs, 0.0f, 1.0f);
@@ -170,13 +172,13 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
         viGroup t12f = new viGroup(  nl, nl, -nl, 1.0f); // updated
         viGroup t13f = new viGroup(  nl, nl,  nl, 1.0f); // updated
         
-        viGroup t21 = new viGroup(vs, vs, vs, 1.0f);
-        viGroup t22 = new viGroup(0.0f, vs, vs, 1.0f);
-        viGroup t23 = new viGroup(0.0f, vs, 0.0f, 1.0f);
+        viGroup t21 = new viGroup(0.0f, vs, vs, 1.0f);
+        viGroup t22 = new viGroup(0.0f, vs, 0.0f, 1.0f);
+        viGroup t23 = new viGroup(vs, vs, vs, 1.0f);
         
-        viGroup t21f = new viGroup(  nl, nl,  nl, 1.0f); // updated
-        viGroup t22f = new viGroup( -nl, nl,  nl, 1.0f); // updated
-        viGroup t23f = new viGroup( -nl, nl, -nl, 1.0f); // updated
+        viGroup t21f = new viGroup( -nl, nl,  nl, 1.0f); // updated
+        viGroup t22f = new viGroup( -nl, nl, -nl, 1.0f); // updated
+        viGroup t23f = new viGroup(  nl, nl,  nl, 1.0f); // updated
         
         // Back
         viGroup ba11 = new viGroup(0.0f, 0.0f, 0.0f, 1.0f);
@@ -187,13 +189,13 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
         viGroup ba12f = new viGroup( -nl,  nl, -nl, 1.0f); // updated
         viGroup ba13f = new viGroup(  nl, -nl, -nl, 1.0f); // updated
         
-        viGroup ba21 = new viGroup(vs, 0.0f, 0.0f, 1.0f);
-        viGroup ba22 = new viGroup(vs, vs, 0.0f, 1.0f);
-        viGroup ba23 = new viGroup(0.0f, vs, 0.0f, 1.0f);
+        viGroup ba21 = new viGroup(vs, vs, 0.0f, 1.0f);
+        viGroup ba22 = new viGroup(0.0f, vs, 0.0f, 1.0f);
+        viGroup ba23 = new viGroup(vs, 0.0f, 0.0f, 1.0f);
         
-        viGroup ba21f = new viGroup(  nl, -nl, -nl, 1.0f); // updated
-        viGroup ba22f = new viGroup(  nl,  nl, -nl, 1.0f); // updated
-        viGroup ba23f = new viGroup( -nl,  nl, -nl, 1.0f); // updated
+        viGroup ba21f = new viGroup(  nl,  nl, -nl, 1.0f); // updated
+        viGroup ba22f = new viGroup( -nl,  nl, -nl, 1.0f); // updated
+        viGroup ba23f = new viGroup(  nl, -nl, -nl, 1.0f); // updated
         
         // Front
         viGroup f11 = new viGroup(vs, 0.0f, vs, 1.0f);        
@@ -221,13 +223,13 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
         viGroup l12f = new viGroup( -nl,  nl, -nl, 1.0f); // updated
         viGroup l13f = new viGroup( -nl, -nl,  nl, 1.0f); // updated
        
-        viGroup l21 = new viGroup(0.0f, 0.0f, vs, 1.0f);
-        viGroup l22 = new viGroup(0.0f, vs, vs, 1.0f);
-        viGroup l23 = new viGroup(0.0f, vs, 0.0f, 1.0f);
-        
-        viGroup l21f = new viGroup( -nl, -nl,  nl, 1.0f); // updated
-        viGroup l22f = new viGroup( -nl, nl,  nl, 1.0f); // updated
-        viGroup l23f = new viGroup( -nl, nl, -nl, 1.0f); // updated        
+        viGroup l21 = new viGroup(0.0f, vs, vs, 1.0f);
+        viGroup l22 = new viGroup(0.0f, vs, 0.0f, 1.0f);
+        viGroup l23 = new viGroup(0.0f, 0.0f, vs, 1.0f);
+       
+        viGroup l21f = new viGroup( -nl, nl,  nl, 1.0f); // updated
+        viGroup l22f = new viGroup( -nl, nl, -nl, 1.0f); // updated        
+        viGroup l23f = new viGroup( -nl, -nl,  nl, 1.0f); // updated
         
          // Right
         viGroup r11 = new viGroup(vs, 0.0f, 0.0f, 1.0f);
@@ -238,13 +240,13 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
         viGroup r12f = new viGroup(  nl, nl, -nl, 1.0f); // updated
         viGroup r13f = new viGroup(  nl, -nl,  nl, 1.0f); // updated
        
-        viGroup r21 = new viGroup(vs, 0.0f, vs, 1.0f);
-        viGroup r22 = new viGroup(vs, vs, vs, 1.0f);
-        viGroup r23 = new viGroup(vs, vs, 0.0f, 1.0f);
-        
-        viGroup r21f = new viGroup(  nl, -nl,  nl, 1.0f); // updated
-        viGroup r22f = new viGroup(  nl,  nl,  nl, 1.0f); // updated
-        viGroup r23f = new viGroup(  nl,  nl, -nl, 1.0f); // updated
+        viGroup r21 = new viGroup(vs, vs, vs, 1.0f);
+        viGroup r22 = new viGroup(vs, vs, 0.0f, 1.0f);
+        viGroup r23 = new viGroup(vs, 0.0f, vs, 1.0f);
+       
+        viGroup r21f = new viGroup(  nl,  nl,  nl, 1.0f); // updated
+        viGroup r22f = new viGroup(  nl,  nl, -nl, 1.0f); // updated
+        viGroup r23f = new viGroup(  nl, -nl,  nl, 1.0f); // updated
         
         // Vertices - total of 36
         
@@ -365,15 +367,15 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor {
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
         checkGlError(gl, "d glBindBuffer error");
         gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
-        gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 0, viList.size() * 108 * 4);
-        gl.glVertexAttribPointer(2, 4, GL4.GL_FLOAT, false, 0, viList.size() * 216 * 4);
+        //gl.glVertexAttribPointer(1, 3, GL4.GL_FLOAT, false, 0, viList.size() * 108 * 4);
+        //gl.glVertexAttribPointer(2, 4, GL4.GL_FLOAT, false, 0, viList.size() * 216 * 4);
         checkGlError(gl, "d glVertexAttribPointer error");
         gl.glEnableVertexAttribArray(0);
         checkGlError(gl, "d glEnableVertexAttribArray 0 error");
-        gl.glEnableVertexAttribArray(1);
-        checkGlError(gl, "d glEnableVertexAttribArray 1 error");
-        gl.glEnableVertexAttribArray(2);
-        checkGlError(gl, "d glEnableVertexAttribArray 2 error");        
+        //gl.glEnableVertexAttribArray(1);
+        //checkGlError(gl, "d glEnableVertexAttribArray 1 error");
+        //gl.glEnableVertexAttribArray(2);
+        //checkGlError(gl, "d glEnableVertexAttribArray 2 error");        
         gl.glDrawArrays(GL4.GL_TRIANGLES, 0, viList.size() * 36);
         checkGlError(gl, "d glDrawArrays error");
 
