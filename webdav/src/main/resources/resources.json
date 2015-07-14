@@ -56,6 +56,14 @@
                 "propfind"
             ]
         },
+        "Dev Cluster Temp": {
+            "mapping": "/groups/jacs/jacsDev/devstore/upload",
+            "type": "block",
+            "path": "mirror",
+            "permissions": [
+                "read", "write", "delete", "propfind", "mkcol"
+            ]
+        },
         "Scality Data": {
             "mapping": "/Scality",
             "type": "object",
