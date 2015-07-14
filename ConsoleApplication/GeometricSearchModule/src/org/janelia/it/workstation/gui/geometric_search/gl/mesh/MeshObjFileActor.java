@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.geometric_search.gl;
+package org.janelia.it.workstation.gui.geometric_search.gl.mesh;
 
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -11,7 +11,6 @@ import javax.media.opengl.GLAutoDrawable;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;

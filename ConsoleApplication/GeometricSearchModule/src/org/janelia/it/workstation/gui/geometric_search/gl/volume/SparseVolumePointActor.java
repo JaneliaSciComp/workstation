@@ -4,23 +4,13 @@
  * and open the template in the editor.
  */
 
-package org.janelia.it.workstation.gui.geometric_search.gl;
+package org.janelia.it.workstation.gui.geometric_search.gl.volume;
 
 import java.io.File;
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import javax.media.opengl.GL4;
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
-import org.janelia.it.workstation.gui.viewer3d.VolumeLoader;
-import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
-import org.janelia.it.workstation.gui.viewer3d.resolver.TrivialFileResolver;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
-import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,6 +1,7 @@
-package org.janelia.it.workstation.gui.geometric_search.gl;
+package org.janelia.it.workstation.gui.geometric_search.gl.mesh;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.it.workstation.gui.geometric_search.gl.GL4Shader;
 
 import javax.media.opengl.GL4;
 

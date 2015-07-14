@@ -7,14 +7,16 @@ import javax.media.opengl.GL4;
 import javax.swing.*;
 
 import org.janelia.it.workstation.gui.geometric_search.gl.*;
+import org.janelia.it.workstation.gui.geometric_search.gl.mesh.MeshObjFileV2Actor;
+import org.janelia.it.workstation.gui.geometric_search.gl.mesh.MeshObjFileV2Shader;
+import org.janelia.it.workstation.gui.geometric_search.gl.mesh.OITMeshDrawShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.volume.SparseVolumeCubeActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.GL4Viewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import org.janelia.geometry3d.Vector4;
 
@@ -109,7 +111,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         GL4ShaderActionSequence sortSequence = new GL4ShaderActionSequence("Sort Phase");
 
         final OITMeshDrawShader drawShader = new OITMeshDrawShader();
-        final OITMeshSortShader sortShader = new OITMeshSortShader();
+        final OITSortShader sortShader = new OITSortShader();
 
         // Setup Draw Shader  //////////////////////////////
 
