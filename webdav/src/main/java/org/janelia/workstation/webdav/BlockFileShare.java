@@ -10,10 +10,12 @@ import org.janelia.workstation.webdav.propfind.Prop;
 import org.janelia.workstation.webdav.propfind.PropfindResponse;
 import org.janelia.workstation.webdav.propfind.Propstat;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.InputStream;
@@ -58,7 +60,10 @@ public class BlockFileShare extends FileShare {
         Propstat propstat = new Propstat();
         Prop prop = new Prop();
         prop.setCreationDate(Files.getAttribute(file, "creationTime").toString());
-        prop.setGetContentType(Files.probeContentType(file));
+
+        // workaround for buggey probeContentType
+        prop.setGetContentType(new MimetypesFileTypeMap().getContentType(file.toFile()));
+
         prop.setGetContentLength(Long.toString(Files.size(file)));
         prop.setGetLastModified(Files.getLastModifiedTime(file).toString());
         fileMeta.setHref("/Webdav" + file.toString());
