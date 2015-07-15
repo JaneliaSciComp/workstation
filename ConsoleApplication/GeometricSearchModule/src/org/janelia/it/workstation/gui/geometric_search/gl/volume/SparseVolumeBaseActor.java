@@ -1,7 +1,9 @@
-package org.janelia.it.workstation.gui.geometric_search.gl;
+package org.janelia.it.workstation.gui.geometric_search.gl.volume;
 
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector4;
+import org.janelia.it.workstation.gui.geometric_search.gl.GL4SimpleActor;
+import org.janelia.it.workstation.gui.geometric_search.gl.VolumeActor;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.workstation.gui.viewer3d.VolumeLoader;
 import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
@@ -14,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL4;
 import java.io.File;
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -89,16 +90,16 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
 
         if (!fileLoaded) {
             try {
-                //loadVolumeFile();
+                loadVolumeFile();
             } catch (Exception ex) {
                 logger.error("Could not load file "+volumeFile.getAbsolutePath());
                 ex.printStackTrace();
                 fileLoadError=true;
                 return;
             }
-            //width=textureData.getSx();
-            //height=textureData.getSy();
-            //depth=textureData.getSz();
+            width=textureData.getSx();
+            height=textureData.getSy();
+            depth=textureData.getSz();
             fileLoaded=true;
         }
         
