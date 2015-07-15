@@ -49,11 +49,11 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
     private static final double TRACED_SEGMENT_RADIUS = 8;
     private static final int TRACED_SEGMENT_POLYGON_SIDES = 10;
-    public static final double ANNO_END_RADIUS = TRACED_SEGMENT_RADIUS * 4;
-    private static final int ANNO_END_POLYGON_SIDES = 12;
+    public static final double ANNO_RADIUS = TRACED_SEGMENT_RADIUS * 4;
+    private static final int ANNO_POLYGON_SIDES = 12;
     
     private static final int CURRENT_SELECTION_POLYGON_SIDES = 24;
-    private static final double CURRENT_SELECTION_RADIUS = TRACED_SEGMENT_RADIUS * 10;
+    public static final double CURRENT_SELECTION_RADIUS = TRACED_SEGMENT_RADIUS * 10;
 
     private static final float[] UNFINISHED_ANNO_COLOR = new float[]{
         1.0f, 0.6f, 0.6f
@@ -71,6 +71,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         1.0f, 1.0f, 1.0f
     };
 
+    private final Logger log = LoggerFactory.getLogger(NeuronTraceVtxAttribMgr.class);
+
     // The skeleton and neuron styles constitute the 'model' to be studied
     // in creating the 3D representation of annotations.
     private AnnotationSkeletonDataSourceI dataSource;
@@ -81,8 +83,37 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     private final List<TriangleSource> triangleSources = new ArrayList<>();
     private final Map<Long, RenderBuffersBean> renderIdToBuffers = new HashMap<>();
     
-    private final Logger log = LoggerFactory.getLogger( NeuronTraceVtxAttribMgr.class );
+    private double annoRadius = ANNO_RADIUS;
+    private double currentSelectionRadius = CURRENT_SELECTION_RADIUS;
     
+    /**
+     * @return the annoRadius
+     */
+    public double getAnnoRadius() {
+        return annoRadius;
+    }
+
+    /**
+     * @param annoRadius the annoRadius to set
+     */
+    public void setAnnoRadius(double annoRadius) {
+        this.annoRadius = annoRadius;
+    }
+
+    /**
+     * @return the currentSelectionRadius
+     */
+    public double getCurrentSelectionRadius() {
+        return currentSelectionRadius;
+    }
+
+    /**
+     * @param currentSelectionRadius the currentSelectionRadius to set
+     */
+    public void setCurrentSelectionRadius(double currentSelectionRadius) {
+        this.currentSelectionRadius = currentSelectionRadius;
+    }
+
     /**
      * Call this whenever something in the 'model' has been changed.
      * 
@@ -231,7 +262,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     private synchronized void createVertices() throws Exception {
         // Make triangle sources.
         LineEnclosureFactory lineEnclosureFactory = new LineEnclosureFactory(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
-        PointEnclosureFactory pointEnclosureFactory = new PointEnclosureFactory(ANNO_END_POLYGON_SIDES, ANNO_END_RADIUS);
+        PointEnclosureFactory pointEnclosureFactory = new PointEnclosureFactory(ANNO_POLYGON_SIDES, ANNO_RADIUS);
         
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
         TileFormat tileFormat = dataSource.getTileFormat();
@@ -239,12 +270,12 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         int currentVertexNumber = 0;
 
         // Look at 'interesting annotations'.  What can be presented there?
-        pointEnclosureFactory.setCharacteristics(ANNO_END_POLYGON_SIDES, ANNO_END_RADIUS);
+        pointEnclosureFactory.setCharacteristics(ANNO_POLYGON_SIDES, getAnnoRadius());
         pointEnclosureFactory.setCurrentVertexNumber(currentVertexNumber);
         calculateInterestingAnnotationVertices(tileFormat, pointEnclosureFactory);
         
         // The current selection.
-        pointEnclosureFactory.setCharacteristics(CURRENT_SELECTION_POLYGON_SIDES, CURRENT_SELECTION_RADIUS);
+        pointEnclosureFactory.setCharacteristics(CURRENT_SELECTION_POLYGON_SIDES, getCurrentSelectionRadius());
         calculateCurrentSelectionVertices(pointEnclosureFactory);
 
         // Get the auto-traced segments.

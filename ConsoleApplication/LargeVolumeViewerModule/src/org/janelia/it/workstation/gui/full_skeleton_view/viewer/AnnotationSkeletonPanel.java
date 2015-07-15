@@ -251,6 +251,7 @@ public class AnnotationSkeletonPanel extends JPanel {
         rtnVal.setActor(meshDraw);
         
         rtnVal.getMenuActions().add( new SerializeWaveFrontAction(attributeManager, AnnotationSkeletonPanel.this) );
+        rtnVal.getMenuActions().add( new SphereSizeAction(attributeManager, meshDraw, AnnotationSkeletonPanel.this) );
         
         return rtnVal;
     }
@@ -344,6 +345,41 @@ public class AnnotationSkeletonPanel extends JPanel {
             } catch ( Exception ex ) {
                 SessionMgr.getSessionMgr().handleException(ex);
             }
+        }
+        
+    }
+    
+    public static class SphereSizeAction extends AbstractAction {
+
+        private final NeuronTraceVtxAttribMgr attributeManager;
+        private final MeshDrawActor meshDraw;
+        private final AnnotationSkeletonPanel panel;
+
+        public SphereSizeAction(
+                NeuronTraceVtxAttribMgr attributeManager,
+                MeshDrawActor meshDraw, 
+                AnnotationSkeletonPanel panel
+        ) {
+            this.attributeManager = attributeManager;
+            this.meshDraw = meshDraw;
+            this.panel = panel;
+            putValue(Action.NAME, "Toggle Landmark Sphere Sizes");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (attributeManager.getAnnoRadius() == NeuronTraceVtxAttribMgr.ANNO_RADIUS) {
+                attributeManager.setAnnoRadius(NeuronTraceVtxAttribMgr.ANNO_RADIUS / 2.0);
+                attributeManager.setCurrentSelectionRadius(attributeManager.getAnnoRadius() * 2.0);
+            }
+            else {
+                attributeManager.setAnnoRadius(NeuronTraceVtxAttribMgr.ANNO_RADIUS);
+                attributeManager.setCurrentSelectionRadius(NeuronTraceVtxAttribMgr.CURRENT_SELECTION_RADIUS);
+            }
+            // Must force re-build/re-send
+            meshDraw.refresh();
+            panel.validate();
+            panel.repaint();
         }
         
     }
