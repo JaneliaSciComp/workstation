@@ -86,6 +86,7 @@ public class RayCastSelector {
         
         //System.out.println("Smallest (O-C): " + smallestOMinusC);
         System.out.println("RayOrigin: " + rayOrigin);
+        System.out.println("RayWorldVec: " + rayWorldVec3);
         
         // Have found what user selected.
         if (selectedIntoRow > -1) {
