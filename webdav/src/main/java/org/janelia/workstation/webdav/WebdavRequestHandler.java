@@ -202,8 +202,6 @@ public class WebdavRequestHandler extends ResourceConfig {
                     session = (String)mappings.next();
                 } while(!filepath.startsWith(session));
 
-                System.out.println(session);
-                System.out.println(bestMatch);
             } while(bestMatch != null && session.length() <= bestMatch.length());
 
             bestMatch = session;
