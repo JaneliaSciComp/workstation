@@ -7,8 +7,6 @@ import javax.media.opengl.GL4;
 import javax.swing.*;
 
 import org.janelia.it.workstation.gui.geometric_search.gl.*;
-import org.janelia.it.workstation.gui.geometric_search.gl.mesh.MeshObjFileV2Actor;
-import org.janelia.it.workstation.gui.geometric_search.gl.mesh.MeshObjFileV2Shader;
 import org.janelia.it.workstation.gui.geometric_search.gl.mesh.OITMeshDrawShader;
 import org.janelia.it.workstation.gui.geometric_search.gl.volume.SparseVolumeCubeActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.GL4Viewer;
@@ -147,7 +145,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         
 //        for (File meshFile : meshFiles) {
 //            if (meshFile.getName().endsWith(".obj")) {
-//                final MeshObjFileV2Actor ma = new MeshObjFileV2Actor(meshFile);
+//                final MeshObjActor ma = new MeshObjActor(meshFile);
 //                ma.setVertexRotation(vertexRotation);
 //                ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.5f));
 //                ma.setUpdateCallback(new GLDisplayUpdateCallback() {
@@ -206,44 +204,6 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
         actionSequence.setShader(shader);
         actionSequence.getActorSequence().add(texelActor);
-    }
-
-    private void setupMeshExperiment(GL4ShaderActionSequence actionSequence) {
-        final MeshObjFileV2Shader shader = new MeshObjFileV2Shader();
-
-        shader.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL4 gl) {
-                Matrix4 viewMatrix=viewer.getRenderer().getViewMatrix();
-                shader.setView(gl, viewMatrix);
-                Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
-                shader.setProjection(gl, projMatrix);
-            }
-        });
-
-        final MeshObjFileV2Actor meshActor1 = new MeshObjFileV2Actor(new File("/Users/murphys/meshes/compartment_62.obj"));
-
-        meshActor1.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL4 gl) {
-                Matrix4 actorModel = meshActor1.getModel();
-                shader.setModel(gl, actorModel);
-            }
-        });
-
-        final MeshObjFileV2Actor meshActor2 = new MeshObjFileV2Actor(new File("/Users/murphys/meshes/compartment_39.obj"));
-
-        meshActor2.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL4 gl) {
-                Matrix4 actorModel = meshActor2.getModel();
-                shader.setModel(gl, actorModel);
-            }
-        });
-
-        actionSequence.setShader(shader);
-        actionSequence.getActorSequence().add(meshActor1);
-        actionSequence.getActorSequence().add(meshActor2);
     }
 
 }

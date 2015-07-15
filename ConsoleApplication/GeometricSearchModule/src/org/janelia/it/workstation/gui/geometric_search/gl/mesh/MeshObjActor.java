@@ -18,9 +18,9 @@ import org.janelia.geometry3d.Vector4;
 /**
  * Created by murphys on 4/9/15.
  */
-public class MeshObjFileV2Actor extends GL4SimpleActor
+public class MeshObjActor extends GL4SimpleActor
 {
-    private final Logger logger = LoggerFactory.getLogger(MeshObjFileV2Actor.class);
+    private final Logger logger = LoggerFactory.getLogger(MeshObjActor.class);
         
     File objFile;
     boolean loaded=false;
@@ -66,7 +66,7 @@ public class MeshObjFileV2Actor extends GL4SimpleActor
         return color;
     }
 
-    public MeshObjFileV2Actor(File objFile) {
+    public MeshObjActor(File objFile) {
         this.objFile=objFile;
     }
 
