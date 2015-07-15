@@ -38,6 +38,11 @@ public abstract class OITDrawShader extends GL4Shader {
         setUniform4v(gl, "dcolor", 1, drawColor.toArray());
         checkGlError(gl, "OITDrawShader setDrawColor() error");
     }
+    
+    public void setMVP(GL4 gl, Matrix4 mvp) {
+        setUniformMatrix4fv(gl, "mvp", false, mvp.asArray());
+        checkGlError(gl, "OITDrawShader setMVP() error");
+    }
 
     public void setTransparencyContext(GL4TransparencyContext tc) {
         this.tc=tc;

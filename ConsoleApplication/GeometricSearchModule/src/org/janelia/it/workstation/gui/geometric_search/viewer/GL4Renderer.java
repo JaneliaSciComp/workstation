@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.janelia.it.workstation.gui.geometric_search.gl.GL4Shader;
 import org.janelia.it.workstation.gui.geometric_search.gl.mesh.OITMeshDrawShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.volume.OITCubeShader;
 
 /**
  * Created by murphys on 4/10/15.
@@ -131,6 +132,9 @@ public class GL4Renderer implements GLEventListener
                 GL4Shader shader = shaderAction.getShader();
                 if (shader instanceof OITMeshDrawShader) {
                     OITMeshDrawShader s = (OITMeshDrawShader)shader;
+                    s.setTransparencyContext(tc);
+                } else if (shader instanceof OITCubeShader) {
+                    OITCubeShader s = (OITCubeShader)shader;
                     s.setTransparencyContext(tc);
                 } else if (shader instanceof OITSortShader) {
                     OITSortShader s = (OITSortShader)shader;
