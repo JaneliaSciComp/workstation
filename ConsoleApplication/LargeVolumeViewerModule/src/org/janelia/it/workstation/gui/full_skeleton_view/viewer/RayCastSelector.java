@@ -195,6 +195,14 @@ public class RayCastSelector {
                 normalizedRayWorld.get(2, 0)
         );
 
+//        Vec3 focus = context.getCamera3d().getFocus();
+//        Matrix focusMatrix = new Matrix(4, 1);
+//        focusMatrix.set(0,0, focus.getX());
+//        focusMatrix.set(1,0, focus.getY());
+//        focusMatrix.set(2,0, focus.getZ());
+//        focusMatrix.set(3,0, 1.0);
+//        Matrix mm = toJamaMatrix(context.getModelViewMatrix());
+//        focusMatrix = mm.times(focusMatrix);
         rtnVal.pickOrigin = worldFromPixel(mouseX, mouseY);
 
         return rtnVal;

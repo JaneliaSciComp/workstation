@@ -33,6 +33,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.DirectionalRe
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.NeuronTraceVtxAttribMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.PixelReadActor;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
@@ -55,6 +56,8 @@ public class AnnotationSkeletonPanel extends JPanel {
     private final AnnotationSkeletonDataSourceI dataSource;
     private OcclusiveViewer viewer;
     private MeshViewContext context;
+    private UniqueColorSelector ucSelector;
+    private PixelReadActor pixelReadActor;
     
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
@@ -132,6 +135,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             final MeshDrawActor meshDrawActor = meshDrawResults.getActor();
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
             
+            ucSelector = new UniqueColorSelector(dataSource);
             viewer.addActor(axesActor);
             // NOTE: refAxisActor is forcing all 'conventional' actors which
             // display after it, into the same confined corner of the screen.
@@ -139,6 +143,10 @@ public class AnnotationSkeletonPanel extends JPanel {
             // others may not.
             viewer.addActor(refAxisActor);
             viewer.addActor(meshDrawActor);
+            pixelReadActor = new PixelReadActor(viewer);
+            pixelReadActor.setPixelListener(ucSelector);
+            pixelReadActor.setBoundingBox3d(boundingBox);
+            viewer.addActor(pixelReadActor);
             viewer.addMenuAction(new BackgroundPickAction(viewer));
             viewer.addMenuAction(
                 new ActorSwapAction(
@@ -266,11 +274,15 @@ public class AnnotationSkeletonPanel extends JPanel {
      */
     private long select(int mouseX, int mouseY) {
         long rtnVal = -1L;
-        if (context != null) {
-            RayCastSelector rayCastSelector = new RayCastSelector( 
-                    dataSource, context, viewer.getWidth(), viewer.getHeight() 
-            );
-            rtnVal = rayCastSelector.select(mouseX, mouseY);
+        if (context != null) {            
+            rtnVal = ucSelector.select(mouseX, mouseY);
+            pixelReadActor.setSampleCoords(mouseX, mouseY);
+            this.validate();
+            this.repaint();
+//            RayCastSelector rayCastSelector = new RayCastSelector( 
+//                    dataSource, context, viewer.getWidth(), viewer.getHeight() 
+//            );
+//            rtnVal = rayCastSelector.select(mouseX, mouseY);
         }
         return rtnVal;
     }
