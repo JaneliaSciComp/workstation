@@ -81,11 +81,20 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                 // Do nothing since we want to update MVP at model level
             }
         });
+
+        File testHomeFile = new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd");
+        File testJaneliaFile = new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd");
+        File testFile = null;
+
+        if (testHomeFile.exists()) {
+            testFile = testHomeFile;
+        } else {
+            testFile = testJaneliaFile;
+        }
+
+        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(testFile, 1, 0.3f);
         
-        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);        
-        //final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);
-        
-        pa.setColor(new Vector4(0.7f, 0.7f, 0.0f, 0.02f));
+        pa.setColor(new Vector4(0.7f, 0.7f, 0.0f, 0.005f));
         pa.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
@@ -103,6 +112,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                 cubeShader.setProjection(gl, projCopy);
 
                 float voxelUnitSize = pa.getVoxelUnitSize();
+                //float voxelUnitSize = 0.2f;
                 cubeShader.setVoxelUnitSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
                 
                 cubeShader.setDrawColor(gl, pa.getColor());
@@ -200,10 +210,19 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 //                drawSequence.getActorSequence().add(ma);
 //            }
 //        }
-        
-        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);        
-        //final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);
-        
+
+        File testHomeFile = new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd");
+        File testJaneliaFile = new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd");
+        File testFile = null;
+
+        if (testHomeFile.exists()) {
+            testFile = testHomeFile;
+        } else {
+            testFile = testJaneliaFile;
+        }
+
+        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(testFile, 0, 0.2f);
+
         //final SparseVolumePointActor pa = new SparseVolumePointActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);
         //final SparseVolumePointActor pa = new SparseVolumePointActor(new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 1);
 
