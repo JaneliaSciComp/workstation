@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.search;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 
 import javax.media.opengl.GL4;
@@ -81,8 +82,8 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             }
         });
         
-        //final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);        
-        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);
+        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);        
+        //final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);
         
         pa.setColor(new Vector4(0.7f, 0.7f, 0.0f, 0.02f));
         pa.setUpdateCallback(new GLDisplayUpdateCallback() {
@@ -96,9 +97,13 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                 Matrix4 projCopy = new Matrix4(proj);
                 Matrix4 modelCopy = new Matrix4(model);
                 
-                Matrix4 vp = viewCopy.multiply(projCopy);             
-                Matrix4 mvp = modelCopy.multiply(vp);             
-                cubeShader.setMVP(gl, mvp); 
+                Matrix4 vp = viewCopy.multiply(projCopy);
+                Matrix4 mvp = modelCopy.multiply(vp);
+                cubeShader.setMVP(gl, mvp);
+                cubeShader.setProjection(gl, projCopy);
+
+                float voxelUnitSize = pa.getVoxelUnitSize();
+                cubeShader.setVoxelUnitSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
                 
                 cubeShader.setDrawColor(gl, pa.getColor());
             }

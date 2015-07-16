@@ -39,6 +39,11 @@ public abstract class OITDrawShader extends GL4Shader {
         checkGlError(gl, "OITDrawShader setDrawColor() error");
     }
     
+    public void setMV(GL4 gl, Matrix4 mv) {
+        setUniformMatrix4fv(gl, "mv", false, mv.asArray());
+        checkGlError(gl, "OITDrawShader setMV() error");
+    }
+    
     public void setMVP(GL4 gl, Matrix4 mvp) {
         setUniformMatrix4fv(gl, "mvp", false, mvp.asArray());
         checkGlError(gl, "OITDrawShader setMVP() error");
