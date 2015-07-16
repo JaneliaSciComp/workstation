@@ -5,8 +5,6 @@
  */
 package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 
-import java.awt.Color;
-import java.awt.Robot;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.PixelReadActor;
 
@@ -15,8 +13,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.PixelRea
  * @author fosterl
  */
 public class UniqueColorSelector implements PixelReadActor.PixelListener {
-    private AnnotationSkeletonDataSourceI dataSource;
-    private Robot robot;
+    private final AnnotationSkeletonDataSourceI dataSource;
     
     public UniqueColorSelector(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
@@ -24,27 +21,6 @@ public class UniqueColorSelector implements PixelReadActor.PixelListener {
 
     public long select(int x, int y) {
         return 0;
-    }
-
-    protected long getAwtColor(int x, int y) {
-        try {
-            robot = new Robot();
-            Color color = robot.getPixelColor(x, y);
-            if (color.getGreen() == 255 && color.getBlue() == 255 && color.getRed() == 255) {
-                System.out.println("WHITE FOUND");
-            }
-            else {
-                System.out.println(color);
-            }
-            return -1;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return 0;
-    }
-    
-    private void compareColor() {
-        //
     }
 
     /**

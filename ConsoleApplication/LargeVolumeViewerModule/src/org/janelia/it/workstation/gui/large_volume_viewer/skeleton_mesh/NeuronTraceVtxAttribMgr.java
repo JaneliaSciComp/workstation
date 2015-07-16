@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
+    public static final String ID_VTX_ATTRIB = "c_id";
     private static final double MANUAL_SEGMENT_RADIUS = 6;
     private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
     private static final double TRACED_SEGMENT_RADIUS = 8;
@@ -457,8 +458,13 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     protected void calculateInterestingAnnotationVertices(TileFormat tileFormat, PointEnclosureFactory interestingAnnotationEnclosureFactory) {
         AnnotationModel annoMdl = dataSource.getAnnotationModel();
         if (annoMdl != null) {
+            int id = -1;
             FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
-            for (int i = 0; i < filteredModel.getRowCount(); i++) {
+            final int rowCount = filteredModel.getRowCount();
+            final int idBreadth = (int)(65536.0 / rowCount);
+            for (int i = 0; i < rowCount; i++) {
+                id = idBreadth * (i + 1);
+                log.info("ID={}.  Row={}.", id, i);
                 InterestingAnnotation anno = filteredModel.getAnnotationAtRow(i);
                 long annotationId = anno.getAnnotationID();
                 TmGeoAnnotation geoAnno = annoMdl.getGeoAnnotationFromID(annotationId);
@@ -480,17 +486,17 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 
                 if (anno.hasNote()) {
                     interestingAnnotationEnclosureFactory.addEnclosure(
-                            point, SPECIAL_ANNO_COLOR
+                            point, SPECIAL_ANNO_COLOR, id
                     );
                 }
                 else if (geometry == AnnotationGeometry.BRANCH) {
                     interestingAnnotationEnclosureFactory.addEnclosure(
-                            point, BRANCH_ANNO_COLOR
+                            point, BRANCH_ANNO_COLOR, id
                     );
                 }
                 else if (anno.getGeometry() == AnnotationGeometry.END) {
                     interestingAnnotationEnclosureFactory.addEnclosure(
-                            point, UNFINISHED_ANNO_COLOR
+                            point, UNFINISHED_ANNO_COLOR, id
                     );
                 }
             }
@@ -503,7 +509,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             Vec3 v = nextParent.getLocation();
             double[] point = getPoint(v);
             currentSelectionEnclosureFactory.addEnclosure(
-                    point, CURRENT_SELECTION_COLOR
+                    point, CURRENT_SELECTION_COLOR, 0
             );
             log.debug("Next parent at {},{},{}.", v.getX(), v.getY(), v.getZ());
         }

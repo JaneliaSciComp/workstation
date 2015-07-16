@@ -48,6 +48,7 @@ public class LineEnclosureFactory implements TriangleSource {
     private final List<double[][]> endCapPolygonsHolder = new ArrayList<>();
     
     private PolygonSource polygonSource;
+    private boolean includeIDs = true;
     
     public LineEnclosureFactory(int endPolygonSides, double endPolygonRadius) {
         setCharacteristics(endPolygonSides, endPolygonRadius);
@@ -61,6 +62,11 @@ public class LineEnclosureFactory implements TriangleSource {
         this.endPolygonRadius = endPolygonRadius;
         this.zAxisAlignedPrototypePolygon = polygonSource.createZAxisAlignedPrototypeEndPolygon();
         axisAlignedPrototypePolygons.put(2, this.zAxisAlignedPrototypePolygon);
+    }
+    
+    /** Override the default 'include ids in buffers' behavior. */
+    public void setIncludeIDs( boolean value ) {
+        this.includeIDs = value;
     }
     
     public int addEnclosure(double[] startingCoords, double[] endingCoords) {
@@ -147,7 +153,14 @@ public class LineEnclosureFactory implements TriangleSource {
                 bean.setAttribute(
                         VertexInfoBean.KnownAttributes.b_color.name(), color, 3
                 );
+
                 logger.debug("Color attribute = [" + color[0] + "," + color[1] + "," + color[2] + "]");
+            }
+            // Must setup a dummy value, so that all vertices have same-sized data in buffer.
+            if (includeIDs) {
+                bean.setAttribute(
+                        NeuronTraceVtxAttribMgr.ID_VTX_ATTRIB, new float[]{0}, 1
+                );
             }
             addVertex(bean);
 			polyBeans.add(bean);

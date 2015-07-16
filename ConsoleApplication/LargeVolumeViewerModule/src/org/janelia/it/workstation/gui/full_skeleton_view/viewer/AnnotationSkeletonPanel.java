@@ -243,6 +243,7 @@ public class AnnotationSkeletonPanel extends JPanel {
         attributeManager.setDataSource(dataSource);
         configurator.setVertexAttributeManager(attributeManager);
         configurator.setColoringStrategy(MeshDrawActor.ColoringStrategy.ATTRIBUTE);
+        configurator.setUseIdAttribute(true);
         configurator.setBoundingBox(boundingBox);
         // This is the testing opportunity.  This may be swapped with a different
         // buffer uploader, if doubt should arise re: the accuracy of the geometry.

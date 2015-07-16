@@ -42,6 +42,7 @@ public class MeshDrawActor implements GLActor {
     private int vertexAttributeLoc = -1;
     private int normalAttributeLoc = -1;
     private int colorAttributeLoc = -1;
+    private int idAttributeLoc = -1;
     
     private MeshDrawActorConfigurator configurator;
 
@@ -68,7 +69,8 @@ public class MeshDrawActor implements GLActor {
         private ColoringStrategy coloringStrategy = ColoringStrategy.UNIFORM;
         private BoundingBox3d boundingBox;
         private BufferUploader bufferUploader;
-
+        private boolean useIdAttribute;
+        
         public void setAxisLengths( double[] axisLengths ) {
             this.axisLengths = axisLengths;
         }
@@ -92,6 +94,23 @@ public class MeshDrawActor implements GLActor {
          */
         public void setColoringStrategy(ColoringStrategy coloringStrategy) {
             this.coloringStrategy = coloringStrategy;
+        }
+
+        /**
+         * If true, this directs the shader to expect pushing of a special
+         * vertex attribute for the identifier of the affected vertex.
+         * 
+         * @return the useIdAttribute
+         */
+        public boolean isUseIdAttribute() {
+            return useIdAttribute;
+        }
+
+        /**
+         * @param useIdAttribute the useIdAttribute to set
+         */
+        public void setUseIdAttribute(boolean useIdAttribute) {
+            this.useIdAttribute = useIdAttribute;
         }
 
         public void setRenderableId( Long renderableId ) {
@@ -263,15 +282,24 @@ public class MeshDrawActor implements GLActor {
         mdShader.setUniformMatrix4v(gl, NORMAL_MATRIX_UNIFORM_NAME, false, vms.computeNormalMatrix(context.getModelViewMatrix()));
         if (reportError(gl, "Pushing matrix uniforms."))
             return;
-        shader.setColorByAttribute(gl, true);
-        if (reportError(gl, "Telling shader to use attribute coloring."))
+        shader.setColorByAttribute(gl, configurator.getColoringStrategy().equals(ColoringStrategy.ATTRIBUTE));
+        if (reportError(gl, "Telling shader to use attribute coloring.")) {
             return;
+        }
+        
+        shader.setIdsAvailableAttribute(gl, configurator.isUseIdAttribute());
+        if (reportError(gl, "Telling shader to use id attributes.")) {
+            return;
+        }
 
         // TODO : make it possible to establish an arbitrary group of vertex attributes programmatically.
         // 3 floats per coord. Stride is 1 normal (3 floats=3 coords), offset to first is 0.
         int numberFloatsInStride = 6;
         if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
             numberFloatsInStride += 3;
+        }
+        if (configurator.isUseIdAttribute()) {
+            numberFloatsInStride ++;
         }
         int stride = numberFloatsInStride * BYTES_PER_FLOAT;
         logger.debug("Stride for upload is " + stride);
@@ -289,6 +317,7 @@ public class MeshDrawActor implements GLActor {
         if (reportError( gl, "Display of mesh-draw-actor 3" ))
             return;
 
+        int storagePerVertexNormalColor = 0;
         if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
             logger.debug("Also doing color attribute.");
             // 3 floats per color. Stride is size of all data combined, offset to first is 1 vertex + 1 normal worth.
@@ -297,6 +326,17 @@ public class MeshDrawActor implements GLActor {
             if (reportError(gl, "Display of mesh-draw-actor 3-opt"))
                 return;
 
+        }
+        if (configurator.isUseIdAttribute()) {
+            storagePerVertexNormalColor = 3 * storagePerVertex;
+            logger.debug("Also sending IDs.");
+            // 1 float per id.
+            gl.glEnableVertexAttribArray(idAttributeLoc);
+            gl.glVertexAttribPointer(idAttributeLoc, 1, GL2.GL_FLOAT, false, stride, storagePerVertexNormalColor);
+            if (reportError(gl, "Display of mesh-draw-actor 4-opt")) {
+                return;
+            }
+            
         }
         gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, bufferUploader.getInxBufferHandle() );
         if (reportError(gl, "Display of mesh-draw-actor 4."))
@@ -357,6 +397,11 @@ public class MeshDrawActor implements GLActor {
 
             } else {
                 setColoring(gl);
+            }
+            
+            if (configurator.isUseIdAttribute()) {
+                idAttributeLoc = gl.glGetAttribLocation(shader.getShaderProgram(), MeshDrawShader.ID_ATTRIBUTE_NAME);
+                reportError(gl, "Obtaining the in-shader locations-4.");
             }
 
         } catch ( AbstractShader.ShaderCreationException sce ) {
