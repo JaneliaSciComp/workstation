@@ -16,8 +16,8 @@ layout (binding = 0, std430) buffer linkedLists {
     NodeType nodes[];
 };
 
-// 2048 x 2048 x 200
-#define MAX_NODES 838860800 
+// Each node is 21 bytes, so 500m * 21 = 10.5G, essentially the card max
+#define MAX_NODES 50000000
 
 out vec4 blankOut;
 

@@ -92,9 +92,9 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             testFile = testJaneliaFile;
         }
 
-        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(testFile, 0, 0.2f);
+        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(testFile, 1, 0.2f);
         
-        pa.setColor(new Vector4(0.7f, 0.7f, 0.0f, 0.1f));
+        pa.setColor(new Vector4(0.7f, 0.7f, 0.0f, 0.01f));
         pa.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {

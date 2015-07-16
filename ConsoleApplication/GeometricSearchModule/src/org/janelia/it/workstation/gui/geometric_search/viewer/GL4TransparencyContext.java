@@ -25,7 +25,7 @@ public class GL4TransparencyContext {
  
     public static final int MAX_HEIGHT = 2048;
     public static final int MAX_WIDTH = 2048;
-    public static final int MAX_NODES = MAX_HEIGHT * MAX_WIDTH * 2;
+    public static final int MAX_NODES = 50000000;
     public static final int NODE_SIZE = 24; // 4 float color vector, 1 depth float, 1 next pointer
     
     int headPointerTotalPixels=0;
