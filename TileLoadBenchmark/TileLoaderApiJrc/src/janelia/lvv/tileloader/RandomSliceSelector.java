@@ -27,65 +27,57 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package janelia.lvv.tileloader;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import org.openide.LifecycleManager;
-import org.openide.modules.ModuleInstall;
+import java.util.Random;
 import org.openide.util.Exceptions;
-import org.openide.windows.WindowManager;
 
-public class Installer extends ModuleInstall
+/**
+ *
+ * @author Christopher Bruns
+ */
+public class RandomSliceSelector implements LoadStrategem
 {
+    // private final List<SubstackInfo> slices = new ArrayList<SubstackInfo>();
+    private final Random random = new Random();
+    private final int sliceCount;
+    private final BrickSetSource source;
+    
+    public RandomSliceSelector(BrickSetSource source, int sliceCount) {
+        this.sliceCount = sliceCount;
+        this.source = source;
+    }
 
-    /**
-     * Run some tile loading benchmarks (TODO)
-     * "restored()" is the "main()" of Netbeans platform applications.
-     */
     @Override
-    public void restored()
+    public Iterator<SubstackInfo> iterator()
     {
-        System.out.println("Running first test load...");
-        List<Integer> sliceIndices = new ArrayList<Integer>();
-        for (int i = 20; i >= 10; --i)
-            sliceIndices.add(i);
-        try {
-            // 1 - Create a source of volume bricks
-            URL testUrl = new URL("file:///F:/Users/cmbruns/mouseLightPerformance/rendered/tiff_stack_per_channel/tile_list.txt");
-            BrickSetSource source = new BrickSetSource(testUrl);
-            // 2 - Create a selector of slices
-            LoadStrategem selector = new RandomSliceSelector(source, 10);
-            // 3 - Create a loader, appropriate to the source format
-            BrickSliceLoader loader = new ClackTiffSliceLoader(); // TODO - use a factory
-            // 4 - measure the tile loading performance
-            LoadTimeMeasurement measurement = new LoadTimeMeasurement(loader, selector);
-            
-            measurement.report(System.out);
-
-        } catch (MalformedURLException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (URISyntaxException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        
-        // Exit the application after running the tests
-        WindowManager.getDefault().invokeWhenUIReady(new Runnable()
-        {
-            public void run()
-            {
-                // any code here will be run with the UI is available
-                // Exit the application
-                LifecycleManager.getDefault().exit(); 
+        List<SubstackInfo> slices = new ArrayList<SubstackInfo>();
+        int blockCount = source.getBrickFolders().size();
+        int slicesPerBlock = source.getBrickDepth();
+        // Select slices at random
+        for (int s = 0; s < sliceCount; ++s) {
+            int b = random.nextInt(blockCount);
+            int z = random.nextInt(slicesPerBlock);
+            List<Integer> ix = new ArrayList<Integer>();
+            ix.add(z);
+            URL url;
+            try {
+                url = source.getBrickFolders().get(b).toURI().resolve(".").toURL();
+                slices.add(new SubstackInfo(url, ix));
+            } catch (URISyntaxException ex) {
+                Exceptions.printStackTrace(ex);
+            } catch (MalformedURLException ex) {
+                Exceptions.printStackTrace(ex);
             }
-        });
-
+        }
+        return slices.iterator();
     }
 
 }
