@@ -1,5 +1,6 @@
-package org.janelia.it.workstation.gui.geometric_search.gl;
+package org.janelia.it.workstation.gui.geometric_search.gl.mesh;
 
+import org.janelia.it.workstation.gui.geometric_search.gl.GL4SimpleActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,15 +13,14 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 
 /**
  * Created by murphys on 4/9/15.
  */
-public class MeshObjFileV2Actor extends GL4SimpleActor
+public class MeshObjActor extends GL4SimpleActor
 {
-    private final Logger logger = LoggerFactory.getLogger(MeshObjFileV2Actor.class);
+    private final Logger logger = LoggerFactory.getLogger(MeshObjActor.class);
         
     File objFile;
     boolean loaded=false;
@@ -66,7 +66,7 @@ public class MeshObjFileV2Actor extends GL4SimpleActor
         return color;
     }
 
-    public MeshObjFileV2Actor(File objFile) {
+    public MeshObjActor(File objFile) {
         this.objFile=objFile;
     }
 

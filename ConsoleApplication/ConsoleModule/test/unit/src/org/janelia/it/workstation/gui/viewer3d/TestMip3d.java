@@ -47,9 +47,10 @@ public class TestMip3d {
                     //String fn = fileBase + "1735579170638921826/ConsolidatedSignal2_25.mp4";
                     // Black as of 11/7/2014.
                     //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/951/842/1742124964321951842/separate/ConsolidatedLabel.v3dpbd";
-                    // Checked 6/25/2015.
+                    // Checked 7/1/2015.
                     String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation//002/594/1763505680465002594/separate/fastLoad/ConsolidatedSignal2_25.mp4";
-
+                    // Flawed: has extra back-slices that are somehow (but not simply) empty.
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/leetlab/Separation/265/762/2154818735297265762/separate/fastLoad/ConsolidatedSignal2_25.mp4";
                     // WORKING:
                     // Compartment masks.
                     // Checked 11/7/2014 (all).

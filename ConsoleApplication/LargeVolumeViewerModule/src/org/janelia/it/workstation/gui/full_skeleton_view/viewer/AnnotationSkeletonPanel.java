@@ -87,8 +87,15 @@ public class AnnotationSkeletonPanel extends JPanel {
             skeletalBoundsResetPositioner.setViewer(viewer);
             skeletalBoundsResetPositioner.setRenderer(renderer);
             skeletalBoundsResetPositioner.setActor(linesDrawActor);
-            context = new MeshViewContext();
-            viewer.setVolumeModel(context);            
+            context = new MeshViewContext();            
+            viewer.setVolumeModel(context);
+            double[] voxelMicronD = tileFormat.getVoxelMicrometers();
+            float[] voxelMicronF = new float[] {
+                (float)voxelMicronD[0], 
+                (float)voxelMicronD[1],
+                (float)voxelMicronD[2]
+            };
+            context.setVoxelMicrometers(voxelMicronF);
             VolumeModel volumeModel = viewer.getVolumeModel();
             final Camera3d rendererCamera = volumeModel.getCamera3d();
             volumeModel.setCamera3d(rendererCamera);
@@ -160,9 +167,6 @@ public class AnnotationSkeletonPanel extends JPanel {
                     }
                 }
             });
-            /*
-             */
-            
             // Reserve the menu actions from mesh draw, until last.
             for (Action menuAction: meshDrawResults.getMenuActions()) {
                 viewer.addMenuAction(menuAction);

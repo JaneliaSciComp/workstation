@@ -7,6 +7,7 @@ import org.janelia.it.workstation.geom.UnitVec3;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderActionSequence;
+import org.janelia.it.workstation.gui.geometric_search.gl.OITSortShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,8 +19,8 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import org.janelia.it.workstation.gui.geometric_search.gl.GL4Shader;
-import org.janelia.it.workstation.gui.geometric_search.gl.OITMeshDrawShader;
-import org.janelia.it.workstation.gui.geometric_search.gl.OITMeshSortShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.mesh.OITMeshDrawShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.volume.OITCubeShader;
 
 /**
  * Created by murphys on 4/10/15.
@@ -132,8 +133,11 @@ public class GL4Renderer implements GLEventListener
                 if (shader instanceof OITMeshDrawShader) {
                     OITMeshDrawShader s = (OITMeshDrawShader)shader;
                     s.setTransparencyContext(tc);
-                } else if (shader instanceof OITMeshSortShader) {
-                    OITMeshSortShader s = (OITMeshSortShader)shader;
+                } else if (shader instanceof OITCubeShader) {
+                    OITCubeShader s = (OITCubeShader)shader;
+                    s.setTransparencyContext(tc);
+                } else if (shader instanceof OITSortShader) {
+                    OITSortShader s = (OITSortShader)shader;
                     s.setTransparencyContext(tc);
                 }
                 shaderAction.init(gl);
@@ -277,7 +281,7 @@ public class GL4Renderer implements GLEventListener
     public void updateProjection(GL4 gl) {
         //gl.glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
         
-        logger.info("updateProjection() using widthInPixels="+widthInPixels+" heightInPixels="+heightInPixels);
+        //logger.info("updateProjection() using widthInPixels="+widthInPixels+" heightInPixels="+heightInPixels);
         
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = model.getCameraFocusDistance();

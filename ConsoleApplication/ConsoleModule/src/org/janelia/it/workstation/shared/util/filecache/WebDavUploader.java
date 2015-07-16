@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.shared.util.filecache;
 
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +27,8 @@ public class WebDavUploader {
      *                 (see {@link org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr#getWebDavClient()}).
      */
     public WebDavUploader(WebDavClient client) {
-        this(client, JACS_ROOT_UPLOAD_PATH);
+        this(client, ConsoleProperties.getString("console.upload.directory",
+                JACS_ROOT_UPLOAD_PATH));
     }
 
     /**

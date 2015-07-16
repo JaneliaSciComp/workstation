@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.large_volume_viewer;
+ package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
