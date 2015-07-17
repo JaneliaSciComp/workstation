@@ -29,6 +29,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationG
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
+import org.janelia.it.workstation.gui.large_volume_viewer.encode.IdCoder;
+import org.janelia.it.workstation.gui.large_volume_viewer.encode.IdCoderProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -44,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author fosterl
  */
-public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
+public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderProvider {
     public static final String ID_VTX_ATTRIB = "c_id";
     private static final double MANUAL_SEGMENT_RADIUS = 6;
     private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
@@ -86,6 +88,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     
     private double annoRadius = ANNO_RADIUS;
     private double currentSelectionRadius = CURRENT_SELECTION_RADIUS;
+    private IdCoder idCoder;
     
     /**
      * @return the annoRadius
@@ -113,6 +116,16 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
      */
     public void setCurrentSelectionRadius(double currentSelectionRadius) {
         this.currentSelectionRadius = currentSelectionRadius;
+    }
+    
+    /**
+     * Return this so that callers can encode/decode ids in same fashion
+     * as was done here.
+     * 
+     * @return configured coder, or null.
+     */
+    public IdCoder getIdCoder() {
+        return idCoder;
     }
 
     /**
@@ -458,12 +471,12 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     protected void calculateInterestingAnnotationVertices(TileFormat tileFormat, PointEnclosureFactory interestingAnnotationEnclosureFactory) {
         AnnotationModel annoMdl = dataSource.getAnnotationModel();
         if (annoMdl != null) {
-            int id = -1;
+            float id = 0;
             FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
             final int rowCount = filteredModel.getRowCount();
-            final int idBreadth = (int)(65536.0 / rowCount);
+            idCoder = new IdCoder(rowCount);
             for (int i = 0; i < rowCount; i++) {
-                id = idBreadth * (i + 1);
+                id = idCoder.encode(i);
                 log.info("ID={}.  Row={}.", id, i);
                 InterestingAnnotation anno = filteredModel.getAnnotationAtRow(i);
                 long annotationId = anno.getAnnotationID();

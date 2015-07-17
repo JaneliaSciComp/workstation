@@ -135,7 +135,6 @@ public class AnnotationSkeletonPanel extends JPanel {
             final MeshDrawActor meshDrawActor = meshDrawResults.getActor();
             GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
             
-            ucSelector = new UniqueColorSelector(dataSource);
             viewer.addActor(axesActor);
             // NOTE: refAxisActor is forcing all 'conventional' actors which
             // display after it, into the same confined corner of the screen.
@@ -239,7 +238,8 @@ public class AnnotationSkeletonPanel extends JPanel {
         configurator.setContext(context);
         configurator.setMatrixScope(MeshDrawActor.MatrixScope.LOCAL);                  
         
-        final NeuronTraceVtxAttribMgr attributeManager = new NeuronTraceVtxAttribMgr();        
+        final NeuronTraceVtxAttribMgr attributeManager = new NeuronTraceVtxAttribMgr(); 
+        ucSelector = new UniqueColorSelector(dataSource, attributeManager);
         attributeManager.setDataSource(dataSource);
         configurator.setVertexAttributeManager(attributeManager);
         configurator.setColoringStrategy(MeshDrawActor.ColoringStrategy.ATTRIBUTE);

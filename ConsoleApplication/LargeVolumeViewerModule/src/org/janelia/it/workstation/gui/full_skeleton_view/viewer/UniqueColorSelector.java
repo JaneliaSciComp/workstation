@@ -6,6 +6,8 @@
 package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
+import org.janelia.it.workstation.gui.large_volume_viewer.encode.IdCoder;
+import org.janelia.it.workstation.gui.large_volume_viewer.encode.IdCoderProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.PixelReadActor;
 
 /**
@@ -14,9 +16,19 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.PixelRea
  */
 public class UniqueColorSelector implements PixelReadActor.PixelListener {
     private final AnnotationSkeletonDataSourceI dataSource;
+    private IdCoderProvider idCoderProvider;
+    
+    public UniqueColorSelector(AnnotationSkeletonDataSourceI dataSource, IdCoderProvider idCoderProvider) {
+        this.dataSource = dataSource;
+        this.idCoderProvider = idCoderProvider;
+    }
     
     public UniqueColorSelector(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
+    }
+    
+    public void setIdCoderProvider(IdCoderProvider provider) {
+        this.idCoderProvider = provider;
     }
 
     public long select(int x, int y) {
@@ -29,6 +41,10 @@ public class UniqueColorSelector implements PixelReadActor.PixelListener {
      */
     @Override
     public void setPixel(float[] pixel) {
-        System.out.println(String.format("Color: r=%f / g=%f / b=%f", pixel[0], pixel[1], pixel[2]));
+        IdCoder idCoder = idCoderProvider.getIdCoder();
+        if (idCoder != null) {
+            int id = idCoder.decode(pixel[0]);
+            System.out.println(String.format("Color: r=%f / g=%f / b=%f.  ID=%d", pixel[0], pixel[1], pixel[2], id));
+        }
     }
 }
