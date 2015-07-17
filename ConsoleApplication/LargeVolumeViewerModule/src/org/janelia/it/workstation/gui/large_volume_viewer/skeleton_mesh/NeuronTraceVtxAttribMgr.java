@@ -274,18 +274,16 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
      * @throws Exception 
      */
     private synchronized void createVertices() throws Exception {
+        VertexNumberGenerator vertexNumberGenerator = new VertexNumberGenerator();
         // Make triangle sources.
-        LineEnclosureFactory lineEnclosureFactory = new LineEnclosureFactory(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
-        PointEnclosureFactory pointEnclosureFactory = new PointEnclosureFactory(ANNO_POLYGON_SIDES, ANNO_RADIUS);
+        LineEnclosureFactory lineEnclosureFactory = new LineEnclosureFactory(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS, vertexNumberGenerator);
+        PointEnclosureFactory pointEnclosureFactory = new PointEnclosureFactory(ANNO_POLYGON_SIDES, ANNO_RADIUS, vertexNumberGenerator);
         
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
         TileFormat tileFormat = dataSource.getTileFormat();
 
-        int currentVertexNumber = 0;
-
         // Look at 'interesting annotations'.  What can be presented there?
         pointEnclosureFactory.setCharacteristics(ANNO_POLYGON_SIDES, getAnnoRadius());
-        pointEnclosureFactory.setCurrentVertexNumber(currentVertexNumber);
         calculateInterestingAnnotationVertices(tileFormat, pointEnclosureFactory);
         
         // The current selection.
@@ -294,7 +292,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
 
         // Get the auto-traced segments.
         lineEnclosureFactory.setCharacteristics(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
-        lineEnclosureFactory.setCurrentVertexNumber(pointEnclosureFactory.getCurrentVertexNumber());
         calculateTracedSegmentVertices(voxelPathAnchorPairs, tileFormat, lineEnclosureFactory);
         
         // Now get the lines.
@@ -303,9 +300,9 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
 
 		// TESTING 
 		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
-        log.info("Number of vertices is {}.", pointEnclosureFactory.getCurrentVertexNumber());
+        log.info("Number of vertices is {}.", vertexNumberGenerator.getCurrentVertex());
 
-		if (lineEnclosureFactory.getCurrentVertexNumber() > 0) {
+		if (vertexNumberGenerator.hasVertices()) {
 			hasDisplayable = true;
 		}
 		else {
@@ -471,7 +468,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
     protected void calculateInterestingAnnotationVertices(TileFormat tileFormat, PointEnclosureFactory interestingAnnotationEnclosureFactory) {
         AnnotationModel annoMdl = dataSource.getAnnotationModel();
         if (annoMdl != null) {
-            float id = 0;
+            float[] id = null;
             FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
             final int rowCount = filteredModel.getRowCount();
             idCoder = new IdCoder(rowCount);
@@ -522,7 +519,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
             Vec3 v = nextParent.getLocation();
             double[] point = getPoint(v);
             currentSelectionEnclosureFactory.addEnclosure(
-                    point, CURRENT_SELECTION_COLOR, 0
+                    point, CURRENT_SELECTION_COLOR, new float[] {0,0,0}
             );
             log.debug("Next parent at {},{},{}.", v.getX(), v.getY(), v.getZ());
         }

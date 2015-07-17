@@ -50,7 +50,8 @@ public class NeuronTraceVtxAttribMgrTest {
 
     @Test
     public void buildAttributes() throws Exception {
-        LineEnclosureFactory factory = new LineEnclosureFactory(6, 16.0);
+        VertexNumberGenerator vng = new VertexNumberGenerator();
+        LineEnclosureFactory factory = new LineEnclosureFactory(6, 16.0, vng);
         double[] startingCoords = new double[] {
             300, 210, 520
         };

@@ -1,10 +1,11 @@
 // Fragment shader for drawing mesh/triangles.
 #version 120
+uniform int idsAvailable;
 varying vec4 colorVar;
 varying vec4 diffuseLightMag;
 varying vec4 homogeniousCoordPos;
 varying vec4 normVar;
-varying float id;
+varying vec4 id;
 
 void main()
 {
@@ -28,11 +29,11 @@ void main()
         finalColor += specularLightMag;
     }
     gl_FragColor = finalColor;
-    if ( id > 0 )
+    if ( idsAvailable == 1 )
     {
-        gl_FragColor.r = id; // using red as pure-ID color
-        gl_FragColor.g = id;
-        gl_FragColor.b = id;
+//        gl_FragColor.r = id; // using red as pure-ID color
+//        gl_FragColor.g = id;
+//        gl_FragColor.b = id;
     }
     gl_FragColor.w = 1.0; // Force alpha to 1.
 }

@@ -299,7 +299,7 @@ public class MeshDrawActor implements GLActor {
             numberFloatsInStride += 3;
         }
         if (configurator.isUseIdAttribute()) {
-            numberFloatsInStride ++;
+            numberFloatsInStride += 3;
         }
         int stride = numberFloatsInStride * BYTES_PER_FLOAT;
         logger.debug("Stride for upload is " + stride);
@@ -330,9 +330,9 @@ public class MeshDrawActor implements GLActor {
         if (configurator.isUseIdAttribute()) {
             storagePerVertexNormalColor = 3 * storagePerVertex;
             logger.debug("Also sending IDs.");
-            // 1 float per id.
+            // 3 floats per id.
             gl.glEnableVertexAttribArray(idAttributeLoc);
-            gl.glVertexAttribPointer(idAttributeLoc, 1, GL2.GL_FLOAT, false, stride, storagePerVertexNormalColor);
+            gl.glVertexAttribPointer(idAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertexNormalColor);
             if (reportError(gl, "Display of mesh-draw-actor 4-opt")) {
                 return;
             }

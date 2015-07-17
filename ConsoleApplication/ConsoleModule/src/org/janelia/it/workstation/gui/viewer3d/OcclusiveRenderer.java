@@ -28,7 +28,7 @@ public class OcclusiveRenderer
     }
     
     @Override
-    public void display(GLAutoDrawable glDrawable) {
+    public void display(GLAutoDrawable glDrawable) {        
         // Preset background from the volume model.
         float[] backgroundClrArr = getVolumeModel().getBackgroundColorFArr();
         this.backgroundColor = new Color( backgroundClrArr[ 0 ], backgroundClrArr[ 1 ], backgroundClrArr[ 2 ] );
@@ -40,6 +40,10 @@ public class OcclusiveRenderer
 
         //final GL2 gl = glDrawable.getGL().getGL2();
         final GL2Adapter gl = GL2AdapterFactory.createGL2Adapter( glDrawable );
+
+        // TEMP: this should be flagged on or off.
+        gl.getGL2GL3().glDisable(GL2.GL_FRAMEBUFFER_SRGB);
+
         gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
         gl.glPushMatrix();
         updateProjection(gl);
@@ -65,6 +69,9 @@ public class OcclusiveRenderer
         // Copy member list of actors local for independent iteration.
         for (GLActor actor : new ArrayList<>( actors ))
             actor.display(glDrawable);
+
+        // TEMP: this should be flagged on or off.
+        gl.getGL2GL3().glEnable(GL2.GL_FRAMEBUFFER_SRGB);
 
         gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
         gl.glPopMatrix();
