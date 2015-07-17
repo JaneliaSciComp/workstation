@@ -68,13 +68,14 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 IntBuffer inxBuf = buffersBean.getIndexBuffer();
                 bufferBytes = inxBuf.capacity() * BYTES_PER_INT;
                 combinedInxSize += bufferBytes;
-                logger.info("Found attributes for {}.", renderId);
+                logger.debug("Found attributes for {}.", renderId);
             } else {
                 logger.warn("No attributes for renderer id: {}.", renderId);
             }
         }
+        //bufferExtremaCheck(renderIdToBuffers);
 
-        logger.info("Allocating buffers");
+        logger.debug("Allocating buffers");
 
         // Allocate enough remote buffer data for all the vertices/attributes
         // to be thrown across in segments.
@@ -101,10 +102,11 @@ public class AttributeManagerBufferUploader implements BufferUploader {
         if (reportError(gl, "Allocate Index Buffer")) {
             throw new BufferStateException();
         }
-        logger.info("Buffers allocated.");
+        logger.debug("Buffers allocated.");
 
         indexCount = 0;
-        int vertexCount = 0;
+        int vertexOffset = 0;
+        int indexOffset = 0;
         for (Long renderId : renderIdToBuffers.keySet()) {
             RenderBuffersBean buffersBean = renderIdToBuffers.get(renderId);
             FloatBuffer attribBuffer = buffersBean.getAttributesBuffer();
@@ -118,11 +120,11 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 attribBuffer.rewind();
                 gl.glBufferSubData(
                         GL2GL3.GL_ARRAY_BUFFER,
-                        vertexCount,
+                        vertexOffset,
                         bufferBytes,
                         attribBuffer
                 );
-                vertexCount += attribBuffer.capacity();
+                vertexOffset += bufferBytes;
                 if (reportError(gl, "Buffer Data")) {
                     throw new BufferStateException();
                 }
@@ -135,14 +137,15 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 if (reportError(gl, "Bind Inx Buf")) {
                     throw new BufferStateException();
                 }
-                logger.info("Uploading chunk of element array.");
+                logger.debug("Uploading chunk of element array.");
                 inxBuf.rewind();
                 gl.glBufferSubData(
                         GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
-                        getIndexCount(),
+                        indexOffset,
                         bufferBytes,
                         inxBuf
                 );
+                indexOffset += bufferBytes;
                 indexCount = getIndexCount() + inxBuf.capacity();
                 if (reportError(gl, "Upload index buffer segment.")) {
                     throw new BufferStateException();
@@ -176,6 +179,30 @@ public class AttributeManagerBufferUploader implements BufferUploader {
     @Override
     public int getIndexCount() {
         return indexCount;
+    }
+
+    @SuppressWarnings("unused")
+    protected void bufferExtremaCheck(final Map<Long, RenderBuffersBean> renderIdToBuffers) {
+        // Sanity check.
+        Map<Long, int[]> extrema = new java.util.HashMap<>();
+        for (Long renderId : renderIdToBuffers.keySet()) {
+            int maxInBuf = 0;
+            int minInBuf = Integer.MAX_VALUE;
+            IntBuffer inxBuf = renderIdToBuffers.get(renderId).getIndexBuffer();
+            for (int i = 0; i < inxBuf.capacity(); i++) {
+                int nextInx = inxBuf.get();
+                if (nextInx < minInBuf) {
+                    minInBuf = nextInx;
+                }
+                if (nextInx > maxInBuf) {
+                    maxInBuf = nextInx;
+                }
+            }
+            extrema.put(renderId, new int[]{minInBuf, maxInBuf});
+        }
+        for (Long renderId : extrema.keySet()) {
+            System.out.println("Extrema for " + renderId + " " + extrema.get(renderId)[0] + ".." + extrema.get(renderId)[1]);
+        }
     }
 
 }

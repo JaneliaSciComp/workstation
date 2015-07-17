@@ -1,0 +1,197 @@
+{
+    "providers": {
+        "ldap": {
+            "url": "ldap-vip1.int.janelia.org",
+            "groupattribute": "memberUid"
+        },
+        "scality": {
+            "url": "http://sc101-jrc:81/proxy",
+            "driver":  "bparc2"
+        }
+    },
+    "authorizers": {
+        "jacsdata": {
+            "type": "ldapgroup",
+            "group": "cn=jacsdata,ou=Groups,dc=hhmi,dc=org"
+        },
+        "flylight": {
+            "type": "ldapgroup",
+            "group": "cn=flylightconf,ou=Groups,dc=hhmi,dc=org"
+        },
+        "dickson": {
+            "type": "ldapgroup",
+            "group": "cn=ditp,ou=Groups,dc=hhmi,dc=org"
+        },
+        "leet": {
+            "type": "ldapgroup",
+            "group": "cn=leetimg,ou=Groups,dc=hhmi,dc=org"
+        },
+        "mousebrain": {
+            "type": "ldapgroup",
+            "group": "cn=mousebrainmicro,ou=Groups,dc=hhmi,dc=org"
+        },
+        "test": {
+            "type": "user",
+            "users": {
+                "testuser": "testuser"
+            }
+        }
+    },
+    "resources": {
+        "Cluster Temp": {
+            "mapping": "/nobackup/jacs/jacsData/filestore/upload",
+            "type": "block",
+            "path": "mirror",
+            "permissions": [
+                "read", "write", "delete", "propfind", "mkcol"
+            ]
+        },
+        "Cluster Data": {
+            "mapping": "/nobackup/jacs/jacsData",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "jacsdata",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Dev Cluster Temp": {
+            "mapping": "/groups/jacs/jacsDev/devstore/upload",
+            "type": "block",
+            "path": "mirror",
+            "permissions": [
+                "read", "write", "delete", "propfind", "mkcol"
+            ]
+        },
+        "Scality Data": {
+            "mapping": "/Scality",
+            "type": "object",
+            "path": "mirror",
+            "permissions": [
+                "read",
+                "write",
+                "propfind"
+            ]
+        },
+        "Workstation Common": {
+            "mapping": "/groups/jacs/jacsShare",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "jacsdata",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Workstation Development": {
+            "mapping": "/groups/jacs/jacsDev",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "jacsdata",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Flylight Flip": {
+            "mapping": "/tier2/flylight/flip",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "flylight",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Flylight Polarity": {
+            "mapping": "/tier2/flylight/polarity",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "flylight",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Flylight SSplit": {
+            "mapping": "/tier2/flylight/ssplit",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "flylight",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Dickson Lab Flylight": {
+            "mapping": "/tier2/flylight/dickson",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "dickson",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Dickson Lab Groups Flylight": {
+            "mapping": "/groups/flylight/flylight/dickson",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "flylight",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Dickson Lab Confocal": {
+            "mapping": "/groups/ditp/ditp/confocalStacks",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "dickson",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Leet Lineage Lab": {
+            "mapping": "/tier2/leet/leetimg/leetlab/lineage",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "leet",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Mouse Brain Micro": {
+            "mapping": "/tier2/mousebrainmicro",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "mousebrain",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Webdav Test Read": {
+            "mapping": "/opt/jacs-webdav-test/test-read",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "test",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Webdav Test Write": {
+            "mapping": "/opt/jacs-webdav-test/test-write",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "test",
+            "permissions": [
+                "read", "write", "delete", "propfind", "mkcol"
+            ]
+        }
+    }
+}

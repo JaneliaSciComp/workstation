@@ -56,6 +56,7 @@ public class VolumeLoader implements VolumeLoaderI {
             TextureDataBuilder textureDataBuilder = null;
             switch ( getFileType( localFileName, baseName, extension ) ) {
                 case TIF: {
+                    logger.info("TIF");
                     TifTextureBuilder tifTextureBuilder = new TifTextureBuilder();
                     TifVolumeFileLoader tifVolumeFileLoader = new TifVolumeFileLoader();
                     tifTextureBuilder.setVolumeFileLoader(tifVolumeFileLoader);
@@ -71,6 +72,7 @@ public class VolumeLoader implements VolumeLoaderI {
                     break;
                 }
                 case V3DSIGNAL: {
+                    logger.info("V3DSIGNAL");
                     V3dSignalFileLoader v3dFileLoader = new V3dSignalFileLoader();
                     fileLoader = v3dFileLoader;
                     textureDataBuilder = new LociTextureBuilder();
@@ -78,6 +80,7 @@ public class VolumeLoader implements VolumeLoaderI {
                     break;
                 }
                 case V3DMASK: {
+                    logger.info("V3DMASK");
                     V3dMaskFileLoader maskFileLoader = new V3dMaskFileLoader();
                     fileLoader = maskFileLoader;
                     textureDataBuilder = new LociTextureBuilder();
@@ -162,13 +165,17 @@ public class VolumeLoader implements VolumeLoaderI {
                 textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
             }
             else if ( FileType.H265.equals( fileType ) ) {
-//                textureData.setExplicitInternalFormat( GL2.GL_RGB );
-//                textureData.setExplicitVoxelComponentOrder( GL2.GL_RGB );
-//                textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
+                textureData.setExplicitInternalFormat( GL2.GL_RGB );
+                textureData.setExplicitVoxelComponentOrder( GL2.GL_RGB );
+                textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
 // Best yet.
-                textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE8);
-                textureData.setExplicitVoxelComponentOrder(GL2.GL_RGB);
-                textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
+//                textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE8);
+//                textureData.setExplicitVoxelComponentOrder(GL2.GL_RGB);
+//                textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
+
+//                textureData.setExplicitInternalFormat(GL2.GL_RGBA);
+//                textureData.setExplicitVoxelComponentOrder(GL2.GL_RGBA);
+//                textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
 
 // Fluffy overlap effect.                
 //                textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE8);

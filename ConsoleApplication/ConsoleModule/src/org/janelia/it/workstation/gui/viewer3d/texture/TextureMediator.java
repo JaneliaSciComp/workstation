@@ -140,8 +140,8 @@ public class TextureMediator {
                     );
                 }
 
-                int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
-                        * textureData.getPixelByteCount() * textureData.getChannelCount();
+                long expectedRemaining = (long)textureData.getSx() * (long)textureData.getSy() * (long)textureData.getSz()
+                        * (long)textureData.getPixelByteCount() * (long)textureData.getChannelCount();
                 if ( expectedRemaining != textureData.getTextureData().length() ) {
                     logger.warn( "Invalid remainder vs texture data dimensions.  Sx=" + textureData.getSx() +
                             " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
@@ -201,7 +201,7 @@ public class TextureMediator {
 
             // DEBUG
             //if ( expectedRemaining < 1000000 )
-            //    testTextureContents(gl); // Did NOT work for TIF!
+            //    testTextureContents(gl); // NOT for very large files!
         }
         return rtnVal;
     }

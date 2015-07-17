@@ -381,6 +381,12 @@ implements MouseMode, KeyListener
 								skeleton.deleteLinkRequest(getHoverAnchor());
                             }
                         }));
+                        result.add(new JMenuItem(new AbstractAction("Move neurite...") {
+                            @Override
+                            public void actionPerformed(ActionEvent actionEvent) {
+								skeleton.moveNeuriteRequest(getHoverAnchor());
+                            }
+                        }));
                         result.add(new JMenuItem(new AbstractAction("Split anchor") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {

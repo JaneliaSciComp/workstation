@@ -24,7 +24,7 @@ MouseWheelListener
 	private static final Logger log = LoggerFactory.getLogger(Mip3d.class);
 	// setup OpenGL Version 2
 	protected static GLProfile profile = null;
-	static GLCapabilities capabilities = null;
+	protected static GLCapabilities capabilities = null;
 
     static {
         try {

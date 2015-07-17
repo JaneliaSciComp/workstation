@@ -338,9 +338,6 @@ public class DirectionalReferenceAxesActor implements GLActor {
         rtnVal[index++] = 0.0f;
         rtnVal[index++] = onscreenSize[1];
         rtnVal[index++] = 0.0f;
-//        rtnVal[index++] = (float) boundingBox.getMinX();
-//        rtnVal[index++] = (float) boundingBox.getMinY();
-//        rtnVal[index++] = (float) boundingBox.getMaxZ();
         return rtnVal;
     }
     

@@ -31,7 +31,7 @@ public class AnnotationSkeletonViewLauncher {
         List<JMenuItem> menuItems = new ArrayList<>();
         Action launchAction = new AbstractAction() {
             {
-                super.putValue(NAME, "Launch Annotation Skeleton Viewer");
+                super.putValue(NAME, "Launch Annotation Landmark Viewer");
             }
             @Override
             public void actionPerformed(ActionEvent e) {

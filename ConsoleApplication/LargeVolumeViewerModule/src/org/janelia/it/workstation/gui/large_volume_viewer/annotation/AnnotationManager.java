@@ -32,9 +32,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -536,6 +534,127 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     }
 
+
+    public void moveNeuriteRequested(Anchor anchor) {
+        if (anchor == null) {
+            presentError("Anchor unexpectedly null!", "Can't move neurite");
+            return;
+        }
+
+        // dialog box with list of neurons, not including current neuron; but
+        //  throw in a dummy "create new neuron" option at the top
+        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
+        TmNeuron sourceNeuron = annotationModel.getNeuronFromAnnotationID(annotation.getId());
+
+        ArrayList<TmNeuron> neuronList = new ArrayList<>(annotationModel.getCurrentWorkspace().getNeuronList());
+        neuronList.remove(sourceNeuron);
+        // not sure alphabetical is the best sort; neuron list is selectable (defaults to creation
+        //  date), but I don't want to figure out how to grab that sort order and use it here;
+        //  however, alphabetical seems reasonable enough (better than arbitrary order)
+        Collections.sort(neuronList, new Comparator<TmNeuron>() {
+            @Override
+            public int compare(TmNeuron tmNeuron, TmNeuron tmNeuron2) {
+                return tmNeuron.getName().compareToIgnoreCase(tmNeuron2.getName());
+            }
+        });
+
+        // add "create new" at top of sorted list
+        TmNeuron dummyCreateNewNeuron = new TmNeuron(-1L, "(create new neuron)");
+        neuronList.add(0, dummyCreateNewNeuron);
+
+        Object [] choices = neuronList.toArray();
+        Object choice = JOptionPane.showInputDialog(
+                ComponentUtil.getLVVMainWindow(),
+                "Choose destination neuron:",
+                "Choose neuron",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                choices,
+                choices[0]
+        );
+        if (choice == null) {
+            return;
+        }
+
+        if (((TmNeuron) choice).getId().equals(dummyCreateNewNeuron.getId())) {
+            // create new neuron and move neurite to it
+            final String neuronName = promptForNeuronName(null);
+            if (neuronName == null) {
+                JOptionPane.showMessageDialog(
+                    ComponentUtil.getLVVMainWindow(),
+                    "Neuron rename canceled; move neurite canceled",
+                    "Move neurite canceled",
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            SimpleWorker mover = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    // need to create neuron, then compare new neuron list to old one,
+                    //  so we can figure out what the new one is, since create neuron
+                    //  can't tell us
+                    Set<Long> oldNeuronIDs = new HashSet<>();
+                    for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+                        oldNeuronIDs.add(neuron.getId());
+                    }
+
+                    annotationModel.createNeuron(neuronName);
+
+                    TmNeuron newNeuron = null;
+                    for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+                        if (!oldNeuronIDs.contains(neuron.getId())) {
+                            newNeuron = neuron;
+                            break;
+                        }
+                    }
+
+                    annotationModel.moveNeurite(annotation, newNeuron);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // nothing to see here
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    presentError(
+                            "Error while moving neurite!",
+                            "Error",
+                            error);
+                }
+            };
+            mover.execute();
+
+        } else {
+            // we're moving to an existing neuron; straightforward!
+            final TmNeuron destinationNeuron = (TmNeuron) choice;
+            SimpleWorker mover = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.moveNeurite(annotation, destinationNeuron);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // nothing to see here
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    presentError(
+                            "Error while moving neurite!",
+                            "Error",
+                            error);
+                }
+            };
+            mover.execute();
+        }
+
+    }
+
+
     /**
      * place a new annotation near the annotation with the input ID; place it
      * "nearby" in the direction of its parent if it has one; if it's a root
@@ -770,16 +889,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        // use a standard neuron name; the user can rename later
-        final String neuronName = getNeuronName(annotationModel.getCurrentWorkspace());
+        // prompt the user for a name, but suggest a standard name
+        final String neuronName = promptForNeuronName(getNeuronName(annotationModel.getCurrentWorkspace()));
 
         // create it:
         SimpleWorker creator = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
                 annotationModel.createNeuron(neuronName);
-                // Renaming neuron here, after selection is done.
-                renameNeuron();
             }
 
             @Override
@@ -847,19 +964,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        final String neuronName = (String) JOptionPane.showInputDialog(
-                ComponentUtil.getLVVMainWindow(),
-                "Neuron name:",
-                "Rename neuron",
-                JOptionPane.PLAIN_MESSAGE,
-                null, // icon
-                null, // choice list; absent = freeform
-                neuron.getName());
-        if (neuronName == null || neuronName.length() == 0) {
+        final String neuronName = promptForNeuronName(neuron.getName());
+        if (neuronName == null) {
             return;
         }
 
-        // validate neuron name?  are there any rules for entity names?
         SimpleWorker renamer = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
@@ -882,6 +991,33 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         renamer.execute();
 
     }
+
+
+    /**
+     * pop a dialog that asks for a name for a neuron;
+     * returns null if the user didn't make a choice
+     */
+    String promptForNeuronName(String suggestedName) {
+        if (suggestedName == null) {
+            suggestedName = "";
+        }
+        String neuronName = (String) JOptionPane.showInputDialog(
+                ComponentUtil.getLVVMainWindow(),
+                "Neuron name:",
+                "Name neuron",
+                JOptionPane.PLAIN_MESSAGE,
+                null, // icon
+                null, // choice list; absent = freeform
+                suggestedName);
+        if (neuronName == null || neuronName.length() == 0) {
+            return null;
+        } else {
+            // if we had any validation to do, we'd do it
+            // here...but we don't
+            return neuronName;
+        }
+    }
+
 
     /**
      * given a workspace, return a new generic neuron name (probably something

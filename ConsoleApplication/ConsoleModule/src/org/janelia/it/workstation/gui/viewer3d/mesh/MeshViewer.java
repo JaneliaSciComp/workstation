@@ -9,7 +9,6 @@ package org.janelia.it.workstation.gui.viewer3d.mesh;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.Viewer3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.workstation.gui.viewer3d.mesh.MeshRenderer;
 
 /**
  * Special viewer to support carrying around extra information needed for mesh.
@@ -18,6 +17,12 @@ import org.janelia.it.workstation.gui.viewer3d.mesh.MeshRenderer;
  */
 public class MeshViewer extends Viewer3d {
     private MeshViewContext context;
+
+    // Setup oversampling to get smoother rendering.
+    static {
+        capabilities.setSampleBuffers(true);
+        capabilities.setNumSamples(4);
+    }
     
 	public MeshViewer() {
         final MeshRenderer meshRenderer = new MeshRenderer();
