@@ -7,6 +7,7 @@ import org.janelia.it.workstation.geom.UnitVec3;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderActionSequence;
+import org.janelia.it.workstation.gui.geometric_search.gl.OITSortShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,8 +19,8 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import org.janelia.it.workstation.gui.geometric_search.gl.GL4Shader;
-import org.janelia.it.workstation.gui.geometric_search.gl.OITMeshDrawShader;
-import org.janelia.it.workstation.gui.geometric_search.gl.OITMeshSortShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.mesh.OITMeshDrawShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.volume.OITCubeShader;
 
 /**
  * Created by murphys on 4/10/15.
@@ -126,14 +127,20 @@ public class GL4Renderer implements GLEventListener
             ex.printStackTrace();
         }
 
+        boolean tcSet = false;
         for (GL4ShaderActionSequence shaderAction : shaderActionList) {
             try {
                 GL4Shader shader = shaderAction.getShader();
-                if (shader instanceof OITMeshDrawShader) {
+                if (!tcSet && shader instanceof OITMeshDrawShader) {
                     OITMeshDrawShader s = (OITMeshDrawShader)shader;
                     s.setTransparencyContext(tc);
-                } else if (shader instanceof OITMeshSortShader) {
-                    OITMeshSortShader s = (OITMeshSortShader)shader;
+                    tcSet=true;
+                } else if (!tcSet && shader instanceof OITCubeShader) {
+                    OITCubeShader s = (OITCubeShader)shader;
+                    s.setTransparencyContext(tc);
+                    tcSet=true;
+                } else if (shader instanceof OITSortShader) {
+                    OITSortShader s = (OITSortShader)shader;
                     s.setTransparencyContext(tc);
                 }
                 shaderAction.init(gl);
