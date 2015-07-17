@@ -36,13 +36,23 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor
         checkGlError(gl, "d glBindVertexArray error");
         gl.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBufferId.get(0));
         checkGlError(gl, "d glBindBuffer error");
+  
+        // VERTEX
         gl.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, 0, 0);
         checkGlError(gl, "d glVertexAttribPointer error");
         gl.glEnableVertexAttribArray(0);
         checkGlError(gl, "d glEnableVertexAttribArray 0 error");
+        
+        // INTENSITY
+        gl.glVertexAttribPointer(1, 1, GL4.GL_FLOAT, false, 0, viList.size() * 3 * 4);
+        checkGlError(gl, "d glVertexAttribPointer error");
+        gl.glEnableVertexAttribArray(1);
+        checkGlError(gl, "d glEnableVertexAttribArray 1 error");       
+        
         logger.info("display() calling glDrawArrays for GL4.GL_POINTS with viList.size="+viList.size());
         gl.glDrawArrays(GL4.GL_POINTS, 0, viList.size());
         checkGlError(gl, "d glDrawArrays error");
+        
     }
 
     @Override
@@ -58,7 +68,7 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor
         //viList.add(vg1);
         //viList.add(vg2);
 
-        FloatBuffer fb=FloatBuffer.allocate(viList.size()*3); // 3 floats per vertex
+        FloatBuffer fb=FloatBuffer.allocate(viList.size()*4); // 3 floats per vertex, 1 for intensity
         
         logger.info("init() adding "+viList.size() +" vertices to FloatBuffer");
              
@@ -69,7 +79,14 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor
             fb.put(v*3+1,vg.y);
             fb.put(v*3+2,vg.z);
         }
-
+        
+        // intensity information
+        int intensityOffset = viList.size() * 3;
+        for (int v=0;v<viList.size();v++) {
+            viGroup vg=viList.get(v);
+            fb.put(intensityOffset + v,vg.w);
+        }
+        
         gl.glGenVertexArrays(1, vertexArrayId);
         checkGlError(gl, "glGenVertexArrays error");
         gl.glBindVertexArray(vertexArrayId.get(0));

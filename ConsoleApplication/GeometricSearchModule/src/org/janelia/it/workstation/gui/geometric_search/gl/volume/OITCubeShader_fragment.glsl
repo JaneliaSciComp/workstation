@@ -9,7 +9,9 @@ struct NodeType {
 uniform vec4 dcolor;
 
 layout (early_fragment_tests) in;
+
 in float vz;
+in float intensityF;
 
 layout (binding=0, offset=0) uniform atomic_uint index_counter;
 layout (binding = 1, r32ui) uniform uimage2D head_pointer_image;
@@ -26,7 +28,9 @@ out vec4 blankOut;
 void main()
 {
 
-    vec4 color = dcolor;
+    float dopac = dcolor.w;
+    vec4 color = dcolor * intensityF;
+    color.w = dopac;
 
     ivec2 fl = ivec2(gl_FragCoord.xy);
     uint new_index = atomicCounterIncrement(index_counter);
