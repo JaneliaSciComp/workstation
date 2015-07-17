@@ -30,14 +30,11 @@
 
 package janelia.lvv.tileloader;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import org.openide.util.Exceptions;
 
 /**
  *
@@ -75,9 +72,9 @@ public class RandomSliceSelector implements LoadStrategem
     }
 
     @Override
-    public URL getSourceUrl()
+    public BrickSetSource getSource()
     {
-        return source.getParentFolder();
+        return source;
     }
 
 }

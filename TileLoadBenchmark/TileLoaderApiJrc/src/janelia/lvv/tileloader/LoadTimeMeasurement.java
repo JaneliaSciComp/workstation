@@ -124,8 +124,12 @@ implements Iterable<Float>
         ps.println("Total of " + size() + " slices loaded,");
         ps.println("in a total of " + totalTime() + " milliseconds.");
         ps.println("Slices selected using a " + selectorName);
-        ps.println("From location: " + selector.getSourceUrl());
+        ps.println("From location: " + selector.getSource().getParentFolder());
+        float sliceSizeMB = selector.getSource().getSliceSizeMB();
+        ps.println("Slice size = " + sliceSizeMB + " MB");
         ps.println("Median slice load took " + median() + " milliseconds.");
+        ps.println("Median bandwidth = "+ 1000.0 * sliceSizeMB / median() + " MB/sec.");
+        ps.println("Estimated block latency = " + (get(0) - median()) + "ms +- " + standardDeviation() + " ms");
         ps.println("Mean slice load took " + mean() + " milliseconds.");
         ps.println("with a standard deviation of " + standardDeviation() + " milliseconds.");
         ps.println("First slice load took " + get(0) + " milliseconds.");

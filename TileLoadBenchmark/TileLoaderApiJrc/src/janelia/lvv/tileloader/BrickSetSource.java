@@ -137,4 +137,9 @@ public class BrickSetSource
     {
         return parentFolder;
     }
+
+    float getSliceSizeMB()
+    {
+        return brickWidth * brickHeight * brickChannels * brickBitDepth / 8e6f;
+    }
 }
