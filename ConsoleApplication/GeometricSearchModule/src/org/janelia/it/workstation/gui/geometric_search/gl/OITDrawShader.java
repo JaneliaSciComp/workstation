@@ -63,6 +63,11 @@ public abstract class OITDrawShader extends GL4Shader {
     public void display(GL4 gl) {
         super.display(gl);
         checkGlError(gl, "d1 OITDrawShader super.display() error");
+        
+        if (tc==null) {
+            // assume earlier instance of this class in the display sequence has been called
+            return;
+        }
 
         // Clear the headPointerTexture
         gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, tc.getHeadPointerInitializerId());

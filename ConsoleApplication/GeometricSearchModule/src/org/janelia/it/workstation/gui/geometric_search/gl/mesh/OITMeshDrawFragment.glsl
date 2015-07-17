@@ -1,12 +1,11 @@
-#version 430
+ #version 430
 
 // vertex to fragment shader io
-//in vec3 N;
-//in vec3 I;
+in vec3 N;
+in vec3 I;
 in vec4 Cs;
 
-//flat in vec3 diffuseColor;
-//flat in vec3 specularColor;
+in float vz;
 
 struct NodeType {
     vec4 color;
@@ -27,8 +26,8 @@ layout (binding = 0, std430) buffer linkedLists {
     NodeType nodes[];
 };
 
-// 2048 x 2048 x 20
-#define MAX_NODES 83886080 
+// 2048 x 2048 x 2
+#define MAX_NODES 8388608
 
 out vec4 blankOut;
 
@@ -36,33 +35,16 @@ out vec4 blankOut;
 void main()
 {
 
-    //float scaleS = 10.0;
-    //float scaleT = 10.0;
-
-    //float thresholdS = 0.13;
-    //float thresholdT = 0.13;
-
-    //vec3 surfaceColor = vec3(0.8, 0.8, 0.7);
-
-    //vec3 finalColor = surfaceColor * diffuseColor + specularColor;
-    //vec4 color = vec4(finalColor, 0.01);
-
-
-
-        // BEGIN ORIGINAL x-ray code
-
     // Actual fragment shading step
-    //float edgefalloff=1.0;
-    //float intensity=0.5;
-    //float ambient=0.1;
+    float edgefalloff=1.0;
+    float intensity=0.2;
+    float ambient=0.05;
 
-    vec4 color = Cs;
-
-        //float opac = dot(normalize(-N), normalize(-I)); 
-        //opac = abs(opac);
-        //opac = ambient + intensity*(1.0-pow(opac, edgefalloff));
-        //color =  opac * color;
-        //color.a = opac;
+    float opac = dot(normalize(-N), normalize(-I));
+    opac = abs(opac);
+    opac = ambient + intensity*(1.0-pow(opac, edgefalloff));
+    vec4 color =  opac * Cs;
+    color.a = opac;
 
     ivec2 fl = ivec2(gl_FragCoord.xy);
     uint new_index = atomicCounterIncrement(index_counter);
@@ -70,7 +52,8 @@ void main()
         int iNewIndex = int(new_index);
         uint old_head = imageAtomicExchange(head_pointer_image, fl, new_index);
         nodes[new_index].color = color;
-        nodes[new_index].depth = 1.0 - gl_FragCoord.z;
+        //nodes[new_index].depth = gl_FragCoord.z;
+        nodes[new_index].depth = 1.0 - vz;
         nodes[new_index].next = old_head;
     }
 
