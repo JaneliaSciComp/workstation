@@ -28,12 +28,14 @@ void main()
     {
         finalColor += specularLightMag;
     }
-    gl_FragColor = finalColor;
+
+    // Drawing both to buffer 0 and buffer 1. Each buffer represents a different
+    // "Render Target".  0=shaded color; 1=identifier
+    gl_FragData[0] = finalColor;
     if ( idsAvailable == 1 )
     {
-//        gl_FragColor.r = id; // using red as pure-ID color
-//        gl_FragColor.g = id;
-//        gl_FragColor.b = id;
+        gl_FragData[1] = id;
+        gl_FragData[1].w = 1.0;
     }
-    gl_FragColor.w = 1.0; // Force alpha to 1.
+    gl_FragData[0].w = 1.0;
 }

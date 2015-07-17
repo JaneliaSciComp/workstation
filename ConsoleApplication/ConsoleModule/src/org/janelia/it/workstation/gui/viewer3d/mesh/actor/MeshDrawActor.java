@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d.mesh.actor;
 
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.opengl.GLActor;
@@ -16,6 +18,7 @@ import java.nio.IntBuffer;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
+import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
 
 /**
  * This is a gl-actor to draw pre-collected buffers, which have been laid out for
@@ -50,6 +53,8 @@ public class MeshDrawActor implements GLActor {
 
     private IntBuffer tempBuffer = IntBuffer.allocate(1);
     private MatrixManager matrixManager;
+    
+    private RenderedIdPicker picker;
 
     public MeshDrawActor( MeshDrawActorConfigurator configurator ) {
         this.configurator = configurator;
@@ -200,7 +205,7 @@ public class MeshDrawActor implements GLActor {
                 return glDrawable.getHeight();
             }
             
-        };
+        };        
         
         if (bBuffersNeedUpload) {
             try {
@@ -221,6 +226,14 @@ public class MeshDrawActor implements GLActor {
                 }
                 dropBuffers(gl);
                 configurator.getBufferUploader().uploadBuffers(gl);
+                
+                if (configurator.isUseIdAttribute()) {
+//                    Toolkit toolkit = Toolkit.getDefaultToolkit();
+//                    Dimension dim = toolkit.getScreenSize();
+//                    // Build this with max-possible buffer dimensions.
+//                    picker = new RenderedIdPicker((int)dim.getWidth(), (int)dim.getHeight());
+//                    picker.init(glDrawable);
+                }
             } catch ( BufferStateException bse ) {
                 // Failure at this level.  Need to do this again.
                 bBuffersNeedUpload = true;
@@ -228,7 +241,7 @@ public class MeshDrawActor implements GLActor {
                 SessionMgr.getSessionMgr().handleException( ex );
             }
         }
-
+        
     }
 
     @Override
@@ -347,6 +360,10 @@ public class MeshDrawActor implements GLActor {
         if (reportError( gl, "Display of mesh-draw-actor 5" ))
             return;
 
+//        if (configurator.isUseIdAttribute()) {
+//            picker.postPick(glDrawable);
+//        }
+        
         shader.unload(gl.getGL2());
 
         if (reportError(gl, "mesh-draw-actor, end of display."))
