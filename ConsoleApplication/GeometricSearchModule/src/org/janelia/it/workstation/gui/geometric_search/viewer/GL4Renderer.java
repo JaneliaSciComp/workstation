@@ -127,15 +127,18 @@ public class GL4Renderer implements GLEventListener
             ex.printStackTrace();
         }
 
+        boolean tcSet = false;
         for (GL4ShaderActionSequence shaderAction : shaderActionList) {
             try {
                 GL4Shader shader = shaderAction.getShader();
-                if (shader instanceof OITMeshDrawShader) {
+                if (!tcSet && shader instanceof OITMeshDrawShader) {
                     OITMeshDrawShader s = (OITMeshDrawShader)shader;
                     s.setTransparencyContext(tc);
-                } else if (shader instanceof OITCubeShader) {
+                    tcSet=true;
+                } else if (!tcSet && shader instanceof OITCubeShader) {
                     OITCubeShader s = (OITCubeShader)shader;
                     s.setTransparencyContext(tc);
+                    tcSet=true;
                 } else if (shader instanceof OITSortShader) {
                     OITSortShader s = (OITSortShader)shader;
                     s.setTransparencyContext(tc);

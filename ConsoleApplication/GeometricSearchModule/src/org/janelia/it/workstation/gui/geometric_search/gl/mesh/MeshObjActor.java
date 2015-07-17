@@ -91,10 +91,8 @@ public class MeshObjActor extends GL4SimpleActor
 //        gl.glBlendFunc(GL4.GL_SRC_ALPHA, GL4.GL_SRC_ALPHA);
 //        gl.glBlendEquation(GL4.GL_FUNC_ADD);
 //        gl.glDepthFunc(GL4.GL_LEQUAL);
-
-
-
-
+        
+        gl.glDisable(GL4.GL_DEPTH_TEST);
 
         checkGlError(gl, "d super.display() error");
         gl.glBindVertexArray(vertexArrayId.get(0));

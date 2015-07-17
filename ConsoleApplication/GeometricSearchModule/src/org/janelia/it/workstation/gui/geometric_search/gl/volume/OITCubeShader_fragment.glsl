@@ -9,6 +9,7 @@ struct NodeType {
 uniform vec4 dcolor;
 
 layout (early_fragment_tests) in;
+in float vz;
 
 layout (binding=0, offset=0) uniform atomic_uint index_counter;
 layout (binding = 1, r32ui) uniform uimage2D head_pointer_image;
@@ -16,8 +17,8 @@ layout (binding = 0, std430) buffer linkedLists {
     NodeType nodes[];
 };
 
-// 2048 x 2048 x 20
-#define MAX_NODES 83886080 
+// Each node is 21 bytes, so 500m * 21 = 10.5G, essentially the card max
+#define MAX_NODES 50000000
 
 out vec4 blankOut;
 
@@ -33,7 +34,8 @@ void main()
         int iNewIndex = int(new_index);
         uint old_head = imageAtomicExchange(head_pointer_image, fl, new_index);
         nodes[new_index].color = color;
-        nodes[new_index].depth = 1.0 - gl_FragCoord.z;
+        //nodes[new_index].depth = gl_FragCoord.z;
+        nodes[new_index].depth = 1.0 - vz;
         nodes[new_index].next = old_head;
     }
 

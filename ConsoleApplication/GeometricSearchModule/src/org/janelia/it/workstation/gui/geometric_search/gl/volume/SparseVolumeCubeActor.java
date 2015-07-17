@@ -28,6 +28,8 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor
     @Override
     public void display(GL4 gl) {
         super.display(gl);
+        
+        gl.glDisable(GL4.GL_DEPTH_TEST);
 
         checkGlError(gl, "d super.display() error");
         gl.glBindVertexArray(vertexArrayId.get(0));
@@ -47,6 +49,14 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor
     public void init(GL4 gl) {
 
         super.init(gl);
+        
+        //viList.clear();
+        
+        //viGroup vg1 = new viGroup(0.0f, 0.0f, 0.0f, 1.0f);
+        //viGroup vg2 = new viGroup(0.0f, 0.0f, 0.7f, 1.0f);
+        
+        //viList.add(vg1);
+        //viList.add(vg2);
 
         FloatBuffer fb=FloatBuffer.allocate(viList.size()*3); // 3 floats per vertex
         
