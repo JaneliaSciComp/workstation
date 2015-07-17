@@ -52,13 +52,9 @@ public class SliceBytes
     private final boolean isSRgb;
     private final ByteBuffer pixels;
     private final int sliceIndex;
-    // Timing performance
-    private final long preBinarizedNanoTime;
-    private final long finalLoadedNanoTime;
 
     public SliceBytes(RenderedImage renderedImage, int sliceIndex) 
     {
-        this.preBinarizedNanoTime = System.nanoTime();
         this.sliceIndex = sliceIndex;
         RenderedImage image = renderedImage;
 		ColorModel colorModel = image.getColorModel();
@@ -115,17 +111,5 @@ public class SliceBytes
 			}			
 		}
 		pixels = byteBuffer;
-        finalLoadedNanoTime = System.nanoTime();
     }
-
-    public long getPreBinarizedNanoTime()
-    {
-        return preBinarizedNanoTime;
-    }
-
-    public long getFinalLoadedNanoTime()
-    {
-        return finalLoadedNanoTime;
-    }
-    
 }

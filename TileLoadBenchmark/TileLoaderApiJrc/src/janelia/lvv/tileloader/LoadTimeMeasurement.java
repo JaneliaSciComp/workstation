@@ -30,16 +30,22 @@
 
 package janelia.lvv.tileloader;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.InetAddress;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import org.apache.commons.lang.SystemUtils;
 
 /**
  *
@@ -60,6 +66,42 @@ implements Iterable<Float>
     private final String timeStamp;
     private final String hostName;
 
+    /**
+     * Convenience method for running a "standard" load test, against
+     * a particular image location.
+     * @param imageFolder 
+     */
+    static void measureLoadPerformance(URL imageSource) throws IOException, URISyntaxException {
+        // 1 - Declare a source of volume bricks
+        // URL testUrl = new URL("file:///F:/Users/cmbruns/mouseLightPerformance/originalTiles/tiff_stack_per_channel/tile_list.txt");
+        BrickSetSource source = new BrickSetSource(imageSource);
+        // 2 - Create a selector of slices - "random" is probably the most demanding
+        LoadStrategem selector = new RandomSliceSelector(source, 10);
+        // 3 - Create a loader, appropriate to the source format
+        BrickSliceLoader loader = new ClackTiffSliceLoader(); // TODO - use a factory
+        // 4 - measure the tile loading performance
+        LoadTimeMeasurement measurement = new LoadTimeMeasurement(loader, selector);
+        // 5 - report the measurement results
+        // Write to a persistent log file
+        String logFolder;
+        if (SystemUtils.IS_OS_WINDOWS)
+            logFolder = "//dm11/jacs/jacsShare/mouseLightTileLoadPerformance/logs/";
+        else if (SystemUtils.IS_OS_MAC_OSX)
+            logFolder = "/Volumes/jacs/jacsShare/mouseLightTileLoadPerformance/logs/";
+        else // Linux
+            logFolder = "/groups/jacs/jacsShare/mouseLightTileLoadPerformance/logs/";
+        // One log file per month
+        String logFileName = "TileLoadLog_" + new SimpleDateFormat("yyyy_MM").format(Calendar.getInstance().getTime()) + ".txt";
+        File logFile = new File(logFolder + logFileName);
+        // logFile.getParentFile().mkdirs(); // Folder should exist by now...
+        // Prime reporter first, so actual file write will be quick.
+        measurement.report(System.out); // write to console for debugging
+        // Open log file in APPEND mode
+        OutputStream logStream = new BufferedOutputStream(new FileOutputStream(logFile, true)); // append
+        measurement.report(logStream);
+        logStream.close();
+    }
+    
     public LoadTimeMeasurement(BrickSliceLoader loader, LoadStrategem selector) throws IOException 
     {
         this.selector = selector;

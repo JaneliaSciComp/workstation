@@ -33,8 +33,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import org.openide.LifecycleManager;
 import org.openide.modules.ModuleInstall;
 import org.openide.util.Exceptions;
@@ -44,31 +42,16 @@ public class Installer extends ModuleInstall
 {
 
     /**
-     * Run some tile loading benchmarks (TODO)
+     * Run some tile loading benchmarks
      * "restored()" is the "main()" of Netbeans platform applications.
      */
     @Override
     public void restored()
     {
-        System.out.println("Running first test load...");
-        List<Integer> sliceIndices = new ArrayList<Integer>();
-        for (int i = 20; i >= 10; --i)
-            sliceIndices.add(i);
         try {
-            // 1 - Declare a source of volume bricks
-            // URL testUrl = new URL("file:///F:/Users/cmbruns/mouseLightPerformance/rendered/tiff_stack_per_channel/tile_list.txt");
-            URL testUrl = new URL("file:///F:/Users/cmbruns/mouseLightPerformance/originalTiles/tiff_stack_per_channel/tile_list.txt");
-            BrickSetSource source = new BrickSetSource(testUrl);
-            // 2 - Create a selector of slices
-            LoadStrategem selector = new RandomSliceSelector(source, 10);
-            // 3 - Create a loader, appropriate to the source format
-            BrickSliceLoader loader = new ClackTiffSliceLoader(); // TODO - use a factory
-            // 4 - measure the tile loading performance
-            LoadTimeMeasurement measurement = new LoadTimeMeasurement(loader, selector);
-            // 5 - report the measurement results
-            // TODO - write to a persistent log file SOMEWHERE
-            measurement.report(System.out);
-
+            URL testUrl = new URL("file:///F:/Users/cmbruns/mouseLightPerformance/rendered/tiff_stack_per_channel/tile_list.txt");
+            // URL testUrl = new URL("file:///F:/Users/cmbruns/mouseLightPerformance/originalTiles/tiff_stack_per_channel/tile_list.txt");
+            LoadTimeMeasurement.measureLoadPerformance(testUrl);
         } catch (MalformedURLException ex) {
             Exceptions.printStackTrace(ex);
         } catch (IOException ex) {
