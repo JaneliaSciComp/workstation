@@ -68,16 +68,16 @@ public class RandomSliceSelector implements LoadStrategem
             List<Integer> ix = new ArrayList<Integer>();
             ix.add(z);
             URL url;
-            try {
-                url = source.getBrickFolders().get(b).toURI().resolve(".").toURL();
-                slices.add(new SubstackInfo(url, ix));
-            } catch (URISyntaxException ex) {
-                Exceptions.printStackTrace(ex);
-            } catch (MalformedURLException ex) {
-                Exceptions.printStackTrace(ex);
-            }
+            url = source.getBrickFolders().get(b);
+            slices.add(new SubstackInfo(url, ix));
         }
         return slices.iterator();
+    }
+
+    @Override
+    public URL getSourceUrl()
+    {
+        return source.getParentFolder();
     }
 
 }

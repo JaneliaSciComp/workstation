@@ -89,12 +89,20 @@ public class ClackTiffSliceLoader implements BrickSliceLoader
     }
     
     // Each color channel is found in a separate monochromatic tiff file
-    public int countChannels(File folder) {
+    public int countChannels(File folderOrFile) {
+        File folder = folderOrFile;
+        String baseName = tiffBaseName+".0.tif";
+        if ( ! folderOrFile.isDirectory() ) {
+            baseName = folderOrFile.getName();
+            folder = folderOrFile.getParentFile();
+        }
         int c = 0;
-        File tiff = new File(folder, tiffBaseName+"."+c+".tif");
+        String tiffName = baseName.replace(".0.", "."+c+".");
+        File tiff = new File(folder, tiffName);
         while (tiff.exists()) {
             c += 1;
-            tiff = new File(folder, tiffBaseName+"."+c+".tif");
+            tiffName = baseName.replace(".0.", "."+c+".");
+            tiff = new File(folder, tiffName);
         }
         return c;
     }
@@ -110,11 +118,18 @@ public class ClackTiffSliceLoader implements BrickSliceLoader
         return f;
     }
     
-    public ImageDecoder[] channelDecodersFromFolder(File folder, int channelCount) throws IOException
+    public ImageDecoder[] channelDecodersFromFolder(File folderOrFile, int channelCount) throws IOException
 	{
+        File folder = folderOrFile;
+        String baseName = tiffBaseName+".0.tif";
+        if ( ! folderOrFile.isDirectory() ) {
+            baseName = folderOrFile.getName();
+            folder = folderOrFile.getParentFile();
+        }
 		ImageDecoder decoders[] = new ImageDecoder[channelCount];
 		for (int c = 0; c < channelCount; ++c) {
-			File tiff = new File(folder, tiffBaseName+"."+c+".tif");
+            String tiffName = baseName.replace(".0.", "."+c+".");
+			File tiff = new File(folder, tiffName);
             SeekableStream s = new FileSeekableStream(tiff);
             decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
 		}

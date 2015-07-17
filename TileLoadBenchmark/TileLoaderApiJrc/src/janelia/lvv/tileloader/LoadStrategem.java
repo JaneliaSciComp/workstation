@@ -30,10 +30,13 @@
 
 package janelia.lvv.tileloader;
 
+import java.net.URL;
+
 /**
  *
  * @author Christopher Bruns
  */
 public interface LoadStrategem extends Iterable<SubstackInfo>
 {
+    public URL getSourceUrl();
 }

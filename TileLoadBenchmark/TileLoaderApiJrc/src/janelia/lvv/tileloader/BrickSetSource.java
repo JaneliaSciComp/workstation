@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
 public class BrickSetSource
 {
     private List<URL> brickFolders = new ArrayList<URL>();
-    private URI parentFolder;
+    private URL parentFolder;
     private int brickWidth, brickHeight, brickDepth, brickChannels, brickBitDepth;
     
     static Pattern headerPatterns[] = new Pattern[] {
@@ -62,7 +62,7 @@ public class BrickSetSource
     // Load image source metadata from text file
     public BrickSetSource(URL tileListFile) throws IOException, URISyntaxException
     {
-        parentFolder = tileListFile.toURI().resolve(".");
+        parentFolder = tileListFile.toURI().resolve(".").toURL();
         URLConnection connection = tileListFile.openConnection();
         BufferedReader reader = new BufferedReader(new InputStreamReader(
                 connection.getInputStream()));
@@ -96,7 +96,7 @@ public class BrickSetSource
             }
             else {
                 // TODO parse block definition
-                URL brickUrl = parentFolder.resolve(inputLine).toURL();
+                URL brickUrl = parentFolder.toURI().resolve(inputLine).toURL();
                 brickFolders.add(brickUrl);
             }
         }
@@ -132,6 +132,9 @@ public class BrickSetSource
     {
         return brickBitDepth;
     }
-    
-    
+
+    public URL getParentFolder()
+    {
+        return parentFolder;
+    }
 }

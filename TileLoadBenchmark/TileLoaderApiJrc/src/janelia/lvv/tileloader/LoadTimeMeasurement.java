@@ -33,7 +33,10 @@ package janelia.lvv.tileloader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.InetAddress;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -54,11 +57,15 @@ implements Iterable<Float>
     private float cachedMin = Float.NaN;
     private float cachedTotalTime = 0;
     private final LoadStrategem selector;
+    private final String timeStamp;
+    private final String hostName;
 
     public LoadTimeMeasurement(BrickSliceLoader loader, LoadStrategem selector) throws IOException 
     {
         this.selector = selector;
         long t0 = System.nanoTime();
+        timeStamp = new SimpleDateFormat().format(Calendar.getInstance().getTime());
+        hostName = InetAddress.getLocalHost().getHostName();
         for (SubstackInfo s : selector) {
             loader.loadSliceRange(s.brickFolder, s.sliceIndices);
             long t1 = System.nanoTime();
@@ -110,16 +117,21 @@ implements Iterable<Float>
     public void report(OutputStream out) {
         PrintStream ps = new PrintStream(out);
         String selectorName = selector.getClass().getSimpleName();
-        ps.println("Slices selected using a " + selectorName);
-        // ps.println("From location: " + selector.);
+        ps.println("********************************************");
+        ps.println("Slice load speed test measured at "+timeStamp);
+        ps.println("on client host computer "+hostName+" running OS "+System.getProperty("os.name"));
+        ps.println("as user "+System.getProperty("user.name"));
         ps.println("Total of " + size() + " slices loaded,");
         ps.println("in a total of " + totalTime() + " milliseconds.");
+        ps.println("Slices selected using a " + selectorName);
+        ps.println("From location: " + selector.getSourceUrl());
         ps.println("Median slice load took " + median() + " milliseconds.");
         ps.println("Mean slice load took " + mean() + " milliseconds.");
         ps.println("with a standard deviation of " + standardDeviation() + " milliseconds.");
         ps.println("First slice load took " + get(0) + " milliseconds.");
         ps.println("Minimum slice load took " + minimum() + " milliseconds.");
         ps.println("Maximum slice load took " + maximum() + " milliseconds.");
+        ps.println("********************************************");
     }
     
     public int size() {
