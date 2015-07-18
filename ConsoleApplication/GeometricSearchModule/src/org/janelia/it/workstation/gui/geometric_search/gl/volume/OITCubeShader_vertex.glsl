@@ -7,6 +7,6 @@ out float intensityG;
 
 void main()
 {
-    gl_Position = vec4( iv.x, iv.y, iv.z, 1.0);
     intensityG=intensityV;
+    gl_Position = vec4( iv.x, iv.y, iv.z, 1.0);
 }

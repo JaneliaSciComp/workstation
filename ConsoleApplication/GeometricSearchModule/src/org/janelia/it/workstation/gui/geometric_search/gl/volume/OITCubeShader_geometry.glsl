@@ -6,9 +6,10 @@ layout(points) in;
 layout(triangle_strip, max_vertices=4) out;
 //layout(triangle_strip, max_vertices=24) out;
 
-in float intensityG;
 out float intensityF;
 out float vz;
+
+in float intensityG[];
 
 uniform mat4 mvp;
 uniform mat4 proj;
@@ -33,7 +34,7 @@ if (GTYPE==1) {
     gl_PointSize = xD;
     vz = v00.z;
     gl_Position = v00;
-    intensityF = intensityG;
+    intensityF = intensityG[0];
     EmitVertex();
     EndPrimitive();
 }
@@ -55,10 +56,22 @@ if (GTYPE==2) {
 
     
 
-    gl_Position = v00; vz = v00.z; intensityF = intensityG; EmitVertex();
-    gl_Position = v10; vz = v10.z; intensityF = intensityG; EmitVertex();
-    gl_Position = v01; vz = v01.z; intensityF = intensityG; EmitVertex();
-    gl_Position = v11; vz = v11.z; intensityF = intensityG; EmitVertex();
+    gl_Position = v00; vz = v00.z; 
+    intensityF = intensityG[0];
+    EmitVertex();
+
+    gl_Position = v10; vz = v10.z;
+    intensityF = intensityG[0];
+    EmitVertex();
+
+    gl_Position = v01; vz = v01.z;
+    intensityF = intensityG[0];
+    EmitVertex();
+
+    gl_Position = v11; vz = v11.z;
+    intensityF = intensityG[0];
+    EmitVertex();
+
     EndPrimitive();
 
 }
