@@ -228,11 +228,11 @@ public class MeshDrawActor implements GLActor {
                 configurator.getBufferUploader().uploadBuffers(gl);
                 
                 if (configurator.isUseIdAttribute()) {
-//                    Toolkit toolkit = Toolkit.getDefaultToolkit();
-//                    Dimension dim = toolkit.getScreenSize();
-//                    // Build this with max-possible buffer dimensions.
-//                    picker = new RenderedIdPicker((int)dim.getWidth(), (int)dim.getHeight());
-//                    picker.init(glDrawable);
+                    Toolkit toolkit = Toolkit.getDefaultToolkit();
+                    Dimension dim = toolkit.getScreenSize();
+                    // Build this with max-possible buffer dimensions.
+                    picker = new RenderedIdPicker();
+                    picker.init(glDrawable, (int)dim.getWidth(), (int)dim.getHeight());
                 }
             } catch ( BufferStateException bse ) {
                 // Failure at this level.  Need to do this again.
@@ -250,7 +250,7 @@ public class MeshDrawActor implements GLActor {
             // Cover strange, overlapping-display-attempts case.
             return;
         }
-        BufferUploader bufferUploader = configurator.getBufferUploader();
+		BufferUploader bufferUploader = configurator.getBufferUploader();
         if (bBuffersNeedUpload) {
             init(glDrawable);
             if (bBuffersNeedUpload) {
@@ -271,8 +271,12 @@ public class MeshDrawActor implements GLActor {
         gl.glEnable(GL2.GL_LINE_SMOOTH);                     // May not be in v2
         gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);   // May not be in v2
 
-        if (reportError( gl, "Display of mesh-draw-actor render characteristics" ))
+		if (reportError( gl, "Display of mesh-draw-actor render characteristics" ))
             return;
+
+        if (configurator.isUseIdAttribute()) {
+//			picker.prePick(glDrawable);
+		}
 
         // Draw the little triangles.
         tempBuffer.rewind();
@@ -360,9 +364,9 @@ public class MeshDrawActor implements GLActor {
         if (reportError( gl, "Display of mesh-draw-actor 5" ))
             return;
 
-//        if (configurator.isUseIdAttribute()) {
+        if (configurator.isUseIdAttribute()) {
 //            picker.postPick(glDrawable);
-//        }
+        }
         
         shader.unload(gl.getGL2());
 
@@ -391,6 +395,8 @@ public class MeshDrawActor implements GLActor {
         shader.unload(gl);
         shader = null;
         dropBuffers(gl);
+		
+		picker.dispose(glDrawable);
     }
     
     public void refresh() {
