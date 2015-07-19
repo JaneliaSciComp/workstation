@@ -149,8 +149,17 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             }
         });
        
-        File meshDir = new File("U:\\meshes");       
-        File[] meshFiles = meshDir.listFiles();
+        File testHomeMeshDir = new File("C:\\cygwin64\\home\\murphys\\meshes");
+        File testJaneliaMeshDir = new File("U:\\meshes");
+        File testMeshDir = null;
+        
+        if (testHomeMeshDir.exists()) {
+            testMeshDir = testHomeMeshDir;
+        } else {
+            testMeshDir = testJaneliaMeshDir;
+        }
+        
+        File[] meshFiles = testMeshDir.listFiles();
                 
         Random rand = new Random();       
         Matrix4 vertexRotation=new Matrix4();
@@ -181,8 +190,8 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                
        /////////////////////////////////////////////////////////////////////////
         
-        viewer.addShaderAction(meshSequence);
         viewer.addShaderAction(cubeSequence);
+        //viewer.addShaderAction(meshSequence);
         sortSequence.setShader(new OITSortShader());
         viewer.addShaderAction(sortSequence);      
     }
@@ -239,9 +248,17 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         });
 
         
-        File meshDir = new File("U:\\meshes");
+        File testHomeMeshDir = new File("C:\\cygwin64\\home\\murphys\\meshes");
+        File testJaneliaMeshDir = new File("U:\\meshes");
+        File testMeshDir = null;
         
-        File[] meshFiles = meshDir.listFiles();
+        if (testHomeMeshDir.exists()) {
+            testMeshDir = testHomeMeshDir;
+        } else {
+            testMeshDir = testJaneliaMeshDir;
+        }
+        
+        File[] meshFiles = testMeshDir.listFiles();
         
         drawSequence.setShader(drawShader);
         
