@@ -33,10 +33,12 @@ public class RenderedIdPicker {
     private int depthBufferId;
     private int viewportWidth;
     private int viewportHeight;
+    private IdCoderProvider idCoderProvider;
 	
 	private Logger logger = LoggerFactory.getLogger(RenderedIdPicker.class);
 
-    public RenderedIdPicker() {
+    public RenderedIdPicker(IdCoderProvider idCoderProvider) {
+        this.idCoderProvider = idCoderProvider;
     }
     
     /**
@@ -181,7 +183,7 @@ public class RenderedIdPicker {
 		}
 		GL3 gl = (GL3)glDrawable.getGL().getGL2();
 		gl.glBindFramebuffer(GL3.GL_READ_FRAMEBUFFER, frameBufId);
-		pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT0, colorTextureId_0);
+		//pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT0, colorTextureId_0);
         pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT1, colorTextureId_1);
         gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, 0);
 		reportError(gl, "Unbind Frame Buffer");
@@ -215,7 +217,7 @@ public class RenderedIdPicker {
 	}
 	
 	private boolean inPick() {
-		return true;
+		return false;
 	}
 	
 	private void prepareTexture(GL3 gl, int texId) {
@@ -252,7 +254,11 @@ public class RenderedIdPicker {
 		}
 		for (int i = 0; i < freq.length; i++) {
 			if (freq[i] > 0) {
-				System.out.println("Frequency of character " + i + "=" + freq[i]);
+                // Dump the identifier implied here, and its frequency.
+                IdCoder idCoder = idCoderProvider.getIdCoder();
+                float idFloat = i / 256.0f;
+                int id = idCoder.decode(idFloat);
+                System.out.println("ID=" + id + ", frequency of character " + i + "=" + freq[i]);
 			}
 		}
 		reportError(gl, "Pixel Read Test.");

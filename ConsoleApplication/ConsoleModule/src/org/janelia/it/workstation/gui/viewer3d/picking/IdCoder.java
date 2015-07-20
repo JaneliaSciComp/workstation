@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.janelia.it.workstation.gui.large_volume_viewer.encode; 
+package org.janelia.it.workstation.gui.viewer3d.picking; 
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

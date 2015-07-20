@@ -29,12 +29,12 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationG
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
-import org.janelia.it.workstation.gui.large_volume_viewer.encode.IdCoder;
-import org.janelia.it.workstation.gui.large_volume_viewer.encode.IdCoderProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
+import org.janelia.it.workstation.gui.viewer3d.picking.IdCoder;
+import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
@@ -124,6 +124,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
      * 
      * @return configured coder, or null.
      */
+    @Override
     public IdCoder getIdCoder() {
         return idCoder;
     }

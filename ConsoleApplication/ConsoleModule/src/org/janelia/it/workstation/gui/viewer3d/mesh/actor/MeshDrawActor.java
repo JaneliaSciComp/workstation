@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.*;
 import java.nio.IntBuffer;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
+import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
 import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
@@ -231,7 +232,7 @@ public class MeshDrawActor implements GLActor {
                     Toolkit toolkit = Toolkit.getDefaultToolkit();
                     Dimension dim = toolkit.getScreenSize();
                     // Build this with max-possible buffer dimensions.
-                    picker = new RenderedIdPicker();
+                    picker = new RenderedIdPicker((IdCoderProvider)configurator.getVertexAttributeManager());
                     picker.init(glDrawable, (int)dim.getWidth(), (int)dim.getHeight());
                 }
             } catch ( BufferStateException bse ) {

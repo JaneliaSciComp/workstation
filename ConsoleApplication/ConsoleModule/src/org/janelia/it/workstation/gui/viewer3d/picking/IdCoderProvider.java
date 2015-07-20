@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.encode;
+package org.janelia.it.workstation.gui.viewer3d.picking;
 
 /**
  * Lazily-retrievable source for an id coder.

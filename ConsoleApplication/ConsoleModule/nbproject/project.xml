@@ -206,6 +206,7 @@
                 <package>org.janelia.it.workstation.gui.viewer3d.mesh</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.mesh.actor</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.mesh.shader</package>
+                <package>org.janelia.it.workstation.gui.viewer3d.picking</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.renderable</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.resolver</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.scaled_image</package>

@@ -6,9 +6,9 @@
 package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
-import org.janelia.it.workstation.gui.large_volume_viewer.encode.IdCoder;
-import org.janelia.it.workstation.gui.large_volume_viewer.encode.IdCoderProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.PixelReadActor;
+import org.janelia.it.workstation.gui.viewer3d.picking.IdCoder;
+import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
 
 /**
  * Using color-under-click to find what was selected.
