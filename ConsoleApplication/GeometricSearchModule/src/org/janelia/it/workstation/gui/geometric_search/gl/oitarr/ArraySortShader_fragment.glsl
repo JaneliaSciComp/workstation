@@ -4,33 +4,34 @@ layout (early_fragment_tests) in;
 
 in vec2 vs_tex_coord;
 
-struct NodeType {
+struct OITArrNodeType {
     vec4 color;
     float depth;
-    uint next;
 };
 
 uniform usampler2D head_pointer_image;
 
-layout (binding = 0, rgba32ui) uniform coherent uimage1D list_buffer;
+uniform int hpi_width;
+uniform int hpi_height;
+uniform int hpi_depth;
 
-layout(binding=0, std430) buffer linkedLists {
-    NodeType nodes[];
+layout (binding = 0, rgba32ui) uniform coherent uimage1D fragment_buffer;
+
+layout(binding=0, std430) buffer fragmentArrays {
+    OITArrNodeType nodes[];
 };
 
 layout (location=0) out vec4 output_color;
 
-#define MAX_FRAGMENTS 500
-
-struct NodeType frags[MAX_FRAGMENTS];
+struct OITArrNodeType frags[hpi_depth];
 
 int build_local_fragment_list(void)
 {
     int frag_count=0;
-    uint current = texelFetch(head_pointer_image, ivec2(gl_FragCoord.xy), 0).x;
-    while( current != 0xFFFFFFFF && frag_count < MAX_FRAGMENTS) {
-        frags[frag_count] = nodes[current];
-        current = nodes[current].next;
+    uint hpiFragCount = texelFetch(head_pointer_image, ivec2(gl_FragCoord.xy), 0).x;
+    int nodeOffset = (gl_FragCoord.y * hpi_width + gl_FragCoord.x) * hpi_depth;
+    while(hpiFragCount != 0xFFFFFFFF && frag_count < hpiFragCount && frag_count < hpi_depth) { // sanity test
+        frags[frag_count] = nodes[nodeOffset + frag_count];
         frag_count++;
     }
     return frag_count;
@@ -45,7 +46,7 @@ void sort_fragment_list(int frag_count)
             float depth_i = frags[i].depth;
             float depth_j = frags[j].depth;
             if (depth_i > depth_j) {
-                struct NodeType temp = frags[i];
+                struct OITArrNodeType temp = frags[i];
                 frags[i] = frags[j];
                 frags[j] = temp;
             }

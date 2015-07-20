@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -44,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -404,13 +407,23 @@ public class JOSObjectResource {
     @ApiResponses(value = {
       @ApiResponse(code = 200, message = "Report returned")
     })
-    public List getUsageByOwner(
+    public Map<String,String> getUsageByOwner(
             @Auth SimplePrincipal principal) {
         
         authorize(principal);
 
-        List map = getObjectCollection().aggregate("{\"$group\" : {_id:\"$owner\", totalBytes:{$sum:{$divide:[\"$numBytes\","+MEGABYTE+"]}}}}").as(List.class);
-        return map;   
+        List<DBObject> results = getObjectCollection().aggregate("{\"$group\" : {_id:\"$owner\", totalMb:{$sum:{$divide:[\"$numBytes\","+MEGABYTE+"]}}}}").as(DBObject.class);
+        
+        Map<String,String> usage = new HashMap<>();
+        
+        DecimalFormat df = new DecimalFormat("0.0000 MB"); 
+        
+        for (DBObject result : results) {
+        	Double sum = (Double)result.get("totalMb");
+        	usage.put(result.get("_id").toString(), df.format(sum));
+        }
+        
+        return usage;
     }
     
     /*
@@ -446,7 +459,7 @@ public class JOSObjectResource {
 
         String owner = principal.getUsername();
         
-        log.trace("Logged in as {}",owner);
+        log.trace("Logged in as [{}]",owner);
         
         JOSObject obj = getObjectCollection().findOne("{path:#}",path).as(JOSObject.class);
         if (obj==null) {
