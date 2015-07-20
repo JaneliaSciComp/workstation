@@ -1,6 +1,6 @@
 Janelia Object Store Service (JOSS)
 
-![Serenity](https://raw.github.com/JaneliaSciComp/janelia-workstation/master/images/serenity.jpg)
+![Serenity](http://i.imgur.com/vnHE9Xm.jpg)
 
 JOSS is a file/object management system with Scality as the storage backend. It exposes a REST API
 for streaming data into and out of Scality, and manages asynchronous deletion of objects. 
