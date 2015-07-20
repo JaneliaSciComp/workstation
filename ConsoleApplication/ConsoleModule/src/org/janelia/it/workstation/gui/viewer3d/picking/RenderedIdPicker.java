@@ -48,25 +48,6 @@ public class RenderedIdPicker {
 		this.viewportWidth = width;
 		this.viewportHeight = height;				
 
-// Temporary Cruft-Hut.		
-//        prepareTexture(gl, colorTextureId_0);
-//		prepareTexture(gl, colorTextureId_1);
-
-        // Set the list of draw buffers.
-//        int drawBuffers[] = new int[] {
-//			GL3.GL_COLOR_ATTACHMENT0,
-//			GL3.GL_DEPTH_ATTACHMENT,
-//			GL3.GL_COLOR_ATTACHMENT1
-//	    };
-//		gl.glDrawBuffer(3);
-//		gl.glBindTexture(GL3.GL_TEXTURE_2D, colorTextureId_0);
-//		gl.glFramebufferTexture2D(GL3.GL_FRAMEBUFFER, GL3.GL_COLOR_ATTACHMENT0, GL3.GL_TEXTURE_2D, colorTextureId_0, 0);   
-//		gl.glBindTexture(GL3.GL_TEXTURE_2D, colorTextureId_1);
-//		gl.glFramebufferTexture2D(GL3.GL_FRAMEBUFFER, GL3.GL_COLOR_ATTACHMENT1, GL3.GL_TEXTURE_2D, colorTextureId_1, 0);   
-//		IntBuffer drawBuffersBuffer = IntBuffer.allocate(3);
-//		drawBuffersBuffer.put(drawBuffers);
-//        gl.glDrawBuffers(drawBuffers.length, drawBuffersBuffer);
-		
 		GL3 gl = glDrawable.getGL().getGL2().getGL3();
         
 		// Test the version.
@@ -96,18 +77,29 @@ public class RenderedIdPicker {
 
 		// Attach the renderbuffers.
 		exchange.rewind();
-		gl.glGenRenderbuffers(3, exchange);
-		reportError(gl, "Gen render texture Buffer");
-		colorTextureId_0 = exchange.get();
+		gl.glGenRenderbuffers(1, exchange);
+		reportError(gl, "Gen render Buffer");
 		depthBufferId = exchange.get();
+		
+		exchange.rewind();
+		gl.glGenTextures(2, exchange);
+		reportError(gl, "Gen render textures");
+		colorTextureId_0 = exchange.get();
 		colorTextureId_1 = exchange.get();
 		
-		gl.glBindRenderbuffer(GL3.GL_RENDERBUFFER, colorTextureId_0);
+		// Establish the color buffer.
+	    gl.glBindTexture(GL3.GL_TEXTURE_2D, colorTextureId_0);
 		reportError(gl, "Bind Color-0 Render Buffer");
-        gl.glRenderbufferStorage(GL3.GL_RENDERBUFFER, GL3.GL_RGB, viewportWidth, viewportHeight);
+		gl.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_WRAP_S, GL3.GL_REPEAT);
+		gl.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_WRAP_T, GL3.GL_REPEAT);
+		gl.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_NEAREST);
+		gl.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_NEAREST);
+		reportError(gl, "Render-Buffer Color-0 parameters");		
+		//NULL means reserve texture memory, but texels are undefined
+		gl.glTexImage2D(GL3.GL_TEXTURE_2D, 0, GL3.GL_RGBA8, viewportWidth, viewportHeight, 0, GL3.GL_BGRA, GL3.GL_UNSIGNED_BYTE, null);
+		reportError(gl, "Render-Buffer Color-0 teximage");		
+        gl.glFramebufferTexture2D(GL3.GL_FRAMEBUFFER, GL3.GL_COLOR_ATTACHMENT0, GL3.GL_TEXTURE_2D, colorTextureId_0, 0);
 		reportError(gl, "Render-Buffer Color-0 Attachment");		
-		gl.glFramebufferRenderbuffer(GL3.GL_FRAMEBUFFER, GL3.GL_COLOR_ATTACHMENT0, GL3.GL_RENDERBUFFER, colorTextureId_0);
-		reportError(gl, "Render Buffer Color Storage-0");
 		
 		// Establish depth render buffer.
 		gl.glBindRenderbuffer(GL3.GL_RENDERBUFFER, depthBufferId);
@@ -117,12 +109,12 @@ public class RenderedIdPicker {
 		gl.glFramebufferRenderbuffer(GL3.GL_FRAMEBUFFER, GL3.GL_DEPTH_ATTACHMENT, GL3.GL_RENDERBUFFER, depthBufferId);
 		reportError(gl, "Render Buffer Storage-0");
 		
-		gl.glBindRenderbuffer(GL3.GL_RENDERBUFFER, colorTextureId_1);
-		reportError(gl, "Bind Color-0 Render Buffer");
-        gl.glRenderbufferStorage(GL3.GL_RENDERBUFFER, GL3.GL_RGB, viewportWidth, viewportHeight);
-		reportError(gl, "Render-Buffer Color-0 Attachment");		
-		gl.glFramebufferRenderbuffer(GL3.GL_FRAMEBUFFER, GL3.GL_COLOR_ATTACHMENT1, GL3.GL_RENDERBUFFER, colorTextureId_1);
-		reportError(gl, "Render Buffer Color Storage-0");
+//		gl.glBindRenderbuffer(GL3.GL_RENDERBUFFER, colorTextureId_1);
+//		reportError(gl, "Bind Color-0 Render Buffer");
+//        gl.glRenderbufferStorage(GL3.GL_RENDERBUFFER, GL3.GL_RGB, viewportWidth, viewportHeight);
+//		reportError(gl, "Render-Buffer Color-0 Attachment");		
+//		gl.glFramebufferRenderbuffer(GL3.GL_FRAMEBUFFER, GL3.GL_COLOR_ATTACHMENT1, GL3.GL_RENDERBUFFER, colorTextureId_1);
+//		reportError(gl, "Render Buffer Color Storage-0");
 		
 		int status = gl.glCheckFramebufferStatus(GL3.GL_FRAMEBUFFER);
 		if (status != GL3.GL_FRAMEBUFFER_COMPLETE) {
@@ -135,10 +127,12 @@ public class RenderedIdPicker {
 		
 		gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, 0);
         
-    }
+	}
 
 	public void prePick(GLAutoDrawable glDrawable) {
-		
+		if (! inPick()) {
+			return;
+		}
 		/*
 		   Bind the FBO, so that all drawing is done to IT, not usual
 		   default framebuffer.
@@ -146,22 +140,34 @@ public class RenderedIdPicker {
 		GL3 gl = glDrawable.getGL().getGL2().getGL3();
         gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, frameBufId);
 		reportError(gl, "Binding Frame Buffer");
+
+		// A last clear op.
+		//  PROOF: something going into the buffer. gl.glClearColor(1.0f, 0.5f, 0.25f, 1.0f);
+		gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		gl.glClearDepth(1.0f);
+		gl.glClear(GL3.GL_COLOR_BUFFER_BIT | GL3.GL_DEPTH_BUFFER_BIT);
+		reportError(gl, "Clearing FBO");
+
+		gl.glViewport(0, 0, viewportWidth, viewportHeight);
+		reportError(gl, "Viewport for Framebuffer");
+		
 	}
 	
     public void postPick(GLAutoDrawable glDrawable) {
+		if (! inPick()) {
+			return;
+		}
 		GL3 gl = glDrawable.getGL().getGL2().getGL3();
 		gl.glBindFramebuffer(GL3.GL_READ_FRAMEBUFFER, frameBufId);
-        //gl.glActiveTexture(textureSymbolicId);
-//        gl.glBindTexture(GL3.GL_TEXTURE_2D, colorTextureId_0);
-//        reportError("testTextureContents glBindTexture", gl2, colorTextureId_0);
 		pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT0);
-		pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT1);
-		pixelReadTest(gl, GL3.GL_DEPTH_ATTACHMENT);
         gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, 0);
 		reportError(gl, "Unbind Frame Buffer");
     }
 
 	public void dispose(GLAutoDrawable glDrawable) {
+		if (! inPick()) {
+			return;
+		}
 		GL3 gl = glDrawable.getGL().getGL2().getGL3();
 		IntBuffer exchange = IntBuffer.allocate(2);
 
@@ -185,6 +191,10 @@ public class RenderedIdPicker {
 		reportError(gl, "Delete Frame Buffers");
 	}
 	
+	private boolean inPick() {
+		return false;
+	}
+	
 	private void prepareTexture(GL3 gl, int texId) {
 		// "Bind" the newly created texture : all future texture functions will modify this texture
 		gl.glBindTexture(GL3.GL_TEXTURE_2D, texId);
@@ -200,13 +210,12 @@ public class RenderedIdPicker {
 	}
 
 	private void pixelReadTest(GL3 gl, int attachment) {
-		int pixelSize = 3 * (Float.SIZE / Byte.SIZE);
+		int pixelSize = 4 * (Float.SIZE / Byte.SIZE);
 		int bufferSize = viewportWidth * viewportHeight * pixelSize;
 		byte[] rawBuffer = new byte[bufferSize];
 		ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
 		gl.glReadBuffer(attachment);
-		gl.glReadPixels(0, 0, viewportWidth, viewportHeight, GL3.GL_RGB, GL3.GL_UNSIGNED_BYTE, buffer);
-//		gl.glGetTexImage(GL3.GL_TEXTURE_2D, colorTextureId_0, GL3.GL_RGB, GL3.GL_UNSIGNED_BYTE, buffer);
+		gl.glReadPixels(0, 0, viewportWidth, viewportHeight, GL3.GL_BGRA, GL3.GL_UNSIGNED_BYTE, buffer);
 		byte[] pixel = new byte[3];
 		int[] freq = new int[256];
 		for (int i = 0; i < rawBuffer.length; i++) {

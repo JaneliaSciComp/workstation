@@ -262,6 +262,10 @@ public class MeshDrawActor implements GLActor {
         if (reportError(gl, "Display of mesh-draw-actor upon entry"))
             return;
 
+		if (configurator.isUseIdAttribute()) {
+			picker.prePick(glDrawable);
+		}
+
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
         gl.glDepthFunc(GL2GL3.GL_LESS);
 
@@ -273,10 +277,6 @@ public class MeshDrawActor implements GLActor {
 
 		if (reportError( gl, "Display of mesh-draw-actor render characteristics" ))
             return;
-
-        if (configurator.isUseIdAttribute()) {
-//			picker.prePick(glDrawable);
-		}
 
         // Draw the little triangles.
         tempBuffer.rewind();
@@ -365,7 +365,7 @@ public class MeshDrawActor implements GLActor {
             return;
 
         if (configurator.isUseIdAttribute()) {
-//            picker.postPick(glDrawable);
+            picker.postPick(glDrawable);
         }
         
         shader.unload(gl.getGL2());
