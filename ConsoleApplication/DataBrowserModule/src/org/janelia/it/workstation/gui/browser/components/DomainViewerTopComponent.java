@@ -4,7 +4,7 @@ import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import javax.swing.JComponent;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.browser.events.Events;
