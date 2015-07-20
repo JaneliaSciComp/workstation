@@ -96,7 +96,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             testFile = testJaneliaFile;
         }
 
-        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(testFile, 1, 0.3f);
+        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(testFile, 0, 0.1f);
         
         Matrix4 gal4Rotation=new Matrix4();
       
@@ -107,7 +107,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                                      0.0f,   0.0f,   0.0f,   1.0f);
         pa.setModel(gal4Rotation);
         
-        pa.setColor(new Vector4(1.0f, 0.0f, 0.0f, 0.01f));
+        pa.setColor(new Vector4(1.0f, 0.0f, 0.0f, 0.2f));
         pa.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
@@ -124,8 +124,8 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                 cubeShader.setMVP(gl, mvp);
                 cubeShader.setProjection(gl, projCopy);
 
-                float voxelUnitSize = pa.getVoxelUnitSize();
-                //float voxelUnitSize = 0.2f;
+                //float voxelUnitSize = pa.getVoxelUnitSize();
+                float voxelUnitSize = 0.2f;
                 cubeShader.setVoxelUnitSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
                 
                 cubeShader.setDrawColor(gl, pa.getColor());
