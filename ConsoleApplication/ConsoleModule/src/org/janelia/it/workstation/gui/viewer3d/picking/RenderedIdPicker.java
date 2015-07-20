@@ -48,7 +48,7 @@ public class RenderedIdPicker {
 		this.viewportWidth = width;
 		this.viewportHeight = height;				
 
-		GL3 gl = glDrawable.getGL().getGL2().getGL3();
+		GL3 gl = (GL3)glDrawable.getGL().getGL2();
         
 		// Test the version.
 		logger.info("OpenGL version {}.", gl.glGetString(GL3.GL_VERSION));
@@ -137,7 +137,7 @@ public class RenderedIdPicker {
 		   Bind the FBO, so that all drawing is done to IT, not usual
 		   default framebuffer.
 		*/
-		GL3 gl = glDrawable.getGL().getGL2().getGL3();
+		GL3 gl = (GL3)glDrawable.getGL().getGL2();
         gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, frameBufId);
 		reportError(gl, "Binding Frame Buffer");
 
@@ -157,7 +157,7 @@ public class RenderedIdPicker {
 		if (! inPick()) {
 			return;
 		}
-		GL3 gl = glDrawable.getGL().getGL2().getGL3();
+		GL3 gl = (GL3)glDrawable.getGL().getGL2();
 		gl.glBindFramebuffer(GL3.GL_READ_FRAMEBUFFER, frameBufId);
 		pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT0);
         gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, 0);
@@ -168,7 +168,7 @@ public class RenderedIdPicker {
 		if (! inPick()) {
 			return;
 		}
-		GL3 gl = glDrawable.getGL().getGL2().getGL3();
+		GL3 gl = (GL3)glDrawable.getGL().getGL2();
 		IntBuffer exchange = IntBuffer.allocate(2);
 
 		exchange.rewind();
@@ -192,7 +192,7 @@ public class RenderedIdPicker {
 	}
 	
 	private boolean inPick() {
-		return false;
+		return true;
 	}
 	
 	private void prepareTexture(GL3 gl, int texId) {
