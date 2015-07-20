@@ -87,7 +87,7 @@ public class RenderedIdPicker {
 		colorTextureId_0 = exchange.get();
 		colorTextureId_1 = exchange.get();
 		
-		// Establish the color buffer.
+		// Establish the color buffer at attachment 0.
 	    gl.glBindTexture(GL3.GL_TEXTURE_2D, colorTextureId_0);
 		reportError(gl, "Bind Color-0 Render Buffer");
 		gl.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_WRAP_S, GL3.GL_REPEAT);
@@ -109,12 +109,19 @@ public class RenderedIdPicker {
 		gl.glFramebufferRenderbuffer(GL3.GL_FRAMEBUFFER, GL3.GL_DEPTH_ATTACHMENT, GL3.GL_RENDERBUFFER, depthBufferId);
 		reportError(gl, "Render Buffer Storage-0");
 		
-//		gl.glBindRenderbuffer(GL3.GL_RENDERBUFFER, colorTextureId_1);
-//		reportError(gl, "Bind Color-0 Render Buffer");
-//        gl.glRenderbufferStorage(GL3.GL_RENDERBUFFER, GL3.GL_RGB, viewportWidth, viewportHeight);
-//		reportError(gl, "Render-Buffer Color-0 Attachment");		
-//		gl.glFramebufferRenderbuffer(GL3.GL_FRAMEBUFFER, GL3.GL_COLOR_ATTACHMENT1, GL3.GL_RENDERBUFFER, colorTextureId_1);
-//		reportError(gl, "Render Buffer Color Storage-0");
+        // Establish the color buffer at attachment 1.
+        gl.glBindTexture(GL3.GL_TEXTURE_2D, colorTextureId_1);
+        reportError(gl, "Bind Color-1 Render Buffer");
+        gl.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_WRAP_S, GL3.GL_REPEAT);
+        gl.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_WRAP_T, GL3.GL_REPEAT);
+        gl.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_NEAREST);
+        gl.glTexParameteri(GL3.GL_TEXTURE_2D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_NEAREST);
+        reportError(gl, "Render-Buffer Color-1 parameters");
+        //NULL means reserve texture memory, but texels are undefined
+        gl.glTexImage2D(GL3.GL_TEXTURE_2D, 0, GL3.GL_RGBA8, viewportWidth, viewportHeight, 0, GL3.GL_BGRA, GL3.GL_UNSIGNED_BYTE, null);
+        reportError(gl, "Render-Buffer Color-1 teximage");
+        gl.glFramebufferTexture2D(GL3.GL_FRAMEBUFFER, GL3.GL_COLOR_ATTACHMENT1, GL3.GL_TEXTURE_2D, colorTextureId_1, 0);
+        reportError(gl, "Render-Buffer Color-1 Attachment");
 		
 		int status = gl.glCheckFramebufferStatus(GL3.GL_FRAMEBUFFER);
 		if (status != GL3.GL_FRAMEBUFFER_COMPLETE) {
@@ -124,7 +131,7 @@ public class RenderedIdPicker {
 			logger.info("Framebuffer complete.");
 		}
 		reportError(gl, "Frame Render Buffer");
-		
+        
 		gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, 0);
         
 	}
@@ -151,6 +158,21 @@ public class RenderedIdPicker {
 		gl.glViewport(0, 0, viewportWidth, viewportHeight);
 		reportError(gl, "Viewport for Framebuffer");
 		
+        // Setting up the draw-buffers.
+        //   This step is what associates "gl_FragData[n]" at the GLSL
+        //   shader, with targets.  By default gl_FragData[0] is the
+        //   attachment0 color buffer.  Here, we add gl_FragData[1]'s
+        //   association with attachment1.
+        int[] drawBuffersTargets = new int[]{
+            GL3.GL_COLOR_ATTACHMENT0,
+            GL3.GL_COLOR_ATTACHMENT1,
+        };
+        IntBuffer exchange = IntBuffer.allocate(2);
+        exchange.rewind();
+        exchange.put(drawBuffersTargets);
+        exchange.rewind();
+        gl.glDrawBuffers(drawBuffersTargets.length, exchange);
+
 	}
 	
     public void postPick(GLAutoDrawable glDrawable) {
@@ -159,7 +181,8 @@ public class RenderedIdPicker {
 		}
 		GL3 gl = (GL3)glDrawable.getGL().getGL2();
 		gl.glBindFramebuffer(GL3.GL_READ_FRAMEBUFFER, frameBufId);
-		pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT0);
+		pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT0, colorTextureId_0);
+        pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT1, colorTextureId_1);
         gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, 0);
 		reportError(gl, "Unbind Frame Buffer");
     }
@@ -209,8 +232,10 @@ public class RenderedIdPicker {
 		reportError("Frame Buffer Texture", gl.getGL2(), texId);
 	}
 
-	private void pixelReadTest(GL3 gl, int attachment) {
-		int pixelSize = 4 * (Float.SIZE / Byte.SIZE);
+	private void pixelReadTest(GL3 gl, int attachment, int textureId) {
+        System.out.println("Pixel Read Test for " + attachment);
+        gl.glBindTexture(GL3.GL_TEXTURE_2D, textureId);
+        int pixelSize = 4 * (Float.SIZE / Byte.SIZE);
 		int bufferSize = viewportWidth * viewportHeight * pixelSize;
 		byte[] rawBuffer = new byte[bufferSize];
 		ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
