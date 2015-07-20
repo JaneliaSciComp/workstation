@@ -3,9 +3,9 @@
 layout(points) in;
 
 //layout(points, max_vertices=1) out;
-//layout(triangle_strip, max_vertices=4) out;
+layout(triangle_strip, max_vertices=4) out;
 //layout(triangle_strip, max_vertices=12) out;
-layout(triangle_strip, max_vertices=8) out;
+//layout(triangle_strip, max_vertices=24) out;
 
 out float intensityF;
 out float vz;
@@ -16,7 +16,7 @@ uniform mat4 mvp;
 uniform mat4 proj;
 uniform vec3 voxelUnitSize;
 
-#define GTYPE 4
+#define GTYPE 2
 
 void main()
 {
@@ -164,7 +164,7 @@ if (GTYPE==4) {
     vec4 v100 = vec4(base.x + voxelUnitSize.x, base.y,                   base.z, base.w);
     vec4 v110 = vec4(base.x + voxelUnitSize.x, base.y + voxelUnitSize.y, base.z, base.w);
 
-    vec4 v001 = base;
+    vec4 v001 = vec4(base.x,                   base.y,                   base.z + voxelUnitSize.z, base.w);
     vec4 v011 = vec4(base.x,                   base.y + voxelUnitSize.y, base.z + voxelUnitSize.z, base.w);
     vec4 v101 = vec4(base.x + voxelUnitSize.x, base.y,                   base.z + voxelUnitSize.z, base.w);
     vec4 v111 = vec4(base.x + voxelUnitSize.x, base.y + voxelUnitSize.y, base.z + voxelUnitSize.z, base.w);
@@ -189,32 +189,32 @@ if (GTYPE==4) {
     EndPrimitive();
 
     // Front
-    //gl_Position = v001p; vz = v001p.z; EmitVertex();
-    //gl_Position = v011p; vz = v011p.z; EmitVertex();
-    //gl_Position = v101p; vz = v101p.z; EmitVertex();
-    //gl_Position = v111p; vz = v111p.z; EmitVertex();
-    //EndPrimitive();
+    gl_Position = v001p; vz = v001p.z; EmitVertex();
+    gl_Position = v101p; vz = v101p.z; EmitVertex();
+    gl_Position = v011p; vz = v011p.z; EmitVertex();
+    gl_Position = v111p; vz = v111p.z; EmitVertex();
+    EndPrimitive();
 
     // Top
-    //gl_Position = v010p; vz = v010p.z; EmitVertex();
-    //gl_Position = v110p; vz = v110p.z; EmitVertex();
-    //gl_Position = v011p; vz = v011p.z; EmitVertex();
-    //gl_Position = v111p; vz = v111p.z; EmitVertex();
-    //EndPrimitive();
+    gl_Position = v010p; vz = v010p.z; EmitVertex();
+    gl_Position = v110p; vz = v110p.z; EmitVertex();
+    gl_Position = v011p; vz = v011p.z; EmitVertex();
+    gl_Position = v111p; vz = v111p.z; EmitVertex();
+    EndPrimitive();
 
     // Bottom
-    //gl_Position = v000p; vz = v000p.z; EmitVertex();
-    //gl_Position = v100p; vz = v100p.z; EmitVertex();
-    //gl_Position = v001p; vz = v001p.z; EmitVertex();
-    //gl_Position = v101p; vz = v101p.z; EmitVertex();
-    //EndPrimitive();
+    gl_Position = v000p; vz = v000p.z; EmitVertex();
+    gl_Position = v100p; vz = v100p.z; EmitVertex();
+    gl_Position = v001p; vz = v001p.z; EmitVertex();
+    gl_Position = v101p; vz = v101p.z; EmitVertex();
+    EndPrimitive();
 
     // Left
-    //gl_Position = v000p; vz = v000p.z; EmitVertex();
-    //gl_Position = v001p; vz = v001p.z; EmitVertex();
-    //gl_Position = v010p; vz = v010p.z; EmitVertex();
-    //gl_Position = v011p; vz = v011p.z; EmitVertex();
-    //EndPrimitive();
+    gl_Position = v000p; vz = v000p.z; EmitVertex();
+    gl_Position = v001p; vz = v001p.z; EmitVertex();
+    gl_Position = v010p; vz = v010p.z; EmitVertex();
+    gl_Position = v011p; vz = v011p.z; EmitVertex();
+    EndPrimitive();
 
     // Right
     gl_Position = v100p; vz = v100p.z; EmitVertex();

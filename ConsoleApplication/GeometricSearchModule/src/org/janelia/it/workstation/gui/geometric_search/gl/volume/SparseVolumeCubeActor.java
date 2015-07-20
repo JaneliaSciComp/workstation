@@ -60,13 +60,13 @@ public class SparseVolumeCubeActor extends SparseVolumeBaseActor
 
         super.init(gl);
         
-        viList.clear();
+        //viList.clear();
         
-        viGroup vg1 = new viGroup(0.0f, 0.0f, 0.0f, 1.0f);
-        viGroup vg2 = new viGroup(0.0f, 0.0f, 0.7f, 1.0f);
+        //viGroup vg1 = new viGroup(0.0f, 0.0f, 0.0f, 1.0f);
+        //viGroup vg2 = new viGroup(0.0f, 0.0f, 0.7f, 1.0f);
         
-        viList.add(vg1);
-        viList.add(vg2);
+        //viList.add(vg1);
+        //viList.add(vg2);
 
         FloatBuffer fb=FloatBuffer.allocate(viList.size()*4); // 3 floats per vertex, 1 for intensity
         

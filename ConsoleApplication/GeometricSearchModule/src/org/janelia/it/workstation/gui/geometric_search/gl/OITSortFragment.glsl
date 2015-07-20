@@ -59,7 +59,7 @@ vec4 blend(vec4 current_color, vec4 new_color) {
 
 vec4 calculate_final_color(int frag_count) {
     int i;
-    vec4 final_color = vec4(1.0, 1.0, 1.0, 0.0);
+    vec4 final_color = vec4(0.0, 0.0, 0.0, 0.0);
     for (i=0; i < frag_count; i++) {
        final_color = blend(final_color, frags[i].color);
     }
