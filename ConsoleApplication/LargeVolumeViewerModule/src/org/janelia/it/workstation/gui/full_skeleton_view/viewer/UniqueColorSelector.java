@@ -49,7 +49,7 @@ public class UniqueColorSelector implements RenderedIdPicker.PixelListener {
 	public void setPixel(int pixel) {
         final IdCoder idCoder = idCoderProvider.getIdCoder();
         final int row = idCoder.decode(pixel / IdCoder.RAW_RANGE_DIVISOR);
-        System.out.println(String.format("ID or Row=%d", row));
+        //DEBUG System.out.println(String.format("ID or Row=%d", row));
         final AnnotationModel annoMdl = dataSource.getAnnotationModel();
         final FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
         if (row < filteredModel.getRowCount()  &&  row >= 0) {

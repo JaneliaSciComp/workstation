@@ -57,11 +57,12 @@ public class RenderedIdPicker {
 		this.viewportWidth = glDrawable.getWidth();
 		this.viewportHeight = glDrawable.getHeight();				
 
-        logger.info("Establishing width={}, and height={}.", viewportWidth, viewportHeight);
+        logger.debug("Establishing width={}, and height={}.", viewportWidth, viewportHeight);
 		GL3 gl = (GL3)glDrawable.getGL().getGL2();
         
 		// Test the version.
-		logger.info("OpenGL version {}.", gl.glGetString(GL3.GL_VERSION));
+        //  BTW: this will report a version of 2.1, even though GL3+ is avail.
+		logger.debug("OpenGL version {}.", gl.glGetString(GL3.GL_VERSION));
 
 		/*
 		  The steps:
@@ -138,7 +139,7 @@ public class RenderedIdPicker {
 			logger.error("Failed to establish framebuffer: {}", decodeFramebufferStatus(status));
 		}
 		else {
-			logger.info("Framebuffer complete.");
+			logger.debug("Framebuffer complete.");
 		}
 		reportError(gl, "Frame Render Buffer");
         

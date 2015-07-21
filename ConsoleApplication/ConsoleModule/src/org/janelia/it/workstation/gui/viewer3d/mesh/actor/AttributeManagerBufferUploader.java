@@ -116,7 +116,7 @@ public class AttributeManagerBufferUploader implements BufferUploader {
                 if (reportError(gl, "Bind Attribs Buf")) {
                     throw new BufferStateException();
                 }
-                logger.info("Uploading chunk of vertex attributes data.");
+                logger.debug("Uploading chunk of vertex attributes data.");
                 attribBuffer.rewind();
                 gl.glBufferSubData(
                         GL2GL3.GL_ARRAY_BUFFER,
