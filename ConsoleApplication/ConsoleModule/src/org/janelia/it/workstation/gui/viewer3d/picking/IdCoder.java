@@ -21,17 +21,14 @@ public class IdCoder {
     public static final float RAW_RANGE_DIVISOR = ENCODE_RANGE - 0.5f;
     private Logger log = LoggerFactory.getLogger(IdCoder.class);
     
-    private int idRange;
-    private int idBreadth;
-    public IdCoder(int idRange) {
-        this.idRange = idRange;
-        this.idBreadth = 4;
-        log.info("ID Range={}.  ID Breadth={}.", idRange, idBreadth);
+    private final static int ID_BREADTH = 4;  // Employ spacing to avoid clash.
+    public IdCoder() {
+        log.debug("ID Breadth={}.", ID_BREADTH);
     }
     
     public float[] encode(int id) {
         id += 1; // No zero identifiers!
-        id *= idBreadth;   // space out the identifiers, to lower prob of clash
+        id *= ID_BREADTH;   // space out the identifiers, to lower prob of clash
         int lobyte = id & 255;
         int midbyte = (id >> 8) & 255;
         int hibyte = (id >> 16) & 255;
@@ -40,6 +37,6 @@ public class IdCoder {
     }
     
     public int decode(float colorVal) {
-        return (int)(Math.round((colorVal * ENCODE_RANGE) / idBreadth)) - 1;
+        return (int)(Math.round((colorVal * ENCODE_RANGE) / ID_BREADTH)) - 1;
     }
 }

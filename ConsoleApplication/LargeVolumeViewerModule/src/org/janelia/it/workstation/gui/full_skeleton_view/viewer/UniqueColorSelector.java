@@ -9,7 +9,6 @@ import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationS
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.PixelReadActor;
 import org.janelia.it.workstation.gui.viewer3d.picking.IdCoder;
 import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
 import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
@@ -18,7 +17,7 @@ import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
  * Using color-under-click to find what was selected.
  * @author fosterl
  */
-public class UniqueColorSelector implements PixelReadActor.PixelListener, RenderedIdPicker.PixelListener {
+public class UniqueColorSelector implements RenderedIdPicker.PixelListener {
     private final AnnotationSkeletonDataSourceI dataSource;
     private IdCoderProvider idCoderProvider;
     private AnnotationSkeletonPanel annoSkeletonPanel;
@@ -42,19 +41,10 @@ public class UniqueColorSelector implements PixelReadActor.PixelListener, Render
     }
 
     /**
-     * What to do when the pixel has been received by the actor.
-     * @param pixel 
+     * What to do when the pixel has been received.
+     *
+     * @param pixel int value buried in a pixel.
      */
-    @Override
-    public void setPixel(float[] pixel) {
-        IdCoder idCoder = idCoderProvider.getIdCoder();
-        if (idCoder != null) {
-            int id = idCoder.decode(pixel[0]);
-            System.out.println(String.format("Color: r=%f / g=%f / b=%f.  ID=%d", pixel[0], pixel[1], pixel[2], id));
-        }
-        redraw();
-    }
-	
 	@Override
 	public void setPixel(int pixel) {
         final IdCoder idCoder = idCoderProvider.getIdCoder();

@@ -472,10 +472,10 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
             float[] id = null;
             FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
             final int rowCount = filteredModel.getRowCount();
-            idCoder = new IdCoder(rowCount);
+            idCoder = new IdCoder();
             for (int i = 0; i < rowCount; i++) {
-                id = idCoder.encode(i);
-                log.info("ID={}.  Row={}.", id, i);
+                id = idCoder.encode(i);                
+                log.debug("ID={}.  Row={}.", id, i);
                 InterestingAnnotation anno = filteredModel.getAnnotationAtRow(i);
                 long annotationId = anno.getAnnotationID();
                 TmGeoAnnotation geoAnno = annoMdl.getGeoAnnotationFromID(annotationId);

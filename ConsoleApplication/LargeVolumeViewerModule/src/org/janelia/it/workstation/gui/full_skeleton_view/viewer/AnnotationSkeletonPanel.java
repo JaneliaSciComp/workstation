@@ -60,7 +60,6 @@ public class AnnotationSkeletonPanel extends JPanel {
     private MeshViewContext context;
     private UniqueColorSelector ucSelector;
 	private RenderedIdPicker picker;
-//    private PixelReadActor pixelReadActor;
     
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
@@ -145,11 +144,6 @@ public class AnnotationSkeletonPanel extends JPanel {
             // others may not.
             viewer.addActor(refAxisActor);
             viewer.addActor(meshDrawActor);
-			// Pixel Read Actor: marked for deletion.
-//            pixelReadActor = new PixelReadActor(viewer);
-//            pixelReadActor.setPixelListener(ucSelector);
-//            pixelReadActor.setBoundingBox3d(boundingBox);
-//            viewer.addActor(pixelReadActor);
             viewer.addMenuAction(new BackgroundPickAction(viewer));
             viewer.addMenuAction(
                 new ActorSwapAction(
@@ -288,13 +282,8 @@ public class AnnotationSkeletonPanel extends JPanel {
         long rtnVal = -1L;
         if (context != null) {            
 			picker.setPickCoords(mouseX, mouseY);
-//            pixelReadActor.setSampleCoords(mouseX, mouseY);
             this.validate();
             this.repaint();
-//            RayCastSelector rayCastSelector = new RayCastSelector( 
-//                    dataSource, context, viewer.getWidth(), viewer.getHeight() 
-//            );
-//            rtnVal = rayCastSelector.select(mouseX, mouseY);
         }
         return rtnVal;
     }
