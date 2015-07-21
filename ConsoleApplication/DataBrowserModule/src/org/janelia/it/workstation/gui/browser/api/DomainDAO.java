@@ -272,7 +272,6 @@ public class DomainDAO {
 
         Class<? extends DomainObject> clazz = getObjectClass(type);
         if (clazz==null) {
-//            throw new IllegalArgumentException("No object type for "+type);
             return new ArrayList<>();
         }
 

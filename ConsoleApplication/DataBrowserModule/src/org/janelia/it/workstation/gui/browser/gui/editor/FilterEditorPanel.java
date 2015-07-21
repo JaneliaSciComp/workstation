@@ -94,7 +94,10 @@ import org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator;
 import org.openide.util.datatransfer.ExTransferable;
 
 /**
- *
+ * The Filter Editor is the main search GUI in the Workstation. Users can create, save, and load filters 
+ * into this panel. The filter is executed every time it changes, and shows results in an embedded 
+ * PaginatedResultsPanel. 
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filter> {

@@ -5,18 +5,22 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
-import javax.swing.BorderFactory;
+
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+
 import loci.formats.FormatException;
+
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.LoadImageWorker;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * An image that is loaded asynchronously from a standard filename. The panel may be scaled as needed, 
+ * resizing the image while keeping the aspect ratio intact. 
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class LoadedImagePanel extends JPanel {
@@ -41,7 +45,6 @@ public class LoadedImagePanel extends JPanel {
         
         setLayout(new BorderLayout());
         setOpaque(false);
-        
         
         loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);

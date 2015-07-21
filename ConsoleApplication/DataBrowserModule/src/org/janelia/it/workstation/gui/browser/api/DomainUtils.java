@@ -23,6 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Utility method for dealing with the Domain model.
+ * 
+ * TODO: move this to the shared or model module.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -70,6 +73,12 @@ public class DomainUtils {
         return urlSb.length()>0 ? urlSb.toString() : null;
     }
 
+    /**
+     * Return true if the given tree node has the specified domain object as a child. 
+     * @param treeNode
+     * @param domainObject
+     * @return
+     */
     public static boolean hasChild(TreeNode treeNode, DomainObject domainObject) {
         for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
             Reference iref = i.next();
@@ -80,6 +89,11 @@ public class DomainUtils {
         return false;
     }
 
+    /**
+     * Returns true if the collection is null or empty. 
+     * @param collection
+     * @return
+     */
     public static boolean isEmpty(Collection<?> collection) {
         return collection==null || collection.isEmpty();
     }

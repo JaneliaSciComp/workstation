@@ -4,6 +4,7 @@ import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.DomainObject
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 
 /**
+ * Enumeration of list viewer classes. 
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

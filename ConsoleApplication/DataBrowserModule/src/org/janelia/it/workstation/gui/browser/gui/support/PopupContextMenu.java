@@ -3,25 +3,23 @@ package org.janelia.it.workstation.gui.browser.gui.support;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import javax.swing.Action;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
+
 import org.janelia.it.workstation.gui.browser.actions.NamedAction;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
+ * Common base class for pop-up context menus.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class PopupContextMenu extends JPopupMenu {
+public abstract class PopupContextMenu extends JPopupMenu {
 
-    private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
-    
     protected static final Browser browser = SessionMgr.getBrowser();
     protected static final Component mainFrame = SessionMgr.getMainFrame();
     
