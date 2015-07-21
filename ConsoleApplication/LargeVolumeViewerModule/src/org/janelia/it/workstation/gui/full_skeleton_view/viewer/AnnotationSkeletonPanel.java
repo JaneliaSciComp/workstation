@@ -33,7 +33,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.DirectionalRe
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.NeuronTraceVtxAttribMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.PixelReadActor;
+//import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.PixelReadActor;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
@@ -45,6 +45,8 @@ import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.AttributeManagerBufferUploader;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
+import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
+import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
 
 /**
  * This panel holds all relevant components for showing the skeleton of
@@ -57,7 +59,8 @@ public class AnnotationSkeletonPanel extends JPanel {
     private OcclusiveViewer viewer;
     private MeshViewContext context;
     private UniqueColorSelector ucSelector;
-    private PixelReadActor pixelReadActor;
+	private RenderedIdPicker picker;
+//    private PixelReadActor pixelReadActor;
     
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
@@ -142,10 +145,11 @@ public class AnnotationSkeletonPanel extends JPanel {
             // others may not.
             viewer.addActor(refAxisActor);
             viewer.addActor(meshDrawActor);
-            pixelReadActor = new PixelReadActor(viewer);
-            pixelReadActor.setPixelListener(ucSelector);
-            pixelReadActor.setBoundingBox3d(boundingBox);
-            viewer.addActor(pixelReadActor);
+			// Pixel Read Actor: marked for deletion.
+//            pixelReadActor = new PixelReadActor(viewer);
+//            pixelReadActor.setPixelListener(ucSelector);
+//            pixelReadActor.setBoundingBox3d(boundingBox);
+//            viewer.addActor(pixelReadActor);
             viewer.addMenuAction(new BackgroundPickAction(viewer));
             viewer.addMenuAction(
                 new ActorSwapAction(
@@ -250,6 +254,9 @@ public class AnnotationSkeletonPanel extends JPanel {
         configurator.setBufferUploader(
                 new AttributeManagerBufferUploader(configurator)
         );
+		picker = new RenderedIdPicker((IdCoderProvider)attributeManager);
+		configurator.setPicker( picker );
+	    picker.setPixelListener(ucSelector);
         
         MeshDrawActor meshDraw = new MeshDrawActor(configurator);
         SkeletonController.getInstance().registerForEvents(
@@ -276,8 +283,8 @@ public class AnnotationSkeletonPanel extends JPanel {
     private long select(int mouseX, int mouseY) {
         long rtnVal = -1L;
         if (context != null) {            
-            rtnVal = ucSelector.select(mouseX, mouseY);
-            pixelReadActor.setSampleCoords(mouseX, mouseY);
+			picker.setPickCoords(mouseX, mouseY);
+//            pixelReadActor.setSampleCoords(mouseX, mouseY);
             this.validate();
             this.repaint();
 //            RayCastSelector rayCastSelector = new RayCastSelector( 

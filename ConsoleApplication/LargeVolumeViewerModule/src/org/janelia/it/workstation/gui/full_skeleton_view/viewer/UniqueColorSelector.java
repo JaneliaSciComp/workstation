@@ -9,12 +9,13 @@ import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationS
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.PixelReadActor;
 import org.janelia.it.workstation.gui.viewer3d.picking.IdCoder;
 import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
+import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
 
 /**
  * Using color-under-click to find what was selected.
  * @author fosterl
  */
-public class UniqueColorSelector implements PixelReadActor.PixelListener {
+public class UniqueColorSelector implements PixelReadActor.PixelListener, RenderedIdPicker.PixelListener {
     private final AnnotationSkeletonDataSourceI dataSource;
     private IdCoderProvider idCoderProvider;
     
@@ -47,4 +48,9 @@ public class UniqueColorSelector implements PixelReadActor.PixelListener {
             System.out.println(String.format("Color: r=%f / g=%f / b=%f.  ID=%d", pixel[0], pixel[1], pixel[2], id));
         }
     }
+	
+	@Override
+	public void setPixel(int pixel) {
+        System.out.println(String.format("ID or Row=%d", pixel));
+	}
 }

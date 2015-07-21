@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.*;
 import java.nio.IntBuffer;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
-import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
 import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
@@ -55,8 +54,6 @@ public class MeshDrawActor implements GLActor {
     private IntBuffer tempBuffer = IntBuffer.allocate(1);
     private MatrixManager matrixManager;
     
-    private RenderedIdPicker picker;
-
     public MeshDrawActor( MeshDrawActorConfigurator configurator ) {
         this.configurator = configurator;
     }
@@ -76,6 +73,7 @@ public class MeshDrawActor implements GLActor {
         private BoundingBox3d boundingBox;
         private BufferUploader bufferUploader;
         private boolean useIdAttribute;
+		private RenderedIdPicker picker;
         
         public void setAxisLengths( double[] axisLengths ) {
             this.axisLengths = axisLengths;
@@ -189,6 +187,20 @@ public class MeshDrawActor implements GLActor {
             this.bufferUploader = bufferUploader;
         }
 
+		/**
+		 * @return the picker
+		 */
+		public RenderedIdPicker getPicker() {
+			return picker;
+		}
+
+		/**
+		 * @param picker the picker to set
+		 */
+		public void setPicker(RenderedIdPicker picker) {
+			this.picker = picker;
+		}
+
     }
 
     @Override
@@ -232,8 +244,7 @@ public class MeshDrawActor implements GLActor {
                     Toolkit toolkit = Toolkit.getDefaultToolkit();
                     Dimension dim = toolkit.getScreenSize();
                     // Build this with max-possible buffer dimensions.
-                    picker = new RenderedIdPicker((IdCoderProvider)configurator.getVertexAttributeManager());
-                    picker.init(glDrawable, (int)dim.getWidth(), (int)dim.getHeight());
+                    configurator.getPicker().init(glDrawable, (int)dim.getWidth(), (int)dim.getHeight());
                 }
             } catch ( BufferStateException bse ) {
                 // Failure at this level.  Need to do this again.
@@ -264,7 +275,7 @@ public class MeshDrawActor implements GLActor {
             return;
 
 		if (configurator.isUseIdAttribute()) {
-			picker.prePick(glDrawable);
+			configurator.getPicker().prePick(glDrawable);
 		}
 
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
@@ -366,7 +377,7 @@ public class MeshDrawActor implements GLActor {
             return;
 
         if (configurator.isUseIdAttribute()) {
-            picker.postPick(glDrawable);
+            configurator.getPicker().postPick(glDrawable);
         }
         
         shader.unload(gl.getGL2());
@@ -397,7 +408,7 @@ public class MeshDrawActor implements GLActor {
         shader = null;
         dropBuffers(gl);
 		
-		picker.dispose(glDrawable);
+		configurator.getPicker().dispose(glDrawable);
     }
     
     public void refresh() {

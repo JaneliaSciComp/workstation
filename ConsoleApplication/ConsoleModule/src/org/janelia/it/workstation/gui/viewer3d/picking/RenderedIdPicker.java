@@ -11,8 +11,6 @@ import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 
 import java.nio.IntBuffer;
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
 import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,13 +25,22 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class RenderedIdPicker {
-    private int frameBufId;
+	public static final int BYTES_PER_PIXEL = 4;
+	public static final int BYTE_MULT = 256;
+	public static final int WORD_MULT = 256 * 256;
+	private static final int UNSET_COORD = -1;
+
+	private int frameBufId;
     private int colorTextureId_0;
     private int colorTextureId_1;
     private int depthBufferId;
     private int viewportWidth;
     private int viewportHeight;
     private IdCoderProvider idCoderProvider;
+	private PixelListener listener;
+	
+	private int x = UNSET_COORD;
+	private int y = UNSET_COORD;
 	
 	private Logger logger = LoggerFactory.getLogger(RenderedIdPicker.class);
 
@@ -137,6 +144,11 @@ public class RenderedIdPicker {
 		gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, 0);
         
 	}
+	
+	public void setPickCoords(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
 
 	public void prePick(GLAutoDrawable glDrawable) {
 		if (! inPick()) {
@@ -184,9 +196,18 @@ public class RenderedIdPicker {
 		GL3 gl = (GL3)glDrawable.getGL().getGL2();
 		gl.glBindFramebuffer(GL3.GL_READ_FRAMEBUFFER, frameBufId);
 		//pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT0, colorTextureId_0);
-        pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT1, colorTextureId_1);
+        //pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT1, colorTextureId_1);
+		byte[] pixels = readPixels(gl, colorTextureId_1, GL3.GL_COLOR_ATTACHMENT1);
+		int id = getId(x, y, pixels);
         gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, 0);
 		reportError(gl, "Unbind Frame Buffer");
+		
+		if (listener != null) {
+			x = UNSET_COORD;
+			y = UNSET_COORD;
+			listener.setPixel(id);
+		}
+		
     }
 
 	public void dispose(GLAutoDrawable glDrawable) {
@@ -216,8 +237,12 @@ public class RenderedIdPicker {
 		reportError(gl, "Delete Frame Buffers");
 	}
 	
+	public void setPixelListener(PixelListener listener) {
+		this.listener = listener;
+	}
+	
 	private boolean inPick() {
-		return false;
+		return x != UNSET_COORD  &&  y != UNSET_COORD;
 	}
 	
 	private void prepareTexture(GL3 gl, int texId) {
@@ -236,14 +261,7 @@ public class RenderedIdPicker {
 
 	private void pixelReadTest(GL3 gl, int attachment, int textureId) {
         System.out.println("Pixel Read Test for " + attachment);
-        gl.glBindTexture(GL3.GL_TEXTURE_2D, textureId);
-        int pixelSize = 4 * (Float.SIZE / Byte.SIZE);
-		int bufferSize = viewportWidth * viewportHeight * pixelSize;
-		byte[] rawBuffer = new byte[bufferSize];
-		ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
-		gl.glReadBuffer(attachment);
-		gl.glReadPixels(0, 0, viewportWidth, viewportHeight, GL3.GL_BGRA, GL3.GL_UNSIGNED_BYTE, buffer);
-		byte[] pixel = new byte[3];
+		byte[] rawBuffer = readPixels(gl, textureId, attachment);
 		int[] freq = new int[256];
 		for (int i = 0; i < rawBuffer.length; i++) {
 			int b = rawBuffer[i];
@@ -252,7 +270,7 @@ public class RenderedIdPicker {
 			}
 			freq[b]++;
 		}
-		for (int i = 0; i < freq.length; i++) {
+		for (int i = 0; i < freq.length; i+=BYTES_PER_PIXEL) {
 			if (freq[i] > 0) {
                 // Dump the identifier implied here, and its frequency.
                 IdCoder idCoder = idCoderProvider.getIdCoder();
@@ -262,6 +280,23 @@ public class RenderedIdPicker {
 			}
 		}
 		reportError(gl, "Pixel Read Test.");
+	}
+
+	private byte[] readPixels(GL3 gl, int textureId, int attachment) {
+		gl.glBindTexture(GL3.GL_TEXTURE_2D, textureId);
+		int pixelSize = BYTES_PER_PIXEL; // * (Float.SIZE / Byte.SIZE)
+		int bufferSize = viewportWidth * viewportHeight * pixelSize;
+		byte[] rawBuffer = new byte[bufferSize];
+		ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
+		gl.glReadBuffer(attachment);
+		gl.glReadPixels(0, 0, viewportWidth, viewportHeight, GL3.GL_BGRA, GL3.GL_UNSIGNED_BYTE, buffer);
+		return rawBuffer;
+	}
+	
+	private int getId(int x, int y, byte[] rawBuffer) {
+		int startOfPixel = (y * viewportWidth + x) * BYTES_PER_PIXEL;
+	    // Using BGRA order.
+		return rawBuffer[startOfPixel] + BYTE_MULT * rawBuffer[startOfPixel + 1] + WORD_MULT * rawBuffer[startOfPixel + 2];
 	}
 	
 	private String decodeFramebufferStatus( int status ) {
@@ -306,8 +341,11 @@ public class RenderedIdPicker {
 		}
 		return rtnVal;
 	}
+	
+	/**
+	 * Implement this and set it, to be informed of the captured pixel value.
+	 */
+	public static interface PixelListener {
+		void setPixel(int pixel);
+	}	
 }
-
-/*
-
-*/
