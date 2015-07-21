@@ -87,6 +87,8 @@ public abstract class ArrayDrawShader extends GL4Shader {
 
         gl.glBindTexture(GL4.GL_TEXTURE_2D, tc.getHeadPointerTextureId());
         checkGlError(gl, "d3 ArrayDrawShader glBindTexture() error");
+        
+        logger.info("Calling glTexSubImage2D with width="+tc.getWidth()+" height="+tc.getHeight());
 
         gl.glTexSubImage2D(GL4.GL_TEXTURE_2D,
                 0, // level
@@ -97,13 +99,17 @@ public abstract class ArrayDrawShader extends GL4Shader {
                 GL4.GL_RED_INTEGER,
                 GL4.GL_UNSIGNED_INT,
                 0);
-        checkGlError(gl, "d4 ArrayDrawShader glTexImage2D() error");
+        checkGlError(gl, "d4 ArrayDrawShader glTexSubImage2D() error");
 
         gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, 0);
 
         // Bind the headPointerTexture for read-write
         gl.glBindImageTexture(1, tc.getHeadPointerTextureId(), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_R32UI);
         checkGlError(gl, "d5 ArrayDrawShader glBindImageTexture() error");
+        
+        //gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 0, tc.getFragmentSSBOId());
+        //checkGlError(gl, "d6 ArrayDrawShader glBindBufferBase() error");
+
     }
 
 }

@@ -76,7 +76,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
     private void setupArrayCubeExperiment() {
 
-        final int DEPTH = 20;
+        final int DEPTH = 100;
 
         GL4ShaderActionSequence cubeSequence = new GL4ShaderActionSequence("ArrayCube");
         GL4ShaderActionSequence meshSequence = new GL4ShaderActionSequence("Meshes");
@@ -89,8 +89,10 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         cubeShader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
-                // Do nothing since we want to update MVP at model level
-            }
+              logger.info("Calling cubeShader.set* with depth="+DEPTH);
+                cubeShader.setWidth(gl, viewer.getWidth());
+                cubeShader.setHeight(gl, viewer.getHeight());
+                cubeShader.setDepth(gl, DEPTH);            }
         });
 
         File testHomeFile = new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd");
@@ -114,7 +116,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                 0.0f, 0.0f, 0.0f, 1.0f);
         pa.setModel(gal4Rotation);
 
-        pa.setColor(new Vector4(1.0f, 0.0f, 0.0f, 0.01f));
+        pa.setColor(new Vector4(1.0f, 1.0f, 0.0f, 0.5f));
         pa.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
@@ -153,13 +155,14 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         sortShader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
+                logger.info("Calling sortShader.set* with depth="+DEPTH);
                 sortShader.setWidth(gl, viewer.getWidth());
                 sortShader.setHeight(gl, viewer.getHeight());
                 sortShader.setDepth(gl, DEPTH);
             }
         });
 
-        sortSequence.setShader(new ArraySortShader());
+        sortSequence.setShader(sortShader);
         viewer.addShaderAction(sortSequence);
     }
     

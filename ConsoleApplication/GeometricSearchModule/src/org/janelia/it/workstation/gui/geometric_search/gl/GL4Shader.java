@@ -82,11 +82,17 @@ public abstract class GL4Shader
             }
             logger.info("Attaching fragment shader");
             gl.glAttachShader(shaderProgram, fragmentShader);
+            logger.info("Linking program");
             gl.glLinkProgram(shaderProgram);
+            logger.info("Validating program");
             gl.glValidateProgram(shaderProgram);
+            logger.info("Post-validation");
             IntBuffer intBuffer = IntBuffer.allocate(1);
+            logger.info("Retrieving link status");
             gl.glGetProgramiv(shaderProgram, GL4.GL_LINK_STATUS, intBuffer);
+            logger.info("Checking link status value");
             if (intBuffer.get(0) != 1) {
+                logger.info("Found problem - retrieving error log");
                 gl.glGetProgramiv(shaderProgram, GL4.GL_INFO_LOG_LENGTH, intBuffer);
                 int size = intBuffer.get(0);
                 StringBuilder errBuilder = new StringBuilder();

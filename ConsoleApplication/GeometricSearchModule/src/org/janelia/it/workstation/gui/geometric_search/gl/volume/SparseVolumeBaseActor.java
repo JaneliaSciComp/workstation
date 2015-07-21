@@ -136,7 +136,7 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
         int chunkOffset=0;
 
         for (int channelIndex=0;channelIndex<textureData.getChannelCount();channelIndex++) {
-            logger.error("Populating texture for channel="+channelIndex);
+            logger.info("Populating texture for channel="+channelIndex);
 
             for (int i=0;i<channelSizeInBytes;i++) channelBuffer[i]=0;
 

@@ -7,6 +7,7 @@ in vec2 vs_tex_coord;
 struct OITArrNodeType {
     vec4 color;
     float depth;
+    uint next;
 };
 
 uniform usampler2D head_pointer_image;
@@ -23,15 +24,40 @@ layout(binding=0, std430) buffer fragmentArrays {
 
 layout (location=0) out vec4 output_color;
 
-struct OITArrNodeType frags[hpi_depth];
+#define MAX_DEPTH 100
+
+struct OITArrNodeType frags[MAX_DEPTH];
+
+//int nonZeroSSBFlag=0;
 
 int build_local_fragment_list(void)
 {
     int frag_count=0;
-    uint hpiFragCount = texelFetch(head_pointer_image, ivec2(gl_FragCoord.xy), 0).x;
-    int nodeOffset = (gl_FragCoord.y * hpi_width + gl_FragCoord.x) * hpi_depth;
-    while(frag_count < hpiFragCount && frag_count < hpi_depth) { // sanity test
-        frags[frag_count] = nodes[nodeOffset + frag_count];
+    ivec2 fl = ivec2(gl_FragCoord.xy);
+
+    //if (fl.x==0 && fl.y==0) {
+    //    vec4 colorCopy = nodes[0].color;
+    //    nonZeroSSBFlag=1;
+    //    if (colorCopy.x > 0.0) {
+    //        nonZeroSSBFlag=2;
+    //    } else {
+    //        nodes[0].color = vec4(1.0, 0.7, 0.7, 1.0);
+    //        vec4 nextCopy = nodes[0].color;
+    //        if (nextCopy.x > 0.0) {
+    //            nonZeroSSBFlag=3;
+    //        }
+    //    }
+    //}
+
+
+    uint hpiFragCount = texelFetch(head_pointer_image, fl, 0).x;
+    int nodeOffset = (fl.y * hpi_width + fl.x) * hpi_depth;
+    while(frag_count < hpiFragCount) { // sanity test
+        int o2 = nodeOffset + frag_count;
+        //if (nodeOffset==0) {
+        //    nonZeroSSBFlag=4;
+        //}
+        frags[frag_count] = nodes[o2];
         frag_count++;
     }
     return frag_count;
@@ -61,9 +87,41 @@ vec4 blend(vec4 current_color, vec4 new_color) {
 vec4 calculate_final_color(int frag_count) {
     int i;
     vec4 final_color = vec4(0.0, 0.0, 0.0, 0.0);
+    //int nzFlag=1;
+    //int dFlag=1;
     for (i=0; i < frag_count; i++) {
+       vec4 fc = frags[i].color;
+       //if (!(fc.x == 0.0 && fc.y == 0.0 && fc.z == 0.0)) {
+       //     nzFlag=0;
+       //}
+       //if (frags[i].depth>0.0) {
+       //     dFlag=0;
+       //}
        final_color = blend(final_color, frags[i].color);
     }
+
+    //if (nzFlag==1) {
+    //    if (frag_count > 50) {
+    //        final_color = vec4(1.0, 0.0, 0.0, 0.0);
+    //    } else if (frag_count > 0) {
+    //        final_color = vec4(0.0, 0.5, 0.5, 0.0);
+    //    }
+    //} 
+
+    //if (dFlag==0) {
+    //    final_color = vec4(1.0, 0.0, 1.0, 1.0);
+    //}
+
+    //if (nonZeroSSBFlag==1) {
+    //    final_color = vec4(1.0, 0.0, 0.0, 1.0);
+    //} else if (nonZeroSSBFlag==2) {
+    //    final_color = vec4(0.0, 1.0, 0.0, 1.0);
+    //} else if (nonZeroSSBFlag==3) {
+    //    final_color = vec4(0.0, 0.0, 1.0, 1.0);
+    //} else if (nonZeroSSBFlag==4) {
+    //    final_color = vec4(0.2, 0.2, 0.2, 1.0);
+    //}
+
     return final_color;
 }
 
