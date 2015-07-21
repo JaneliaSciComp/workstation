@@ -5,8 +5,10 @@
  */
 package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 
-import javax.swing.JComponent;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.PixelReadActor;
 import org.janelia.it.workstation.gui.viewer3d.picking.IdCoder;
 import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
@@ -19,12 +21,12 @@ import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
 public class UniqueColorSelector implements PixelReadActor.PixelListener, RenderedIdPicker.PixelListener {
     private final AnnotationSkeletonDataSourceI dataSource;
     private IdCoderProvider idCoderProvider;
-    private JComponent redrawComponent;
+    private AnnotationSkeletonPanel annoSkeletonPanel;
     
-    public UniqueColorSelector(AnnotationSkeletonDataSourceI dataSource, IdCoderProvider idCoderProvider, JComponent redrawComponent) {
+    public UniqueColorSelector(AnnotationSkeletonDataSourceI dataSource, IdCoderProvider idCoderProvider, AnnotationSkeletonPanel redrawComponent) {
         this.dataSource = dataSource;
         this.idCoderProvider = idCoderProvider;
-        this.redrawComponent = redrawComponent;
+        this.annoSkeletonPanel = redrawComponent;
     }
     
     public UniqueColorSelector(AnnotationSkeletonDataSourceI dataSource) {
@@ -55,12 +57,22 @@ public class UniqueColorSelector implements PixelReadActor.PixelListener, Render
 	
 	@Override
 	public void setPixel(int pixel) {
-        System.out.println(String.format("ID or Row=%d", idCoderProvider.getIdCoder().decode(pixel / 255.5f)));
+        final int row = idCoderProvider.getIdCoder().decode(pixel / 255.5f);
+        System.out.println(String.format("ID or Row=%d", row));
+        final AnnotationModel annoMdl = dataSource.getAnnotationModel();
+        final FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
+        if (row < filteredModel.getRowCount()) {
+            InterestingAnnotation annotation = filteredModel.getAnnotationAtRow(row);
+            if (annotation != null) {
+                long annoId = annotation.getAnnotationID();
+                annoSkeletonPanel.positionForSelection(annoId);
+            }
+        }
         redraw();
 	}
     
     private void redraw() {
-        redrawComponent.validate();
-        redrawComponent.repaint();
+        annoSkeletonPanel.validate();
+        annoSkeletonPanel.repaint();
     }
 }

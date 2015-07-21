@@ -165,16 +165,7 @@ public class AnnotationSkeletonPanel extends JPanel {
                 public void mouseClicked(MouseEvent me) {
                     long selectedAnnotation = select(me.getX(), me.getY());
                     if (selectedAnnotation > 0) {
-                        final SkeletonController skeletonController = SkeletonController.getInstance();
-                        //skeletonController.annotationSelected(selectedAnnotation);
-                        Vec3 focus = skeletonController.getAnnotationPosition(selectedAnnotation);
-                        if (focus != null) {
-                            skeletonController.setLVVFocus(focus);
-                            context.getCamera3d().setFocus(focus);
-                            viewer.invalidate();
-                            viewer.validate();
-                            viewer.repaint();
-                        }
+                        positionForSelection(selectedAnnotation);
                     }
                 }
             });
@@ -187,6 +178,19 @@ public class AnnotationSkeletonPanel extends JPanel {
             validate();
             repaint();
             controller.registerForEvents(this);
+        }
+    }
+
+    public void positionForSelection(long selectedAnnotation) {
+        final SkeletonController skeletonController = SkeletonController.getInstance();
+        //skeletonController.annotationSelected(selectedAnnotation);
+        Vec3 focus = skeletonController.getAnnotationPosition(selectedAnnotation);
+        if (focus != null) {
+            skeletonController.setLVVFocus(focus);
+            context.getCamera3d().setFocus(focus);
+            viewer.invalidate();
+            viewer.validate();
+            viewer.repaint();
         }
     }
     
