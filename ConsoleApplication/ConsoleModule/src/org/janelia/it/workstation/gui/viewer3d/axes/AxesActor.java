@@ -75,12 +75,6 @@ public class AxesActor implements GLActor
             GLProfile profile = GLProfile.get(GLProfile.GL3);
             final GLCapabilities capabilities = new GLCapabilities(profile);
             capabilities.setGLProfile( profile );
-            // KEEPING this for use of GL3 under MAC.  So far, unneeded, and not debugged.
-            //        SwingUtilities.invokeLater(new Runnable() {
-            //            public void run() {
-            //                new JOCLSimpleGL3(capabilities);
-            //            }
-            //        });
         } catch ( Throwable th ) {
             logger.error( "No GL3 profile available" );
         }
@@ -292,7 +286,7 @@ public class AxesActor implements GLActor
     
     //---------------------------------------END IMPLEMENTATION GLActor
 
-    /** Call this when this actor is to be re-shown after an absense. */
+    /** Call this when this actor is to be re-shown after an absence. */
     public void refresh() {
     }
 
