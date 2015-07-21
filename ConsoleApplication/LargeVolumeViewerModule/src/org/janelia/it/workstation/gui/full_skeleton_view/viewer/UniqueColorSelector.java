@@ -61,7 +61,7 @@ public class UniqueColorSelector implements PixelReadActor.PixelListener, Render
         System.out.println(String.format("ID or Row=%d", row));
         final AnnotationModel annoMdl = dataSource.getAnnotationModel();
         final FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
-        if (row < filteredModel.getRowCount()) {
+        if (row < filteredModel.getRowCount()  &&  row >= 0) {
             InterestingAnnotation annotation = filteredModel.getAnnotationAtRow(row);
             if (annotation != null) {
                 long annoId = annotation.getAnnotationID();
