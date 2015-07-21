@@ -240,12 +240,10 @@ public class MeshDrawActor implements GLActor {
                 dropBuffers(gl);
                 configurator.getBufferUploader().uploadBuffers(gl);
                 
-                if (configurator.isUseIdAttribute()) {
-                    Toolkit toolkit = Toolkit.getDefaultToolkit();
-                    Dimension dim = toolkit.getScreenSize();
-                    // Build this with max-possible buffer dimensions.
-                    configurator.getPicker().init(glDrawable, (int)dim.getWidth(), (int)dim.getHeight());
-                }
+//                if (configurator.isUseIdAttribute()) {
+//                    // Build this with max-possible buffer dimensions.
+//                    configurator.getPicker().init(glDrawable);
+//                }
             } catch ( BufferStateException bse ) {
                 // Failure at this level.  Need to do this again.
                 bBuffersNeedUpload = true;

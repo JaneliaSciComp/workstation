@@ -53,10 +53,11 @@ public class RenderedIdPicker {
 	 * @see https://www.opengl.org/wiki/Framebuffer_Object_Examples
      * @param glDrawable 
      */
-    public void init(GLAutoDrawable glDrawable, int width, int height) {        
-		this.viewportWidth = width;
-		this.viewportHeight = height;				
+    public void init(GLAutoDrawable glDrawable) {        
+		this.viewportWidth = glDrawable.getWidth();
+		this.viewportHeight = glDrawable.getHeight();				
 
+        logger.info("Establishing width={}, and height={}.", viewportWidth, viewportHeight);
 		GL3 gl = (GL3)glDrawable.getGL().getGL2();
         
 		// Test the version.
@@ -154,6 +155,7 @@ public class RenderedIdPicker {
 		if (! inPick()) {
 			return;
 		}
+        init(glDrawable);
 		/*
 		   Bind the FBO, so that all drawing is done to IT, not usual
 		   default framebuffer.
@@ -197,8 +199,9 @@ public class RenderedIdPicker {
 		gl.glBindFramebuffer(GL3.GL_READ_FRAMEBUFFER, frameBufId);
 		//pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT0, colorTextureId_0);
         //pixelReadTest(gl, GL3.GL_COLOR_ATTACHMENT1, colorTextureId_1);
-		byte[] pixels = readPixels(gl, colorTextureId_1, GL3.GL_COLOR_ATTACHMENT1);
-		int id = getId(x, y, pixels);
+        int yPos = viewportHeight - y;
+		byte[] pixels = readPixels(gl, colorTextureId_1, GL3.GL_COLOR_ATTACHMENT1, x, yPos, 1, 1);
+		int id = getId(pixels);
         gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, 0);
 		reportError(gl, "Unbind Frame Buffer");
 		
@@ -283,22 +286,32 @@ public class RenderedIdPicker {
 	}
 
 	private byte[] readPixels(GL3 gl, int textureId, int attachment) {
-		gl.glBindTexture(GL3.GL_TEXTURE_2D, textureId);
-		int pixelSize = BYTES_PER_PIXEL; // * (Float.SIZE / Byte.SIZE)
-		int bufferSize = viewportWidth * viewportHeight * pixelSize;
-		byte[] rawBuffer = new byte[bufferSize];
-		ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
-		gl.glReadBuffer(attachment);
-		gl.glReadPixels(0, 0, viewportWidth, viewportHeight, GL3.GL_BGRA, GL3.GL_UNSIGNED_BYTE, buffer);
-		return rawBuffer;
+        return readPixels(gl, textureId, attachment, 0, 0, viewportWidth, viewportHeight);
 	}
 	
+    private byte[] readPixels(GL3 gl, int textureId, int attachment, int startX, int startY, int width, int height) {
+        gl.glBindTexture(GL3.GL_TEXTURE_2D, textureId);
+        int pixelSize = BYTES_PER_PIXEL; // * (Float.SIZE / Byte.SIZE)
+        int bufferSize = width * height * pixelSize;
+        byte[] rawBuffer = new byte[bufferSize];
+        ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
+        gl.glReadBuffer(attachment);
+        gl.glReadPixels(startX, startY, width, height, GL3.GL_BGRA, GL3.GL_UNSIGNED_BYTE, buffer);
+        return rawBuffer;
+    }
+
 	private int getId(int x, int y, byte[] rawBuffer) {
-		int startOfPixel = (y * viewportWidth + x) * BYTES_PER_PIXEL;
+        int vertPos = viewportHeight - y;
+		int startOfPixel = (vertPos * viewportWidth + x) * BYTES_PER_PIXEL;
 	    // Using BGRA order.
 		return rawBuffer[startOfPixel] + BYTE_MULT * rawBuffer[startOfPixel + 1] + WORD_MULT * rawBuffer[startOfPixel + 2];
 	}
 	
+    private int getId(byte[] rawBuffer) {
+        // Using BGRA order.
+        return rawBuffer[1] + BYTE_MULT * rawBuffer[2] + WORD_MULT * rawBuffer[3];
+    }
+
 	private String decodeFramebufferStatus( int status ) {
 		String rtnVal = null;
 		switch (status) {			

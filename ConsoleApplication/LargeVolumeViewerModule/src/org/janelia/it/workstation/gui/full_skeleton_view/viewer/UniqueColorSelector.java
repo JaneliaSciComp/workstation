@@ -5,6 +5,7 @@
  */
 package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 
+import javax.swing.JComponent;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.PixelReadActor;
 import org.janelia.it.workstation.gui.viewer3d.picking.IdCoder;
@@ -18,10 +19,12 @@ import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
 public class UniqueColorSelector implements PixelReadActor.PixelListener, RenderedIdPicker.PixelListener {
     private final AnnotationSkeletonDataSourceI dataSource;
     private IdCoderProvider idCoderProvider;
+    private JComponent redrawComponent;
     
-    public UniqueColorSelector(AnnotationSkeletonDataSourceI dataSource, IdCoderProvider idCoderProvider) {
+    public UniqueColorSelector(AnnotationSkeletonDataSourceI dataSource, IdCoderProvider idCoderProvider, JComponent redrawComponent) {
         this.dataSource = dataSource;
         this.idCoderProvider = idCoderProvider;
+        this.redrawComponent = redrawComponent;
     }
     
     public UniqueColorSelector(AnnotationSkeletonDataSourceI dataSource) {
@@ -47,10 +50,17 @@ public class UniqueColorSelector implements PixelReadActor.PixelListener, Render
             int id = idCoder.decode(pixel[0]);
             System.out.println(String.format("Color: r=%f / g=%f / b=%f.  ID=%d", pixel[0], pixel[1], pixel[2], id));
         }
+        redraw();
     }
 	
 	@Override
 	public void setPixel(int pixel) {
         System.out.println(String.format("ID or Row=%d", pixel));
+        redraw();
 	}
+    
+    private void redraw() {
+        redrawComponent.validate();
+        redrawComponent.repaint();
+    }
 }
