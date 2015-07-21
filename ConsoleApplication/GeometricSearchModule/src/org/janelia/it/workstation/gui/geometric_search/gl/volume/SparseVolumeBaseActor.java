@@ -38,12 +38,12 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
     int height;
     int depth;
 
-    IntBuffer vertexArrayId=IntBuffer.allocate(1);
-    IntBuffer vertexBufferId=IntBuffer.allocate(1);
-    Vector4 color=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-    Matrix4 vertexRotation=null;
+    public IntBuffer vertexArrayId=IntBuffer.allocate(1);
+    public IntBuffer vertexBufferId=IntBuffer.allocate(1);
+    public Vector4 color=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+    public Matrix4 vertexRotation=null;
 
-    protected class viGroup {
+    public class viGroup {
         
         public viGroup() {}
         
@@ -60,7 +60,7 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
         public float w; // intensity
     }
 
-    List<viGroup> viList=new ArrayList<>();
+    public List<viGroup> viList=new ArrayList<>();
 
     public void setColor(Vector4 color) {
         this.color=color;

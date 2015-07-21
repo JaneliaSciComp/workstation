@@ -74,7 +74,7 @@ public class ArrayTransparencyContext {
 
         // Create PBO from which to clear the headPointerTexture
         ByteBuffer bb = ByteBuffer.allocate(headPointerTotalPixels * 4);
-        byte ffb = -1; // 0xFF for java is -1, we want the shader to see unsigned int==0xFFFFFFFF
+        byte ffb = 0; // 0xFF for java is -1, we want the shader to see unsigned int==0xFFFFFFFF
         for (int i=0;i<bb.capacity();i++) {
             bb.put(i, ffb);
         }

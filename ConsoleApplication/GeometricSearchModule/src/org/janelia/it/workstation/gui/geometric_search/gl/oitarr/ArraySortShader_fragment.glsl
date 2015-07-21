@@ -30,7 +30,7 @@ int build_local_fragment_list(void)
     int frag_count=0;
     uint hpiFragCount = texelFetch(head_pointer_image, ivec2(gl_FragCoord.xy), 0).x;
     int nodeOffset = (gl_FragCoord.y * hpi_width + gl_FragCoord.x) * hpi_depth;
-    while(hpiFragCount != 0xFFFFFFFF && frag_count < hpiFragCount && frag_count < hpi_depth) { // sanity test
+    while(frag_count < hpiFragCount && frag_count < hpi_depth) { // sanity test
         frags[frag_count] = nodes[nodeOffset + frag_count];
         frag_count++;
     }

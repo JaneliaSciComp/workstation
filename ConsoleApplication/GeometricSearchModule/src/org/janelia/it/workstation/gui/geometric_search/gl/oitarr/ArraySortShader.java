@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.geometric_search.gl.oitarr;
 
+import org.janelia.geometry3d.Vector3;
 import org.janelia.it.workstation.gui.geometric_search.gl.GL4Shader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,20 @@ public class ArraySortShader extends GL4Shader {
     FloatBuffer quadFb;
     IntBuffer vertexArrayId=IntBuffer.allocate(1);
 
+    public void setWidth(GL4 gl, int width) {
+        setUniform(gl, "hpi_width", width);
+        checkGlError(gl, "ArraySortShader setWidth() error");
+    }
+
+    public void setHeight(GL4 gl, int height) {
+        setUniform(gl, "hpi_height", height);
+        checkGlError(gl, "ArraySortShader setHeight() error");
+    }
+
+    public void setDepth(GL4 gl, int depth) {
+        setUniform(gl, "hpi_depth", depth);
+        checkGlError(gl, "ArraySortShader setDepth() error");
+    }
 
     @Override
     public void display(GL4 gl) {
