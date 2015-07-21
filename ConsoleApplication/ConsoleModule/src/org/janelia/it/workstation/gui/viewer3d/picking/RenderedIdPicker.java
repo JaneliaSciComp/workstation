@@ -214,9 +214,6 @@ public class RenderedIdPicker {
     }
 
 	public void dispose(GLAutoDrawable glDrawable) {
-		if (! inPick()) {
-			return;
-		}
 		GL3 gl = (GL3)glDrawable.getGL().getGL2();
 		IntBuffer exchange = IntBuffer.allocate(2);
 
@@ -304,12 +301,16 @@ public class RenderedIdPicker {
         int vertPos = viewportHeight - y;
 		int startOfPixel = (vertPos * viewportWidth + x) * BYTES_PER_PIXEL;
 	    // Using BGRA order.
-		return rawBuffer[startOfPixel] + BYTE_MULT * rawBuffer[startOfPixel + 1] + WORD_MULT * rawBuffer[startOfPixel + 2];
+		return rawBuffer[startOfPixel + 2] + BYTE_MULT * rawBuffer[startOfPixel + 1] + WORD_MULT * rawBuffer[startOfPixel];
 	}
 	
     private int getId(byte[] rawBuffer) {
         // Using BGRA order.
-        return rawBuffer[1] + BYTE_MULT * rawBuffer[2] + WORD_MULT * rawBuffer[3];
+        return toUnsignedInt(rawBuffer[2]) + BYTE_MULT * toUnsignedInt(rawBuffer[1]) + WORD_MULT * toUnsignedInt(rawBuffer[0]);
+    }
+    
+    private int toUnsignedInt(byte b) {
+        return b < 0 ? 256 + b : b;
     }
 
 	private String decodeFramebufferStatus( int status ) {

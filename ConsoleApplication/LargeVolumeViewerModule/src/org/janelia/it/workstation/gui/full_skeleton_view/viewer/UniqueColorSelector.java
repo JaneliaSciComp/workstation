@@ -55,7 +55,7 @@ public class UniqueColorSelector implements PixelReadActor.PixelListener, Render
 	
 	@Override
 	public void setPixel(int pixel) {
-        System.out.println(String.format("ID or Row=%d", pixel));
+        System.out.println(String.format("ID or Row=%d", idCoderProvider.getIdCoder().decode(pixel / 255.5f)));
         redraw();
 	}
     

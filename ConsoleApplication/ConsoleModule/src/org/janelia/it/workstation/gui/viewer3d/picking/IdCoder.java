@@ -32,6 +32,6 @@ public class IdCoder {
     }
     
     public int decode(float colorVal) {
-        return (int)((colorVal * ENCODE_RANGE) / idBreadth) - 1;
+        return (int)(Math.round((colorVal * ENCODE_RANGE) / idBreadth)) - 1;
     }
 }
