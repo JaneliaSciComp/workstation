@@ -60,7 +60,6 @@ public class AnnotationSkeletonPanel extends JPanel {
     private MeshViewContext context;
     private UniqueColorSelector ucSelector;
 	private RenderedIdPicker picker;
-//    private PixelReadActor pixelReadActor;
     
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
@@ -145,11 +144,6 @@ public class AnnotationSkeletonPanel extends JPanel {
             // others may not.
             viewer.addActor(refAxisActor);
             viewer.addActor(meshDrawActor);
-			// Pixel Read Actor: marked for deletion.
-//            pixelReadActor = new PixelReadActor(viewer);
-//            pixelReadActor.setPixelListener(ucSelector);
-//            pixelReadActor.setBoundingBox3d(boundingBox);
-//            viewer.addActor(pixelReadActor);
             viewer.addMenuAction(new BackgroundPickAction(viewer));
             viewer.addMenuAction(
                 new ActorSwapAction(
@@ -165,16 +159,7 @@ public class AnnotationSkeletonPanel extends JPanel {
                 public void mouseClicked(MouseEvent me) {
                     long selectedAnnotation = select(me.getX(), me.getY());
                     if (selectedAnnotation > 0) {
-                        final SkeletonController skeletonController = SkeletonController.getInstance();
-                        //skeletonController.annotationSelected(selectedAnnotation);
-                        Vec3 focus = skeletonController.getAnnotationPosition(selectedAnnotation);
-                        if (focus != null) {
-                            skeletonController.setLVVFocus(focus);
-                            context.getCamera3d().setFocus(focus);
-                            viewer.invalidate();
-                            viewer.validate();
-                            viewer.repaint();
-                        }
+                        positionForSelection(selectedAnnotation);
                     }
                 }
             });
@@ -187,6 +172,19 @@ public class AnnotationSkeletonPanel extends JPanel {
             validate();
             repaint();
             controller.registerForEvents(this);
+        }
+    }
+
+    public void positionForSelection(long selectedAnnotation) {
+        final SkeletonController skeletonController = SkeletonController.getInstance();
+        //skeletonController.annotationSelected(selectedAnnotation);
+        Vec3 focus = skeletonController.getAnnotationPosition(selectedAnnotation);
+        if (focus != null) {
+            skeletonController.setLVVFocus(focus);
+            context.getCamera3d().setFocus(focus);
+            viewer.invalidate();
+            viewer.validate();
+            viewer.repaint();
         }
     }
     
@@ -243,7 +241,7 @@ public class AnnotationSkeletonPanel extends JPanel {
         configurator.setMatrixScope(MeshDrawActor.MatrixScope.LOCAL);                  
         
         final NeuronTraceVtxAttribMgr attributeManager = new NeuronTraceVtxAttribMgr(); 
-        ucSelector = new UniqueColorSelector(dataSource, attributeManager);
+        ucSelector = new UniqueColorSelector(dataSource, attributeManager, this);
         attributeManager.setDataSource(dataSource);
         configurator.setVertexAttributeManager(attributeManager);
         configurator.setColoringStrategy(MeshDrawActor.ColoringStrategy.ATTRIBUTE);
@@ -284,13 +282,8 @@ public class AnnotationSkeletonPanel extends JPanel {
         long rtnVal = -1L;
         if (context != null) {            
 			picker.setPickCoords(mouseX, mouseY);
-//            pixelReadActor.setSampleCoords(mouseX, mouseY);
             this.validate();
             this.repaint();
-//            RayCastSelector rayCastSelector = new RayCastSelector( 
-//                    dataSource, context, viewer.getWidth(), viewer.getHeight() 
-//            );
-//            rtnVal = rayCastSelector.select(mouseX, mouseY);
         }
         return rtnVal;
     }

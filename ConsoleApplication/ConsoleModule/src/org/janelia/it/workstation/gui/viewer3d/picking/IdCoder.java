@@ -14,24 +14,29 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class IdCoder {
+    public static final float HIBYTE_ENCODE_RANGE = 256.0f*256.0f*256.0f;
+    public static final float MIDBYTE_ENCODE_RANGE = 256.0f*256.0f;
+    public static final float BYTE_ENCODE_RANGE = 256.0f;
+    public static final float ENCODE_RANGE = HIBYTE_ENCODE_RANGE + MIDBYTE_ENCODE_RANGE + BYTE_ENCODE_RANGE;
+    public static final float RAW_RANGE_DIVISOR = ENCODE_RANGE - 0.5f;
     private Logger log = LoggerFactory.getLogger(IdCoder.class);
-    public static final float ENCODE_RANGE = 256f;
     
-    private int idRange;
-    private float idBreadth;
-    public IdCoder(int idRange) {
-        this.idRange = idRange;
-        this.idBreadth = ENCODE_RANGE / idRange;
-        log.info("ID Range={}.  ID Breadth={}.", idRange, idBreadth);
+    private final static int ID_BREADTH = 4;  // Employ spacing to avoid clash.
+    public IdCoder() {
+        log.debug("ID Breadth={}.", ID_BREADTH);
     }
     
-    public float[] encode(int i) {
-        //@todo
-        //Temporary: need to do proper 3-byte encoding!!
-        return new float[]{(idBreadth * (i + 1)) / ENCODE_RANGE, 0, 0};
+    public float[] encode(int id) {
+        id += 1; // No zero identifiers!
+        id *= ID_BREADTH;   // space out the identifiers, to lower prob of clash
+        int lobyte = id & 255;
+        int midbyte = (id >> 8) & 255;
+        int hibyte = (id >> 16) & 255;
+
+        return new float[]{lobyte / BYTE_ENCODE_RANGE, midbyte / BYTE_ENCODE_RANGE, hibyte / BYTE_ENCODE_RANGE};
     }
     
     public int decode(float colorVal) {
-        return (int)((colorVal * ENCODE_RANGE) / idBreadth) - 1;
+        return (int)(Math.round((colorVal * ENCODE_RANGE) / ID_BREADTH)) - 1;
     }
 }
