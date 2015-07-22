@@ -144,6 +144,7 @@ public class RenderedIdPicker {
 		reportError(gl, "Frame Render Buffer");
         
 		gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, 0);
+        gl.glBindTexture(GL3.GL_TEXTURE_2D, 0);
         
 	}
 	
@@ -204,9 +205,9 @@ public class RenderedIdPicker {
         gl.glBindFramebuffer(GL3.GL_FRAMEBUFFER, 0);
 		reportError(gl, "Unbind Frame Buffer");
 		
+        x = UNSET_COORD;
+        y = UNSET_COORD;
 		if (listener != null) {
-			x = UNSET_COORD;
-			y = UNSET_COORD;
 			listener.setPixel(id);
 		}
 		
