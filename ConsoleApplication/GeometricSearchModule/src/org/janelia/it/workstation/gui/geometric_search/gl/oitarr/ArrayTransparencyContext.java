@@ -145,7 +145,7 @@ public class ArrayTransparencyContext {
         //checkGlError(gl, "i6 ArrayTransparencyContext glBindBuffer() error");
 
         logger.info("Calling glBufferData for SSBO with size="+headPointerTotalPixels);
-        gl.glBufferData(GL4.GL_SHADER_STORAGE_BUFFER, headPointerTotalPixels*depth*24, null, GL4.GL_DYNAMIC_DRAW);
+        gl.glBufferData(GL4.GL_SHADER_STORAGE_BUFFER, headPointerTotalPixels*depth*16, null, GL4.GL_DYNAMIC_DRAW);
         checkGlError(gl, "i8 ArrayTransparencyContext glBufferData() error");
 
  
