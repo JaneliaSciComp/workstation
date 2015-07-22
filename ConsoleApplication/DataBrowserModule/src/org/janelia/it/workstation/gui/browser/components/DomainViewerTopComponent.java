@@ -91,6 +91,7 @@ public final class DomainViewerTopComponent extends TopComponent {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
+    
     @Override
     public void componentOpened() {
         Events.getInstance().registerOnEventBus(this);

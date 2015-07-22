@@ -35,10 +35,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Top component which displays something.
+ * Top component for the Data Explorer, which shows an outline tree view of the
+ * user's workspace.
  */
 @ConvertAsProperties(
-        dtd = "-//org.janelia.it.FlyWorkstation.gui.dialogs.nb//DomainExplorer//EN",
+        dtd = "-//org.janelia.it.workstation.gui.browser.components//DomainExplorer//EN",
         autostore = false
 )
 @TopComponent.Description(
@@ -51,7 +52,7 @@ import org.slf4j.LoggerFactory;
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_DomainExplorerAction",
-        preferredID = "DomainExplorerTopComponent"
+        preferredID = DomainExplorerTopComponent.TC_NAME
 )
 @Messages({
     "CTL_DomainExplorerAction=Domain Explorer",
@@ -65,12 +66,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
 
     private final ExplorerManager mgr = new ExplorerManager();
-
     private final DomainObjectNodeSelectionModel selectionModel = new DomainObjectNodeSelectionModel();
-    
     private Lookup.Result<AbstractNode> result = null;
-    
-    private static DomainDAO dao;
     private WorkspaceWrapper currWorkspace;
     
     public DomainExplorerTopComponent() {
@@ -319,6 +316,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             return workspace;
         }
 
+        @Override
         public String toString() {
             return workspace.getName() + " (" + workspace.getOwnerKey() + ")";
         }
