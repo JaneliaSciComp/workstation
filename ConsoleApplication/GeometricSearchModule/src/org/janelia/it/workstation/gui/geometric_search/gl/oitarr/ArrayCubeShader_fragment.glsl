@@ -18,7 +18,7 @@ uniform int hpi_depth;
 
 layout (binding = 1, r32ui) uniform uimage2D head_pointer_image;
 
-layout (std430, binding = 0) buffer FragmentArrays {
+layout (std430, binding = 0) coherent buffer FragmentArrays {
     NodeType nodes[];
 };
 
@@ -45,8 +45,8 @@ void main()
 
     if (iPosition > -1 && iPosition < MAX_DEPTH) {
         nodes[xyOffset + zSize*iPosition].color = color;
-        nodes[xyOffset + zSize*iPosition].depth = dz;   
-    } else if (0==1) {
+        nodes[xyOffset + zSize*iPosition].depth = dz;
+    } else {
         // Find the closest fragment and average
         int closestIndex=0;
         float closestDistance=10000.0;
@@ -68,5 +68,7 @@ void main()
     } 
 
     blankOut = vec4(0.0, 0.0, 0.0, 0.0);
+
+    memoryBarrier();
     
 }

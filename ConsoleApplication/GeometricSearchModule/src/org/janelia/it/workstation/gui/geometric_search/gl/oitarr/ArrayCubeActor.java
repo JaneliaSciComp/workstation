@@ -51,7 +51,7 @@ public class ArrayCubeActor extends SparseVolumeBaseActor
         logger.info("display() calling glDrawArrays for GL4.GL_POINTS with viList.size="+viList.size());
         gl.glDrawArrays(GL4.GL_POINTS, 0, viList.size());
         checkGlError(gl, "d glDrawArrays error");
-
+        
     }
 
     @Override

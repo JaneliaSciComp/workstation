@@ -105,7 +105,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             testFile = testJaneliaFile;
         }
 
-        final ArrayCubeActor pa = new ArrayCubeActor(testFile, 0, 0.20f);
+        final ArrayCubeActor pa = new ArrayCubeActor(testFile, 1, 0.25f);
 
         Matrix4 gal4Rotation=new Matrix4();
 
