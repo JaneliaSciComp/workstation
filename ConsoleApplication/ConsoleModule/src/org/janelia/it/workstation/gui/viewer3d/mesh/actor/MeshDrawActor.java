@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.viewer3d.mesh.actor;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.opengl.GLActor;
@@ -239,11 +237,6 @@ public class MeshDrawActor implements GLActor {
                 }
                 dropBuffers(gl);
                 configurator.getBufferUploader().uploadBuffers(gl);
-                
-//                if (configurator.isUseIdAttribute()) {
-//                    // Build this with max-possible buffer dimensions.
-//                    configurator.getPicker().init(glDrawable);
-//                }
             } catch ( BufferStateException bse ) {
                 // Failure at this level.  Need to do this again.
                 bBuffersNeedUpload = true;
@@ -267,7 +260,7 @@ public class MeshDrawActor implements GLActor {
                 // Implies the initialization failed.  Do nothing further.
                 return;
             }
-        }
+        }		
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
         if (reportError(gl, "Display of mesh-draw-actor upon entry"))
             return;
@@ -384,6 +377,7 @@ public class MeshDrawActor implements GLActor {
             return;
         gl.glDisable( GL2.GL_DEPTH_TEST );
         gl.glDisable( GL2.GL_LINE_SMOOTH );
+		gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, 0 );
 
     }
 
