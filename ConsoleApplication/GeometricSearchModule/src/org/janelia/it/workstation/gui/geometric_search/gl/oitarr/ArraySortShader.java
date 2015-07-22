@@ -60,7 +60,7 @@ public class ArraySortShader extends GL4Shader {
         gl.glBindImageTexture(1, tc.getHeadPointerTextureId(), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_R32UI);
         checkGlError(gl, "d6.2 ArraySortShader glBindImageTexture() error");
         
-        //gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 2, tc.getFragmentSSBOId());
+        //gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 0, tc.getFragmentSSBOId());
         //checkGlError(gl, "d6.3 ArraySortShader glBindBufferBase() error");
 
         gl.glBindVertexArray(vertexArrayId.get(0));
