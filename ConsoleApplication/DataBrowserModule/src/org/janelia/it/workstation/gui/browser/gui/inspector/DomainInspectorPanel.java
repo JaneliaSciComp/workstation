@@ -311,19 +311,6 @@ public class DomainInspectorPanel extends JPanel {
         annotationsPanel.add(annotationsLoadingLabel, BorderLayout.CENTER);
     }
 
-//    public void loadRootedEntity(RootedEntity rootedEntity) {
-//        loadRootedEntity(rootedEntity, TAB_NAME_ATTRIBUTES);
-//    }
-
-//    public void loadRootedEntity(RootedEntity rootedEntity, String defaultTab) {
-//        if (rootedEntity == null) {
-//            showNothing();
-//            return;
-//        }
-//        EntityData entityData = rootedEntity.getEntityData();
-//        loadEntity(rootedEntity.getEntity(), entityData.getEntityAttrName(), defaultTab);
-//    }
-
     public void loadDomainObject(final DomainObject domainObject) {
         loadDomainObject(domainObject, null);
     }
