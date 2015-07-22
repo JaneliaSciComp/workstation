@@ -1,10 +1,11 @@
 #version 430
 
-struct OITArrNodeType {
-    vec4 color;
-};
-
 uniform vec4 dcolor;
+
+struct NodeType {
+    vec4 color;
+    float depth;
+};
 
 layout (early_fragment_tests) in;
 
@@ -17,17 +18,17 @@ uniform int hpi_depth;
 
 layout (binding = 1, r32ui) uniform uimage2D head_pointer_image;
 
-layout (binding=0, std430) buffer fragmentArrays {
-    OITArrNodeType nodes[];
+layout (std430, binding = 0) buffer FragmentArrays {
+    NodeType nodes[];
 };
 
 out vec4 blankOut;
 
-#define MAX_DEPTH 100
+#define MAX_DEPTH 50
 
-// entry point
 void main()
 {
+    float dz = 1.0 - vz;
 
     float dopac = dcolor.w;
     vec4 color = dcolor * intensityF;
@@ -36,61 +37,36 @@ void main()
 
     uint oldPosition = imageAtomicAdd(head_pointer_image, fl, 1);
 
-    //int check1=0;
-    //int check2=0;
-    //int check3=0;
+    int iPosition = int(oldPosition);
 
-    //if (fl.x==0 && fl.y==0) {
-    //    nodes[0].color = vec4(1.0, 1.0, 1.0, 1.0);
-    //    nodes[0].depth = 1.0;
-    //} else {
+    int zSize=hpi_width * hpi_height;
 
-    if (oldPosition<MAX_DEPTH) {
+    int xyOffset = (fl.y * hpi_width + fl.x);
 
-        int nodeOffset = (fl.y * hpi_width + fl.x)*hpi_depth;
-
-        //color = vec4(0.0, 0.0, 1.0, 1.0);
-        //float vz2 = 0.5;
-
-        uint newIndex = uint(nodeOffset) + oldPosition;
-
-        //if (nodeOffset > 100000000) {
-        //    check1=1;
-        //}
-
-        //if (oldPosition > 50) {
-        //    check2=1;
-        //}
-
-        //if (newIndex > 100000000) {
-        //    check3=1;
-        //}
-
-        nodes[newIndex].color = color;
-        //nodes[newIndex].depth = 1.0 - vz;
-    }
-
-    //}
-
-    //float rC=0.0;
-    //float gC=0.0;
-    //float bC=0.1;
-
-    //if (check1>0) {
-    //    rC=1.0;
-    //}
-
-    //if (check2>0) {
-    //    gC=1.0;
-    //}
-
-    //if (check3>0) {
-    //    bC=1.0;
-    //}
-
-    //blankOut = vec4(rC, gC, bC, 1.0);
+    if (iPosition > -1 && iPosition < MAX_DEPTH) {
+        nodes[xyOffset + zSize*iPosition].color = color;
+        nodes[xyOffset + zSize*iPosition].depth = dz;   
+    } else if (0==1) {
+        // Find the closest fragment and average
+        int closestIndex=0;
+        float closestDistance=10000.0;
+        struct NodeType closestNode;
+        for (int f=0;f<MAX_DEPTH;f++) {
+            struct NodeType fn = nodes[xyOffset + zSize*f];
+            float distance = abs(dz - fn.depth);
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex=f;
+                closestNode=fn;
+            }
+        }
+        vec4 newColor = mix(closestNode.color, color, 0.5);
+        float newDepth = (closestNode.depth + dz)/2.0;
+        closestNode.color = newColor;
+        closestNode.depth = newDepth;
+        nodes[xyOffset + zSize*closestIndex] = closestNode;
+    } 
 
     blankOut = vec4(0.0, 0.0, 0.0, 0.0);
     
-
 }

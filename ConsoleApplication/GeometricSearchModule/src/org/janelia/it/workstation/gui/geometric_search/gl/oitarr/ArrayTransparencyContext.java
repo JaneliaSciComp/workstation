@@ -24,7 +24,7 @@ public class ArrayTransparencyContext {
     public static final int NODE_SIZE = 20; // vec4 color, float depth
     public static final int DEFAULT_WIDTH = 1600;
     public static final int DEFAULT_HEIGHT = 1200;
-    public static final int DEFAULT_DEPTH = 100;
+    public static final int DEFAULT_DEPTH = 50;
 
     IntBuffer headPointerId = IntBuffer.allocate(1);
     IntBuffer headPointerInitializerId = IntBuffer.allocate(1);
@@ -132,24 +132,21 @@ public class ArrayTransparencyContext {
         //gl.glGenBuffers(1, fragmentSSBO);
         //gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 0, fragmentSSBO.get(0));
         //gl.glBufferData(GL4.GL_SHADER_STORAGE_BUFFER, MAX_NODES * NODE_SIZE, null, GL4.GL_DYNAMIC_DRAW);
-        
-        
-        
+            
         gl.glGenBuffers(1, fragmentSSBO);
         checkGlError(gl, "i5 ArrayTransparencyContext glGenBuffers() error");
         
         gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 0, fragmentSSBO.get(0));
         checkGlError(gl, "i7 ArrayTransparencyContext glBindBufferBase() error");
 
-        //gl.glBindBuffer(GL4.GL_SHADER_STORAGE_BUFFER, fragmentSSBO.get(0));
-        //checkGlError(gl, "i6 ArrayTransparencyContext glBindBuffer() error");
-
-        logger.info("Calling glBufferData for SSBO with size="+headPointerTotalPixels);
-        gl.glBufferData(GL4.GL_SHADER_STORAGE_BUFFER, headPointerTotalPixels*depth*16, null, GL4.GL_DYNAMIC_DRAW);
+        gl.glBindBuffer(GL4.GL_SHADER_STORAGE_BUFFER, fragmentSSBO.get(0));
+        checkGlError(gl, "i6 ArrayTransparencyContext glBindBuffer() error");
+        
+        Long bufferLength = new Long(headPointerTotalPixels) * new Long(20) * new Long(depth); // XY , vec4+float, depth
+        
+        logger.info("Calling glBufferData for SSBO with size="+bufferLength);
+        gl.glBufferData(GL4.GL_SHADER_STORAGE_BUFFER, bufferLength, null, GL4.GL_DYNAMIC_DRAW);
         checkGlError(gl, "i8 ArrayTransparencyContext glBufferData() error");
-
- 
-
     }
 
 }

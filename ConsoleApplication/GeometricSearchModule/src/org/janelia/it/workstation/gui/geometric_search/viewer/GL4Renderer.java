@@ -49,8 +49,8 @@ public class GL4Renderer implements GLEventListener
 
 
     // camera parameters
-    private double widthInPixels = 1200;
-    private double heightInPixels = 800;
+    private double widthInPixels = 1600;
+    private double heightInPixels = 1200;
     private GL4Model model;
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;

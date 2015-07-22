@@ -76,7 +76,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
     private void setupArrayCubeExperiment() {
 
-        final int DEPTH = 100;
+        final int DEPTH = 50;
 
         GL4ShaderActionSequence cubeSequence = new GL4ShaderActionSequence("ArrayCube");
         GL4ShaderActionSequence meshSequence = new GL4ShaderActionSequence("Meshes");
@@ -105,7 +105,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             testFile = testJaneliaFile;
         }
 
-        final ArrayCubeActor pa = new ArrayCubeActor(testFile, 1, 0.35f);
+        final ArrayCubeActor pa = new ArrayCubeActor(testFile, 0, 0.20f);
 
         Matrix4 gal4Rotation=new Matrix4();
 
@@ -116,7 +116,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                 0.0f, 0.0f, 0.0f, 1.0f);
         pa.setModel(gal4Rotation);
 
-        pa.setColor(new Vector4(1.0f, 1.0f, 0.0f, 0.5f));
+        pa.setColor(new Vector4(1.0f, 0.0f, 0.0f, 0.01f));
         pa.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
