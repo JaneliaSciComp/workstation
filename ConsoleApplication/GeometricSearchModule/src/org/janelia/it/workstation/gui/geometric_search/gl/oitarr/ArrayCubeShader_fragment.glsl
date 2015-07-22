@@ -2,8 +2,6 @@
 
 struct OITArrNodeType {
     vec4 color;
-    float depth;
-    uint next;
 };
 
 uniform vec4 dcolor;
@@ -38,7 +36,9 @@ void main()
 
     uint oldPosition = imageAtomicAdd(head_pointer_image, fl, 1);
 
-    //int loopFlag=0;
+    //int check1=0;
+    //int check2=0;
+    //int check3=0;
 
     //if (fl.x==0 && fl.y==0) {
     //    nodes[0].color = vec4(1.0, 1.0, 1.0, 1.0);
@@ -54,20 +54,43 @@ void main()
 
         uint newIndex = uint(nodeOffset) + oldPosition;
 
+        //if (nodeOffset > 100000000) {
+        //    check1=1;
+        //}
+
+        //if (oldPosition > 50) {
+        //    check2=1;
+        //}
+
         //if (newIndex > 100000000) {
-        //    loopFlag=1;
+        //    check3=1;
         //}
 
         nodes[newIndex].color = color;
-        nodes[newIndex].depth = 1.0 - vz;
+        //nodes[newIndex].depth = 1.0 - vz;
     }
 
     //}
 
-    blankOut = vec4(0.0, 0.0, 0.0, 0.0);
+    //float rC=0.0;
+    //float gC=0.0;
+    //float bC=0.1;
 
-    //if (loopFlag>0) {
-    //    blankOut = vec4(0.7, 0.7, 1.0, 0.0);
+    //if (check1>0) {
+    //    rC=1.0;
     //}
+
+    //if (check2>0) {
+    //    gC=1.0;
+    //}
+
+    //if (check3>0) {
+    //    bC=1.0;
+    //}
+
+    //blankOut = vec4(rC, gC, bC, 1.0);
+
+    blankOut = vec4(0.0, 0.0, 0.0, 0.0);
+    
 
 }
