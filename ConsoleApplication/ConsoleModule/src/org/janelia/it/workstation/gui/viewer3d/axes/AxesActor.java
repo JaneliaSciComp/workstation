@@ -55,6 +55,7 @@ public class AxesActor implements GLActor
 
     private int lineBufferHandle;
     private int inxBufferHandle;
+	private int colorBufferHandle;
     private int interleavedTexHandle;
     
     private FontInfo axisLabelFontInfo;
@@ -200,20 +201,7 @@ public class AxesActor implements GLActor
         if (reportError( gl, "Display of axes-actor 1" ))
             return;
 
-        float alpha = 1.0f;
-        float[] color = new float[ 3 ];
-        if (volumeModel.isWhiteBackground()) {
-            color[ 0] = 1.0f;
-            color[ 1] = 0.85f;
-            color[ 2] = 0.85f;
-        } else {
-            color[ 0] = 0.30f;
-            color[ 1] = 0.15f;
-            color[ 2] = 0.15f;
-        }
-
         gl.glLineWidth(1.0f);
-        gl.glColor4f( color[ 0 ], color[ 1 ], color[ 2 ], alpha );
         if (reportError( gl, "Display of axes-actor 2" ))
             return;
 
@@ -226,8 +214,20 @@ public class AxesActor implements GLActor
         if (reportError( gl, "Display of axes-actor 4" ))
             return;
 
+		gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, colorBufferHandle );
+		if (reportError( gl, "Display of axes-actor 4a."))
+			return;
+
+		gl.glEnableClientState( GL2.GL_COLOR_ARRAY );
+		if (reportError(gl, "Display of axes-actor 4b.")) {
+			return;
+		}
+		gl.glColorPointer(4, GL2.GL_FLOAT, 0, 0);
+		if (reportError( gl, "Display of axes-actor 4c."))
+			return;
+
         gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle );
-        if (reportError(gl, "Display of axes-actor 4a."))
+        if (reportError(gl, "Display of axes-actor 4d."))
             return;
 
         gl.glDrawElements( GL2.GL_LINES, lineBufferVertexCount, GL2.GL_UNSIGNED_INT, 0 );
@@ -246,7 +246,8 @@ public class AxesActor implements GLActor
         if (reportError(gl, "Axes-actor, end of display."))
             return;                
 
-        gl.glUseProgram(previousShader);
+        // No shader has been in use.  No need to revert.
+		//   gl.glUseProgram(previousShader);
 
 	}
 
@@ -375,8 +376,32 @@ public class AxesActor implements GLActor
         lineBuffer.put(zTicks.getCoords());
         lineBufferVertexCount = lineBuffer.capacity();
         lineBuffer.rewind();
-
-        ByteBuffer inxBase = ByteBuffer.allocateDirect(
+		
+		final int numVertices = baseBuffer.capacity() / 3;		
+		final int colorBufferByteSize = FLOAT_BYTE_SIZE * (numVertices * 4);
+		
+		ByteBuffer colorBaseBuffer = ByteBuffer.allocateDirect( colorBufferByteSize );
+		colorBaseBuffer.order( ByteOrder.nativeOrder() );
+		FloatBuffer colorBuffer = colorBaseBuffer.asFloatBuffer();
+		float alpha = 1.0f;
+		float[] color = new float[3];
+		if (volumeModel.isWhiteBackground()) {
+			color[ 0] = 1.0f;
+			color[ 1] = 0.85f;
+			color[ 2] = 0.85f;
+		} else {
+			color[ 0] = 0.30f;
+			color[ 1] = 0.15f;
+			color[ 2] = 0.15f;
+		}
+		for (int i = 0; i < numVertices; i++) {
+			colorBuffer.put(color);
+			colorBuffer.put(alpha);
+		}
+		colorBuffer.rewind();
+		//NEXT: push this buffer.  Figure out how to turn it on at display
+		
+		ByteBuffer inxBase = ByteBuffer.allocateDirect(
                 nextVertexOffset * Integer.SIZE / 8 *
                         axisGeometry.getIndices().length +
                         xShapeGeometry.getIndices().length +
@@ -415,6 +440,7 @@ public class AxesActor implements GLActor
         // Make handles for subsequent use.
         lineBufferHandle = createBufferHandle( gl );
         inxBufferHandle = createBufferHandle( gl );
+		colorBufferHandle = createBufferHandle( gl );
 
         // Bind data to the handle, and upload it to the GPU.
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, lineBufferHandle);
@@ -423,11 +449,25 @@ public class AxesActor implements GLActor
         }
         gl.glBufferData(
                 GL2.GL_ARRAY_BUFFER,
-                (long) (lineBuffer.capacity() * (Float.SIZE / 8)),
+                (long) (lineBuffer.capacity() * FLOAT_BYTE_SIZE),
                 lineBuffer,
                 GL2.GL_STATIC_DRAW
         );
         if (reportError( gl, "Buffer Data" )) {
+            return false;
+        }
+		
+		gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBufferHandle);
+        if (reportError( gl, "Bind Color buffer" )) {
+            return false;
+        }
+        gl.glBufferData(
+                GL2.GL_ARRAY_BUFFER,
+                (long) (colorBuffer.capacity() * FLOAT_BYTE_SIZE),
+                colorBuffer,
+                GL2.GL_STATIC_DRAW
+        );
+        if (reportError( gl, "Color Buffer Data" )) {
             return false;
         }
 
@@ -448,6 +488,7 @@ public class AxesActor implements GLActor
         
         return rtnVal;
     }
+	public static final int FLOAT_BYTE_SIZE = Float.SIZE / 8;
     
     private int createBufferHandle( GL2 gl ) {
         gl.glGenBuffers( 1, handleArr, 0 );
@@ -487,7 +528,7 @@ public class AxesActor implements GLActor
         }
         gl.glBufferData(
                 GL2.GL_ARRAY_BUFFER,
-                (long) (labelBuf.capacity() * (Float.SIZE / 8)),
+                (long) (labelBuf.capacity() * FLOAT_BYTE_SIZE),
                 labelBuf,
                 GL2.GL_STATIC_DRAW
         );
