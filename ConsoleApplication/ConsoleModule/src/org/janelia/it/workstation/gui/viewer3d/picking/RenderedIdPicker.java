@@ -240,7 +240,7 @@ public class RenderedIdPicker {
 		this.listener = listener;
 	}
 	
-	private boolean inPick() {
+	public boolean inPick() {
 		return x != UNSET_COORD  &&  y != UNSET_COORD;
 	}
 	
