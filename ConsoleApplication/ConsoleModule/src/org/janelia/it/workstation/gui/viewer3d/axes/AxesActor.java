@@ -71,17 +71,6 @@ public class AxesActor implements GLActor
 
     private static final Logger logger = LoggerFactory.getLogger( AxesActor.class );
 
-    static {
-        try {
-            GLProfile profile = GLProfile.get(GLProfile.GL3);
-            final GLCapabilities capabilities = new GLCapabilities(profile);
-            capabilities.setGLProfile( profile );
-        } catch ( Throwable th ) {
-            logger.error( "No GL3 profile available" );
-        }
-
-    }
-
     public AxesActor() {
         setAxisLengths( DEFAULT_AXIS_LEN, DEFAULT_AXIS_LEN, DEFAULT_AXIS_LEN );
     }        

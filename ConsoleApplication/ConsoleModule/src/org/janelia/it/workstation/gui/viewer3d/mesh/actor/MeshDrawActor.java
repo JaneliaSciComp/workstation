@@ -337,7 +337,6 @@ public class MeshDrawActor implements GLActor {
         if (reportError( gl, "Display of mesh-draw-actor 3" ))
             return;
 
-        int storagePerVertexNormalColor = 0;
         if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
             logger.debug("Also doing color attribute.");
             // 3 floats per color. Stride is size of all data combined, offset to first is 1 vertex + 1 normal worth.
@@ -347,8 +346,11 @@ public class MeshDrawActor implements GLActor {
                 return;
 
         }
-        if (configurator.isUseIdAttribute()) {
-            storagePerVertexNormalColor = 3 * storagePerVertex;
+        if (configurator.isUseIdAttribute()  &&  configurator.getPicker().inPick()) {
+            int storagePerVertexNormalColor = 2 * storagePerVertex;
+            if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
+                storagePerVertexNormalColor = 3 * storagePerVertex;
+            }
             logger.debug("Also sending IDs.");
             // 3 floats per id.
             gl.glEnableVertexAttribArray(idAttributeLoc);
@@ -378,6 +380,7 @@ public class MeshDrawActor implements GLActor {
         gl.glDisable( GL2.GL_DEPTH_TEST );
         gl.glDisable( GL2.GL_LINE_SMOOTH );
 		gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, 0 );
+        gl.glEnableVertexAttribArray(0);
 
     }
 
