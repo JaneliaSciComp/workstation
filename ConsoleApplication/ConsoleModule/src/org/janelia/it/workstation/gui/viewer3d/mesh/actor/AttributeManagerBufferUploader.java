@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
  */
 public class AttributeManagerBufferUploader implements BufferUploader {
     private static final Logger logger = LoggerFactory.getLogger(AttributeManagerBufferUploader.class);
-    private int vtxAttribBufferHandle;
-    private int inxBufferHandle;
+    private int vtxAttribBufferHandle = -1;
+    private int inxBufferHandle = -1;
     private int indexCount;
     
     private final MeshDrawActorConfigurator configurator;
@@ -45,7 +45,7 @@ public class AttributeManagerBufferUploader implements BufferUploader {
         this.vtxAttribBufferHandle = handleArr[0];
         this.inxBufferHandle = handleArr[1];
 
-        if (reportError(gl, "Bind buffer")) {
+        if (reportError(gl, "Gen Buffer Handles.")) {
             throw new BufferStateException();
         }
         final Map<Long, RenderBuffersBean> renderIdToBuffers
