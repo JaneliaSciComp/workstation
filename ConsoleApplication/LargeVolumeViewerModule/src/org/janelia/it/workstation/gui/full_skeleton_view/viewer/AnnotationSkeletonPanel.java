@@ -59,20 +59,31 @@ public class AnnotationSkeletonPanel extends JPanel {
     private MeshViewContext context;
     private UniqueColorSelector ucSelector;
 	private RenderedIdPicker picker;
+    private SkeletonActor linesDrawActor;
     
     private Collection<GLActor> coreActors = new ArrayList<>();
     private Collection<GLActor> fixedFunctionActors = new ArrayList<>();
+    private boolean meshMode = true;
     
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
         this.setLayout(new BorderLayout());
     }
     
+    /** T=draw with mesh; F=draw with lines. */
+    public void setMeshMode(boolean isMesh) {
+        meshMode = isMesh;
+    }
+    
+    public boolean isMeshMode() {
+        return meshMode;
+    }
+    
     public void establish3D() {
         if (viewer == null  &&  dataSource.getSkeleton() != null  &&  dataSource.getSkeleton().getTileFormat() != null) {
             // Establish the lines-ish version of the skele viewer.
             // This one also acts as a collector of data.
-            SkeletonActor linesDrawActor = new SkeletonActor();
+            linesDrawActor = new SkeletonActor();
             linesDrawActor.setParentAnchorImageName( SkeletonActor.ParentAnchorImage.LARGE );
             linesDrawActor.setNeuronStyleModel( dataSource.getNeuronStyleModel() );
             linesDrawActor.setShowOnlyParentAnchors( true );
@@ -87,7 +98,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             // Establish the renderer.
             OcclusiveRenderer renderer = new OcclusiveRenderer();
             final SkeletalBoundsResetPositioner skeletalBoundsResetPositioner = new SkeletalBoundsResetPositioner(dataSource.getSkeleton());
-            renderer.setResetPositioner( skeletalBoundsResetPositioner);
+            renderer.setResetPositioner( skeletalBoundsResetPositioner );
 
             // Establish the viewer.
             viewer = new OcclusiveViewer(renderer);            
@@ -120,11 +131,6 @@ public class AnnotationSkeletonPanel extends JPanel {
             linesDrawActor.setZThicknessInPixels( Long.MAX_VALUE );
             linesDrawActor.updateAnchors();
 
-            // This should be done after establishing the skeleton.
-            SkeletonController controller = SkeletonController.getInstance();
-            controller.registerForEvents(linesDrawActor);
-            controller.registerForEvents(viewer);
-
             DirectionalReferenceAxesActor refAxisActor = new DirectionalReferenceAxesActor(
                     new float[] { 100.0f, 100.0f, 100.0f },
                     boundingBox,
@@ -138,26 +144,33 @@ public class AnnotationSkeletonPanel extends JPanel {
             MDReturn meshDrawResults = buildMeshDrawActor( context, originalBoundingBox );
             final MeshDrawActor meshDrawActor = meshDrawResults.getActor();
             GLActor axesActor = buildOpenGLCoreAxesActor( originalBoundingBox, 1.0, context );
-            GLActor ffAxesActor = buildOpenGLFIxedFunctionActor( originalBoundingBox, 1.0, volumeModel);
+            GLActor ffAxesActor = buildOpenGLFixedFunctionActor( originalBoundingBox, 1.0, volumeModel);
             
             // NOTE: refAxisActor is forcing all 'conventional' actors which
             // display after it, into the same confined corner of the screen.
             // The 'meshDrawActor' may be permitted to follow it, but the
             // others may not.
+            coreActors.clear();
             coreActors.add(axesActor);
             coreActors.add(meshDrawActor);
             coreActors.add(refAxisActor);
             
+            fixedFunctionActors.clear();
             fixedFunctionActors.add(ffAxesActor);
             fixedFunctionActors.add(linesDrawActor);
-            fixedFunctionActors.add(refAxisActor);
+            //fixedFunctionActors.add(refAxisActor);
             
             viewer.addMenuAction(new BackgroundPickAction(viewer));
+//            viewer.addMenuAction(
+//                new ActorSwapAction(
+//                    viewer,
+//                    coreActors, "Mesh Draw",
+//                    fixedFunctionActors, "Lines Draw"
+//                )
+//            );
             viewer.addMenuAction(
-                new ActorSwapAction(
-                    viewer,
-                    coreActors, "Mesh Draw",
-                    fixedFunctionActors, "Lines Draw"
+                new ModeSwapAction(
+                    this, "Mesh Draw", "Lines Draw"
                 )
             );
             
@@ -175,9 +188,21 @@ public class AnnotationSkeletonPanel extends JPanel {
                 viewer.addMenuAction(menuAction);
             }
             
+            // This should be done after establishing the skeleton.
+            SkeletonController controller = SkeletonController.getInstance();
+            controller.registerForEvents(viewer);
+            controller.registerForEvents(linesDrawActor);
+
             // Add the initial actor list.
-            for (GLActor actor: coreActors) {
-                viewer.addActor(actor);
+            if (meshMode) {
+                for (GLActor actor : coreActors) {
+                    viewer.addActor(actor);
+                }
+            }
+            else {
+                for (GLActor actor: fixedFunctionActors) {
+                    viewer.addActor(actor);
+                }
             }
             
             this.add(viewer, BorderLayout.CENTER);
@@ -197,12 +222,16 @@ public class AnnotationSkeletonPanel extends JPanel {
             viewer.invalidate();
             viewer.validate();
             viewer.repaint();
-        }
+        }        
     }
     
     public void close() {
         if (viewer != null ) {
             viewer.clear();
+            SkeletonController controller = SkeletonController.getInstance();
+            controller.unregister(viewer);
+            controller.unregister(linesDrawActor);
+            this.remove(viewer);
             viewer = null;
         }
     }
@@ -222,7 +251,7 @@ public class AnnotationSkeletonPanel extends JPanel {
      * @param volumeModel tells the axes actor whether its background will be white.
      * @return the actor.
      */
-    public GLActor buildOpenGLFIxedFunctionActor(BoundingBox3d boundingBox, double axisLengthDivisor, VolumeModel volumeModel) {
+    public GLActor buildOpenGLFixedFunctionActor(BoundingBox3d boundingBox, double axisLengthDivisor, VolumeModel volumeModel) {
         org.janelia.it.workstation.gui.viewer3d.axes.AxesActor axes = new org.janelia.it.workstation.gui.viewer3d.axes.AxesActor();
         axes.setVolumeModel(volumeModel);
         axes.setBoundingBox(boundingBox);
@@ -510,6 +539,47 @@ public class AnnotationSkeletonPanel extends JPanel {
        
     }
     
+    public static class ModeSwapAction extends AbstractAction {
+
+        private final static String SWAP_FORMAT = "Replace %s with %s.";
+        private final String firstLabel;
+        private final String secondLabel;
+
+        private boolean inCore = true;
+        private AnnotationSkeletonPanel swapPanel;
+
+        public ModeSwapAction(
+                AnnotationSkeletonPanel swapPanel,
+                String firstActorLabel,
+                String secondActorLabel
+        ) {
+            this.swapPanel = swapPanel;
+            this.firstLabel = String.format(SWAP_FORMAT, firstActorLabel, secondActorLabel);
+            this.secondLabel = String.format(SWAP_FORMAT, secondActorLabel, firstActorLabel);
+            inCore = swapPanel.isMeshMode();
+
+            putValue(Action.NAME, inCore ? firstLabel : secondLabel);
+
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (inCore) {
+                inCore = false;
+                putValue(Action.NAME, secondLabel);
+            } else {
+                inCore = true;
+                putValue(Action.NAME, firstLabel);
+            }
+            swapPanel.close();
+            swapPanel.setMeshMode(inCore);
+            swapPanel.establish3D();
+            swapPanel.validate();
+            swapPanel.repaint();
+        }
+
+    }
+
     public static class SkeletalBoundsResetPositioner implements ResetPositionerI {
         private Skeleton skeleton;
         private OcclusiveViewer viewer;
