@@ -1,22 +1,28 @@
 package org.janelia.it.workstation.gui.geometric_search.search;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 
 import javax.media.opengl.GL4;
 import javax.swing.*;
 
 import org.janelia.it.workstation.gui.geometric_search.gl.*;
+import org.janelia.it.workstation.gui.geometric_search.gl.mesh.OITMeshDrawShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArrayCubeActor;
+import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArrayCubeShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArraySortShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.volume.SparseVolumeCubeActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.GL4Viewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import org.janelia.geometry3d.Vector4;
+import org.janelia.it.workstation.gui.geometric_search.gl.mesh.MeshObjActor;
+import org.janelia.it.workstation.gui.geometric_search.gl.volume.OITCubeShader;
 
 
 /**
@@ -51,17 +57,10 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         viewer.setPreferredSize(new Dimension(1600, 1200));
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
-
-        //setupVolumeExperiment();
         
-        setupOITMeshExperiment();
-
-//        GL4ShaderActionSequence actionSequence = new GL4ShaderActionSequence("Experimental Shader Action Sequence");
-//
-//        setupTexelExperiment(actionSequence);
-//
-//        logger.info("Adding glSequence...");
-//        viewer.addShaderAction(actionSequence);
+        //setupOITMeshExperiment();
+        //setupCubeExperiment();
+        setupArrayCubeExperiment();
 
         add(viewer, BorderLayout.CENTER);
 
@@ -73,6 +72,228 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         }
         viewer.resetView();
         viewer.refresh();
+    }
+
+    private void setupArrayCubeExperiment() {
+
+        final int DEPTH = 50;
+
+        GL4ShaderActionSequence cubeSequence = new GL4ShaderActionSequence("ArrayCube");
+        GL4ShaderActionSequence meshSequence = new GL4ShaderActionSequence("Meshes");
+        GL4ShaderActionSequence sortSequence = new GL4ShaderActionSequence("Sort Phase");
+
+        // VOLUME //////////////////////////////////////////////////////////////
+
+        final ArrayCubeShader cubeShader = new ArrayCubeShader();
+
+        cubeShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+              logger.info("Calling cubeShader.set* with depth="+DEPTH);
+                cubeShader.setWidth(gl, viewer.getWidth());
+                cubeShader.setHeight(gl, viewer.getHeight());
+                cubeShader.setDepth(gl, DEPTH);            }
+        });
+
+        File testHomeFile = new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd");
+        File testJaneliaFile = new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd");
+        File testFile = null;
+
+        if (testHomeFile.exists()) {
+            testFile = testHomeFile;
+        } else {
+            testFile = testJaneliaFile;
+        }
+
+        final ArrayCubeActor pa = new ArrayCubeActor(testFile, 0, 0.25f);
+
+        Matrix4 gal4Rotation=new Matrix4();
+
+        // Empirically derived - for GAL4 samples
+        gal4Rotation.setTranspose(-1.0f, 0.0f, 0.0f, 0.5f,
+                0.0f, -1.0f, 0.0f, 0.25f,
+                0.0f, 0.0f, -1.0f, 0.625f,
+                0.0f, 0.0f, 0.0f, 1.0f);
+        //pa.setModel(gal4Rotation);
+
+        pa.setColor(new Vector4(1.0f, 1.0f, 0.0f, 0.05f));
+        pa.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                Matrix4 view = viewer.getRenderer().getViewMatrix();
+                Matrix4 proj = viewer.getRenderer().getProjectionMatrix();
+                Matrix4 model = pa.getModel();
+
+                Matrix4 viewCopy = new Matrix4(view);
+                Matrix4 projCopy = new Matrix4(proj);
+                Matrix4 modelCopy = new Matrix4(model);
+
+                Matrix4 vp = viewCopy.multiply(projCopy);
+                Matrix4 mvp = modelCopy.multiply(vp);
+
+                cubeShader.setMVP(gl, mvp);
+                cubeShader.setProjection(gl, projCopy);
+                cubeShader.setWidth(gl, viewer.getWidth());
+                cubeShader.setHeight(gl, viewer.getHeight());
+                cubeShader.setDepth(gl, DEPTH);
+
+                float voxelUnitSize = pa.getVoxelUnitSize();
+                //float voxelUnitSize = 0.01f;
+                cubeShader.setVoxelUnitSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
+
+                cubeShader.setDrawColor(gl, pa.getColor());
+            }
+        });
+        cubeSequence.getActorSequence().add(pa);
+        cubeSequence.setShader(cubeShader);
+               
+       /////////////////////////////////////////////////////////////////////////
+
+
+        final ArraySortShader sortShader = new ArraySortShader();
+        sortShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                logger.info("Calling sortShader.set* with depth="+DEPTH);
+                sortShader.setWidth(gl, viewer.getWidth());
+                sortShader.setHeight(gl, viewer.getHeight());
+                sortShader.setDepth(gl, DEPTH);
+            }
+        });
+
+        sortSequence.setShader(sortShader);
+        
+        /////////////////////////////////////////////////////////////////////////
+        
+        viewer.addShaderAction(cubeSequence);
+        //viewer.addShaderAction(meshSequence);
+        viewer.addShaderAction(sortSequence);
+    }
+    
+    private void setupCubeExperiment() {
+        GL4ShaderActionSequence cubeSequence = new GL4ShaderActionSequence("Cube");
+        GL4ShaderActionSequence meshSequence = new GL4ShaderActionSequence("Meshes");
+        GL4ShaderActionSequence sortSequence = new GL4ShaderActionSequence("Sort Phase");
+        
+        // VOLUME //////////////////////////////////////////////////////////////
+
+        final OITCubeShader cubeShader = new OITCubeShader();
+        
+        cubeShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                // Do nothing since we want to update MVP at model level
+            }
+        });
+        
+        File testHomeFile = new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd");
+        File testJaneliaFile = new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd");
+        File testFile = null;
+
+        if (testHomeFile.exists()) {
+            testFile = testHomeFile;
+        } else {
+            testFile = testJaneliaFile;
+        }
+
+        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(testFile, 1, 0.35f);
+        
+        Matrix4 gal4Rotation=new Matrix4();
+      
+        // Empirically derived - for GAL4 samples
+        gal4Rotation.setTranspose(-1.0f,   0.0f,   0.0f,   0.5f,
+                                     0.0f,  -1.0f,   0.0f,   0.25f,
+                                     0.0f,   0.0f,  -1.0f,   0.625f,
+                                     0.0f,   0.0f,   0.0f,   1.0f);
+        pa.setModel(gal4Rotation);
+        
+        pa.setColor(new Vector4(1.0f, 0.0f, 0.0f, 0.01f));
+        pa.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                Matrix4 view = viewer.getRenderer().getViewMatrix();
+                Matrix4 proj = viewer.getRenderer().getProjectionMatrix();
+                Matrix4 model = pa.getModel();
+                
+                Matrix4 viewCopy = new Matrix4(view);
+                Matrix4 projCopy = new Matrix4(proj);
+                Matrix4 modelCopy = new Matrix4(model);
+                
+                Matrix4 vp = viewCopy.multiply(projCopy);
+                Matrix4 mvp = modelCopy.multiply(vp);
+                cubeShader.setMVP(gl, mvp);
+                cubeShader.setProjection(gl, projCopy);
+
+                float voxelUnitSize = pa.getVoxelUnitSize();
+                //float voxelUnitSize = 0.2f;
+                cubeShader.setVoxelUnitSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
+                
+                cubeShader.setDrawColor(gl, pa.getColor());
+            }
+        });
+        cubeSequence.getActorSequence().add(pa);
+        cubeSequence.setShader(cubeShader);
+        
+        
+        // MESHES //////////////////////////////////////////////////////////////
+        
+        final OITMeshDrawShader drawShader = new OITMeshDrawShader();
+        
+        drawShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                Matrix4 viewMatrix = viewer.getRenderer().getViewMatrix();
+                drawShader.setView(gl, viewMatrix);
+                Matrix4 projMatrix = viewer.getRenderer().getProjectionMatrix();
+                drawShader.setProjection(gl, projMatrix);
+            }
+        });
+       
+        File testHomeMeshDir = new File("C:\\cygwin64\\home\\murphys\\meshes");
+        File testJaneliaMeshDir = new File("U:\\meshes");
+        File testMeshDir = null;
+        
+        if (testHomeMeshDir.exists()) {
+            testMeshDir = testHomeMeshDir;
+        } else {
+            testMeshDir = testJaneliaMeshDir;
+        }
+        
+        File[] meshFiles = testMeshDir.listFiles();
+                
+        Random rand = new Random();       
+        Matrix4 vertexRotation=new Matrix4();
+      
+        // Empirically derived - compatible with results of MeshLab import/export from normalized compartment coordinates
+        vertexRotation.setTranspose(-1.0f,   0.0f,   0.0f,   0.5f,
+                                     0.0f,  -1.0f,   0.0f,   0.25f,
+                                     0.0f,   0.0f,  -1.0f,   0.625f,
+                                     0.0f,   0.0f,   0.0f,   1.0f);
+        
+        for (File meshFile : meshFiles) {
+            if (meshFile.getName().endsWith(".obj")) {
+                final MeshObjActor ma = new MeshObjActor(meshFile);
+                ma.setVertexRotation(vertexRotation);
+                ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.5f));
+                ma.setUpdateCallback(new GLDisplayUpdateCallback() {
+                    @Override
+                    public void update(GL4 gl) {
+                        Matrix4 actorModel = ma.getModel();
+                        drawShader.setModel(gl, actorModel);
+                        drawShader.setDrawColor(gl, ma.getColor());
+                    }
+                });
+                meshSequence.getActorSequence().add(ma);
+            }
+        }      
+        meshSequence.setShader(drawShader);
+               
+       /////////////////////////////////////////////////////////////////////////
+        
+        viewer.addShaderAction(cubeSequence);
+        viewer.addShaderAction(meshSequence);
+        sortSequence.setShader(new OITSortShader());
+        viewer.addShaderAction(sortSequence);      
     }
     
     private void setupVolumeExperiment() {
@@ -93,9 +314,9 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                 
         volumeSequence.setShader(volumeShader);
         
-        final VolumeActor volumeActor = new VolumeActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"));
+        //final VolumeActor volumeActor = new VolumeActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"));
  
-        //final VolumeActor volumeActor = new VolumeActor(new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"));
+        final VolumeActor volumeActor = new VolumeActor(new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"));
 
         volumeSequence.getActorSequence().add(volumeActor);
         
@@ -109,7 +330,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         GL4ShaderActionSequence sortSequence = new GL4ShaderActionSequence("Sort Phase");
 
         final OITMeshDrawShader drawShader = new OITMeshDrawShader();
-        final OITMeshSortShader sortShader = new OITMeshSortShader();
+        final OITSortShader sortShader = new OITSortShader();
 
         // Setup Draw Shader  //////////////////////////////
 
@@ -127,9 +348,17 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         });
 
         
-        File meshDir = new File("U:\\meshes");
+        File testHomeMeshDir = new File("C:\\cygwin64\\home\\murphys\\meshes");
+        File testJaneliaMeshDir = new File("U:\\meshes");
+        File testMeshDir = null;
         
-        File[] meshFiles = meshDir.listFiles();
+        if (testHomeMeshDir.exists()) {
+            testMeshDir = testHomeMeshDir;
+        } else {
+            testMeshDir = testJaneliaMeshDir;
+        }
+        
+        File[] meshFiles = testMeshDir.listFiles();
         
         drawSequence.setShader(drawShader);
         
@@ -145,7 +374,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         
 //        for (File meshFile : meshFiles) {
 //            if (meshFile.getName().endsWith(".obj")) {
-//                final MeshObjFileV2Actor ma = new MeshObjFileV2Actor(meshFile);
+//                final MeshObjActor ma = new MeshObjActor(meshFile);
 //                ma.setVertexRotation(vertexRotation);
 //                ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.5f));
 //                ma.setUpdateCallback(new GLDisplayUpdateCallback() {
@@ -159,10 +388,19 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 //                drawSequence.getActorSequence().add(ma);
 //            }
 //        }
-        
-        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);        
-        //final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);
-        
+
+        File testHomeFile = new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd");
+        File testJaneliaFile = new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd");
+        File testFile = null;
+
+        if (testHomeFile.exists()) {
+            testFile = testHomeFile;
+        } else {
+            testFile = testJaneliaFile;
+        }
+
+        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(testFile, 0, 0.2f);
+
         //final SparseVolumePointActor pa = new SparseVolumePointActor(new File("U:\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 0, 0.2f);
         //final SparseVolumePointActor pa = new SparseVolumePointActor(new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd"), 1);
 
@@ -204,44 +442,6 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
 
         actionSequence.setShader(shader);
         actionSequence.getActorSequence().add(texelActor);
-    }
-
-    private void setupMeshExperiment(GL4ShaderActionSequence actionSequence) {
-        final MeshObjFileV2Shader shader = new MeshObjFileV2Shader();
-
-        shader.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL4 gl) {
-                Matrix4 viewMatrix=viewer.getRenderer().getViewMatrix();
-                shader.setView(gl, viewMatrix);
-                Matrix4 projMatrix=viewer.getRenderer().getProjectionMatrix();
-                shader.setProjection(gl, projMatrix);
-            }
-        });
-
-        final MeshObjFileV2Actor meshActor1 = new MeshObjFileV2Actor(new File("/Users/murphys/meshes/compartment_62.obj"));
-
-        meshActor1.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL4 gl) {
-                Matrix4 actorModel = meshActor1.getModel();
-                shader.setModel(gl, actorModel);
-            }
-        });
-
-        final MeshObjFileV2Actor meshActor2 = new MeshObjFileV2Actor(new File("/Users/murphys/meshes/compartment_39.obj"));
-
-        meshActor2.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL4 gl) {
-                Matrix4 actorModel = meshActor2.getModel();
-                shader.setModel(gl, actorModel);
-            }
-        });
-
-        actionSequence.setShader(shader);
-        actionSequence.getActorSequence().add(meshActor1);
-        actionSequence.getActorSequence().add(meshActor2);
     }
 
 }

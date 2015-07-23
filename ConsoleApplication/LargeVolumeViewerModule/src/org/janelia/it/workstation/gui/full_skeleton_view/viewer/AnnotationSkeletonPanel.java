@@ -44,6 +44,8 @@ import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.AttributeManagerBufferUploader;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
+import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
+import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
 
 /**
  * This panel holds all relevant components for showing the skeleton of
@@ -55,6 +57,8 @@ public class AnnotationSkeletonPanel extends JPanel {
     private final AnnotationSkeletonDataSourceI dataSource;
     private OcclusiveViewer viewer;
     private MeshViewContext context;
+    private UniqueColorSelector ucSelector;
+	private RenderedIdPicker picker;
     
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
@@ -154,16 +158,7 @@ public class AnnotationSkeletonPanel extends JPanel {
                 public void mouseClicked(MouseEvent me) {
                     long selectedAnnotation = select(me.getX(), me.getY());
                     if (selectedAnnotation > 0) {
-                        final SkeletonController skeletonController = SkeletonController.getInstance();
-                        //skeletonController.annotationSelected(selectedAnnotation);
-                        Vec3 focus = skeletonController.getAnnotationPosition(selectedAnnotation);
-                        if (focus != null) {
-                            skeletonController.setLVVFocus(focus);
-                            context.getCamera3d().setFocus(focus);
-                            viewer.invalidate();
-                            viewer.validate();
-                            viewer.repaint();
-                        }
+                        positionForSelection(selectedAnnotation);
                     }
                 }
             });
@@ -176,6 +171,19 @@ public class AnnotationSkeletonPanel extends JPanel {
             validate();
             repaint();
             controller.registerForEvents(this);
+        }
+    }
+
+    public void positionForSelection(long selectedAnnotation) {
+        final SkeletonController skeletonController = SkeletonController.getInstance();
+        //skeletonController.annotationSelected(selectedAnnotation);
+        Vec3 focus = skeletonController.getAnnotationPosition(selectedAnnotation);
+        if (focus != null) {
+            skeletonController.setLVVFocus(focus);
+            context.getCamera3d().setFocus(focus);
+            viewer.invalidate();
+            viewer.validate();
+            viewer.repaint();
         }
     }
     
@@ -231,16 +239,21 @@ public class AnnotationSkeletonPanel extends JPanel {
         configurator.setContext(context);
         configurator.setMatrixScope(MeshDrawActor.MatrixScope.LOCAL);                  
         
-        final NeuronTraceVtxAttribMgr attributeManager = new NeuronTraceVtxAttribMgr();        
+        final NeuronTraceVtxAttribMgr attributeManager = new NeuronTraceVtxAttribMgr(); 
+        ucSelector = new UniqueColorSelector(dataSource, attributeManager, this);
         attributeManager.setDataSource(dataSource);
         configurator.setVertexAttributeManager(attributeManager);
         configurator.setColoringStrategy(MeshDrawActor.ColoringStrategy.ATTRIBUTE);
+        configurator.setUseIdAttribute(true);
         configurator.setBoundingBox(boundingBox);
         // This is the testing opportunity.  This may be swapped with a different
         // buffer uploader, if doubt should arise re: the accuracy of the geometry.
         configurator.setBufferUploader(
                 new AttributeManagerBufferUploader(configurator)
         );
+		picker = new RenderedIdPicker((IdCoderProvider)attributeManager);
+		configurator.setPicker( picker );
+	    picker.setPixelListener(ucSelector);
         
         MeshDrawActor meshDraw = new MeshDrawActor(configurator);
         SkeletonController.getInstance().registerForEvents(
@@ -251,6 +264,7 @@ public class AnnotationSkeletonPanel extends JPanel {
         rtnVal.setActor(meshDraw);
         
         rtnVal.getMenuActions().add( new SerializeWaveFrontAction(attributeManager, AnnotationSkeletonPanel.this) );
+        rtnVal.getMenuActions().add( new SphereSizeAction(attributeManager, meshDraw, AnnotationSkeletonPanel.this) );
         
         return rtnVal;
     }
@@ -265,11 +279,10 @@ public class AnnotationSkeletonPanel extends JPanel {
      */
     private long select(int mouseX, int mouseY) {
         long rtnVal = -1L;
-        if (context != null) {
-            RayCastSelector rayCastSelector = new RayCastSelector( 
-                    dataSource, context, viewer.getWidth(), viewer.getHeight() 
-            );
-            rtnVal = rayCastSelector.select(mouseX, mouseY);
+        if (context != null) {            
+			picker.setPickCoords(mouseX, mouseY);
+            this.validate();
+            this.repaint();
         }
         return rtnVal;
     }
@@ -344,6 +357,41 @@ public class AnnotationSkeletonPanel extends JPanel {
             } catch ( Exception ex ) {
                 SessionMgr.getSessionMgr().handleException(ex);
             }
+        }
+        
+    }
+    
+    public static class SphereSizeAction extends AbstractAction {
+
+        private final NeuronTraceVtxAttribMgr attributeManager;
+        private final MeshDrawActor meshDraw;
+        private final AnnotationSkeletonPanel panel;
+
+        public SphereSizeAction(
+                NeuronTraceVtxAttribMgr attributeManager,
+                MeshDrawActor meshDraw, 
+                AnnotationSkeletonPanel panel
+        ) {
+            this.attributeManager = attributeManager;
+            this.meshDraw = meshDraw;
+            this.panel = panel;
+            putValue(Action.NAME, "Toggle Landmark Sphere Sizes");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (attributeManager.getAnnoRadius() == NeuronTraceVtxAttribMgr.ANNO_RADIUS) {
+                attributeManager.setAnnoRadius(NeuronTraceVtxAttribMgr.ANNO_RADIUS / 2.0);
+                attributeManager.setCurrentSelectionRadius(attributeManager.getAnnoRadius() * 2.0);
+            }
+            else {
+                attributeManager.setAnnoRadius(NeuronTraceVtxAttribMgr.ANNO_RADIUS);
+                attributeManager.setCurrentSelectionRadius(NeuronTraceVtxAttribMgr.CURRENT_SELECTION_RADIUS);
+            }
+            // Must force re-build/re-send
+            meshDraw.refresh();
+            panel.validate();
+            panel.repaint();
         }
         
     }

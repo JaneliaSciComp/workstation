@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL4;
@@ -28,6 +29,7 @@ public abstract class GL4Shader
     protected static GLU glu = new GLU();
 
     private int vertexShader = 0;
+    private int geometryShader = 0;
     private int fragmentShader = 0;
     private int shaderProgram = 0;
     private int previousShader = 0;
@@ -38,6 +40,7 @@ public abstract class GL4Shader
 
     /**  All abstract methods.  Implement these for the specifics. */
     public abstract String getVertexShaderResourceName();
+    public String getGeometryShaderResourceName() { return null; }
     public abstract String getFragmentShaderResourceName();
 
     private Logger logger = LoggerFactory.getLogger( GL4Shader.class );
@@ -55,22 +58,42 @@ public abstract class GL4Shader
         // Create shader program
         if ( getVertexShaderResourceName() != null ) {
             vertexShader = gl.glCreateShader(GL4.GL_VERTEX_SHADER);
+            logger.info("Loading vertex shader");
             loadOneShader(vertexShader, getVertexShaderResourceName(), gl);
+            
+            if (getGeometryShaderResourceName()!=null) {
+                geometryShader = gl.glCreateShader(GL4.GL_GEOMETRY_SHADER);
+                logger.info("Loading geometry shader");
+                loadOneShader(geometryShader, getGeometryShaderResourceName(), gl);
+            }
 
             // System.out.println("loaded vertex shader");
             fragmentShader = gl.glCreateShader(GL4.GL_FRAGMENT_SHADER);
+            logger.info("Loading fragment shader");
             loadOneShader(fragmentShader, getFragmentShaderResourceName(), gl);
 
             // System.out.println("loaded fragment shader");
             if (shaderProgram == 0)
                 shaderProgram = gl.glCreateProgram();
+            logger.info("Attaching vertex shader");
             gl.glAttachShader(shaderProgram, vertexShader);
+            if (geometryShader!=0) {
+                logger.info("Attaching geometry shader");
+                gl.glAttachShader(shaderProgram, geometryShader);
+            }
+            logger.info("Attaching fragment shader");
             gl.glAttachShader(shaderProgram, fragmentShader);
+            logger.info("Linking program");
             gl.glLinkProgram(shaderProgram);
+            logger.info("Validating program");
             gl.glValidateProgram(shaderProgram);
+            logger.info("Post-validation");
             IntBuffer intBuffer = IntBuffer.allocate(1);
+            logger.info("Retrieving link status");
             gl.glGetProgramiv(shaderProgram, GL4.GL_LINK_STATUS, intBuffer);
+            logger.info("Checking link status value");
             if (intBuffer.get(0) != 1) {
+                logger.info("Found problem - retrieving error log");
                 gl.glGetProgramiv(shaderProgram, GL4.GL_INFO_LOG_LENGTH, intBuffer);
                 int size = intBuffer.get(0);
                 StringBuilder errBuilder = new StringBuilder();
@@ -91,6 +114,11 @@ public abstract class GL4Shader
                 throw new ShaderCreationException( errBuilder.toString() );
 
             }
+            LongBuffer lb = LongBuffer.allocate(1);
+            gl.glGetInteger64v(GL4.GL_MAX_SHADER_STORAGE_BLOCK_SIZE, lb);
+            logger.info("MAX_SHADER_STORAGE_BLOCK_SIZE="+lb.get(0));
+            gl.glGetInteger64v(GL4.GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, lb);
+            logger.info("MAX_SHADER_STORAGE_BUFFER_BINDINGS="+lb.get(0));
         }
     }
 

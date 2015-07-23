@@ -50,7 +50,8 @@ public class NeuronTraceVtxAttribMgrTest {
 
     @Test
     public void buildAttributes() throws Exception {
-        LineEnclosureFactory factory = new LineEnclosureFactory(6, 16.0);
+        VertexNumberGenerator vng = new VertexNumberGenerator();
+        LineEnclosureFactory factory = new LineEnclosureFactory(6, 16.0, vng);
         double[] startingCoords = new double[] {
             300, 210, 520
         };
@@ -70,7 +71,7 @@ public class NeuronTraceVtxAttribMgrTest {
         triangleSources.add( factory );
         
         NeuronTraceVtxAttribMgr attribMgr = new NeuronTraceVtxAttribMgr();
-        attribMgr.populateNormals(triangleSources, renderIdToBuffers);
+        attribMgr.handleRenderBuffers(triangleSources, renderIdToBuffers);
         attribMgr.exportVertices(new File("/Users/fosterl/"), "UnitTest_VtxAttribMgr", triangleSources, 500L);
     }
     

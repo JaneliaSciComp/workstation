@@ -40,7 +40,8 @@ public class PointEnclosureFactoryTest {
 
     @Test
     public void enclosePoints() {
-        PointEnclosureFactory factory = new PointEnclosureFactory(10, 10.0);
+        VertexNumberGenerator vng = new VertexNumberGenerator();
+        PointEnclosureFactory factory = new PointEnclosureFactory(10, 10.0, vng);
         factory.getVertices();        
     }
 

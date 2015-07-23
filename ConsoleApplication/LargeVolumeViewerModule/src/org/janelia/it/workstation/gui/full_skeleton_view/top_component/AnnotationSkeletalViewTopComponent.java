@@ -12,7 +12,8 @@ import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 
 /**
- * Top component which displays something.
+ * Top component for landmark annotations.  Used for rapid, "random access"
+ * of regions of the volume.
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.full_skeleton_view.top_component//AnnotationSkeletalView//EN",
@@ -32,7 +33,7 @@ import org.openide.util.NbBundle.Messages;
 )
 @Messages({
     "CTL_AnnotationSkeletalViewAction=AnnotationSkeletalView",
-    "CTL_AnnotationSkeletalViewTopComponent=LVV Annotation Landmarks",
+    "CTL_AnnotationSkeletalViewTopComponent=LVV Landmarks",
     "HINT_AnnotationSkeletalViewTopComponent=Skeletal View of LVV Annotations"
 })
 public final class AnnotationSkeletalViewTopComponent extends TopComponent {

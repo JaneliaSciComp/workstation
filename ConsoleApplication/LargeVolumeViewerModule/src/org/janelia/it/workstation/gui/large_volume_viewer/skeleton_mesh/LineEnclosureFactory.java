@@ -33,8 +33,6 @@ public class LineEnclosureFactory implements TriangleSource {
     private static final int X = 0, Y = 1, Z = 2;
 	private static final int PERPENDICULAR_ALIGNMENT = 100;
     
-    private int currentVertexNumber = 0;
-
     private final List<VertexInfoBean> vertices = new ArrayList<>();
     private final List<Triangle> triangles = new ArrayList<>();
     private final ViewMatrixSupport matrixUtils = new ViewMatrixSupport();
@@ -48,9 +46,12 @@ public class LineEnclosureFactory implements TriangleSource {
     private final List<double[][]> endCapPolygonsHolder = new ArrayList<>();
     
     private PolygonSource polygonSource;
+    private boolean includeIDs = true;
+    private final VertexNumberGenerator vertexNumberGenerator;
     
-    public LineEnclosureFactory(int endPolygonSides, double endPolygonRadius) {
+    public LineEnclosureFactory(int endPolygonSides, double endPolygonRadius, VertexNumberGenerator vertexNumberGenerator) {
         setCharacteristics(endPolygonSides, endPolygonRadius);
+        this.vertexNumberGenerator = vertexNumberGenerator;
     }
     
     public final void setCharacteristics( int endPolygonSides, double endPolygonRadius ) {
@@ -61,6 +62,11 @@ public class LineEnclosureFactory implements TriangleSource {
         this.endPolygonRadius = endPolygonRadius;
         this.zAxisAlignedPrototypePolygon = polygonSource.createZAxisAlignedPrototypeEndPolygon();
         axisAlignedPrototypePolygons.put(2, this.zAxisAlignedPrototypePolygon);
+    }
+    
+    /** Override the default 'include ids in buffers' behavior. */
+    public void setIncludeIDs( boolean value ) {
+        this.includeIDs = value;
     }
     
     public int addEnclosure(double[] startingCoords, double[] endingCoords) {
@@ -100,20 +106,6 @@ public class LineEnclosureFactory implements TriangleSource {
         return coordCount;
     }
 
-    /**
-     * @return the currentVertexNumber
-     */
-    public int getCurrentVertexNumber() {
-        return currentVertexNumber;
-    }
-
-    /**
-     * @param currentVertexNumber the currentVertexNumber to set
-     */
-    public void setCurrentVertexNumber(int currentVertexNumber) {
-        this.currentVertexNumber = currentVertexNumber;
-    }
-
     //--------------------------------------------IMPLEMENT TriangleSource
     @Override
     public List<VertexInfoBean> getVertices() {
@@ -147,7 +139,14 @@ public class LineEnclosureFactory implements TriangleSource {
                 bean.setAttribute(
                         VertexInfoBean.KnownAttributes.b_color.name(), color, 3
                 );
+
                 logger.debug("Color attribute = [" + color[0] + "," + color[1] + "," + color[2] + "]");
+            }
+            // Must setup a dummy value, so that all vertices have same-sized data in buffer.
+            if (includeIDs) {
+                bean.setAttribute(
+                        NeuronTraceVtxAttribMgr.ID_VTX_ATTRIB, new float[]{0,0,0}, 3
+                );
             }
             addVertex(bean);
 			polyBeans.add(bean);
@@ -420,8 +419,7 @@ public class LineEnclosureFactory implements TriangleSource {
 	}
 
     private void addVertex(VertexInfoBean vertex) {
-        vertex.setVtxBufOffset(getCurrentVertexNumber());
-        setCurrentVertexNumber(getCurrentVertexNumber() + 1);
+        vertex.setVtxBufOffset(vertexNumberGenerator.allocateVertexNumber());
         vertices.add(vertex);
     }
 

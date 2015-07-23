@@ -42,11 +42,8 @@
             "mapping": "/nobackup/jacs/jacsData/filestore/upload",
             "type": "block",
             "path": "mirror",
-            "authorizer": "jacsdata",
             "permissions": [
-                "write",
-                "mkcol",
-                "propfind"
+                "read", "write", "delete", "propfind", "mkcol"
             ]
         },
         "Cluster Data": {
@@ -57,6 +54,14 @@
             "permissions": [
                 "read",
                 "propfind"
+            ]
+        },
+        "Dev Cluster Temp": {
+            "mapping": "/groups/jacs/jacsDev/devstore/upload",
+            "type": "block",
+            "path": "mirror",
+            "permissions": [
+                "read", "write", "delete", "propfind", "mkcol"
             ]
         },
         "Scality Data": {

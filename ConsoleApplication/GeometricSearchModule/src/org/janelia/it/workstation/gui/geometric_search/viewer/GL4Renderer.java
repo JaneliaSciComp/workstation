@@ -7,6 +7,7 @@ import org.janelia.it.workstation.geom.UnitVec3;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderActionSequence;
+import org.janelia.it.workstation.gui.geometric_search.gl.OITSortShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,8 +19,11 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import org.janelia.it.workstation.gui.geometric_search.gl.GL4Shader;
-import org.janelia.it.workstation.gui.geometric_search.gl.OITMeshDrawShader;
-import org.janelia.it.workstation.gui.geometric_search.gl.OITMeshSortShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.mesh.OITMeshDrawShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArrayCubeShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArraySortShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArrayTransparencyContext;
+import org.janelia.it.workstation.gui.geometric_search.gl.volume.OITCubeShader;
 
 /**
  * Created by murphys on 4/10/15.
@@ -29,7 +33,8 @@ public class GL4Renderer implements GLEventListener
     public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2000;
 
     protected GLU glu = new GLU();
-    protected GL4TransparencyContext tc = new GL4TransparencyContext();
+    //protected GL4TransparencyContext tc = new GL4TransparencyContext();
+    protected ArrayTransparencyContext ac = new ArrayTransparencyContext();
     protected List<GL4ShaderActionSequence> shaderActionList = new ArrayList<GL4ShaderActionSequence>();
     protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
     protected Camera3d camera;
@@ -44,8 +49,8 @@ public class GL4Renderer implements GLEventListener
 
 
     // camera parameters
-    private double widthInPixels = 1200;
-    private double heightInPixels = 800;
+    private double widthInPixels = 1600;
+    private double heightInPixels = 1200;
     private GL4Model model;
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;
@@ -121,21 +126,44 @@ public class GL4Renderer implements GLEventListener
         final GL4 gl = glDrawable.getGL().getGL4();
         
         try {
-            tc.init(gl);
+            //tc.init(gl);
+            ac.init(gl);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
 
+        boolean tcSet = false;
+        boolean acSet = false;
         for (GL4ShaderActionSequence shaderAction : shaderActionList) {
             try {
                 GL4Shader shader = shaderAction.getShader();
-                if (shader instanceof OITMeshDrawShader) {
-                    OITMeshDrawShader s = (OITMeshDrawShader)shader;
-                    s.setTransparencyContext(tc);
-                } else if (shader instanceof OITMeshSortShader) {
-                    OITMeshSortShader s = (OITMeshSortShader)shader;
-                    s.setTransparencyContext(tc);
-                }
+                
+                // TC case
+//                if (!tcSet && shader instanceof OITMeshDrawShader) {
+//                    OITMeshDrawShader s = (OITMeshDrawShader)shader;
+//                    s.setTransparencyContext(tc);
+//                    tcSet=true;
+//                } else if (!tcSet && shader instanceof OITCubeShader) {
+//                    OITCubeShader s = (OITCubeShader)shader;
+//                    s.setTransparencyContext(tc);
+//                    tcSet=true;
+//                } else if (shader instanceof OITSortShader) {
+//                    OITSortShader s = (OITSortShader)shader;
+//                    s.setTransparencyContext(tc);
+//                }
+                
+                // AC case
+                if (!acSet && shader instanceof ArrayCubeShader) {
+                    ArrayCubeShader acs = (ArrayCubeShader)shader;
+                    ac.setWidth(glDrawable.getWidth());
+                    ac.setHeight(glDrawable.getHeight());
+                    acs.setTransparencyContext(ac);
+                    acSet=true;
+                } else if (shader instanceof ArraySortShader) {
+                    ArraySortShader ass = (ArraySortShader)shader;
+                    ass.setTransparencyContext(ac);
+                }        
+                
                 shaderAction.init(gl);
             } catch (Exception ex) {
                 ex.printStackTrace();

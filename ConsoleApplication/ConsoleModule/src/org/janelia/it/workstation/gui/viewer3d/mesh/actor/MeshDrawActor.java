@@ -16,6 +16,7 @@ import java.nio.IntBuffer;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
+import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
 
 /**
  * This is a gl-actor to draw pre-collected buffers, which have been laid out for
@@ -42,6 +43,7 @@ public class MeshDrawActor implements GLActor {
     private int vertexAttributeLoc = -1;
     private int normalAttributeLoc = -1;
     private int colorAttributeLoc = -1;
+    private int idAttributeLoc = -1;
     
     private MeshDrawActorConfigurator configurator;
 
@@ -49,7 +51,7 @@ public class MeshDrawActor implements GLActor {
 
     private IntBuffer tempBuffer = IntBuffer.allocate(1);
     private MatrixManager matrixManager;
-
+    
     public MeshDrawActor( MeshDrawActorConfigurator configurator ) {
         this.configurator = configurator;
     }
@@ -68,7 +70,9 @@ public class MeshDrawActor implements GLActor {
         private ColoringStrategy coloringStrategy = ColoringStrategy.UNIFORM;
         private BoundingBox3d boundingBox;
         private BufferUploader bufferUploader;
-
+        private boolean useIdAttribute;
+		private RenderedIdPicker picker;
+        
         public void setAxisLengths( double[] axisLengths ) {
             this.axisLengths = axisLengths;
         }
@@ -92,6 +96,23 @@ public class MeshDrawActor implements GLActor {
          */
         public void setColoringStrategy(ColoringStrategy coloringStrategy) {
             this.coloringStrategy = coloringStrategy;
+        }
+
+        /**
+         * If true, this directs the shader to expect pushing of a special
+         * vertex attribute for the identifier of the affected vertex.
+         * 
+         * @return the useIdAttribute
+         */
+        public boolean isUseIdAttribute() {
+            return useIdAttribute;
+        }
+
+        /**
+         * @param useIdAttribute the useIdAttribute to set
+         */
+        public void setUseIdAttribute(boolean useIdAttribute) {
+            this.useIdAttribute = useIdAttribute;
         }
 
         public void setRenderableId( Long renderableId ) {
@@ -164,6 +185,20 @@ public class MeshDrawActor implements GLActor {
             this.bufferUploader = bufferUploader;
         }
 
+		/**
+		 * @return the picker
+		 */
+		public RenderedIdPicker getPicker() {
+			return picker;
+		}
+
+		/**
+		 * @param picker the picker to set
+		 */
+		public void setPicker(RenderedIdPicker picker) {
+			this.picker = picker;
+		}
+
     }
 
     @Override
@@ -181,7 +216,7 @@ public class MeshDrawActor implements GLActor {
                 return glDrawable.getHeight();
             }
             
-        };
+        };        
         
         if (bBuffersNeedUpload) {
             try {
@@ -209,7 +244,7 @@ public class MeshDrawActor implements GLActor {
                 SessionMgr.getSessionMgr().handleException( ex );
             }
         }
-
+        
     }
 
     @Override
@@ -218,28 +253,32 @@ public class MeshDrawActor implements GLActor {
             // Cover strange, overlapping-display-attempts case.
             return;
         }
-        BufferUploader bufferUploader = configurator.getBufferUploader();
+		BufferUploader bufferUploader = configurator.getBufferUploader();
         if (bBuffersNeedUpload) {
             init(glDrawable);
             if (bBuffersNeedUpload) {
                 // Implies the initialization failed.  Do nothing further.
                 return;
             }
-        }
+        }		
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
         if (reportError(gl, "Display of mesh-draw-actor upon entry"))
             return;
 
+		if (configurator.isUseIdAttribute()) {
+			configurator.getPicker().prePick(glDrawable);
+		}
+
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
         gl.glDepthFunc(GL2GL3.GL_LESS);
 
-        gl.glFrontFace(GL2.GL_CCW);
-        gl.glEnable(GL2.GL_CULL_FACE);
+        gl.glFrontFace(GL2GL3.GL_CCW);
+        gl.glEnable(GL2GL3.GL_CULL_FACE);
 
-        gl.glEnable(GL2.GL_LINE_SMOOTH);                     // May not be in v2
-        gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);   // May not be in v2
+        gl.glEnable(GL2GL3.GL_LINE_SMOOTH);                     // May not be in v2
+        gl.glHint(GL2GL3.GL_LINE_SMOOTH_HINT, GL2GL3.GL_NICEST);   // May not be in v2
 
-        if (reportError( gl, "Display of mesh-draw-actor render characteristics" ))
+		if (reportError( gl, "Display of mesh-draw-actor render characteristics" ))
             return;
 
         // Draw the little triangles.
@@ -263,14 +302,23 @@ public class MeshDrawActor implements GLActor {
         mdShader.setUniformMatrix4v(gl, NORMAL_MATRIX_UNIFORM_NAME, false, vms.computeNormalMatrix(context.getModelViewMatrix()));
         if (reportError(gl, "Pushing matrix uniforms."))
             return;
-        shader.setColorByAttribute(gl, true);
-        if (reportError(gl, "Telling shader to use attribute coloring."))
+        shader.setColorByAttribute(gl, configurator.getColoringStrategy().equals(ColoringStrategy.ATTRIBUTE));
+        if (reportError(gl, "Telling shader to use attribute coloring.")) {
             return;
+        }
+        
+        shader.setIdsAvailableAttribute(gl, configurator.isUseIdAttribute());
+        if (reportError(gl, "Telling shader to use id attributes.")) {
+            return;
+        }
 
         // TODO : make it possible to establish an arbitrary group of vertex attributes programmatically.
         // 3 floats per coord. Stride is 1 normal (3 floats=3 coords), offset to first is 0.
         int numberFloatsInStride = 6;
         if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
+            numberFloatsInStride += 3;
+        }
+        if (configurator.isUseIdAttribute()) {
             numberFloatsInStride += 3;
         }
         int stride = numberFloatsInStride * BYTES_PER_FLOAT;
@@ -279,13 +327,13 @@ public class MeshDrawActor implements GLActor {
         int storagePerVertexNormal = 2 * storagePerVertex;
 
         gl.glEnableVertexAttribArray(vertexAttributeLoc);
-        gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, stride, 0);
+        gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2GL3.GL_FLOAT, false, stride, 0);
         if (reportError( gl, "Display of mesh-draw-actor 2" ))
             return;
 
         // 3 floats per normal. Stride is size of all data combined, offset to first is 1 vertex worth.
         gl.glEnableVertexAttribArray(normalAttributeLoc);
-        gl.glVertexAttribPointer(normalAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertex);
+        gl.glVertexAttribPointer(normalAttributeLoc, 3, GL2GL3.GL_FLOAT, false, stride, storagePerVertex);
         if (reportError( gl, "Display of mesh-draw-actor 3" ))
             return;
 
@@ -293,26 +341,46 @@ public class MeshDrawActor implements GLActor {
             logger.debug("Also doing color attribute.");
             // 3 floats per color. Stride is size of all data combined, offset to first is 1 vertex + 1 normal worth.
             gl.glEnableVertexAttribArray(colorAttributeLoc);
-            gl.glVertexAttribPointer(colorAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertexNormal);
+            gl.glVertexAttribPointer(colorAttributeLoc, 3, GL2GL3.GL_FLOAT, false, stride, storagePerVertexNormal);
             if (reportError(gl, "Display of mesh-draw-actor 3-opt"))
                 return;
 
         }
-        gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, bufferUploader.getInxBufferHandle() );
+        if (configurator.isUseIdAttribute()  &&  configurator.getPicker().inPick()) {
+            int storagePerVertexNormalColor = 2 * storagePerVertex;
+            if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
+                storagePerVertexNormalColor = 3 * storagePerVertex;
+            }
+            logger.debug("Also sending IDs.");
+            // 3 floats per id.
+            gl.glEnableVertexAttribArray(idAttributeLoc);
+            gl.glVertexAttribPointer(idAttributeLoc, 3, GL2GL3.GL_FLOAT, false, stride, storagePerVertexNormalColor);
+            if (reportError(gl, "Display of mesh-draw-actor 4-opt")) {
+                return;
+            }
+            
+        }
+        gl.glBindBuffer( GL2GL3.GL_ELEMENT_ARRAY_BUFFER, bufferUploader.getInxBufferHandle() );
         if (reportError(gl, "Display of mesh-draw-actor 4."))
             return;
 
         // One triangle every three indices.  But count corresponds to the number of vertices.
-        gl.glDrawElements( GL2.GL_TRIANGLES, bufferUploader.getIndexCount(), GL2.GL_UNSIGNED_INT, 0 );
+        gl.glDrawElements( GL2GL3.GL_TRIANGLES, bufferUploader.getIndexCount(), GL2GL3.GL_UNSIGNED_INT, 0 );
         if (reportError( gl, "Display of mesh-draw-actor 5" ))
             return;
 
+        if (configurator.isUseIdAttribute()) {
+            configurator.getPicker().postPick(glDrawable);
+        }
+        
         shader.unload(gl.getGL2());
 
         if (reportError(gl, "mesh-draw-actor, end of display."))
             return;
-        gl.glDisable( GL2.GL_DEPTH_TEST );
-        gl.glDisable( GL2.GL_LINE_SMOOTH );
+        gl.glDisable( GL2GL3.GL_DEPTH_TEST );
+        gl.glDisable( GL2GL3.GL_LINE_SMOOTH );
+		gl.glBindBuffer( GL2GL3.GL_ELEMENT_ARRAY_BUFFER, 0 );
+        gl.glEnableVertexAttribArray(0);
 
     }
 
@@ -334,6 +402,8 @@ public class MeshDrawActor implements GLActor {
         shader.unload(gl);
         shader = null;
         dropBuffers(gl);
+		
+		configurator.getPicker().dispose(glDrawable);
     }
     
     public void refresh() {
@@ -357,6 +427,11 @@ public class MeshDrawActor implements GLActor {
 
             } else {
                 setColoring(gl);
+            }
+            
+            if (configurator.isUseIdAttribute()) {
+                idAttributeLoc = gl.glGetAttribLocation(shader.getShaderProgram(), MeshDrawShader.ID_ATTRIBUTE_NAME);
+                reportError(gl, "Obtaining the in-shader locations-4.");
             }
 
         } catch ( AbstractShader.ShaderCreationException sce ) {

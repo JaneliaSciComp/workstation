@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class WebDavClient {
 
-    public static final String JACS_WEBDAV_BASE_URL = "http://jacs-staging.int.janelia.org:8880/Webdav";
+    public static final String JACS_WEBDAV_BASE_URL = "http://jacs-webdav.int.janelia.org/Webdav";
     private int port;
     private String protocol;
     private String host;
@@ -65,7 +65,7 @@ public class WebDavClient {
             this.protocol = url.getProtocol();
             this.host = url.getHost();
             this.port = url.getPort();
-            this.basePath = url.getPath();
+            this.basePath = baseUrl;
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("failed to parse base URL: " + baseUrl, e);
         }
@@ -132,8 +132,8 @@ public class WebDavClient {
     public URL getWebDavUrl(String standardPath)
             throws MalformedURLException {
         URL url;
-        String foobar = JACS_WEBDAV_BASE_URL + standardPath;
-        url = new URL(foobar);
+        String urlStr = basePath + standardPath;
+        url = new URL(urlStr);
 
         return url;
     }
