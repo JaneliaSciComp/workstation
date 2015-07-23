@@ -3,7 +3,7 @@
 layout (early_fragment_tests) in;
 
 struct NodeType {
-    vec4 color;
+    uint colorUPack;
     float depth;
 };
 
@@ -35,8 +35,8 @@ layout (std430, binding = 3) buffer FragmentArrays3 {
 
 layout (location=0) out vec4 output_color;
 
-#define BUFFER_DEPTH 50
-#define MAX_DEPTH 200
+#define BUFFER_DEPTH 135
+#define MAX_DEPTH 540
 
 struct NodeType frags[MAX_DEPTH];
 
@@ -91,9 +91,10 @@ vec4 blend(vec4 current_color, vec4 new_color) {
 
 vec4 calculate_final_color(int frag_count) {
     int i;
-    vec4 final_color = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 final_color = vec4(1.0, 1.0, 1.0, 0.0);
     for (i=0; i < frag_count; i++) {
-       final_color = blend(final_color, frags[i].color);
+       vec4 color = unpackUnorm4x8(frags[i].colorUPack);
+       final_color = blend(final_color, color);
     }
     return final_color;
 }
