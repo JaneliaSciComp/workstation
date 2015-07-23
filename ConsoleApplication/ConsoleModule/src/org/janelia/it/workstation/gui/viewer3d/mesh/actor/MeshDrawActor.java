@@ -272,11 +272,11 @@ public class MeshDrawActor implements GLActor {
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
         gl.glDepthFunc(GL2GL3.GL_LESS);
 
-        gl.glFrontFace(GL2.GL_CCW);
-        gl.glEnable(GL2.GL_CULL_FACE);
+        gl.glFrontFace(GL2GL3.GL_CCW);
+        gl.glEnable(GL2GL3.GL_CULL_FACE);
 
-        gl.glEnable(GL2.GL_LINE_SMOOTH);                     // May not be in v2
-        gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);   // May not be in v2
+        gl.glEnable(GL2GL3.GL_LINE_SMOOTH);                     // May not be in v2
+        gl.glHint(GL2GL3.GL_LINE_SMOOTH_HINT, GL2GL3.GL_NICEST);   // May not be in v2
 
 		if (reportError( gl, "Display of mesh-draw-actor render characteristics" ))
             return;
@@ -327,43 +327,45 @@ public class MeshDrawActor implements GLActor {
         int storagePerVertexNormal = 2 * storagePerVertex;
 
         gl.glEnableVertexAttribArray(vertexAttributeLoc);
-        gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, stride, 0);
+        gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2GL3.GL_FLOAT, false, stride, 0);
         if (reportError( gl, "Display of mesh-draw-actor 2" ))
             return;
 
         // 3 floats per normal. Stride is size of all data combined, offset to first is 1 vertex worth.
         gl.glEnableVertexAttribArray(normalAttributeLoc);
-        gl.glVertexAttribPointer(normalAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertex);
+        gl.glVertexAttribPointer(normalAttributeLoc, 3, GL2GL3.GL_FLOAT, false, stride, storagePerVertex);
         if (reportError( gl, "Display of mesh-draw-actor 3" ))
             return;
 
-        int storagePerVertexNormalColor = 0;
         if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
             logger.debug("Also doing color attribute.");
             // 3 floats per color. Stride is size of all data combined, offset to first is 1 vertex + 1 normal worth.
             gl.glEnableVertexAttribArray(colorAttributeLoc);
-            gl.glVertexAttribPointer(colorAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertexNormal);
+            gl.glVertexAttribPointer(colorAttributeLoc, 3, GL2GL3.GL_FLOAT, false, stride, storagePerVertexNormal);
             if (reportError(gl, "Display of mesh-draw-actor 3-opt"))
                 return;
 
         }
-        if (configurator.isUseIdAttribute()) {
-            storagePerVertexNormalColor = 3 * storagePerVertex;
+        if (configurator.isUseIdAttribute()  &&  configurator.getPicker().inPick()) {
+            int storagePerVertexNormalColor = 2 * storagePerVertex;
+            if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
+                storagePerVertexNormalColor = 3 * storagePerVertex;
+            }
             logger.debug("Also sending IDs.");
             // 3 floats per id.
             gl.glEnableVertexAttribArray(idAttributeLoc);
-            gl.glVertexAttribPointer(idAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertexNormalColor);
+            gl.glVertexAttribPointer(idAttributeLoc, 3, GL2GL3.GL_FLOAT, false, stride, storagePerVertexNormalColor);
             if (reportError(gl, "Display of mesh-draw-actor 4-opt")) {
                 return;
             }
             
         }
-        gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, bufferUploader.getInxBufferHandle() );
+        gl.glBindBuffer( GL2GL3.GL_ELEMENT_ARRAY_BUFFER, bufferUploader.getInxBufferHandle() );
         if (reportError(gl, "Display of mesh-draw-actor 4."))
             return;
 
         // One triangle every three indices.  But count corresponds to the number of vertices.
-        gl.glDrawElements( GL2.GL_TRIANGLES, bufferUploader.getIndexCount(), GL2.GL_UNSIGNED_INT, 0 );
+        gl.glDrawElements( GL2GL3.GL_TRIANGLES, bufferUploader.getIndexCount(), GL2GL3.GL_UNSIGNED_INT, 0 );
         if (reportError( gl, "Display of mesh-draw-actor 5" ))
             return;
 
@@ -375,9 +377,10 @@ public class MeshDrawActor implements GLActor {
 
         if (reportError(gl, "mesh-draw-actor, end of display."))
             return;
-        gl.glDisable( GL2.GL_DEPTH_TEST );
-        gl.glDisable( GL2.GL_LINE_SMOOTH );
-		gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, 0 );
+        gl.glDisable( GL2GL3.GL_DEPTH_TEST );
+        gl.glDisable( GL2GL3.GL_LINE_SMOOTH );
+		gl.glBindBuffer( GL2GL3.GL_ELEMENT_ARRAY_BUFFER, 0 );
+        gl.glEnableVertexAttribArray(0);
 
     }
 
