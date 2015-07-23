@@ -24,7 +24,7 @@ public class ArrayTransparencyContext {
     public static final int NODE_SIZE = 20; // vec4 color, float depth
     public static final int DEFAULT_WIDTH = 1600;
     public static final int DEFAULT_HEIGHT = 1200;
-    public static final int DEFAULT_DEPTH = 50;
+    public static final int DEFAULT_DEPTH = 135;
 
     IntBuffer headPointerId = IntBuffer.allocate(1);
     IntBuffer headPointerInitializerId = IntBuffer.allocate(1);
@@ -143,7 +143,7 @@ public class ArrayTransparencyContext {
         //gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 0, fragmentSSBO.get(0));
         //gl.glBufferData(GL4.GL_SHADER_STORAGE_BUFFER, MAX_NODES * NODE_SIZE, null, GL4.GL_DYNAMIC_DRAW);
         
-        Long bufferLength = new Long(headPointerTotalPixels) * new Long(20) * new Long(depth); // XY , vec4+float, depth
+        Long bufferLength = new Long(headPointerTotalPixels) * new Long(8) * new Long(depth); // XY , vec4+float, depth
         
         // SSBO 0
             
