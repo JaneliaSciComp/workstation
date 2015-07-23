@@ -162,6 +162,10 @@ public class AxesActor implements GLActor
         if ( ! volumeModel.isShowAxes() )
             return;
         
+        if (bBuffersNeedUpload) {
+            init(glDrawable);
+        }
+        
         GL2 gl = glDrawable.getGL().getGL2();
         if (reportError( gl, "Display of axes-actor upon entry" ))
             return;

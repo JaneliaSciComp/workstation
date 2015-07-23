@@ -60,6 +60,9 @@ public class AnnotationSkeletonPanel extends JPanel {
     private UniqueColorSelector ucSelector;
 	private RenderedIdPicker picker;
     
+    private Collection<GLActor> coreActors = new ArrayList<>();
+    private Collection<GLActor> fixedFunctionActors = new ArrayList<>();
+    
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
         this.setLayout(new BorderLayout());
@@ -134,22 +137,27 @@ public class AnnotationSkeletonPanel extends JPanel {
 
             MDReturn meshDrawResults = buildMeshDrawActor( context, originalBoundingBox );
             final MeshDrawActor meshDrawActor = meshDrawResults.getActor();
-            GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, context );
+            GLActor axesActor = buildOpenGLCoreAxesActor( originalBoundingBox, 1.0, context );
+            GLActor ffAxesActor = buildOpenGLFIxedFunctionActor( originalBoundingBox, 1.0, volumeModel);
             
-            viewer.addActor(axesActor);
             // NOTE: refAxisActor is forcing all 'conventional' actors which
             // display after it, into the same confined corner of the screen.
             // The 'meshDrawActor' may be permitted to follow it, but the
             // others may not.
-            viewer.addActor(refAxisActor);
-            viewer.addActor(meshDrawActor);
+            coreActors.add(axesActor);
+            coreActors.add(meshDrawActor);
+            coreActors.add(refAxisActor);
+            
+            fixedFunctionActors.add(ffAxesActor);
+            fixedFunctionActors.add(linesDrawActor);
+            fixedFunctionActors.add(refAxisActor);
+            
             viewer.addMenuAction(new BackgroundPickAction(viewer));
             viewer.addMenuAction(
                 new ActorSwapAction(
                     viewer,
-                    meshDrawActor, "Mesh Draw",
-                    linesDrawActor, "Lines Draw",
-                    refAxisActor
+                    coreActors, "Mesh Draw",
+                    fixedFunctionActors, "Lines Draw"
                 )
             );
             
@@ -165,6 +173,11 @@ public class AnnotationSkeletonPanel extends JPanel {
             // Reserve the menu actions from mesh draw, until last.
             for (Action menuAction: meshDrawResults.getMenuActions()) {
                 viewer.addMenuAction(menuAction);
+            }
+            
+            // Add the initial actor list.
+            for (GLActor actor: coreActors) {
+                viewer.addActor(actor);
             }
             
             this.add(viewer, BorderLayout.CENTER);
@@ -201,24 +214,46 @@ public class AnnotationSkeletonPanel extends JPanel {
     }
 
     /**
-     * Creates the actor to draw the axes on the screen.
+     * Creates the actor to draw the axes on the screen. This version is
+     * using all-core/generic vertex attributes.
      *
      * @param boundingBox tells extrema for the axes.
      * @param axisLengthDivisor applies downsampling abbreviation of axes.
      * @param volumeModel tells the axes actor whether its background will be white.
      * @return the actor.
      */
-    public GLActor buildAxesActor(BoundingBox3d boundingBox, double axisLengthDivisor, MeshViewContext volumeModel) {
-        AxesActor axes = new AxesActor();
-        axes.setMeshViewerContext(volumeModel);
+    public GLActor buildOpenGLFIxedFunctionActor(BoundingBox3d boundingBox, double axisLengthDivisor, VolumeModel volumeModel) {
+        org.janelia.it.workstation.gui.viewer3d.axes.AxesActor axes = new org.janelia.it.workstation.gui.viewer3d.axes.AxesActor();
+        axes.setVolumeModel(volumeModel);
         axes.setBoundingBox(boundingBox);
         axes.setAxisLengths( boundingBox.getWidth(), boundingBox.getHeight(), boundingBox.getDepth() );
-        axes.setRenderMethod(AxesActor.RenderMethod.MESH);
+        axes.setRenderMethod(org.janelia.it.workstation.gui.viewer3d.axes.AxesActor.RenderMethod.MESH);
         axes.setAxisLengthDivisor( axisLengthDivisor );
         axes.setFullAxes( true );
         return axes;
     }
     
+    /**
+     * Creates the actor to draw the axes on the screen. This version is using
+     * older fixed-function-compatible calls.
+     *
+     * @param boundingBox tells extrema for the axes.
+     * @param axisLengthDivisor applies downsampling abbreviation of axes.
+     * @param volumeModel tells the axes actor whether its background will be
+     * white.
+     * @return the actor.
+     */
+    public GLActor buildOpenGLCoreAxesActor(BoundingBox3d boundingBox, double axisLengthDivisor, MeshViewContext volumeModel) {
+        AxesActor axes = new AxesActor();
+        axes.setMeshViewerContext(volumeModel);
+        axes.setBoundingBox(boundingBox);
+        axes.setAxisLengths(boundingBox.getWidth(), boundingBox.getHeight(), boundingBox.getDepth());
+        axes.setRenderMethod(AxesActor.RenderMethod.MESH);
+        axes.setAxisLengthDivisor(axisLengthDivisor);
+        axes.setFullAxes(true);
+        return axes;
+    }
+
     /**
      * Creates the actor to draw the "wrapped geometry" or "suit of armor"
      * rendition of the traces.
@@ -423,32 +458,25 @@ public class AnnotationSkeletonPanel extends JPanel {
     
     public static class ActorSwapAction extends AbstractAction {
         private final static String SWAP_FORMAT = "Replace %s with %s.";
-        private final GLActor firstActor;
-        private final GLActor secondActor;
         private final String firstLabel;
         private final String secondLabel;
         
-        private final GLActor mustBeLastActor;
-        
         private OcclusiveViewer viewer;
+        private boolean inCore = true;
         
-        private GLActor currentActor;
+        private Collection<GLActor> coreActors;
+        private Collection<GLActor> fixedFunctionActors;
         
         public ActorSwapAction(
                 OcclusiveViewer viewer, 
-                GLActor firstActor, String firstActorLabel, 
-                GLActor secondActor, String secondActorLabel,
-                GLActor mustBeLastActor
+                Collection<GLActor> coreActors, String firstActorLabel, 
+                Collection<GLActor> fixedFunctionActors, String secondActorLabel
         ) {
             this.viewer = viewer;
-            this.firstActor = firstActor;
-            this.secondActor = secondActor;            
             this.firstLabel = String.format( SWAP_FORMAT, firstActorLabel, secondActorLabel );
+            this.coreActors = coreActors;
             this.secondLabel = String.format( SWAP_FORMAT, secondActorLabel, firstActorLabel );
-            
-            this.mustBeLastActor = mustBeLastActor;
-            
-            this.currentActor = firstActor;
+            this.fixedFunctionActors = fixedFunctionActors;
             
             putValue( Action.NAME, firstLabel );
                    
@@ -456,18 +484,26 @@ public class AnnotationSkeletonPanel extends JPanel {
         
         @Override
         public void actionPerformed(ActionEvent e) {
-            viewer.removeActor(currentActor);
-            viewer.removeActor(mustBeLastActor);
-            if (currentActor == firstActor) {
-                currentActor = secondActor;
+            if (inCore) {
+                inCore = false;
+                for (GLActor actor: coreActors) {
+                    viewer.removeActor(actor);
+                }
+                for (GLActor actor: fixedFunctionActors) {
+                    viewer.addActor(actor);
+                }
                 putValue(Action.NAME, secondLabel);
             }
             else {
-                currentActor = firstActor;
+                inCore = true;
+                for (GLActor actor : fixedFunctionActors) {
+                    viewer.removeActor(actor);
+                }
+                for (GLActor actor : coreActors) {
+                    viewer.addActor(actor);
+                }
                 putValue(Action.NAME, firstLabel);
             }
-            viewer.addActor(currentActor);
-            viewer.addActor(mustBeLastActor);
             viewer.validate();
             viewer.repaint();
         }
