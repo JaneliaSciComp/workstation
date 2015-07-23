@@ -216,7 +216,10 @@ public class WorkspaceNeuronList extends JPanel {
             for (TmNeuron neuron: workspace.getNeuronList()) {
                 neuronTableModel.addNeuron(neuron);
             }
-            neuronTableModel.fireTableDataChanged();
+            // it surprises me that this test is necessary
+            if (neuronTableModel.getRowCount() > 0) {
+                neuronTableModel.fireTableDataChanged();
+            }
         }
     }
 
