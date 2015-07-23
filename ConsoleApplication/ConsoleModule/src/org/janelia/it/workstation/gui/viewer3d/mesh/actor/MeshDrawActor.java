@@ -290,8 +290,8 @@ public class MeshDrawActor implements GLActor {
         
         if (matrixManager != null) {
             double far = configurator.getContext().getCameraFocusDistance() * 4.0;
-            matrixManager.recalculate(gl, 10.0, far);
-            //matrixManager.recalculate(gl);
+            //matrixManager.recalculate(gl, 10.0, far);
+            matrixManager.recalculate(gl);
         }
 
         ViewMatrixSupport vms = new ViewMatrixSupport();

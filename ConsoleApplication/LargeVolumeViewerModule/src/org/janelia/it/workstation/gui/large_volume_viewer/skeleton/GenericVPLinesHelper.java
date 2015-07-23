@@ -11,10 +11,10 @@ import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
  * Carries out the display task for a Generic Vertex Pointer-using class.
  * @author fosterl
  */
-public class GenericVPHelper {
+public class GenericVPLinesHelper {
     private MeshViewContext context;
     private String reportString;
-    public GenericVPHelper(MeshViewContext context, String reportString) {
+    public GenericVPLinesHelper(MeshViewContext context, String reportString) {
         this.context = context;
         this.reportString = reportString;
     }
@@ -141,12 +141,12 @@ public class GenericVPHelper {
 
     private void setRenderMode(GL2 gl, boolean enable) {
         if (enable) {
-            // set blending to enable transparent voxels
+            // Set depth to allow interposition
             gl.glEnable(GL2.GL_DEPTH_TEST);
             gl.glDepthFunc(GL2.GL_LESS);
             reportError(gl, String.format("Display of %s depth", reportString));
         } else {
             gl.glDisable(GL2.GL_DEPTH_TEST);
         }
-    }
+    }        
 }

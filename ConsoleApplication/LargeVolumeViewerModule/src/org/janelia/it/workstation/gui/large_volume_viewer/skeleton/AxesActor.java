@@ -68,7 +68,7 @@ public class AxesActor implements GLActor
     private float axisLabelMagnifier;
     private int tickSize;
     
-    private GenericVPHelper vertexPointerHelper;
+    private GenericVPLinesHelper vertexPointerHelper;
     private DirectionalReferenceAxesShader shader;
     private MeshViewContext context;
     private MatrixManager matrixManager;
@@ -155,7 +155,7 @@ public class AxesActor implements GLActor
                 if (buildBuffers(gl)) {
                     bBuffersNeedUpload = false;
                 }
-                vertexPointerHelper = new GenericVPHelper(context, "ticked-axes-actor");
+                vertexPointerHelper = new GenericVPLinesHelper(context, "ticked-axes-actor");
                 this.matrixManager = new MatrixManager(
                         context, 
                         glDrawable.getWidth(), 
