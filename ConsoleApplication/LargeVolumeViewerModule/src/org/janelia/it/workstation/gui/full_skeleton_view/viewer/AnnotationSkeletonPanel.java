@@ -32,6 +32,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.DirectionalReferenceAxesActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.AxesActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.NeuronTraceVtxAttribMgr;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -40,7 +41,6 @@ import org.janelia.it.workstation.gui.viewer3d.OcclusiveViewer;
 import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer;
 import org.janelia.it.workstation.gui.viewer3d.ResetPositionerI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.AttributeManagerBufferUploader;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
@@ -134,7 +134,7 @@ public class AnnotationSkeletonPanel extends JPanel {
 
             MDReturn meshDrawResults = buildMeshDrawActor( context, originalBoundingBox );
             final MeshDrawActor meshDrawActor = meshDrawResults.getActor();
-            GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, volumeModel );
+            GLActor axesActor = buildAxesActor( originalBoundingBox, 1.0, context );
             
             viewer.addActor(axesActor);
             // NOTE: refAxisActor is forcing all 'conventional' actors which
@@ -208,9 +208,9 @@ public class AnnotationSkeletonPanel extends JPanel {
      * @param volumeModel tells the axes actor whether its background will be white.
      * @return the actor.
      */
-    public GLActor buildAxesActor(BoundingBox3d boundingBox, double axisLengthDivisor, VolumeModel volumeModel) {
+    public GLActor buildAxesActor(BoundingBox3d boundingBox, double axisLengthDivisor, MeshViewContext volumeModel) {
         AxesActor axes = new AxesActor();
-        axes.setVolumeModel(volumeModel);
+        axes.setMeshViewerContext(volumeModel);
         axes.setBoundingBox(boundingBox);
         axes.setAxisLengths( boundingBox.getWidth(), boundingBox.getHeight(), boundingBox.getDepth() );
         axes.setRenderMethod(AxesActor.RenderMethod.MESH);
