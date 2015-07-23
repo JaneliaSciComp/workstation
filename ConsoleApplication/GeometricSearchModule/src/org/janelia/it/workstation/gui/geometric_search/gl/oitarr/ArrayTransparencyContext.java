@@ -28,13 +28,14 @@ public class ArrayTransparencyContext {
 
     IntBuffer headPointerId = IntBuffer.allocate(1);
     IntBuffer headPointerInitializerId = IntBuffer.allocate(1);
-    IntBuffer fragmentSSBO = IntBuffer.allocate(1);
+    IntBuffer fragmentSSBO1 = IntBuffer.allocate(1);
+    IntBuffer fragmentSSBO2 = IntBuffer.allocate(1);
     IntBuffer zeroValueBuffer = IntBuffer.allocate(1);
 
     public ArrayTransparencyContext() {
-        this.width = DEFAULT_WIDTH;
-        this.height = DEFAULT_HEIGHT;
-        this.depth = DEFAULT_DEPTH;
+        width = ArrayTransparencyContext.DEFAULT_WIDTH;
+        height = ArrayTransparencyContext.DEFAULT_HEIGHT;
+        depth = ArrayTransparencyContext.DEFAULT_DEPTH;
     }
 
     public int getWidth() {
@@ -57,8 +58,12 @@ public class ArrayTransparencyContext {
         return headPointerId.get(0);
     }
 
-    public int getFragmentSSBOId() {
-        return fragmentSSBO.get(0);
+    public int getFragmentSSBO1Id() {
+        return fragmentSSBO1.get(0);
+    }
+    
+    public int getFragmentSSBO2Id() {
+        return fragmentSSBO2.get(0);
     }
 
     public int getHeadPointerInitializerId() {
@@ -132,21 +137,44 @@ public class ArrayTransparencyContext {
         //gl.glGenBuffers(1, fragmentSSBO);
         //gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 0, fragmentSSBO.get(0));
         //gl.glBufferData(GL4.GL_SHADER_STORAGE_BUFFER, MAX_NODES * NODE_SIZE, null, GL4.GL_DYNAMIC_DRAW);
-            
-        gl.glGenBuffers(1, fragmentSSBO);
-        checkGlError(gl, "i5 ArrayTransparencyContext glGenBuffers() error");
-        
-        gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 0, fragmentSSBO.get(0));
-        checkGlError(gl, "i7 ArrayTransparencyContext glBindBufferBase() error");
-
-        gl.glBindBuffer(GL4.GL_SHADER_STORAGE_BUFFER, fragmentSSBO.get(0));
-        checkGlError(gl, "i6 ArrayTransparencyContext glBindBuffer() error");
         
         Long bufferLength = new Long(headPointerTotalPixels) * new Long(20) * new Long(depth); // XY , vec4+float, depth
         
+        // SSBO 1
+            
+        gl.glGenBuffers(1, fragmentSSBO1);
+        checkGlError(gl, "i5 ArrayTransparencyContext glGenBuffers() error");
+        
+        gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 0, fragmentSSBO1.get(0));
+        checkGlError(gl, "i7 ArrayTransparencyContext glBindBufferBase() error");
+
+        gl.glBindBuffer(GL4.GL_SHADER_STORAGE_BUFFER, fragmentSSBO1.get(0));
+        checkGlError(gl, "i6 ArrayTransparencyContext glBindBuffer() error");
+              
         logger.info("Calling glBufferData for SSBO with size="+bufferLength);
         gl.glBufferData(GL4.GL_SHADER_STORAGE_BUFFER, bufferLength, null, GL4.GL_DYNAMIC_DRAW);
         checkGlError(gl, "i8 ArrayTransparencyContext glBufferData() error");
+        
+        gl.glBindBuffer(GL4.GL_SHADER_STORAGE_BUFFER, 0);
+        
+        
+        // SSBO 2
+            
+        gl.glGenBuffers(1, fragmentSSBO2);
+        checkGlError(gl, "i5 ArrayTransparencyContext glGenBuffers() error");
+        
+        gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 1, fragmentSSBO2.get(0));
+        checkGlError(gl, "i7 ArrayTransparencyContext glBindBufferBase() error");
+
+        gl.glBindBuffer(GL4.GL_SHADER_STORAGE_BUFFER, fragmentSSBO2.get(0));
+        checkGlError(gl, "i6 ArrayTransparencyContext glBindBuffer() error");
+              
+        logger.info("Calling glBufferData for SSBO with size="+bufferLength);
+        gl.glBufferData(GL4.GL_SHADER_STORAGE_BUFFER, bufferLength, null, GL4.GL_DYNAMIC_DRAW);
+        checkGlError(gl, "i8 ArrayTransparencyContext glBufferData() error");
+        
+        gl.glBindBuffer(GL4.GL_SHADER_STORAGE_BUFFER, 0);
+        
     }
 
 }

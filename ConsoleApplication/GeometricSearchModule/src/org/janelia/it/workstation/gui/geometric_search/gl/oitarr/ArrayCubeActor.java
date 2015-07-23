@@ -60,13 +60,11 @@ public class ArrayCubeActor extends SparseVolumeBaseActor
 
         super.init(gl);
 
-        viList.clear();
-        
-        Random rn = new Random();
-        
-        for (int i=0;i<1000000;i++) {
-            viList.add(new viGroup(rn.nextFloat(), rn.nextFloat(), rn.nextFloat(), 1.0f));
-        }
+        //viList.clear();       
+        //Random rn = new Random();      
+        //for (int i=0;i<100000;i++) {
+        //    viList.add(new viGroup(rn.nextFloat(), rn.nextFloat(), rn.nextFloat(), 0.1f));
+        //}
 
         FloatBuffer fb=FloatBuffer.allocate(viList.size()*4); // 3 floats per vertex, 1 for intensity
 

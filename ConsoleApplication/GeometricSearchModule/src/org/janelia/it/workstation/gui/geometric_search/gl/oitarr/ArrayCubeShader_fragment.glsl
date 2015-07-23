@@ -18,13 +18,17 @@ uniform int hpi_depth;
 
 layout (binding = 1, r32ui) uniform uimage2D head_pointer_image;
 
-layout (std430, binding = 0) coherent buffer FragmentArrays {
-    NodeType nodes[];
+layout (std430, binding = 0) buffer FragmentArrays0 {
+    NodeType nodes0[];
+};
+
+layout (std430, binding = 1) buffer FragmentArrays1 {
+    NodeType nodes1[];
 };
 
 out vec4 blankOut;
 
-#define MAX_DEPTH 50
+#define BUFFER_DEPTH 50
 
 void main()
 {
@@ -33,6 +37,8 @@ void main()
     float dopac = dcolor.w;
     vec4 color = dcolor * intensityF;
     color.w = dopac;
+
+
     ivec2 fl = ivec2(gl_FragCoord.xy);
 
     uint oldPosition = imageAtomicAdd(head_pointer_image, fl, 1);
@@ -43,28 +49,16 @@ void main()
 
     int xyOffset = (fl.y * hpi_width + fl.x);
 
-    if (iPosition > -1 && iPosition < MAX_DEPTH) {
-        nodes[xyOffset + zSize*iPosition].color = color;
-        nodes[xyOffset + zSize*iPosition].depth = dz;
-    } else {
-        // Find the closest fragment and average
-        int closestIndex=0;
-        float closestDistance=10000.0;
-        struct NodeType closestNode;
-        for (int f=0;f<MAX_DEPTH;f++) {
-            struct NodeType fn = nodes[xyOffset + zSize*f];
-            float distance = abs(dz - fn.depth);
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestIndex=f;
-                closestNode=fn;
-            }
+    if (iPosition > -1 && iPosition < BUFFER_DEPTH) {
+        if (iPosition<5) {
+            nodes0[xyOffset + zSize*iPosition].color = color;
+        } else {
+            nodes0[xyOffset + zSize*iPosition].color = color;
         }
-        vec4 newColor = mix(closestNode.color, color, 0.5);
-        float newDepth = (closestNode.depth + dz)/2.0;
-        closestNode.color = newColor;
-        closestNode.depth = newDepth;
-        nodes[xyOffset + zSize*closestIndex] = closestNode;
+        nodes0[xyOffset + zSize*iPosition].depth = dz;
+    } else if (iPosition > BUFFER_DEPTH && iPosition < BUFFER_DEPTH*2) {
+        nodes1[xyOffset + zSize*(iPosition-BUFFER_DEPTH)].color = color;
+        nodes1[xyOffset + zSize*(iPosition-BUFFER_DEPTH)].depth = dz;
     } 
 
     blankOut = vec4(0.0, 0.0, 0.0, 0.0);

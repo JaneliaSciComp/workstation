@@ -114,9 +114,9 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                 0.0f, -1.0f, 0.0f, 0.25f,
                 0.0f, 0.0f, -1.0f, 0.625f,
                 0.0f, 0.0f, 0.0f, 1.0f);
-        pa.setModel(gal4Rotation);
+        //pa.setModel(gal4Rotation);
 
-        pa.setColor(new Vector4(1.0f, 0.0f, 0.0f, 0.01f));
+        pa.setColor(new Vector4(1.0f, 1.0f, 0.0f, 0.05f));
         pa.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
@@ -137,8 +137,8 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
                 cubeShader.setHeight(gl, viewer.getHeight());
                 cubeShader.setDepth(gl, DEPTH);
 
-                //float voxelUnitSize = pa.getVoxelUnitSize();
-                float voxelUnitSize = 0.0025f;
+                float voxelUnitSize = pa.getVoxelUnitSize();
+                //float voxelUnitSize = 0.01f;
                 cubeShader.setVoxelUnitSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
 
                 cubeShader.setDrawColor(gl, pa.getColor());
