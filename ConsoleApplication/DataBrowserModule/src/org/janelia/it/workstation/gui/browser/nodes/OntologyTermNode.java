@@ -21,7 +21,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> {
     public OntologyTermNode(Ontology ontology, OntologyTerm ontologyTerm) throws Exception {
         super(DomainUtils.isEmpty(ontologyTerm.getTerms())
                 ?Children.LEAF
-                :Children.create(new OntologyChildFactory(ontology, ontologyTerm), true), ontologyTerm);
+                :Children.create(new OntologyChildFactory(ontology, ontologyTerm), false), ontologyTerm);
         this.ontologyRef = new WeakReference<Ontology>(ontology);
     }
     

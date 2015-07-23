@@ -6,7 +6,6 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
@@ -16,13 +15,10 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -30,19 +26,16 @@ import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
+import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.JScrollMenu;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
-import org.openide.nodes.Node;
 import org.openide.nodes.PropertySupport;
 import org.openide.nodes.Sheet;
-import org.openide.util.actions.Presenter;
 import org.openide.util.actions.SystemAction;
 import org.openide.util.datatransfer.ExTransferable;
 import org.openide.util.lookup.AbstractLookup;
@@ -62,11 +55,11 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
 
     private final InstanceContent lookupContents;
 
-    public DomainObjectNode(ChildFactory parentChildFactory, Children children, DomainObject domainObject) throws Exception {
+    public DomainObjectNode(ChildFactory parentChildFactory, Children children, DomainObject domainObject) {
         this(new InstanceContent(), parentChildFactory, children, domainObject);
     }
 
-    public DomainObjectNode(InstanceContent lookupContents, ChildFactory parentChildFactory, Children children, DomainObject domainObject) throws Exception {
+    public DomainObjectNode(InstanceContent lookupContents, ChildFactory parentChildFactory, Children children, DomainObject domainObject) {
         super(children, new AbstractLookup(lookupContents));
         this.parentChildFactory = parentChildFactory;
         this.lookupContents = lookupContents;
@@ -116,15 +109,20 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
 
     @Override
     public Action[] getActions(boolean context) {
-        List<Action> actions = new ArrayList<Action>();
+        List<Action> actions = new ArrayList<>();
         actions.add(new CopyNameAction());
         actions.add(new CopyGUIDAction());
         actions.add(null);
         actions.add(new OpenInNewViewerAction());
         actions.add(null);
-        actions.add(new AddToTopLevelFolderAction());
+        actions.add(AddToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
+        actions.add(null);
+        
+//        DomainExplorerTopComponent detc = (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
+//        actions.add(new DebugAction(detc.getLookup()));
+        
         //actions.add(CutAction.get(CutAction.class));
 //        actions.add(CopyAction.get(CopyAction.class));
 //        actions.add(PasteAction.get(PasteAction.class));
@@ -298,117 +296,6 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
         }
     }
-
-    private final class AddToTopLevelFolderAction extends AbstractAction implements Presenter.Popup {
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            DomainObject domainObject = getLookup().lookup(DomainObject.class);
-            if (domainObject==null) {
-                return;
-            }
-
-        }
-
-        @Override
-        public JMenuItem getPopupPresenter() {
-            JMenu newFolderMenu = new JScrollMenu("Add To Top-Level Folder");
-
-            JMenuItem createNewItem = new JMenuItem("Create New...");
-
-            createNewItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-
-                    // Add button clicked
-                    final String folderName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Folder Name:\n",
-                            "Create top-level folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
-                    if ((folderName==null)||(folderName.length()<=0)) {
-                        return;
-                    }
-
-                    SimpleWorker worker = new SimpleWorker() {
-                        @Override
-                        protected void doStuff() throws Exception {
-                            // Update database
-//                            Entity newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
-//
-//                            List<Long> ids = new ArrayList<Long>();
-//                            for (RootedEntity rootedEntity : rootedEntityList) {
-//                                ids.add(rootedEntity.getEntity().getId());
-//                            }
-//                            ModelMgr.getModelMgr().addChildren(newFolder.getId(), ids, EntityConstants.ATTRIBUTE_ENTITY);
-                        }
-
-                        @Override
-                        protected void hadSuccess() {
-                            // No need to update the UI, the event bus will get it done
-                        }
-
-                        @Override
-                        protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
-                        }
-                    };
-                    worker.execute();
-                }
-            });
-
-            newFolderMenu.add(createNewItem);
-            newFolderMenu.addSeparator();
-
-            DomainExplorerTopComponent detc = (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
-            TreeNodeNode workspaceNodeNode = (TreeNodeNode)detc.getExplorerManager().getRootContext();
-            
-            Node[] nodes = workspaceNodeNode.getChildren().getNodes();
-            
-            for(Node node : nodes) {
-                
-                if (!(node instanceof TreeNodeNode)) {
-                    continue;
-                }
-                
-                TreeNodeNode treeNodeNode = (TreeNodeNode)node;
-                TreeNode treeNode = treeNodeNode.getTreeNode();
-                                
-                if (!DomainUtils.hasWriteAccess(treeNode)) {
-                    continue;
-                }
-                
-                
-                JMenuItem commonRootItem = new JMenuItem(treeNodeNode.getDisplayName());
-                commonRootItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent actionEvent) {
-                        SimpleWorker worker = new SimpleWorker() {
-                            @Override
-                            protected void doStuff() throws Exception {
-//                                List<Long> ids = new ArrayList<Long>();
-//                                for (RootedEntity rootedEntity : rootedEntityList) {
-//                                    ids.add(rootedEntity.getEntity().getId());
-//                                }
-//                                ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids,
-//                                        EntityConstants.ATTRIBUTE_ENTITY);
-                            }
-
-                            @Override
-                            protected void hadSuccess() {
-                                // No need to update the UI, the event bus will get it done
-                            }
-
-                            @Override
-                            protected void hadError(Throwable error) {
-                                SessionMgr.getSessionMgr().handleException(error);
-                            }
-                        };
-                        worker.execute();
-                    }
-                });
-
-                newFolderMenu.add(commonRootItem);
-            }
-
-            return newFolderMenu;
-        }
-    }
     
     private final class RenameAction extends AbstractAction {
 
@@ -455,7 +342,6 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
             browser.open();
             browser.requestActive();
             DomainExplorerTopComponent explorer = (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
-            //explorer.selectNode(DomainObjectNode.this);
             // Deselect it first, so that this generates another selection event, since the browser didn't exist when the first one was generated
             explorer.getSelectionModel().deselect(DomainObjectNode.this);
             explorer.getSelectionModel().select(DomainObjectNode.this, true);

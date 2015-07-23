@@ -39,7 +39,7 @@ public class OntologyNode extends DomainObjectNode {
     }
     
     private OntologyNode(ChildFactory parentChildFactory, final OntologyChildFactory childFactory, Ontology ontology) throws Exception {
-        super(parentChildFactory, DomainUtils.isEmpty(ontology.getTerms()) ? Children.LEAF:Children.create(childFactory, true), ontology);
+        super(parentChildFactory, DomainUtils.isEmpty(ontology.getTerms()) ? Children.LEAF:Children.create(childFactory, false), ontology);
         this.childFactory = childFactory;
         if (!DomainUtils.isEmpty(ontology.getTerms())) {
             getLookupContents().add(new Index.Support() {

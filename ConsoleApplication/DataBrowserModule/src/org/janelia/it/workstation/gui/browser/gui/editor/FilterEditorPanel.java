@@ -208,8 +208,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
                         filter.setName(newName);
                         DomainDAO dao = DomainMgr.getDomainMgr().getDao();
                         dao.save(SessionMgr.getSubjectKey(), filter);
-                        Workspace workspace = DomainExplorerTopComponent.getInstance().getCurrentWorkspace();
-                        dao.addChild(SessionMgr.getSubjectKey(), workspace, filter);
+                        dao.addChild(SessionMgr.getSubjectKey(), dao.getDefaultWorkspace(SessionMgr.getSubjectKey()), filter);
                     }
 
                     @Override

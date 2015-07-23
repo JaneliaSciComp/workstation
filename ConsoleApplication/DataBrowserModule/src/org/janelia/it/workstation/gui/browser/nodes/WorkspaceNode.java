@@ -12,68 +12,30 @@ import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
+import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
+import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.actions.RenameAction;
-import org.openide.nodes.Children;
-import org.openide.nodes.Index;
 import org.openide.nodes.Node;
 import org.openide.nodes.NodeTransfer;
 import org.openide.util.datatransfer.PasteType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TreeNodeNode extends DomainObjectNode {
+public class WorkspaceNode extends TreeNodeNode {
     
-    private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
+    private final static Logger log = LoggerFactory.getLogger(WorkspaceNode.class);
     
-    protected final TreeNodeChildFactory childFactory;
-    
-    public TreeNodeNode(TreeNodeChildFactory parentChildFactory, TreeNode treeNode) {
-        this(parentChildFactory, treeNode.getNumChildren()==0?null:new TreeNodeChildFactory(treeNode), treeNode);
+    public WorkspaceNode(TreeNodeChildFactory parentChildFactory, TreeNode treeNode) {
+        super(parentChildFactory, treeNode);
     }
     
-    protected TreeNodeNode(TreeNodeChildFactory parentChildFactory, final TreeNodeChildFactory childFactory, TreeNode treeNode) {
-        super(parentChildFactory, treeNode.getNumChildren()==0?Children.LEAF:Children.create(childFactory, false), treeNode);
-        this.childFactory = childFactory;
-        if (treeNode.getNumChildren()>0) {
-            getLookupContents().add(new Index.Support() {
-                @Override
-                public Node[] getNodes() {
-                    return getChildren().getNodes();
-                }
-                @Override
-                public int getNodesCount() {
-                    return getNodes().length;
-                }
-                @Override
-                public void reorder(final int[] order) {
-                    SimpleWorker worker = new SimpleWorker() {
-                        @Override
-                        protected void doStuff() throws Exception {
-                            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                            dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
-                        }
-                        @Override
-                        protected void hadSuccess() {
-                            childFactory.refresh();
-                        }
-                        @Override
-                        protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
-                        }
-                    };
-                    worker.execute();
-                }
-            });
-        }
+    private WorkspaceNode(TreeNodeChildFactory parentChildFactory, final TreeNodeChildFactory childFactory, TreeNode treeNode) {
+        super(parentChildFactory, childFactory, treeNode);
     }
     
     public TreeNode getTreeNode() {
@@ -114,32 +76,6 @@ public class TreeNodeNode extends DomainObjectNode {
         return actions.toArray(new Action[0]);
     }
     
-    @Override
-    public void setName(final String newName) {
-        final TreeNode treeNode = getTreeNode();
-        final String oldName = treeNode.getName();
-        treeNode.setName(newName);
-
-        SimpleWorker worker = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                log.trace("Changing name from " + oldName + " to: " + newName);
-                final DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                dao.updateProperty(SessionMgr.getSubjectKey(), treeNode, "name", newName);
-            }
-            @Override
-            protected void hadSuccess() {
-                log.info("Fire name change from" + oldName + " to: " + newName);
-                fireDisplayNameChange(oldName, newName); 
-            }
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        worker.execute();
-    }
-
     @Override
     public PasteType getDropType(final Transferable t, int action, int index) {
         final TreeNode treeNode = getTreeNode();                
@@ -187,9 +123,5 @@ public class TreeNodeNode extends DomainObjectNode {
         if (p != null) {
             s.add(p);
         }
-    }
-
-    public void refresh() {
-        childFactory.refresh();
     }
 }

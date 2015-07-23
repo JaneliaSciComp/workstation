@@ -98,30 +98,6 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             else {
                 return null;
             }
-//            else if (Sample.class.isAssignableFrom(key.getClass())) {
-//                return new SampleNode(this, (Sample)key);
-//            }
-//            else if (NeuronFragment.class.isAssignableFrom(key.getClass())) {
-//                return new NeuronFragmentNode(this, (NeuronFragment)key);
-//            }
-//            else if (LSMImage.class.isAssignableFrom(key.getClass())) {
-//                return new LSMImageNode(this, (LSMImage)key);
-//            }
-//            else if (ScreenSample.class.isAssignableFrom(key.getClass())) {
-//                return new ScreenSampleNode(this, (ScreenSample)key);
-//            }
-//            else if (FlyLine.class.isAssignableFrom(key.getClass())) {
-//                return new FlyLineNode(this, (FlyLine)key);
-//            }
-//            else if (CompartmentSet.class.isAssignableFrom(key.getClass())) {
-//                return new CompartmentSetNode(this, (CompartmentSet)key);
-//            }
-//            else if (DeadReference.class.isAssignableFrom(key.getClass())) {
-//                return new DeadReferenceNode(this, (DeadReference)key);
-//            }
-//            else {
-//                log.warn("Cannot handle type: " + key.getClass().getName());
-//            }
         }
         catch (Exception e) {
             log.error("Error creating node for key " + key, e);
@@ -152,21 +128,6 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         }
         
         refresh();
-
-//            SimpleWorker worker = new SimpleWorker() {
-//                @Override
-//                protected void doStuff() throws Exception {
-//                }
-//                @Override
-//                protected void hadSuccess() {
-//                    refresh();
-//                }
-//                @Override
-//                protected void hadError(Throwable error) {
-//                    SessionMgr.getSessionMgr().handleException(error);
-//                }
-//            };
-//            worker.execute();
     }
 
     public void removeChild(final DomainObject domainObject) {
@@ -191,23 +152,5 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         }
         
         refresh();
-                
-//        SimpleWorker worker = new SimpleWorker() {
-//            @Override
-//            protected void doStuff() throws Exception {
-//            }
-//            @Override
-//            protected void hadSuccess() {
-//                log.info("refreshing view after removing child");
-//                refresh();
-//            }
-//            @Override
-//            protected void hadError(Throwable error) {
-//                SessionMgr.getSessionMgr().handleException(error);
-//            }
-//        };
-//        worker.execute();
     }
-
-
 }

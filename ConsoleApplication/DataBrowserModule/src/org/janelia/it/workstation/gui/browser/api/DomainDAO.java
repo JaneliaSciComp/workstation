@@ -188,6 +188,14 @@ public class DomainDAO {
     }
 
     /**
+     * Get the domain object referenced by the type and id. 
+     */
+    public DomainObject getDomainObject(String subjectKey, Class<? extends DomainObject> domainClass, Long id) {
+        Reference reference = new Reference(getCollectionName(domainClass), id);
+        return getDomainObject(subjectKey, reference);
+    }
+    
+    /**
      * Get the domain object referenced by the given Reference.
      */
     public DomainObject getDomainObject(String subjectKey, Reference reference) {
@@ -325,6 +333,10 @@ public class DomainDAO {
     public List<Annotation> getAnnotations(String subjectKey, Collection<Long> targetIds) {
         Set<String> subjects = getSubjectSet(subjectKey);
         return toList(annotationCollection.find("{targetId:{$in:#},readers:{$in:#}}",targetIds,subjects).as(Annotation.class));
+    }
+    
+    public Workspace getDefaultWorkspace(String subjectKey) {
+        return treeNodeCollection.findOne("{class:#,ownerKey:#}",Workspace.class.getName(),subjectKey).as(Workspace.class);
     }
     
     public Collection<Workspace> getWorkspaces(String subjectKey) {
@@ -535,7 +547,23 @@ public class DomainDAO {
         Reference ref = new Reference();
         ref.setTargetId(domainObject.getId());
         ref.setTargetType(getCollectionName(domainObject));
-        treeNode.getChildren().add(ref);
+        treeNode.addChild(ref);
+        save(subjectKey, treeNode);
+    }
+    
+    public void addChildren(String subjectKey, TreeNode treeNode, List<DomainObject> domainObjects) throws Exception {
+        if (domainObjects==null) {
+            throw new IllegalArgumentException("Cannot add null child");
+        }
+        for(DomainObject obj : domainObjects) {
+            if (obj.getId()==null) {
+                throw new IllegalArgumentException("Cannot add child without an id");
+            }
+            Reference ref = new Reference();
+            ref.setTargetId(obj.getId());
+            ref.setTargetType(getCollectionName(obj));
+            treeNode.addChild(ref);
+        }
         save(subjectKey, treeNode);
     }
     
@@ -549,6 +577,7 @@ public class DomainDAO {
         Long targetId = domainObject.getId();
         String targetType = getCollectionName(domainObject);
         Reference reference = new Reference(targetType, targetId);
+        log.info("Removing "+domainObject.getName()+" from "+treeNode.getName());
         removeReference(subjectKey, treeNode, reference);
     }
     
@@ -570,7 +599,6 @@ public class DomainDAO {
             log.warn("Could not update "+type+"#"+domainObject.getId()+"."+propName+": "+wr.getError());
         }
     }
-    
     
     // UNSECURE METHODS, SERVER SIDE ONLY
     // TODO: MOVE THESE ELSEWHERE
