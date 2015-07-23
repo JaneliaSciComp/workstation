@@ -97,7 +97,7 @@ public class AxesActor implements GLActor
         this.renderMethod = renderMethod;
     }
 
-    public void setAxisLengths( double xAxisLength, double yAxisLength, double zAxisLength ) {
+    public final void setAxisLengths( double xAxisLength, double yAxisLength, double zAxisLength ) {
         axisLengths[ 0 ] = xAxisLength;
         axisLengths[ 1 ] = yAxisLength;
         axisLengths[ 2 ] = zAxisLength;
@@ -290,21 +290,20 @@ public class AxesActor implements GLActor
         lineBuffer.rewind();
 		
 		final int numVertices = baseBuffer.capacity() / 3;		
-		final int colorBufferByteSize = FLOAT_BYTE_SIZE * (numVertices * 4);
+		final int colorBufferByteSize = (numVertices * 4);
 		
-		ByteBuffer colorBaseBuffer = ByteBuffer.allocateDirect( colorBufferByteSize );
-		colorBaseBuffer.order( ByteOrder.nativeOrder() );
-		FloatBuffer colorBuffer = colorBaseBuffer.asFloatBuffer();
-		float alpha = 1.0f;
-		float[] color = new float[3];
+		ByteBuffer colorBuffer = ByteBuffer.allocateDirect( colorBufferByteSize );
+		colorBuffer.order( ByteOrder.nativeOrder() );
+		byte alpha = (byte)255;
+		byte[] color = new byte[3];
 		if (context.isWhiteBackground()) {
-			color[ 0] = 1.0f;
-			color[ 1] = 0.85f;
-			color[ 2] = 0.85f;
+			color[ 0] = (byte)255;
+			color[ 1] = (byte)218;
+			color[ 2] = (byte)218;
 		} else {
-			color[ 0] = 0.30f;
-			color[ 1] = 0.15f;
-			color[ 2] = 0.15f;
+			color[ 0] = 77;
+			color[ 1] = 38;
+			color[ 2] = 38;
 		}
 		for (int i = 0; i < numVertices; i++) {
 			colorBuffer.put(color);
@@ -375,7 +374,7 @@ public class AxesActor implements GLActor
         }
         gl.glBufferData(
                 GL2GL3.GL_ARRAY_BUFFER,
-                (long) (colorBuffer.capacity() * FLOAT_BYTE_SIZE),
+                (long) (colorBuffer.capacity()),
                 colorBuffer,
                 GL2GL3.GL_STATIC_DRAW
         );
