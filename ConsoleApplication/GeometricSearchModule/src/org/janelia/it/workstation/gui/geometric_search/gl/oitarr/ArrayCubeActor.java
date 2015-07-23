@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.GL4;
 import java.io.File;
 import java.nio.FloatBuffer;
+import java.util.Random;
 
 /**
  * Created by murphys on 7/20/2015.
@@ -59,13 +60,13 @@ public class ArrayCubeActor extends SparseVolumeBaseActor
 
         super.init(gl);
 
-        //viList.clear();
-
-        //viGroup vg1 = new viGroup(0.0f, 0.0f, 0.0f, 1.0f);
-        //viGroup vg2 = new viGroup(0.0f, 0.0f, 0.7f, 1.0f);
-
-        //viList.add(vg1);
-        //viList.add(vg2);
+        viList.clear();
+        
+        Random rn = new Random();
+        
+        for (int i=0;i<1000000;i++) {
+            viList.add(new viGroup(rn.nextFloat(), rn.nextFloat(), rn.nextFloat(), 1.0f));
+        }
 
         FloatBuffer fb=FloatBuffer.allocate(viList.size()*4); // 3 floats per vertex, 1 for intensity
 

@@ -3,9 +3,9 @@
 layout(points) in;
 
 //layout(points, max_vertices=1) out;
-layout(triangle_strip, max_vertices=4) out;
+//layout(triangle_strip, max_vertices=4) out;
 //layout(triangle_strip, max_vertices=12) out;
-//layout(triangle_strip, max_vertices=24) out;
+layout(triangle_strip, max_vertices=24) out;
 
 out float intensityF;
 out float vz;
@@ -16,7 +16,7 @@ uniform mat4 mvp;
 uniform mat4 proj;
 uniform vec3 voxelUnitSize;
 
-#define GTYPE 2
+#define GTYPE 4
 
 void main()
 {
