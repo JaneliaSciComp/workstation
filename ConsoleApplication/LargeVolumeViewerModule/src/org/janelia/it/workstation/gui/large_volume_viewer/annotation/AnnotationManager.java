@@ -892,27 +892,29 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         // prompt the user for a name, but suggest a standard name
         final String neuronName = promptForNeuronName(getNeuronName(annotationModel.getCurrentWorkspace()));
 
-        // create it:
-        SimpleWorker creator = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.createNeuron(neuronName);
-            }
+        if (neuronName != null) {
+            // create it:
+            SimpleWorker creator = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.createNeuron(neuronName);
+                }
 
-            @Override
-            protected void hadSuccess() {
-                // nothing here, annModel emits its own signals
-            }
+                @Override
+                protected void hadSuccess() {
+                    // nothing here, annModel emits its own signals
+                }
 
-            @Override
-            protected void hadError(Throwable error) {
-                presentError(
-                        "Could not create neuron!",
-                        "Error",
-                        error);
-            }
-        };
-        creator.execute();
+                @Override
+                protected void hadError(Throwable error) {
+                    presentError(
+                            "Could not create neuron!",
+                            "Error",
+                            error);
+                }
+            };
+            creator.execute();
+        }
     }
 
     public void deleteCurrentNeuron() {

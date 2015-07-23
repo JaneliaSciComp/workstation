@@ -216,7 +216,8 @@ public class WorkspaceNeuronList extends JPanel {
             for (TmNeuron neuron: workspace.getNeuronList()) {
                 neuronTableModel.addNeuron(neuron);
             }
-            // it surprises me that this test is necessary
+            // it surprises me that this test is necessary; why doesn't the model
+            //  know enough not to update itself if it's empty?
             if (neuronTableModel.getRowCount() > 0) {
                 neuronTableModel.fireTableDataChanged();
             }
