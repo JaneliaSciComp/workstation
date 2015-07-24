@@ -290,8 +290,8 @@ public class MeshDrawActor implements GLActor {
         
         if (matrixManager != null) {
             double far = configurator.getContext().getCameraFocusDistance() * 4.0;
-            matrixManager.recalculate(gl, 10.0, far);
-            //matrixManager.recalculate(gl);
+            //matrixManager.recalculate(gl, 10.0, far);
+            matrixManager.recalculate(gl);
         }
 
         ViewMatrixSupport vms = new ViewMatrixSupport();
@@ -346,7 +346,7 @@ public class MeshDrawActor implements GLActor {
                 return;
 
         }
-        if (configurator.isUseIdAttribute()  &&  configurator.getPicker().inPick()) {
+        if (configurator.isUseIdAttribute()) {
             int storagePerVertexNormalColor = 2 * storagePerVertex;
             if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
                 storagePerVertexNormalColor = 3 * storagePerVertex;

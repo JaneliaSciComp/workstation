@@ -3,7 +3,7 @@
 uniform vec4 dcolor;
 
 struct NodeType {
-    vec4 color;
+    uint colorUPack;
     float depth;
 };
 
@@ -26,9 +26,17 @@ layout (std430, binding = 1) buffer FragmentArrays1 {
     NodeType nodes1[];
 };
 
+layout (std430, binding = 2) buffer FragmentArrays2 {
+    NodeType nodes2[];
+};
+
+layout (std430, binding = 3) buffer FragmentArrays3 {
+    NodeType nodes3[];
+};
+
 out vec4 blankOut;
 
-#define BUFFER_DEPTH 50
+#define BUFFER_DEPTH 135
 
 void main()
 {
@@ -40,25 +48,23 @@ void main()
 
 
     ivec2 fl = ivec2(gl_FragCoord.xy);
-
     uint oldPosition = imageAtomicAdd(head_pointer_image, fl, 1);
-
     int iPosition = int(oldPosition);
-
     int zSize=hpi_width * hpi_height;
-
     int xyOffset = (fl.y * hpi_width + fl.x);
 
     if (iPosition > -1 && iPosition < BUFFER_DEPTH) {
-        if (iPosition<5) {
-            nodes0[xyOffset + zSize*iPosition].color = color;
-        } else {
-            nodes0[xyOffset + zSize*iPosition].color = color;
-        }
+        nodes0[xyOffset + zSize*iPosition].colorUPack = packUnorm4x8(color);
         nodes0[xyOffset + zSize*iPosition].depth = dz;
-    } else if (iPosition > BUFFER_DEPTH && iPosition < BUFFER_DEPTH*2) {
-        nodes1[xyOffset + zSize*(iPosition-BUFFER_DEPTH)].color = color;
+    } else if (iPosition < BUFFER_DEPTH*2) {
+        nodes1[xyOffset + zSize*(iPosition-BUFFER_DEPTH)].colorUPack = packUnorm4x8(color);
         nodes1[xyOffset + zSize*(iPosition-BUFFER_DEPTH)].depth = dz;
+    } else if (iPosition < BUFFER_DEPTH*3) {
+        nodes2[xyOffset + zSize*(iPosition-BUFFER_DEPTH*2)].colorUPack = packUnorm4x8(color);
+        nodes2[xyOffset + zSize*(iPosition-BUFFER_DEPTH*2)].depth = dz;
+    } else if (iPosition < BUFFER_DEPTH*4) {
+        nodes3[xyOffset + zSize*(iPosition-BUFFER_DEPTH*3)].colorUPack = packUnorm4x8(color);
+        nodes3[xyOffset + zSize*(iPosition-BUFFER_DEPTH*3)].depth = dz;
     } 
 
     blankOut = vec4(0.0, 0.0, 0.0, 0.0);

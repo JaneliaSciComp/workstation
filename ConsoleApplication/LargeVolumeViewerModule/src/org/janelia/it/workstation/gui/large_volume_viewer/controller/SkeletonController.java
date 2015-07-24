@@ -70,6 +70,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         actor.setNextParentByID(nextParentId);        
     }
     
+    public void unregister(SkeletonActor actor) {
+        this.actors.remove(actor);        
+    }
+    
     public void registerForEvents(LargeVolumeViewerTranslator lvvTranslator) {
         this.lvvTranslator = lvvTranslator;
     }
@@ -90,6 +94,12 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     
     public void registerForEvents(JComponent component) {
         updateListeners.add(component);
+    }
+    
+    public void unregister(JComponent component) {
+        if (updateListeners.contains(component)) {
+            updateListeners.remove(component);
+        }
     }
 
     public Vec3 getAnnotationPosition( long annotationID ) {
