@@ -346,7 +346,7 @@ public class MeshDrawActor implements GLActor {
                 return;
 
         }
-        if (configurator.isUseIdAttribute()  &&  configurator.getPicker().inPick()) {
+        if (configurator.isUseIdAttribute()) {
             int storagePerVertexNormalColor = 2 * storagePerVertex;
             if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
                 storagePerVertexNormalColor = 3 * storagePerVertex;

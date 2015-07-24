@@ -158,7 +158,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             fixedFunctionActors.clear();
             fixedFunctionActors.add(ffAxesActor);
             fixedFunctionActors.add(linesDrawActor);
-            //fixedFunctionActors.add(refAxisActor);
+            fixedFunctionActors.add(refAxisActor);
             
             viewer.addMenuAction(new BackgroundPickAction(viewer));
 //            viewer.addMenuAction(
