@@ -7,7 +7,7 @@ import javax.swing.tree.TreeSelectionModel;
 import org.janelia.it.workstation.gui.browser.nodes.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
-import org.janelia.it.workstation.gui.browser.nodes.RootNode;
+import org.janelia.it.workstation.gui.browser.nodes.UserViewRootNode;
 
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.view.BeanTreeView;
@@ -22,14 +22,19 @@ import org.openide.nodes.Node;
 public class NodeChooser extends AbstractChooser<Node> implements ExplorerManager.Provider {
 
     private final ExplorerManager mgr = new ExplorerManager();  
+    private final UserViewRootNode root;
     private final BeanTreeView beanTreeView;
     private final List<String> selectedPaths = new ArrayList<>();
 
-    public NodeChooser(String title, RootNode root, boolean allowMulti) {
-        mgr.setRootContext(root);
+    public NodeChooser(String title, boolean allowMulti) {
         setTitle(title);
-        
+        this.root = new UserViewRootNode();
         this.beanTreeView = new CustomTreeView(this);
+        mgr.setRootContext(root);
+        
+        for(Node node : root.getChildren().getNodes()) {
+            beanTreeView.expandNode(node);
+        }
         
         addChooser(beanTreeView);        
         beanTreeView.setSelectionMode(allowMulti 

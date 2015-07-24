@@ -1,7 +1,10 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.LinkedList;
+import java.util.List;
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.openide.nodes.Node;
 import org.openide.util.Enumerations;
 
@@ -12,6 +15,15 @@ import org.openide.util.Enumerations;
  */
 public class NodeUtils {
 
+    public static String createPathString(Long[] idPath) {
+        StringBuilder sb = new StringBuilder();
+        for(Long id : idPath) {
+            if (sb.length()>0) sb.append("/");
+            sb.append(id);
+        }
+        return sb.toString();
+    }
+    
     public static String createPathString(DomainObjectNode node) {
         LinkedList<Long> ids = new LinkedList<>();
 
@@ -23,12 +35,24 @@ public class NodeUtils {
             currNode = currNode.getParentNode();
         }
 
-        StringBuilder sb = new StringBuilder();
-        for(Long id : ids) {
-            if (sb.length()>0) sb.append("/");
-            sb.append(id);
+        return createPathString(ids.toArray(new Long[ids.size()]));
+    }
+    
+    public static Long[] createIdPath(String pathString) {
+        List<Long> path = new ArrayList<>();
+        for(String s : pathString.split("/")) {
+            path.add(new Long(s));
         }
-        return sb.toString();
+        return path.toArray(new Long[path.size()]);
+    }
+    
+    public static Long[] createIdPath(DomainObject... domainObjects) {
+        Long[] array = new Long[domainObjects.length];
+        int i = 0;
+        for(DomainObject domainObject : domainObjects) {
+            array[i++] = domainObject.getId();
+        }
+        return array;
     }
     
     public static Long[] createIdPath(Node node) {

@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -20,22 +21,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The root node of the Data Explorer, containing all the Workspace nodes
- * that the user can read.
+ * A root node for Workspaces, containing only workspaces owned by the user.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class RootNode extends AbstractNode {
+public class UserViewRootNode extends AbstractNode {
     
-    private final static Logger log = LoggerFactory.getLogger(RootNode.class);
+    private final static Logger log = LoggerFactory.getLogger(UserViewRootNode.class);
     
-    private final RootNodeChildFactory childFactory;
+    private final UserViewRootNodeChildFactory childFactory;
     
-    public RootNode() {
-        this(new RootNodeChildFactory());
+    public UserViewRootNode() {
+        this(new UserViewRootNodeChildFactory());
     }
     
-    private RootNode(RootNodeChildFactory childFactory) {
+    private UserViewRootNode(UserViewRootNodeChildFactory childFactory) {
         super(Children.create(childFactory, false));
         this.childFactory = childFactory;
     }
@@ -61,24 +61,30 @@ public class RootNode extends AbstractNode {
         childFactory.refresh();
     }   
     
-    private static class RootNodeChildFactory extends ChildFactory<DomainObject> {
+    private static class UserViewRootNodeChildFactory extends ChildFactory<DomainObject> {
 
         @Override
         protected boolean createKeys(List<DomainObject> list) {
             DomainDAO dao = DomainMgr.getDomainMgr().getDao();
             List<Workspace> workspaces = new ArrayList<>(dao.getWorkspaces(SessionMgr.getSubjectKey()));
 
-            Collections.sort(workspaces, new Comparator<Workspace>() {
+            List<Workspace> owned = new ArrayList<>();
+            for(Workspace workspace : workspaces) {
+                if (DomainUtils.isOwner(workspace)) {
+                    owned.add(workspace);
+                }
+            }
+            
+            Collections.sort(owned, new Comparator<Workspace>() {
                 @Override
                 public int compare(Workspace o1, Workspace o2) {
-                    return ComparisonChain.start()
-                            .compareTrueFirst(DomainUtils.isOwner(o1), DomainUtils.isOwner(o2))
-                            .compare(o1.getOwnerKey(), o2.getOwnerKey())
-                            .compare(o1.getId(), o2.getId()).result();
+                    return ComparisonChain.start().compare(o1.getId(), o2.getId()).result();
                 }
             });
 
-            list.addAll(workspaces);
+            // It's tempting to add directly to the list above, but it seems
+            // to perform much better when we use addAll. 
+            list.addAll(owned);
             return true;
         }
 
@@ -86,7 +92,7 @@ public class RootNode extends AbstractNode {
         protected Node createNodeForKey(DomainObject key) {
             try {
                 if (Workspace.class.isAssignableFrom(key.getClass())) {
-                    return new WorkspaceNode(null, (Workspace) key);
+                    return new UserViewTreeNodeNode((TreeNode) key);
                 }
                 else {
                     throw new IllegalStateException("Illegal root node: " + key.getClass().getName());

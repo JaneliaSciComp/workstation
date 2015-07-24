@@ -1,10 +1,13 @@
 package org.janelia.it.workstation.gui.browser.nb_action;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -17,7 +20,9 @@ import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.support.NodeChooser;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
+import org.janelia.it.workstation.gui.browser.nodes.UserViewTreeNodeNode;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
@@ -34,34 +39,42 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AddToFolderAction extends NodeAction implements Presenter.Popup {
+public class MoveToFolderAction extends NodeAction implements Presenter.Popup {
 
-    private final static Logger log = LoggerFactory.getLogger(AddToFolderAction.class);
+    private final static Logger log = LoggerFactory.getLogger(MoveToFolderAction.class);
     
     private static final int MAX_ADD_TO_ROOT_HISTORY = 5;
     
     protected final Component mainFrame = SessionMgr.getMainFrame();
 
-    private final static AddToFolderAction singleton = new AddToFolderAction();
-    public static AddToFolderAction get() {
+    private final static MoveToFolderAction singleton = new MoveToFolderAction();
+    public static MoveToFolderAction get() {
         return singleton;
     }
     
     private final List<Node> selected = new ArrayList<>();
     
-    private AddToFolderAction() {
+    private MoveToFolderAction() {
+    }
+    
+    @Override
+    public String getName() {
+        return "";
+    }
+    
+    @Override
+    public HelpCtx getHelpCtx() {
+        return new HelpCtx("");
     }
     
     @Override
     protected void performAction (Node[] activatedNodes) {
-        enable(activatedNodes);
-        for(Node node : selected) {
-            log.info("add to folder: "+node.getDisplayName()+" from "+node.getParentNode().getDisplayName());
-        }
+        // Not used, because we implement a custom popup presenter
     }
 
     @Override
     protected boolean asynchronous() {
+        // We do our own background processing
         return false;
     }
     
@@ -81,9 +94,9 @@ public class AddToFolderAction extends NodeAction implements Presenter.Popup {
         
         final DomainExplorerTopComponent explorer = (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
 
-        JMenu newFolderMenu = new JMenu("Add To Folder");
+        JMenu newFolderMenu = new JMenu("Move To Folder");
 
-        JMenuItem createNewItem = new JMenuItem("Create New Top-Level Folder...");
+        JMenuItem createNewItem = new JMenuItem("Create New Folder...");
         
         final DomainDAO dao = DomainMgr.getDomainMgr().getDao();
         final Workspace workspace = dao.getDefaultWorkspace(SessionMgr.getSubjectKey());
@@ -93,7 +106,7 @@ public class AddToFolderAction extends NodeAction implements Presenter.Popup {
 
                 // Add button clicked
                 final String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Folder Name:\n",
-                        "Create top-level folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                        "Create new folder in workspace", JOptionPane.PLAIN_MESSAGE, null, null, null);
                 if ((folderName == null) || (folderName.length() <= 0)) {
                     return;
                 }
@@ -101,21 +114,28 @@ public class AddToFolderAction extends NodeAction implements Presenter.Popup {
                 SimpleWorker worker = new SimpleWorker() {
                     
                     private TreeNode folder;
+                    private Long[] idPath;
 
                     @Override
                     protected void doStuff() throws Exception {
                         folder = new TreeNode();
                         folder.setName(folderName);
                         dao.save(SessionMgr.getSubjectKey(), folder);
+                        idPath = NodeUtils.createIdPath(workspace, folder);
                         dao.addChild(SessionMgr.getSubjectKey(), workspace, folder);
-                        addSelectedObjectsToCommonRoot(folder);
+                        moveSelectedObjectsToFolder(folder, idPath);
                     }
 
                     @Override
                     protected void hadSuccess() {
-                        explorer.refresh();
-                        // No need to update the UI, the event bus will get it done
                         log.debug("Added to folder {}",folder.getId());
+                        explorer.refresh(new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                explorer.expand(idPath);
+                                return null;
+                            }
+                        });
                     }
 
                     @Override
@@ -123,6 +143,7 @@ public class AddToFolderAction extends NodeAction implements Presenter.Popup {
                         SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
+                
                 worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating folder...", ""));
                 worker.execute();
             }
@@ -135,27 +156,35 @@ public class AddToFolderAction extends NodeAction implements Presenter.Popup {
         chooseItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                NodeChooser nodeChooser = new NodeChooser("Choose folder to add to", explorer.getRoot(), false);
+                NodeChooser nodeChooser = new NodeChooser("Choose folder to add to", false);
                 
                 int returnVal = nodeChooser.showDialog(explorer);
                 if (returnVal != NodeChooser.CHOOSE_OPTION) return;
                 if (nodeChooser.getChosenElements().isEmpty()) return;
-                final Node selectedNode = nodeChooser.getChosenElements().get(0);
+                final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
 
-                if (selectedNode instanceof TreeNodeNode) {
-                    final TreeNode folder = ((TreeNodeNode)selectedNode).getTreeNode();
+                if (selectedNode instanceof UserViewTreeNodeNode) {
+                    final TreeNode folder = selectedNode.getTreeNode();
                     SimpleWorker worker = new SimpleWorker() {
 
+                        private Long[] idPath;
+                    
                         @Override
                         protected void doStuff() throws Exception {
-                            addSelectedObjectsToCommonRoot(folder);
+                            idPath = NodeUtils.createIdPath(selectedNode);
+                            moveSelectedObjectsToFolder(folder, idPath);
                         }
 
                         @Override
                         protected void hadSuccess() {
-                            explorer.refresh();
-                            // No need to update the UI, the event bus will get it done
-                            log.debug("Added to folder {}",folder.getId());
+                            log.info("Added to folder {}",folder.getId());
+                            explorer.refresh(new Callable<Void>() {
+                                @Override
+                                public Void call() throws Exception {
+                                    explorer.expand(idPath);
+                                    return null;
+                                }
+                            });
                         }
 
                         @Override
@@ -175,16 +204,19 @@ public class AddToFolderAction extends NodeAction implements Presenter.Popup {
         newFolderMenu.add(chooseItem);
         newFolderMenu.addSeparator();
 
-        List<Long> addHistory = (List<Long>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_ROOT_HISTORY);
+        List<String> addHistory = (List<String>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_FOLDER_HISTORY);
         if (addHistory!=null && !addHistory.isEmpty()) {
 
             JMenuItem item = new JMenuItem("Recent:");
             item.setEnabled(false);
             newFolderMenu.add(item);
 
-            for (Long rootId : addHistory) {
+            for (String path : addHistory) {
 
-                final TreeNode folder = (TreeNode)dao.getDomainObject(SessionMgr.getSubjectKey(), TreeNode.class, rootId);
+                final Long[] idPath = NodeUtils.createIdPath(path);
+                final Long folderId = idPath[idPath.length-1];
+                
+                final TreeNode folder = (TreeNode)dao.getDomainObject(SessionMgr.getSubjectKey(), TreeNode.class, folderId);
                 if (folder == null) continue;
 
                 DomainUtils.hasWriteAccess(folder);
@@ -196,14 +228,20 @@ public class AddToFolderAction extends NodeAction implements Presenter.Popup {
                         SimpleWorker worker = new SimpleWorker() {
                             @Override
                             protected void doStuff() throws Exception {
-                                addSelectedObjectsToCommonRoot(folder);
+                                moveSelectedObjectsToFolder(folder, idPath);
                             }
 
                             @Override
                             protected void hadSuccess() {
-                                explorer.refresh();
-                                // No need to update the UI, the event bus will get it done
                                 log.debug("Added to folder {}",folder.getId());
+                                explorer.refresh(new Callable<Void>() {
+                                    @Override
+                                    public Void call() throws Exception {
+                                        // TODO: this only works if the folder is at the top level, we should fix this
+                                        explorer.expand(idPath);
+                                        return null;
+                                    }
+                                });
                             }
 
                             @Override
@@ -222,42 +260,41 @@ public class AddToFolderAction extends NodeAction implements Presenter.Popup {
         return newFolderMenu;
     }
     
-    @Override
-    public String getName() {
-        return "";
-    }
-    
-    @Override
-    public HelpCtx getHelpCtx() {
-        return new HelpCtx("");
-    }
-    
-    private void addSelectedObjectsToCommonRoot(TreeNode folder) throws Exception {
+    private void moveSelectedObjectsToFolder(TreeNode folder, Long[] idPath) throws Exception {
         // Update database
+        
+        Multimap<TreeNode,DomainObject> removeMap = ArrayListMultimap.create();
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Node node : selected) {
             DomainObjectNode selectedNode = (DomainObjectNode)node;
+            TreeNodeNode parentNode = (TreeNodeNode)node.getParentNode();
             domainObjects.add(selectedNode.getDomainObject());
+            removeMap.put(parentNode.getTreeNode(), selectedNode.getDomainObject());
         }
+        
         DomainDAO dao = DomainMgr.getDomainMgr().getDao();
         dao.addChildren(SessionMgr.getSubjectKey(), folder, domainObjects);
-        log.info("Added {} objects to folder {}",domainObjects.size(),folder.getName());
+        for(TreeNode treeNode : removeMap.keys()) {
+            dao.removeChildren(SessionMgr.getSubjectKey(), treeNode, removeMap.get(treeNode));
+        }
+        
         // Update history
-        updateAddToFolderHistory(folder);                
+        updateAddToFolderHistory(folder, idPath);                
     }
     
-    private void updateAddToFolderHistory(TreeNode folder) {
-        List<Long> addHistory = (List<Long>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_ROOT_HISTORY);
+    private void updateAddToFolderHistory(TreeNode folder, Long[] idPath) {
+        String pathString = NodeUtils.createPathString(idPath);
+        List<String> addHistory = (List<String>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_FOLDER_HISTORY);
         if (addHistory==null) {
             addHistory = new ArrayList<>();
         }
-        if (addHistory.contains(folder.getId())) {
+        if (addHistory.contains(pathString)) {
             return;
         }
         if (addHistory.size()>=MAX_ADD_TO_ROOT_HISTORY) {
             addHistory.remove(addHistory.size()-1);
         }
-        addHistory.add(0, folder.getId());
-        SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_ROOT_HISTORY, addHistory);
+        addHistory.add(0, pathString);
+        SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_FOLDER_HISTORY, addHistory);
     }
 }

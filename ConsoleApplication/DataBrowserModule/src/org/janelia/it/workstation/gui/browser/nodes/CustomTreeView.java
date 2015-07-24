@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import org.openide.explorer.ExplorerManager;
@@ -16,7 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Provides some useful functionality op top of the BeanTreeView. 
  * Adapted from CustomTreeView in com.nbtaskfocus.core.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class CustomTreeView extends BeanTreeView {
     
@@ -39,23 +44,23 @@ public class CustomTreeView extends BeanTreeView {
         tree.scrollRowToVisible(0);
     }
     
-//    public void scrollToNode(Node n) {
-//        TreeNode tn = Visualizer.findVisualizer(n);
-//        if (tn == null) {
-//            return;
-//        }
-//
-//        TreeModel model = tree.getModel();
-//        if (!(model instanceof DefaultTreeModel)) {
-//            return;
-//        }
-//
-//        TreePath path = new TreePath(((DefaultTreeModel) model).getPathToRoot(tn));
-//        Rectangle r = tree.getPathBounds(path);
-//        if (r != null) {
-//            tree.scrollRectToVisible(r);
-//        }
-//    }
+    public void scrollToNode(Node n) {
+        TreeNode tn = Visualizer.findVisualizer(n);
+        if (tn == null) {
+            return;
+        }
+
+        TreeModel model = tree.getModel();
+        if (!(model instanceof DefaultTreeModel)) {
+            return;
+        }
+
+        TreePath path = new TreePath(((DefaultTreeModel) model).getPathToRoot(tn));
+        Rectangle r = tree.getPathBounds(path);
+        if (r != null) {
+            tree.scrollRectToVisible(r);
+        }
+    }
 
     public List<Long[]> getExpandedPaths() {
 
@@ -78,7 +83,8 @@ public class CustomTreeView extends BeanTreeView {
     }
 
     /**
-     * Useful because it doesn't scroll to the expanded path like BeanTreeView's showPath.
+     * Expands the given path. Useful because it doesn't scroll to the 
+     * expanded path like BeanTreeView's showPath.
      * @param path 
      */
     protected void expandPath(TreePath path) {
@@ -86,12 +92,14 @@ public class CustomTreeView extends BeanTreeView {
     }
 
     /** 
-     * Expands all the paths, when exists
+     * Expand all the given paths.
      */
     public void expandNodes(List<Long[]> exPaths) {
         for (Iterator<Long[]> it = exPaths.iterator(); it.hasNext();) {
             Long[] sp = it.next();
+            log.trace("Expanding {}",NodeUtils.createPathString(sp));
             TreePath tp = idPath2TreePath(sp);
+            log.debug("Expanding {}",tp);
             if (tp != null) {
                 expandPath(tp);
             }

@@ -13,7 +13,6 @@ import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
-import org.janelia.it.workstation.gui.browser.nodes.children.OntologyChildFactory;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -116,35 +115,35 @@ public class OntologyNode extends DomainObjectNode {
     public Action[] getActions(boolean context) {
         Action[] superActions = super.getActions(context);
         List<Action> actions = new ArrayList<Action>();
-        actions.add(RenameAction.get(RenameAction.class));
+//        actions.add(RenameAction.get(RenameAction.class));
         actions.addAll(Lists.newArrayList(superActions));
         return actions.toArray(new Action[0]);
     }
     
-    @Override
-    public void setName(final String newName) {
-        final Ontology ontology = getOntology();
-        final String oldName = ontology.getName();
-        ontology.setName(newName);
-        SimpleWorker worker = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                log.trace("Changing name from " + oldName + " to: " + newName);
-                DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                dao.updateProperty(SessionMgr.getSubjectKey(), ontology, "name", newName);
-            }
-            @Override
-            protected void hadSuccess() {
-                log.trace("Fire name change from" + oldName + " to: " + newName);
-                fireDisplayNameChange(oldName, newName); 
-            }
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        worker.execute();
-    }
+//    @Override
+//    public void setName(final String newName) {
+//        final Ontology ontology = getOntology();
+//        final String oldName = ontology.getName();
+//        ontology.setName(newName);
+//        SimpleWorker worker = new SimpleWorker() {
+//            @Override
+//            protected void doStuff() throws Exception {
+//                log.trace("Changing name from " + oldName + " to: " + newName);
+//                DomainDAO dao = DomainMgr.getDomainMgr().getDao();
+//                dao.updateProperty(SessionMgr.getSubjectKey(), ontology, "name", newName);
+//            }
+//            @Override
+//            protected void hadSuccess() {
+//                log.trace("Fire name change from" + oldName + " to: " + newName);
+//                fireDisplayNameChange(oldName, newName); 
+//            }
+//            @Override
+//            protected void hadError(Throwable error) {
+//                SessionMgr.getSessionMgr().handleException(error);
+//            }
+//        };
+//        worker.execute();
+//    }
 
     @Override
     public PasteType getDropType(final Transferable t, int action, int index) {

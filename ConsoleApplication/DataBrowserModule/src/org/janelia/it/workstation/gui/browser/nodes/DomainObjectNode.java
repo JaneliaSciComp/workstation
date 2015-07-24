@@ -26,8 +26,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
-import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
-import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
+import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
@@ -44,7 +43,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * A domain object node in the graph, usually a Filter or Object Set. 
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DomainObjectNode extends AbstractNode implements Has2dRepresentation {
@@ -115,7 +115,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         actions.add(null);
         actions.add(new OpenInNewViewerAction());
         actions.add(null);
-        actions.add(AddToFolderAction.get());
+        actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
         actions.add(null);
@@ -224,7 +224,12 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         }
         if (parentChildFactory instanceof TreeNodeChildFactory) {
             TreeNodeChildFactory treeNodeChildFactory = (TreeNodeChildFactory) parentChildFactory;
-            treeNodeChildFactory.removeChild(getDomainObject());
+            try {
+                treeNodeChildFactory.removeChild(getDomainObject());
+            }
+            catch (Exception e) {
+                throw new IOException("Error destroying node",e);
+            }
         }
         else {
             throw new IllegalStateException("Cannot destroy sample without treeNode parent");
@@ -267,7 +272,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         return null;
     }
 
-    private final class CopyNameAction extends AbstractAction {
+    protected final class CopyNameAction extends AbstractAction {
 
         public CopyNameAction() {
             putValue(NAME, "Copy Name To Clipboard");
@@ -280,7 +285,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         }
     }
 
-    private final class CopyGUIDAction extends AbstractAction {
+    protected final class CopyGUIDAction extends AbstractAction {
 
         public CopyGUIDAction() {
             putValue(NAME, "Copy GUID To Clipboard");
@@ -297,7 +302,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         }
     }
     
-    private final class RenameAction extends AbstractAction {
+    protected final class RenameAction extends AbstractAction {
 
         public RenameAction() {
             putValue(NAME, "Rename");
@@ -316,7 +321,9 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
             }
             try {
                 DomainDAO dao = DomainMgr.getDomainMgr().getDao();
+                final String oldName = domainObject.getName();
                 dao.updateProperty(SessionMgr.getSubjectKey(), domainObject, "name", newName);
+                fireDisplayNameChange(oldName, newName); 
             } 
             catch (Exception ex) {
                 SessionMgr.getSessionMgr().handleException(ex);
@@ -330,7 +337,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         }
     }
     
-    private final class OpenInNewViewerAction extends AbstractAction {
+    protected final class OpenInNewViewerAction extends AbstractAction {
 
         public OpenInNewViewerAction() {
             putValue(NAME, "Open In New Viewer");

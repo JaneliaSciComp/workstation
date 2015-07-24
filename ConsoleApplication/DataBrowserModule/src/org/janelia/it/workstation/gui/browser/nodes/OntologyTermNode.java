@@ -6,7 +6,6 @@ import java.lang.ref.WeakReference;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.nodes.children.OntologyChildFactory;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.Children;
 import org.slf4j.Logger;

@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyVetoException;
@@ -9,6 +8,7 @@ import java.util.ArrayList;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.ActionMap;
 import javax.swing.JButton;
@@ -23,6 +23,7 @@ import org.janelia.it.workstation.gui.browser.nodes.RootNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -36,7 +37,6 @@ import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.RequestProcessor;
 import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
 import org.slf4j.Logger;
@@ -99,7 +99,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
 //        bindKeys();
 
-        root = new RootNode();
+        this.root = new RootNode();
         mgr.setRootContext(root);
         
         TreeToolbar toolbar = new TreeToolbar(root);
@@ -108,18 +108,25 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                    
         List<Long[]> paths = new ArrayList<>();
         for(Node node : root.getChildren().getNodes()) {
-            DomainObjectNode objNode = ((DomainObjectNode)node);
-            Long[] id = new Long[] { objNode.getDomainObject().getId() };
-            paths.add(id);
+            beanTreeView.expandNode(node);
+//            DomainObjectNode objNode = ((DomainObjectNode)node);
+//            Long[] id = new Long[] { objNode.getDomainObject().getId() };
+//            paths.add(id);
             // TODO: expand just the first, or remember expansion?
             break;
         }
         
-        beanTreeView.expandNodes(paths);
+//        beanTreeView.expandNodes(paths);
     }
     
     public RootNode getRoot() {
         return root;
+    }
+
+    public void expand(Long[] idPath) {
+        List<Long[]> paths = new ArrayList<>();
+        paths.add(idPath);
+        beanTreeView.expandNodes(paths);
     }
     
     private class TreeToolbar extends JPanel {
@@ -180,6 +187,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 //    }
     
     public void refresh() {
+        refresh(null);
+    }
+    
+    public void refresh(final Callable<Void> success) {
                         
         final List<Long[]> expanded = beanTreeView.getExpandedPaths();
         
@@ -194,6 +205,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             protected void hadSuccess() {
                 try {
                     beanTreeView.expandNodes(expanded);
+                    ConcurrentUtils.invoke(success);
                 }
                 catch (Exception e) {
                     hadError(e);
@@ -261,17 +273,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     public ExplorerManager getExplorerManager() {
         return mgr;
     }
-
-    public void selectNode(Node node) {
-        if (node==null) return;
-        try {
-            Node[] nodes = { node };
-            mgr.setSelectedNodes(nodes);
-        }
-        catch (PropertyVetoException e) {
-            log.error("Node selection was vetoed",e);
-        }
-    }
     
     @Override
     public void resultChanged(LookupEvent lookupEvent) {
@@ -285,8 +286,19 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
     }
 
+    public void selectNode(Node node) {
+        if (node==null) return;
+        try {
+            Node[] nodes = { node };
+            mgr.setSelectedNodes(nodes);
+        }
+        catch (PropertyVetoException e) {
+            log.error("Node selection was vetoed",e);
+        }
+    }
+
     public void selectNodeById(Long id) {
-        // TODO: we need RootedEntities or Paths or something
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
 }

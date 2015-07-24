@@ -49,6 +49,8 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import java.util.HashSet;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
+import org.janelia.it.jacs.shared.utils.ReflectionUtils;
+import org.jongo.Update;
 
 /**
  * The main domain-object DAO for the JACS system.
@@ -384,6 +386,11 @@ public class DomainDAO {
         return treeNodeCollection.findOne("{_id:#,readers:{$in:#}}",id,subjects).as(TreeNode.class);
     }
     
+    public TreeNode getParentTreeNodes(String subjectKey, Long id) {
+        Set<String> subjects = getSubjectSet(subjectKey);
+        return treeNodeCollection.findOne("{'children.targetId':#,readers:{$in:#}}",id,subjects).as(TreeNode.class);
+    }
+    
     public void changePermissions(String subjectKey, String type, Long id, String granteeKey, String rights, boolean grant) throws Exception {
         Collection<Long> ids = new ArrayList<>();
         ids.add(id);
@@ -486,7 +493,10 @@ public class DomainDAO {
                 collection.save(domainObject);
             }
             else {
-                collection.update("{_id:#,writers:#,updatedDate:#}", domainObject.getId(), subjectKey, domainObject.getUpdatedDate()).with(domainObject);
+                WriteResult result = collection.update("{_id:#,writers:#,updatedDate:#}", domainObject.getId(), subjectKey, domainObject.getUpdatedDate()).with(domainObject);
+                if (result.getN()!=1) {
+                    throw new IllegalStateException("Updated "+result.getN()+" records instead of "+type+"#"+domainObject.getId());
+                }
             }
             log.info("Saved "+domainObject.getClass().getName()+"#"+domainObject.getId());
         }
@@ -551,7 +561,7 @@ public class DomainDAO {
         save(subjectKey, treeNode);
     }
     
-    public void addChildren(String subjectKey, TreeNode treeNode, List<DomainObject> domainObjects) throws Exception {
+    public void addChildren(String subjectKey, TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
         if (domainObjects==null) {
             throw new IllegalArgumentException("Cannot add null child");
         }
@@ -564,6 +574,7 @@ public class DomainDAO {
             ref.setTargetType(getCollectionName(obj));
             treeNode.addChild(ref);
         }
+        log.info("Adding "+domainObjects.size()+" objects to "+treeNode.getName());
         save(subjectKey, treeNode);
     }
     
@@ -581,6 +592,23 @@ public class DomainDAO {
         removeReference(subjectKey, treeNode, reference);
     }
     
+    public void removeChildren(String subjectKey, TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
+        if (domainObjects==null) {
+            throw new IllegalArgumentException("Cannot remove null child");
+        }
+        for(DomainObject obj : domainObjects) {
+            if (obj.getId()==null) {
+                throw new IllegalArgumentException("Cannot remove child without an id");
+            }
+            Reference ref = new Reference();
+            ref.setTargetId(obj.getId());
+            ref.setTargetType(getCollectionName(obj));
+            treeNode.removeChild(ref);
+        }
+        log.info("Removing "+domainObjects.size()+" objects from "+treeNode.getName());
+        save(subjectKey, treeNode);
+    }
+    
     public void removeReference(String subjectKey, TreeNode treeNode, Reference reference) throws Exception {
         for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
             Reference iref = i.next();
@@ -592,6 +620,12 @@ public class DomainDAO {
     }
     
     public void updateProperty(String subjectKey, DomainObject domainObject, String propName, String propValue) {
+        try {
+            ReflectionUtils.set(domainObject, propName, propValue);
+        }
+        catch (Exception e) {
+            throw new IllegalStateException("Could not update object attribute "+propName,e);
+        }
         String type = getCollectionName(domainObject);
         MongoCollection collection = getCollectionByName(type);
         WriteResult wr = collection.update("{_id:#,writers:#}",domainObject.getId(),subjectKey).with("{$set: {"+propName+":#, updatedDate:#}}",propValue,new Date());

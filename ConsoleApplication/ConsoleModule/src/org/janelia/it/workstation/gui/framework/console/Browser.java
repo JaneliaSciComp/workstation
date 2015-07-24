@@ -41,7 +41,9 @@ public class Browser implements Cloneable {
 
     private static final String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
     public static final String SEARCH_HISTORY = "SEARCH_HISTORY";
+    /** @deprecated use ADD_TO_FOLDER_HISTORY instead */
     public static final String ADD_TO_ROOT_HISTORY = "ADD_TO_ROOT_HISTORY";
+    public static final String ADD_TO_FOLDER_HISTORY = "ADD_TO_FOLDER_HISTORY";
     private static final String VIEWERS_LINKED = "Browser.ViewersLinked";
     private static final String AUTO_SHARE_TEMPLATE = "Browser.AutoShareTemplate";
 
@@ -109,6 +111,9 @@ public class Browser implements Cloneable {
     private void jbInit(BrowserModel browserModel) throws Exception {
 
         log.info("Initializing browser...");
+        
+        // TODO: delete this eventually, when we have cleaned up everyone's preferences
+        SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_ROOT_HISTORY, null);
         
         this.browserModel = browserModel;
         
