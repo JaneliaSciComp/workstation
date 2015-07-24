@@ -50,7 +50,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
     // TODO: make interleaved version of these two buffers.
     private int lineBufferHandle;
     private int colorBufferHandle; 
-    private GenericVPHelper vertexPointerHelper;
+    private GenericVPLinesHelper vertexPointerHelper;
     
     private DirectionalReferenceAxesShader shader = null;
     
@@ -84,7 +84,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
         this.matrixManager = new MatrixManager(
                 context, (int)onscreenSize[0] * 2, (int)onscreenSize[1] * 2, FocusBehavior.FIXED
         );
-        vertexPointerHelper = new GenericVPHelper(context, "directional-ref-actor");
+        vertexPointerHelper = new GenericVPLinesHelper(context, "directional-ref-actor");
         createBoundingBox(placement, parentBoundingBox, onscreenSize);
     }
 
