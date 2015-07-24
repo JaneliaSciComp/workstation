@@ -59,6 +59,10 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
         public float z;
         public float w; // intensity
     }
+    
+    public int getWidth() { return width; }
+    public int getHeight() { return height; }
+    public int getDepth() { return depth; }
 
     public List<viGroup> viList=new ArrayList<>();
 

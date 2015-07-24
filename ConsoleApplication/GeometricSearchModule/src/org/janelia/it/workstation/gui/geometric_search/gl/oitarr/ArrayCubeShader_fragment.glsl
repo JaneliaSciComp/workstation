@@ -46,7 +46,6 @@ void main()
     vec4 color = dcolor * intensityF;
     color.w = dopac;
 
-
     ivec2 fl = ivec2(gl_FragCoord.xy);
     uint oldPosition = imageAtomicAdd(head_pointer_image, fl, 1);
     int iPosition = int(oldPosition);
