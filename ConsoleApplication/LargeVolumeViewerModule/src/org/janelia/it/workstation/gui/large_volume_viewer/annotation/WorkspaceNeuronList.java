@@ -216,11 +216,6 @@ public class WorkspaceNeuronList extends JPanel {
             for (TmNeuron neuron: workspace.getNeuronList()) {
                 neuronTableModel.addNeuron(neuron);
             }
-            // it surprises me that this test is necessary; why doesn't the model
-            //  know enough not to update itself if it's empty?
-            if (neuronTableModel.getRowCount() > 0) {
-                neuronTableModel.fireTableDataChanged();
-            }
         }
     }
 
@@ -267,15 +262,18 @@ class NeuronTableModel extends AbstractTableModel {
 
     public void clear() {
         neurons = new ArrayList<>();
+        fireTableDataChanged();
     }
 
     public void addNeuron(TmNeuron neuron) {
         neurons.add(neuron);
+        fireTableDataChanged();
     }
 
     public void updateNeuron(TmNeuron neuron) {
         int neuronRow = getRowForNeuron(neuron);
         neurons.set(neuronRow, neuron);
+        fireTableDataChanged();
     }
 
     // boilerplate stuff
@@ -311,9 +309,21 @@ class NeuronTableModel extends AbstractTableModel {
         }
     }
 
-    // needed to get color to work right
-    public Class getColumnClass(int c) {
-        return getValueAt(0, c).getClass();
+    // needed to get color to work right; make sure classes match what getValueAt() returns!
+    public Class getColumnClass(int column) {
+        switch (column) {
+            case 0:
+                // neuron
+                return TmNeuron.class;
+            case 1:
+                // color
+                return Color.class;
+            case 2:
+                // creation date
+                return Date.class;
+            default:
+                return Object.class;
+        }
     }
 
     public Object getValueAt(int row, int column) {
