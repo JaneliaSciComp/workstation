@@ -11,6 +11,8 @@ import org.janelia.it.workstation.gui.geometric_search.gl.*;
 import org.janelia.it.workstation.gui.geometric_search.gl.mesh.OITMeshDrawShader;
 import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArrayCubeActor;
 import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArrayCubeShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArrayMeshShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArrayMeshActor;
 import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArraySortShader;
 import org.janelia.it.workstation.gui.geometric_search.gl.volume.SparseVolumeCubeActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.GL4Viewer;
@@ -146,6 +148,65 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         });
         cubeSequence.getActorSequence().add(pa);
         cubeSequence.setShader(cubeShader);
+
+        // MESHES //////////////////////////////////////////////////////////////
+
+        final ArrayMeshShader meshShader = new ArrayMeshShader();
+
+        meshShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+            @Override
+            public void update(GL4 gl) {
+                Matrix4 viewMatrix = viewer.getRenderer().getViewMatrix();
+                meshShader.setView(gl, viewMatrix);
+                Matrix4 projMatrix = viewer.getRenderer().getProjectionMatrix();
+                meshShader.setProjection(gl, projMatrix);
+                
+                meshShader.setWidth(gl, viewer.getWidth());
+                meshShader.setHeight(gl, viewer.getHeight());
+                meshShader.setDepth(gl, DEPTH);            
+                
+            }
+        });
+
+        File testHomeMeshDir = new File("C:\\cygwin64\\home\\murphys\\meshes");
+        File testJaneliaMeshDir = new File("U:\\meshes");
+        File testMeshDir = null;
+
+        if (testHomeMeshDir.exists()) {
+            testMeshDir = testHomeMeshDir;
+        } else {
+            testMeshDir = testJaneliaMeshDir;
+        }
+
+        File[] meshFiles = testMeshDir.listFiles();
+
+        Random rand = new Random();
+        Matrix4 vertexRotation=new Matrix4();
+
+        // Empirically derived - compatible with results of MeshLab import/export from normalized compartment coordinates
+        vertexRotation.setTranspose(-1.0f,   0.0f,   0.0f,   0.5f,
+                0.0f,  -1.0f,   0.0f,   0.25f,
+                0.0f,   0.0f,  -1.0f,   0.625f,
+                0.0f,   0.0f,   0.0f,   1.0f);
+
+        for (File meshFile : meshFiles) {
+            if (meshFile.getName().endsWith(".obj")) {
+                final ArrayMeshActor ma = new ArrayMeshActor(meshFile);
+                ma.setVertexRotation(vertexRotation);
+                ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.2f));
+                ma.setUpdateCallback(new GLDisplayUpdateCallback() {
+                    @Override
+                    public void update(GL4 gl) {
+                        Matrix4 actorModel = ma.getModel();
+                        meshShader.setModel(gl, actorModel);
+                        meshShader.setDrawColor(gl, ma.getColor());
+                    }
+                });
+                logger.info("Adding actor to meshSequence for file="+meshFile.getName());
+                meshSequence.getActorSequence().add(ma);
+            }
+        }
+        meshSequence.setShader(meshShader);
                
        /////////////////////////////////////////////////////////////////////////
 
@@ -166,7 +227,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         /////////////////////////////////////////////////////////////////////////
         
         viewer.addShaderAction(cubeSequence);
-        //viewer.addShaderAction(meshSequence);
+        viewer.addShaderAction(meshSequence);
         viewer.addShaderAction(sortSequence);
     }
     

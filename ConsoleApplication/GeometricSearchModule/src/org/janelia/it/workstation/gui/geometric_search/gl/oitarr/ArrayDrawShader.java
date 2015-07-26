@@ -17,7 +17,7 @@ public abstract class ArrayDrawShader extends GL4Shader {
 
     private Logger logger = LoggerFactory.getLogger(ArrayDrawShader.class);
 
-    private ArrayTransparencyContext tc;
+    protected ArrayTransparencyContext tc;
 
     public void setProjection(GL4 gl, Matrix4 projection) {
         setUniformMatrix4fv(gl, "proj", false, projection.asArray());
@@ -74,42 +74,6 @@ public abstract class ArrayDrawShader extends GL4Shader {
     @Override
     public void display(GL4 gl) {
         super.display(gl);
-        checkGlError(gl, "d1 ArrayDrawShader super.display() error");
-
-        if (tc==null) {
-            // assume earlier instance of this class in the display sequence has been called
-            return;
-        }
-
-        // Clear the headPointerTexture
-        gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, tc.getHeadPointerInitializerId());
-        checkGlError(gl, "d2 ArrayDrawShader glBindBuffer() error");
-
-        gl.glBindTexture(GL4.GL_TEXTURE_2D, tc.getHeadPointerTextureId());
-        checkGlError(gl, "d3 ArrayDrawShader glBindTexture() error");
-        
-        logger.info("Calling glTexSubImage2D with width="+tc.getWidth()+" height="+tc.getHeight());
-
-        gl.glTexSubImage2D(GL4.GL_TEXTURE_2D,
-                0, // level
-                0, // xoffset
-                0, // yoffset
-                tc.getWidth(),
-                tc.getHeight(),
-                GL4.GL_RED_INTEGER,
-                GL4.GL_UNSIGNED_INT,
-                0);
-        checkGlError(gl, "d4 ArrayDrawShader glTexSubImage2D() error");
-
-        gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, 0);
-
-        // Bind the headPointerTexture for read-write
-        gl.glBindImageTexture(1, tc.getHeadPointerTextureId(), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_R32UI);
-        checkGlError(gl, "d5 ArrayDrawShader glBindImageTexture() error");
-        
-        //gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 0, tc.getFragmentSSBOId());
-        //checkGlError(gl, "d6 ArrayDrawShader glBindBufferBase() error");
-
     }
 
 }

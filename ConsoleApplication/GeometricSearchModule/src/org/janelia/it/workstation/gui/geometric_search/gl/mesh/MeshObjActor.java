@@ -106,6 +106,9 @@ public class MeshObjActor extends GL4SimpleActor
         checkGlError(gl, "d glEnableVertexAttribArray 0 error");
         gl.glEnableVertexAttribArray(1);
         checkGlError(gl, "d glEnableVertexAttribArray 1 error");
+        
+        logger.info("calling glDrawArrays for fList.size()="+fList.size());
+        
         gl.glDrawArrays(GL4.GL_TRIANGLES, 0, fList.size()*3);
         checkGlError(gl, "d glDrawArrays error");
 

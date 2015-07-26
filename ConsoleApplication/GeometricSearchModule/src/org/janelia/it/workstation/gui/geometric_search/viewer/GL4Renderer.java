@@ -242,6 +242,14 @@ public class GL4Renderer implements GLEventListener
 
         // Copy member list of actors local for independent iteration.
         //logger.info("Display shader sequence starting");
+
+        try {
+            ac.display(gl);
+        } catch (Exception ex) {
+            logger.error("Error in ArrayTransparencyContext display(): "+ex.getMessage());
+            ex.printStackTrace();
+        }
+
         for (GL4ShaderActionSequence shaderAction : shaderActionList) {
 //            GL4Shader s = shaderAction.getShader();
 //            String fsName = s.getFragmentShaderResourceName();

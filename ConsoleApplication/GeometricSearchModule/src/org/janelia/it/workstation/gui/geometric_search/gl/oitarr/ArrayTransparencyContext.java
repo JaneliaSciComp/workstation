@@ -218,4 +218,32 @@ public class ArrayTransparencyContext {
         
     }
 
+    public void display(GL4 gl) throws Exception {
+        // Clear the headPointerTexture
+        gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, headPointerInitializerId.get(0));
+        checkGlError(gl, "d2 ArrayTransparencyContext glBindBuffer() error");
+
+        gl.glBindTexture(GL4.GL_TEXTURE_2D, headPointerId.get(0));
+        checkGlError(gl, "d3 ArrayTransparencyContext glBindTexture() error");
+
+        logger.info("Calling glTexSubImage2D with width="+width+" height="+height);
+
+        gl.glTexSubImage2D(GL4.GL_TEXTURE_2D,
+                0, // level
+                0, // xoffset
+                0, // yoffset
+                width,
+                height,
+                GL4.GL_RED_INTEGER,
+                GL4.GL_UNSIGNED_INT,
+                0);
+        checkGlError(gl, "d4 ArrayTransparencyContext glTexSubImage2D() error");
+
+        gl.glBindBuffer(GL4.GL_PIXEL_UNPACK_BUFFER, 0);
+
+        // Bind the headPointerTexture for read-write
+        gl.glBindImageTexture(1, headPointerId.get(0), 0, false, 0, GL4.GL_READ_WRITE, GL4.GL_R32UI);
+        checkGlError(gl, "d5 ArrayTransparencyContext glBindImageTexture() error");
+    }
+
 }
