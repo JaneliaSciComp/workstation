@@ -1,17 +1,18 @@
 package org.janelia.it.workstation.gui.browser.nb_action;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.Callable;
 import javax.swing.JOptionPane;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
+import org.janelia.it.workstation.gui.browser.gui.editor.ObjectSetEditorPanel;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -22,29 +23,31 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 
 /**
- * Allows the user to create new filters, either in their default workspace, 
- * or underneath another existing tree node. Once the filter is created, 
- * it is opened in the filter editor.
+ * Allows the user to create new object sets, either in their default workspace, 
+ * or underneath another existing tree node. Once the set is created, 
+ * it is opened in the object set editor.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
         category = "File",
-        id = "NewFilterAction"
+        id = "NewSetAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_NewFilterAction"
+        displayName = "#CTL_NewSetAction"
 )
-@ActionReference(path = "Menu/File/New", position = 1)
-@Messages("CTL_NewFilterAction=Filter")
-public final class NewFilterAction implements ActionListener {
+@ActionReference(path = "Menu/File/New", position = 2)
+@Messages("CTL_NewSetAction=Set")
+public final class NewSetAction implements ActionListener {
 
+    protected final Component mainFrame = SessionMgr.getMainFrame();
+    
     private TreeNodeNode parentNode;
     
-    public NewFilterAction() {
+    public NewSetAction() {
     }
     
-    public NewFilterAction(TreeNodeNode parentNode) {
+    public NewSetAction(TreeNodeNode parentNode) {
         this.parentNode = parentNode;
     }
     
@@ -52,42 +55,36 @@ public final class NewFilterAction implements ActionListener {
     public void actionPerformed(ActionEvent e) {
 
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
-                    
+        
         if (parentNode==null) {
-            // If there is no parent node specified, we don't actually have to 
-            // save a new filter. Just open up the editor:
-            DomainListViewTopComponent browser = initView();
-            FilterEditorPanel editor = ((FilterEditorPanel)browser.getEditor());
-            editor.loadNewFilter();
-            return;
+            // If there is no parent node specified, we'll just use the default workspace. 
+            parentNode = explorer.getWorkspaceNode();
         }
         
-        // Since we're putting the filter under a parent, we need the name up front
-        String name = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), 
-                        "Filter Name:\n", "Create new filter", JOptionPane.PLAIN_MESSAGE, null, null, null);
+        final String name = (String) JOptionPane.showInputDialog(mainFrame, "Set Name:\n",
+                "Create new set", JOptionPane.PLAIN_MESSAGE, null, null, null);
         if (StringUtils.isEmpty(name)) {
             return;
         }
         
-        final Filter filter = new Filter();
-        filter.setName(name);
-        filter.setSearchType(FilterEditorPanel.DEFAULT_SEARCH_CLASS.getName());
-        
-        // Save the filter and select it in the explorer so that it opens 
-        SimpleWorker newFilterWorker = new SimpleWorker() {
+        final ObjectSet objectSet = new ObjectSet();
+        objectSet.setName(name);
+
+        // Save the set and select it in the explorer so that it opens
+        SimpleWorker newSetWorker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
                 DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                dao.save(SessionMgr.getSubjectKey(), filter);
+                dao.save(SessionMgr.getSubjectKey(), objectSet);
                 TreeNode parentFolder = parentNode.getTreeNode();
-                dao.addChild(SessionMgr.getSubjectKey(), parentFolder, filter);
+                dao.addChild(SessionMgr.getSubjectKey(), parentFolder, objectSet);
             }
 
             @Override
             protected void hadSuccess() {
                 initView();
-                final Long[] idPath = NodeUtils.createIdPath(parentNode, filter);
+                final Long[] idPath = NodeUtils.createIdPath(parentNode, objectSet);
                 explorer.refresh(new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
@@ -103,7 +100,7 @@ public final class NewFilterAction implements ActionListener {
             }
         };
         
-        newFilterWorker.execute();
+        newSetWorker.execute();
     }
     
     private DomainListViewTopComponent initView() {
@@ -113,7 +110,7 @@ public final class NewFilterAction implements ActionListener {
             browser.open();
             browser.requestActive();
         }
-        browser.setEditorClass(FilterEditorPanel.class);
+        browser.setEditorClass(ObjectSetEditorPanel.class);
         return browser;
     }
 }

@@ -15,6 +15,8 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
+import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
+import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -111,9 +113,12 @@ public class TreeNodeNode extends DomainObjectNode {
     @Override
     public Action[] getActions(boolean context) {
         List<Action> actions = new ArrayList<>();
+        actions.add(PopupLabelAction.get());
+        actions.add(null);
         actions.add(new CopyNameAction());
         actions.add(new CopyGUIDAction());
         actions.add(null);
+        actions.add(NewDomainObjectAction.get());
         actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
@@ -124,15 +129,20 @@ public class TreeNodeNode extends DomainObjectNode {
     public PasteType getDropType(final Transferable t, int action, int index) {
         final TreeNode treeNode = getTreeNode();                
         if (t.isDataFlavorSupported(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR)) {
+            
+            final Node node = NodeTransfer.node(t, NodeTransfer.DND_MOVE + NodeTransfer.CLIPBOARD_CUT);
+            final TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
+            //log.info("{} has parent {}",node,originalParentNode);
+            
             return new PasteType() {
                 @Override
                 public Transferable paste() throws IOException {
-                    final Node node = NodeTransfer.node(t, NodeTransfer.DND_MOVE + NodeTransfer.CLIPBOARD_CUT);
                     if (node==null) {
                         throw new IOException("Cannot find node");
                     }   
                     try {
-                        TreeNodeNode originalNode = (TreeNodeNode)node.getParentNode();
+                        //TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
+                        log.info("{} has parent {}",node,originalParentNode);
                         
                         DomainObject domainObject = (DomainObject) t.getTransferData(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR);
                         if (domainObject.getId().equals(treeNode.getId())) {
@@ -142,14 +152,13 @@ public class TreeNodeNode extends DomainObjectNode {
                         log.info("Pasting {} on {}",domainObject.getId(),treeNode.getName());
                         if (DomainUtils.hasChild(treeNode, domainObject)) {
                             log.info("Child already exists.");
-                            // TODO: this should reorder the child to the end
                         }
                         else {
-                            childFactory.addChild(domainObject);    
-                        }
-                        if (DomainUtils.hasWriteAccess(originalNode.getTreeNode())) {
-                            log.info("Original node was moved or cut, so we presume it was pasted, and will destroy node");
-                            node.destroy();
+                            childFactory.addChild(domainObject);
+                            if (DomainUtils.hasWriteAccess(originalParentNode.getTreeNode())) {
+                                log.info("Original node was moved or cut, so we presume it was pasted, and will destroy node");
+                                node.destroy();
+                            }
                         }
                     } 
                     catch (IOException e) {

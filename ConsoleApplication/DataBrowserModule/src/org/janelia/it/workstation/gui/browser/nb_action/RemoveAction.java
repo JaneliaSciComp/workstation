@@ -34,8 +34,19 @@ public final class RemoveAction extends NodeAction {
     }
     
     private final List<Node> selected = new ArrayList<>();
+    private final List<Node> toRemove = new ArrayList<>();
     
     private RemoveAction() {
+    }
+    
+    @Override
+    public String getName() {
+        return "Remove "+toRemove.size()+" items";
+    }
+    
+    @Override
+    public HelpCtx getHelpCtx() {
+        return new HelpCtx("RemoveAction");
     }
     
     @Override
@@ -46,6 +57,7 @@ public final class RemoveAction extends NodeAction {
     @Override
     protected boolean enable(Node[] activatedNodes) {
         selected.clear();
+        toRemove.clear();
         for(Node node : activatedNodes) {
             
             boolean included = true;
@@ -72,18 +84,19 @@ public final class RemoveAction extends NodeAction {
                 included = false;
             }
             
+            selected.add(node);
             if (included) {
-                selected.add(node);
+                toRemove.add(node);
             }
         }
-        return selected.size()==activatedNodes.length;
+        return toRemove.size()==selected.size();
     }
     
     @Override
     protected void performAction (Node[] activatedNodes) {
         Set<TreeNodeNode> toRefresh = new HashSet<>();
         
-        for(Node node : selected) {
+        for(Node node : toRemove) {
             try {
                 // TODO: check number of references
                 TreeNodeNode treeNodeNode = (TreeNodeNode)node.getParentNode();
@@ -102,16 +115,5 @@ public final class RemoveAction extends NodeAction {
         for(TreeNodeNode treeNodeNode : toRefresh) {
             treeNodeNode.refresh();
         }
-        
-    }
-    
-    @Override
-    public String getName() {
-        return "Remove "+selected.size()+" items";
-    }
-    
-    @Override
-    public HelpCtx getHelpCtx() {
-        return new HelpCtx("RemoveAction");
     }
 }

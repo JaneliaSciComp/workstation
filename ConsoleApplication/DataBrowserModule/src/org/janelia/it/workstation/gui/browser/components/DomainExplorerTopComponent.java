@@ -19,7 +19,9 @@ import javax.swing.text.DefaultEditorKit;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
 import org.janelia.it.workstation.gui.browser.nodes.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.RootNode;
+import org.janelia.it.workstation.gui.browser.nodes.WorkspaceNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
@@ -106,17 +108,11 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         add(toolbar, BorderLayout.PAGE_START);
         add(beanTreeView, BorderLayout.CENTER);
                    
-        List<Long[]> paths = new ArrayList<>();
+        // Expand the top-level workspace nodes
         for(Node node : root.getChildren().getNodes()) {
             beanTreeView.expandNode(node);
-//            DomainObjectNode objNode = ((DomainObjectNode)node);
-//            Long[] id = new Long[] { objNode.getDomainObject().getId() };
-//            paths.add(id);
-            // TODO: expand just the first, or remember expansion?
-            break;
+            break; // For now, we'll only expand the user's default workspace
         }
-        
-//        beanTreeView.expandNodes(paths);
     }
     
     public RootNode getRoot() {
@@ -127,6 +123,19 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         List<Long[]> paths = new ArrayList<>();
         paths.add(idPath);
         beanTreeView.expandNodes(paths);
+    }
+
+    public void select(Long[] idPath) {
+        Node node = NodeUtils.findNodeWithPath(root, idPath);
+        log.info("Found node with path {}: {}",NodeUtils.createPathString(idPath),node);
+        selectNode(node);
+    }
+    
+    public WorkspaceNode getWorkspaceNode() {
+        for(Node node : root.getChildren().getNodes()) {
+            return (WorkspaceNode)node;
+        }
+        return null;
     }
     
     private class TreeToolbar extends JPanel {

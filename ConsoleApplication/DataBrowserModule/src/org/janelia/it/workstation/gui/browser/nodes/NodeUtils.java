@@ -55,6 +55,17 @@ public class NodeUtils {
         return array;
     }
     
+    public static Long[] createIdPath(Node parentNode, DomainObject domainObject) {
+        Long[] parentPath = createIdPath(parentNode);
+        Long[] array = new Long[parentPath.length+1];
+        int i = 0;
+        for(Long id : parentPath) {
+            array[i++] = id;
+        }
+        array[array.length-1] = domainObject.getId();
+        return array;
+    }
+    
     public static Long[] createIdPath(Node node) {
         if (node instanceof RootNode) {
             return new Long[0];
@@ -78,7 +89,7 @@ public class NodeUtils {
         }
     }
     
-    public static Node findPath(Node start, Long[] ids) {
+    public static Node findNodeWithPath(Node start, Long[] ids) {
 
         if (ids.length==0) {
             return start;

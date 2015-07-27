@@ -59,6 +59,7 @@ public class MoveToFolderAction extends NodeAction implements Presenter.Popup {
     
     @Override
     public String getName() {
+        // Implemented by popup presenter
         return "";
     }
     
@@ -69,7 +70,7 @@ public class MoveToFolderAction extends NodeAction implements Presenter.Popup {
     
     @Override
     protected void performAction (Node[] activatedNodes) {
-        // Not used, because we implement a custom popup presenter
+        // Implemented by popup presenter
     }
 
     @Override
@@ -84,18 +85,34 @@ public class MoveToFolderAction extends NodeAction implements Presenter.Popup {
         for(Node node : activatedNodes) {
             selected.add(node);
         }
-        return selected.size()==activatedNodes.length;
+        // Enable state is determined by the popup presenter
+        return true;
     }
     
     @Override
     public JMenuItem getPopupPresenter() {
 
-        if (selected.isEmpty()) return null;
+        assert !selected.isEmpty() : "No nodes are selected";
         
-        final DomainExplorerTopComponent explorer = (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
+        final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
 
-        JMenu newFolderMenu = new JMenu("Move To Folder");
-
+        int numOwned = 0;
+        for(Node node : selected) {
+            DomainObjectNode domainNode = (DomainObjectNode)node;
+            if (DomainUtils.isOwner(domainNode.getDomainObject())) {
+                numOwned++;
+            }
+        }
+        
+        boolean owned = numOwned>0;
+        JMenu newFolderMenu = new JMenu(owned ? "Move To Folder" : "Create Shortcut In Folder");
+        
+        if (owned && numOwned<selected.size()) {
+            // Not everything is owned, so let's just disable the item to eliminate confusion as to what happens in this case
+            newFolderMenu.setEnabled(false);
+            return newFolderMenu;
+        }
+        
         JMenuItem createNewItem = new JMenuItem("Create New Folder...");
         
         final DomainDAO dao = DomainMgr.getDomainMgr().getDao();
@@ -261,28 +278,39 @@ public class MoveToFolderAction extends NodeAction implements Presenter.Popup {
     }
     
     private void moveSelectedObjectsToFolder(TreeNode folder, Long[] idPath) throws Exception {
-        // Update database
+        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
         
+        // Build list of things to remove
         Multimap<TreeNode,DomainObject> removeMap = ArrayListMultimap.create();
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Node node : selected) {
             DomainObjectNode selectedNode = (DomainObjectNode)node;
             TreeNodeNode parentNode = (TreeNodeNode)node.getParentNode();
-            domainObjects.add(selectedNode.getDomainObject());
+            DomainObject domainObject = selectedNode.getDomainObject();
+            if (DomainUtils.hasChild(folder, domainObject)) {
+                log.debug("Folder {} already has child {}",folder.getId(),domainObject.getId());
+            }
+            else {
+                domainObjects.add(domainObject);
+            }
             removeMap.put(parentNode.getTreeNode(), selectedNode.getDomainObject());
         }
         
-        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
+        // Add them to the given folder
         dao.addChildren(SessionMgr.getSubjectKey(), folder, domainObjects);
+        
+        // Remove from existing folders
         for(TreeNode treeNode : removeMap.keys()) {
-            dao.removeChildren(SessionMgr.getSubjectKey(), treeNode, removeMap.get(treeNode));
+            if (DomainUtils.isOwner(treeNode)) {
+                dao.removeChildren(SessionMgr.getSubjectKey(), treeNode, removeMap.get(treeNode));
+            }
         }
         
         // Update history
-        updateAddToFolderHistory(folder, idPath);                
+        updateAddToFolderHistory(idPath);                
     }
     
-    private void updateAddToFolderHistory(TreeNode folder, Long[] idPath) {
+    private void updateAddToFolderHistory(Long[] idPath) {
         String pathString = NodeUtils.createPathString(idPath);
         List<String> addHistory = (List<String>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_FOLDER_HISTORY);
         if (addHistory==null) {

@@ -112,7 +112,7 @@ public class CustomTreeView extends BeanTreeView {
 
     private TreePath idPath2TreePath(Long[] sp) {
 
-        Node n = NodeUtils.findPath(getRootContext(), sp);
+        Node n = NodeUtils.findNodeWithPath(getRootContext(), sp);
         if (n==null) return null;
 
         // Create the tree path

@@ -6,10 +6,10 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
+import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A top-level Workspace node in the data graph. Functions as a tree node 
@@ -18,8 +18,6 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class WorkspaceNode extends TreeNodeNode {
-    
-    private final static Logger log = LoggerFactory.getLogger(WorkspaceNode.class);
     
     public WorkspaceNode(TreeNodeChildFactory parentChildFactory, Workspace workspace) {
         super(parentChildFactory, workspace);
@@ -71,9 +69,12 @@ public class WorkspaceNode extends TreeNodeNode {
     @Override
     public Action[] getActions(boolean context) {
         List<Action> actions = new ArrayList<>();
+        actions.add(PopupLabelAction.get());
+        actions.add(null);
         actions.add(new CopyNameAction());
         actions.add(new CopyGUIDAction());
         actions.add(null);
+        actions.add(NewDomainObjectAction.get());
         actions.add(new RenameAction());
         return actions.toArray(new Action[0]);
     }
