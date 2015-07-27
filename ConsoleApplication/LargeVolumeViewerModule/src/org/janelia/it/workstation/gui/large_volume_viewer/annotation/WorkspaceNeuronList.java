@@ -224,7 +224,7 @@ public class WorkspaceNeuronList extends JPanel {
      * existing neuron (replaces in place)
      */
     private void updateModel(TmNeuron neuron) {
-        neuronTableModel.fireTableDataChanged();
+        neuronTableModel.updateNeuron(neuron);
     }
 
 
