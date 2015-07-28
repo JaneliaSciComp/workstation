@@ -22,7 +22,6 @@ public class VoxelViewer extends GLJPanel
     protected static GLProfile profile = null;
     protected static GLCapabilities capabilities = null;
 
-
     public enum InteractionMode {
         ROTATE,
         TRANSLATE,
@@ -31,6 +30,8 @@ public class VoxelViewer extends GLJPanel
 
     VoxelViewerModel model;
     VoxelViewerRenderer renderer;
+    VoxelViewerBasicController controller;
+    VoxelViewerData data;
 
     protected Point previousMousePos;
     protected boolean bMouseIsDragging = false;
@@ -66,6 +67,16 @@ public class VoxelViewer extends GLJPanel
         setPreferredSize( new Dimension( 1200, 800 ) );
 
         addGLEventListener(renderer);
+    }
+
+    public VoxelViewerController getController(VoxelViewerData data) throws Exception {
+        if (this.data!=null && data!=null) {
+            throw new Exception("Data API may only be populated once");
+        }
+        if (data!=null) {
+            this.data=data;
+        }
+        return controller;
     }
     
     @Override
