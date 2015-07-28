@@ -11,7 +11,7 @@ import java.util.Collection;
 /**
  * Created by murphys on 4/10/15.
  */
-public class GL4Model {
+public class VoxelViewerModel {
 
     public static final float[] DEFAULT_BACKGROUND_COLOR = {0.0f, 0.0f, 0.0f};
     public static final boolean DEFAULT_SHOWING_AXES = true;
@@ -34,7 +34,7 @@ public class GL4Model {
 
     private Collection<UpdateListener> listeners = new ArrayList<>();
 
-    public GL4Model() {
+    public VoxelViewerModel() {
         camera3d = new BasicObservableCamera3d();
         camera3d.setFocus(0.0,0.0,0.5);
         cameraDepth = new Vec3(0.0, 0.0, DEFAULT_CAMERA_FOCUS_DISTANCE);

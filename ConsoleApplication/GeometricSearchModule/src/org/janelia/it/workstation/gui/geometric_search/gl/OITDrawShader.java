@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.geometric_search.gl;
 
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector4;
-import org.janelia.it.workstation.gui.geometric_search.viewer.GL4TransparencyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

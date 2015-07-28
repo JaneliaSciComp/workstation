@@ -15,7 +15,7 @@ import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArrayMeshShader
 import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArrayMeshActor;
 import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArraySortShader;
 import org.janelia.it.workstation.gui.geometric_search.gl.volume.SparseVolumeCubeActor;
-import org.janelia.it.workstation.gui.geometric_search.viewer.GL4Viewer;
+import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ import org.janelia.it.workstation.gui.geometric_search.gl.volume.OITCubeShader;
 public class GeometricSearchPanel extends JPanel implements Refreshable {
 
     private final Logger logger = LoggerFactory.getLogger(GeometricSearchPanel.class);
-    GL4Viewer viewer;
+    VoxelViewer viewer;
 
     @Override
     public void refresh() {
@@ -55,7 +55,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         if ( viewer != null ) {
             viewer.releaseMenuActions();
         }
-        viewer = new GL4Viewer();
+        viewer = new VoxelViewer();
         viewer.setPreferredSize(new Dimension(1600, 1200));
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
@@ -107,7 +107,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
             testFile = testJaneliaFile;
         }
 
-        final ArrayCubeActor pa = new ArrayCubeActor(testFile, 1, 0.20f, 1000000);
+        final ArrayCubeActor pa = new ArrayCubeActor(testFile, 1, 0.20f, 100000);
 
         Matrix4 gal4Rotation=new Matrix4();
 
@@ -227,7 +227,7 @@ public class GeometricSearchPanel extends JPanel implements Refreshable {
         /////////////////////////////////////////////////////////////////////////
         
         viewer.addShaderAction(cubeSequence);
-        viewer.addShaderAction(meshSequence);
+        //viewer.addShaderAction(meshSequence);
         viewer.addShaderAction(sortSequence);
     }
     

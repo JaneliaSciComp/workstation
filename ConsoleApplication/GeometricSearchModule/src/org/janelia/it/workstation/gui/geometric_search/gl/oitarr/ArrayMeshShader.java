@@ -1,10 +1,6 @@
 package org.janelia.it.workstation.gui.geometric_search.gl.oitarr;
 
-import org.janelia.it.workstation.gui.geometric_search.viewer.GL4TransparencyContext;
-
 import javax.media.opengl.GL4;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 
 /**
  * Created by murphys on 7/25/2015.

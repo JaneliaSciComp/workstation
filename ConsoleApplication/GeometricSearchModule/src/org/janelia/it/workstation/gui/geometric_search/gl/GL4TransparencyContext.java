@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package org.janelia.it.workstation.gui.geometric_search.viewer;
+package org.janelia.it.workstation.gui.geometric_search.gl;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;

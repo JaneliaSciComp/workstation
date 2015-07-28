@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.GL4;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import org.janelia.it.workstation.gui.geometric_search.viewer.GL4TransparencyContext;
 
 /**
  * Created by murphys on 5/15/15.
