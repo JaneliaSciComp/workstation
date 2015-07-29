@@ -36,7 +36,7 @@ layout (std430, binding = 3) buffer FragmentArrays3 {
 
 out vec4 blankOut;
 
-#define BUFFER_DEPTH 135
+#define BUFFER_DEPTH GL_TRANSPARENCY_QUARTERDEPTH_INT
 
 void main()
 {

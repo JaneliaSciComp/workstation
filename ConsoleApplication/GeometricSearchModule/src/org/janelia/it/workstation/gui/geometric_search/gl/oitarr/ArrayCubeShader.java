@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.gl.oitarr;
 
 import org.janelia.geometry3d.Vector3;
+import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderProperties;
 import org.janelia.it.workstation.gui.geometric_search.gl.OITDrawShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,10 @@ import javax.media.opengl.GL4;
 public class ArrayCubeShader extends ArrayDrawShader {
 
     private Logger logger = LoggerFactory.getLogger(ArrayCubeShader.class);
+
+    public ArrayCubeShader(GL4ShaderProperties properties) {
+        super(properties);
+    }
 
     @Override
     public String getVertexShaderResourceName() {

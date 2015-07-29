@@ -45,6 +45,18 @@ public abstract class GL4Shader
 
     private Logger logger = LoggerFactory.getLogger( GL4Shader.class );
 
+    private GL4ShaderProperties properties;
+
+    public GL4Shader(GL4ShaderProperties properties) {
+        this.properties=properties;
+    }
+
+    public GL4Shader() {}
+
+    public void setProperties(GL4ShaderProperties properties) {
+        this.properties=properties;
+    }
+
     public void dispose(GL4 gl) {
         gl.glDeleteProgram(shaderProgram);
         shaderProgram = 0;
@@ -150,6 +162,9 @@ public abstract class GL4Shader
             StringBuffer stringBuffer = new StringBuffer();
             String line;
             while ((line = reader.readLine()) != null) {
+                if (properties!=null) {
+                    line=scanForProperties(line);
+                } 
                 stringBuffer.append(line);
                 stringBuffer.append("\n");
             }
@@ -267,6 +282,28 @@ public abstract class GL4Shader
             return;
         String errorStr = glu.gluErrorString(errorNumber);
         logger.error( "OpenGL Error " + errorNumber + ": " + errorStr + ": " + message );
+    }
+
+    public String scanForProperties(String line) {
+        String[] tokens=line.split("\\s+");
+        StringBuffer newLine=new StringBuffer();
+        for (String token : tokens) {
+            String value=properties.getStringValue(token);
+            if (value!=null) {
+                if (newLine.length()==0) {
+                    newLine.append(value);
+                } else {
+                    newLine.append(" "+value);
+                }
+            } else {
+                if (newLine.length()==0) {
+                    newLine.append(token);
+                } else {
+                    newLine.append(" "+token);
+                }
+            }
+        }
+        return newLine.toString();
     }
 
 }

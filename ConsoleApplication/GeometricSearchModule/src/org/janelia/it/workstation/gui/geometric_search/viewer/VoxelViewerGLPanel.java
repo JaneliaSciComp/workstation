@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
 import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderActionSequence;
+import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,8 @@ public class VoxelViewerGLPanel extends GLJPanel
         implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener {
 
     private static final Logger logger = LoggerFactory.getLogger(VoxelViewerGLPanel.class);
+
+    protected VoxelViewerProperties properties;
 
     protected static GLProfile profile = null;
     protected static GLCapabilities capabilities = null;
@@ -50,7 +53,7 @@ public class VoxelViewerGLPanel extends GLJPanel
 
     public JPopupMenu popupMenu;
 
-    public VoxelViewerGLPanel() {
+    public VoxelViewerGLPanel(int width, int height) {
         super(capabilities);
         popupMenu = new JPopupMenu();
         addMouseListener(this);
@@ -64,9 +67,18 @@ public class VoxelViewerGLPanel extends GLJPanel
         popupMenu.add(resetViewItem);
         model=new VoxelViewerModel();
         renderer=new VoxelViewerRenderer(model);
-        setPreferredSize( new Dimension( 1200, 800 ) );
+        renderer.setProperties(properties);
+        setPreferredSize( new Dimension( width, height ) );
 
         addGLEventListener(renderer);
+    }
+
+    public void setProperties(VoxelViewerProperties properties) {
+        this.properties=properties;
+    }
+
+    public GL4ShaderProperties getProperties() {
+        return properties;
     }
 
     public VoxelViewerController getController(VoxelViewerData data) throws Exception {
@@ -77,6 +89,21 @@ public class VoxelViewerGLPanel extends GLJPanel
             this.data=data;
         }
         return controller;
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        int width=1200;
+        int height=800;
+        if (properties!=null) {
+            try {
+                width=properties.getInteger(VoxelViewerProperties.GL_VIEWER_WIDTH_INT);
+                height=properties.getInteger(VoxelViewerProperties.GL_VIEWER_HEIGHT_INT);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        return new Dimension(width, height);
     }
     
     @Override

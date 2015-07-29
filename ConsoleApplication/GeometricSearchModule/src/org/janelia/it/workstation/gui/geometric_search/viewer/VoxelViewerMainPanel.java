@@ -14,6 +14,7 @@ import java.awt.*;
 public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
     private final Logger logger = LoggerFactory.getLogger(VoxelViewerMainPanel.class);
+    VoxelViewerProperties properties=new VoxelViewerProperties();
     VoxelViewerGLPanel viewer;
 
     @Override
@@ -33,11 +34,21 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
     private void createGL4Viewer() {
 
+        int width=1200;
+        int height=800;
+
+        try {
+            width=properties.getInteger(VoxelViewerProperties.GL_VIEWER_WIDTH_INT);
+            height=properties.getInteger(VoxelViewerProperties.GL_VIEWER_HEIGHT_INT);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
         if ( viewer != null ) {
             viewer.releaseMenuActions();
         }
-        viewer = new VoxelViewerGLPanel();
-        viewer.setPreferredSize(new Dimension(1600, 1200));
+        viewer = new VoxelViewerGLPanel(width, height);
+        viewer.setProperties(properties);
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
 

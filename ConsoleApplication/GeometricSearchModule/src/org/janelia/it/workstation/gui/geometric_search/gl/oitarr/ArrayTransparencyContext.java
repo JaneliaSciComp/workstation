@@ -19,47 +19,42 @@ public class ArrayTransparencyContext {
 
     public static int width;
     public static int height;
-    public static int depth;
+    public static int transparency_quarterdepth;
 
     public static final int NODE_SIZE = 20; // vec4 color, float depth
-    public static final int DEFAULT_WIDTH = 1600;
-    public static final int DEFAULT_HEIGHT = 1200;
-    public static final int DEFAULT_DEPTH = 135;
+    public static final int DEFAULT_WIDTH = 1200;
+    public static final int DEFAULT_HEIGHT = 800;
+    public static final int DEFAULT_TRANSPARENCY_QUARTERDEPTH = 135;
 
-    IntBuffer headPointerId = IntBuffer.allocate(1);
-    IntBuffer headPointerInitializerId = IntBuffer.allocate(1);
+    static IntBuffer headPointerId = IntBuffer.allocate(1);
+    static IntBuffer headPointerInitializerId = IntBuffer.allocate(1);
     
-    IntBuffer fragmentSSBO0 = IntBuffer.allocate(1);
-    IntBuffer fragmentSSBO1 = IntBuffer.allocate(1);
-    IntBuffer fragmentSSBO2 = IntBuffer.allocate(1);
-    IntBuffer fragmentSSBO3 = IntBuffer.allocate(1);
+    static IntBuffer fragmentSSBO0 = IntBuffer.allocate(1);
+    static IntBuffer fragmentSSBO1 = IntBuffer.allocate(1);
+    static IntBuffer fragmentSSBO2 = IntBuffer.allocate(1);
+    static IntBuffer fragmentSSBO3 = IntBuffer.allocate(1);
     
-    
-    IntBuffer zeroValueBuffer = IntBuffer.allocate(1);
+    static IntBuffer zeroValueBuffer = IntBuffer.allocate(1);
 
-    public ArrayTransparencyContext() {
-        width = ArrayTransparencyContext.DEFAULT_WIDTH;
-        height = ArrayTransparencyContext.DEFAULT_HEIGHT;
-        depth = ArrayTransparencyContext.DEFAULT_DEPTH;
-    }
-
-    public int getWidth() {
+    public static int getWidth() {
         return width;
     }
 
-    public int getHeight() {
+    public static int getHeight() {
         return height;
     }
 
-    public int getDepth() {
-        return depth;
+    public static int getTransparencyQuarterDepth() {
+        return transparency_quarterdepth;
     }
     
-    public void setWidth(int width) { this.width = width; }
+    public static void setWidth(int widthArg) { width = widthArg; }
     
-    public void setHeight(int height) { this.height = height; }
+    public static void setHeight(int heightArg) { height = heightArg; }
 
-    public int getHeadPointerTextureId() {
+    public static void setTransparencyQuarterDepth(int transparency_quarterdepthArg) { transparency_quarterdepth = transparency_quarterdepthArg; }
+
+    public static int getHeadPointerTextureId() {
         return headPointerId.get(0);
     }
 
@@ -143,7 +138,7 @@ public class ArrayTransparencyContext {
         //gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 0, fragmentSSBO.get(0));
         //gl.glBufferData(GL4.GL_SHADER_STORAGE_BUFFER, MAX_NODES * NODE_SIZE, null, GL4.GL_DYNAMIC_DRAW);
         
-        Long bufferLength = new Long(headPointerTotalPixels) * new Long(8) * new Long(depth); // XY , vec4+float, depth
+        Long bufferLength = new Long(headPointerTotalPixels) * new Long(8) * new Long(transparency_quarterdepth); // XY , vec4+float, depth
         
         // SSBO 0
             

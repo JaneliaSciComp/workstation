@@ -46,14 +46,16 @@ public class VoxelViewerRenderer implements GLEventListener
 
 
     // camera parameters
-    private double widthInPixels = 1600;
-    private double heightInPixels = 1200;
+    private double widthInPixels = 1200.0;
+    private double heightInPixels = 800.0;
     private VoxelViewerModel model;
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;
 
     Matrix4 viewMatrix;
     Matrix4 projectionMatrix;
+
+    VoxelViewerProperties properties;
 
     private Logger logger = LoggerFactory.getLogger(VoxelViewerRenderer.class);
 
@@ -63,6 +65,10 @@ public class VoxelViewerRenderer implements GLEventListener
 
     public Matrix4 getProjectionMatrix() {
         return projectionMatrix;
+    }
+
+    public void setProperties(VoxelViewerProperties properties) {
+        this.properties=properties;
     }
 
     // scene objects

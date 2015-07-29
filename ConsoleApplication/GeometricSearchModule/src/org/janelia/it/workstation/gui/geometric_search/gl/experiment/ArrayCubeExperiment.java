@@ -31,7 +31,7 @@ public class ArrayCubeExperiment implements GL4Experiment {
 
         // VOLUME //////////////////////////////////////////////////////////////
 
-        final ArrayCubeShader cubeShader = new ArrayCubeShader();
+        final ArrayCubeShader cubeShader = new ArrayCubeShader(viewer.getProperties());
 
         cubeShader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
@@ -96,7 +96,7 @@ public class ArrayCubeExperiment implements GL4Experiment {
 
         // MESHES //////////////////////////////////////////////////////////////
 
-        final ArrayMeshShader meshShader = new ArrayMeshShader();
+        final ArrayMeshShader meshShader = new ArrayMeshShader(viewer.getProperties());
 
         meshShader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
@@ -156,7 +156,7 @@ public class ArrayCubeExperiment implements GL4Experiment {
         /////////////////////////////////////////////////////////////////////////
 
 
-        final ArraySortShader sortShader = new ArraySortShader();
+        final ArraySortShader sortShader = new ArraySortShader(viewer.getProperties());
         sortShader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {

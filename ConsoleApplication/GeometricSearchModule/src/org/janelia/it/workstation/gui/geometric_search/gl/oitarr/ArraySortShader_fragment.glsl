@@ -35,8 +35,8 @@ layout (std430, binding = 3) buffer FragmentArrays3 {
 
 layout (location=0) out vec4 output_color;
 
-#define BUFFER_DEPTH 135
-#define MAX_DEPTH 540
+#define BUFFER_DEPTH GL_TRANSPARENCY_QUARTERDEPTH_INT
+#define MAX_DEPTH GL_TRANSPARENCY_MAXDEPTH_INT
 
 struct NodeType frags[MAX_DEPTH];
 

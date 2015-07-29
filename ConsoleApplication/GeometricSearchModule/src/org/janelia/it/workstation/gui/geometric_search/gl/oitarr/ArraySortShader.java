@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.geometric_search.gl.oitarr;
 
 import org.janelia.geometry3d.Vector3;
 import org.janelia.it.workstation.gui.geometric_search.gl.GL4Shader;
+import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +16,10 @@ import java.nio.IntBuffer;
 public class ArraySortShader extends GL4Shader {
 
     private final Logger logger = LoggerFactory.getLogger(ArraySortShader.class);
+
+    public ArraySortShader(GL4ShaderProperties properties) {
+        super(properties);
+    }
 
     private ArrayTransparencyContext tc;
 

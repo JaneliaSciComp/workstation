@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.gl.oitarr;
 
+import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderProperties;
+
 import javax.media.opengl.GL4;
 
 /**
@@ -7,6 +9,10 @@ import javax.media.opengl.GL4;
  */
 public class ArrayMeshShader extends ArrayDrawShader {
 
+
+    public ArrayMeshShader(GL4ShaderProperties properties) {
+        super(properties);
+    }
 
     @Override
     public String getVertexShaderResourceName() {
