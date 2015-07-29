@@ -1208,6 +1208,20 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             return false;
         }
 
+        // for Mac/Win, must be a directory (symlinks work on Linux,
+        //  but don't work when mounted on Mac/Win
+        if (System.getProperty("os.name").contains("Mac OS X") ||
+            System.getProperty("os.name").contains("Windows")) {
+            if (!testFile.isDirectory()) {
+                JOptionPane.showMessageDialog(this.getParent(),
+                        "Error opening path " + testFile.getPath() +
+                                " \nAre you sure this is a directory?",
+                        "Not a directory?",
+                        JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
+
         // July 1, 2013 elevate url loading from LargeVolumeViewer to QuadViewUi.
         URL url = testFile.toURI().toURL();
         snapshot3dLauncher = new Snapshot3DLauncher(
