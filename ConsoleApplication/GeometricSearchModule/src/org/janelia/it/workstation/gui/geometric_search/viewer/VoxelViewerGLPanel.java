@@ -14,10 +14,10 @@ import java.awt.event.*;
 /**
  * Created by murphys on 4/10/15.
  */
-public class VoxelViewer extends GLJPanel
+public class VoxelViewerGLPanel extends GLJPanel
         implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(VoxelViewer.class);
+    private static final Logger logger = LoggerFactory.getLogger(VoxelViewerGLPanel.class);
 
     protected static GLProfile profile = null;
     protected static GLCapabilities capabilities = null;
@@ -50,7 +50,7 @@ public class VoxelViewer extends GLJPanel
 
     public JPopupMenu popupMenu;
 
-    public VoxelViewer() {
+    public VoxelViewerGLPanel() {
         super(capabilities);
         popupMenu = new JPopupMenu();
         addMouseListener(this);

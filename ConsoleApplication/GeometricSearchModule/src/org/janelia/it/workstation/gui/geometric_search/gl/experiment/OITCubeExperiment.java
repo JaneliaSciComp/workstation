@@ -5,7 +5,11 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderActionSequence;
 import org.janelia.it.workstation.gui.geometric_search.gl.GLDisplayUpdateCallback;
-import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.*;
+import org.janelia.it.workstation.gui.geometric_search.gl.OITSortShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.mesh.MeshObjActor;
+import org.janelia.it.workstation.gui.geometric_search.gl.mesh.OITMeshDrawShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.volume.OITCubeShader;
+import org.janelia.it.workstation.gui.geometric_search.gl.volume.SparseVolumeCubeActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerGLPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,31 +19,25 @@ import java.io.File;
 import java.util.Random;
 
 /**
- * Created by murphys on 7/28/2015.
+ * Created by murphys on 7/29/2015.
  */
-public class ArrayCubeExperiment implements GL4Experiment {
-
-    private final Logger logger = LoggerFactory.getLogger(ArrayCubeExperiment.class);
+public class OITCubeExperiment implements GL4Experiment {
+    private final Logger logger = LoggerFactory.getLogger(OITCubeExperiment.class);
 
     public void setup(final VoxelViewerGLPanel viewer) {
-
-        final int DEPTH = 135;
-
-        GL4ShaderActionSequence cubeSequence = new GL4ShaderActionSequence("ArrayCube");
+        GL4ShaderActionSequence cubeSequence = new GL4ShaderActionSequence("Cube");
         GL4ShaderActionSequence meshSequence = new GL4ShaderActionSequence("Meshes");
         GL4ShaderActionSequence sortSequence = new GL4ShaderActionSequence("Sort Phase");
 
         // VOLUME //////////////////////////////////////////////////////////////
 
-        final ArrayCubeShader cubeShader = new ArrayCubeShader();
+        final OITCubeShader cubeShader = new OITCubeShader();
 
         cubeShader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
-                logger.info("Calling cubeShader.set* with depth="+DEPTH);
-                cubeShader.setWidth(gl, viewer.getWidth());
-                cubeShader.setHeight(gl, viewer.getHeight());
-                cubeShader.setDepth(gl, DEPTH);            }
+                // Do nothing since we want to update MVP at model level
+            }
         });
 
         File testHomeFile = new File("C:\\cygwin64\\home\\murphys\\volumes\\GMR_40B09_AE_01_06-fA01b_C091216_20100427171414198.reg.local.v3dpbd");
@@ -52,18 +50,18 @@ public class ArrayCubeExperiment implements GL4Experiment {
             testFile = testJaneliaFile;
         }
 
-        final ArrayCubeActor pa = new ArrayCubeActor(testFile, 1, 0.20f, 100000);
+        final SparseVolumeCubeActor pa = new SparseVolumeCubeActor(testFile, 1, 0.35f);
 
         Matrix4 gal4Rotation=new Matrix4();
 
         // Empirically derived - for GAL4 samples
-        gal4Rotation.setTranspose(-1.0f, 0.0f, 0.0f, 0.5f,
-                0.0f, -1.0f, 0.0f, 0.25f,
-                0.0f, 0.0f, -1.0f, 0.625f,
-                0.0f, 0.0f, 0.0f, 1.0f);
+        gal4Rotation.setTranspose(-1.0f,   0.0f,   0.0f,   0.5f,
+                0.0f,  -1.0f,   0.0f,   0.25f,
+                0.0f,   0.0f,  -1.0f,   0.625f,
+                0.0f,   0.0f,   0.0f,   1.0f);
         pa.setModel(gal4Rotation);
 
-        pa.setColor(new Vector4(1.0f, 0.0f, 0.0f, 0.005f));
+        pa.setColor(new Vector4(1.0f, 0.0f, 0.0f, 0.01f));
         pa.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
@@ -77,15 +75,11 @@ public class ArrayCubeExperiment implements GL4Experiment {
 
                 Matrix4 vp = viewCopy.multiply(projCopy);
                 Matrix4 mvp = modelCopy.multiply(vp);
-
                 cubeShader.setMVP(gl, mvp);
                 cubeShader.setProjection(gl, projCopy);
-                cubeShader.setWidth(gl, viewer.getWidth());
-                cubeShader.setHeight(gl, viewer.getHeight());
-                cubeShader.setDepth(gl, DEPTH);
 
                 float voxelUnitSize = pa.getVoxelUnitSize();
-                //float voxelUnitSize = 0.01f;
+                //float voxelUnitSize = 0.2f;
                 cubeShader.setVoxelUnitSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
 
                 cubeShader.setDrawColor(gl, pa.getColor());
@@ -94,22 +88,18 @@ public class ArrayCubeExperiment implements GL4Experiment {
         cubeSequence.getActorSequence().add(pa);
         cubeSequence.setShader(cubeShader);
 
+
         // MESHES //////////////////////////////////////////////////////////////
 
-        final ArrayMeshShader meshShader = new ArrayMeshShader();
+        final OITMeshDrawShader drawShader = new OITMeshDrawShader();
 
-        meshShader.setUpdateCallback(new GLDisplayUpdateCallback() {
+        drawShader.setUpdateCallback(new GLDisplayUpdateCallback() {
             @Override
             public void update(GL4 gl) {
                 Matrix4 viewMatrix = viewer.getRenderer().getViewMatrix();
-                meshShader.setView(gl, viewMatrix);
+                drawShader.setView(gl, viewMatrix);
                 Matrix4 projMatrix = viewer.getRenderer().getProjectionMatrix();
-                meshShader.setProjection(gl, projMatrix);
-
-                meshShader.setWidth(gl, viewer.getWidth());
-                meshShader.setHeight(gl, viewer.getHeight());
-                meshShader.setDepth(gl, DEPTH);
-
+                drawShader.setProjection(gl, projMatrix);
             }
         });
 
@@ -136,45 +126,29 @@ public class ArrayCubeExperiment implements GL4Experiment {
 
         for (File meshFile : meshFiles) {
             if (meshFile.getName().endsWith(".obj")) {
-                final ArrayMeshActor ma = new ArrayMeshActor(meshFile);
+                final MeshObjActor ma = new MeshObjActor(meshFile);
                 ma.setVertexRotation(vertexRotation);
-                ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.2f));
+                ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.5f));
                 ma.setUpdateCallback(new GLDisplayUpdateCallback() {
                     @Override
                     public void update(GL4 gl) {
                         Matrix4 actorModel = ma.getModel();
-                        meshShader.setModel(gl, actorModel);
-                        meshShader.setDrawColor(gl, ma.getColor());
+                        drawShader.setModel(gl, actorModel);
+                        drawShader.setDrawColor(gl, ma.getColor());
                     }
                 });
-                logger.info("Adding actor to meshSequence for file="+meshFile.getName());
                 meshSequence.getActorSequence().add(ma);
             }
         }
-        meshSequence.setShader(meshShader);
-
-        /////////////////////////////////////////////////////////////////////////
-
-
-        final ArraySortShader sortShader = new ArraySortShader();
-        sortShader.setUpdateCallback(new GLDisplayUpdateCallback() {
-            @Override
-            public void update(GL4 gl) {
-                logger.info("Calling sortShader.set* with depth="+DEPTH);
-                sortShader.setWidth(gl, viewer.getWidth());
-                sortShader.setHeight(gl, viewer.getHeight());
-                sortShader.setDepth(gl, DEPTH);
-            }
-        });
-
-        sortSequence.setShader(sortShader);
+        meshSequence.setShader(drawShader);
 
         /////////////////////////////////////////////////////////////////////////
 
         viewer.addShaderAction(cubeSequence);
         viewer.addShaderAction(meshSequence);
+        sortSequence.setShader(new OITSortShader());
         viewer.addShaderAction(sortSequence);
     }
 
-}
 
+}
