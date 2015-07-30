@@ -8,6 +8,8 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -105,6 +107,11 @@ public class LargeVolumeViewViewer extends JPanel {
                 refresh();
 
                 // but now we have to do the load in another thread, so we don't lock the UI:
+                final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace...");
+                progress.start();
+                progress.setDisplayName("Loading workspace");
+                progress.switchToIndeterminate();
+
                 SimpleWorker opener = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
@@ -128,10 +135,12 @@ public class LargeVolumeViewViewer extends JPanel {
                     protected void hadSuccess() {
                         // Listen for further changes, so can refresh again later.
                         establishObserver();
+                        progress.finish();
                     }
 
                     @Override
                     protected void hadError(Throwable error) {
+                        progress.finish();
                         SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
