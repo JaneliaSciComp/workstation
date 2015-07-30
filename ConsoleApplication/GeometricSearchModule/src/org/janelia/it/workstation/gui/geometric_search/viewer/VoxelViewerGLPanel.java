@@ -10,10 +10,13 @@ import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import org.janelia.it.workstation.gui.framework.outline.TransferableEntityList;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**
  * Created by murphys on 4/10/15.
@@ -77,6 +80,8 @@ public class VoxelViewerGLPanel extends GLJPanel
         setPreferredSize( new Dimension( width, height ) );
 
         addGLEventListener(renderer);
+
+        setTransferHandler(new VoxelViewerTransferHandler(this));
     }
 
     public void setProperties(VoxelViewerProperties properties) {
