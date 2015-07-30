@@ -160,6 +160,13 @@ public class VoxelViewerRenderer implements GLEventListener
                     ArrayCubeShader acs = (ArrayCubeShader)shader;
                     ac.setWidth(glDrawable.getWidth());
                     ac.setHeight(glDrawable.getHeight());
+                    int depth=0;
+                    if (properties==null) {
+                        logger.error("VoxelViewerProperties is null - cannot set transparency depth");
+                    } else {
+                        depth=properties.getInteger(VoxelViewerProperties.GL_TRANSPARENCY_QUARTERDEPTH_INT);
+                    }
+                    ac.setTransparencyQuarterDepth(depth);
                     acs.setTransparencyContext(ac);
                     acSet=true;
                 } else if (shader instanceof ArraySortShader) {

@@ -34,8 +34,8 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
     private void createGL4Viewer() {
 
-        int width=1200;
-        int height=800;
+        int width=0;
+        int height=0;
 
         try {
             width=properties.getInteger(VoxelViewerProperties.GL_VIEWER_WIDTH_INT);
@@ -54,8 +54,8 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
         // Experiment setup goes here ==============
 
-        ArrayCubeExperiment arrayCubeExperiment=new ArrayCubeExperiment();
-        arrayCubeExperiment.setup(viewer);
+        //ArrayCubeExperiment arrayCubeExperiment=new ArrayCubeExperiment();
+        //arrayCubeExperiment.setup(viewer);
 
         //===========================================
 

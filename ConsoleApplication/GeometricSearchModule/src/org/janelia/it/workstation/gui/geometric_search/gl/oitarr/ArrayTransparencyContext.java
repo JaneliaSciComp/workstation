@@ -35,6 +35,12 @@ public class ArrayTransparencyContext {
     static IntBuffer fragmentSSBO3 = IntBuffer.allocate(1);
     
     static IntBuffer zeroValueBuffer = IntBuffer.allocate(1);
+    
+    public ArrayTransparencyContext() {
+        width=DEFAULT_WIDTH;
+        height=DEFAULT_HEIGHT;
+        transparency_quarterdepth=DEFAULT_TRANSPARENCY_QUARTERDEPTH;
+    }
 
     public static int getWidth() {
         return width;

@@ -11,6 +11,9 @@ import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by murphys on 4/10/15.
@@ -19,6 +22,9 @@ public class VoxelViewerGLPanel extends GLJPanel
         implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener {
 
     private static final Logger logger = LoggerFactory.getLogger(VoxelViewerGLPanel.class);
+
+    LinkedBlockingQueue taskQueue= new LinkedBlockingQueue();
+    ThreadPoolExecutor threadPool = new ThreadPoolExecutor(4, 4, 1000L, TimeUnit.MILLISECONDS, taskQueue);
 
     protected VoxelViewerProperties properties;
 
