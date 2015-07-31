@@ -9,17 +9,21 @@ import org.eclipse.jetty.server.Server;
  */
 public class EmbeddedWebServer {
 
-    private final int port;
+	private int port;
     private Server server;
     
-    public EmbeddedWebServer(int port) {
-        this.port = port;
+    public EmbeddedWebServer() {
     }
     
-    public void start() throws Exception {
+    public void start(int port) throws Exception {
+    	this.port = port;
         this.server = new Server(port);
         server.setHandler(new FileProxyService());
         server.start();
+    }
+
+    public int getPort() {
+    	return port;
     }
     
     public void stop() throws Exception {
