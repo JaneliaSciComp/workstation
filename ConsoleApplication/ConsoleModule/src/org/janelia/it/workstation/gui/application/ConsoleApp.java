@@ -115,8 +115,8 @@ public class ConsoleApp {
                 @Override
                 protected void doStuff() throws Exception {
                     modelMgr.initErrorOntology();
-                    sessionMgr.startAxisServer(ConsoleProperties.getString("console.WebServiceURL"));
-                    sessionMgr.startWebServer(ConsoleProperties.getInt("console.WebServer.port"));
+                    sessionMgr.startAxisServer(ConsoleProperties.getInt("console.WebService.startingPort"));
+                    sessionMgr.startWebServer(ConsoleProperties.getInt("console.WebServer.startingPort"));
                     modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
                 }
 
