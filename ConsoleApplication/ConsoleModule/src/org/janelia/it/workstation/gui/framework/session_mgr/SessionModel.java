@@ -48,7 +48,7 @@ public class SessionModel extends GenericModel {
     }
     
     public void setPortOffset(int portOffset) {
-    	this.portOffset = portOffset + 10000;
+    	this.portOffset = portOffset;
     }
 
 //    void addBrowserModel(BrowserModel browserModel) {
