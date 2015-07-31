@@ -4,6 +4,7 @@ import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 
 import javax.swing.*;
 
+import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerController;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerMainPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,8 @@ public class GeometricSearchMainPanel extends JPanel implements Refreshable {
 
     GeometricSearchMenuPanel menuPanel = new GeometricSearchMenuPanel();
     VoxelViewerMainPanel viewerMain;
+    VoxelViewerSearchData searchData = new VoxelViewerSearchData();
+    VoxelViewerController viewerController;
 
     public GeometricSearchMainPanel() {
         super();
@@ -43,11 +46,21 @@ public class GeometricSearchMainPanel extends JPanel implements Refreshable {
 
     public void displayReady() {
         if (viewerMain==null) {
-            viewerMain = new VoxelViewerMainPanel();
-            viewerMain.setTransferHandler(new GeometricSearchTransferHandler(this));
-            add(viewerMain, BorderLayout.CENTER);
+            createVoxelViewer();
         }
         viewerMain.refresh();
+    }
+
+    public void createVoxelViewer() {
+        viewerMain = new VoxelViewerMainPanel();
+        try {
+            viewerController = viewerMain.getController(searchData);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        viewerMain.setTransferHandler(new GeometricSearchTransferHandler(this, viewerController));
+
+        add(viewerMain, BorderLayout.CENTER);
     }
 
 }

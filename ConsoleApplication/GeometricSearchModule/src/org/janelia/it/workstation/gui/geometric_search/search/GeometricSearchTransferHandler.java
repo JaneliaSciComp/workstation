@@ -5,6 +5,7 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.workstation.gui.framework.outline.TransferableEntityList;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerController;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,9 +24,11 @@ public class GeometricSearchTransferHandler extends EntityTransferHandler {
     private final Logger logger = LoggerFactory.getLogger(GeometricSearchTransferHandler.class);
 
     private JComponent dropTarget;
+    private VoxelViewerController controller;
 
-    public GeometricSearchTransferHandler( JComponent viewer ) {
-        this.dropTarget = viewer;
+    public GeometricSearchTransferHandler(JComponent dropTarget, VoxelViewerController controller) {
+        this.dropTarget = dropTarget;
+        this.controller = controller;
     }
 
     @Override
@@ -107,6 +110,8 @@ public class GeometricSearchTransferHandler extends EntityTransferHandler {
                         throw new Exception("SessionMgr.getCachedFile() failed to retrieve file="+filePathED.getValue());
                     } else {
                         logger.info("file="+filePathED.getValue()+" successfully found");
+                        int datasetId=controller.addAlignedStackDataset(localFile);
+                        logger.info("Added stack file="+filePathED.getValue()+" assigned datasetId="+datasetId);
                     }
                 }
             }

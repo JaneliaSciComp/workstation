@@ -22,6 +22,10 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     VoxelViewerData data;
     TransferHandler transferHandler;
 
+    public VoxelViewerMainPanel() {
+        controller = new VoxelViewerBasicController();
+    }
+
     @Override
     public void refresh() {
 
@@ -58,6 +62,9 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
         viewer.setTransferHandler(transferHandler);
+
+        controller.setModel(model);
+        controller.setViewer(viewer);
 
         // Experiment setup goes here ==============
 
