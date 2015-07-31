@@ -14,8 +14,13 @@ import java.awt.*;
 public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
     private final Logger logger = LoggerFactory.getLogger(VoxelViewerMainPanel.class);
+
     VoxelViewerProperties properties=new VoxelViewerProperties();
     VoxelViewerGLPanel viewer;
+    VoxelViewerModel model;
+    VoxelViewerBasicController controller;
+    VoxelViewerData data;
+    TransferHandler transferHandler;
 
     @Override
     public void refresh() {
@@ -47,10 +52,12 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         if ( viewer != null ) {
             viewer.releaseMenuActions();
         }
-        viewer = new VoxelViewerGLPanel(width, height);
+        model=new VoxelViewerModel();
+        viewer = new VoxelViewerGLPanel(width, height, model);
         viewer.setProperties(properties);
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
+        viewer.setTransferHandler(transferHandler);
 
         // Experiment setup goes here ==============
 
@@ -69,6 +76,24 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         }
         viewer.resetView();
         viewer.refresh();
+    }
+
+    public VoxelViewerController getController(VoxelViewerData data) throws Exception {
+        if (this.data!=null && data!=null) {
+            throw new Exception("Data API may only be populated once");
+        }
+        if (data!=null) {
+            this.data=data;
+        }
+        return controller;
+    }
+
+    @Override
+    public void setTransferHandler(TransferHandler transferHandler) {
+        this.transferHandler=transferHandler;
+        if (viewer!=null) {
+            viewer.setTransferHandler(transferHandler);
+        }
     }
 
 }

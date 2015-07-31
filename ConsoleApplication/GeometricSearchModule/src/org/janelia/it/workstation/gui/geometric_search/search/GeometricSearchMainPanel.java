@@ -44,6 +44,7 @@ public class GeometricSearchMainPanel extends JPanel implements Refreshable {
     public void displayReady() {
         if (viewerMain==null) {
             viewerMain = new VoxelViewerMainPanel();
+            viewerMain.setTransferHandler(new GeometricSearchTransferHandler(this));
             add(viewerMain, BorderLayout.CENTER);
         }
         viewerMain.refresh();

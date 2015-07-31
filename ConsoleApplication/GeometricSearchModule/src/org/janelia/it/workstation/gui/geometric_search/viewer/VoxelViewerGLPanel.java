@@ -42,8 +42,6 @@ public class VoxelViewerGLPanel extends GLJPanel
 
     VoxelViewerModel model;
     VoxelViewerRenderer renderer;
-    VoxelViewerBasicController controller;
-    VoxelViewerData data;
 
     protected Point previousMousePos;
     protected boolean bMouseIsDragging = false;
@@ -62,8 +60,9 @@ public class VoxelViewerGLPanel extends GLJPanel
 
     public JPopupMenu popupMenu;
 
-    public VoxelViewerGLPanel(int width, int height) {
+    public VoxelViewerGLPanel(int width, int height, VoxelViewerModel model) {
         super(capabilities);
+        this.model=model;
         popupMenu = new JPopupMenu();
         addMouseListener(this);
         addMouseMotionListener(this);
@@ -74,14 +73,11 @@ public class VoxelViewerGLPanel extends GLJPanel
         JMenuItem resetViewItem = new JMenuItem("Reset view");
         resetViewItem.addActionListener(this);
         popupMenu.add(resetViewItem);
-        model=new VoxelViewerModel();
         renderer=new VoxelViewerRenderer(model);
         renderer.setProperties(properties);
         setPreferredSize( new Dimension( width, height ) );
 
         addGLEventListener(renderer);
-
-        setTransferHandler(new VoxelViewerTransferHandler(this));
     }
 
     public void setProperties(VoxelViewerProperties properties) {
@@ -90,16 +86,6 @@ public class VoxelViewerGLPanel extends GLJPanel
 
     public GL4ShaderProperties getProperties() {
         return properties;
-    }
-
-    public VoxelViewerController getController(VoxelViewerData data) throws Exception {
-        if (this.data!=null && data!=null) {
-            throw new Exception("Data API may only be populated once");
-        }
-        if (data!=null) {
-            this.data=data;
-        }
-        return controller;
     }
 
     @Override
