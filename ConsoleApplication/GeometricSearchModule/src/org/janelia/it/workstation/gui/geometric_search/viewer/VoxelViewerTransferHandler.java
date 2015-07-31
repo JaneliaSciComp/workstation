@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.geometric_search.viewer;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.datatransfer.Transferable;
+import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 
@@ -44,18 +46,45 @@ public class VoxelViewerTransferHandler extends EntityTransferHandler {
     @Override
     public boolean canImport(TransferHandler.TransferSupport support) {
 
-        logger.info("canImport() called");
+        logger.info("canImport() 2 called");
 
         // Get the target entity.
         Transferable transferable = support.getTransferable();
 
+        logger.info("Check3");
+
         try {
             List<RootedEntity> rootedEntities = (List<RootedEntity>) transferable.getTransferData(TransferableEntityList.getRootedEntityFlavor());
+
+            if (rootedEntities==null) {
+                logger.info("rootedEntities is null");
+                return false;
+            } else {
+                int reSize=rootedEntities.size();
+                logger.info("rootedEntities size="+reSize);
+            }
+
+            if (rootedEntities.size()>0) {
+                RootedEntity re = rootedEntities.get(0);
+                String reType=re.getType();
+                logger.info("First rooted entity id="+re+" type="+reType);
+                RootedEntity alignedStackEntity = re.getChildOfType(EntityConstants.TYPE_ALIGNED_BRAIN_STACK);
+                if (alignedStackEntity!=null) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            } else {
+                logger.info("Rooted entity list is empty from drag and drop");
+            }
+
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
 
-        return true;
+        return false;
     }
 
     @Override
@@ -68,14 +97,30 @@ public class VoxelViewerTransferHandler extends EntityTransferHandler {
         try {
             List<RootedEntity> rootedEntities = (List<RootedEntity>) transferable.getTransferData(TransferableEntityList.getRootedEntityFlavor());
 
-            logger.info("Retrieved rootedEntities");
+            RootedEntity re = rootedEntities.get(0);
+            String reType=re.getType();
+            logger.info("First rooted entity id="+re+" type="+reType);
+            RootedEntity alignedStackEntity = re.getChildOfType(EntityConstants.TYPE_ALIGNED_BRAIN_STACK);
 
-            if (rootedEntities.size()>0) {
-                RootedEntity re = rootedEntities.get(0);
-                long reId=re.getEntityId();
-                logger.info("First rooted entity id="+reId);
+            if (alignedStackEntity==null) {
+                logger.info("alignedStackEntity is null");
             } else {
-                logger.info("Rooted entity list is empty from drag and drop");
+                EntityData filePathED = alignedStackEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
+                if (filePathED == null) {
+                    logger.info("filePathED is null");
+                } else {
+                    logger.info("aligned stack path=" + filePathED.getValue());
+                    File alignedStackFile=new File(filePathED.getValue());
+                    if (alignedStackFile.exists()) {
+                        logger.info("stack exists");
+                    } else {
+                        logger.info("Could not find stack file="+alignedStackFile.getAbsolutePath()+", so trying utility");
+                        File utilFile=VoxelViewerUtil.findFile(filePathED.getValue());
+                        if (utilFile==null) {
+                            logger.info("utility did not succeed");
+                        }
+                    }
+                }
             }
 
         } catch (Exception ex) {
