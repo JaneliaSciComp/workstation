@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.nodes.children;
+package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -14,9 +14,6 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.model.DeadReference;
-import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
-import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
-import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -24,7 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * A child factory for tree nodes (i.e. folders). Supports adding and removing 
+ * children dynamically. 
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
@@ -41,7 +40,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     protected boolean createKeys(List<DomainObject> list) {
         TreeNode treeNode = treeNodeRef.get();
         if (treeNode==null) return false;
-        log.trace("Creating children keys for {}",treeNode.getName());   
+        log.debug("Creating children keys for {}",treeNode.getName());
         
         DomainDAO dao = DomainMgr.getDomainMgr().getDao();
         List<DomainObject> children = dao.getDomainObjects(SessionMgr.getSubjectKey(), treeNode.getChildren());
@@ -98,30 +97,6 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             else {
                 return null;
             }
-//            else if (Sample.class.isAssignableFrom(key.getClass())) {
-//                return new SampleNode(this, (Sample)key);
-//            }
-//            else if (NeuronFragment.class.isAssignableFrom(key.getClass())) {
-//                return new NeuronFragmentNode(this, (NeuronFragment)key);
-//            }
-//            else if (LSMImage.class.isAssignableFrom(key.getClass())) {
-//                return new LSMImageNode(this, (LSMImage)key);
-//            }
-//            else if (ScreenSample.class.isAssignableFrom(key.getClass())) {
-//                return new ScreenSampleNode(this, (ScreenSample)key);
-//            }
-//            else if (FlyLine.class.isAssignableFrom(key.getClass())) {
-//                return new FlyLineNode(this, (FlyLine)key);
-//            }
-//            else if (CompartmentSet.class.isAssignableFrom(key.getClass())) {
-//                return new CompartmentSetNode(this, (CompartmentSet)key);
-//            }
-//            else if (DeadReference.class.isAssignableFrom(key.getClass())) {
-//                return new DeadReferenceNode(this, (DeadReference)key);
-//            }
-//            else {
-//                log.warn("Cannot handle type: " + key.getClass().getName());
-//            }
         }
         catch (Exception e) {
             log.error("Error creating node for key " + key, e);
@@ -130,84 +105,40 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     }
     
     public void refresh() {
-        TreeNode treeNode = treeNodeRef.get();
-        log.warn("refreshing {}",treeNode.getName());
+        log.warn("Refreshing {}",treeNodeRef.get().getName());
         refresh(true);
     }
     
-    public void addChild(final DomainObject domainObject) {
+    public void addChild(final DomainObject domainObject) throws Exception {
         final TreeNode treeNode = treeNodeRef.get();
         if (treeNode==null) {
             log.warn("Cannot add child to unloaded treeNode");
             return;
         }   
-        log.info("Adding child {} to {}",domainObject.getId(),treeNode.getName());
         
+        log.info("Adding child {} to {}",domainObject.getId(),treeNode.getName());
         DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-        try {
-            dao.addChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
-        }
-        catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
-        }
+        dao.addChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
         
         refresh();
-
-//            SimpleWorker worker = new SimpleWorker() {
-//                @Override
-//                protected void doStuff() throws Exception {
-//                }
-//                @Override
-//                protected void hadSuccess() {
-//                    refresh();
-//                }
-//                @Override
-//                protected void hadError(Throwable error) {
-//                    SessionMgr.getSessionMgr().handleException(error);
-//                }
-//            };
-//            worker.execute();
     }
 
-    public void removeChild(final DomainObject domainObject) {
+    public void removeChild(final DomainObject domainObject) throws Exception {
         final TreeNode treeNode = treeNodeRef.get();
         if (treeNode==null) {
             log.warn("Cannot remove child from unloaded treeNode");
             return;
         }
-        
-        try {
-            log.info("removing child {} from {}", domainObject.getId(), treeNode.getName());
-            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-            if (domainObject instanceof DeadReference) {
-                dao.removeReference(SessionMgr.getSubjectKey(), treeNode, ((DeadReference) domainObject).getReference());
-            }
-            else {
-                dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
-            }
+
+        log.info("Removing child {} from {}", domainObject.getId(), treeNode.getName());
+        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
+        if (domainObject instanceof DeadReference) {
+            dao.removeReference(SessionMgr.getSubjectKey(), treeNode, ((DeadReference) domainObject).getReference());
         }
-        catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+        else {
+            dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
         }
-        
+            
         refresh();
-                
-//        SimpleWorker worker = new SimpleWorker() {
-//            @Override
-//            protected void doStuff() throws Exception {
-//            }
-//            @Override
-//            protected void hadSuccess() {
-//                log.info("refreshing view after removing child");
-//                refresh();
-//            }
-//            @Override
-//            protected void hadError(Throwable error) {
-//                SessionMgr.getSessionMgr().handleException(error);
-//            }
-//        };
-//        worker.execute();
     }
-
-
 }

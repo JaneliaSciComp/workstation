@@ -9,6 +9,7 @@ import javax.swing.text.DefaultEditorKit;
 
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -24,14 +25,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Top component which displays something.
+ * Top component for the Ontology Editor, which lets users create ontologies
+ * and annotate their domain objects.
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.browser.components//OntologyExplorer//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "OntologyExplorerTopComponent",
+        preferredID = OntologyExplorerTopComponent.TC_NAME,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
@@ -40,7 +42,7 @@ import org.slf4j.LoggerFactory;
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_OntologyExplorerAction",
-        preferredID = "OntologyExplorerTopComponent"
+        preferredID = OntologyExplorerTopComponent.TC_NAME
 )
 @Messages({
     "CTL_OntologyExplorerAction=Ontology Explorer",
@@ -51,10 +53,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
 
     private Logger log = LoggerFactory.getLogger(OntologyExplorerTopComponent.class);
 
-    protected static final String MONGO_SERVER_URL = "mongo-db";
-    protected static final String MONGO_DATABASE = "jacs";
-    protected static final String MONGO_USERNAME = "flyportal";
-    protected static final String MONGO_PASSWORD = "flyportal";
+    public static final String TC_NAME = "OntologyExplorerTopComponent";
     
     private ExplorerManager mgr = new ExplorerManager();
     
@@ -78,20 +77,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         });
     }
 
-    private static DomainDAO dao;
-
-    public static DomainDAO getDao() {
-        if (dao == null) {
-            try {
-                dao = new DomainDAO(MONGO_SERVER_URL, MONGO_DATABASE, MONGO_USERNAME, MONGO_PASSWORD);
-            }
-            catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
-            }
-        }
-        return dao;
-    }
-
     private OntologyWrapper currOntology;
 
     private void loadOntologies() {
@@ -99,9 +84,9 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             @Override
             public void run() {
                 try {
-                    DomainDAO dao = getDao();
+                    DomainDAO dao = DomainMgr.getDomainMgr().getDao();
                     Collection<Ontology> ontologies = dao.getOntologies(SessionMgr.getSubjectKey());
-                    DefaultComboBoxModel<OntologyWrapper> model = new DefaultComboBoxModel<OntologyWrapper>();
+                    DefaultComboBoxModel<OntologyWrapper> model = new DefaultComboBoxModel<>();
                     for (Ontology ontology : ontologies) {
                         OntologyWrapper wrapper = new OntologyWrapper(ontology);
                         model.addElement(wrapper);
@@ -263,7 +248,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     
     private class OntologyWrapper {
 
-        private Ontology ontology;
+        private final Ontology ontology;
 
         OntologyWrapper(Ontology ontology) {
             this.ontology = ontology;
@@ -273,6 +258,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             return ontology;
         }
 
+        @Override
         public String toString() {
             return ontology.getName() + " (" + ontology.getOwnerKey() + ")";
         }

@@ -49,6 +49,8 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import java.util.HashSet;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
+import org.janelia.it.jacs.shared.utils.ReflectionUtils;
+import org.jongo.Update;
 
 /**
  * The main domain-object DAO for the JACS system.
@@ -187,6 +189,14 @@ public class DomainDAO {
         return list;
     }
 
+    /**
+     * Get the domain object referenced by the type and id. 
+     */
+    public DomainObject getDomainObject(String subjectKey, Class<? extends DomainObject> domainClass, Long id) {
+        Reference reference = new Reference(getCollectionName(domainClass), id);
+        return getDomainObject(subjectKey, reference);
+    }
+    
     /**
      * Get the domain object referenced by the given Reference.
      */
@@ -327,6 +337,10 @@ public class DomainDAO {
         return toList(annotationCollection.find("{targetId:{$in:#},readers:{$in:#}}",targetIds,subjects).as(Annotation.class));
     }
     
+    public Workspace getDefaultWorkspace(String subjectKey) {
+        return treeNodeCollection.findOne("{class:#,ownerKey:#}",Workspace.class.getName(),subjectKey).as(Workspace.class);
+    }
+    
     public Collection<Workspace> getWorkspaces(String subjectKey) {
         Set<String> subjects = getSubjectSet(subjectKey);
         return toList(treeNodeCollection.find("{class:#,readers:{$in:#}}",Workspace.class.getName(),subjects).as(Workspace.class));
@@ -370,6 +384,11 @@ public class DomainDAO {
     public TreeNode getTreeNodeById(String subjectKey, Long id) {
         Set<String> subjects = getSubjectSet(subjectKey);
         return treeNodeCollection.findOne("{_id:#,readers:{$in:#}}",id,subjects).as(TreeNode.class);
+    }
+    
+    public TreeNode getParentTreeNodes(String subjectKey, Long id) {
+        Set<String> subjects = getSubjectSet(subjectKey);
+        return treeNodeCollection.findOne("{'children.targetId':#,readers:{$in:#}}",id,subjects).as(TreeNode.class);
     }
     
     public void changePermissions(String subjectKey, String type, Long id, String granteeKey, String rights, boolean grant) throws Exception {
@@ -474,7 +493,10 @@ public class DomainDAO {
                 collection.save(domainObject);
             }
             else {
-                collection.update("{_id:#,writers:#,updatedDate:#}", domainObject.getId(), subjectKey, domainObject.getUpdatedDate()).with(domainObject);
+                WriteResult result = collection.update("{_id:#,writers:#,updatedDate:#}", domainObject.getId(), subjectKey, domainObject.getUpdatedDate()).with(domainObject);
+                if (result.getN()!=1) {
+                    throw new IllegalStateException("Updated "+result.getN()+" records instead of "+type+"#"+domainObject.getId());
+                }
             }
             log.info("Saved "+domainObject.getClass().getName()+"#"+domainObject.getId());
         }
@@ -535,7 +557,24 @@ public class DomainDAO {
         Reference ref = new Reference();
         ref.setTargetId(domainObject.getId());
         ref.setTargetType(getCollectionName(domainObject));
-        treeNode.getChildren().add(ref);
+        treeNode.addChild(ref);
+        save(subjectKey, treeNode);
+    }
+    
+    public void addChildren(String subjectKey, TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
+        if (domainObjects==null) {
+            throw new IllegalArgumentException("Cannot add null child");
+        }
+        for(DomainObject obj : domainObjects) {
+            if (obj.getId()==null) {
+                throw new IllegalArgumentException("Cannot add child without an id");
+            }
+            Reference ref = new Reference();
+            ref.setTargetId(obj.getId());
+            ref.setTargetType(getCollectionName(obj));
+            treeNode.addChild(ref);
+        }
+        log.info("Adding "+domainObjects.size()+" objects to "+treeNode.getName());
         save(subjectKey, treeNode);
     }
     
@@ -549,7 +588,25 @@ public class DomainDAO {
         Long targetId = domainObject.getId();
         String targetType = getCollectionName(domainObject);
         Reference reference = new Reference(targetType, targetId);
+        log.info("Removing "+domainObject.getName()+" from "+treeNode.getName());
         removeReference(subjectKey, treeNode, reference);
+    }
+    
+    public void removeChildren(String subjectKey, TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
+        if (domainObjects==null) {
+            throw new IllegalArgumentException("Cannot remove null child");
+        }
+        for(DomainObject obj : domainObjects) {
+            if (obj.getId()==null) {
+                throw new IllegalArgumentException("Cannot remove child without an id");
+            }
+            Reference ref = new Reference();
+            ref.setTargetId(obj.getId());
+            ref.setTargetType(getCollectionName(obj));
+            treeNode.removeChild(ref);
+        }
+        log.info("Removing "+domainObjects.size()+" objects from "+treeNode.getName());
+        save(subjectKey, treeNode);
     }
     
     public void removeReference(String subjectKey, TreeNode treeNode, Reference reference) throws Exception {
@@ -563,6 +620,12 @@ public class DomainDAO {
     }
     
     public void updateProperty(String subjectKey, DomainObject domainObject, String propName, String propValue) {
+        try {
+            ReflectionUtils.set(domainObject, propName, propValue);
+        }
+        catch (Exception e) {
+            throw new IllegalStateException("Could not update object attribute "+propName,e);
+        }
         String type = getCollectionName(domainObject);
         MongoCollection collection = getCollectionByName(type);
         WriteResult wr = collection.update("{_id:#,writers:#}",domainObject.getId(),subjectKey).with("{$set: {"+propName+":#, updatedDate:#}}",propValue,new Date());
@@ -570,7 +633,6 @@ public class DomainDAO {
             log.warn("Could not update "+type+"#"+domainObject.getId()+"."+propName+": "+wr.getError());
         }
     }
-    
     
     // UNSECURE METHODS, SERVER SIDE ONLY
     // TODO: MOVE THESE ELSEWHERE

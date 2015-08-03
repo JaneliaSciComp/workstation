@@ -91,6 +91,7 @@ public final class DomainViewerTopComponent extends TopComponent {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
+    
     @Override
     public void componentOpened() {
         Events.getInstance().registerOnEventBus(this);
@@ -190,6 +191,8 @@ public final class DomainViewerTopComponent extends TopComponent {
         
         final Class<? extends DomainObjectEditor> editorClass = getEditorClass(domainObject);
         if (editorClass==null) {
+            // TODO: comment this exception back in after initial development is complete
+            //throw new IllegalStateException("No viewer defined for domain object of type "+domainObject.getClass().getName());
             log.info("No viewer defined for domain object of type {}",domainObject.getClass().getName());
             return;
         }

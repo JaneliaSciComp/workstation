@@ -14,14 +14,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Top component which displays something.
+ * Top component for the Data Inspector, which shows details about a single
+ * domain object. 
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.browser.components//DomainInspector//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = DomainInspectorTopComponent.PREFERRED_ID,
+        preferredID = DomainInspectorTopComponent.TC_NAME,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
@@ -30,7 +31,7 @@ import org.slf4j.LoggerFactory;
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_DomainInspectorAction",
-        preferredID = DomainInspectorTopComponent.PREFERRED_ID
+        preferredID = DomainInspectorTopComponent.TC_NAME
 )
 @Messages({
     "CTL_DomainInspectorAction=Data Inspector",
@@ -41,7 +42,7 @@ public final class DomainInspectorTopComponent extends TopComponent {
 
     private Logger log = LoggerFactory.getLogger(DomainInspectorTopComponent.class);
 
-    public static final String PREFERRED_ID = "DomainInspectorTopComponent";
+    public static final String TC_NAME = "DomainInspectorTopComponent";
     
     private final DomainInspectorPanel detailsPanel;
 

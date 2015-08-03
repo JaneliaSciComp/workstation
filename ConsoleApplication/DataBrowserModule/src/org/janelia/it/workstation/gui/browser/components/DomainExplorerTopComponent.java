@@ -1,23 +1,32 @@
 package org.janelia.it.workstation.gui.browser.components;
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyVetoException;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import java.util.ArrayList;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.ActionMap;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.SwingUtilities;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
 import javax.swing.text.DefaultEditorKit;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.jacs.model.domain.workspace.Workspace;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
+import org.janelia.it.workstation.gui.browser.nodes.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
-import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
+import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
+import org.janelia.it.workstation.gui.browser.nodes.RootNode;
+import org.janelia.it.workstation.gui.browser.nodes.WorkspaceNode;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -30,15 +39,17 @@ import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.RequestProcessor;
+import org.openide.util.lookup.Lookups;
+import org.openide.util.lookup.ProxyLookup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Top component which displays something.
+ * Top component for the Data Explorer, which shows an outline tree view of the
+ * user's workspace.
  */
 @ConvertAsProperties(
-        dtd = "-//org.janelia.it.FlyWorkstation.gui.dialogs.nb//DomainExplorer//EN",
+        dtd = "-//org.janelia.it.workstation.gui.browser.components//DomainExplorer//EN",
         autostore = false
 )
 @TopComponent.Description(
@@ -51,7 +62,7 @@ import org.slf4j.LoggerFactory;
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_DomainExplorerAction",
-        preferredID = "DomainExplorerTopComponent"
+        preferredID = DomainExplorerTopComponent.TC_NAME
 )
 @Messages({
     "CTL_DomainExplorerAction=Domain Explorer",
@@ -65,25 +76,23 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
 
     private final ExplorerManager mgr = new ExplorerManager();
-
     private final DomainObjectNodeSelectionModel selectionModel = new DomainObjectNodeSelectionModel();
-    
     private Lookup.Result<AbstractNode> result = null;
-    
-    private static DomainDAO dao;
-    private WorkspaceWrapper currWorkspace;
+    private RootNode root;
+    private CustomTreeView beanTreeView;
     
     public DomainExplorerTopComponent() {
         initComponents();
-        beanTreeView.setDefaultActionAllowed(false);
-        beanTreeView.setRootVisible(false);
         
+        this.beanTreeView = new CustomTreeView(this);
         selectionModel.setSource(this);
         
         setName(Bundle.CTL_DomainExplorerTopComponent());
         setToolTipText(Bundle.HINT_DomainExplorerTopComponent());
-        associateLookup(ExplorerUtils.createLookup(mgr, getActionMap()));
-
+        
+        Lookup lookup = new ProxyLookup (ExplorerUtils.createLookup(mgr, getActionMap()), Lookups.singleton(selectionModel));
+        associateLookup(lookup);
+        
         ActionMap map = this.getActionMap();
         map.put(DefaultEditorKit.copyAction, ExplorerUtils.actionCopy(mgr));
         map.put(DefaultEditorKit.cutAction, ExplorerUtils.actionCut(mgr));
@@ -92,13 +101,73 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
 //        bindKeys();
 
-        RequestProcessor.getDefault().post(new Runnable() {
-            @Override
-            public void run() {
-                loadWorkspaces();
-            }
-        });
+        this.root = new RootNode();
+        mgr.setRootContext(root);
         
+        TreeToolbar toolbar = new TreeToolbar(root);
+        add(toolbar, BorderLayout.PAGE_START);
+        add(beanTreeView, BorderLayout.CENTER);
+                   
+        // Expand the top-level workspace nodes
+        for(Node node : root.getChildren().getNodes()) {
+            beanTreeView.expandNode(node);
+            break; // For now, we'll only expand the user's default workspace
+        }
+    }
+    
+    public RootNode getRoot() {
+        return root;
+    }
+
+    public void expand(Long[] idPath) {
+        List<Long[]> paths = new ArrayList<>();
+        paths.add(idPath);
+        beanTreeView.expandNodes(paths);
+    }
+
+    public void select(Long[] idPath) {
+        Node node = NodeUtils.findNodeWithPath(root, idPath);
+        log.info("Found node with path {}: {}",NodeUtils.createPathString(idPath),node);
+        selectNode(node);
+    }
+    
+    public WorkspaceNode getWorkspaceNode() {
+        for(Node node : root.getChildren().getNodes()) {
+            return (WorkspaceNode)node;
+        }
+        return null;
+    }
+    
+    private class TreeToolbar extends JPanel {
+    
+        private final JButton refreshButton;
+        private final JToolBar toolBar;
+        
+        public TreeToolbar(final RootNode rootNode) {
+            super(new BorderLayout());
+        
+            this.toolBar = new JToolBar();
+            toolBar.setFloatable(false);
+            toolBar.setRollover(true);
+
+            refreshButton = new JButton(Icons.getRefreshIcon());
+            refreshButton.setToolTipText("Refresh the data in the tree.");
+            refreshButton.setFocusable(false);
+            refreshButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    refresh();
+                }
+            });
+            toolBar.add(refreshButton);
+
+            toolBar.addSeparator();
+            add(toolBar, BorderLayout.PAGE_START);
+        }
+        
+        public JToolBar getJToolBar() {
+            return toolBar;
+        }
     }
     
     public static DomainExplorerTopComponent getInstance() {
@@ -126,47 +195,41 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 //        keys.put(keyPaste, pasteAction);
 //    }
     
-    public Workspace getCurrentWorkspace() {
-        return currWorkspace==null?null:currWorkspace.getWorkspace();
-    }
-    
     public void refresh() {
-        loadWorkspaces();
-        // TODO: reselect the same node that was selected
+        refresh(null);
     }
     
-    private void loadWorkspaces() {
-        SwingUtilities.invokeLater(new Runnable() {
+    public void refresh(final Callable<Void> success) {
+                        
+        final List<Long[]> expanded = beanTreeView.getExpandedPaths();
+        
+        SimpleWorker worker = new SimpleWorker() {
+
             @Override
-            public void run() {
+            protected void doStuff() throws Exception {
+                root.refreshChildren();
+            }
+
+            @Override
+            protected void hadSuccess() {
                 try {
-                    DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                    Collection<Workspace> workspaces = dao.getWorkspaces(SessionMgr.getSubjectKey());
-                    DefaultComboBoxModel<WorkspaceWrapper> model = new DefaultComboBoxModel<>();
-                    for (Workspace workspace : workspaces) {
-                        WorkspaceWrapper wrapper = new WorkspaceWrapper(workspace);
-                        model.addElement(wrapper);
-                        if (currWorkspace==null && workspace.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
-                            currWorkspace = wrapper;
-                        }
-                    }
-                    if (currWorkspace!=null) {
-                        model.setSelectedItem(currWorkspace);
-                        workspaceCombo.setModel(model);
-                        loadWorkspace(currWorkspace.getWorkspace());
-                    }
+                    beanTreeView.expandNodes(expanded);
+                    ConcurrentUtils.invoke(success);
                 }
                 catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
+                    hadError(e);
                 }
             }
-        });
-    }
 
-    private void loadWorkspace(Workspace workspace) throws Exception {
-        mgr.setRootContext(new TreeNodeNode(null, workspace));
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        
+        worker.execute();
     }
-
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -175,73 +238,11 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        beanTreeView = new org.openide.explorer.view.BeanTreeView();
-        toolBar = new javax.swing.JToolBar();
-        workspaceCombo = new javax.swing.JComboBox();
-        refreshButton = new javax.swing.JButton();
-        filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
-
-        toolBar.setRollover(true);
-
-        workspaceCombo.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Loading..." }));
-        workspaceCombo.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                workspaceComboItemStateChanged(evt);
-            }
-        });
-        toolBar.add(workspaceCombo);
-
-        refreshButton.setIcon(Icons.getRefreshIcon());
-        org.openide.awt.Mnemonics.setLocalizedText(refreshButton, org.openide.util.NbBundle.getMessage(DomainExplorerTopComponent.class, "DomainExplorerTopComponent.refreshButton.text")); // NOI18N
-        refreshButton.setFocusable(false);
-        refreshButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        refreshButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        refreshButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                refreshButtonActionPerformed(evt);
-            }
-        });
-        toolBar.add(refreshButton);
-        toolBar.add(filler1);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(beanTreeView, javax.swing.GroupLayout.DEFAULT_SIZE, 595, Short.MAX_VALUE)
-            .addComponent(toolBar, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addComponent(toolBar, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(beanTreeView, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
-                .addContainerGap())
-        );
+        setLayout(new java.awt.BorderLayout());
     }// </editor-fold>//GEN-END:initComponents
 
-    private void workspaceComboItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_workspaceComboItemStateChanged
-        try {
-            WorkspaceWrapper wrapper = (WorkspaceWrapper) evt.getItem();
-            loadWorkspace(wrapper.getWorkspace());
-        }
-        catch (Exception e) {
-            log.error("Error changing workspace", e);
-        }
-    }//GEN-LAST:event_workspaceComboItemStateChanged
-
-
-    private void refreshButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_refreshButtonActionPerformed
-        loadWorkspaces();
-    }//GEN-LAST:event_refreshButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private org.openide.explorer.view.BeanTreeView beanTreeView;
-    private javax.swing.Box.Filler filler1;
-    private javax.swing.JButton refreshButton;
-    private javax.swing.JToolBar toolBar;
-    private javax.swing.JComboBox workspaceCombo;
     // End of variables declaration//GEN-END:variables
     
     @Override
@@ -281,6 +282,18 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     public ExplorerManager getExplorerManager() {
         return mgr;
     }
+    
+    @Override
+    public void resultChanged(LookupEvent lookupEvent) {
+        Collection<? extends AbstractNode> allNodes = result.allInstances();
+        if (allNodes.isEmpty()) {
+            return;
+        }
+        final Node node = allNodes.iterator().next();
+        if (node instanceof DomainObjectNode) {
+            selectionModel.select((DomainObjectNode)node, true);
+        }
+    }
 
     public void selectNode(Node node) {
         if (node==null) return;
@@ -292,35 +305,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             log.error("Node selection was vetoed",e);
         }
     }
-    
-    @Override
-    public void resultChanged(LookupEvent lookupEvent) {
-        Collection<? extends AbstractNode> allNodes = result.allInstances();
-        if (allNodes.isEmpty()) {
-            return;
-        }
-        final Node node = allNodes.iterator().next();
-        selectionModel.select((DomainObjectNode)node, true);
-    }
 
     public void selectNodeById(Long id) {
-        // TODO: we need RootedEntities or Paths or something
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    private class WorkspaceWrapper {
-
-        private final Workspace workspace;
-
-        WorkspaceWrapper(Workspace workspace) {
-            this.workspace = workspace;
-        }
-
-        public Workspace getWorkspace() {
-            return workspace;
-        }
-
-        public String toString() {
-            return workspace.getName() + " (" + workspace.getOwnerKey() + ")";
-        }
-    }
 }

@@ -86,7 +86,6 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriter
 import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.it.jacs.model.domain.support.MongoMapped;
-import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
@@ -105,12 +104,12 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
     
     private static final String SOLR_TYPE_FIELD = "type";
+    public static final String DEFAULT_FILTER_NAME = "Unsaved Filter";
+    public static final Class<?> DEFAULT_SEARCH_CLASS = Sample.class;
     
     // UI Settings
     private static final int MAX_VALUES_STRING_LENGTH = 20;
-    private static final String DEFAULT_FILTER_NAME = "Unsaved Filter";
     private static final Font FILTER_NAME_FONT = new Font("Sans Serif", Font.BOLD, 16);
-    private static final Class<?> DEFAULT_SEARCH_CLASS = Sample.class;
     private final int pageSize = SearchResults.PAGE_SIZE;
     
     // UI Elements
@@ -187,6 +186,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         saveAsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                
                 final String newName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), 
                         "Filter Name:\n", "Save Filter", JOptionPane.PLAIN_MESSAGE, null, null, filter.getName());
                 if ((newName == null) || (newName.length() <= 0)) {
@@ -208,8 +208,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
                         filter.setName(newName);
                         DomainDAO dao = DomainMgr.getDomainMgr().getDao();
                         dao.save(SessionMgr.getSubjectKey(), filter);
-                        Workspace workspace = DomainExplorerTopComponent.getInstance().getCurrentWorkspace();
-                        dao.addChild(SessionMgr.getSubjectKey(), workspace, filter);
+                        dao.addChild(SessionMgr.getSubjectKey(), dao.getDefaultWorkspace(SessionMgr.getSubjectKey()), filter);
                     }
 
                     @Override
@@ -227,7 +226,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
                             @Override
                             public void run() {
                                 try {
-                                    DomainExplorerTopComponent.getInstance().selectNodeById(filter.getId());
+                                    //DomainExplorerTopComponent.getInstance().selectNodeById(filter.getId());
                                     // TODO: update the browser top component name somehow
                                 }
                                 catch (Exception e) {
@@ -352,7 +351,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
         this.filter = new Filter();
         filter.setName(DEFAULT_FILTER_NAME);
         filter.setSearchType(DEFAULT_SEARCH_CLASS.getName());
-        setSearchClass(DEFAULT_SEARCH_CLASS);
+        loadDomainObject(filter);
     }
     
     @Override

@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.nodes.children;
+package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.lang.ref.WeakReference;
 import java.util.List;

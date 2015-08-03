@@ -9,7 +9,6 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
-import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.Children;
@@ -99,7 +98,7 @@ public class ObjectSetNode extends DomainObjectNode {
                 log.info("Will paste {} on {}", domainObject.getId(), objectSet.getName());
             }
             catch (Exception ex) {
-                log.error("WTF", ex);
+                log.error("Error pasting", ex);
             }
             return new PasteType() {
                 @Override
