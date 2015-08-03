@@ -26,6 +26,7 @@ public class VoxelViewerBasicController implements VoxelViewerController {
     }
 
     public int addAlignedStackDataset(File alignedStackFile) {
+
         return 0;
     }
 

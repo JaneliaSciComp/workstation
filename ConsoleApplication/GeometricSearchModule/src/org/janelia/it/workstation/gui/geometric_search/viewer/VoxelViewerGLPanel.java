@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
-import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderActionSequence;
-import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderProperties;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderActionSequence;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,13 +10,10 @@ import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.janelia.it.workstation.gui.framework.outline.TransferableEntityList;
-import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**
  * Created by murphys on 4/10/15.

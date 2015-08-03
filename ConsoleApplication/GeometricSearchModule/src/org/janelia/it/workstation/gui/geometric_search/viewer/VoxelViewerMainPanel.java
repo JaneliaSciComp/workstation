@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
-import org.janelia.it.workstation.gui.geometric_search.gl.experiment.ArrayCubeExperiment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
