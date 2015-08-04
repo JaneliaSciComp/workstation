@@ -23,7 +23,7 @@ public class VoxelViewerModel {
 
     private Logger logger = LoggerFactory.getLogger(VoxelViewerModel.class);
 
-    public static final float[] DEFAULT_BACKGROUND_COLOR = {0.0f, 0.0f, 0.0f};
+    public static final float[] DEFAULT_BACKGROUND_COLOR = {0.0f, 0.0f, 0.3f};
     public static final boolean DEFAULT_SHOWING_AXES = true;
 
     private Vec3 cameraDepth;
@@ -94,8 +94,8 @@ public class VoxelViewerModel {
                 arrayCubeShader.setDepth(gl, transparencyQuarterDepth);
             }
         });
-
         denseVolumeShaderActionSequence.setShader(arrayCubeShader);
+        denseVolumeShaderActionSequence.setApplyMemoryBarrier(true);
     }
 
     private void setupMeshShader() {
@@ -117,6 +117,7 @@ public class VoxelViewerModel {
         });
 
         meshShaderActionSequence.setShader(arrayMeshShader);
+        meshShaderActionSequence.setApplyMemoryBarrier(true);
     }
 
     public Deque<GL4SimpleActor> getInitQueue() {

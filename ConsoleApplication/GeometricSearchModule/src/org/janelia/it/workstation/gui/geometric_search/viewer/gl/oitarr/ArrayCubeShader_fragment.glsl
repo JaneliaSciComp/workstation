@@ -66,7 +66,7 @@ void main()
         nodes3[xyOffset + zSize*(iPosition-BUFFER_DEPTH*3)].depth = dz;
     } 
 
-    blankOut = vec4(0.0, 0.0, 0.0, 0.0);
+    blankOut = vec4(1.0, 0.0, 0.0, 1.0);
 
     memoryBarrier();
     

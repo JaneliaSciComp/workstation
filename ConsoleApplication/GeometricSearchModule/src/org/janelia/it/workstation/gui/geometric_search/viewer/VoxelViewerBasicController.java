@@ -56,7 +56,7 @@ public class VoxelViewerBasicController implements VoxelViewerController {
                 //cubeActor1.setId(index1);
                 logger.info("Check3");
 
-                model.setDisposeAndClearAllActorsMsg();
+                //model.setDisposeAndClearAllActorsMsg();
 
                 logger.info("Check3.1");
                 model.addActorToInitQueue(cubeActor0);

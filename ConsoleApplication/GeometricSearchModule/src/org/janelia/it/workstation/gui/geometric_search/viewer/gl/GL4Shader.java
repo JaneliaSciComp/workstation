@@ -67,6 +67,9 @@ public abstract class GL4Shader
     }
 
     public void init(GL4 gl) throws ShaderCreationException {
+
+        logger.info("init() for shader classname="+this.getClass().getName());
+
         // Create shader program
         if ( getVertexShaderResourceName() != null ) {
             vertexShader = gl.glCreateShader(GL4.GL_VERTEX_SHADER);
@@ -132,6 +135,7 @@ public abstract class GL4Shader
             gl.glGetInteger64v(GL4.GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, lb);
             logger.info("MAX_SHADER_STORAGE_BUFFER_BINDINGS="+lb.get(0));
         }
+        logger.info("init() done");
     }
 
     public void display(GL4 gl) {

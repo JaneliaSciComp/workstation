@@ -130,11 +130,16 @@ public class VoxelViewerRenderer implements GLEventListener
             } else {
                 depth=properties.getInteger(VoxelViewerProperties.GL_TRANSPARENCY_QUARTERDEPTH_INT);
             }
+            
+            logger.info("atc init()");
+            
             atc.setTransparencyQuarterDepth(depth);
             atc.init(gl);
+            
+            logger.info("ass init()");
 
-            ass.setTransparencyContext(atc);
-            ass.init(gl);
+           // ass.setTransparencyContext(atc);
+            //ass.init(gl);
 
             model.initAll(atc, gl);
 
@@ -285,7 +290,7 @@ public class VoxelViewerRenderer implements GLEventListener
 
             logger.info("display() check 10");
 
-            ass.display(gl);
+           // ass.display(gl);
         }
 
         logger.info("display() check 11");
