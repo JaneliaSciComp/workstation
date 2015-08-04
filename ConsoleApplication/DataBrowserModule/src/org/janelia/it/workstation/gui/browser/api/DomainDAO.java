@@ -150,6 +150,13 @@ public class DomainDAO {
     }
     
     /** 
+     * Return all the subjects.
+     */
+    public List<Subject> getSubjects() {
+        return toList(subjectCollection.find().as(Subject.class));
+    }
+    
+    /** 
      * Return the set of subjectKeys which are readable by the given subject. This includes the subject itself, and all of the groups it is part of. 
      */
     public Set<String> getSubjectSet(String subjectKey) {

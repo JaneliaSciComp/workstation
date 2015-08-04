@@ -1,15 +1,20 @@
 package org.janelia.it.workstation.gui.browser.api;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFilepath;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
@@ -144,4 +149,23 @@ public class DomainUtils {
 
         return attrs;
     }
+    
+    /**
+     * Sort a list of subjects in this order: 
+     * groups then users, alphabetical by full name, alphabetical by name. 
+     * @param subjects
+     */
+    public static void sortSubjects(List<Subject> subjects) {
+        Collections.sort(subjects, new Comparator<Subject>() {
+            @Override
+            public int compare(Subject o1, Subject o2) {
+                ComparisonChain chain = ComparisonChain.start()
+                        .compare(o1.getClass().getName(), o2.getClass().getName(), Ordering.natural())
+                        .compare(o1.getFullName(), o2.getFullName(), Ordering.natural().nullsLast())
+                        .compare(o1.getName(), o2.getName(), Ordering.natural().nullsFirst());
+                return chain.result();
+            }
+        });
+    }
+
 }

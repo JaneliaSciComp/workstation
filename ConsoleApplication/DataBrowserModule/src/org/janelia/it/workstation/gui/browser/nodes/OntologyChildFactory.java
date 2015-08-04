@@ -5,7 +5,6 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.nodes.ChildFactory;
@@ -25,8 +24,8 @@ public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
     private final WeakReference<OntologyTerm> ontologyTermRef;
     
     public OntologyChildFactory(Ontology ontology, OntologyTerm ontologyTerm) {
-        this.ontologyRef = new WeakReference<Ontology>(ontology);
-        this.ontologyTermRef = new WeakReference<OntologyTerm>(ontologyTerm);
+        this.ontologyRef = new WeakReference<>(ontology);
+        this.ontologyTermRef = new WeakReference<>(ontologyTerm);
     }
     
     @Override

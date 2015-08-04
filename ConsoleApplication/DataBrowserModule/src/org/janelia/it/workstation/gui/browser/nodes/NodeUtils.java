@@ -24,18 +24,9 @@ public class NodeUtils {
         return sb.toString();
     }
     
-    public static String createPathString(DomainObjectNode node) {
-        LinkedList<Long> ids = new LinkedList<>();
-
-        Node currNode = node;
-        while ((currNode != null) && (currNode instanceof DomainObjectNode)) {
-
-            DomainObjectNode objNode = (DomainObjectNode)currNode;
-            ids.addFirst(objNode.getDomainObject().getId());
-            currNode = currNode.getParentNode();
-        }
-
-        return createPathString(ids.toArray(new Long[ids.size()]));
+    public static String createPathString(Node node) {
+        Long[] ids = createIdPath(node);
+        return createPathString(ids);
     }
     
     public static Long[] createIdPath(String pathString) {
@@ -67,26 +58,35 @@ public class NodeUtils {
     }
     
     public static Long[] createIdPath(Node node) {
+        
+        LinkedList<Long> ar = new LinkedList<>();
+        
         if (node instanceof RootNode) {
             return new Long[0];
         }
         else if (node instanceof DomainObjectNode) {
             DomainObjectNode objNode = (DomainObjectNode)node;
-            LinkedList<Long> ar = new LinkedList<>();
-
             Node currNode = objNode;
             while ((currNode != null) && (currNode instanceof DomainObjectNode)) {
                 ar.addFirst(((DomainObjectNode)currNode).getDomainObject().getId());
                 currNode = currNode.getParentNode();
             }
-
-            Long[] res = new Long[ar.size()];
-            ar.toArray(res);
-            return res;
+        }
+        else if (node instanceof OntologyTermNode) {
+            OntologyTermNode objNode = (OntologyTermNode)node;
+            Node currNode = objNode;
+            while ((currNode != null) && (currNode instanceof OntologyTermNode)) {
+                ar.addFirst(((OntologyTermNode)currNode).getObject().getId());
+                currNode = currNode.getParentNode();
+            }
         }
         else {
             throw new IllegalArgumentException("Unsupported node type: "+node.getClass());
         }
+
+        Long[] res = new Long[ar.size()];
+        ar.toArray(res);
+        return res;
     }
     
     public static Node findNodeWithPath(Node start, Long[] ids) {

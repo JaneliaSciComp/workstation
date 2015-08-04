@@ -16,7 +16,6 @@ import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.openide.actions.RenameAction;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
@@ -33,11 +32,11 @@ public class OntologyNode extends DomainObjectNode {
     
     private final OntologyChildFactory childFactory;
     
-    public OntologyNode(Ontology ontology) throws Exception {
+    public OntologyNode(Ontology ontology) {
         this(null, DomainUtils.isEmpty(ontology.getTerms()) ? null:new OntologyChildFactory(ontology, ontology), ontology);
     }
     
-    private OntologyNode(ChildFactory parentChildFactory, final OntologyChildFactory childFactory, Ontology ontology) throws Exception {
+    private OntologyNode(ChildFactory parentChildFactory, final OntologyChildFactory childFactory, Ontology ontology) {
         super(parentChildFactory, DomainUtils.isEmpty(ontology.getTerms()) ? Children.LEAF:Children.create(childFactory, false), ontology);
         this.childFactory = childFactory;
         if (!DomainUtils.isEmpty(ontology.getTerms())) {

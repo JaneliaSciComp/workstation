@@ -1,10 +1,13 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Rectangle;
+import java.awt.event.KeyListener;
+import java.beans.PropertyVetoException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import javax.swing.text.Position;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
@@ -32,12 +35,59 @@ public class CustomTreeView extends BeanTreeView {
     public CustomTreeView(ExplorerManager.Provider explorerManagerProvider) {
         this.explorerManagerProvider = explorerManagerProvider;
         setDefaultActionAllowed(false);
-        setRootVisible(false);
+        setQuickSearchAllowed(false);
         tree.setScrollsOnExpand(false);
     }
 
     public Provider getExplorerManagerProvider() {
         return explorerManagerProvider;
+    }
+
+    public Node getRootNode() {
+        return explorerManagerProvider.getExplorerManager().getRootContext();
+    }
+    
+    public Node[] getSelectedNodes() {
+        ExplorerManager mgr = explorerManagerProvider.getExplorerManager();
+        return mgr.getSelectedNodes();
+    }
+    
+    public Node getCurrentNode() {
+        ExplorerManager mgr = explorerManagerProvider.getExplorerManager();
+        Node[] selected = mgr.getSelectedNodes();
+        if (selected.length>0) {
+            return selected[0];
+        }
+        return null;
+    }
+    
+    public Node getTopNode() {
+        ExplorerManager mgr = explorerManagerProvider.getExplorerManager();
+        if (tree.isRootVisible()) {
+            return mgr.getRootContext();
+        }
+        else {
+            return mgr.getRootContext().getChildren().nodes().nextElement();
+        }
+    }
+    
+    public void navigateToNextRow() {
+        ExplorerManager mgr = explorerManagerProvider.getExplorerManager();
+        Node curr = mgr.getSelectedNodes()[0];
+        Node parent = curr.getParentNode();
+        boolean selectNext = false;
+        if (parent!=null) {
+            for(Node child : parent.getChildren().getNodes()) {
+                if (selectNext) {
+                    selectNode(child);
+                    return;
+                }
+                if (child.equals(curr)) {
+                    selectNext = true;
+                }
+            }
+        }
+        selectTopNode();
     }
     
     public void scrollToTop() {
@@ -66,7 +116,7 @@ public class CustomTreeView extends BeanTreeView {
 
         List<Long[]> result = new ArrayList<>();
 
-        TreeNode rtn = Visualizer.findVisualizer(getRootContext());
+        TreeNode rtn = Visualizer.findVisualizer(getRootNode());
         TreePath tp = new TreePath(rtn); // Get the root
 
         Enumeration<TreePath> paths = tree.getExpandedDescendants(tp);
@@ -81,38 +131,72 @@ public class CustomTreeView extends BeanTreeView {
 
         return result;
     }
-
+    
+    public void selectNode(Node node) {
+        if (node==null) return;
+        ExplorerManager mgr = explorerManagerProvider.getExplorerManager();
+        try {
+            Node[] nodes = { node };
+            mgr.setSelectedNodes(nodes);
+        }
+        catch (PropertyVetoException e) {
+            log.error("Node selection was vetoed",e);
+        }
+    }
+    
+    public void selectTopNode() {
+        selectNode(getTopNode());
+    }
+    
+    /**
+     * Select the node containing the given search string. If bias is null then we search forward starting with the
+     * current node. If the current node contains the searchString then we don't move. If the bias is Forward then we
+     * start searching in the node after the selected one. If bias is Backward then we look backwards from the node
+     * before the selected one.
+     *
+     * @param searchString
+     * @param bias
+     */
+    public void navigateToNodeStartingWith(String searchString, Position.Bias bias, boolean skipStartingNode) {
+        CustomTreeFind searcher = new CustomTreeFind(this, searchString, getCurrentNode(), bias, skipStartingNode);
+        selectNode(searcher.find());
+    }
+    
     /**
      * Expands the given path. Useful because it doesn't scroll to the 
      * expanded path like BeanTreeView's showPath.
      * @param path 
      */
-    protected void expandPath(TreePath path) {
+    public void expand(TreePath path) {
         tree.expandPath(path);
     }
 
+    /**
+     * Expand the given path.
+     */
+    public void expand(Long[] idPath) {
+        List<Long[]> paths = new ArrayList<>();
+        paths.add(idPath);
+        expand(paths);
+    }
+    
     /** 
      * Expand all the given paths.
      */
-    public void expandNodes(List<Long[]> exPaths) {
+    public void expand(List<Long[]> exPaths) {
         for (Iterator<Long[]> it = exPaths.iterator(); it.hasNext();) {
             Long[] sp = it.next();
             log.trace("Expanding {}",NodeUtils.createPathString(sp));
             TreePath tp = idPath2TreePath(sp);
             log.debug("Expanding {}",tp);
             if (tp != null) {
-                expandPath(tp);
+                expand(tp);
             }
         }
     }
 
-    private Node getRootContext() {
-        return explorerManagerProvider.getExplorerManager().getRootContext();
-    }
-
     private TreePath idPath2TreePath(Long[] sp) {
-
-        Node n = NodeUtils.findNodeWithPath(getRootContext(), sp);
+        Node n = NodeUtils.findNodeWithPath(getRootNode(), sp);
         if (n==null) return null;
 
         // Create the tree path
@@ -123,5 +207,23 @@ public class CustomTreeView extends BeanTreeView {
             n = n.getParentNode();
         }
         return new TreePath(tns);
+    }
+    
+    public void replaceKeyListeners(KeyListener newListener) {
+        for( KeyListener listener : getKeyListeners()) {
+            removeKeyListener(listener);
+        }
+        for(KeyListener listener : tree.getKeyListeners()) {
+            tree.removeKeyListener(listener);
+        }
+        tree.addKeyListener(newListener);
+    }
+    
+    @Override
+    public void grabFocus() {
+        tree.grabFocus();
+        if (getCurrentNode() == null) {
+            selectTopNode();
+        }
     }
 }

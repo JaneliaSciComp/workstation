@@ -17,6 +17,7 @@ import javax.swing.JToolBar;
 import javax.swing.text.DefaultEditorKit;
 
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
+import org.janelia.it.workstation.gui.browser.nodes.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.nodes.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
@@ -71,20 +72,27 @@ import org.slf4j.LoggerFactory;
 })
 public final class DomainExplorerTopComponent extends TopComponent implements ExplorerManager.Provider, LookupListener {
 
-    public static final String TC_NAME = "DomainExplorerTopComponent";
-    
     private Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
 
+    public static final String TC_NAME = "DomainExplorerTopComponent";
+    
+    public static DomainExplorerTopComponent getInstance() {
+        return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
+    }
+    
+    private final CustomTreeView beanTreeView;
     private final ExplorerManager mgr = new ExplorerManager();
     private final DomainObjectNodeSelectionModel selectionModel = new DomainObjectNodeSelectionModel();
+    
     private Lookup.Result<AbstractNode> result = null;
     private RootNode root;
-    private CustomTreeView beanTreeView;
     
     public DomainExplorerTopComponent() {
         initComponents();
         
         this.beanTreeView = new CustomTreeView(this);
+        beanTreeView.setRootVisible(false);
+        
         selectionModel.setSource(this);
         
         setName(Bundle.CTL_DomainExplorerTopComponent());
@@ -104,7 +112,11 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         this.root = new RootNode();
         mgr.setRootContext(root);
         
-        TreeToolbar toolbar = new TreeToolbar(root);
+        CustomTreeToolbar toolbar = new CustomTreeToolbar(beanTreeView) {
+            protected void refresh() {
+                DomainExplorerTopComponent.this.refresh();
+            }
+        };
         add(toolbar, BorderLayout.PAGE_START);
         add(beanTreeView, BorderLayout.CENTER);
                    
@@ -113,69 +125,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             beanTreeView.expandNode(node);
             break; // For now, we'll only expand the user's default workspace
         }
-    }
-    
-    public RootNode getRoot() {
-        return root;
-    }
-
-    public void expand(Long[] idPath) {
-        List<Long[]> paths = new ArrayList<>();
-        paths.add(idPath);
-        beanTreeView.expandNodes(paths);
-    }
-
-    public void select(Long[] idPath) {
-        Node node = NodeUtils.findNodeWithPath(root, idPath);
-        log.info("Found node with path {}: {}",NodeUtils.createPathString(idPath),node);
-        selectNode(node);
-    }
-    
-    public WorkspaceNode getWorkspaceNode() {
-        for(Node node : root.getChildren().getNodes()) {
-            return (WorkspaceNode)node;
-        }
-        return null;
-    }
-    
-    private class TreeToolbar extends JPanel {
-    
-        private final JButton refreshButton;
-        private final JToolBar toolBar;
-        
-        public TreeToolbar(final RootNode rootNode) {
-            super(new BorderLayout());
-        
-            this.toolBar = new JToolBar();
-            toolBar.setFloatable(false);
-            toolBar.setRollover(true);
-
-            refreshButton = new JButton(Icons.getRefreshIcon());
-            refreshButton.setToolTipText("Refresh the data in the tree.");
-            refreshButton.setFocusable(false);
-            refreshButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    refresh();
-                }
-            });
-            toolBar.add(refreshButton);
-
-            toolBar.addSeparator();
-            add(toolBar, BorderLayout.PAGE_START);
-        }
-        
-        public JToolBar getJToolBar() {
-            return toolBar;
-        }
-    }
-    
-    public static DomainExplorerTopComponent getInstance() {
-        return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
-    }
-
-    public DomainObjectNodeSelectionModel getSelectionModel() {
-        return selectionModel;
     }
     
 //    private void bindKeys() {
@@ -195,40 +144,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 //        keys.put(keyPaste, pasteAction);
 //    }
     
-    public void refresh() {
-        refresh(null);
-    }
-    
-    public void refresh(final Callable<Void> success) {
-                        
-        final List<Long[]> expanded = beanTreeView.getExpandedPaths();
-        
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-                root.refreshChildren();
-            }
-
-            @Override
-            protected void hadSuccess() {
-                try {
-                    beanTreeView.expandNodes(expanded);
-                    ConcurrentUtils.invoke(success);
-                }
-                catch (Exception e) {
-                    hadError(e);
-                }
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        
-        worker.execute();
-    }
     
     /**
      * This method is called from within the constructor to initialize the form.
@@ -278,9 +193,41 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         // TODO read your settings according to their version
     }
 
-    @Override
-    public ExplorerManager getExplorerManager() {
-        return mgr;
+    // Custom methods
+    
+    public void refresh() {
+        refresh(null);
+    }
+    
+    public void refresh(final Callable<Void> success) {
+                        
+        final List<Long[]> expanded = beanTreeView.getExpandedPaths();
+        
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                root.refreshChildren();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                try {
+                    beanTreeView.expand(expanded);
+                    ConcurrentUtils.invoke(success);
+                }
+                catch (Exception e) {
+                    hadError(e);
+                }
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        
+        worker.execute();
     }
     
     @Override
@@ -295,19 +242,41 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
     }
 
+    public WorkspaceNode getWorkspaceNode() {
+        for(Node node : root.getChildren().getNodes()) {
+            return (WorkspaceNode)node;
+        }
+        return null;
+    }
+    
+    @Override
+    public ExplorerManager getExplorerManager() {
+        return mgr;
+    }
+    
+    public DomainObjectNodeSelectionModel getSelectionModel() {
+        return selectionModel;
+    }
+    
+    public RootNode getRoot() {
+        return root;
+    }
+
+    public void expand(Long[] idPath) {
+        beanTreeView.expand(idPath);
+    }
+
+    public void select(Long[] idPath) {
+        Node node = NodeUtils.findNodeWithPath(root, idPath);
+        log.info("Found node with path {}: {}",NodeUtils.createPathString(idPath),node);
+        selectNode(node);
+    }
+    
     public void selectNode(Node node) {
-        if (node==null) return;
-        try {
-            Node[] nodes = { node };
-            mgr.setSelectedNodes(nodes);
-        }
-        catch (PropertyVetoException e) {
-            log.error("Node selection was vetoed",e);
-        }
+        beanTreeView.selectNode(node);
     }
 
     public void selectNodeById(Long id) {
         throw new UnsupportedOperationException("Not yet implemented");
     }
-
 }
