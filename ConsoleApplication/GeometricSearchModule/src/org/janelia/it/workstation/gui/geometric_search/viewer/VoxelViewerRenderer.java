@@ -8,6 +8,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderActionSequence;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4SimpleActor;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GLDisplayUpdateCallback;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,9 +35,11 @@ public class VoxelViewerRenderer implements GLEventListener
     private VoxelViewerModel model;
     protected Camera3d camera;
     VoxelViewerProperties properties;
+    VoxelViewerGLPanel viewer;
 
     protected ArrayTransparencyContext atc = new ArrayTransparencyContext();
     protected ArraySortShader ass = new ArraySortShader(null);
+    protected GL4ShaderActionSequence assActionSequence = new GL4ShaderActionSequence("Sort Shader");
 
     protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -74,6 +77,10 @@ public class VoxelViewerRenderer implements GLEventListener
     public VoxelViewerRenderer(VoxelViewerModel model) {
         this.model=model;
         camera=model.getCamera3d();
+    }
+
+    public void setViewer(VoxelViewerGLPanel viewer) {
+        this.viewer=viewer;
     }
 
     public void setPixelDimensions(double widthInPixels, double heightInPixels) {
@@ -138,8 +145,23 @@ public class VoxelViewerRenderer implements GLEventListener
             
             logger.info("ass init()");
 
-           // ass.setTransparencyContext(atc);
-            //ass.init(gl);
+            ass.setProperties(properties);
+            ass.setTransparencyContext(atc);
+            final int transparencyQuarterDepth=model.getTransparencyQuarterDepth();
+            ass.setUpdateCallback(new GLDisplayUpdateCallback() {
+                @Override
+                public void update(GL4 gl) {
+                    int width=viewer.getWidth();
+                    int height=viewer.getHeight();
+                    logger.info("Calling sortShader.set* with depth="+transparencyQuarterDepth+" width="+width+" height="+height);
+                    ass.setWidth(gl, viewer.getWidth());
+                    ass.setHeight(gl, viewer.getHeight());
+                    ass.setDepth(gl, transparencyQuarterDepth);
+                }
+            });
+            assActionSequence.setShader(ass);
+            assActionSequence.setApplyMemoryBarrier(true);
+            assActionSequence.init(gl);
 
             model.initAll(atc, gl);
 
@@ -290,7 +312,7 @@ public class VoxelViewerRenderer implements GLEventListener
 
             logger.info("display() check 10");
 
-           // ass.display(gl);
+            assActionSequence.display(gl);
         }
 
         logger.info("display() check 11");

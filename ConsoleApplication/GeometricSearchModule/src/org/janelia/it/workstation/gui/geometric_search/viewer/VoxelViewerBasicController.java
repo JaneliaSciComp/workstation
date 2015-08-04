@@ -49,18 +49,18 @@ public class VoxelViewerBasicController implements VoxelViewerController {
             @Override
             public void run() {
                 logger.info("Check0");
-                ArrayCubeActor cubeActor0=createCubeActor(alignedStackFile, 0, 0.25f, 500000, new Vector4(1.0f, 0.0f, 0.0f, 0.005f));
+                ArrayCubeActor cubeActor0=createCubeActor(alignedStackFile, 0, 0.25f, 500000, new Vector4(1.0f, 0.0f, 0.0f, 0.05f));
                 cubeActor0.setId(index0);
                 logger.info("Check1");
-                //ArrayCubeActor cubeActor1=createCubeActor(alignedStackFile, 1, 0.25f, 500000, new Vector4(0.0f, 0.0f, 1.0f, 0.05f));
-                //cubeActor1.setId(index1);
+                ArrayCubeActor cubeActor1=createCubeActor(alignedStackFile, 1, 0.25f, 500000, new Vector4(0.0f, 1.0f, 0.0f, 0.005f));
+                cubeActor1.setId(index1);
                 logger.info("Check3");
 
-                //model.setDisposeAndClearAllActorsMsg();
+                model.setDisposeAndClearAllActorsMsg();
 
                 logger.info("Check3.1");
                 model.addActorToInitQueue(cubeActor0);
-                //model.addActorToInitQueue(cubeActor1);
+                model.addActorToInitQueue(cubeActor1);
                 logger.info("Check3.2");
             }
         });

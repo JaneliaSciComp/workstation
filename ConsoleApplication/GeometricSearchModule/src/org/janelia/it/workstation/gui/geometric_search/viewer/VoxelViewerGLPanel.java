@@ -67,6 +67,7 @@ public class VoxelViewerGLPanel extends GLJPanel
         popupMenu.add(resetViewItem);
         renderer=new VoxelViewerRenderer(model);
         renderer.setProperties(properties);
+        renderer.setViewer(this);
         setPreferredSize( new Dimension( width, height ) );
 
         addGLEventListener(renderer);
