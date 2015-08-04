@@ -55,7 +55,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         if ( viewer != null ) {
             viewer.releaseMenuActions();
         }
-        model=new VoxelViewerModel();
+        model=new VoxelViewerModel(properties);
         viewer = new VoxelViewerGLPanel(width, height, model);
         viewer.setProperties(properties);
         viewer.setVisible(true);
@@ -64,6 +64,9 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
         controller.setModel(model);
         controller.setViewer(viewer);
+
+        model.setViewer(viewer);
+        model.postViewerIntegrationSetup();
 
         // Experiment setup goes here ==============
 

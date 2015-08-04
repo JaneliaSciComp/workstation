@@ -15,10 +15,14 @@ public abstract class GL4SimpleActor {
     protected static GLU glu = new GLU();
     private static Logger logger = LoggerFactory.getLogger(GL4SimpleActor.class);
 
-
     protected GLDisplayUpdateCallback updateCallback;
 
     protected Matrix4 model=new Matrix4();
+
+    protected int actorId=0;
+
+    // Callable within a non-GL setup thread before init()
+    public void setup() {}
 
     public abstract void dispose(GL4 gl);
 
@@ -28,6 +32,14 @@ public abstract class GL4SimpleActor {
         if (updateCallback!=null) {
             updateCallback.update(gl);
         }
+    }
+
+    public void setId(int id) {
+        actorId=id;
+    }
+
+    public int getActorId() {
+        return actorId;
     }
 
     public Matrix4 getModel() { return model; }

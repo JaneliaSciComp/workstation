@@ -112,12 +112,12 @@ public class OITMeshExperiment implements GL4Experiment {
         drawSequence.getActorSequence().add(pa);
 
 
-        viewer.addShaderAction(drawSequence);
+        //viewer.addShaderAction(drawSequence);
 
         // Setup Sort Shader ///////////////////////////////////////
 
-        sortSequence.setShader(sortShader);
-        viewer.addShaderAction(sortSequence); //DEBUG AND SEE WHAT HAPPENS
+       // sortSequence.setShader(sortShader);
+        //viewer.addShaderAction(sortSequence); //DEBUG AND SEE WHAT HAPPENS
     }
 
 }

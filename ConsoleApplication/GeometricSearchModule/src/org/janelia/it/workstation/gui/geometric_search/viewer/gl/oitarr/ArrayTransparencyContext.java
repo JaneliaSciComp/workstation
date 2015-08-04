@@ -247,4 +247,8 @@ public class ArrayTransparencyContext {
         checkGlError(gl, "d5 ArrayTransparencyContext glBindImageTexture() error");
     }
 
+    public void dispose(GL4 gl) {
+        // todo - fill this in
+    }
+
 }

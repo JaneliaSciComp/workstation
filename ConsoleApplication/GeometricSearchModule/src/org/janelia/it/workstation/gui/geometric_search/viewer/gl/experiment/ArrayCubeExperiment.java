@@ -171,9 +171,9 @@ public class ArrayCubeExperiment implements GL4Experiment {
 
         /////////////////////////////////////////////////////////////////////////
 
-        viewer.addShaderAction(cubeSequence);
-        viewer.addShaderAction(meshSequence);
-        viewer.addShaderAction(sortSequence);
+//        viewer.addShaderAction(cubeSequence);
+//        viewer.addShaderAction(meshSequence);
+//        viewer.addShaderAction(sortSequence);
     }
 
 }

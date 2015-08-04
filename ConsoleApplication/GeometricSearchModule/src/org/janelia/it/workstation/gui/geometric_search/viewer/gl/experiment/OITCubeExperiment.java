@@ -144,10 +144,10 @@ public class OITCubeExperiment implements GL4Experiment {
 
         /////////////////////////////////////////////////////////////////////////
 
-        viewer.addShaderAction(cubeSequence);
-        viewer.addShaderAction(meshSequence);
-        sortSequence.setShader(new OITSortShader());
-        viewer.addShaderAction(sortSequence);
+//        viewer.addShaderAction(cubeSequence);
+//        viewer.addShaderAction(meshSequence);
+//        sortSequence.setShader(new OITSortShader());
+//        viewer.addShaderAction(sortSequence);
     }
 
 

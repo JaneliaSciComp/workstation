@@ -22,12 +22,6 @@ public class VoxelViewerGLPanel extends GLJPanel
         implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener {
 
     private static final Logger logger = LoggerFactory.getLogger(VoxelViewerGLPanel.class);
-
-    LinkedBlockingQueue taskQueue= new LinkedBlockingQueue();
-    ThreadPoolExecutor threadPool = new ThreadPoolExecutor(4, 4, 1000L, TimeUnit.MILLISECONDS, taskQueue);
-
-    protected VoxelViewerProperties properties;
-
     protected static GLProfile profile = null;
     protected static GLCapabilities capabilities = null;
 
@@ -37,6 +31,7 @@ public class VoxelViewerGLPanel extends GLJPanel
         ZOOM
     }
 
+    protected VoxelViewerProperties properties;
     VoxelViewerModel model;
     VoxelViewerRenderer renderer;
 
@@ -79,6 +74,7 @@ public class VoxelViewerGLPanel extends GLJPanel
 
     public void setProperties(VoxelViewerProperties properties) {
         this.properties=properties;
+        renderer.setProperties(properties);
     }
 
     public GL4ShaderProperties getProperties() {
@@ -170,14 +166,6 @@ public class VoxelViewerGLPanel extends GLJPanel
         renderer.setResetFirstRedraw(resetFirstRedraw);
     }
 
-    /**
-     * Add any actor to this Mip as desired.
-     */
-    public void addShaderAction(GL4ShaderActionSequence shaderAction) {
-        addActorToRenderer(shaderAction);
-    }
-
-
     @Override
     public void mouseDragged(MouseEvent event) {
         Point p1 = event.getPoint();
@@ -236,14 +224,6 @@ public class VoxelViewerGLPanel extends GLJPanel
         // giving the appearance of sluggishness.  So call repaint(),
         // not display().
         repaint();
-    }
-
-    /** Special synchronized method, for adding actors. Supports multi-threaded brick-add. */
-    private void addActorToRenderer(GL4ShaderActionSequence shaderAction) {
-        synchronized ( this ) {
-            renderer.addShaderAction(shaderAction);
-            //renderer.resetView();
-        }
     }
 
     protected void maybeShowPopup(MouseEvent event)

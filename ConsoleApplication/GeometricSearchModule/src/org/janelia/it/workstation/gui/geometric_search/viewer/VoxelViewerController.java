@@ -7,5 +7,5 @@ import java.io.File;
  */
 public interface VoxelViewerController {
 
-    public int addAlignedStackDataset(File alignedStackFile);
+    public int[] addAlignedStackDataset(File alignedStackFile);
 }

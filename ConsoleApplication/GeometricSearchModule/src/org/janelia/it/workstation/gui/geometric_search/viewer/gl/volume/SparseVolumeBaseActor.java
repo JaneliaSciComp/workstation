@@ -85,13 +85,7 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
     }
 
     @Override
-    public void display(GL4 gl) {
-        super.display(gl);
-    }
-
-    @Override
-    public void init(GL4 gl) {
-
+    public void setup() {
         if (!fileLoaded) {
             try {
                 loadVolumeFile();
@@ -106,7 +100,7 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
             depth=textureData.getSz();
             fileLoaded=true;
         }
-        
+
         if (textureData==null) return;
 
         // We want to do two passes through the volume data. On the first pass, we will
@@ -114,8 +108,8 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
         // populate the vertex array buffer.
 
         // Next, iterate through channels and create textureIds
-        
-        
+
+
         if ( textureData.getTextureData().getVolumeChunks() == null ) {
             logger.info("No entries found in textureData from file="+textureData.getFilename());
             return;
@@ -230,7 +224,15 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
             }
 
         }
+    }
 
+    @Override
+    public void display(GL4 gl) {
+        super.display(gl);
+    }
+
+    @Override
+    public void init(GL4 gl) {
     }
 
     @Override

@@ -43,7 +43,7 @@ public class VolumeExperiment implements GL4Experiment {
 
         volumeSequence.getActorSequence().add(volumeActor);
 
-        viewer.addShaderAction(volumeSequence);
+        //viewer.addShaderAction(volumeSequence);
     }
 
 

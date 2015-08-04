@@ -11,6 +11,7 @@ public class GL4ShaderActionSequence {
 
     String name;
     private GL4Shader shader;
+    boolean applyMemoryBarrier=false;
     List<GL4SimpleActor> actorSequence=new ArrayList<>();
 
     public GL4ShaderActionSequence(String name) {
@@ -44,6 +45,17 @@ public class GL4ShaderActionSequence {
         shader.dispose(gl);
     }
 
+    public void disposeAndClearActorsOnly(GL4 gl) {
+        for (GL4SimpleActor actor : actorSequence) {
+            actor.dispose(gl);
+        }
+        actorSequence.clear();
+    }
+
+    public void setApplyMemoryBarrier(boolean useBarrier) {
+        this.applyMemoryBarrier=useBarrier;
+    }
+
 
     public void init(GL4 gl) throws Exception {
         shader.init(gl);
@@ -74,7 +86,9 @@ public class GL4ShaderActionSequence {
 //        //gl.glEnable(GL4.GL_DEPTH_TEST);
 //        gl.glDisable(GL4.GL_BLEND);
         
-        gl.glMemoryBarrier(GL4.GL_ALL_BARRIER_BITS);
+        if (applyMemoryBarrier) {
+            gl.glMemoryBarrier(GL4.GL_ALL_BARRIER_BITS);
+        }
 
         shader.unload(gl);
     }

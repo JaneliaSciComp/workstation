@@ -32,6 +32,6 @@ public class TexelExperiment  implements GL4Experiment {
         actionSequence.setShader(shader);
         actionSequence.getActorSequence().add(texelActor);
 
-        viewer.addShaderAction(actionSequence);
+        //viewer.addShaderAction(actionSequence);
     }
 }
