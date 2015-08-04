@@ -28,8 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A panel that builds pagination and selection features around an 
- * AnnotatedDomainObjectListViewer. 
+ * A panel that builds pagination and selection features around an AnnotatedDomainObjectListViewer. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -38,29 +37,30 @@ public abstract class PaginatedResultsPanel extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(PaginatedResultsPanel.class);
     
     // Splash panel
-    protected JLabel splashPanel;
+    private JLabel splashPanel;
     
     // Status bar
-    protected final JPanel statusBar;
-    protected final JLabel statusLabel;
-    protected final JPanel selectionButtonContainer;
-    protected final JButton prevPageButton;
-    protected final JButton nextPageButton;
-    protected final JButton endPageButton;
-    protected final JButton startPageButton;
-    protected final JButton selectAllButton;
-    protected final JLabel pagingStatusLabel;
+    private final JPanel statusBar;
+    private final JLabel statusLabel;
+    private final JPanel selectionButtonContainer;
+    private final JButton prevPageButton;
+    private final JButton nextPageButton;
+    private final JButton endPageButton;
+    private final JButton startPageButton;
+    private final JButton selectAllButton;
+    private final JLabel pagingStatusLabel;
     private final SimpleDropDownButton viewTypeButton;
     
     // Result view
-    protected AnnotatedDomainObjectListViewer resultsView;
+    private AnnotatedDomainObjectListViewer resultsView;
     
     // Content
-    protected SearchResults searchResults;
+    private SearchResults searchResults;
     private ResultPage resultPage;
-    protected int numPages = 0;
-    protected int currPage = 0;
+    private int numPages = 0;
+    private int currPage = 0;
     
+    // State
     protected DomainObjectSelectionModel selectionModel;
     
     // Hud dialog
@@ -215,6 +215,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
         if (event.getSource()!=resultsView) return;
+        resultsView.selectDomainObject(event.getDomainObject(), event.isSelect(), event.isClearAll());
         updateStatusBar();
 //        updateHud(false);
     }

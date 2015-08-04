@@ -930,9 +930,9 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
                 return;
             }
             
-            if (dtde.isDataFlavorSupported(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR)) {
+            if (dtde.isDataFlavorSupported(DomainObjectFlavor.SINGLE_FLAVOR)) {
                 try {
-                    Object transData = dtde.getTransferable().getTransferData(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR);
+                    Object transData = dtde.getTransferable().getTransferData(DomainObjectFlavor.SINGLE_FLAVOR);
                     if (transData instanceof DomainObject) {
                         dtde.acceptDrop(DnDConstants.ACTION_COPY);
                         DomainObject obj = (DomainObject)transData;

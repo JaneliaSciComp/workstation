@@ -4,7 +4,8 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 
 /**
- *
+ * One ore more domain objects were selected.
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DomainObjectSelectionEvent {

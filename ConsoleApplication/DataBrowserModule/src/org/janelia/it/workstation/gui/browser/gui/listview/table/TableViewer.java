@@ -25,10 +25,10 @@ public abstract class TableViewer<T,S> extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(TableViewer.class);
 
-    protected final JPanel resultsPane;
-    protected final DynamicTable resultsTable;
+    private final JPanel resultsPane;
+    private final DynamicTable resultsTable;
     
-    protected SelectionModel<T,S> selectionModel;
+    private SelectionModel<T,S> selectionModel;
         
     public TableViewer() {
         

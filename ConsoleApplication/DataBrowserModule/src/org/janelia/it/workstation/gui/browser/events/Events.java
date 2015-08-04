@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Global event bus singleton. 
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -39,6 +40,7 @@ public class Events {
     }
     
     public void registerOnEventBus(Object object) {
+        log.debug("Registering: {}",object);
         try {
             synchronized (Events.class) {
                 eventBus.register(object);
@@ -50,6 +52,7 @@ public class Events {
     }
 
     public void unregisterOnEventBus(Object object) {
+        log.debug("Unregistering: {}",object);
         try {
             synchronized (Events.class) {
                 eventBus.unregister(object);

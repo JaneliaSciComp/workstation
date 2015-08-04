@@ -6,12 +6,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -19,16 +24,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.UserColorMapping;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
+import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.outline.Annotations;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -42,14 +51,6 @@ import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
-import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
-
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
  * functionality on top of it, such as:
@@ -60,29 +61,28 @@ import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
+public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(IconGridViewerPanel.class);
 
     // Main components
     private ImagesPanel<T,S> imagesPanel;
     private IconDemoToolbar iconDemoToolbar;
-
-    private String currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
     
     // These members deal with the context and entities within it
-    protected List<T> imageObjects;
-    protected final Annotations annotations = new Annotations();
-    protected final List<String> allUsers = new ArrayList<>();
-    protected final Set<String> hiddenUsers = new HashSet<>();
-    protected int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
-    protected final List<String> allImageRoles = new ArrayList<>();
+    private List<T> imageObjects;
+    private Map<S,T> imageObjectMap;
+    private final Annotations annotations = new Annotations();
+    private final List<String> allUsers = new ArrayList<>();
+    private final Set<String> hiddenUsers = new HashSet<>();
+    private int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
+    private ImageModel<T,S> imageModel;
 
     // Listeners
-    protected SessionModelListener sessionModelListener;
-    protected ModelMgrObserver modelMgrObserver;
+    private SessionModelListener sessionModelListener;
+    private ModelMgrObserver modelMgrObserver;
     
-    protected SelectionModel<T,S> selectionModel;
+    private SelectionModel<T,S> selectionModel;
     
 
     // Listen for key strokes and execute the appropriate key bindings
@@ -139,9 +139,9 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
 
                 // Delete triggers deletion
                 if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-                    List<AnnotatedImageButton<T>> selected = imagesPanel.getSelectedButtons();
+                    List<AnnotatedImageButton<T,S>> selected = imagesPanel.getSelectedButtons();
                     List<T> toDelete = new ArrayList<>();
-                    for(AnnotatedImageButton<T> button : selected) {
+                    for(AnnotatedImageButton<T,S> button : selected) {
                         T imageObject = button.getImageObject();
                         toDelete.add(imageObject);
                     }
@@ -179,7 +179,7 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
                 }
 
                 if (imageObj != null) {
-                    S id = getImageUniqueId(imageObj);
+                    S id = getImageModel().getImageUniqueId(imageObj);
                     AnnotatedImageButton button = imagesPanel.getButtonById(id);
                     if (button != null) {
                         selectImageObject(imageObj, clearAll);
@@ -203,7 +203,7 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
             if (e.isConsumed()) {
                 return;
             }
-            AnnotatedImageButton<T> button = getButtonAncestor(e.getComponent());
+            AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
             // Make sure the button is selected
             if (!button.isSelected()) {
                 buttonSelection(button, false, false);
@@ -218,9 +218,10 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
             if (e.isConsumed()) {
                 return;
             }
-            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+            AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
+            final DomainObject domainObject = (DomainObject)button.getImageObject();
 //            log.info("doubleLeftClicked: {}",button.getImageObject());
-            buttonDrillDown(button);
+            buttonDrillDown(domainObject);
             e.consume();
         }
 
@@ -230,7 +231,7 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
             if (e.isConsumed()) {
                 return;
             }
-            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+            AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
             if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 1) {
                 return;
             }
@@ -246,12 +247,12 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
     /**
      * This is a separate method so that it can be overridden to accommodate other behavior patterns.
      */
-    protected abstract void buttonDrillDown(AnnotatedImageButton button);
+    protected abstract void buttonDrillDown(DomainObject domainObject);
 
     protected void buttonSelection(AnnotatedImageButton button, boolean multiSelect, boolean rangeSelect) {
         
         final T imageObject = (T)button.getImageObject();
-        final S uniqueId = getImageUniqueId(imageObject);
+        final S uniqueId = getImageModel().getImageUniqueId(imageObject);
         
 //        selectionButtonContainer.setVisible(false);
 
@@ -273,7 +274,7 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
                 // Walk through the buttons and select everything between the last and current selections
                 boolean selecting = false;
                 for (T otherImageObject : imageObjects) {
-                    final S otherUniqueId = getImageUniqueId(otherImageObject);
+                    final S otherUniqueId = getImageModel().getImageUniqueId(otherImageObject);
                     log.trace("Consider "+otherUniqueId);
                     if (otherUniqueId.equals(lastSelectedId) || otherUniqueId.equals(uniqueId)) {
                         if (otherUniqueId.equals(lastSelectedId)) {
@@ -305,12 +306,12 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
         button.requestFocus();
     }
     
-    private AnnotatedImageButton getButtonAncestor(Component component) {
+    private AnnotatedImageButton<T,S> getButtonAncestor(Component component) {
         Component c = component;
         while (!(c instanceof AnnotatedImageButton)) {
             c = c.getParent();
         }
-        return (AnnotatedImageButton) c;
+        return (AnnotatedImageButton<T,S>) c;
     }
 
     public IconGridViewerPanel() {
@@ -319,33 +320,10 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
         setLayout(new BorderLayout());
         setFocusable(true);
 
-        sessionModelListener = new SessionModelListener() {
-            @Override
-            public void browserAdded(BrowserModel browserModel) {
-            }
-
-            @Override
-            public void browserRemoved(BrowserModel browserModel) {
-            }
-
-            @Override
-            public void sessionWillExit() {
-            }
-
-            @Override
-            public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
-                if (key == "console.serverLogin") {
-                    IconGridViewerPanel.this.clear();
-                }
-            }
-        };
-        SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
-
-
         iconDemoToolbar = createToolbar();
         iconDemoToolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
 
-        imagesPanel = new ImagesPanel<>(this);
+        imagesPanel = new ImagesPanel<>();
         imagesPanel.setButtonKeyListener(keyListener);
         imagesPanel.setButtonMouseListener(buttonMouseListener);
         imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
@@ -452,12 +430,15 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
 //            }
 //        });
 
-        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
+        sessionModelListener = new SessionModelListener() {
 
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
 
-                if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
+                if (key == "console.serverLogin") {
+                    IconGridViewerPanel.this.clear();
+                }
+                else if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
                     refreshAnnotations(null);
                 }
                 else if (ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY.equals(key)) {
@@ -491,32 +472,24 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
             @Override
             public void browserAdded(BrowserModel browserModel) {
             }
-        });
+        };
+        
+        SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
+    }
+
+    protected ImageModel<T, S> getImageModel() {
+        return imageModel;
+    }
+
+    protected void setImageModel(ImageModel<T, S> imageModel) {
+        this.imageModel = imageModel;
+        imagesPanel.setImageModel(imageModel);
     }
     
-    @Override
-    public void registerAspectRatio(double aspectRatio) {
-        imagesPanel.registerAspectRatio(aspectRatio);
-    }
-
-    @Override
-    public int getMaxImageWidth() {
-        return imagesPanel.getMaxImageWidth();
-    }
-    
-    @Override
-    public String getCurrImageRole() {
-        return currImageRole;
-    }
-
-    @Override
-    public void setCurrImageRole(String currImageRole) {
-        this.currImageRole = currImageRole;
-    }
-
     public void setSelectionModel(SelectionModel<T,S> selectionModel) {
-        selectionModel.setSource(this);
         this.selectionModel = selectionModel;
+        imagesPanel.setSelectionModel(selectionModel);
+        selectionModel.setSource(this);
     }
     
     public SelectionModel<T,S> getSelectionModel() {
@@ -689,36 +662,17 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
 
                 return userListMenu;
             }
-
-            @Override
-            protected JPopupMenu getPopupImageRoleMenu() {
-
-                final JPopupMenu imageRoleListMenu = new JPopupMenu();
-                final List<String> imageRoles = new ArrayList<>(allImageRoles);
-
-                for (final String imageRole : imageRoles) {
-                    JMenuItem roleMenuItem = new JCheckBoxMenuItem(imageRole, imageRole.equals(getCurrImageRole()));
-                    roleMenuItem.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            setCurrImageRole(imageRole);
-                            imageObjectsLoadDone(null);
-                        }
-                    });
-                    imageRoleListMenu.add(roleMenuItem);
-                }
-                return imageRoleListMenu;
-            }
         };
     }
 
     protected void selectImageObject(T imageObject, boolean clearAll) {
-        final S id = getImageUniqueId(imageObject);
+        final S id = getImageModel().getImageUniqueId(imageObject);
         imagesPanel.setSelectionByUniqueId(id, true, clearAll);
         selectionModel.select(imageObject, clearAll);
     }
 
     protected void deselectImageObject(T imageObject) {
-        final S id = getImageUniqueId(imageObject);
+        final S id = getImageModel().getImageUniqueId(imageObject);
         imagesPanel.setSelectionByUniqueId(id, false, false);
         selectionModel.deselect(imageObject);
     }
@@ -1126,15 +1080,12 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
         return imageObjects.get(i + 1);
     }
     
-    protected abstract void populateImageRoles(List<T> imageObjects);
-
     private synchronized void setImageObjects(List<T> imageObjects) {
         log.debug("Setting {} image objects",imageObjects.size());
         this.imageObjects = imageObjects;
-        populateImageRoles(imageObjects);
-        iconDemoToolbar.getImageRoleButton().setEnabled(!allImageRoles.isEmpty());
-        if (!allImageRoles.contains(getCurrImageRole())) {
-            setCurrImageRole(FileType.SignalMip.toString());
+        this.imageObjectMap = new HashMap<>();
+        for(T imageObject : imageObjects) {
+            imageObjectMap.put(getImageModel().getImageUniqueId(imageObject), imageObject);
         }
     }
 
@@ -1143,11 +1094,7 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
         if (uniqueId == null) {
             return null;
         }
-        AnnotatedImageButton<T> button = imagesPanel.getButtonById(uniqueId);
-        if (button == null) {
-            return null;
-        }
-        return button.getImageObject();
+        return imageObjectMap.get(uniqueId);
     }
 //
 //    public List<RootedEntity> getSelectedEntities() {
@@ -1204,16 +1151,6 @@ public abstract class IconGridViewerPanel<T,S> extends IconPanel<T,S> {
 //        }
 //        return res.get(0);
 //    }
-
-    @Override
-    public boolean areTitlesVisible() {
-        return getToolbar().areTitlesVisible();
-    }
-
-    @Override
-    public boolean areTagsVisible() {
-        return getToolbar().areTagsVisible();
-    }
 
 //    public EntityViewerState saveViewerState() {
 //        // We could get this from the EntitySelectionModel, but sometimes that 

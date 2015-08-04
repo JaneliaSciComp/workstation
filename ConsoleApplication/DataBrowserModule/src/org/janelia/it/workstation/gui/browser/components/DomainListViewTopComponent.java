@@ -139,7 +139,7 @@ public final class DomainListViewTopComponent extends TopComponent {
             }
             editor = editorClass.newInstance();
             add((JComponent)editor, BorderLayout.CENTER);
-            Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
+            Events.getInstance().registerOnEventBus(editor.getEventBusListener());
         }
         catch (InstantiationException | IllegalAccessException e) {
             SessionMgr.getSessionMgr().handleException(e);

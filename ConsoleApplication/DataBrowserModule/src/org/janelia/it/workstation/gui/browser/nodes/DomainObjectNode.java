@@ -6,6 +6,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
+import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
@@ -15,11 +16,14 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+
 import static javax.swing.Action.NAME;
+
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -35,10 +39,13 @@ import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
+import org.openide.nodes.Node;
+import org.openide.nodes.NodeTransfer;
 import org.openide.nodes.PropertySupport;
 import org.openide.nodes.Sheet;
 import org.openide.util.actions.SystemAction;
 import org.openide.util.datatransfer.ExTransferable;
+import org.openide.util.datatransfer.PasteType;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 import org.slf4j.Logger;
@@ -186,16 +193,16 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         log.info("clipboard COPY "+getDomainObject());
         Transferable deflt = super.clipboardCopy();
         ExTransferable added = ExTransferable.create(deflt);
-        added.put(new ExTransferable.Single(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR) {
-            @Override
-            protected DomainObject getData() {
-                return (DomainObject) getDomainObject();
-            }
-        });
         added.put(new ExTransferable.Single(DataFlavor.stringFlavor) {
             @Override
             protected String getData() {
                 return getPrimaryLabel();
+            }
+        });
+        added.put(new ExTransferable.Single(DomainObjectFlavor.SINGLE_FLAVOR) {
+            @Override
+            protected DomainObject getData() {
+                return (DomainObject) getDomainObject();
             }
         });
         return added;
@@ -206,7 +213,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         log.info("clipboard CUT "+getDomainObject());
         Transferable deflt = super.clipboardCut();
         ExTransferable added = ExTransferable.create(deflt);
-        added.put(new ExTransferable.Single(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR) {
+        added.put(new ExTransferable.Single(DomainObjectFlavor.SINGLE_FLAVOR) {
             @Override
             protected DomainObject getData() {
                 return getDomainObject();
@@ -259,7 +266,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
             }
 
         }
-        catch (Exception ex) {
+        catch (IntrospectionException ex) {
             SessionMgr.getSessionMgr().handleException(ex);
         }
 
@@ -274,6 +281,24 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
             return DomainUtils.getFilepath((HasFiles) domainObject, role);
         }
         return null;
+    }
+
+    /**
+     * Subclasses should override this method to add their their paste type to the set. 
+     */
+    @Override
+    public PasteType getDropType(final Transferable t, int action, int index) {
+        // Let subclasses define their paste types by overriding this method
+        return null;
+    }
+    
+    @Override
+    protected void createPasteTypes(Transferable t, List<PasteType> s) {
+        super.createPasteTypes(t, s);
+        PasteType p = getDropType(t, 0, 0);
+        if (p != null) {
+            s.add(p);
+        }
     }
 
     protected final class CopyNameAction extends AbstractAction {

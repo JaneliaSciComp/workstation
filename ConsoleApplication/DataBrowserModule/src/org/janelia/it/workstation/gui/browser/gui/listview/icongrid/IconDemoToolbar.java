@@ -22,7 +22,6 @@ import org.janelia.it.workstation.gui.util.MouseForwarder;
 public abstract class IconDemoToolbar extends ViewerToolbar {
 
     protected JToggleButton showTitlesButton;
-    protected JButton imageRoleButton;
     protected JToggleButton showTagsButton;
     protected JButton userButton;
     protected JSlider imageSizeSlider;
@@ -76,20 +75,6 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
 
         toolbar.addSeparator();
 
-        imageRoleButton = new JButton("Image type...");
-        imageRoleButton.setIcon(Icons.getIcon("image.png"));
-        imageRoleButton.setFocusable(false);
-        imageRoleButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                showPopupImageRoleMenu();
-            }
-        });
-        imageRoleButton.addMouseListener(new MouseForwarder(toolbar, "ImageRoleButton->JToolBar"));
-        toolbar.add(imageRoleButton);
-
-        toolbar.addSeparator();
-
         imageSizeSlider = new JSlider(ImagesPanel.MIN_IMAGE_WIDTH, ImagesPanel.MAX_IMAGE_WIDTH,
                 ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
         imageSizeSlider.setFocusable(false);
@@ -120,22 +105,12 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
 
     protected abstract JPopupMenu getPopupUserMenu();
 
-    protected abstract JPopupMenu getPopupImageRoleMenu();
-
     private void showPopupUserMenu() {
         JPopupMenu menu = getPopupUserMenu();
         if (menu == null) {
             return;
         }
         menu.show(userButton, 0, userButton.getHeight());
-    }
-
-    private void showPopupImageRoleMenu() {
-        JPopupMenu menu = getPopupImageRoleMenu();
-        if (menu == null) {
-            return;
-        }
-        menu.show(imageRoleButton, 0, imageRoleButton.getHeight());
     }
 
     public boolean areTitlesVisible() {
@@ -148,10 +123,6 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
 
     public JToggleButton getShowTitlesButton() {
         return showTitlesButton;
-    }
-
-    public JButton getImageRoleButton() {
-        return imageRoleButton;
     }
 
     public JToggleButton getShowTagsButton() {

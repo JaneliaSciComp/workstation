@@ -34,16 +34,19 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
     
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
     
+    private DomainObjectSelectionModel selectionModel;
+    
     private AnnotatedDomainObjectList domainObjectList;
     
     @Override
     public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
+        this.selectionModel = selectionModel;
         super.setSelectionModel(selectionModel);
     }
     
     @Override
     public DomainObjectSelectionModel getSelectionModel() {
-        return (DomainObjectSelectionModel)super.getSelectionModel();
+        return selectionModel;
     }
     
     @Override
@@ -100,6 +103,11 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
             log.error("Error getting attribute value for column: "+columnName,e);
             return null;
         }
+    }
+    
+    @Override
+    public void selectDomainObject(DomainObject domainObject, boolean selected, boolean clearAll) {
+        // TODO: change table selection
     }
     
     @Override

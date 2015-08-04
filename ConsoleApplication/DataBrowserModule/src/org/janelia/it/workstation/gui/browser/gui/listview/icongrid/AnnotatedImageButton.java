@@ -1,21 +1,41 @@
 package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 
-import java.awt.*;
-import java.awt.dnd.*;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.MouseDragGestureRecognizer;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.List;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.TransferHandler;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 
-import org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectId;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.support.AnnotationView;
+import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an
@@ -23,50 +43,51 @@ import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class AnnotatedImageButton<T> extends SelectablePanel implements DragGestureListener {
+public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implements DragGestureListener {
 
+    private static final Logger log = LoggerFactory.getLogger(AnnotatedImageButton.class);
+    
     protected final JLabel titleLabel;
     protected final JLabel subtitleLabel;
     protected final JPanel mainPanel;
     protected final JPanel buttonPanel;
     protected final JLabel loadingLabel;
     protected boolean viewable = false;
-//    protected AnnotationView annotationView;
+    protected AnnotationView annotationView;
     protected boolean annotationsLoaded = false;
     protected DragSource source;
     protected double aspectRatio;
-    protected final IconPanel iconPanel;
+    protected final ImagesPanel<T,S> imagesPanel;
+    protected final ImageModel<T,S> imageModel;
+    protected final SelectionModel<T,S> selectionModel;
     protected final T imageObject;
     protected SimpleWorker annotationLoadingWorker;
     
     /**
      * Factory method for creating AnnotatedImageButtons. 
-     * @param <U>
-     * @param imageObject
-     * @param filepath
-     * @param iconPanel
-     * @return 
      */
-    public static <U> AnnotatedImageButton<U> create(U imageObject, String filepath, IconPanel iconPanel) {
-        if (filepath != null) {
-            return new DynamicImageButton(imageObject, iconPanel);
+    public static <U,S> AnnotatedImageButton<U,S> create(U imageObject, ImageModel<U,S> imageModel, SelectionModel<U,S> selectionModel, ImagesPanel<U,S> imagesPanel) {
+        if (imageModel.getImageFilepath(imageObject) != null) {
+            return new DynamicImageButton<>(imageObject, imageModel, selectionModel, imagesPanel);
         }
         else {
-            return new StaticImageButton(imageObject, iconPanel);
+            return new StaticImageButton<>(imageObject, imageModel, selectionModel, imagesPanel);
         }
     }
 
-    protected AnnotatedImageButton(final T imageObject, final IconPanel iconPanel) {
+    protected AnnotatedImageButton(T imageObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, ImagesPanel<T,S> imagesPanel) {
 
-        this.iconPanel = iconPanel;
         this.imageObject = imageObject;
+        this.imageModel = imageModel;
+        this.selectionModel = selectionModel;
+        this.imagesPanel = imagesPanel;
 
         Boolean disableImageDrag = (Boolean) SessionMgr.getSessionMgr().getModelProperty(ViewerSettingsPanel.DISABLE_IMAGE_DRAG_PROPERTY);
         if (disableImageDrag == null || disableImageDrag == false) {
             this.source = new DragSource();
             source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);
-
-            setTransferHandler(new EntityTransferHandler() {
+            // TODO: this class should not know about DomainObjects
+            setTransferHandler(new DomainObjectTransferHandler((ImageModel<DomainObject,DomainObjectId>)imageModel, (DomainObjectSelectionModel)selectionModel) {
                 @Override
                 public JComponent getDropTargetComponent() {
                     return AnnotatedImageButton.this;
@@ -151,8 +172,8 @@ public abstract class AnnotatedImageButton<T> extends SelectablePanel implements
         mainPanel.removeAll();
 
         StringBuilder tsb = new StringBuilder();
-        if (iconPanel!=null) {
-            tsb.append(iconPanel.getImageLabel(imageObject));
+        if (imageModel!=null) {
+            tsb.append(imageModel.getImageLabel(imageObject));
         }
         else {
             tsb.append(imageObject.toString());
@@ -207,7 +228,7 @@ public abstract class AnnotatedImageButton<T> extends SelectablePanel implements
 //            setSubtitle(ssb.toString(), 100);
 //        }
 
-        mainPanel.add(init(imageObject));
+        mainPanel.add(init(imageObject, imageModel));
     }
 
     public void setTitle(String title, int maxWidth) {
@@ -235,7 +256,7 @@ public abstract class AnnotatedImageButton<T> extends SelectablePanel implements
         subtitleLabel.setVisible(true);
     }
 
-    public abstract JComponent init(T imageObject);
+    public abstract JComponent init(T imageObject, final ImageModel<T,S> imageModel);
 
     public synchronized void setTitleVisible(boolean visible) {
         titleLabel.setVisible(visible);
@@ -243,44 +264,44 @@ public abstract class AnnotatedImageButton<T> extends SelectablePanel implements
     }
 
     public synchronized void setTagsVisible(boolean visible) {
-//        if (annotationView == null) {
-//            return;
-//        }
-//        ((JPanel) annotationView).setVisible(visible);
+        if (annotationView == null) {
+            return;
+        }
+        ((JPanel) annotationView).setVisible(visible);
     }
 
-//    public synchronized void setAnnotationView(AnnotationView annotationView) {
-//        this.annotationView = annotationView;
-//        // Fix event dispatching so that user can click on the tags and still select the button
-//        ((JPanel) annotationView).addMouseListener(new MouseForwarder(this, "JPanel(annotationView)->AnnotatedImageButton"));
-//        if (annotationsLoaded) {
-//            showAnnotations(annotationView.getAnnotations());
-//        }
-//    }
-//
-//    public synchronized AnnotationView getAnnotationView() {
-//        return annotationView;
-//    }
-//
-//    public synchronized void showAnnotations(List<OntologyAnnotation> annotations) {
-//
-//        annotationView.setAnnotations(annotations);
-//        annotationsLoaded = true;
-//
-//        buttonPanel.remove(loadingLabel);
-//        if (annotationView != null) {
-//            buttonPanel.remove((JPanel) annotationView);
-//        }
-//        GridBagConstraints c = new GridBagConstraints();
-//        c.gridx = 0;
-//        c.gridy = 3;
-//        c.fill = GridBagConstraints.BOTH;
-//        c.anchor = GridBagConstraints.PAGE_START;
-//        c.weighty = 1;
-//        buttonPanel.add((JPanel) annotationView, c);
-//
-//        buttonPanel.revalidate();
-//    }
+    public synchronized void setAnnotationView(AnnotationView annotationView) {
+        this.annotationView = annotationView;
+        // Fix event dispatching so that user can click on the tags and still select the button
+        ((JPanel) annotationView).addMouseListener(new MouseForwarder(this, "JPanel(annotationView)->AnnotatedImageButton"));
+        if (annotationsLoaded) {
+            showAnnotations(annotationView.getAnnotations());
+        }
+    }
+
+    public synchronized AnnotationView getAnnotationView() {
+        return annotationView;
+    }
+
+    public synchronized void showAnnotations(List<Annotation> annotations) {
+
+        annotationView.setAnnotations(annotations);
+        annotationsLoaded = true;
+
+        buttonPanel.remove(loadingLabel);
+        if (annotationView != null) {
+            buttonPanel.remove((JPanel) annotationView);
+        }
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 3;
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.PAGE_START;
+        c.weighty = 1;
+        buttonPanel.add((JPanel) annotationView, c);
+
+        buttonPanel.revalidate();
+    }
 
     public T getImageObject() {
         return imageObject;
@@ -308,8 +329,8 @@ public abstract class AnnotatedImageButton<T> extends SelectablePanel implements
         double a = width / height;
         if (a != this.aspectRatio) {
             this.aspectRatio = a;
-            if (iconPanel!=null) {
-                iconPanel.registerAspectRatio(a);
+            if (imagesPanel!=null) {
+                imagesPanel.registerAspectRatio(a);
             }
         }
     }
@@ -324,9 +345,9 @@ public abstract class AnnotatedImageButton<T> extends SelectablePanel implements
                 keyDown = true;
             }
         }
-//        if (!isSelected() && !keyDown) {
-//            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconPanel.getSelectionCategory(), rootedEntity.getId(), true);
-//        }
+        if (!isSelected() && !keyDown) {
+            selectionModel.select(imageObject, true);
+        }
         getTransferHandler().exportAsDrag(this, dge.getTriggerEvent(), TransferHandler.LINK);
     }
 }

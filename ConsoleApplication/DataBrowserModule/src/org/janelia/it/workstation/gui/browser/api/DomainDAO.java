@@ -548,17 +548,9 @@ public class DomainDAO {
     }
 
     public void addChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) throws Exception {
-        if (domainObject==null) {
-            throw new IllegalArgumentException("Cannot add null child");
-        }
-        if (domainObject.getId()==null) {
-            throw new IllegalArgumentException("Cannot add child without an id");
-        }
-        Reference ref = new Reference();
-        ref.setTargetId(domainObject.getId());
-        ref.setTargetType(getCollectionName(domainObject));
-        treeNode.addChild(ref);
-        save(subjectKey, treeNode);
+        Collection<DomainObject> domainObjects = new ArrayList<>();
+        domainObjects.add(domainObject);
+        addChildren(subjectKey, treeNode, domainObjects);
     }
     
     public void addChildren(String subjectKey, TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
@@ -579,17 +571,9 @@ public class DomainDAO {
     }
     
     public void removeChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) throws Exception {
-        if (domainObject==null) {
-            throw new IllegalArgumentException("Cannot remove null child");
-        }
-        if (domainObject.getId()==null) {
-            throw new IllegalArgumentException("Cannot remove child without an id");
-        }
-        Long targetId = domainObject.getId();
-        String targetType = getCollectionName(domainObject);
-        Reference reference = new Reference(targetType, targetId);
-        log.info("Removing "+domainObject.getName()+" from "+treeNode.getName());
-        removeReference(subjectKey, treeNode, reference);
+        Collection<DomainObject> domainObjects = new ArrayList<>();
+        domainObjects.add(domainObject);
+        removeChildren(subjectKey, treeNode, domainObjects);
     }
     
     public void removeChildren(String subjectKey, TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
@@ -607,6 +591,52 @@ public class DomainDAO {
         }
         log.info("Removing "+domainObjects.size()+" objects from "+treeNode.getName());
         save(subjectKey, treeNode);
+    }
+
+    public void addMember(String subjectKey, ObjectSet objectSet, DomainObject domainObject) throws Exception {
+        Collection<DomainObject> domainObjects = new ArrayList<>();
+        domainObjects.add(domainObject);
+        addMembers(subjectKey, objectSet, domainObjects);
+    }
+    
+    public void addMembers(String subjectKey, ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
+        if (domainObjects==null) {
+            throw new IllegalArgumentException("Cannot add null child");
+        }
+        for(DomainObject obj : domainObjects) {
+            if (obj.getId()==null) {
+                throw new IllegalArgumentException("Cannot add child without an id");
+            }
+            String type = MongoUtils.getCollectionName(obj);
+            if (objectSet.getTargetType()==null) {
+                objectSet.setTargetType(type);
+            }
+            if (type.equals(objectSet.getTargetType())) {
+                objectSet.addMember(obj.getId());
+            }
+        }
+        log.info("Adding "+domainObjects.size()+" objects to "+objectSet.getName());
+        save(subjectKey, objectSet);
+    }
+    
+    public void removeMember(String subjectKey, ObjectSet objectSet, DomainObject domainObject) throws Exception {
+        Collection<DomainObject> domainObjects = new ArrayList<>();
+        domainObjects.add(domainObject);
+        removeMembers(subjectKey, objectSet, domainObjects);
+    }
+    
+    public void removeMembers(String subjectKey, ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
+        if (domainObjects==null) {
+            throw new IllegalArgumentException("Cannot remove null child");
+        }
+        for(DomainObject obj : domainObjects) {
+            if (obj.getId()==null) {
+                throw new IllegalArgumentException("Cannot remove child without an id");
+            }
+            objectSet.removeMember(obj.getId());
+        }
+        log.info("Removing "+domainObjects.size()+" objects from "+objectSet.getName());
+        save(subjectKey, objectSet);
     }
     
     public void removeReference(String subjectKey, TreeNode treeNode, Reference reference) throws Exception {

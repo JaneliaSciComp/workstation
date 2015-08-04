@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.*;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 
 import org.janelia.it.workstation.gui.framework.outline.Annotations;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -17,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Self-adjusting grid of images which may be resized together.
+ * Self-adjusting grid of image buttons which may be resized together.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -38,9 +39,12 @@ public class ImagesPanel<T,S> extends JScrollPane {
     private MouseListener buttonMouseListener;
 
     // UI Components
-    private final HashMap<S, AnnotatedImageButton<T>> buttons = new LinkedHashMap<>();
-    private final IconPanel<T,S> iconPanel;
+    private final HashMap<S, AnnotatedImageButton<T,S>> buttons = new LinkedHashMap<>();
     private final ScrollableGridPanel buttonsPanel;
+    private ImageModel<T,S> imageModel;
+    private SelectionModel<T,S> selectionModel;
+    private boolean titlesVisible = true;
+    private boolean tagsVisible = true;
 
     // State
     private Map<Long, List<Annotation>> filteredAnnotationMap = new HashMap<>();
@@ -84,8 +88,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
         }
     };
 
-    public ImagesPanel(IconPanel<T,S> iconPanel) {
-        this.iconPanel = iconPanel;
+    public ImagesPanel() {
         buttonsPanel = new ScrollableGridPanel();
         setViewportView(buttonsPanel);
         setBorder(BorderFactory.createEmptyBorder());
@@ -93,15 +96,19 @@ public class ImagesPanel<T,S> extends JScrollPane {
             getViewport().setBackground(Color.white);
         }
     }
-
-    public IconPanel<T,S> getIconPanel() {
-        return iconPanel;
+    
+    public void setImageModel(ImageModel<T,S> imageModel) {
+        this.imageModel = imageModel;
+    }
+    
+    public void setSelectionModel(SelectionModel<T, S> selectionModel) {
+        this.selectionModel = selectionModel;
     }
     
     /**
      * Returns the button with the given unique id.
      */
-    public AnnotatedImageButton getButtonById(S uniqueId) {
+    public AnnotatedImageButton<T,S> getButtonById(S uniqueId) {
         return buttons.get(uniqueId);
     }
 
@@ -131,7 +138,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
     }
 
     public void cancelAllLoads() {
-        for (AnnotatedImageButton button : buttons.values()) {
+        for (AnnotatedImageButton<T,S> button : buttons.values()) {
 //            if (button instanceof DynamicImageButton) {
 //                ((DynamicImageButton) button).cancelLoad();
 //            }
@@ -147,7 +154,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
         buttons.clear();
         for (Component component : buttonsPanel.getComponents()) {
             if (component instanceof AnnotatedImageButton) {
-                AnnotatedImageButton button = (AnnotatedImageButton) component;
+                AnnotatedImageButton<T,S> button = (AnnotatedImageButton<T,S>) component;
                 buttonsPanel.remove(button);
             }
         }
@@ -155,17 +162,16 @@ public class ImagesPanel<T,S> extends JScrollPane {
         this.lowestAspectRatio = null;
 
         for (final T imageObject : imageObjects) {
-            S imageId = iconPanel.getImageUniqueId(imageObject);
+            S imageId = imageModel.getImageUniqueId(imageObject);
             
             if (buttons.containsKey(imageId)) {
                 continue;
             }            
 
-            String filepath = iconPanel.getImageFilepath(imageObject, iconPanel.getCurrImageRole());
-            AnnotatedImageButton<T> button = AnnotatedImageButton.create(imageObject, filepath, iconPanel);
+            AnnotatedImageButton<T,S> button = AnnotatedImageButton.create(imageObject, imageModel, selectionModel, this);
 
-            button.setTitleVisible(iconPanel.areTitlesVisible());
-            button.setTagsVisible(iconPanel.areTagsVisible());
+            button.setTitleVisible(titlesVisible);
+            button.setTagsVisible(tagsVisible);
 
             if (buttonKeyListener != null) {
                 button.addKeyListener(buttonKeyListener);
@@ -185,8 +191,8 @@ public class ImagesPanel<T,S> extends JScrollPane {
     }
 
     public void removeImageObject(T imageObject) {
-        S imageId = iconPanel.getImageUniqueId(imageObject);
-        AnnotatedImageButton button = buttons.get(imageId);
+        S imageId = imageModel.getImageUniqueId(imageObject);
+        AnnotatedImageButton<T,S> button = buttons.get(imageId);
         if (button == null) {
             return; // Button was already removed
         }
@@ -222,10 +228,10 @@ public class ImagesPanel<T,S> extends JScrollPane {
 //        });
     }
 
-    public List<AnnotatedImageButton<T>> getButtonsByUniqueId(S uniqueId) {
-        List<AnnotatedImageButton<T>> imageButtons = new ArrayList<>();
-        for (AnnotatedImageButton<T> button : buttons.values()) {
-            S imageId = iconPanel.getImageUniqueId(button.getImageObject());
+    public List<AnnotatedImageButton<T,S>> getButtonsByUniqueId(S uniqueId) {
+        List<AnnotatedImageButton<T,S>> imageButtons = new ArrayList<>();
+        for (AnnotatedImageButton<T,S> button : buttons.values()) {
+            S imageId = imageModel.getImageUniqueId(button.getImageObject());
             if (imageId.equals(uniqueId)) {
                 imageButtons.add(button);
             }
@@ -247,7 +253,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
 
         int maxImageHeight = (int) Math.round(maxImageWidth / aspectRatio);
 
-        for (AnnotatedImageButton button : buttons.values()) {
+        for (AnnotatedImageButton<T,S> button : buttons.values()) {
             try {
                 button.setImageSize(maxImageWidth, maxImageHeight);
             }
@@ -265,7 +271,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
         }
         log.trace("resizeTables: {}", tableHeight);
         this.currTableHeight = tableHeight;
-        for (AnnotatedImageButton button : buttons.values()) {
+        for (AnnotatedImageButton<T,S> button : buttons.values()) {
             try {
                 button.resizeTable(tableHeight);
             }
@@ -277,7 +283,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
 
     public synchronized void showAllButtons() {
         buttonsPanel.removeAll();
-        for (AnnotatedImageButton button : buttons.values()) {
+        for (AnnotatedImageButton<T,S> button : buttons.values()) {
             buttonsPanel.add(button);
         }
         revalidate();
@@ -286,7 +292,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
 
     public synchronized void hideButtons(Collection<S> uniqueIds) {
         for (S uniqueId : uniqueIds) {
-            AnnotatedImageButton button = getButtonById(uniqueId);
+            AnnotatedImageButton<T,S> button = getButtonById(uniqueId);
             buttonsPanel.remove(button);
         }
         revalidate();
@@ -309,24 +315,23 @@ public class ImagesPanel<T,S> extends JScrollPane {
         if (imageObject == null) {
             return;
         }
-        S uniqueId = iconPanel.getImageUniqueId(imageObject);
-        AnnotatedImageButton<T> selectedButton = getButtonById(uniqueId);
+        S uniqueId = imageModel.getImageUniqueId(imageObject);
+        AnnotatedImageButton<T,S> selectedButton = getButtonById(uniqueId);
         scrollButtonToCenter(selectedButton);
     }
 
-    public void scrollButtonToVisible(AnnotatedImageButton button) {
+    public void scrollButtonToVisible(AnnotatedImageButton<T,S> button) {
         if (button == null) {
             return;
         }
         getViewport().scrollRectToVisible(button.getBounds());
     }
 
-    public void scrollButtonToCenter(AnnotatedImageButton button) {
+    public void scrollButtonToCenter(AnnotatedImageButton<T,S> button) {
 
         if (button == null) {
             return;
         }
-        JViewport viewport = getViewport();
 
 	    // This rectangle is relative to the table where the
         // northwest corner of cell (0,0) is always (0,0).
@@ -358,12 +363,11 @@ public class ImagesPanel<T,S> extends JScrollPane {
         viewport.scrollRectToVisible(rect);
     }
 
-    public void scrollButtonToTop(AnnotatedImageButton button) {
+    public void scrollButtonToTop(AnnotatedImageButton<T,S> button) {
 
         if (button == null) {
             return;
         }
-        JViewport viewport = getViewport();
 
 	    // This rectangle is relative to the table where the
         // northwest corner of cell (0,0) is always (0,0).
@@ -383,17 +387,17 @@ public class ImagesPanel<T,S> extends JScrollPane {
     }
 
     public void scrollSelectedEntitiesToCenter() {
-        List<AnnotatedImageButton<T>> selected = getSelectedButtons();
+        List<AnnotatedImageButton<T,S>> selected = getSelectedButtons();
         if (selected.isEmpty()) {
             return;
         }
         int i = selected.size() / 2;
-        AnnotatedImageButton centerOfMass = selected.get(i);
+        AnnotatedImageButton<T,S> centerOfMass = selected.get(i);
         scrollButtonToCenter(centerOfMass);
     }
 
     public void scrollSelectedEntitiesToTop() {
-        List<AnnotatedImageButton<T>> selected = getSelectedButtons();
+        List<AnnotatedImageButton<T,S>> selected = getSelectedButtons();
         if (selected.isEmpty()) {
             return;
         }
@@ -409,13 +413,15 @@ public class ImagesPanel<T,S> extends JScrollPane {
     }
 
     public void setTitleVisbility(boolean visible) {
-        for (AnnotatedImageButton button : buttons.values()) {
+        this.titlesVisible = visible;
+        for (AnnotatedImageButton<T,S> button : buttons.values()) {
             button.setTitleVisible(visible);
         }
     }
 
     public void setTagVisbility(boolean visible) {
-        for (AnnotatedImageButton button : buttons.values()) {
+        this.tagsVisible = visible;
+        for (AnnotatedImageButton<T,S> button : buttons.values()) {
             button.setTagsVisible(visible);
         }
     }
@@ -452,7 +458,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
 
     public void setSelection(T selectedObject, boolean selection, boolean clearAll) {
         if (clearAll) {
-            for (AnnotatedImageButton<T> button : buttons.values()) {
+            for (AnnotatedImageButton<T,S> button : buttons.values()) {
                 T imageObject = button.getImageObject();
                 if (imageObject.equals(selectedObject)) {
                     setSelection(button, true);
@@ -463,8 +469,8 @@ public class ImagesPanel<T,S> extends JScrollPane {
             }
         }
         else {
-            S selectedId = iconPanel.getImageUniqueId(selectedObject);
-            AnnotatedImageButton button = buttons.get(selectedId);
+            S selectedId = imageModel.getImageUniqueId(selectedObject);
+            AnnotatedImageButton<T,S> button = buttons.get(selectedId);
             if (button != null) {
                 setSelection(button, selection);
             }
@@ -472,7 +478,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
     }
     
     public void setSelectedObjects(Set<T> selectedObjects) {
-        for (AnnotatedImageButton<T> button : buttons.values()) {
+        for (AnnotatedImageButton<T,S> button : buttons.values()) {
             T imageObject = button.getImageObject();
             if (selectedObjects.contains(imageObject)) {
                 setSelection(button, true);
@@ -485,9 +491,9 @@ public class ImagesPanel<T,S> extends JScrollPane {
     
     public void setSelectionByUniqueId(S selectedId, boolean selection, boolean clearAll) {
         if (clearAll) {
-            for (AnnotatedImageButton<T> button : buttons.values()) {
+            for (AnnotatedImageButton<T,S> button : buttons.values()) {
                 T imageObject = button.getImageObject();
-                Object imageId = iconPanel.getImageUniqueId(imageObject);
+                S imageId = imageModel.getImageUniqueId(imageObject);
                 if (imageId.equals(selectedId)) {
                     setSelection(button, true);
                 }
@@ -497,16 +503,16 @@ public class ImagesPanel<T,S> extends JScrollPane {
             }
         }
         else {
-            AnnotatedImageButton button = buttons.get(selectedId);
+            AnnotatedImageButton<T,S> button = buttons.get(selectedId);
             if (button != null) {
                 setSelection(button, selection);
             }
         }
     }
 
-    public List<AnnotatedImageButton<T>> getSelectedButtons() {
-        List<AnnotatedImageButton<T>> selected = new ArrayList<>();
-        for (AnnotatedImageButton<T> button : buttons.values()) {
+    public List<AnnotatedImageButton<T,S>> getSelectedButtons() {
+        List<AnnotatedImageButton<T,S>> selected = new ArrayList<>();
+        for (AnnotatedImageButton<T,S> button : buttons.values()) {
             if (button.isSelected()) {
                 selected.add(button);
             }

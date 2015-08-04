@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
 import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A tree node (i.e. Folder) in the data graph.
+ * A tree node (i.e. Folder) in the data graph. Supports reordering, 
+ * drag and drop, and context menu actions. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -45,7 +47,6 @@ public class TreeNodeNode extends DomainObjectNode {
     }
     
     protected TreeNodeNode(TreeNodeChildFactory parentChildFactory, final TreeNodeChildFactory childFactory, TreeNode treeNode) {
-//        super(parentChildFactory, treeNode.getNumChildren()==0?Children.LEAF:Children.create(childFactory, false), treeNode);
         super(parentChildFactory, Children.create(childFactory, false), treeNode);
         this.childFactory = childFactory;
         if (treeNode.getNumChildren()>0) {
@@ -79,6 +80,10 @@ public class TreeNodeNode extends DomainObjectNode {
                 }
             });
         }
+    }
+
+    public void refresh() {
+        childFactory.refresh();
     }
     
     public TreeNode getTreeNode() {
@@ -127,66 +132,65 @@ public class TreeNodeNode extends DomainObjectNode {
 
     @Override
     public PasteType getDropType(final Transferable t, int action, int index) {
-        final TreeNode treeNode = getTreeNode();                
-        if (t.isDataFlavorSupported(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR)) {
-            
+        
+        if (t.isDataFlavorSupported(DomainObjectFlavor.SINGLE_FLAVOR)) {
+
             final Node node = NodeTransfer.node(t, NodeTransfer.DND_MOVE + NodeTransfer.CLIPBOARD_CUT);
-            final TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
-            //log.info("{} has parent {}",node,originalParentNode);
+            if (node==null) {
+                // Only accept nodes. This filters out drag and drop from other components, like the Data Browser. 
+                return null;
+            }   
+
+            final TreeNode treeNode = getTreeNode();
+            final TreeNode originalParent = ((TreeNodeNode)node.getParentNode()).getTreeNode();
+            log.trace("{} has parent {}",treeNode.getId(),originalParent.getId());
             
+            DomainObject domainObject;
+            try {
+                domainObject = (DomainObject) t.getTransferData(DomainObjectFlavor.SINGLE_FLAVOR);
+            }
+            catch (UnsupportedFlavorException | IOException e) {
+                log.error("Error getting drop type", e);
+                return null;
+            }
+
+            log.trace("Will paste {} on {}",domainObject.getId(),treeNode.getName());
+            
+            final DomainObject toPaste = domainObject;
             return new PasteType() {
                 @Override
+                public String getName() {
+                    return "PasteIntoTreeNode";
+                }
+                @Override
                 public Transferable paste() throws IOException {
-                    if (node==null) {
-                        throw new IOException("Cannot find node");
-                    }   
                     try {
-                        //TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
-                        log.info("{} has parent {}",node,originalParentNode);
-                        
-                        DomainObject domainObject = (DomainObject) t.getTransferData(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR);
-                        if (domainObject.getId().equals(treeNode.getId())) {
+                        if (toPaste.getId().equals(treeNode.getId())) {
                             log.info("Cannot move a node into itself");
                             return null;
                         }
-                        log.info("Pasting {} on {}",domainObject.getId(),treeNode.getName());
-                        if (DomainUtils.hasChild(treeNode, domainObject)) {
+                        else if (DomainUtils.hasChild(treeNode, toPaste)) {
                             log.info("Child already exists.");
+                            return null;
                         }
-                        else {
-                            childFactory.addChild(domainObject);
-                            if (DomainUtils.hasWriteAccess(originalParentNode.getTreeNode())) {
-                                log.info("Original node was moved or cut, so we presume it was pasted, and will destroy node");
-                                node.destroy();
-                            }
+                        log.info("Pasting {} on {}",toPaste.getId(),treeNode.getName());
+                        childFactory.addChild(toPaste);
+                        if (DomainUtils.hasWriteAccess(originalParent)) {
+                            log.info("Original node was moved or cut, so we presume it was pasted, and will destroy node");
+                            node.destroy();
                         }
                     } 
-                    catch (IOException e) {
-                        throw e;
-                    }
                     catch (Exception e) {
                         throw new IOException("Error pasting node",e);
                     }
                     return null;
                 }
             };
-        } 
+        }
         else {
-            log.trace("Transfer does not support domain object flavor.");
+            log.debug("Transfer data does not support domain object list flavor.");
             return null;
         }
-    }
-    
-    @Override
-    protected void createPasteTypes(Transferable t, List<PasteType> s) {
-        super.createPasteTypes(t, s);
-        PasteType p = getDropType(t, 0, 0);
-        if (p != null) {
-            s.add(p);
-        }
-    }
-
-    public void refresh() {
-        childFactory.refresh();
+        
     }
 }

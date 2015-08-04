@@ -3,11 +3,16 @@ package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
 import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.support.MongoUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -16,6 +21,12 @@ import org.openide.util.datatransfer.PasteType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * A object set node in the data graph. Supports paste of additional members 
+ * through drag and drop. 
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class ObjectSetNode extends DomainObjectNode {
     
     private final static Logger log = LoggerFactory.getLogger(ObjectSetNode.class);
@@ -53,88 +64,56 @@ public class ObjectSetNode extends DomainObjectNode {
     public boolean canDestroy() {
         return true;
     }
-    
-//    @Override
-//    public Action[] getActions(boolean context) {
-//        Action[] superActions = super.getActions(context);
-//        List<Action> actions = new ArrayList<Action>();
-//        actions.add(RenameAction.get(RenameAction.class));
-//        actions.addAll(Lists.newArrayList(superActions));
-//        return actions.toArray(new Action[0]);
-//    }
-    
-//    @Override
-//    public void setName(final String newName) {
-//        final TreeNode treeNode = getTreeNode();
-//        final String oldName = treeNode.getName();
-//        treeNode.setName(newName);
-//
-//        SimpleWorker worker = new SimpleWorker() {
-//            @Override
-//            protected void doStuff() throws Exception {
-//                log.trace("Changing name from " + oldName + " to: " + newName);
-//                DomainDAO dao = DomainExplorerTopComponent.getDao();
-//                dao.updateProperty(SessionMgr.getSubjectKey(), treeNode, "name", newName);
-//            }
-//            @Override
-//            protected void hadSuccess() {
-//                log.trace("Fire name change from" + oldName + " to: " + newName);
-//                fireDisplayNameChange(oldName, newName); 
-//            }
-//            @Override
-//            protected void hadError(Throwable error) {
-//                SessionMgr.getSessionMgr().handleException(error);
-//            }
-//        };
-//        worker.execute();
-//    }
 
     @Override
     public PasteType getDropType(final Transferable t, int action, int index) {
+        
         final ObjectSet objectSet = getObjectSet();                
-        if (t.isDataFlavorSupported(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR)) {
+                
+        if (t.isDataFlavorSupported(DomainObjectFlavor.LIST_FLAVOR)) {
+            List<DomainObject> objects;
             try {
-                DomainObject domainObject = (DomainObject) t.getTransferData(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR);
-                log.info("Will paste {} on {}", domainObject.getId(), objectSet.getName());
+                objects = (List<DomainObject>) t.getTransferData(DomainObjectFlavor.LIST_FLAVOR);
             }
-            catch (Exception ex) {
-                log.error("Error pasting", ex);
+            catch (UnsupportedFlavorException | IOException e) {
+                log.error("Error getting drop type", e);
+                return null;
             }
+            
+            for(DomainObject domainObject : objects) {
+                String type = MongoUtils.getCollectionName(domainObject);
+                if (objectSet.getTargetType()!=null && !type.equals(objectSet.getTargetType())) {
+                    log.info("Type {} is incompatible with object set {}",type,objectSet.getId());
+                    return null;
+                }
+                log.trace("Will paste {} on {}", domainObject.getId(), objectSet.getName());
+            }
+            
+            final List<DomainObject> toPaste = objects;
             return new PasteType() {
                 @Override
+                public String getName() {
+                    return "PasteIntoObjectSet";
+                }
+                @Override
                 public Transferable paste() throws IOException {
-//                    try {
-//                        DomainObject domainObject = (DomainObject) t.getTransferData(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR);
-//                        log.info("Pasting {} on {}",domainObject.getId(),objectSet.getName());
-//                        if (DomainUtils.hasChild(objectSet, domainObject)) {
-//                            log.info("Child already exists. TODO: should reorder it to the end");
-//                        }
-//                        else {
-//                            childFactory.addChild(domainObject);    
-//                        }
-//                        final Node node = NodeTransfer.node(t, NodeTransfer.DND_MOVE + NodeTransfer.CLIPBOARD_CUT);
-//                        if (node != null) {
-//                            log.info("Original node was moved or cut, so we presume it was pasted, and will destroy node");
-//                            node.destroy();
-//                        }
-//                    } catch (UnsupportedFlavorException ex) {
-//                        log.error("Flavor is not supported for paste",ex);
-//                    }
+                    try {
+                        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
+                        dao.addMembers(SessionMgr.getSubjectKey(), objectSet, toPaste);
+                    }
+                    catch (Exception e) {
+                        throw new IOException("Error pasting into object set",e);
+                    }
+                    final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
+                    explorer.refresh();
                     return null;
                 }
             };
-        } else {
-            log.trace("Transfer does not support domain object flavor.");
+        }
+        else {
+            log.debug("Transfer data does not support domain object list flavor.");
             return null;
         }
-    }
-    
-    @Override
-    protected void createPasteTypes(Transferable t, List<PasteType> s) {
-        super.createPasteTypes(t, s);
-        PasteType p = getDropType(t, 0, 0);
-        if (p != null) {
-            s.add(p);
-        }
+        
     }
 }

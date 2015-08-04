@@ -148,7 +148,7 @@ public class OntologyNode extends DomainObjectNode {
     @Override
     public PasteType getDropType(final Transferable t, int action, int index) {
         final Ontology ontology = getOntology();
-        if (t.isDataFlavorSupported(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR)) {
+        if (t.isDataFlavorSupported(DomainObjectFlavor.SINGLE_FLAVOR)) {
             return new PasteType() {
                 @Override
                 public Transferable paste() throws IOException {

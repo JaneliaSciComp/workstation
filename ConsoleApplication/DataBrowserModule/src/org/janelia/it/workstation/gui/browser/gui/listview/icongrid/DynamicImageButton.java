@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 
 /**
  * An AnnotatedImageButton with a dynamic image, i.e. one that is loaded
@@ -11,17 +12,17 @@ import javax.swing.JComponent;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DynamicImageButton<T> extends AnnotatedImageButton<T> {
+public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
     private DynamicImagePanel dynamicImagePanel;
 
-    public DynamicImageButton(final T imageObject, final IconPanel iconPanel) {
-        super(imageObject, iconPanel);
+    public DynamicImageButton(T imageObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, ImagesPanel<T,S> imagesPanel) {
+        super(imageObject, imageModel, selectionModel, imagesPanel);
     }
 
-    public JComponent init(final T imageObject) {
+    public JComponent init(final T imageObject, final ImageModel<T,S> imageModel) {
 
-        String filepath = iconPanel.getImageFilepath(imageObject);
+        String filepath = imageModel.getImageFilepath(imageObject);
         if (filepath == null) {
             throw new IllegalStateException("Entity has no filepath");
         }

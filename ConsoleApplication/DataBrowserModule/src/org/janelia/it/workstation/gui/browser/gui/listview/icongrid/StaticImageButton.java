@@ -6,8 +6,9 @@ import java.awt.image.BufferedImage;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import org.janelia.it.jacs.model.entity.Entity;
 
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 
@@ -16,17 +17,17 @@ import org.janelia.it.workstation.shared.util.Utils;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class StaticImageButton<T> extends AnnotatedImageButton<T> {
+public class StaticImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
     private BufferedImage staticIcon;
     private JLabel label;
 
-    public StaticImageButton(final T imageObject, final IconPanel iconPanel) {
-        super(imageObject, iconPanel);
+    public StaticImageButton(T imageObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, ImagesPanel<T,S> imagesPanel) {
+        super(imageObject, imageModel, selectionModel, imagesPanel);
     }
 
     @Override
-    public JComponent init(final T imageObject) {
+    public JComponent init(final T imageObject, final ImageModel<T,S> imageModel) {
         this.label = new JLabel(Icons.getLoadingIcon());
         return label;
     }
@@ -60,7 +61,7 @@ public class StaticImageButton<T> extends AnnotatedImageButton<T> {
             double h = label.getIcon().getIconHeight();
             registerAspectRatio(w, h);
 
-            int width = iconPanel.getMaxImageWidth();
+            int width = imagesPanel.getMaxImageWidth();
             if (width <= staticIcon.getWidth()) { // Don't scale up icons
                 label.setIcon(new ImageIcon(Utils.getScaledImage(staticIcon, width)));
             }

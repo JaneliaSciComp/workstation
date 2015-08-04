@@ -5,6 +5,7 @@ import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.events.Events;
 
 /**
+ * A selection model implementation which tracks the selection of domain objects. 
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
