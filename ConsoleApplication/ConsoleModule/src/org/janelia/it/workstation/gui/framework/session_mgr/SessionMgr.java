@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.framework.session_mgr;
 
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
+
 import org.janelia.it.jacs.model.user_data.Group;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
@@ -32,10 +33,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
+
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
+import java.net.BindException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
@@ -50,6 +53,9 @@ public final class SessionMgr {
 
     public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 50;
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
+
+    private static final int MAX_PORT_TRIES = 20;
+    private static final int PORT_INCREMENT = 1000;
 
     public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
     public static String UNLOAD_IMAGES_PROPERTY = "SessionMgr.UnloadImagesProperty";
@@ -595,15 +601,41 @@ public final class SessionMgr {
         }
     }
 
-    public void startAxisServer(String url) {
+    public int startAxisServer(int startingPort) {
+        int port = startingPort;
         try {
             if (axisServer == null) {
-                axisServer = new EmbeddedAxisServer(url);
+                axisServer = new EmbeddedAxisServer();
             }
-            axisServer.start();
-        }
+            int tries = 0;
+            while (true) {
+                try {
+                    axisServer.start(port);
+                    log.info("Started web services on port " + port);
+                    sessionModel.setPortOffset(port);
+                    break;
+                } 
+                catch (Exception e) {
+                    if (e instanceof BindException || e.getCause() instanceof BindException) {
+                        log.info("Could not start web service on port: " + port);
+                        port += PORT_INCREMENT;
+                        tries++;
+                        if (tries >= MAX_PORT_TRIES) {
+                            log.error("Tried to start web service on " + MAX_PORT_TRIES + " ports, giving up.");
+                            return -1;
+                        }
+                    } 
+                    else {
+                        log.error("Could not start web service on port: " + port);
+                        throw e;
+                    }
+                }
+            }
+            return port;
+        } 
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
+            return -1;
         }
     }
 
@@ -611,18 +643,47 @@ public final class SessionMgr {
         return axisServer;
     }
 
-    public void startWebServer(int port) {
+    public int startWebServer(int startingPort) {
+        int port = startingPort;
         try {
             if (webServer == null) {
-                webServer = new EmbeddedWebServer(port);
+                webServer = new EmbeddedWebServer();
             }
-            webServer.start();
-        }
+            int tries = 0;
+            while (true) {
+                try {
+                    webServer.start(port);
+                    log.info("Started web server on port " + port);
+                    break;
+                } 
+                catch (Exception e) {
+                    if (e instanceof BindException || e.getCause() instanceof BindException) {
+                        log.info("Could not start web server on port: " + port);
+                        port += PORT_INCREMENT;
+                        tries++;
+                        if (tries >= MAX_PORT_TRIES) {
+                            log.error("Tried to start web server on " + MAX_PORT_TRIES + " ports, giving up.");
+                            return -1;
+                        }
+                    } 
+                    else {
+                        log.error("Could not start web server on port: " + port);
+                        throw e;
+                    }
+                }
+            }
+            return port;
+        } 
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
+            return -1;
         }
     }
 
+    public EmbeddedWebServer getWebServer() {
+        return webServer;
+    }
+    
     public void saveUserSettings() {
         writeSettings();
     }

@@ -33,6 +33,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
+import org.janelia.it.workstation.gui.viewer3d.picking.IdCoder;
+import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
@@ -44,16 +46,17 @@ import org.slf4j.LoggerFactory;
  * 
  * @author fosterl
  */
-public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
+public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderProvider {
+    public static final String ID_VTX_ATTRIB = "c_id";
     private static final double MANUAL_SEGMENT_RADIUS = 6;
     private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
     private static final double TRACED_SEGMENT_RADIUS = 8;
     private static final int TRACED_SEGMENT_POLYGON_SIDES = 10;
-    public static final double ANNO_END_RADIUS = TRACED_SEGMENT_RADIUS * 4;
-    private static final int ANNO_END_POLYGON_SIDES = 12;
+    public static final double ANNO_RADIUS = TRACED_SEGMENT_RADIUS * 4;
+    private static final int ANNO_POLYGON_SIDES = 12;
     
     private static final int CURRENT_SELECTION_POLYGON_SIDES = 24;
-    private static final double CURRENT_SELECTION_RADIUS = TRACED_SEGMENT_RADIUS * 10;
+    public static final double CURRENT_SELECTION_RADIUS = TRACED_SEGMENT_RADIUS * 10;
 
     private static final float[] UNFINISHED_ANNO_COLOR = new float[]{
         1.0f, 0.6f, 0.6f
@@ -71,6 +74,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         1.0f, 1.0f, 1.0f
     };
 
+    private final Logger log = LoggerFactory.getLogger(NeuronTraceVtxAttribMgr.class);
+
     // The skeleton and neuron styles constitute the 'model' to be studied
     // in creating the 3D representation of annotations.
     private AnnotationSkeletonDataSourceI dataSource;
@@ -81,8 +86,49 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     private final List<TriangleSource> triangleSources = new ArrayList<>();
     private final Map<Long, RenderBuffersBean> renderIdToBuffers = new HashMap<>();
     
-    private final Logger log = LoggerFactory.getLogger( NeuronTraceVtxAttribMgr.class );
+    private double annoRadius = ANNO_RADIUS;
+    private double currentSelectionRadius = CURRENT_SELECTION_RADIUS;
+    private IdCoder idCoder;
     
+    /**
+     * @return the annoRadius
+     */
+    public double getAnnoRadius() {
+        return annoRadius;
+    }
+
+    /**
+     * @param annoRadius the annoRadius to set
+     */
+    public void setAnnoRadius(double annoRadius) {
+        this.annoRadius = annoRadius;
+    }
+
+    /**
+     * @return the currentSelectionRadius
+     */
+    public double getCurrentSelectionRadius() {
+        return currentSelectionRadius;
+    }
+
+    /**
+     * @param currentSelectionRadius the currentSelectionRadius to set
+     */
+    public void setCurrentSelectionRadius(double currentSelectionRadius) {
+        this.currentSelectionRadius = currentSelectionRadius;
+    }
+    
+    /**
+     * Return this so that callers can encode/decode ids in same fashion
+     * as was done here.
+     * 
+     * @return configured coder, or null.
+     */
+    @Override
+    public IdCoder getIdCoder() {
+        return idCoder;
+    }
+
     /**
      * Call this whenever something in the 'model' has been changed.
      * 
@@ -229,27 +275,24 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
      * @throws Exception 
      */
     private synchronized void createVertices() throws Exception {
+        VertexNumberGenerator vertexNumberGenerator = new VertexNumberGenerator();
         // Make triangle sources.
-        LineEnclosureFactory lineEnclosureFactory = new LineEnclosureFactory(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
-        PointEnclosureFactory pointEnclosureFactory = new PointEnclosureFactory(ANNO_END_POLYGON_SIDES, ANNO_END_RADIUS);
+        LineEnclosureFactory lineEnclosureFactory = new LineEnclosureFactory(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS, vertexNumberGenerator);
+        PointEnclosureFactory pointEnclosureFactory = new PointEnclosureFactory(ANNO_POLYGON_SIDES, ANNO_RADIUS, vertexNumberGenerator);
         
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
         TileFormat tileFormat = dataSource.getTileFormat();
 
-        int currentVertexNumber = 0;
-
         // Look at 'interesting annotations'.  What can be presented there?
-        pointEnclosureFactory.setCharacteristics(ANNO_END_POLYGON_SIDES, ANNO_END_RADIUS);
-        pointEnclosureFactory.setCurrentVertexNumber(currentVertexNumber);
+        pointEnclosureFactory.setCharacteristics(ANNO_POLYGON_SIDES, getAnnoRadius());
         calculateInterestingAnnotationVertices(tileFormat, pointEnclosureFactory);
         
         // The current selection.
-        pointEnclosureFactory.setCharacteristics(CURRENT_SELECTION_POLYGON_SIDES, CURRENT_SELECTION_RADIUS);
+        pointEnclosureFactory.setCharacteristics(CURRENT_SELECTION_POLYGON_SIDES, getCurrentSelectionRadius());
         calculateCurrentSelectionVertices(pointEnclosureFactory);
 
         // Get the auto-traced segments.
         lineEnclosureFactory.setCharacteristics(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
-        lineEnclosureFactory.setCurrentVertexNumber(pointEnclosureFactory.getCurrentVertexNumber());
         calculateTracedSegmentVertices(voxelPathAnchorPairs, tileFormat, lineEnclosureFactory);
         
         // Now get the lines.
@@ -258,9 +301,9 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 
 		// TESTING 
 		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
-        log.info("Number of vertices is {}.", pointEnclosureFactory.getCurrentVertexNumber());
+        log.info("Number of vertices is {}.", vertexNumberGenerator.getCurrentVertex());
 
-		if (lineEnclosureFactory.getCurrentVertexNumber() > 0) {
+		if (vertexNumberGenerator.hasVertices()) {
 			hasDisplayable = true;
 		}
 		else {
@@ -426,8 +469,13 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     protected void calculateInterestingAnnotationVertices(TileFormat tileFormat, PointEnclosureFactory interestingAnnotationEnclosureFactory) {
         AnnotationModel annoMdl = dataSource.getAnnotationModel();
         if (annoMdl != null) {
+            float[] id = null;
             FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
-            for (int i = 0; i < filteredModel.getRowCount(); i++) {
+            final int rowCount = filteredModel.getRowCount();
+            idCoder = new IdCoder();
+            for (int i = 0; i < rowCount; i++) {
+                id = idCoder.encode(i);                
+                log.debug("ID={}.  Row={}.", id, i);
                 InterestingAnnotation anno = filteredModel.getAnnotationAtRow(i);
                 long annotationId = anno.getAnnotationID();
                 TmGeoAnnotation geoAnno = annoMdl.getGeoAnnotationFromID(annotationId);
@@ -449,17 +497,17 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 
                 if (anno.hasNote()) {
                     interestingAnnotationEnclosureFactory.addEnclosure(
-                            point, SPECIAL_ANNO_COLOR
+                            point, SPECIAL_ANNO_COLOR, id
                     );
                 }
                 else if (geometry == AnnotationGeometry.BRANCH) {
                     interestingAnnotationEnclosureFactory.addEnclosure(
-                            point, BRANCH_ANNO_COLOR
+                            point, BRANCH_ANNO_COLOR, id
                     );
                 }
                 else if (anno.getGeometry() == AnnotationGeometry.END) {
                     interestingAnnotationEnclosureFactory.addEnclosure(
-                            point, UNFINISHED_ANNO_COLOR
+                            point, UNFINISHED_ANNO_COLOR, id
                     );
                 }
             }
@@ -472,7 +520,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             Vec3 v = nextParent.getLocation();
             double[] point = getPoint(v);
             currentSelectionEnclosureFactory.addEnclosure(
-                    point, CURRENT_SELECTION_COLOR
+                    point, CURRENT_SELECTION_COLOR, new float[] {0,0,0}
             );
             log.debug("Next parent at {},{},{}.", v.getX(), v.getY(), v.getZ());
         }

@@ -1,9 +1,13 @@
 package org.janelia.it.workstation.gui.framework.session_mgr;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.janelia.it.workstation.gui.framework.keybind.KeyBindings;
 import org.janelia.it.workstation.ws.ExternalClient;
-
-import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The SessionModel manages BrowserModels, as well as providing the API
@@ -15,11 +19,15 @@ import java.util.*;
  */
 
 public class SessionModel extends GenericModel {
+
+    private static final Logger log = LoggerFactory.getLogger(SessionModel.class);
+    
     private static SessionModel sessionModel = new SessionModel();
     private List<BrowserModel> browserModels = new ArrayList<>();
     private static KeyBindings bindings;
     private List<ExternalClient> externalClients = new ArrayList<>();
-    private int portCounter = 30020;
+    private int portOffset = 0;
+    private int portCounter = 1;
 
     private SessionModel() {
         super();
@@ -37,6 +45,10 @@ public class SessionModel extends GenericModel {
         browserModels.add(browserModel);
         fireBrowserAdded(browserModel);
         return browserModel;
+    }
+    
+    public void setPortOffset(int portOffset) {
+    	this.portOffset = portOffset;
     }
 
 //    void addBrowserModel(BrowserModel browserModel) {
@@ -82,8 +94,9 @@ public class SessionModel extends GenericModel {
      * @param newClientName the external tool to add
      */
     public int addExternalClient(String newClientName) {
-        ExternalClient newClient = new ExternalClient(++portCounter,newClientName);
+        ExternalClient newClient = new ExternalClient(portOffset+portCounter, newClientName);
         externalClients.add(newClient);
+        this.portCounter+=1;
         return newClient.getClientPort();
     }
 
@@ -105,29 +118,27 @@ public class SessionModel extends GenericModel {
         return null;
     }
 
-    public void removeExternalClientByPort(int targetPort){
-        ExternalClient targetClient=null;
+    public void removeExternalClientByPort(int targetPort) {
+        ExternalClient targetClient = null;
         for (ExternalClient externalClient : externalClients) {
-            if (externalClient.getClientPort()==targetPort){
+            if (externalClient.getClientPort() == targetPort) {
                 targetClient = externalClient;
                 break;
             }
         }
-        if (null!=targetClient) { externalClients.remove(targetClient); }
+        if (null != targetClient) {
+            externalClients.remove(targetClient);
+        }
     }
 
-//    public List<ExternalClient> getExternalClients() {
-//        return externalClients;
-//    }
-//
-    public void sendMessageToExternalClients(String operationName, Map<String,Object> parameters) {
+    public void sendMessageToExternalClients(String operationName, Map<String, Object> parameters) {
         for (ExternalClient externalClient : externalClients) {
-        	try {
-        		externalClient.sendMessage(operationName, parameters);
-        	}
-        	catch (Exception e) {
-        		e.printStackTrace();
-        	}
+            try {
+                externalClient.sendMessage(operationName, parameters);
+            } 
+            catch (Exception e) {
+                log.error("Error sending message to external clients: " + operationName, e);
+            }
         }
     }
 
@@ -135,10 +146,6 @@ public class SessionModel extends GenericModel {
         removeAllBrowserModels();
         fireSystemExit();
     }
-
-//  void loadProgressMeterStateChange(boolean on) {
-//     fireLoadProgressStateChange(on);
-//  }
 
     private void fireBrowserRemoved(BrowserModel browserModel) {
         for (GenericModelListener modelListener : modelListeners)

@@ -8,6 +8,8 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -55,6 +57,10 @@ public class LargeVolumeViewViewer extends JPanel {
     }
 
     public void loadEntity(final RootedEntity rootedEntity) {
+        // NOTE: there must be a better way to handle the tasks in and out of
+        //  the UI thread; this version is the result of fixing what
+        //  we had w/o serious rewriting
+
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -82,36 +88,64 @@ public class LargeVolumeViewViewer extends JPanel {
                         e.printStackTrace();
                     }
                     if (sliceSample == null) {
-                        JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
-                                "Could not find sample entity for this workspace!",
-                                "Could not open workspace",
-                                JOptionPane.ERROR_MESSAGE);
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
+                                        "Could not find sample entity for this workspace!",
+                                        "Could not open workspace",
+                                        JOptionPane.ERROR_MESSAGE);
+                            }
+                        });
                     }
-
                 }
-                
             }
 
             @Override
             protected void hadSuccess() {
+                // refresh is a UI action, has to happen here
                 refresh();
 
-                // be sure we've successfully gotten the sample before loading it!
-                if (sliceSample != null && sliceSample.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-                    try {
-                        if (!viewUI.loadFile(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH))) {
-                            JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
-                                    "Could not open sample entity for this workspace!",
-                                    "Could not open workspace",
-                                    JOptionPane.ERROR_MESSAGE);
-                        }
-                    } catch (MalformedURLException e) {
-                        SessionMgr.getSessionMgr().handleException(e);
-                    }
-                }
+                // but now we have to do the load in another thread, so we don't lock the UI:
+                final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace...");
+                progress.start();
+                progress.setDisplayName("Loading workspace");
+                progress.switchToIndeterminate();
 
-                // Listen for further changes, so can refresh again later.
-                establishObserver();
+                SimpleWorker opener = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        // be sure we've successfully gotten the sample before loading it!
+                        if (sliceSample != null && sliceSample.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+                            if (!viewUI.loadFile(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH))) {
+                                SwingUtilities.invokeLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
+                                                "Could not open sample entity for this workspace!",
+                                                "Could not open workspace",
+                                                JOptionPane.ERROR_MESSAGE);
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        // Listen for further changes, so can refresh again later.
+                        establishObserver();
+                        progress.finish();
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        progress.finish();
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                opener.execute();
+
             }
 
             @Override

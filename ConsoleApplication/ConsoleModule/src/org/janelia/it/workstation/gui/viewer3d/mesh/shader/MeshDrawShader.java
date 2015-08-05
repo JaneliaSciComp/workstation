@@ -14,9 +14,11 @@ import org.slf4j.LoggerFactory;
 public class MeshDrawShader extends AbstractShader {
     public static final String COLOR_UNIFORM_NAME = "color";
     public static final String COLOR_STRATEGY_UNIFORM = "colorStrategy";
+    public static final String IDS_AVAILABLE_UNIFORM = "idsAvailable";
     public static final String VERTEX_ATTRIBUTE_NAME = "vertexAttribute";
     public static final String NORMAL_ATTRIBUTE_NAME = "normalAttribute";
     public static final String COLOR_ATTRIBUTE_NAME = "colorAttribute";
+    public static final String ID_ATTRIBUTE_NAME = "idAttribute";
     public static final String VERTEX_SHADER =   "MeshDrawSpecularVtx.glsl";
     public static final String FRAGMENT_SHADER = "MeshDrawSpecularFrg.glsl";
     
@@ -85,6 +87,14 @@ public class MeshDrawShader extends AbstractShader {
             logger.warn("Failed to set color-by-attribute to " + flag);
         }
         gl.glUniform1i(uniformLoc, flag? 1 : 0);
+    }
+    
+    public void setIdsAvailableAttribute(GL2GL3 gl, boolean flag) {
+        int uniformLoc = gl.glGetUniformLocation(getShaderProgram(), IDS_AVAILABLE_UNIFORM);
+        if (uniformLoc < 0) {
+            logger.warn("Failed to set ids-available to " + flag);
+        }
+        gl.glUniform1i(uniformLoc, flag ? 1 : 0);
     }
 
     @Override

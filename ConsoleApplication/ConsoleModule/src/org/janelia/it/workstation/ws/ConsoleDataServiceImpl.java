@@ -1,5 +1,14 @@
 package org.janelia.it.workstation.ws;
 
+import java.awt.Color;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.jws.WebService;
+import javax.jws.soap.SOAPBinding;
+
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
@@ -12,14 +21,6 @@ import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jws.WebService;
-import javax.jws.soap.SOAPBinding;
-import java.awt.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * The implementation of the Console server interface.
@@ -62,28 +63,34 @@ public class ConsoleDataServiceImpl {
     }
 
     public void selectEntity(long entityId, boolean clearAll) throws Exception {
+        log.info("Select entity {}", entityId);
 //        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_MAIN_VIEW, entityId+"", clearAll);
 //        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_SEC_VIEW, entityId+"", clearAll);
     }
 
     public void deselectEntity(long entityId) throws Exception {
+        log.info("Deselect entity {}", entityId);
 //        ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(EntitySelectionModel.CATEGORY_MAIN_VIEW, entityId+"");
 //        ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(EntitySelectionModel.CATEGORY_SEC_VIEW, entityId+"");
     }
 
     public Entity createAnnotation(OntologyAnnotation annotation) throws Exception {
+        log.info("Create annotation {}", annotation.getKeyString());
         return ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
     }
 
     public void removeAnnotation(long annotationId) throws Exception {
+        log.info("Remove annotation {}", annotationId);
         ModelMgr.getModelMgr().removeAnnotation(annotationId);
     }
 
     public Entity[] getAnnotationsForEntity(long entityId) throws Exception {
+        log.info("Get annotations for entity {}", entityId);
         return ModelMgr.getModelMgr().getAnnotationsForEntity(entityId).toArray(new Entity[0]);
     }
 
     public Entity[] getAnnotationsForEntities(Long[] entityIds) throws Exception {
+        log.info("Get annotations for {} entities", entityIds.length);
         return ModelMgr.getModelMgr().getAnnotationsForEntities(Arrays.asList(entityIds)).toArray(new Entity[0]);
     }
 
@@ -136,47 +143,74 @@ public class ConsoleDataServiceImpl {
 //        return ModelMgr.getModelMgr().getEntitiesByType(entityTypeId);
 //    }
     public Entity getOntology(long rootId) throws Exception {
-        return ModelMgr.getModelMgr().getOntologyTree(rootId);
+        log.info("Get ontology {}", rootId);
+        Entity ontology = ModelMgr.getModelMgr().getOntologyTree(rootId);
+        if (ontology == null) {
+            throw new IllegalStateException("No such ontology: " + rootId);
+        }
+        return ontology;
     }
 
     public AnnotationSession getAnnotationSession(long sessionId) throws Exception {
+        log.info("Get annotation session {}", sessionId);
         return ModelMgr.getModelMgr().getAnnotationSession(sessionId);
     }
 
     public OntologyKeyBindings getKeybindings(long ontologyId) throws Exception {
+        log.info("Get key bindings for ontology {}", ontologyId);
         return ModelMgr.getModelMgr().loadOntologyKeyBindings(ontologyId);
     }
 
     public Entity getEntityById(long entityId) throws Exception {
-        return translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityById(entityId));
+        log.info("Get entity {}", entityId);
+        Entity entity = translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityById(entityId));
+        if (entity == null) {
+            throw new IllegalStateException("No such entity: " + entityId);
+        }
+        return entity;
     }
 
     public Entity getEntityAndChildren(long entityId) throws Exception {
-        return translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityAndChildren(entityId));
+        log.info("Get entity and children {}", entityId);
+        Entity entity = translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityAndChildren(entityId));
+        if (entity == null) {
+            throw new IllegalStateException("No such entity: " + entityId);
+        }
+        return entity;
     }
 
     public Entity getEntityTree(long entityId) throws Exception {
-        return translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityTree(entityId));
+        log.info("Get entity tree {}", entityId);
+        Entity entity = translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityTree(entityId));
+        if (entity == null) {
+            throw new IllegalStateException("No such entity: " + entityId);
+        }
+        return entity;
     }
 
     public Entity[] getParentEntityArray(long childEntityId) throws Exception {
+        log.info("Get parent entity array for entity {}", childEntityId);
         List<Entity> list = ModelMgr.getModelMgr().getParentEntities(childEntityId);
         return list.toArray(new Entity[0]);
     }
 
     public EntityData[] getParentEntityDataArray(long childEntityId) throws Exception {
+        log.info("Get parent entity data array for entity {}", childEntityId);
         List<EntityData> list = ModelMgr.getModelMgr().getParentEntityDatas(childEntityId);
         return list.toArray(new EntityData[0]);
     }
 
     public Entity getAncestorWithType(long entityId, String type) throws Exception {
-        return ModelMgr.getModelMgr().getAncestorWithType(ModelMgr.getModelMgr().getEntityById(entityId), type);
+        log.info("Get ancestor {} for entity {}", type, entityId);
+        Entity entity = ModelMgr.getModelMgr().getAncestorWithType(ModelMgr.getModelMgr().getEntityById(entityId), type);
+        if (entity == null) {
+            throw new IllegalStateException("Entity " + entityId + " has no ancestor of type " + type);
+        }
+        return entity;
     }
 
-//    public EntityData saveEntityDataForEntity(EntityData newData) throws Exception {
-//        return ModelMgr.getModelMgr().saveOrUpdateEntityData(newData);
-//    }
     public String getUserAnnotationColor(String username) throws Exception {
+        log.info("Get annotation color for user {}", username);
         Color color = ModelMgr.getModelMgr().getUserAnnotationColor(username);
         String rgb = Integer.toHexString((color.getRGB() & 0xffffff) | 0x1000000).substring(1);
         return rgb;
@@ -185,8 +219,7 @@ public class ConsoleDataServiceImpl {
     private Entity translatePaths(Entity entity) {
         if (ConsoleProperties.getBoolean("console.WebServer.proxyFiles")) {
             return PathTranslator.translatePathsToProxy(entity);
-        }
-        else {
+        } else {
             return PathTranslator.translatePathsToCurrentPlatform(entity);
         }
     }

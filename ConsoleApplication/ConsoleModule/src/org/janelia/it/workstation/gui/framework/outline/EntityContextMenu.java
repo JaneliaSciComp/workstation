@@ -1520,6 +1520,7 @@ public class EntityContextMenu extends JPopupMenu {
     
     protected JMenuItem getDownloadMenu() {
 
+        boolean allNonH5j = true;
         boolean allLsm = true;
         List<Entity> entitiesWithFilepaths = new ArrayList<>();
         for(final RootedEntity re : rootedEntityList) {
@@ -1529,6 +1530,9 @@ public class EntityContextMenu extends JPopupMenu {
                 entitiesWithFilepaths.add(entity);
                 if (!EntityConstants.TYPE_LSM_STACK.equals(entity.getEntityTypeName())) {
                     allLsm = false;
+                }
+                if (filepath.endsWith("h5j")) {
+                	allNonH5j = false;
                 }
             }
         }
@@ -1556,7 +1560,9 @@ public class EntityContextMenu extends JPopupMenu {
             add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, extension));
         }
         for(String extension : DOWNLOAD_EXTENSIONS) {
-            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, true, extension));
+            JMenuItem downloadItem = getDownloadItem(entitiesWithFilepaths, true, extension);
+            downloadItem.setEnabled(allNonH5j);
+            add(downloadMenu, downloadItem);
         }
         
         return downloadMenu;

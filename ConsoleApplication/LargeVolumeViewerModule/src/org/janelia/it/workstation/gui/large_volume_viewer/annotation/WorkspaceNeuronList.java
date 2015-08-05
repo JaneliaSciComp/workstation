@@ -1,8 +1,10 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.border.Border;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableModel;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -22,8 +24,11 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronSelec
  */
 public class WorkspaceNeuronList extends JPanel {
 
-    private JList neuronListBox;
-    private DefaultListModel neuronListModel;
+    private JTable neuronTable;
+    private NeuronTableModel neuronTableModel;
+    private DefaultRowSorter<TableModel, String> sorter;
+    private AnnotationManager annotationManager;
+    private AnnotationModel annotationModel;
     private CameraPanToListener panListener;
     private NeuronSelectedListener neuronSelectedListener;
 
@@ -38,12 +43,14 @@ public class WorkspaceNeuronList extends JPanel {
     }
 
     // to add new sort order: add to enum here, add menu in AnnotationPanel.java,
-    //  and implement the sort in sortNeuronList below
-    // default set in AnnotationPanel as well
+    //  and implement the sort in sortOrderChanged, below
     public enum NeuronSortOrder {ALPHABETICAL, CREATIONDATE};
-    private NeuronSortOrder neuronSortOrder;
+    private NeuronSortOrder neuronSortOrder = NeuronSortOrder.CREATIONDATE;
 
-    public WorkspaceNeuronList(int width) {
+    public WorkspaceNeuronList(AnnotationManager annotationManager,
+        AnnotationModel annotationModel, int width) {
+        this.annotationManager = annotationManager;
+        this.annotationModel = annotationModel;
         this.width = width;
         setupUI();
     }
@@ -79,43 +86,64 @@ public class WorkspaceNeuronList extends JPanel {
         c.insets = new Insets(10, 0, 0, 0);
         add(new JLabel("Neurons", JLabel.LEADING), c);
 
-        neuronListModel = new DefaultListModel();
-        neuronListBox = new JList(neuronListModel);
-        JScrollPane neuronScrollPane = new JScrollPane(neuronListBox);
-        neuronListBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        neuronListBox.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent listSelectionEvent) {
-                        if (!listSelectionEvent.getValueIsAdjusting()) {
-                            int index = neuronListBox.getSelectedIndex();
-                            TmNeuron selectedNeuron;
-                            if (index >= 0) {
-                                selectedNeuron = (TmNeuron) neuronListModel.getElementAt(index);
-                            } else {
-                                selectedNeuron = null;
-                            }
+
+        // neuron table
+        neuronTableModel = new NeuronTableModel();
+        neuronTableModel.setAnnotationModel(annotationModel);
+        neuronTable = new JTable(neuronTableModel);
+
+        neuronTable.getColumnModel().getColumn(0).setPreferredWidth(175);
+        neuronTable.getColumnModel().getColumn(1).setPreferredWidth(50);
+        neuronTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+
+        neuronTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // hide columns that we only maintain for sorting (eg, creation date)
+        neuronTable.removeColumn(neuronTable.getColumnModel().getColumn(2));
+
+        // sort, but only programmatically
+        neuronTable.setAutoCreateRowSorter(true);
+        sorter = (DefaultRowSorter<TableModel, String>) neuronTable.getRowSorter();
+        for (int i=0 ; i<neuronTable.getColumnCount() ; i++) {
+            sorter.setSortable(i, false);
+        }
+
+        // custom renderer does color swatches for the neurons
+        neuronTable.setDefaultRenderer(Color.class, new ColorCellRenderer(true));
+
+        neuronTable.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent me) {
+                JTable table = (JTable) me.getSource();
+                int viewRow = table.rowAtPoint(me.getPoint());
+                if (viewRow >= 0) {
+                    int modelRow = neuronTable.convertRowIndexToModel(viewRow);
+                    TmNeuron selectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
+                    if (me.getClickCount() == 1) {
+                        // which column?
+                        int viewColumn = table.columnAtPoint(me.getPoint());
+                        int modelColumn = neuronTable.convertColumnIndexToModel(viewColumn);
+                        if (modelColumn == 0) {
+                            // single click name, select neuron
                             if (neuronSelectedListener != null)
                                 neuronSelectedListener.selectNeuron(selectedNeuron);
+                        } else if (modelColumn == 1) {
+                            // single click color, edit style
+                            annotationManager.chooseNeuronStyle(selectedNeuron);
+
+                            // what update?
+
+
                         }
+                    } else if (me.getClickCount() == 2) {
+                        // double click, go to neuron
+                        onNeuronDoubleClicked(selectedNeuron);
                     }
                 }
-        );
-        // ...and you have to do it again if you want to get mouse clicks, ugh:
-        neuronListBox.addMouseListener(
-                new MouseAdapter() {
-                    @Override
-                    public void mousePressed(MouseEvent mouseEvent) {
-                        JList list = (JList)mouseEvent.getSource();
-                        // double-click:
-                        if (mouseEvent.getClickCount() == 2) {
-                            int index = list.locationToIndex(mouseEvent.getPoint());
-                            TmNeuron neuron = (TmNeuron) list.getModel().getElementAt(index);
-                            onNeuronDoubleClicked(neuron);
-                        }
-                    }
-                }
-        );
+            }
+        });
+
+        JScrollPane scrollPane = new JScrollPane(neuronTable);
+        neuronTable.setFillsViewportHeight(true);
 
         GridBagConstraints c2 = new GridBagConstraints();
         c2.gridx = 0;
@@ -123,58 +151,50 @@ public class WorkspaceNeuronList extends JPanel {
         c2.weighty = 1.0;
         c2.anchor = GridBagConstraints.PAGE_START;
         c2.fill = GridBagConstraints.BOTH;
-        add(neuronScrollPane, c2);
+        add(scrollPane, c2);
 
         loadWorkspace(null);
-
     }
 
     /**
-     * called when current neuron changes
+     * called when current neuron changes; both selects the neuron visually
+     * as well as replaces the old neuron in the model with the new one
      */
     public void selectNeuron(TmNeuron neuron) {
         if (neuron == null) {
             return;
         }
 
-        // find the neuron in the list model by ID:
-        Enumeration<TmNeuron> neuronEnumeration = (Enumeration<TmNeuron>) neuronListModel.elements();
-        TmNeuron foundNeuron = null;
-        while (neuronEnumeration.hasMoreElements()) {
-            TmNeuron testNeuron = neuronEnumeration.nextElement();
-            if (testNeuron.getId().equals(neuron.getId())) {
-                foundNeuron = testNeuron;
-                break;
-            }
-        }
-
-        // I should probably just count the index during the enum
-        //  loop above...
-        if (foundNeuron != null) {
-            int index = neuronListModel.indexOf(foundNeuron);
-            neuronListModel.setElementAt(neuron, index);
-            neuronListBox.setSelectedValue(neuron, true);
+        updateModel(neuron);
+        int neuronModelRow = neuronTableModel.getRowForNeuron(neuron);
+        if (neuronModelRow >= 0) {
+            int neuronTableRow = neuronTable.convertRowIndexToView(neuronModelRow);
+            neuronTable.setRowSelectionInterval(neuronTableRow, neuronTableRow);
+        } else {
+            neuronTable.clearSelection();
         }
     }
 
     /**
      * called when the sort order is changed in the UI
      */
-    public void sortOrderChanged(NeuronSortOrder sortOrder) {
-        if (sortOrder == neuronSortOrder) {
+    public void sortOrderChanged(NeuronSortOrder neuronSortOrder) {
+        if (this.neuronSortOrder == neuronSortOrder) {
             return;
         }
-        this.neuronSortOrder = sortOrder;
-        if (neuronListModel.size() > 0) {
-            // this can't be the best way to do this...
-            Vector<TmNeuron> neuronVector = new Vector<TmNeuron>(neuronListModel.size());
-            for (int i=0; i<neuronListModel.size(); i++) {
-                neuronVector.add((TmNeuron) neuronListModel.getElementAt(i));
-            }
-            sortNeuronList(neuronVector);
-            neuronListModel.clear();
-            for (TmNeuron tmNeuron: neuronVector) {
-                neuronListModel.addElement(tmNeuron);
+        this.neuronSortOrder = neuronSortOrder;
+        setSortOrder(neuronSortOrder);
+    }
+
+    private void setSortOrder(NeuronSortOrder neuronSortOrder) {
+        if (neuronTableModel.getRowCount() > 0) {
+            switch(neuronSortOrder) {
+                case ALPHABETICAL:
+                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
+                    break;
+                case CREATIONDATE:
+                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(2, SortOrder.ASCENDING)));
+                    break;
             }
         }
     }
@@ -183,37 +203,30 @@ public class WorkspaceNeuronList extends JPanel {
      * populate the UI with info from the input workspace
      */
     public void loadWorkspace(TmWorkspace workspace) {
-        neuronListModel.clear();
+        updateModel(workspace);
+        setSortOrder(neuronSortOrder);
+    }
+
+    /**
+     * update the table model given a new workspace
+     */
+    private void updateModel(TmWorkspace workspace) {
+        neuronTableModel.clear();
         if (workspace != null) {
-            // repopulate neuron list
-            Vector<TmNeuron> neuronVector = new Vector<TmNeuron>(workspace.getNeuronList());
-            sortNeuronList(neuronVector);
-            for (TmNeuron tmNeuron: neuronVector) {
-                neuronListModel.addElement(tmNeuron);
+            for (TmNeuron neuron: workspace.getNeuronList()) {
+                neuronTableModel.addNeuron(neuron);
             }
         }
     }
 
-    private void sortNeuronList(Vector<TmNeuron> neuronVector) {
-        switch(neuronSortOrder) {
-            case ALPHABETICAL:
-                Collections.sort(neuronVector, new Comparator<TmNeuron>() {
-                    @Override
-                    public int compare(TmNeuron tmNeuron, TmNeuron tmNeuron2) {
-                        return tmNeuron.getName().compareToIgnoreCase(tmNeuron2.getName());
-                    }
-                });
-                break;
-            case CREATIONDATE:
-                Collections.sort(neuronVector, new Comparator<TmNeuron>() {
-                    @Override
-                    public int compare(TmNeuron tmNeuron, TmNeuron tmNeuron2) {
-                        return tmNeuron.getCreationDate().compareTo(tmNeuron2.getCreationDate());
-                    }
-                });
-                break;
-        }
+    /**
+     * update the table neuron with a new version of an
+     * existing neuron (replaces in place)
+     */
+    private void updateModel(TmNeuron neuron) {
+        neuronTableModel.updateNeuron(neuron);
     }
+
 
     private void onNeuronDoubleClicked(TmNeuron neuron) {
         // should pan to center of neuron; let's call that the center
@@ -232,3 +245,144 @@ public class WorkspaceNeuronList extends JPanel {
     }
 
 }
+
+class NeuronTableModel extends AbstractTableModel {
+
+    // note: creation date column will be hidden!
+    private String[] columnNames = {"Name", "Style", "Creation Date"};
+
+    private ArrayList<TmNeuron> neurons = new ArrayList<>();
+
+    // need this to retrieve colors!
+    private AnnotationModel annotationModel;
+
+    public void setAnnotationModel(AnnotationModel annotationModel) {
+        this.annotationModel = annotationModel;
+    }
+
+    public void clear() {
+        neurons = new ArrayList<>();
+        fireTableDataChanged();
+    }
+
+    public void addNeuron(TmNeuron neuron) {
+        neurons.add(neuron);
+        fireTableDataChanged();
+    }
+
+    public void updateNeuron(TmNeuron neuron) {
+        int neuronRow = getRowForNeuron(neuron);
+        neurons.set(neuronRow, neuron);
+        fireTableDataChanged();
+    }
+
+    // boilerplate stuff
+    public String getColumnName(int column) {
+        return columnNames[column];
+    }
+
+    public int getColumnCount() {
+        return columnNames.length;
+    }
+
+    public int getRowCount() {
+        return neurons.size();
+    }
+
+    public TmNeuron getNeuronAtRow(int row) {
+        return neurons.get(row);
+    }
+
+    public int getRowForNeuron(TmNeuron neuron) {
+        // we're matching by ID, not object identity
+        TmNeuron foundNeuron = null;
+        for (TmNeuron n: neurons) {
+            if (n.getId().equals(neuron.getId())) {
+                foundNeuron = n;
+                break;
+            }
+        }
+        if (foundNeuron != null) {
+            return neurons.indexOf(foundNeuron);
+        } else {
+            return -1;
+        }
+    }
+
+    // needed to get color to work right; make sure classes match what getValueAt() returns!
+    public Class getColumnClass(int column) {
+        switch (column) {
+            case 0:
+                // neuron
+                return TmNeuron.class;
+            case 1:
+                // color
+                return Color.class;
+            case 2:
+                // creation date
+                return Date.class;
+            default:
+                return Object.class;
+        }
+    }
+
+    public Object getValueAt(int row, int column) {
+        switch (column) {
+            case 0:
+                // neuron itself, which will display as name
+                return neurons.get(row);
+            case 1:
+                // color, from style
+                return annotationModel.getNeuronStyle(neurons.get(row)).getColor();
+            case 2:
+                // creation date, hidden, but there for sorting
+                return neurons.get(row).getCreationDate();
+            default:
+                return null;
+        }
+
+    }
+
+}
+
+// pretty much taken from Oracle Java Table tutorial
+class ColorCellRenderer extends JLabel implements TableCellRenderer {
+    Border unselectedBorder = null;
+    Border selectedBorder = null;
+    boolean isBordered = true;
+
+
+    public ColorCellRenderer(boolean isBordered) {
+        this.isBordered = isBordered;
+        setOpaque(true);
+    }
+
+    public Component getTableCellRendererComponent(JTable table, Object color,
+            boolean isSelected, boolean hasFocus, int row, int column) {
+        Color newColor = (Color) color;
+        setBackground(newColor);
+
+        if (isBordered) {
+            if (isSelected) {
+                if (selectedBorder == null) {
+                    selectedBorder = BorderFactory.createMatteBorder(2,5,2,5,
+                            table.getSelectionBackground());
+                }
+                setBorder(selectedBorder);
+            } else {
+                if (unselectedBorder == null) {
+                    unselectedBorder = BorderFactory.createMatteBorder(2,5,2,5,
+                            table.getBackground());
+                }
+                setBorder(unselectedBorder);
+            }
+        }
+
+        setToolTipText("RGB value: " + newColor.getRed() + ", "
+                + newColor.getGreen() + ", "
+                + newColor.getBlue());
+        return this;
+    }
+
+}
+

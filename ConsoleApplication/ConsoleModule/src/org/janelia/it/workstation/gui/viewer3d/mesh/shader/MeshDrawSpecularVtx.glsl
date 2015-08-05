@@ -4,18 +4,21 @@
 attribute vec4 vertexAttribute;
 attribute vec4 normalAttribute;
 attribute vec4 colorAttribute;
+attribute vec4 idAttribute;
 
 uniform mat4 projection;
 uniform mat4 modelView;
 uniform mat4 normalMatrix;
 uniform vec4 color;
 uniform int colorStrategy;
+uniform int idsAvailable;
 
 varying vec4 normVar;
 varying vec4 colorVar;
 varying vec4 diffuseLightMag;
 varying vec4 specularLightMag;
 varying vec4 homogeniousCoordPos;
+varying vec4 id;
 
 void main(void)
 {
@@ -28,6 +31,11 @@ void main(void)
     else
     {
         colorVar = color;
+    }
+
+    if (idsAvailable == 1)
+    {
+        id = idAttribute;
     }
 
     vec4 lightPosition = vec4( 0, 0.0, 100.0, 0 );
