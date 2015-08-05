@@ -7,6 +7,8 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.openide.nodes.Node;
 import org.openide.util.Enumerations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utilities for dealing with domain object nodes. 
@@ -15,6 +17,8 @@ import org.openide.util.Enumerations;
  */
 public class NodeUtils {
 
+    private final static Logger log = LoggerFactory.getLogger(NodeUtils.class);
+    
     public static String createPathString(Long[] idPath) {
         StringBuilder sb = new StringBuilder();
         for(Long id : idPath) {
@@ -87,11 +91,23 @@ public class NodeUtils {
     
     public static Node findNodeWithPath(Node start, Long[] ids) {
 
+        if (log.isTraceEnabled()) {
+            log.trace("findNodeWithPath({},{})",start.getDisplayName(),NodeUtils.createPathString(ids));
+        }
+        
         if (ids.length==0) {
             return start;
         }
         
         Enumeration<Long> enumeration = Enumerations.array(ids);
+        
+        if (start instanceof HasIdentifier) {
+            HasIdentifier hasId = (HasIdentifier)start;
+            if (ids[0].equals(hasId.getId())) { 
+                // skip the first node, because its this one
+                enumeration.nextElement();
+            }
+        }
         
         while (enumeration.hasMoreElements()) {
             Long id = enumeration.nextElement();
@@ -109,6 +125,10 @@ public class NodeUtils {
 
     public static Node findChild(Node node, Long id) {
         
+        if (log.isTraceEnabled()) {
+            log.trace("findChild({},{})",node.getDisplayName(),id);
+        }
+        
         Node[] list = node.getChildren().getNodes();
 
         if (list.length == 0) {
@@ -117,6 +137,9 @@ public class NodeUtils {
 
         for (int i = 0; i < list.length; i++) {
             Node child = list[i];
+            if (log.isTraceEnabled()) {
+                log.trace("findChild - checking {}",child.getDisplayName());
+            }
             if (child instanceof HasIdentifier) {
                 HasIdentifier hasId = (HasIdentifier)list[i];
                 if (id.equals(hasId.getId())) { 

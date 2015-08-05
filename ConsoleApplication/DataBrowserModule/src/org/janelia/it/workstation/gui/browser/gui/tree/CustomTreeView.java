@@ -6,6 +6,7 @@ import java.beans.PropertyVetoException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import javax.swing.text.Position;
 import javax.swing.tree.DefaultTreeModel;
@@ -187,7 +188,6 @@ public class CustomTreeView extends BeanTreeView {
     public void expand(List<Long[]> exPaths) {
         for (Iterator<Long[]> it = exPaths.iterator(); it.hasNext();) {
             Long[] sp = it.next();
-            log.trace("Expanding {}",NodeUtils.createPathString(sp));
             TreePath tp = idPath2TreePath(sp);
             log.debug("Expanding {}",tp);
             if (tp != null) {
@@ -200,13 +200,15 @@ public class CustomTreeView extends BeanTreeView {
         Node n = NodeUtils.findNodeWithPath(getRootNode(), sp);
         if (n==null) return null;
 
-        // Create the tree path
-        TreeNode tns[] = new TreeNode[sp.length + 1];
-
-        for (int i = sp.length; i >= 0; i--) {
-            tns[i] = Visualizer.findVisualizer(n);
+        LinkedList<TreeNode> treeNodes = new LinkedList<>();
+        
+        while (n != null) {
+            treeNodes.addFirst(Visualizer.findVisualizer(n));
             n = n.getParentNode();
         }
+        
+        TreeNode[] tns = new TreeNode[treeNodes.size()];
+        treeNodes.toArray(tns);
         return new TreePath(tns);
     }
     
