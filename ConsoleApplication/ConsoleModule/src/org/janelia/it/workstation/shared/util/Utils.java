@@ -635,11 +635,11 @@ public class Utils {
 
         try {
             input = wfile.getStream();
-            long length = wfile.getLength();
+            Long length = wfile.getLength();
 
             log.info("copyURLToFile: length={}, effectiveURL={}", length, wfile.getEffectiveURL());
 
-            if (length == 0) {
+            if (length != null && length == 0) {
                 throw new IOException("length of " + wfile.getEffectiveURL() + " is 0");
             }
 
@@ -656,8 +656,8 @@ public class Utils {
 
             FileOutputStream output = new FileOutputStream(destination);
             try {
-                final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor);
-                if (totalBytesWritten < length) {
+                final long totalBytesWritten = copy(input, output, length==null?100:length, worker, estimatedCompressionFactor);
+                if (length != null && totalBytesWritten < length) {
                     throw new IOException("bytes written (" + totalBytesWritten + ") for " + wfile.getEffectiveURL() +
                                           " is less than source length (" + length + ")");
                 }
