@@ -22,16 +22,13 @@ import org.janelia.it.workstation.gui.browser.gui.support.NodeChooser;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
+import org.janelia.it.workstation.gui.browser.nodes.UserViewRootNode;
 import org.janelia.it.workstation.gui.browser.nodes.UserViewTreeNodeNode;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.nodes.Node;
-import org.openide.util.HelpCtx;
-import org.openide.util.actions.NodeAction;
-import org.openide.util.actions.Presenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +36,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class MoveToFolderAction extends NodeAction implements Presenter.Popup {
+public class MoveToFolderAction extends NodePresenterAction {
 
     private final static Logger log = LoggerFactory.getLogger(MoveToFolderAction.class);
     
@@ -52,52 +49,19 @@ public class MoveToFolderAction extends NodeAction implements Presenter.Popup {
         return singleton;
     }
     
-    private final List<Node> selected = new ArrayList<>();
-    
     private MoveToFolderAction() {
-    }
-    
-    @Override
-    public String getName() {
-        // Implemented by popup presenter
-        return "";
-    }
-    
-    @Override
-    public HelpCtx getHelpCtx() {
-        return new HelpCtx("");
-    }
-    
-    @Override
-    protected void performAction (Node[] activatedNodes) {
-        // Implemented by popup presenter
-    }
-
-    @Override
-    protected boolean asynchronous() {
-        // We do our own background processing
-        return false;
-    }
-    
-    @Override
-    protected boolean enable(Node[] activatedNodes) {
-        selected.clear();
-        for(Node node : activatedNodes) {
-            selected.add(node);
-        }
-        // Enable state is determined by the popup presenter
-        return true;
     }
     
     @Override
     public JMenuItem getPopupPresenter() {
 
-        assert !selected.isEmpty() : "No nodes are selected";
+        List<Node> selectedNodes = getSelectedNodes();
+        assert !selectedNodes.isEmpty() : "No nodes are selected";
         
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
 
         int numOwned = 0;
-        for(Node node : selected) {
+        for(Node node : selectedNodes) {
             DomainObjectNode domainNode = (DomainObjectNode)node;
             if (DomainUtils.isOwner(domainNode.getDomainObject())) {
                 numOwned++;
@@ -107,7 +71,7 @@ public class MoveToFolderAction extends NodeAction implements Presenter.Popup {
         boolean owned = numOwned>0;
         JMenu newFolderMenu = new JMenu(owned ? "Move To Folder" : "Create Shortcut In Folder");
         
-        if (owned && numOwned<selected.size()) {
+        if (owned && numOwned<selectedNodes.size()) {
             // Not everything is owned, so let's just disable the item to eliminate confusion as to what happens in this case
             newFolderMenu.setEnabled(false);
             return newFolderMenu;
@@ -173,7 +137,8 @@ public class MoveToFolderAction extends NodeAction implements Presenter.Popup {
         chooseItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                NodeChooser nodeChooser = new NodeChooser("Choose folder to add to", false);
+                NodeChooser nodeChooser = new NodeChooser(new UserViewRootNode(), "Choose folder to add to");
+                nodeChooser.setRootVisible(false);
                 
                 int returnVal = nodeChooser.showDialog(explorer);
                 if (returnVal != NodeChooser.CHOOSE_OPTION) return;
@@ -278,12 +243,13 @@ public class MoveToFolderAction extends NodeAction implements Presenter.Popup {
     }
     
     private void moveSelectedObjectsToFolder(TreeNode folder, Long[] idPath) throws Exception {
+        List<Node> selectedNodes = getSelectedNodes();
         DomainDAO dao = DomainMgr.getDomainMgr().getDao();
         
         // Build list of things to remove
         Multimap<TreeNode,DomainObject> removeMap = ArrayListMultimap.create();
         List<DomainObject> domainObjects = new ArrayList<>();
-        for(Node node : selected) {
+        for(Node node : selectedNodes) {
             DomainObjectNode selectedNode = (DomainObjectNode)node;
             TreeNodeNode parentNode = (TreeNodeNode)node.getParentNode();
             DomainObject domainObject = selectedNode.getDomainObject();

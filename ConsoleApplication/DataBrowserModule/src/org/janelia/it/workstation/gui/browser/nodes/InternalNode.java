@@ -15,6 +15,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import static javax.swing.Action.NAME;
 
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -69,7 +70,7 @@ public class InternalNode<T> extends AbstractNode implements Has2dRepresentation
     
     @Override
     public Action[] getActions(boolean context) {
-        List<Action> actions = new ArrayList<Action>();
+        List<Action> actions = new ArrayList<>();
         actions.add(new CopyNameAction());
         return actions.toArray(new Action[actions.size()]);
     }
@@ -153,7 +154,7 @@ public class InternalNode<T> extends AbstractNode implements Has2dRepresentation
         return null;
     }
     
-    private final class CopyNameAction extends AbstractAction {
+    protected final class CopyNameAction extends AbstractAction {
 
         public CopyNameAction() {
             putValue (NAME, "Copy Name To Clipboard");
@@ -165,4 +166,7 @@ public class InternalNode<T> extends AbstractNode implements Has2dRepresentation
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
         }
     }
+    
+    
+    
 }

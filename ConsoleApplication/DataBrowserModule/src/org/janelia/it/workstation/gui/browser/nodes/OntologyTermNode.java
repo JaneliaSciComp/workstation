@@ -1,12 +1,25 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
 import java.lang.ref.WeakReference;
-import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import static javax.swing.Action.NAME;
+
+import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
+import org.janelia.it.jacs.model.domain.ontology.EnumItem;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
+import org.janelia.it.workstation.gui.browser.nb_action.AddOntologyTermAction;
+import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.Children;
 import org.slf4j.Logger;
@@ -25,7 +38,11 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         this.ontologyRef = new WeakReference<>(ontology);
     }
     
-    private OntologyTerm getOntologyTerm() {
+    public Ontology getOntology() {
+        return (Ontology)ontologyRef.get();
+    }
+    
+    public OntologyTerm getOntologyTerm() {
         return (OntologyTerm)getObject();
     }
     
@@ -73,4 +90,119 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         }
         return Icons.getIcon("bullet_error.png").getImage();
     }
+    
+    @Override
+    public Action[] getActions(boolean context) {
+        List<Action> actions = new ArrayList<>();
+        actions.add(PopupLabelAction.get());
+        actions.add(null);
+        actions.add(new InternalNode.CopyNameAction());
+        actions.add(new CopyGUIDAction());
+        actions.add(null);
+        actions.add(new AssignShortcutAction());
+        actions.add(AddOntologyTermAction.get());
+        actions.add(new RemoveAction());
+        actions.add(null);
+        actions.add(new AnnotateAction());
+        actions.add(new RemoveAnnotationAction());
+        return actions.toArray(new Action[actions.size()]);
+    }
+
+    @Override
+    public Action getPreferredAction() {
+        return new AnnotateAction();
+    }
+    
+    protected final class CopyGUIDAction extends AbstractAction {
+
+        public CopyGUIDAction() {
+            putValue(NAME, "Copy GUID To Clipboard");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            HasIdentifier ontologyTerm = getLookup().lookup(HasIdentifier.class);
+            if (ontologyTerm==null) {
+                return;
+            }
+            Transferable t = new StringSelection(ontologyTerm.getId()+"");
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+        }
+    }
+    
+    protected final class AssignShortcutAction extends AbstractAction {
+
+        public AssignShortcutAction() {
+            putValue(NAME, "Assign Shortcut...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            OntologyTerm ontologyTerm = getLookup().lookup(OntologyTerm.class);
+            
+            // TODO: implement
+//            org.janelia.it.workstation.gui.framework.actions.Action action = getActionForNode(OntologyTermNode.this);
+//            keyBindDialog.showForAction(action);            
+        }
+    }
+    
+    protected final class RemoveAction extends AbstractAction {
+
+        public RemoveAction() {
+            putValue(NAME, "Remove");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            
+            OntologyTermNode node = OntologyTermNode.this;
+            OntologyTerm ontologyTerm = getLookup().lookup(OntologyTerm.class);
+            
+            // TODO: implement
+            log.info("Will remove ontology term: {}",ontologyTerm.getName());
+        }
+    }
+    
+    protected final class AnnotateAction extends AbstractAction {
+
+        public AnnotateAction() {
+            putValue(NAME, "Apply To Selected Objects");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            
+            OntologyTermNode node = OntologyTermNode.this;
+            OntologyTerm ontologyTerm = getLookup().lookup(OntologyTerm.class);
+            Long keyTermId = node.getId();
+            String keyTermValue = node.getDisplayName();
+            
+            // TODO: implement
+            log.info("Will annotate all selected entities: {} ({})",keyTermValue,keyTermId);
+            
+        }
+    }
+    
+    protected final class RemoveAnnotationAction extends AbstractAction {
+
+        public RemoveAnnotationAction() {
+            putValue(NAME, "Remove Annotation From Selected Items");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            
+            OntologyTermNode node = OntologyTermNode.this;
+            OntologyTerm ontologyTerm = getLookup().lookup(OntologyTerm.class);
+            OntologyTermNode key = (ontologyTerm instanceof EnumItem) ? ((OntologyTermNode)node.getParentNode()) : node;
+            Long keyTermId = key.getId();
+            String keyTermValue = key.getDisplayName();
+            
+            log.info("Will remove annotation from all selected entities: {} ({})",keyTermValue,keyTermId);
+            
+            // TODO: implement
+//            RemoveAnnotationTermAction action = new RemoveAnnotationTermAction(keyTermId, keyTermValue);
+        }
+    }
+    
 }

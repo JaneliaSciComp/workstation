@@ -85,6 +85,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         initComponents();
         
         this.beanTreeView = new CustomTreeView(this);
+        beanTreeView.setDefaultActionAllowed(false);
         beanTreeView.setRootVisible(false);
         
         selectionModel.setSource(this);

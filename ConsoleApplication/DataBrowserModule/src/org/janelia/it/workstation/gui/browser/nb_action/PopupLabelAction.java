@@ -2,13 +2,12 @@ package org.janelia.it.workstation.gui.browser.nb_action;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
 
 /**
- * Not really an action, just the top label on the popup menu.
+ * Not really an action, just the disabled top label on a pop-up menu.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -26,8 +25,8 @@ public final class PopupLabelAction extends NodeAction {
     
     @Override
     public String getName() {
-        DomainObjectNode doNode = (DomainObjectNode)selected.get(0);
-        return selected.size()>1 ? "(Multiple selected)" : doNode.getDisplayName();
+        Node node = selected.get(0);
+        return selected.size()>1 ? "(Multiple selected)" : node.getDisplayName();
     }
     
     @Override
@@ -51,5 +50,6 @@ public final class PopupLabelAction extends NodeAction {
     
     @Override
     protected void performAction (Node[] activatedNodes) {
+        // This action is always disabled
     }
 }

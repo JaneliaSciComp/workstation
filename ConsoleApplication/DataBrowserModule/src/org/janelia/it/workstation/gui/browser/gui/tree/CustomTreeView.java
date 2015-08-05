@@ -36,7 +36,6 @@ public class CustomTreeView extends BeanTreeView {
     
     public CustomTreeView(ExplorerManager.Provider explorerManagerProvider) {
         this.explorerManagerProvider = explorerManagerProvider;
-        setDefaultActionAllowed(false);
         setQuickSearchAllowed(false);
         tree.setScrollsOnExpand(false);
     }

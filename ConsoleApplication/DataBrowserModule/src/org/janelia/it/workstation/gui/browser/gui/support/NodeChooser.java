@@ -7,7 +7,6 @@ import javax.swing.tree.TreeSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
-import org.janelia.it.workstation.gui.browser.nodes.UserViewRootNode;
 
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.view.BeanTreeView;
@@ -22,21 +21,33 @@ import org.openide.nodes.Node;
 public class NodeChooser extends AbstractChooser<Node> implements ExplorerManager.Provider {
 
     private final ExplorerManager mgr = new ExplorerManager();  
-    private final UserViewRootNode root;
+    private final Node root;
     private final BeanTreeView beanTreeView;
     private final List<String> selectedPaths = new ArrayList<>();
 
-    public NodeChooser(String title, boolean allowMulti) {
+    public NodeChooser(Node rootNode, String title) {
         setTitle(title);
-        this.root = new UserViewRootNode();
+        this.root = rootNode;
         this.beanTreeView = new CustomTreeView(this);
-        mgr.setRootContext(root);
+        beanTreeView.setDefaultActionAllowed(false);
+        mgr.setRootContext(root);     
+        
+        // Defaults
+        setRootVisible(true);
+        setMultipleSelection(false);
         
         for(Node node : root.getChildren().getNodes()) {
             beanTreeView.expandNode(node);
         }
         
-        addChooser(beanTreeView);        
+        addChooser(beanTreeView);   
+    }
+    
+    public final void setRootVisible(boolean visible) {
+        beanTreeView.setRootVisible(visible);
+    }
+    
+    public final void setMultipleSelection(boolean allowMulti) {
         beanTreeView.setSelectionMode(allowMulti 
                 ? TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION 
                 : TreeSelectionModel.SINGLE_TREE_SELECTION);

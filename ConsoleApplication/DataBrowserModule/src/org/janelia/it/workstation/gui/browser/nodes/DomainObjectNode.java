@@ -325,11 +325,11 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            DomainObject domainObject = getLookup().lookup(DomainObject.class);
-            if (domainObject==null) {
+            HasIdentifier hasId = getLookup().lookup(HasIdentifier.class);
+            if (hasId==null) {
                 return;
             }
-            Transferable t = new StringSelection(domainObject.getId()+"");
+            Transferable t = new StringSelection(hasId.getId()+"");
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
         }
     }
