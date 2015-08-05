@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
-import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderActionSequence;
-import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderProperties;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderActionSequence;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,13 +10,10 @@ import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.janelia.it.workstation.gui.framework.outline.TransferableEntityList;
-import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**
  * Created by murphys on 4/10/15.
@@ -25,12 +22,6 @@ public class VoxelViewerGLPanel extends GLJPanel
         implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener {
 
     private static final Logger logger = LoggerFactory.getLogger(VoxelViewerGLPanel.class);
-
-    LinkedBlockingQueue taskQueue= new LinkedBlockingQueue();
-    ThreadPoolExecutor threadPool = new ThreadPoolExecutor(4, 4, 1000L, TimeUnit.MILLISECONDS, taskQueue);
-
-    protected VoxelViewerProperties properties;
-
     protected static GLProfile profile = null;
     protected static GLCapabilities capabilities = null;
 
@@ -40,6 +31,7 @@ public class VoxelViewerGLPanel extends GLJPanel
         ZOOM
     }
 
+    protected VoxelViewerProperties properties;
     VoxelViewerModel model;
     VoxelViewerRenderer renderer;
 
@@ -75,6 +67,7 @@ public class VoxelViewerGLPanel extends GLJPanel
         popupMenu.add(resetViewItem);
         renderer=new VoxelViewerRenderer(model);
         renderer.setProperties(properties);
+        renderer.setViewer(this);
         setPreferredSize( new Dimension( width, height ) );
 
         addGLEventListener(renderer);
@@ -82,6 +75,7 @@ public class VoxelViewerGLPanel extends GLJPanel
 
     public void setProperties(VoxelViewerProperties properties) {
         this.properties=properties;
+        renderer.setProperties(properties);
     }
 
     public GL4ShaderProperties getProperties() {
@@ -173,14 +167,6 @@ public class VoxelViewerGLPanel extends GLJPanel
         renderer.setResetFirstRedraw(resetFirstRedraw);
     }
 
-    /**
-     * Add any actor to this Mip as desired.
-     */
-    public void addShaderAction(GL4ShaderActionSequence shaderAction) {
-        addActorToRenderer(shaderAction);
-    }
-
-
     @Override
     public void mouseDragged(MouseEvent event) {
         Point p1 = event.getPoint();
@@ -239,14 +225,6 @@ public class VoxelViewerGLPanel extends GLJPanel
         // giving the appearance of sluggishness.  So call repaint(),
         // not display().
         repaint();
-    }
-
-    /** Special synchronized method, for adding actors. Supports multi-threaded brick-add. */
-    private void addActorToRenderer(GL4ShaderActionSequence shaderAction) {
-        synchronized ( this ) {
-            renderer.addShaderAction(shaderAction);
-            //renderer.resetView();
-        }
     }
 
     protected void maybeShowPopup(MouseEvent event)

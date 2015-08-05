@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
-import org.janelia.it.workstation.gui.geometric_search.gl.experiment.ArrayCubeExperiment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +55,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         if ( viewer != null ) {
             viewer.releaseMenuActions();
         }
-        model=new VoxelViewerModel();
+        model=new VoxelViewerModel(properties);
         viewer = new VoxelViewerGLPanel(width, height, model);
         viewer.setProperties(properties);
         viewer.setVisible(true);
@@ -65,6 +64,9 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
         controller.setModel(model);
         controller.setViewer(viewer);
+
+        model.setViewer(viewer);
+        model.postViewerIntegrationSetup();
 
         // Experiment setup goes here ==============
 

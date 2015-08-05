@@ -110,8 +110,8 @@ public class GeometricSearchTransferHandler extends EntityTransferHandler {
                         throw new Exception("SessionMgr.getCachedFile() failed to retrieve file="+filePathED.getValue());
                     } else {
                         logger.info("file="+filePathED.getValue()+" successfully found");
-                        int datasetId=controller.addAlignedStackDataset(localFile);
-                        logger.info("Added stack file="+filePathED.getValue()+" assigned datasetId="+datasetId);
+                        int[] datasetIdArr=controller.addAlignedStackDataset(localFile);
+                        logger.info("Added stack file="+filePathED.getValue()+" assigned datasetId="+datasetIdArr[0] + " and datasetId="+datasetIdArr[1]);
                     }
                 }
             }
