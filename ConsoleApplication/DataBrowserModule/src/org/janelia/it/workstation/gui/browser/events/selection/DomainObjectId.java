@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.browser.events.selection;
 import org.janelia.it.jacs.model.domain.DomainObject;
 
 /**
+ * A unique identifier for domain objects.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

@@ -23,7 +23,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -39,8 +39,6 @@ import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
-import org.openide.nodes.Node;
-import org.openide.nodes.NodeTransfer;
 import org.openide.nodes.PropertySupport;
 import org.openide.nodes.Sheet;
 import org.openide.util.actions.SystemAction;
@@ -56,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectNode extends AbstractNode implements Has2dRepresentation {
+public class DomainObjectNode extends AbstractNode implements Has2dRepresentation, HasIdentifier {
 
     private final static Logger log = LoggerFactory.getLogger(DomainObjectNode.class);
 
@@ -94,6 +92,11 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
 
     public String getExtraLabel() {
         return null;
+    }
+    
+    @Override
+    public Long getId() {
+        return getDomainObject().getId();
     }
     
     @Override

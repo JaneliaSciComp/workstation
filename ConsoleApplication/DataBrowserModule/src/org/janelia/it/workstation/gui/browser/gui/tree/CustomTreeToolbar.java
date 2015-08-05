@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.nodes;
+package org.janelia.it.workstation.gui.browser.gui.tree;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;

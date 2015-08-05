@@ -1,30 +1,22 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyVetoException;
-import java.util.ArrayList;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.ActionMap;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JToolBar;
 import javax.swing.text.DefaultEditorKit;
 
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
-import org.janelia.it.workstation.gui.browser.nodes.CustomTreeToolbar;
-import org.janelia.it.workstation.gui.browser.nodes.CustomTreeView;
+import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
+import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.RootNode;
 import org.janelia.it.workstation.gui.browser.nodes.WorkspaceNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -48,6 +40,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Top component for the Data Explorer, which shows an outline tree view of the
  * user's workspace.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.browser.components//DomainExplorer//EN",

@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.nodes;
+package org.janelia.it.workstation.gui.browser.gui.tree;
 
 import java.awt.Rectangle;
 import java.awt.event.KeyListener;
@@ -12,6 +12,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerManager.Provider;
 import org.openide.explorer.view.BeanTreeView;
@@ -21,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Provides some useful functionality op top of the BeanTreeView. 
+ * Provides some useful functionality on top of the BeanTreeView. 
  * Adapted from CustomTreeView in com.nbtaskfocus.core.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>

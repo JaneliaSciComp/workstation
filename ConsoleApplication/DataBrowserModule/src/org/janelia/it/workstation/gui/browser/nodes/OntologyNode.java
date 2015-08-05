@@ -113,7 +113,7 @@ public class OntologyNode extends DomainObjectNode {
     @Override
     public Action[] getActions(boolean context) {
         Action[] superActions = super.getActions(context);
-        List<Action> actions = new ArrayList<Action>();
+        List<Action> actions = new ArrayList<>();
 //        actions.add(RenameAction.get(RenameAction.class));
         actions.addAll(Lists.newArrayList(superActions));
         return actions.toArray(new Action[0]);

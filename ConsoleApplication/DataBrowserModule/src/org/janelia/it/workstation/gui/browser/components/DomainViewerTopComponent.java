@@ -23,7 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Top component which displays something.
+ * Top component which displays domain object viewers. 
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.browser.components//DomainViewer//EN",

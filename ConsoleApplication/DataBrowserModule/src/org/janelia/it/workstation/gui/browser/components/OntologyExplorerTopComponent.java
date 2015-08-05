@@ -39,8 +39,8 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.AutoAnnotationPermissi
 import org.janelia.it.workstation.gui.browser.gui.dialogs.BulkAnnotationPermissionDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.KeyBindDialog;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectComparator;
-import org.janelia.it.workstation.gui.browser.nodes.CustomTreeToolbar;
-import org.janelia.it.workstation.gui.browser.nodes.CustomTreeView;
+import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
+import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
@@ -72,6 +72,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Top component for the Ontology Editor, which lets users create ontologies
  * and annotate their domain objects.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.browser.components//OntologyExplorer//EN",
@@ -141,7 +143,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             }
         };
         add(toolbar, BorderLayout.PAGE_START);
-        add(beanTreeView, BorderLayout.CENTER);
         
         this.bulkAnnotationDialog = new BulkAnnotationPermissionDialog();
         this.autoAnnotationDialog = new AutoAnnotationPermissionDialog();
@@ -219,6 +220,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             @Override
             public void run() {
                 try {
+                    ontologies.clear();
                     DomainDAO dao = DomainMgr.getDomainMgr().getDao();
                     for (Ontology ontology : dao.getOntologies(SessionMgr.getSubjectKey())) {
                         ontologies.add(ontology);
@@ -234,15 +236,22 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
                 }
+                // Refresh popup menu
+                add(getBottomToolbar(), BorderLayout.PAGE_END);
             }
         });
-        // Refresh popup menu
-        add(getBottomToolbar(), BorderLayout.PAGE_END);
     }
 
     private void loadOntology(Ontology ontology) {
         this.currOntology = ontology;
-        mgr.setRootContext(new OntologyNode(ontology));        
+        if (ontology==null) {
+            remove(beanTreeView);
+        }
+        else {
+            mgr.setRootContext(new OntologyNode(ontology));
+            add(beanTreeView, BorderLayout.CENTER);
+        }
+        revalidate();
     }
     
     /**
@@ -342,8 +351,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
         toolBar.setRollover(true);
-
-        log.info("Generating toolbar");
         
         if (ontologies != null) {
             final JButton ontologyButton = new JButton("Open ontology...");

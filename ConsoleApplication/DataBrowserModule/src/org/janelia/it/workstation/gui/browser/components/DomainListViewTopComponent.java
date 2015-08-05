@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays children of domain objects.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.browser.components//DomainListView//EN",

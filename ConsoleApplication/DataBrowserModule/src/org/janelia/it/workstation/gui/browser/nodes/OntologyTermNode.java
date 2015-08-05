@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
 import java.lang.ref.WeakReference;
+import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
@@ -11,7 +12,7 @@ import org.openide.nodes.Children;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OntologyTermNode extends InternalNode<OntologyTerm> {
+public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasIdentifier {
     
     private final static Logger log = LoggerFactory.getLogger(OntologyTermNode.class);
     
@@ -21,7 +22,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> {
         super(DomainUtils.isEmpty(ontologyTerm.getTerms())
                 ?Children.LEAF
                 :Children.create(new OntologyChildFactory(ontology, ontologyTerm), false), ontologyTerm);
-        this.ontologyRef = new WeakReference<Ontology>(ontology);
+        this.ontologyRef = new WeakReference<>(ontology);
     }
     
     private OntologyTerm getOntologyTerm() {
@@ -36,6 +37,11 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> {
     @Override
     public String getSecondaryLabel() {
         return getOntologyTerm().getTypeName();
+    }
+    
+    @Override
+    public Long getId() {
+        return getOntologyTerm().getId();
     }
     
     @Override

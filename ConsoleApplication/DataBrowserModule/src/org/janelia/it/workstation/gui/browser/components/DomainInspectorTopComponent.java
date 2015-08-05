@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Top component for the Data Inspector, which shows details about a single
  * domain object. 
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.browser.components//DomainInspector//EN",

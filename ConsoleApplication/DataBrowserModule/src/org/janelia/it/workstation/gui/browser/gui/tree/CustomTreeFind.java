@@ -1,18 +1,26 @@
-package org.janelia.it.workstation.gui.browser.nodes;
+package org.janelia.it.workstation.gui.browser.gui.tree;
 
+import com.google.common.base.Predicates;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.text.Position.Bias;
 
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
+import static org.reflections.ReflectionUtils.getAllMethods;
+import static org.reflections.ReflectionUtils.withModifier;
+import static org.reflections.ReflectionUtils.withName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Searches a tree model forward or backward to find nodes matching some search string. 
+ * Searches a custom tree forward or backward to find nodes matching some search string. 
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -44,7 +52,7 @@ public class CustomTreeFind {
     		Bias bias, boolean skipStartingNode) {
         this.dynamicTree = customTreeView;
         this.searchString = searchString.toUpperCase();
-        this.startingNode = startingNode;
+        this.startingNode = startingNode==null?customTreeView.getRootNode():startingNode;
         this.bias = bias == null ? Bias.Forward : bias;
         this.skipStartingNode = skipStartingNode;
     }
@@ -53,7 +61,7 @@ public class CustomTreeFind {
      * Execute the search and return the first matching node found. 
      * @return
      */
-    protected Node find() {
+    public Node find() {
         if (hasRun) throw new IllegalStateException("Cannot reuse TreeSearcher once it has been run.");
         hasRun = true;
         Node foundNode = find((Node) dynamicTree.getRootNode());
@@ -63,13 +71,8 @@ public class CustomTreeFind {
         return firstMatch;
     }
 
-    /**
-     * 
-     * @param currNode
-     * @return
-     */
-    protected Node find(Node currNode) {
-    	    	
+    private Node find(Node currNode) {
+    	    
     	// Searching background, so check the current node first (it comes before its children)
         if (bias == Bias.Forward) {
             Node found = checkCurrent(currNode);
@@ -79,16 +82,35 @@ public class CustomTreeFind {
         // Now we can retrieve the children
         Children children = currNode.getChildren();
         
-        log.info("testing "+children+", "+currNode.getDisplayName());
-//        List<Node> childNodes = Arrays.asList(children.getNodes());
-        List<Node> childNodes = children.snapshot();
+        boolean inited = false;
+        try {
+            // I couldn't find any other way of doing this. NetBeans should 
+            // really expose a way to find out if the children have been loaded. 
+            Set<Method> isInitMethods = getAllMethods(Children.class, 
+                Predicates.and(withModifier(Modifier.PROTECTED), withName("isInitialized")));
+            Method isInit = isInitMethods.iterator().next();
+            isInit.setAccessible(true);
+            inited = (Boolean)isInit.invoke(children);
+        }
+        catch (Exception e) {
+            // We don't alert the user here because if this exception happens
+            // it's likely to happen over and over. Just log it and fail the search.
+            log.error("Problem checking if the nodes have been loaded",e);
+        }
         
-        // If we're searching backward then we have to walk the children in reverse order
-        if (bias == Bias.Backward) Collections.reverse(childNodes);
-        
-        for (Node child : childNodes) {
-            Node found = find(child);
-            if (found != null) return found;
+        if (inited) {
+            // Need to make a copy so that we don't modify the underlying children array
+            List<Node> childNodes = new ArrayList<>(Arrays.asList(children.getNodes()));
+
+            // If we're searching backward then we have to walk the children in reverse order
+            if (bias == Bias.Backward) {
+                Collections.reverse(childNodes);
+            }
+
+            for (Node child : childNodes) {
+                Node found = find(child);
+                if (found != null) return found;
+            }
         }
 
         // Searching background, so check the current node last (it comes before its children)
@@ -100,12 +122,7 @@ public class CustomTreeFind {
         return null;
     }
 
-    /**
-     * 
-     * @param currNode
-     * @return
-     */
-    protected Node checkCurrent(Node currNode) {
+    private Node checkCurrent(Node currNode) {
 
     	// Begin actually looking only once we get to the starting node
         if (currNode.equals(startingNode)) {
@@ -113,10 +130,9 @@ public class CustomTreeFind {
         }
 
         String name = currNode.getDisplayName();
-        
         if (name.toUpperCase().contains(searchString)) {
             // Found a match
-        	
+            
             if (looking && (!skipStartingNode || (skipStartingNode && !currNode.equals(startingNode)))) {
             	// This is a good match
                 return currNode;

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.swing.tree.TreeSelectionModel;
-import org.janelia.it.workstation.gui.browser.nodes.CustomTreeView;
+import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.UserViewRootNode;

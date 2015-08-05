@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.openide.nodes.Node;
 import org.openide.util.Enumerations;
 
@@ -37,23 +37,29 @@ public class NodeUtils {
         return path.toArray(new Long[path.size()]);
     }
     
-    public static Long[] createIdPath(DomainObject... domainObjects) {
-        Long[] array = new Long[domainObjects.length];
+    public static Long[] createIdPath(HasIdentifier... objs) {
+        
+        Long[] array = new Long[objs.length];
+        
         int i = 0;
-        for(DomainObject domainObject : domainObjects) {
-            array[i++] = domainObject.getId();
+        for(HasIdentifier obj : objs) {
+            array[i++] = obj.getId();
         }
+        
         return array;
     }
     
-    public static Long[] createIdPath(Node parentNode, DomainObject domainObject) {
+    public static Long[] createIdPath(Node parentNode, HasIdentifier obj) {
+        
         Long[] parentPath = createIdPath(parentNode);
         Long[] array = new Long[parentPath.length+1];
+        
         int i = 0;
         for(Long id : parentPath) {
             array[i++] = id;
         }
-        array[array.length-1] = domainObject.getId();
+        
+        array[array.length-1] = obj.getId();
         return array;
     }
     
@@ -64,20 +70,10 @@ public class NodeUtils {
         if (node instanceof RootNode) {
             return new Long[0];
         }
-        else if (node instanceof DomainObjectNode) {
-            DomainObjectNode objNode = (DomainObjectNode)node;
-            Node currNode = objNode;
-            while ((currNode != null) && (currNode instanceof DomainObjectNode)) {
-                ar.addFirst(((DomainObjectNode)currNode).getDomainObject().getId());
-                currNode = currNode.getParentNode();
-            }
-        }
-        else if (node instanceof OntologyTermNode) {
-            OntologyTermNode objNode = (OntologyTermNode)node;
-            Node currNode = objNode;
-            while ((currNode != null) && (currNode instanceof OntologyTermNode)) {
-                ar.addFirst(((OntologyTermNode)currNode).getObject().getId());
-                currNode = currNode.getParentNode();
+        else if (node instanceof HasIdentifier) {
+            while ((node != null) && (node instanceof HasIdentifier)) {
+                ar.addFirst(((HasIdentifier)node).getId());
+                node = node.getParentNode();
             }
         }
         else {
@@ -120,9 +116,12 @@ public class NodeUtils {
         }
 
         for (int i = 0; i < list.length; i++) {
-            DomainObjectNode objNode = (DomainObjectNode)list[i];
-            if (id.equals(objNode.getDomainObject().getId())) { 
-                return list[i];
+            Node child = list[i];
+            if (child instanceof HasIdentifier) {
+                HasIdentifier hasId = (HasIdentifier)list[i];
+                if (id.equals(hasId.getId())) { 
+                    return list[i];
+                }
             }
         }
 
