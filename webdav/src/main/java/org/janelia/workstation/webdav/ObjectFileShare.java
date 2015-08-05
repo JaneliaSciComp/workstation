@@ -18,6 +18,7 @@ import org.janelia.workstation.webdav.propfind.Prop;
 import org.janelia.workstation.webdav.propfind.PropfindResponse;
 import org.janelia.workstation.webdav.propfind.Propstat;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.StreamingOutput;
@@ -88,26 +89,30 @@ public class ObjectFileShare extends FileShare {
     }
 
     @Override
-    public StreamingOutput getFile (String filename) throws FileNotFoundException {
+    public StreamingOutput getFile (HttpServletResponse response, String filename) throws FileNotFoundException {
         // strip off the Scality prepend
         final String qualifiedFilename = filename.substring(SCALITY_PREPEND.length());
+        MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
+        HttpConnectionManagerParams managerParams = mgr.getParams();
+        managerParams.setDefaultMaxConnectionsPerHost(10);
+        managerParams.setMaxTotalConnections(20);
+        HttpClient httpClient = new HttpClient(mgr);
+
+        String url = getUrlFromBPID(qualifiedFilename);
+        final GetMethod get = new GetMethod(url);
+        try {
+            int responseCode = httpClient.executeMethod(get);
+        } catch (IOException e) {
+            throw new FileNotFoundException("problem getting data from scality");
+        }
+        final String contentLengthStr = get.getResponseHeader("Content-length").getValue();
+        response.setHeader("Content-Length", contentLengthStr);
+
         return new StreamingOutput() {
             @Override
             public void write(OutputStream output) throws IOException, WebApplicationException {
-                String url = getUrlFromBPID(qualifiedFilename);
-                final GetMethod get = new GetMethod(url);
                 try {
-                    int responseCode;
-
-                    MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
-                    HttpConnectionManagerParams managerParams = mgr.getParams();
-                    managerParams.setDefaultMaxConnectionsPerHost(10);
-                    managerParams.setMaxTotalConnections(20);
-                    HttpClient httpClient = new HttpClient(mgr);
-                    responseCode = httpClient.executeMethod(get);
-
-                    String contentLengthStr = get.getResponseHeader("Content-length").getValue();
-                    final long contentLength = Long.parseLong(contentLengthStr);
+                    long contentLength = Long.parseLong(contentLengthStr);
                     copyBytes(get.getResponseBodyAsStream(), output, contentLength);
                 }
                 finally {
