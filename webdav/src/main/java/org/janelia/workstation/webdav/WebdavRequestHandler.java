@@ -1,6 +1,7 @@
 package org.janelia.workstation.webdav;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -36,6 +37,9 @@ public class WebdavRequestHandler extends ResourceConfig {
 
     @Context
     HttpServletRequest request;
+
+    @Context
+    HttpServletResponse response;
 
     public WebdavRequestHandler() {
         resourceBuilder = Resource.builder();
@@ -111,7 +115,7 @@ public class WebdavRequestHandler extends ResourceConfig {
         }
 
         // delegate to FileShare to get file
-        return mapping.getFile(filepath);
+        return mapping.getFile(response, filepath);
     }
 
     @PUT
