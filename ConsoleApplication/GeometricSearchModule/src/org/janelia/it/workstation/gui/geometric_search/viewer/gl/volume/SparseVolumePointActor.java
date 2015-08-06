@@ -8,6 +8,7 @@ package org.janelia.it.workstation.gui.geometric_search.viewer.gl.volume;
 
 import java.io.File;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
@@ -21,6 +22,9 @@ import org.slf4j.LoggerFactory;
 public class SparseVolumePointActor extends SparseVolumeBaseActor implements VolumeDataAcceptor
 {
     private final Logger logger = LoggerFactory.getLogger(SparseVolumePointActor.class);
+
+    public IntBuffer vertexArrayId= IntBuffer.allocate(1);
+    public IntBuffer vertexBufferId=IntBuffer.allocate(1);
 
     public SparseVolumePointActor(File volumeFile, int volumeChannel, float volumeCutoff) {
         super(volumeFile, volumeChannel, volumeCutoff);

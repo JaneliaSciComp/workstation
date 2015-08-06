@@ -1,10 +1,14 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
+import de.javasoft.swing.JYScrollPaneMap;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
+import org.jdesktop.swingx.JXTextArea;
+import org.jdesktop.swingx.JXTextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 
 /**
@@ -22,6 +26,21 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     TransferHandler transferHandler;
 
     public VoxelViewerMainPanel() {
+
+        JPanel pa1 = new JPanel();
+        JTable jt1 = new JTable(10,1);
+        //JScrollPane js1 = new JScrollPane(jt1);
+        for (int i=0;i<10;i++) {
+            JXTextField ex1 = new JXTextField();
+            ex1.setText("This is the text for="+i);
+            ex1.setColumns(30);
+            ex1.setVisible(true);
+            jt1.add(ex1);
+        }
+       // pa1.add(js1);
+        pa1.add(jt1);
+        add(pa1, BorderLayout.WEST);
+
         controller = new VoxelViewerBasicController();
     }
 
@@ -75,7 +94,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
         //===========================================
 
-        add(viewer, BorderLayout.CENTER);
+       add(viewer, BorderLayout.CENTER);
 
     }
 
@@ -103,6 +122,17 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         if (viewer!=null) {
             viewer.setTransferHandler(transferHandler);
         }
+    }
+
+    private JPanel createScrollablePanelContainer() {
+        JPanel containerPanel = new JPanel();
+        JScrollPane scrollPane = new JScrollPane();
+        for (int i=0;i<10;i++) {
+            JLabel l = new JLabel("Hello there="+i);
+            scrollPane.add(l);
+        }
+        containerPanel.add(scrollPane);
+        return containerPanel;
     }
 
 }
