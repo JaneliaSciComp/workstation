@@ -27,9 +27,9 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     public VoxelViewerMainPanel() {
 
         JPanel pa1 = new JPanel();
-        JTable jt1 = new JTable(100,1);
+        JTable jt1 = new JTable(10,1);
         //JScrollPane js1 = new JScrollPane(jt1);
-        for (int i=0;i<100;i++) {
+        for (int i=0;i<10;i++) {
             JXTextArea ex1 = new JXTextArea();
             ex1.setText("This is the text for="+i);
             jt1.add(ex1);
