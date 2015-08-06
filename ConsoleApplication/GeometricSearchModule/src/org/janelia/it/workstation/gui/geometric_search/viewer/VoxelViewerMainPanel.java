@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.geometric_search.viewer;
 import de.javasoft.swing.JYScrollPaneMap;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.jdesktop.swingx.JXTextArea;
+import org.jdesktop.swingx.JXTextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +31,10 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         JTable jt1 = new JTable(10,1);
         //JScrollPane js1 = new JScrollPane(jt1);
         for (int i=0;i<10;i++) {
-            JXTextArea ex1 = new JXTextArea();
+            JXTextField ex1 = new JXTextField();
             ex1.setText("This is the text for="+i);
+            ex1.setColumns(30);
+            ex1.setVisible(true);
             jt1.add(ex1);
         }
        // pa1.add(js1);
@@ -91,7 +94,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
         //===========================================
 
-        add(viewer, BorderLayout.CENTER);
+       add(viewer, BorderLayout.CENTER);
 
     }
 
