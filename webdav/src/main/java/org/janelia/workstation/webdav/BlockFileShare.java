@@ -11,6 +11,7 @@ import org.janelia.workstation.webdav.propfind.PropfindResponse;
 import org.janelia.workstation.webdav.propfind.Propstat;
 
 import javax.activation.MimetypesFileTypeMap;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.StreamingOutput;
@@ -27,8 +28,15 @@ import java.util.List;
  */
 public class BlockFileShare extends FileShare {
     @Override
-    public StreamingOutput getFile(String qualifiedFilename) throws FileNotFoundException {
+    public StreamingOutput getFile(HttpServletResponse response, String qualifiedFilename) throws FileNotFoundException {
         final String filename = qualifiedFilename;
+        try {
+            response.setHeader("Content-Length", Long.toString(Files.size(Paths.get(filename))));
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+            throw new FileNotFoundException("Problem retrieving content length data on file");
+        }
         return new StreamingOutput() {
             @Override
             public void write(OutputStream output) throws IOException, WebApplicationException {

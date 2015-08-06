@@ -7,6 +7,7 @@ import java.util.Set;
 import org.janelia.workstation.webdav.exception.FileNotFoundException;
 import org.janelia.workstation.webdav.exception.FileUploadException;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
@@ -38,7 +39,7 @@ public abstract class FileShare {
         return true;
     }
 
-    public StreamingOutput getFile (String qualifiedFilename) throws FileNotFoundException {
+    public StreamingOutput getFile (HttpServletResponse respopnse, String qualifiedFilename) throws FileNotFoundException {
         return null;
     }
 
