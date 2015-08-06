@@ -38,8 +38,6 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
     int height;
     int depth;
 
-    public IntBuffer vertexArrayId=IntBuffer.allocate(1);
-    public IntBuffer vertexBufferId=IntBuffer.allocate(1);
     public Vector4 color=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
     public Matrix4 vertexRotation=null;
 
@@ -237,6 +235,8 @@ public abstract class SparseVolumeBaseActor extends GL4SimpleActor implements Vo
 
     @Override
     public void dispose(GL4 gl) {
+        viList.clear();
+        textureData=null;
     }
 
     private void loadVolumeFile() throws Exception {

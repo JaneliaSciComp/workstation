@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.geometric_search.viewer.gl.volume;
 
 import java.io.File;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import javax.media.opengl.GL4;
 import org.janelia.geometry3d.Matrix4;
 import org.slf4j.Logger;
@@ -13,6 +14,9 @@ import org.slf4j.LoggerFactory;
 public class SparseVolumeCubeActor extends SparseVolumeBaseActor
 {
     private final Logger logger = LoggerFactory.getLogger(SparseVolumeCubeActor.class);
+
+    public IntBuffer vertexArrayId= IntBuffer.allocate(1);
+    public IntBuffer vertexBufferId=IntBuffer.allocate(1);
 
     public SparseVolumeCubeActor(File volumeFile, int volumeChannel, float volumeCutoff) {
         super(volumeFile, volumeChannel, volumeCutoff);

@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.GL4;
 import java.io.File;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,9 @@ import java.util.List;
 public class SparseVolumeCubeColorActor extends SparseVolumeBaseActor {
 
     private final Logger logger = LoggerFactory.getLogger(SparseVolumeCubeColorActor.class);
+
+    public IntBuffer vertexArrayId= IntBuffer.allocate(1);
+    public IntBuffer vertexBufferId=IntBuffer.allocate(1);
 
     public SparseVolumeCubeColorActor(File volumeFile, int volumeChannel, float volumeCutoff) {
         super(volumeFile, volumeChannel, volumeCutoff);
