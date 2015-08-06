@@ -131,6 +131,7 @@ public class WebDavClient {
     public URL getWebDavUrl(String standardPath)
             throws MalformedURLException {
         URL url;
+        standardPath = standardPath.replace("\\","/");
         String urlStr = basePath + standardPath;
         url = new URL(urlStr);
 
