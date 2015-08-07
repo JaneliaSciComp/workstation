@@ -7,9 +7,9 @@ import java.io.File;
 /**
  * Created by murphys on 7/25/2015.
  */
-public class ArrayMeshActor extends MeshObjActor {
+public class ArrayMeshGLActor extends MeshObjActor {
 
-    public ArrayMeshActor(File objFile) {
+    public ArrayMeshGLActor(File objFile) {
         super(objFile);
     }
 

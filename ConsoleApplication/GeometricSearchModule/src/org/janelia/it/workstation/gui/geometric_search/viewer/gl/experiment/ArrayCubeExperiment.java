@@ -52,7 +52,7 @@ public class ArrayCubeExperiment implements GL4Experiment {
             testFile = testJaneliaFile;
         }
 
-        final ArrayCubeActor pa = new ArrayCubeActor(testFile, 1, 0.20f, 100000);
+        final ArrayCubeGLActor pa = new ArrayCubeGLActor(testFile, 1, 0.20f, 100000);
 
         Matrix4 gal4Rotation=new Matrix4();
 
@@ -136,7 +136,7 @@ public class ArrayCubeExperiment implements GL4Experiment {
 
         for (File meshFile : meshFiles) {
             if (meshFile.getName().endsWith(".obj")) {
-                final ArrayMeshActor ma = new ArrayMeshActor(meshFile);
+                final ArrayMeshGLActor ma = new ArrayMeshGLActor(meshFile);
                 ma.setVertexRotation(vertexRotation);
                 ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.2f));
                 ma.setUpdateCallback(new GLDisplayUpdateCallback() {

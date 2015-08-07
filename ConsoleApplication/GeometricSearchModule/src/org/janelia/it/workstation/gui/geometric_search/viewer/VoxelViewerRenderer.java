@@ -18,10 +18,7 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Deque;
-import java.util.List;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4Shader;
 
 /**
  * Created by murphys on 4/10/15.
@@ -220,9 +217,9 @@ public class VoxelViewerRenderer implements GLEventListener
         while (initQueue.size()>0) {
             GL4SimpleActor actor = initQueue.pop();
             actor.init(gl);
-            if (actor instanceof ArrayCubeActor) {
+            if (actor instanceof ArrayCubeGLActor) {
                 model.getDenseVolumeShaderActionSequence().getActorSequence().add(actor);
-            } else if (actor instanceof ArrayMeshActor) {
+            } else if (actor instanceof ArrayMeshGLActor) {
                 model.getMeshShaderActionSequence().getActorSequence().add(actor);
             }
         }
