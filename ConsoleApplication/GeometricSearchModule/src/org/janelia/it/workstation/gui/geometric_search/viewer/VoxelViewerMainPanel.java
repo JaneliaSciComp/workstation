@@ -26,21 +26,8 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     TransferHandler transferHandler;
 
     public VoxelViewerMainPanel() {
-
-        JPanel pa1 = new JPanel();
-        JTable jt1 = new JTable(10,1);
-        //JScrollPane js1 = new JScrollPane(jt1);
-        for (int i=0;i<10;i++) {
-            JXTextField ex1 = new JXTextField();
-            ex1.setText("This is the text for="+i);
-            ex1.setColumns(30);
-            ex1.setVisible(true);
-            jt1.add(ex1);
-        }
-       // pa1.add(js1);
-        pa1.add(jt1);
-        add(pa1, BorderLayout.WEST);
-
+        JPanel tablePanel = createScrollableTablePanel();
+        add(tablePanel, BorderLayout.WEST);
         controller = new VoxelViewerBasicController();
     }
 
@@ -124,12 +111,17 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         }
     }
 
-    private JPanel createScrollablePanelContainer() {
+    private JPanel createScrollableTablePanel() {
         JPanel containerPanel = new JPanel();
-        JScrollPane scrollPane = new JScrollPane();
-        for (int i=0;i<10;i++) {
-            JLabel l = new JLabel("Hello there="+i);
-            scrollPane.add(l);
+        JPanel rowPanel = new JPanel();
+        rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.Y_AXIS));
+        JScrollPane scrollPane = new JScrollPane(rowPanel);
+        scrollPane.setPreferredSize(new Dimension(250, 800));
+        for (int i=0;i<100;i++) {
+            JButton l = new JButton("Hello there="+i);
+            l.putClientProperty("Synthetica.opaque", Boolean.FALSE);
+            l.setBorder(BorderFactory.createBevelBorder(1));
+            rowPanel.add(l);
         }
         containerPanel.add(scrollPane);
         return containerPanel;
