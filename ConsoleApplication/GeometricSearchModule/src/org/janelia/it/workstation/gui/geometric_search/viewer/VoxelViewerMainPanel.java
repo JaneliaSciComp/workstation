@@ -1,10 +1,14 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
+import de.javasoft.swing.JYScrollPaneMap;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
+import org.jdesktop.swingx.JXTextArea;
+import org.jdesktop.swingx.JXTextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 
 /**
@@ -22,6 +26,8 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     TransferHandler transferHandler;
 
     public VoxelViewerMainPanel() {
+        JPanel tablePanel = createScrollableTablePanel();
+        add(tablePanel, BorderLayout.WEST);
         controller = new VoxelViewerBasicController();
     }
 
@@ -75,7 +81,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
         //===========================================
 
-        add(viewer, BorderLayout.CENTER);
+       add(viewer, BorderLayout.CENTER);
 
     }
 
@@ -103,6 +109,22 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         if (viewer!=null) {
             viewer.setTransferHandler(transferHandler);
         }
+    }
+
+    private JPanel createScrollableTablePanel() {
+        JPanel containerPanel = new JPanel();
+        JPanel rowPanel = new JPanel();
+        rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.Y_AXIS));
+        JScrollPane scrollPane = new JScrollPane(rowPanel);
+        scrollPane.setPreferredSize(new Dimension(250, 800));
+        for (int i=0;i<100;i++) {
+            JButton l = new JButton("Hello there="+i);
+            l.putClientProperty("Synthetica.opaque", Boolean.FALSE);
+            l.setBorder(BorderFactory.createBevelBorder(1));
+            rowPanel.add(l);
+        }
+        containerPanel.add(scrollPane);
+        return containerPanel;
     }
 
 }

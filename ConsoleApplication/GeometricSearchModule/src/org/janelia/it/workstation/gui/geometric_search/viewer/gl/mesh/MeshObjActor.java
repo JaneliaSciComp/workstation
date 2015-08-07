@@ -192,7 +192,8 @@ public class MeshObjActor extends GL4SimpleActor
 
     @Override
     public void dispose(GL4 gl) {
-
+        gl.glDeleteVertexArrays(1, vertexArrayId);
+        gl.glDeleteBuffers(1, vertexBufferId);
     }
 
     private void loadObjFile() throws Exception {

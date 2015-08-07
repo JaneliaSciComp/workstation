@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.GL4;
 import java.io.File;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,9 +21,12 @@ public class ArrayCubeActor extends SparseVolumeBaseActor
     
     int downsampleLevel=1;
     int maxVoxels;
+
+    public IntBuffer vertexArrayId= IntBuffer.allocate(1);
+    public IntBuffer vertexBufferId=IntBuffer.allocate(1);
+
     public List<viGroup> voxelList=new ArrayList<>();
 
-    
     public ArrayCubeActor(File volumeFile, int volumeChannel, float volumeCutoff, int maxVoxels) {
         super(volumeFile, volumeChannel, volumeCutoff);
         this.maxVoxels=maxVoxels;
@@ -175,6 +179,8 @@ public class ArrayCubeActor extends SparseVolumeBaseActor
     @Override
     public void dispose(GL4 gl) {
         super.dispose(gl);
+        gl.glDeleteVertexArrays(1, vertexArrayId);
+        gl.glDeleteBuffers(1, vertexBufferId);
     }
     
     @Override

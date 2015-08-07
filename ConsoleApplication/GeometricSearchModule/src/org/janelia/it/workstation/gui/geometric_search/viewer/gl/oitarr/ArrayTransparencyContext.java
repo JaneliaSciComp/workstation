@@ -84,6 +84,13 @@ public class ArrayTransparencyContext {
         logger.error( "OpenGL Error " + errorNumber + ": " + errorStr + ": " + message );
     }
 
+    public long getBufferQuarterByteLength() {
+        long headPointerTotalPixels=width * height;
+        long nodeLength = 8; // uint + float
+        long tqlLong=new Long(transparency_quarterdepth);
+        return headPointerTotalPixels * nodeLength * tqlLong;
+    }
+
     public void init(GL4 gl) throws Exception {
 
         zeroValueBuffer.put(0,0);
@@ -144,7 +151,7 @@ public class ArrayTransparencyContext {
         //gl.glBindBufferBase(GL4.GL_SHADER_STORAGE_BUFFER, 0, fragmentSSBO.get(0));
         //gl.glBufferData(GL4.GL_SHADER_STORAGE_BUFFER, MAX_NODES * NODE_SIZE, null, GL4.GL_DYNAMIC_DRAW);
         
-        Long bufferLength = new Long(headPointerTotalPixels) * new Long(8) * new Long(transparency_quarterdepth); // XY , vec4+float, depth
+        Long bufferLength = getBufferQuarterByteLength();
         
         // SSBO 0
             
