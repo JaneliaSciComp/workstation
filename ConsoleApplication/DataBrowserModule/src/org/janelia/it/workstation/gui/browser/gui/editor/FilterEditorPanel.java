@@ -99,7 +99,7 @@ import org.openide.util.datatransfer.ExTransferable;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filter> {
+public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEditor<Filter> {
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
     
@@ -369,6 +369,11 @@ public class FilterEditorPanel extends JPanel implements DomainObjectEditor<Filt
     @Override
     public String getName() {
         return "Filter Editor";
+    }
+    
+    @Override
+    public DomainObjectSelectionModel getSelectionModel() {
+        return selectionModel;
     }
     
     @Override

@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.ProtectionDomain;
+import javax.swing.ToolTipManager;
 import org.janelia.it.workstation.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
@@ -39,7 +40,7 @@ public class ConsoleApp {
         
         ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
         log.debug("Code Source: "+pd.getCodeSource().getLocation());
-        
+                
         System.setProperty("apple.laf.useScreenMenuBar", "false");
         System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", ConsoleProperties.getString("console.Title"));

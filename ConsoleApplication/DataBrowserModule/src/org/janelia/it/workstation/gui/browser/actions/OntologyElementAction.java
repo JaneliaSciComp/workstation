@@ -1,6 +1,7 @@
-package org.janelia.it.workstation.gui.framework.actions;
+package org.janelia.it.workstation.gui.browser.actions;
 
-import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
+import org.janelia.it.workstation.gui.framework.actions.Action;
 
 /**
  * An abstract base class for actions dealing with ontology elements.
@@ -9,25 +10,18 @@ import org.janelia.it.jacs.model.ontology.OntologyElement;
  */
 public abstract class OntologyElementAction implements Action {
 
-    private OntologyElement element;
+    private Long[] path;
     private String uniqueId;
+    
+    public void init(Long[] path) {
+        this.path = path;
+        this.uniqueId = NodeUtils.createPathString(path);
+    }
 
-    public void init(OntologyElement element) {
-        this.element = element;
+    public Long[] getPath() {
+        return path;
     }
     
-    public void init(String uniqueId) {
-        this.uniqueId = uniqueId;
-    }
-
-    public OntologyElement getOntologyElement() {
-        return element;
-    }
-    
-    public Long getElementId() {
-        return element.getId();
-    }
-
     public String getUniqueId() {
         return uniqueId;
     }

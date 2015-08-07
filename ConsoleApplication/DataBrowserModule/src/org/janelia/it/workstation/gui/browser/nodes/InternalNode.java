@@ -6,10 +6,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,15 +14,13 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import static javax.swing.Action.NAME;
 
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.AbstractNode;
+import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
-import org.openide.nodes.PropertySupport;
-import org.openide.nodes.Sheet;
 import org.openide.util.datatransfer.ExTransferable;
-import org.openide.util.lookup.Lookups;
+import org.openide.util.lookup.AbstractLookup;
+import org.openide.util.lookup.InstanceContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,12 +28,26 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class InternalNode<T> extends AbstractNode implements Has2dRepresentation {
+public class InternalNode<T> extends AbstractNode {
         
     private final static Logger log = LoggerFactory.getLogger(InternalNode.class);
     
-    public InternalNode(Children children, T object) throws Exception {
-        super(children, Lookups.singleton(object));
+    private final ChildFactory parentChildFactory;
+    private final InstanceContent lookupContents;
+    
+    public InternalNode(ChildFactory parentChildFactory, Children children, T object) {
+        this(new InstanceContent(), parentChildFactory, children, object);
+    }
+
+    public InternalNode(InstanceContent lookupContents, ChildFactory parentChildFactory, Children children, T object) {
+        super(children, new AbstractLookup(lookupContents));
+        this.parentChildFactory = parentChildFactory;
+        this.lookupContents = lookupContents;
+        lookupContents.add(object);
+    }
+    
+    protected InstanceContent getLookupContents() {
+        return lookupContents;
     }
     
     public T getObject() {
@@ -50,6 +59,10 @@ public class InternalNode<T> extends AbstractNode implements Has2dRepresentation
     }
     
     public String getSecondaryLabel() {
+        return null;
+    }
+    
+    public String getExtraLabel() {
         return null;
     }
     
@@ -94,6 +107,7 @@ public class InternalNode<T> extends AbstractNode implements Has2dRepresentation
     public String getHtmlDisplayName() {
         String primary = getPrimaryLabel();
         String secondary = getSecondaryLabel();
+        String extra = getExtraLabel();
         StringBuilder sb = new StringBuilder();
         if (primary!=null) {
             sb.append("<font color='!Label.foreground'>");
@@ -104,6 +118,11 @@ public class InternalNode<T> extends AbstractNode implements Has2dRepresentation
             sb.append(" <font color='#957D47'><i>");
             sb.append(secondary);
             sb.append("</i></font>");
+        }
+        if (extra!=null) {
+            sb.append(" <font color='#959595'>");
+            sb.append(extra);
+            sb.append("</font>");
         }
         return sb.toString();
     }
@@ -122,38 +141,6 @@ public class InternalNode<T> extends AbstractNode implements Has2dRepresentation
         return added;
     }
     
-    @Override
-    protected Sheet createSheet() {
-
-        Sheet sheet = Sheet.createDefault();
-        Sheet.Set set = Sheet.createPropertiesSet();
-        T obj = getObject();
-        
-        try {
-
-            for(PropertyDescriptor propertyDescriptor : 
-                Introspector.getBeanInfo(obj.getClass()).getPropertyDescriptors()) {
-                Method getter = propertyDescriptor.getReadMethod();
-                Method setter = propertyDescriptor.getWriteMethod();
-                PropertySupport.Reflection prop = 
-                        new PropertySupport.Reflection(obj, getter.getReturnType(), getter, setter);
-                prop.setName(DomainUtils.unCamelCase(getter.getName().replaceFirst("get", "")));
-                set.put(prop);
-            }
-
-        } catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
-        }
-
-        sheet.put(set);
-        return sheet;
-    }
-
-    @Override
-    public String get2dImageFilepath(String role) {
-        return null;
-    }
-    
     protected final class CopyNameAction extends AbstractAction {
 
         public CopyNameAction() {
@@ -166,7 +153,4 @@ public class InternalNode<T> extends AbstractNode implements Has2dRepresentation
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
         }
     }
-    
-    
-    
 }

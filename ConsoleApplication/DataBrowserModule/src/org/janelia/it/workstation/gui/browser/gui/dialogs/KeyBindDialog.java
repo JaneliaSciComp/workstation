@@ -16,6 +16,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
+import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 
 import org.janelia.it.workstation.gui.framework.actions.Action;
@@ -78,27 +80,29 @@ public class KeyBindDialog extends ModalDialog {
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");
         okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-	            if (actionToBind == null) {
-	                throw new IllegalStateException("No action to bind");
-	            }
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (actionToBind == null) {
+                    throw new IllegalStateException("No action to bind");
+                }
 
-	            KeyboardShortcut keyboardShortcut = getKeyboardShortcut();
-	            SessionMgr.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
-	            SessionMgr.getKeyBindings().saveOntologyKeybinds(SessionMgr.getBrowser().getOntologyOutline().getCurrentOntology());
-	            setVisible(false);
-			}
-		});
+                KeyboardShortcut keyboardShortcut = getKeyboardShortcut();
+                SessionMgr.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
+                OntologyExplorerTopComponent explorer = OntologyExplorerTopComponent.getInstance();
+                OntologyNode ontologyNode = explorer.getOntologyNode();
+                SessionMgr.getKeyBindings().saveOntologyKeybinds(ontologyNode.getId());
+                setVisible(false);
+            }
+        });
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
         cancelButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-	            setVisible(false);
-			}
-		});
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+            }
+        });
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));

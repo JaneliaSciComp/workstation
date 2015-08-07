@@ -37,7 +37,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(PaginatedResultsPanel.class);
     
     // Splash panel
-    private JLabel splashPanel;
+    private final JLabel splashPanel;
     
     // Status bar
     private final JPanel statusBar;

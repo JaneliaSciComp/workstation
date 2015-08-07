@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ObjectSetEditorPanel extends JPanel implements DomainObjectEditor<ObjectSet> {
+public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectionEditor<ObjectSet> {
 
     private final static Logger log = LoggerFactory.getLogger(DomainListViewTopComponent.class);
     
@@ -90,6 +90,11 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectEditor<O
     @Override
     public String getName() {
         return "Object Set Editor";
+    }
+    
+    @Override
+    public DomainObjectSelectionModel getSelectionModel() {
+        return selectionModel;
     }
     
     @Override

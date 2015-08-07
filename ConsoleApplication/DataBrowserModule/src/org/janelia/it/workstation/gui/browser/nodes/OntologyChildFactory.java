@@ -46,7 +46,7 @@ public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
         final Ontology ontology = ontologyRef.get();
         if (ontology==null) return null;
         try {
-            return new OntologyTermNode(ontology, key);
+            return new OntologyTermNode(this, ontology, key);
         }
         catch (Exception e) {
             log.error("Error creating node for key " + key, e);

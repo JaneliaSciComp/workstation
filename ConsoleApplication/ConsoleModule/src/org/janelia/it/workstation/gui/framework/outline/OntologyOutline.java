@@ -352,7 +352,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         });
 
         // Load key bind preferences and bind keys to actions
-        SessionMgr.getKeyBindings().loadOntologyKeybinds(root, ontologyActionMap);
+        SessionMgr.getKeyBindings().loadOntologyKeybinds(root.getId(), ontologyActionMap);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -446,7 +446,10 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                 else {
                     keyBindButton.setToolTipText("Enter key binding mode");
                     recordingKeyBinds = false;
-                    SessionMgr.getKeyBindings().saveOntologyKeybinds(getCurrentOntology());
+                    Entity currOntology = getCurrentOntology();
+                    if (currOntology!=null) {
+                        SessionMgr.getKeyBindings().saveOntologyKeybinds(currOntology.getId());
+                    }
                 }
             }
         });

@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
+import org.janelia.it.jacs.model.entity.Entity;
 
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
@@ -86,7 +87,8 @@ public class KeyBindDialog extends ModalDialog {
 
 	            KeyboardShortcut keyboardShortcut = getKeyboardShortcut();
 	            SessionMgr.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
-	            SessionMgr.getKeyBindings().saveOntologyKeybinds(SessionMgr.getBrowser().getOntologyOutline().getCurrentOntology());
+                    Entity currOntology = SessionMgr.getBrowser().getOntologyOutline().getCurrentOntology();
+	            SessionMgr.getKeyBindings().saveOntologyKeybinds(currOntology.getId());
 	            setVisible(false);
 			}
 		});

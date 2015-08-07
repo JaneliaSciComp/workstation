@@ -261,10 +261,12 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         beanTreeView.expand(idPath);
     }
 
-    public void select(Long[] idPath) {
+    public Node select(Long[] idPath) {
+        if (root==null) return null;
         Node node = NodeUtils.findNodeWithPath(root, idPath);
-        log.info("Found node with path {}: {}",NodeUtils.createPathString(idPath),node);
+        log.info("Found node with path {}: {}",NodeUtils.createPathString(idPath),node.getDisplayName());
         selectNode(node);
+        return node;
     }
     
     public void selectNode(Node node) {

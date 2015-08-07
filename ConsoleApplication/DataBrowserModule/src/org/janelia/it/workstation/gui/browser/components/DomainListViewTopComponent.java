@@ -7,10 +7,10 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
-import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.gui.browser.gui.editor.ObjectSetEditorPanel;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectSelectionEditor;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -71,7 +71,7 @@ public final class DomainListViewTopComponent extends TopComponent {
     /* Instance variables */
     
     private final InstanceContent content = new InstanceContent();
-    private DomainObjectEditor editor;
+    private DomainObjectSelectionEditor editor;
             
     public DomainListViewTopComponent() {
         initComponents();
@@ -133,7 +133,7 @@ public final class DomainListViewTopComponent extends TopComponent {
         return true;
     }
     
-    public void setEditorClass(Class<? extends DomainObjectEditor> editorClass) {
+    public void setEditorClass(Class<? extends DomainObjectSelectionEditor> editorClass) {
         try {
             if (editor!=null) {
                 remove((JComponent)editor);
@@ -149,10 +149,10 @@ public final class DomainListViewTopComponent extends TopComponent {
         setName(editor.getName());
     }
     
-    public DomainObjectEditor getEditor() {
+    public DomainObjectSelectionEditor getEditor() {
         return editor;
     }
-    
+        
     @Subscribe
     public void loadDomainObject(DomainObjectSelectionEvent event) {
 
@@ -184,7 +184,7 @@ public final class DomainListViewTopComponent extends TopComponent {
         }
         
         final DomainObject domainObject = domainObjectNode.getDomainObject();
-        final Class<? extends DomainObjectEditor> editorClass = getEditorClass(domainObject);
+        final Class<? extends DomainObjectSelectionEditor> editorClass = getEditorClass(domainObject);
         if (editorClass==null) {
             return;
         }
@@ -195,7 +195,7 @@ public final class DomainListViewTopComponent extends TopComponent {
         setName(domainObject.getName());
     }
 
-    private Class<? extends DomainObjectEditor> getEditorClass(DomainObject domainObject) {
+    private Class<? extends DomainObjectSelectionEditor> getEditorClass(DomainObject domainObject) {
         if (domainObject instanceof Filter) {
             return FilterEditorPanel.class;
         }

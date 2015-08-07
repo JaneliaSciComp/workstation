@@ -1,98 +1,81 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
-import java.awt.datatransfer.Transferable;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.openide.nodes.ChildFactory;
-import org.openide.nodes.Children;
-import org.openide.nodes.Index;
 import org.openide.nodes.Node;
-import org.openide.util.datatransfer.PasteType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.MapMaker;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+import org.janelia.it.workstation.gui.browser.actions.RunNodeDefaultAction;
+import org.janelia.it.workstation.gui.browser.actions.OntologyElementAction;
+import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
-public class OntologyNode extends DomainObjectNode {
+/**
+ * Root node of an ontology. Manages all the nodes in the ontology, including
+ * inter-ontology references and actions. 
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
+public class OntologyNode extends OntologyTermNode {
     
     private final static Logger log = LoggerFactory.getLogger(OntologyNode.class);
     
-    private final OntologyChildFactory childFactory;
+    private final ConcurrentMap<Long, OntologyTermNode> nodeById = new MapMaker().weakValues().makeMap();
+    private final Map<String, org.janelia.it.workstation.gui.framework.actions.Action> ontologyActionMap = new HashMap<>();
     
     public OntologyNode(Ontology ontology) {
-        this(null, DomainUtils.isEmpty(ontology.getTerms()) ? null:new OntologyChildFactory(ontology, ontology), ontology);
+        super(null, ontology, ontology);
+        populateMaps(this);
     }
     
-    private OntologyNode(ChildFactory parentChildFactory, final OntologyChildFactory childFactory, Ontology ontology) {
-        super(parentChildFactory, DomainUtils.isEmpty(ontology.getTerms()) ? Children.LEAF:Children.create(childFactory, false), ontology);
-        this.childFactory = childFactory;
-        if (!DomainUtils.isEmpty(ontology.getTerms())) {
-            getLookupContents().add(new Index.Support() {
-
-                @Override
-                public Node[] getNodes() {
-                    return getChildren().getNodes();
-                }
-
-                @Override
-                public int getNodesCount() {
-                    return getNodes().length;
-                }
-
-                @Override
-                public void reorder(final int[] order) {
-                    SimpleWorker worker = new SimpleWorker() {
-                        @Override
-                        protected void doStuff() throws Exception {
-                            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                            //dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
-                        }
-                        @Override
-                        protected void hadSuccess() {
-                            childFactory.refresh();
-                        }
-                        @Override
-                        protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
-                        }
-                    };
-                    worker.execute();
-                }
-            });
+    private void populateMaps(OntologyTermNode node) {
+        log.trace("populateMaps({})",node.getDisplayName());
+        populateLookupMap(node);
+        populateActionMap(node);
+        for(Node childNode : node.getChildren().getNodes()) {
+            if (childNode instanceof OntologyTermNode) {
+                OntologyTermNode termNode = (OntologyTermNode)childNode;
+                populateMaps(termNode);
+            }
+            else {
+                log.warn("Encountered unsupported node type while traversing ontology: "+node.getClass().getName());
+            }
         }
     }
     
-    private Ontology getOntology() {
-        return (Ontology)getDomainObject();
+    private void populateLookupMap(OntologyTermNode node) {
+        nodeById.put(node.getId(), node);
+        
+    }
+    private void populateActionMap(OntologyTermNode node) {
+        OntologyElementAction action = new RunNodeDefaultAction();
+        Long[] path = NodeUtils.createIdPath(node);
+        action.init(path);
+        String pathStr = NodeUtils.createPathString(path);
+        log.trace("path string: {}",pathStr);
+        ontologyActionMap.put(pathStr, action);
     }
     
-    @Override
-    public String getPrimaryLabel() {
-        return getOntology().getName();
+    public org.janelia.it.workstation.gui.framework.actions.Action getActionForNode(OntologyTermNode node) {
+        return ontologyActionMap.get(NodeUtils.createPathString(node));
     }
     
-    @Override
-    public String getSecondaryLabel() {
-        return getOntology().getTypeName();
-    }
-    
-    @Override
-    public String getExtraLabel() {
-        // TODO: implement keybinding display
-        return null;
+    public OntologyTermNode getNodeById(Long id) {
+        return nodeById.get(id);
     }
     
     @Override
@@ -119,69 +102,32 @@ public class OntologyNode extends DomainObjectNode {
         return actions.toArray(new Action[0]);
     }
     
-//    @Override
-//    public void setName(final String newName) {
-//        final Ontology ontology = getOntology();
-//        final String oldName = ontology.getName();
-//        ontology.setName(newName);
-//        SimpleWorker worker = new SimpleWorker() {
-//            @Override
-//            protected void doStuff() throws Exception {
-//                log.trace("Changing name from " + oldName + " to: " + newName);
-//                DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-//                dao.updateProperty(SessionMgr.getSubjectKey(), ontology, "name", newName);
-//            }
-//            @Override
-//            protected void hadSuccess() {
-//                log.trace("Fire name change from" + oldName + " to: " + newName);
-//                fireDisplayNameChange(oldName, newName); 
-//            }
-//            @Override
-//            protected void hadError(Throwable error) {
-//                SessionMgr.getSessionMgr().handleException(error);
-//            }
-//        };
-//        worker.execute();
-//    }
-
     @Override
-    public PasteType getDropType(final Transferable t, int action, int index) {
+    public void setName(final String newName) {
         final Ontology ontology = getOntology();
-        if (t.isDataFlavorSupported(DomainObjectFlavor.SINGLE_FLAVOR)) {
-            return new PasteType() {
-                @Override
-                public Transferable paste() throws IOException {
-//                    try {
-//                        DomainObject domainObject = (DomainObject) t.getTransferData(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR);
-//                        log.info("Pasting {} on {}",domainObject.getId(),treeNode.getName());
-//                        if (DomainUtils.hasChild(treeNode, domainObject)) {
-//                            log.info("Child already exists. TODO: should reorder it to the end");
-//                            return null;
-//                        }
-//                        childFactory.addChild(domainObject);
-//                        final Node node = NodeTransfer.node(t, NodeTransfer.DND_MOVE + NodeTransfer.CLIPBOARD_CUT);
-//                        if (node != null) {
-//                            log.info("Original node was moved or cut, so we presume it was pasted, and will destroy node");
-//                            node.destroy();
-//                        }
-//                    } catch (UnsupportedFlavorException ex) {
-//                        log.error("Flavor is not supported for paste",ex);
-//                    }
-                    return null;
-                }
-            };
-        } else {
-            log.trace("Transfer does not support domain object flavor.");
-            return null;
-        }
+        final String oldName = ontology.getName();
+        ontology.setName(newName);
+        SimpleWorker worker = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                log.trace("Changing name from " + oldName + " to: " + newName);
+                DomainDAO dao = DomainMgr.getDomainMgr().getDao();
+                dao.updateProperty(SessionMgr.getSubjectKey(), ontology, "name", newName);
+            }
+            @Override
+            protected void hadSuccess() {
+                log.trace("Fire name change from" + oldName + " to: " + newName);
+                fireDisplayNameChange(oldName, newName); 
+            }
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        worker.execute();
     }
-    
-    @Override
-    protected void createPasteTypes(Transferable t, List<PasteType> s) {
-        super.createPasteTypes(t, s);
-        PasteType p = getDropType(t, 0, 0);
-        if (p != null) {
-            s.add(p);
-        }
+
+    public Map<String, org.janelia.it.workstation.gui.framework.actions.Action> getOntologyActionMap() {
+        return ontologyActionMap;
     }
 }

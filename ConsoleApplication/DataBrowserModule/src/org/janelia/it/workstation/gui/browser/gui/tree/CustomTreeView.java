@@ -4,6 +4,7 @@ import java.awt.Rectangle;
 import java.awt.event.KeyListener;
 import java.beans.PropertyVetoException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -113,6 +114,15 @@ public class CustomTreeView extends BeanTreeView {
         }
     }
 
+    public List<Long[]> getSelectedPaths() {
+        ExplorerManager mgr = explorerManagerProvider.getExplorerManager();
+        List<Long[]> paths = new ArrayList<>();
+        for(Node node : mgr.getSelectedNodes()) {
+                paths.add(NodeUtils.createIdPath(node));
+        }
+        return paths;
+    }
+    
     public List<Long[]> getExpandedPaths() {
 
         List<Long[]> result = new ArrayList<>();
@@ -139,6 +149,23 @@ public class CustomTreeView extends BeanTreeView {
         try {
             Node[] nodes = { node };
             mgr.setSelectedNodes(nodes);
+        }
+        catch (PropertyVetoException e) {
+            log.error("Node selection was vetoed",e);
+        }
+    }
+    
+    public void selectPaths(List<Long[]> paths) {
+        ExplorerManager mgr = explorerManagerProvider.getExplorerManager();
+        try {
+            List<Node> nodes = new ArrayList<>();
+            for(Long[] path : paths) {
+                Node node = NodeUtils.findNodeWithPath(mgr.getRootContext(), path);
+                nodes.add(node);
+            }        
+            Node[] ar = new Node[nodes.size()];
+            nodes.toArray(ar);
+            mgr.setSelectedNodes(ar);
         }
         catch (PropertyVetoException e) {
             log.error("Node selection was vetoed",e);
@@ -184,10 +211,10 @@ public class CustomTreeView extends BeanTreeView {
     /** 
      * Expand all the given paths.
      */
-    public void expand(List<Long[]> exPaths) {
-        for (Iterator<Long[]> it = exPaths.iterator(); it.hasNext();) {
-            Long[] sp = it.next();
-            TreePath tp = idPath2TreePath(sp);
+    public void expand(List<Long[]> paths) {
+        for (Iterator<Long[]> it = paths.iterator(); it.hasNext();) {
+            Long[] path = it.next();
+            TreePath tp = getTreePath(path);
             log.debug("Expanding {}",tp);
             if (tp != null) {
                 expand(tp);
@@ -195,8 +222,8 @@ public class CustomTreeView extends BeanTreeView {
         }
     }
 
-    private TreePath idPath2TreePath(Long[] sp) {
-        Node n = NodeUtils.findNodeWithPath(getRootNode(), sp);
+    private TreePath getTreePath(Long[] path) {
+        Node n = NodeUtils.findNodeWithPath(getRootNode(), path);
         if (n==null) return null;
 
         LinkedList<TreeNode> treeNodes = new LinkedList<>();

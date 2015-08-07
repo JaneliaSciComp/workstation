@@ -58,8 +58,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
 
     private final static Logger log = LoggerFactory.getLogger(DomainObjectNode.class);
 
-    protected final ChildFactory parentChildFactory;
-
+    private final ChildFactory parentChildFactory;
     private final InstanceContent lookupContents;
 
     public DomainObjectNode(ChildFactory parentChildFactory, Children children, DomainObject domainObject) {

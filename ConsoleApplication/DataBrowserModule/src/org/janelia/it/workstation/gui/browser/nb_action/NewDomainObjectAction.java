@@ -9,7 +9,6 @@ import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
-import org.openide.util.actions.Presenter;
 
 /**
  * This action allows the user to create new domain objects underneath an 
@@ -18,7 +17,7 @@ import org.openide.util.actions.Presenter;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public final class NewDomainObjectAction extends NodeAction implements Presenter.Popup {
+public final class NewDomainObjectAction extends NodeAction {
 
     private final static NewDomainObjectAction singleton = new NewDomainObjectAction();
     public static NewDomainObjectAction get() {
