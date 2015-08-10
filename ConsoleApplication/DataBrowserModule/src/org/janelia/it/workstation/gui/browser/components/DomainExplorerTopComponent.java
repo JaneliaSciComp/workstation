@@ -61,8 +61,7 @@ import org.slf4j.LoggerFactory;
 )
 @Messages({
     "CTL_DomainExplorerAction=Domain Explorer",
-    "CTL_DomainExplorerTopComponent=Domain Explorer",
-    "HINT_DomainExplorerTopComponent=Browse the data"
+    "CTL_DomainExplorerTopComponent=Domain Explorer"
 })
 public final class DomainExplorerTopComponent extends TopComponent implements ExplorerManager.Provider, LookupListener {
 
@@ -91,7 +90,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         selectionModel.setSource(this);
         
         setName(Bundle.CTL_DomainExplorerTopComponent());
-        setToolTipText(Bundle.HINT_DomainExplorerTopComponent());
         
         Lookup lookup = new ProxyLookup (ExplorerUtils.createLookup(mgr, getActionMap()), Lookups.singleton(selectionModel));
         associateLookup(lookup);
@@ -108,6 +106,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         mgr.setRootContext(root);
         
         CustomTreeToolbar toolbar = new CustomTreeToolbar(beanTreeView) {
+            @Override
             protected void refresh() {
                 DomainExplorerTopComponent.this.refresh();
             }

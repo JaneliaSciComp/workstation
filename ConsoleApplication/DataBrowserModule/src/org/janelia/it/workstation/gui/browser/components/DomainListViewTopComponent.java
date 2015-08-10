@@ -46,8 +46,7 @@ import org.slf4j.LoggerFactory;
 )
 @Messages({
     "CTL_DomainListViewAction=Domain Browser",
-    "CTL_DomainListViewTopComponent=Domain Browser",
-    "HINT_DomainListViewTopComponent=Domain Browser"
+    "CTL_DomainListViewTopComponent=Domain Browser"
 })
 public final class DomainListViewTopComponent extends TopComponent {
 
@@ -76,7 +75,6 @@ public final class DomainListViewTopComponent extends TopComponent {
     public DomainListViewTopComponent() {
         initComponents();
         setName(Bundle.CTL_DomainListViewTopComponent());
-        setToolTipText(Bundle.HINT_DomainListViewTopComponent());
         associateLookup(new AbstractLookup(content));
     }
     

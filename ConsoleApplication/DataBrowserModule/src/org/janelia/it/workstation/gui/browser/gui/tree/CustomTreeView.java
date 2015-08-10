@@ -4,16 +4,17 @@ import java.awt.Rectangle;
 import java.awt.event.KeyListener;
 import java.beans.PropertyVetoException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
 import javax.swing.text.Position;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerManager.Provider;
@@ -136,7 +137,7 @@ public class CustomTreeView extends BeanTreeView {
         if (node==null) return;
         ExplorerManager mgr = explorerManagerProvider.getExplorerManager();
         try {
-            log.info("Selecting node: {}",node.getDisplayName());
+            log.debug("Selecting node: {}",node.getDisplayName());
             Node[] nodes = { node };
             mgr.setSelectedNodes(nodes);
         }
@@ -151,7 +152,7 @@ public class CustomTreeView extends BeanTreeView {
             List<Node> nodes = new ArrayList<>();
             for(Long[] path : paths) {
                 Node node = NodeUtils.findNodeWithPath(mgr.getRootContext(), path);
-                log.info("Selecting node: {}",node.getDisplayName());
+                log.debug("Selecting node: {}",node.getDisplayName());
                 nodes.add(node);
             }        
             Node[] ar = new Node[nodes.size()];
@@ -231,9 +232,11 @@ public class CustomTreeView extends BeanTreeView {
     
     public void replaceKeyListeners(KeyListener newListener) {
         for(KeyListener listener : getKeyListeners()) {
+            log.debug("Removing from BeanTreeView: "+listener);
             removeKeyListener(listener);
         }
         for(KeyListener listener : tree.getKeyListeners()) {
+            log.debug("Removing from JTree: "+listener);
             tree.removeKeyListener(listener);
         }
         tree.addKeyListener(newListener);

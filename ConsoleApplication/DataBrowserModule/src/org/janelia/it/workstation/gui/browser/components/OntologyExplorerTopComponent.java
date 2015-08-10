@@ -96,8 +96,7 @@ import org.slf4j.LoggerFactory;
 )
 @Messages({
     "CTL_OntologyExplorerAction=Ontology Explorer",
-    "CTL_OntologyExplorerTopComponent=Ontology Explorer",
-    "HINT_OntologyExplorerTopComponent=Use ontologies to annotate your data"
+    "CTL_OntologyExplorerTopComponent=Ontology Explorer"
 })
 public final class OntologyExplorerTopComponent extends TopComponent implements ExplorerManager.Provider {
 
@@ -130,8 +129,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         this.beanTreeView = new CustomTreeView(this);
         
         setName(Bundle.CTL_OntologyExplorerTopComponent());
-        
-        setToolTipText(Bundle.HINT_OntologyExplorerTopComponent());
         associateLookup(ExplorerUtils.createLookup(mgr, getActionMap()));
 
         ActionMap map = this.getActionMap();
@@ -141,6 +138,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         map.put("delete", ExplorerUtils.actionDelete(mgr, true)); 
         
         CustomTreeToolbar toolbar = new CustomTreeToolbar(beanTreeView) {
+            @Override
             protected void refresh() {
                 OntologyExplorerTopComponent.this.refresh();
             }
@@ -162,16 +160,16 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     }
                     
                     KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-
                     Node currNode = beanTreeView.getCurrentNode();
                     
                     if (recordingKeyBinds && ontologyNode!=null && currNode!=null) {
                         
-                        log.info("User pressed "+e.getKeyChar());
+                        log.debug("User pressed "+e.getKeyChar());
+                        e.consume();
                     
                         if (currNode instanceof OntologyTermNode) {
                             
-                            log.info("Current node: {}",currNode.getDisplayName());
+                            log.debug("Rebinding current node: {}",currNode.getDisplayName());
                             Action action = ontologyNode.getActionForNode((OntologyTermNode)currNode);
     
                             if (action == null) {
@@ -201,7 +199,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                             // Move to the next row
                             beanTreeView.navigateToNextRow();
                         }
-
                     }
                     else {
                         SessionMgr.getKeyBindings().executeBinding(shortcut);
@@ -209,8 +206,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 }
             }
         };
-
-        beanTreeView.replaceKeyListeners(keyListener);
         
         // Prepare the key binding dialog box
         this.keyBindDialog = new KeyBindDialog();
@@ -310,17 +305,21 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public void selectOntology(OntologySelectionEvent event) {
         Long ontologyId = event.getOntologyId();
         log.trace("selectOntology({})",ontologyId);
+        selectOntology(ontologyId, true);
+    }
+    
+    public void selectOntology(Long ontologyId, boolean expandAll) {
         if (ontologyId==null) {
-            showOntology(null);
+            showOntology(null, expandAll);
         }
         else {
             for (Ontology ontology : ontologies) {
-                if (ontology.getId().equals(event.getOntologyId())) {
-                    showOntology(ontology);
+                if (ontology.getId().equals(ontologyId)) {
+                    showOntology(ontology, expandAll);
                     return;
                 }
             }
-            log.warn("Ontology not found: {}",event.getOntologyId());
+            log.warn("Ontology not found: {}",ontologyId);
         }
     }
     
@@ -359,7 +358,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             protected void hadSuccess() {
                 try {
                     if (ontologyNode!=null) {
-                        showOntology(ontologyNode.getOntology());
+                        selectOntology(ontologyNode.getId(), false);
                         if (restoreState) {
                             beanTreeView.expand(expanded);
                             beanTreeView.selectPaths(selected);
@@ -399,7 +398,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         Collections.sort(ontologies, new DomainObjectComparator());
     }
 
-    private void showOntology(Ontology ontology) {
+    private void showOntology(Ontology ontology, final boolean expandAll) {
         log.trace("showOntology({})",ontology);
         if (ontology==null) {
             ontologyNode = null;
@@ -415,7 +414,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                beanTreeView.expandAll();
+                if (expandAll) beanTreeView.expandAll();
+                beanTreeView.replaceKeyListeners(keyListener);
             }
         });
     }
