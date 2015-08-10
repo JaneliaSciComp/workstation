@@ -15,9 +15,9 @@ import java.util.List;
 /**
  * Created by murphys on 7/20/2015.
  */
-public class ArrayCubeActor extends SparseVolumeBaseActor
+public class ArrayCubeGLActor extends SparseVolumeBaseActor
 {
-    private final Logger logger = LoggerFactory.getLogger(ArrayCubeActor.class);
+    private final Logger logger = LoggerFactory.getLogger(ArrayCubeGLActor.class);
     
     int downsampleLevel=1;
     int maxVoxels;
@@ -27,7 +27,7 @@ public class ArrayCubeActor extends SparseVolumeBaseActor
 
     public List<viGroup> voxelList=new ArrayList<>();
 
-    public ArrayCubeActor(File volumeFile, int volumeChannel, float volumeCutoff, int maxVoxels) {
+    public ArrayCubeGLActor(File volumeFile, int volumeChannel, float volumeCutoff, int maxVoxels) {
         super(volumeFile, volumeChannel, volumeCutoff);
         this.maxVoxels=maxVoxels;
     }

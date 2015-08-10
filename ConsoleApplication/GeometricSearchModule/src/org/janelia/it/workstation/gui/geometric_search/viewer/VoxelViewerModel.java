@@ -5,6 +5,8 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicCamera3d;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.ActorModel;
+import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.DatasetModel;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderActionSequence;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4SimpleActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GLDisplayUpdateCallback;
@@ -13,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL4;
-import javax.media.opengl.GLDrawable;
 import java.util.*;
 
 /**
@@ -45,6 +46,9 @@ public class VoxelViewerModel {
     VoxelViewerProperties properties;
     VoxelViewerGLPanel viewer;
 
+    DatasetModel datasetModel=new DatasetModel();
+    ActorModel actorModel=new ActorModel();
+
     public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 2.0;
 
     public int maxActorIndex=0;
@@ -54,6 +58,14 @@ public class VoxelViewerModel {
         camera3d = new BasicObservableCamera3d();
         camera3d.setFocus(0.0,0.0,0.5);
         cameraDepth = new Vec3(0.0, 0.0, DEFAULT_CAMERA_FOCUS_DISTANCE);
+    }
+
+    public ActorModel getActorModel() {
+        return actorModel;
+    }
+
+    public DatasetModel getDatasetModel() {
+        return datasetModel;
     }
 
     public int getNextActorIndex() {
@@ -150,9 +162,9 @@ public class VoxelViewerModel {
 
     public void addActor(GL4SimpleActor actor) {
         synchronized (this) {
-            if (actor instanceof ArrayCubeActor) {
+            if (actor instanceof ArrayCubeGLActor) {
                 denseVolumeShaderActionSequence.getActorSequence().add(actor);
-            } else if (actor instanceof ArrayMeshActor) {
+            } else if (actor instanceof ArrayMeshGLActor) {
                 meshShaderActionSequence.getActorSequence().add(actor);
             }
         }

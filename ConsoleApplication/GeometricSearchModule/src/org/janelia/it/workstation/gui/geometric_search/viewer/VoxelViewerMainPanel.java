@@ -25,9 +25,31 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     VoxelViewerData data;
     TransferHandler transferHandler;
 
+    JPanel datasetManagementPanel = new JPanel();
+    JPanel actorManagermentPanel = new JPanel();
+
+
     public VoxelViewerMainPanel() {
-        JPanel tablePanel = createScrollableTablePanel();
-        add(tablePanel, BorderLayout.WEST);
+
+        // Dataset Panel
+        datasetManagementPanel.setLayout(new BoxLayout(datasetManagementPanel, BoxLayout.X_AXIS));
+
+        JPanel datasetPanel = createScrollableTablePanel();
+        JPanel renderablePanel = createScrollableTablePanel();
+
+        datasetManagementPanel.add(datasetPanel);
+        datasetManagementPanel.add(renderablePanel);
+
+        add(datasetManagementPanel, BorderLayout.WEST);
+
+        // Actor Panel
+        actorManagermentPanel.setLayout(new BoxLayout(actorManagermentPanel, BoxLayout.X_AXIS));
+
+        JPanel actorPanel = createScrollableTablePanel();
+        actorManagermentPanel.add(actorPanel);
+
+        add(actorManagermentPanel, BorderLayout.EAST);
+
         controller = new VoxelViewerBasicController();
     }
 
@@ -81,7 +103,8 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
         //===========================================
 
-       add(viewer, BorderLayout.CENTER);
+        add(viewer, BorderLayout.CENTER);
+        add(actorManagermentPanel, BorderLayout.EAST);
 
     }
 
@@ -117,7 +140,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane(rowPanel);
         scrollPane.setPreferredSize(new Dimension(250, 800));
-        for (int i=0;i<100;i++) {
+        for (int i=0;i<10;i++) {
             JButton l = new JButton("Hello there="+i);
             l.putClientProperty("Synthetica.opaque", Boolean.FALSE);
             l.setBorder(BorderFactory.createBevelBorder(1));
