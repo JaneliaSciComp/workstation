@@ -81,7 +81,8 @@ public class NodeUtils {
             }
         }
         else {
-            throw new IllegalArgumentException("Unsupported node type: "+node.getClass());
+            log.warn("Unsupported node type: {}",node.getClass());
+            return null;
         }
 
         Long[] res = new Long[ar.size()];

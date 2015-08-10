@@ -238,7 +238,7 @@ public final class ModelMgr {
         return ontologyElementTreeSet;
     }
 
-    public List<Entity> ontologyWalker(List<Entity> list) {
+    private List<Entity> ontologyWalker(List<Entity> list) {
         List<Entity> finalList = new ArrayList<>();
         finalList.addAll(list);
         for (Entity entity : list) {

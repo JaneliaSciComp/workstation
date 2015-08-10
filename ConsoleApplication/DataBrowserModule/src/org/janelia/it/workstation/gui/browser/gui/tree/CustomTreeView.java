@@ -74,24 +74,12 @@ public class CustomTreeView extends BeanTreeView {
     }
     
     public void navigateToNextRow() {
-        ExplorerManager mgr = explorerManagerProvider.getExplorerManager();
-        Node curr = mgr.getSelectedNodes()[0];
-        Node parent = curr.getParentNode();
-        boolean selectNext = false;
-        if (parent!=null) {
-            for(Node child : parent.getChildren().getNodes()) {
-                if (selectNext) {
-                    selectNode(child);
-                    return;
-                }
-                if (child.equals(curr)) {
-                    selectNext = true;
-                }
-            }
-        }
-        selectTopNode();
+        Node curr = getCurrentNode();
+        CustomTreeFind find = new CustomTreeFind(this, null, curr, Position.Bias.Forward, true);
+        Node node = find.find();
+        selectNode(node);
     }
-    
+        
     public void scrollToTop() {
         tree.scrollRowToVisible(0);
     }
@@ -118,7 +106,8 @@ public class CustomTreeView extends BeanTreeView {
         ExplorerManager mgr = explorerManagerProvider.getExplorerManager();
         List<Long[]> paths = new ArrayList<>();
         for(Node node : mgr.getSelectedNodes()) {
-                paths.add(NodeUtils.createIdPath(node));
+            Long[] path = NodeUtils.createIdPath(node);
+            if (path!=null) paths.add(path);
         }
         return paths;
     }
@@ -147,6 +136,7 @@ public class CustomTreeView extends BeanTreeView {
         if (node==null) return;
         ExplorerManager mgr = explorerManagerProvider.getExplorerManager();
         try {
+            log.info("Selecting node: {}",node.getDisplayName());
             Node[] nodes = { node };
             mgr.setSelectedNodes(nodes);
         }
@@ -161,6 +151,7 @@ public class CustomTreeView extends BeanTreeView {
             List<Node> nodes = new ArrayList<>();
             for(Long[] path : paths) {
                 Node node = NodeUtils.findNodeWithPath(mgr.getRootContext(), path);
+                log.info("Selecting node: {}",node.getDisplayName());
                 nodes.add(node);
             }        
             Node[] ar = new Node[nodes.size()];
@@ -239,7 +230,7 @@ public class CustomTreeView extends BeanTreeView {
     }
     
     public void replaceKeyListeners(KeyListener newListener) {
-        for( KeyListener listener : getKeyListeners()) {
+        for(KeyListener listener : getKeyListeners()) {
             removeKeyListener(listener);
         }
         for(KeyListener listener : tree.getKeyListeners()) {

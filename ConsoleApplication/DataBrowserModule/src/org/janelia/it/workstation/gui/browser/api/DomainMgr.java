@@ -10,21 +10,24 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
  */
 public class DomainMgr {
     
+    // Singleton
+    private static final DomainMgr instance = new DomainMgr();
+    public static DomainMgr getDomainMgr() {
+        return instance;
+    }
+    
     protected static final String MONGO_SERVER_URL = "mongo-db";
     protected static final String MONGO_DATABASE = "jacs";
     protected static final String MONGO_USERNAME = "flyportal";
     protected static final String MONGO_PASSWORD = "flyportal";
     
-    private static DomainMgr instance;
-    
-    public static DomainMgr getDomainMgr() {
-        if (instance == null) {
-            instance = new DomainMgr();
-        }
-        return instance;
-    }
     
     private DomainDAO dao;
+    
+    private DomainMgr() {
+    
+    }
+    
     
     public DomainDAO getDao() {
         if (dao == null) {

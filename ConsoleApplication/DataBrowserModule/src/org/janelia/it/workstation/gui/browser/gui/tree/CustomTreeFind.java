@@ -51,7 +51,7 @@ public class CustomTreeFind {
     public CustomTreeFind(CustomTreeView customTreeView, String searchString, Node startingNode, 
     		Bias bias, boolean skipStartingNode) {
         this.dynamicTree = customTreeView;
-        this.searchString = searchString.toUpperCase();
+        this.searchString = searchString==null?null:searchString.toUpperCase();
         this.startingNode = startingNode==null?customTreeView.getRootNode():startingNode;
         this.bias = bias == null ? Bias.Forward : bias;
         this.skipStartingNode = skipStartingNode;
@@ -130,7 +130,7 @@ public class CustomTreeFind {
         }
 
         String name = currNode.getDisplayName();
-        if (name.toUpperCase().contains(searchString)) {
+        if (searchString==null || name.toUpperCase().contains(searchString)) {
             // Found a match
             
             if (looking && (!skipStartingNode || (skipStartingNode && !currNode.equals(startingNode)))) {

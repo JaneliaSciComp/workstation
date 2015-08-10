@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.components;
 
+import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
@@ -17,8 +18,10 @@ import java.util.concurrent.Callable;
 import javax.swing.ActionMap;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
@@ -33,12 +36,16 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.selection.OntologySelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.AutoAnnotationPermissionDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.BulkAnnotationPermissionDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.KeyBindDialog;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectComparator;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
+import org.janelia.it.workstation.gui.browser.nodes.EmptyNode;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
@@ -61,7 +68,6 @@ import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
 import org.openide.nodes.Node;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.RequestProcessor;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,6 +109,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         return (OntologyExplorerTopComponent)WindowLocator.getByName(OntologyExplorerTopComponent.TC_NAME);
     }
     
+    private final JPanel treePanel;
     private final CustomTreeView beanTreeView;
     private final ExplorerManager mgr = new ExplorerManager();
     private final KeyListener keyListener;
@@ -112,7 +119,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     
     private final List<Ontology> ontologies = new ArrayList<>();
     
-    private Ontology currOntology;
     private OntologyNode ontologyNode;
     private boolean recordingKeyBinds = false;
     
@@ -120,6 +126,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public OntologyExplorerTopComponent() {
         initComponents();
         
+        this.treePanel = new JPanel(new BorderLayout());
         this.beanTreeView = new CustomTreeView(this);
         
         setName(Bundle.CTL_OntologyExplorerTopComponent());
@@ -139,6 +146,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             }
         };
         add(toolbar, BorderLayout.PAGE_START);
+        add(treePanel, BorderLayout.CENTER);
+        add(getBottomToolbar(), BorderLayout.PAGE_END);
         
         this.bulkAnnotationDialog = new BulkAnnotationPermissionDialog();
         this.autoAnnotationDialog = new AutoAnnotationPermissionDialog();
@@ -156,13 +165,13 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
 
                     Node currNode = beanTreeView.getCurrentNode();
                     
-                    log.info("User pressed "+e.getKeyChar());
-                    
                     if (recordingKeyBinds && ontologyNode!=null && currNode!=null) {
                         
-                        log.info("Current node: {}",currNode.getDisplayName());
+                        log.info("User pressed "+e.getKeyChar());
                     
                         if (currNode instanceof OntologyTermNode) {
+                            
+                            log.info("Current node: {}",currNode.getDisplayName());
                             Action action = ontologyNode.getActionForNode((OntologyTermNode)currNode);
     
                             if (action == null) {
@@ -179,11 +188,20 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                             }
     
                             // Refresh the entire tree (another key bind may have been overridden)
-                            refresh();
+                            refresh(true, new Callable<Void>() {
+                                @Override
+                                public Void call() throws Exception {
+                                    // Move to the next row
+                                    beanTreeView.navigateToNextRow();
+                                    return null;
+                                }
+                            });
+                        }
+                        else {
+                            // Move to the next row
+                            beanTreeView.navigateToNextRow();
                         }
 
-                        // Move to the next row
-                        beanTreeView.navigateToNextRow();
                     }
                     else {
                         SessionMgr.getKeyBindings().executeBinding(shortcut);
@@ -195,7 +213,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         beanTreeView.replaceKeyListeners(keyListener);
         
         // Prepare the key binding dialog box
-        // TODO: fix this
         this.keyBindDialog = new KeyBindDialog();
         keyBindDialog.pack();
 
@@ -206,58 +223,28 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             }
         });
         
-        RequestProcessor.getDefault().post(new Runnable() {
+        showLoadingIndicator();
+                
+        SimpleWorker worker = new SimpleWorker() {
+
             @Override
-            public void run() {
+            protected void doStuff() throws Exception {
                 loadOntologies();
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        beanTreeView.expandAll();
-                    }
-                });
             }
-        });
-    }
 
-    private void loadOntologies() {
-
-        ontologies.clear();
-        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-        for (Ontology ontology : dao.getOntologies(SessionMgr.getSubjectKey())) {
-            ontologies.add(ontology);
-            if (currOntology==null && ontology.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
-                currOntology = ontology;
-            }
-        }
-        Collections.sort(ontologies, new DomainObjectComparator());
-
-        SwingUtilities.invokeLater(new Runnable() {
             @Override
-            public void run() {
-                if (currOntology!=null) {
-                    loadOntology(currOntology);
-                }
-                // Refresh popup menu
-                add(getBottomToolbar(), BorderLayout.PAGE_END);
+            protected void hadSuccess() {
+                Long ontologyId = StateMgr.getStateMgr().getCurrentOntologyId();
+                Events.getInstance().postOnEventBus(new OntologySelectionEvent(ontologyId));
             }
-        });
-    }
 
-    private void loadOntology(Ontology ontology) {
-        this.currOntology = ontology;
-        if (ontology==null) {
-            remove(beanTreeView);
-        }
-        else {
-            ontologyNode = new OntologyNode(ontology);
-            mgr.setRootContext(ontologyNode);
-            
-            SessionMgr.getKeyBindings().loadOntologyKeybinds(ontology.getId(), ontologyNode.getOntologyActionMap());
-            
-            add(beanTreeView, BorderLayout.CENTER);
-        }
-        revalidate();
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        
+        worker.execute();
     }
     
     /**
@@ -277,12 +264,12 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        Events.getInstance().registerOnEventBus(this);
     }
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
+        Events.getInstance().unregisterOnEventBus(this);
     }
 
     void writeProperties(java.util.Properties p) {
@@ -298,6 +285,44 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     }
     
     // Custom methods
+    
+    public void showNothing() {
+        treePanel.removeAll();
+        revalidate();
+        repaint();
+    }
+
+    public void showLoadingIndicator() {
+        treePanel.removeAll();
+        treePanel.add(new JLabel(Icons.getLoadingIcon()));
+        revalidate();
+        repaint();
+    }
+
+    public void showTree() {
+        treePanel.removeAll();
+        treePanel.add(beanTreeView);
+        revalidate();
+        repaint();
+    }
+    
+    @Subscribe
+    public void selectOntology(OntologySelectionEvent event) {
+        Long ontologyId = event.getOntologyId();
+        log.trace("selectOntology({})",ontologyId);
+        if (ontologyId==null) {
+            showOntology(null);
+        }
+        else {
+            for (Ontology ontology : ontologies) {
+                if (ontology.getId().equals(event.getOntologyId())) {
+                    showOntology(ontology);
+                    return;
+                }
+            }
+            log.warn("Ontology not found: {}",event.getOntologyId());
+        }
+    }
     
     public KeyBindDialog getKeyBindDialog() {
         return keyBindDialog;
@@ -317,9 +342,11 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     }
     
     public void refresh(final boolean restoreState, final Callable<Void> success) {
-                        
-        final List<Long[]> expanded = restoreState ? beanTreeView.getExpandedPaths() : null;
-        final List<Long[]> selected = restoreState ? beanTreeView.getSelectedPaths() : null;
+        
+        log.info("refresh(restoreState={})",restoreState);
+        
+        final List<Long[]> expanded = ontologyNode!=null && restoreState ? beanTreeView.getExpandedPaths() : null;
+        final List<Long[]> selected = ontologyNode!=null && restoreState ? beanTreeView.getSelectedPaths() : null;
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -331,10 +358,14 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             @Override
             protected void hadSuccess() {
                 try {
-                    if (restoreState) {
-                        beanTreeView.expand(expanded);
-                        beanTreeView.selectPaths(selected);
+                    if (ontologyNode!=null) {
+                        showOntology(ontologyNode.getOntology());
+                        if (restoreState) {
+                            beanTreeView.expand(expanded);
+                            beanTreeView.selectPaths(selected);
+                        }
                     }
+                    beanTreeView.grabFocus();
                     ConcurrentUtils.invoke(success);
                 }
                 catch (Exception e) {
@@ -355,15 +386,41 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         if (ontologyNode==null) return null;
         Node node = NodeUtils.findNodeWithPath(ontologyNode, idPath);
         log.info("Found node with path {}: {}",NodeUtils.createPathString(idPath),node.getDisplayName());
-        selectNode(node);
+        beanTreeView.selectNode(node);
         return (OntologyTermNode)node;
     }
     
-    public void selectNode(Node node) {
-        beanTreeView.selectNode(node);
+    private void loadOntologies() {
+        ontologies.clear();
+        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
+        for (Ontology ontology : dao.getOntologies(SessionMgr.getSubjectKey())) {
+            ontologies.add(ontology);
+        }
+        Collections.sort(ontologies, new DomainObjectComparator());
+    }
+
+    private void showOntology(Ontology ontology) {
+        log.trace("showOntology({})",ontology);
+        if (ontology==null) {
+            ontologyNode = null;
+            mgr.setRootContext(new EmptyNode("No ontology selected"));
+            showNothing();
+        }
+        else {
+            ontologyNode = new OntologyNode(ontology);
+            SessionMgr.getKeyBindings().loadOntologyKeybinds(ontology.getId(), ontologyNode.getOntologyActionMap());
+            mgr.setRootContext(ontologyNode);
+            showTree();
+        }
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                beanTreeView.expandAll();
+            }
+        });
     }
     
-    protected JToolBar getBottomToolbar() {
+    private JToolBar getBottomToolbar() {
 
         final Component mainFrame = SessionMgr.getMainFrame();
     
@@ -383,6 +440,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     final JScrollPopupMenu ontologyListMenu = new JScrollPopupMenu();
                     ontologyListMenu.setMaximumVisibleRows(50);
 
+                    Long currOntologyId = StateMgr.getStateMgr().getCurrentOntologyId();
+                
                     for (final Ontology ontology : ontologies) {
                         Subject subject = null;
                         try {
@@ -392,15 +451,13 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                             log.error("Error getting subject: "+ontology.getOwnerKey(),ex);
                         }
                         String owner = subject==null?ontology.getOwnerKey():subject.getFullName();
-                        boolean checked = currOntology != null && ontology.getId().equals(currOntology.getId());
+                        boolean checked = currOntologyId != null && ontology.getId().equals(currOntologyId);
                         JMenuItem roleMenuItem = new JCheckBoxMenuItem(ontology.getName() + " (" + owner + ")", checked);
                         String iconName = DomainUtils.isOwner(ontology)?"folder.png":"folder_blue.png";
                         roleMenuItem.setIcon(Icons.getIcon(iconName));
                         roleMenuItem.addActionListener(new ActionListener() {
                             public void actionPerformed(ActionEvent e) {
-                                // TODO: use events, like before
-                                //ModelMgr.getModelMgr().setCurrentOntologyId(ontology.getId());
-                                loadOntology(ontology);
+                                StateMgr.getStateMgr().setCurrentOntologyId(ontology.getId());
                             }
                         });
                         ontologyListMenu.add(roleMenuItem);
@@ -417,7 +474,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                         }
                     });
                     ontologyListMenu.add(addMenuItem);
-
+                    
                     JMenuItem loadOwlItem = new JMenuItem("Load OWL File...");
                     loadOwlItem.setIcon(Icons.getIcon("folder_add.png"));
                     loadOwlItem.addActionListener(new ActionListener() {
