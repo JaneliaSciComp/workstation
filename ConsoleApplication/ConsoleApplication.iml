@@ -20,12 +20,28 @@
       <sourceFolder url="file://$MODULE_DIR$/SlideView/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/DataViewModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/GeometricSearchModule/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/AlignmentBoardModule/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ConsoleModule/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ConsoleWrapper/build" />
+      <excludeFolder url="file://$MODULE_DIR$/DataViewModule/build" />
+      <excludeFolder url="file://$MODULE_DIR$/GLViewerTools/build" />
       <excludeFolder url="file://$MODULE_DIR$/GLViewerTools/src" />
+      <excludeFolder url="file://$MODULE_DIR$/GeometricSearchModule/build" />
+      <excludeFolder url="file://$MODULE_DIR$/Geometry3d/build" />
       <excludeFolder url="file://$MODULE_DIR$/Geometry3d/src" />
+      <excludeFolder url="file://$MODULE_DIR$/HortaTracer/build" />
       <excludeFolder url="file://$MODULE_DIR$/HortaTracer/src" />
+      <excludeFolder url="file://$MODULE_DIR$/Jogl213/build" />
       <excludeFolder url="file://$MODULE_DIR$/Jogl213/src" />
+      <excludeFolder url="file://$MODULE_DIR$/Jogl224Lib/build" />
       <excludeFolder url="file://$MODULE_DIR$/Jogl224Lib/src" />
+      <excludeFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/build" />
+      <excludeFolder url="file://$MODULE_DIR$/SceneWindow/build" />
       <excludeFolder url="file://$MODULE_DIR$/SceneWindow/src" />
+      <excludeFolder url="file://$MODULE_DIR$/SharedModelComputeWrapper/build" />
+      <excludeFolder url="file://$MODULE_DIR$/SlideView/build" />
+      <excludeFolder url="file://$MODULE_DIR$/SplitPickingModule/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/build" />
       <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/src" />
     </content>
     <orderEntry type="inheritedJdk" />
