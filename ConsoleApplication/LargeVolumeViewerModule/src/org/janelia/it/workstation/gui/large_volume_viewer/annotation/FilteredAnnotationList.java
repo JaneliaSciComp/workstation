@@ -78,9 +78,7 @@ public class FilteredAnnotationList extends JPanel {
 
         // set up model & data-related stuff
         model = annotationModel.getFilteredAnnotationModel();
-//                new FilteredAnnotationModel();
         setupFilters();
-
 
         // GUI stuff
         setupUI();
@@ -96,7 +94,8 @@ public class FilteredAnnotationList extends JPanel {
 
 
         // single-click selects annotation, and
-        //  double-click shifts camera to annotation
+        //  double-click shifts camera to annotation, except if you
+        //  double-click note, then you get the edit/delete note dialog
         filteredTable.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
                 JTable table = (JTable) me.getSource();
@@ -107,11 +106,20 @@ public class FilteredAnnotationList extends JPanel {
                         InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
                         annoSelectListener.annotationSelected(ann.getAnnotationID());
                     } else if (me.getClickCount() == 2) {
-                        if (panListener != null) {
-                            InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
-                            TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getAnnotationID());
-                            if (ann != null) {
-                                panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                        // which column?
+                        int viewColumn = table.columnAtPoint(me.getPoint());
+                        int modelColumn = table.convertColumnIndexToModel(viewColumn);
+                        InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
+                        TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getAnnotationID());
+                        if (modelColumn == 2) {
+                            // double-click note: edit note dialog
+                            editNoteRequestedListener.editNote(ann);
+                        } else {
+                            // everyone else, shift camera to annotation
+                            if (panListener != null) {
+                                if (ann != null) {
+                                    panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                                }
                             }
                         }
                     }
@@ -122,7 +130,6 @@ public class FilteredAnnotationList extends JPanel {
         // set the current filter late, after both the filters and UI are
         //  set up
         setCurrentFilter(filters.get("default"));
-
     }
 
 
