@@ -1978,43 +1978,42 @@ public class EntityContextMenu extends JPopupMenu {
         final String entityType = rootedEntity.getEntity().getEntityTypeName();
         if (entityType.equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             JMenuItem menuItem = new JMenuItem("  Edit sample path");
-
             menuItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println("editing path for " + rootedEntity.getName());
-
-
-
-                    // going to have to do some db access in UI thread;
-                    // get entity, current path
-
-
-                    // pop dialog with current path
-                    String editedPath = (String) JOptionPane.showInputDialog(
+                    final String editedPath = (String) JOptionPane.showInputDialog(
                             mainFrame,
-                            "Neuron name:",
-                            "Name neuron",
+                            "New Linux path to sample:",
+                            "Edit sample path",
                             JOptionPane.PLAIN_MESSAGE,
                             null, // icon
                             null, // choice list
-                            "");  // input value
+                            rootedEntity.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH) // input value
+                            );
                     if (editedPath == null || editedPath.length() == 0) {
+                        // canceled
                         return;
                     } else {
+                        final Entity sampleEntity = rootedEntity.getEntity();
+                        SimpleWorker saver = new SimpleWorker() {
+                            @Override
+                            protected void doStuff() throws Exception {
+                                sampleEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH, editedPath);
+                                ModelMgr.getModelMgr().saveOrUpdateEntity(sampleEntity);
+                            }
 
-                        // if accept and valid-looking (not blank)
-                        // get entity again (?), set attribute, save to db
-                        // and that bit should be in diff thread?
-                        // poke UI to update?
+                            @Override
+                            protected void hadSuccess() {
+                                // blah
+                            }
 
-
+                            @Override
+                            protected void hadError(Throwable error) {
+                                SessionMgr.getSessionMgr().handleException(error);
+                            }
+                        };
+                        saver.execute();
                     }
-
-
-
-
-
                 }
             });
             return menuItem;
