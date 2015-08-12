@@ -204,6 +204,10 @@ public class FilteredAnnotationList extends JPanel {
         // default filter: interesting = has a note or isn't a straight link (ie, root, end, branch)
         filters.put("default", new OrFilter(new HasNoteFilter(), new NotFilter(new GeometryFilter(AnnotationGeometry.LINK))));
 
+        // ...and those two conditions separately:
+        filters.put("notes", new HasNoteFilter());
+        filters.put("geometry", new NotFilter(new GeometryFilter(AnnotationGeometry.LINK)));
+
 
         // endpoint that isn't marked traced or problem
         List<AnnotationFilter> tempFilters = new ArrayList<>();
@@ -303,7 +307,8 @@ public class FilteredAnnotationList extends JPanel {
         JPanel filterMenuPanel = new JPanel();
         filterMenuPanel.setLayout(new BorderLayout(2, 2));
         filterMenuPanel.add(new JLabel("Filter:"), BorderLayout.LINE_START);
-        String[] filterNames = {"default", "ends", "branches", "roots", "interesting", "review"};
+        String[] filterNames = {"default", "ends", "branches", "roots", "notes",
+            "geometry", "interesting", "review"};
         final JComboBox filterMenu = new JComboBox(filterNames);
         filterMenu.addActionListener(new ActionListener() {
             @Override
