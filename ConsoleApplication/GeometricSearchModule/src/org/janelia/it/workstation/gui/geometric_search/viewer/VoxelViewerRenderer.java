@@ -6,7 +6,10 @@ import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.UnitVec3;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderActionSequence;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderActionSequence;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4SimpleActor;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GLDisplayUpdateCallback;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,49 +18,44 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
-import org.janelia.it.workstation.gui.geometric_search.gl.GL4Shader;
-import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArrayCubeShader;
-import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArraySortShader;
-import org.janelia.it.workstation.gui.geometric_search.gl.oitarr.ArrayTransparencyContext;
+import java.util.Deque;
 
 /**
  * Created by murphys on 4/10/15.
  */
 public class VoxelViewerRenderer implements GLEventListener
 {
-    public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2000;
+    private Logger logger = LoggerFactory.getLogger(VoxelViewerRenderer.class);
 
     protected GLU glu = new GLU();
-    //protected GL4TransparencyContext tc = new GL4TransparencyContext();
-    protected ArrayTransparencyContext ac = new ArrayTransparencyContext();
-    protected List<GL4ShaderActionSequence> shaderActionList = new ArrayList<GL4ShaderActionSequence>();
-    protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
-    protected Camera3d camera;
 
-//    public static final double MAX_PIXELS_PER_VOXEL = 100000.0;
-//    public static final double MIN_PIXELS_PER_VOXEL = 0.001;
+    private VoxelViewerModel model;
+    protected Camera3d camera;
+    VoxelViewerProperties properties;
+    VoxelViewerGLPanel viewer;
+
+    protected ArrayTransparencyContext atc = new ArrayTransparencyContext();
+    protected ArraySortShader ass = new ArraySortShader(null);
+    protected GL4ShaderActionSequence assActionSequence = new GL4ShaderActionSequence("Sort Shader");
+
+    protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+
+    public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2000;
     private static final double MAX_CAMERA_FOCUS_DISTANCE = 1000000.0;
     private static final double MIN_CAMERA_FOCUS_DISTANCE = 0.001;
     private static final Vec3 UP_IN_CAMERA = new Vec3(0,1,0);
     private static double FOV_Y_DEGREES = 45.0f; 
     private float FOV_TERM = new Float(Math.tan( (Math.PI/180.0) * (FOV_Y_DEGREES/2.0) ) );
 
-
     // camera parameters
     private double widthInPixels = 1200.0;
     private double heightInPixels = 800.0;
-    private VoxelViewerModel model;
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;
 
     Matrix4 viewMatrix;
     Matrix4 projectionMatrix;
 
-    VoxelViewerProperties properties;
-
-    private Logger logger = LoggerFactory.getLogger(VoxelViewerRenderer.class);
 
     public Matrix4 getViewMatrix() {
         return viewMatrix;
@@ -69,6 +67,7 @@ public class VoxelViewerRenderer implements GLEventListener
 
     public void setProperties(VoxelViewerProperties properties) {
         this.properties=properties;
+        ass.setProperties(properties);
     }
 
     // scene objects
@@ -77,10 +76,10 @@ public class VoxelViewerRenderer implements GLEventListener
         camera=model.getCamera3d();
     }
 
-    public void addShaderAction(GL4ShaderActionSequence shaderAction) {
-        shaderActionList.add(shaderAction);
+    public void setViewer(VoxelViewerGLPanel viewer) {
+        this.viewer=viewer;
     }
-    
+
     public void setPixelDimensions(double widthInPixels, double heightInPixels) {
         this.widthInPixels=widthInPixels;
         this.heightInPixels=heightInPixels;
@@ -106,13 +105,9 @@ public class VoxelViewerRenderer implements GLEventListener
     public void dispose(GLAutoDrawable glDrawable)
     {
         final GL4 gl = glDrawable.getGL().getGL4();
-
-        for (GL4ShaderActionSequence shaderAction : shaderActionList)
-            shaderAction.dispose(gl);
-    }
-
-    public List<GL4ShaderActionSequence> getShaderActionList() {
-        return shaderActionList;
+        model.disposeAndClearAll(gl);
+        ass.dispose(gl);
+        atc.dispose(gl);
     }
 
 //    public Color getBackgroundColor() {
@@ -129,48 +124,48 @@ public class VoxelViewerRenderer implements GLEventListener
         final GL4 gl = glDrawable.getGL().getGL4();
         
         try {
-            //tc.init(gl);
-            ac.init(gl);
+
+            // Array transparency context
+            atc.setWidth(glDrawable.getWidth());
+            atc.setHeight(glDrawable.getHeight());
+            int depth=0;
+            if (properties==null) {
+                logger.error("VoxelViewerProperties is null - cannot set transparency depth");
+            } else {
+                depth=properties.getInteger(VoxelViewerProperties.GL_TRANSPARENCY_QUARTERDEPTH_INT);
+            }
+            
+            logger.info("atc init()");
+            
+            atc.setTransparencyQuarterDepth(depth);
+            atc.init(gl);
+            
+            logger.info("ass init()");
+
+            ass.setProperties(properties);
+            ass.setTransparencyContext(atc);
+            final int transparencyQuarterDepth=model.getTransparencyQuarterDepth();
+            ass.setUpdateCallback(new GLDisplayUpdateCallback() {
+                @Override
+                public void update(GL4 gl) {
+                    int width=viewer.getWidth();
+                    int height=viewer.getHeight();
+                    logger.info("Calling sortShader.set* with depth="+transparencyQuarterDepth+" width="+width+" height="+height);
+                    ass.setWidth(gl, viewer.getWidth());
+                    ass.setHeight(gl, viewer.getHeight());
+                    ass.setDepth(gl, transparencyQuarterDepth);
+                }
+            });
+            assActionSequence.setShader(ass);
+            assActionSequence.setApplyMemoryBarrier(true);
+            assActionSequence.init(gl);
+
+            model.initAll(atc, gl);
+
+            logger.info("Done with init()");
+
         } catch (Exception ex) {
             ex.printStackTrace();
-        }
-
-        boolean tcSet = false;
-        boolean acSet = false;
-        for (GL4ShaderActionSequence shaderAction : shaderActionList) {
-            try {
-                GL4Shader shader = shaderAction.getShader();
-                
-                // TC case
-//                if (!tcSet && shader instanceof OITMeshDrawShader) {
-//                    OITMeshDrawShader s = (OITMeshDrawShader)shader;
-//                    s.setTransparencyContext(tc);
-//                    tcSet=true;
-//                } else if (!tcSet && shader instanceof OITCubeShader) {
-//                    OITCubeShader s = (OITCubeShader)shader;
-//                    s.setTransparencyContext(tc);
-//                    tcSet=true;
-//                } else if (shader instanceof OITSortShader) {
-//                    OITSortShader s = (OITSortShader)shader;
-//                    s.setTransparencyContext(tc);
-//                }
-                
-                // AC case
-                if (!acSet && shader instanceof ArrayCubeShader) {
-                    ArrayCubeShader acs = (ArrayCubeShader)shader;
-                    ac.setWidth(glDrawable.getWidth());
-                    ac.setHeight(glDrawable.getHeight());
-                    acs.setTransparencyContext(ac);
-                    acSet=true;
-                } else if (shader instanceof ArraySortShader) {
-                    ArraySortShader ass = (ArraySortShader)shader;
-                    ass.setTransparencyContext(ac);
-                }        
-                
-                shaderAction.init(gl);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
         }
 
     }
@@ -191,8 +186,7 @@ public class VoxelViewerRenderer implements GLEventListener
     }
 
     public void clear() {
-        shaderActionList.clear();
-        hasBeenReset = false;
+        model.setDisposeAndClearAllActorsMsg();
     }
 
     public void requestReset() {
@@ -201,12 +195,52 @@ public class VoxelViewerRenderer implements GLEventListener
     @Override
     public void display(GLAutoDrawable glDrawable) {
 
+        logger.info("display() start");
+
+        final GL4 gl = glDrawable.getGL().getGL4();
+
+        logger.info("display() check 1");
+
+        // First, handle messages
+        Deque<String> msgQueue=model.getMessageQueue();
+        while (msgQueue.size()>0) {
+            String msg=msgQueue.pop();
+            if (msg.equals(VoxelViewerModel.DISPOSE_AND_CLEAR_ALL_ACTORS_MSG)) {
+                model.disposeAndClearAllActors(gl);
+            }
+        }
+
+        logger.info("display() check 2");
+
+        // Next, handle any inits
+        Deque<GL4SimpleActor> initQueue=model.getInitQueue();
+        while (initQueue.size()>0) {
+            GL4SimpleActor actor = initQueue.pop();
+            actor.init(gl);
+            if (actor instanceof ArrayCubeGLActor) {
+                model.getDenseVolumeShaderActionSequence().getActorSequence().add(actor);
+            } else if (actor instanceof ArrayMeshGLActor) {
+                model.getMeshShaderActionSequence().getActorSequence().add(actor);
+            }
+        }
+
+        logger.info("display() check 3");
+
+        // Last, handle any removals
+        Deque<Integer> removalQueue=model.getDisposeQueue();
+        while (removalQueue.size()>0) {
+            Integer actorIdToRemove=removalQueue.pop();
+            model.removeActor(actorIdToRemove, gl);
+        }
+
+        logger.info("display() check 4");
+
+        // NOTE: THIS STUFF SHOULD BE HANDLED IN THE SHADERS
         // Preset background from the volume model.
         float[] backgroundClrArr = model.getBackgroundColorFArr();
         this.backgroundColor = new Color( backgroundClrArr[ 0 ], backgroundClrArr[ 1 ], backgroundClrArr[ 2 ] );
 
-        final GL4 gl = glDrawable.getGL().getGL4();
-        displayBackground(gl);
+        //displayBackground(gl);
         gl.glClear(GL4.GL_DEPTH_BUFFER_BIT);
         gl.glEnable(GL4.GL_DEPTH_TEST);
 
@@ -246,21 +280,39 @@ public class VoxelViewerRenderer implements GLEventListener
         // Copy member list of actors local for independent iteration.
         //logger.info("Display shader sequence starting");
 
-        try {
-            ac.display(gl);
-        } catch (Exception ex) {
-            logger.error("Error in ArrayTransparencyContext display(): "+ex.getMessage());
-            ex.printStackTrace();
+        logger.info("display() check 5");
+
+        if (model.getDenseVolumeShaderActionSequence().getActorSequence().size()>0 ||
+                model.getMeshShaderActionSequence().getActorSequence().size()>0) {
+
+            try {
+                logger.info("display() check 6");
+
+                atc.display(gl);
+
+                logger.info("display() check 7");
+
+
+            }
+            catch (Exception ex) {
+                logger.error("Error in ArrayTransparencyContext display(): " + ex.getMessage());
+                ex.printStackTrace();
+            }
+
+            logger.info("display() check 8");
+
+            model.getDenseVolumeShaderActionSequence().display(gl);
+
+            logger.info("display() check 9");
+
+            model.getMeshShaderActionSequence().display(gl);
+
+            logger.info("display() check 10");
+
+            assActionSequence.display(gl);
         }
 
-        for (GL4ShaderActionSequence shaderAction : shaderActionList) {
-//            GL4Shader s = shaderAction.getShader();
-//            String fsName = s.getFragmentShaderResourceName();
-            //logger.info("Loading "+fsName);
-            shaderAction.display(gl);
-
-           // logger.info("Done with "+fsName);
-        }
+        logger.info("display() check 11");
 
     }
 

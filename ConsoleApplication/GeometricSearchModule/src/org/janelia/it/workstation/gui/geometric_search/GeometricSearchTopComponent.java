@@ -166,33 +166,11 @@ public final class GeometricSearchTopComponent extends TopComponent {
     private void initSearch() {
         logger.info("initSearch()");
         searchTabPanel.setLayout(new BorderLayout());
-        searchStartWrapper=new JPanel();
-        searchStartWrapper.setLayout(new GridLayout(18,9));
-        searchStartButton=new JButton("Start");
-        searchStartButton.setPreferredSize(new Dimension(100,40));
-        searchStartButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                searchStartWrapper.setVisible(false);
-                searchTabPanel.remove(searchStartWrapper);
-                searchPanel = new GeometricSearchMainPanel();
-                searchTabPanel.add(searchPanel, BorderLayout.CENTER);
-                searchPanel.setVisible(true);
-                searchPanel.displayReady();
-                searchPanel.refresh();
-            }
-        });
-        // Goofy stuff to position start button in center of panel
-        for (int r=0;r<17;r++) {
-            for (int c=0;c<9;c++) {
-                if (r==8 && c==4) {
-                    searchStartWrapper.add(searchStartButton);
-                } else {
-                    searchStartWrapper.add(new JLabel());
-                }
-            }
-        }
-        searchTabPanel.add(searchStartWrapper, BorderLayout.CENTER);
+        searchPanel = new GeometricSearchMainPanel();
+        searchTabPanel.add(searchPanel, BorderLayout.CENTER);
+        searchPanel.setVisible(true);
+        searchPanel.displayReady();
+        searchPanel.refresh();     
     }
 
 }

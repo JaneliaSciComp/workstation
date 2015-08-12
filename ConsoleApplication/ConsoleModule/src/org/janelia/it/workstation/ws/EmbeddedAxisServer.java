@@ -9,24 +9,30 @@ import java.util.Map;
 import javax.xml.ws.Endpoint;
 
 /**
- * This Axis server contains the web service end-points for both the console observer service and the data service.
- * It publishes the end-points using JAX-WS.
+ * This Axis server contains the web service end-points for both the console
+ * observer service and the data service. It publishes the end-points using
+ * JAX-WS.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class EmbeddedAxisServer implements ModelMgrObserver {
 
-    private final String baseUrl;
+    private int port;
     private Endpoint obs;
     private Endpoint cds;
 
-    public EmbeddedAxisServer(String baseUrl) throws Exception {
-        this.baseUrl = baseUrl == null ? "http://localhost:30001" : baseUrl;
+    public EmbeddedAxisServer() throws Exception {
     }
 
-    public void start() {
+    public void start(int port) {
+        this.port = port;
+        String baseUrl = "http://localhost:" + port;
         obs = Endpoint.publish(baseUrl + "/axis2/services/obs", new ConsoleObserverImpl());
         cds = Endpoint.publish(baseUrl + "/axis2/services/cds", new ConsoleDataServiceImpl());
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public void stop() {
@@ -131,5 +137,4 @@ public class EmbeddedAxisServer implements ModelMgrObserver {
         Map<String, Object> parameters = new LinkedHashMap<>();
         SessionMgr.getSessionMgr().sendMessageToExternalClients("sessionDeselected", parameters);
     }
-
 }

@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
-import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderActionSequence;
-import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderProperties;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderActionSequence;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +11,9 @@ import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by murphys on 4/10/15.
@@ -19,9 +22,6 @@ public class VoxelViewerGLPanel extends GLJPanel
         implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener {
 
     private static final Logger logger = LoggerFactory.getLogger(VoxelViewerGLPanel.class);
-
-    protected VoxelViewerProperties properties;
-
     protected static GLProfile profile = null;
     protected static GLCapabilities capabilities = null;
 
@@ -31,10 +31,9 @@ public class VoxelViewerGLPanel extends GLJPanel
         ZOOM
     }
 
+    protected VoxelViewerProperties properties;
     VoxelViewerModel model;
     VoxelViewerRenderer renderer;
-    VoxelViewerBasicController controller;
-    VoxelViewerData data;
 
     protected Point previousMousePos;
     protected boolean bMouseIsDragging = false;
@@ -53,8 +52,9 @@ public class VoxelViewerGLPanel extends GLJPanel
 
     public JPopupMenu popupMenu;
 
-    public VoxelViewerGLPanel(int width, int height) {
+    public VoxelViewerGLPanel(int width, int height, VoxelViewerModel model) {
         super(capabilities);
+        this.model=model;
         popupMenu = new JPopupMenu();
         addMouseListener(this);
         addMouseMotionListener(this);
@@ -65,9 +65,9 @@ public class VoxelViewerGLPanel extends GLJPanel
         JMenuItem resetViewItem = new JMenuItem("Reset view");
         resetViewItem.addActionListener(this);
         popupMenu.add(resetViewItem);
-        model=new VoxelViewerModel();
         renderer=new VoxelViewerRenderer(model);
         renderer.setProperties(properties);
+        renderer.setViewer(this);
         setPreferredSize( new Dimension( width, height ) );
 
         addGLEventListener(renderer);
@@ -75,20 +75,11 @@ public class VoxelViewerGLPanel extends GLJPanel
 
     public void setProperties(VoxelViewerProperties properties) {
         this.properties=properties;
+        renderer.setProperties(properties);
     }
 
     public GL4ShaderProperties getProperties() {
         return properties;
-    }
-
-    public VoxelViewerController getController(VoxelViewerData data) throws Exception {
-        if (this.data!=null && data!=null) {
-            throw new Exception("Data API may only be populated once");
-        }
-        if (data!=null) {
-            this.data=data;
-        }
-        return controller;
     }
 
     @Override
@@ -176,14 +167,6 @@ public class VoxelViewerGLPanel extends GLJPanel
         renderer.setResetFirstRedraw(resetFirstRedraw);
     }
 
-    /**
-     * Add any actor to this Mip as desired.
-     */
-    public void addShaderAction(GL4ShaderActionSequence shaderAction) {
-        addActorToRenderer(shaderAction);
-    }
-
-
     @Override
     public void mouseDragged(MouseEvent event) {
         Point p1 = event.getPoint();
@@ -242,14 +225,6 @@ public class VoxelViewerGLPanel extends GLJPanel
         // giving the appearance of sluggishness.  So call repaint(),
         // not display().
         repaint();
-    }
-
-    /** Special synchronized method, for adding actors. Supports multi-threaded brick-add. */
-    private void addActorToRenderer(GL4ShaderActionSequence shaderAction) {
-        synchronized ( this ) {
-            renderer.addShaderAction(shaderAction);
-            //renderer.resetView();
-        }
     }
 
     protected void maybeShowPopup(MouseEvent event)

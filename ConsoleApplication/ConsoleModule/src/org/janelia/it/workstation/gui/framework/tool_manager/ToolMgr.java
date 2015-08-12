@@ -36,6 +36,8 @@ public class ToolMgr extends PreferenceManager {
 	
 	private static final Logger log = LoggerFactory.getLogger(ToolMgr.class);
 	
+	private static final String CONSOLE_PORT_VAR_NAME = "WORKSTATION_SERVICE_PORT";
+	
     public static final String TOOL_FIJI    = "Fiji.app";
     public static final String TOOL_VAA3D   = "Vaa3d";
     public static final String TOOL_NA      = "Vaa3d - Neuron Annotator";
@@ -273,14 +275,24 @@ public class ToolMgr extends PreferenceManager {
 
     public static void runTool(String toolName) throws Exception {
         ToolInfo tmpTool = toolTreeMap.get(toolName);
-        if (null==tmpTool.getPath()||"".equals(tmpTool.getPath())) {
+        if (null == tmpTool.getPath() || "".equals(tmpTool.getPath())) {
             throw new Exception("Cannot run the tool.  A path to the program is not defined.");
         }
         if (tmpTool.getPath().endsWith(".app")) {
             Desktop.getDesktop().open(new File(tmpTool.getPath()));
-        }
-        else {
-            Runtime.getRuntime().exec(tmpTool.getPath());
+        } else {
+            String path = tmpTool.getPath();
+            // When executing vaa3d, give it a port to connect back to the console
+            if (toolName.equals(TOOL_NA) || toolName.equals(TOOL_VAA3D)) {
+                int consolePort = SessionMgr.getSessionMgr().getAxisServer().getPort();
+                if (consolePort > 0) {
+                    path = "env " + CONSOLE_PORT_VAR_NAME + "=" + consolePort + " " + path;
+                    log.info("Executing with environment: " + path);
+                } else {
+                    log.info("Executing: " + path);
+                }
+            }
+            Runtime.getRuntime().exec(path);
         }
     }
 

@@ -233,6 +233,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             loadOntology(selectedEntityRoot.getId(), success);
         }
         else {
+            this.root = null;
             initializeTree(null);
             ConcurrentUtils.invokeAndHandleExceptions(success);
         }

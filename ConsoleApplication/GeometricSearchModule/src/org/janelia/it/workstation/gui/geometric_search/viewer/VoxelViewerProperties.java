@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
-import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderProperties;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderProperties;
 
 import java.util.HashMap;
 

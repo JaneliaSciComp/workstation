@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.*;
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -132,6 +131,7 @@ public class WebDavClient {
     public URL getWebDavUrl(String standardPath)
             throws MalformedURLException {
         URL url;
+        standardPath = standardPath.replace("\\","/");
         String urlStr = basePath + standardPath;
         url = new URL(urlStr);
 
