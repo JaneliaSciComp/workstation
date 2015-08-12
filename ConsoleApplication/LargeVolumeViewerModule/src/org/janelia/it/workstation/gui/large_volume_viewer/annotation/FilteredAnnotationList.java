@@ -12,7 +12,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteReq
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -47,7 +46,7 @@ public class FilteredAnnotationList extends JPanel {
 
     // GUI stuff
     private int width;
-    private static final int height = 2 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
+    private static final int height = 3 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
     private JTable filteredTable;
     private JTextField filterField;
     private TableRowSorter<FilteredAnnotationModel> sorter;

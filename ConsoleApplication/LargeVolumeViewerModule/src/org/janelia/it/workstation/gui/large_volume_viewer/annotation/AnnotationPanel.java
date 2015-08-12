@@ -376,7 +376,7 @@ public class AnnotationPanel extends JPanel
         // ----- notes: simple panel to show notes
         add(Box.createRigidArea(new Dimension(0, 20)), cVert);
         noteListPanel = new NoteListPanel(width);
-        add(noteListPanel, cVert);
+        // add(noteListPanel, cVert);
 
         // testing
         // showOutline(noteListPanel, Color.orange);
