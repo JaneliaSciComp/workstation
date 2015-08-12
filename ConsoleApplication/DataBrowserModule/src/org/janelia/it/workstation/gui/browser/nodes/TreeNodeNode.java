@@ -7,12 +7,13 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
@@ -48,6 +49,7 @@ public class TreeNodeNode extends DomainObjectNode {
     
     protected TreeNodeNode(TreeNodeChildFactory parentChildFactory, final TreeNodeChildFactory childFactory, TreeNode treeNode) {
         super(parentChildFactory, Children.create(childFactory, false), treeNode);
+        log.debug("Creating new tree node for {}",treeNode.getName());
         this.childFactory = childFactory;
         if (treeNode.getNumChildren()>0) {
             getLookupContents().add(new Index.Support() {
@@ -64,8 +66,8 @@ public class TreeNodeNode extends DomainObjectNode {
                     SimpleWorker worker = new SimpleWorker() {
                         @Override
                         protected void doStuff() throws Exception {
-                            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                            dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
+                            DomainModel model = DomainMgr.getDomainMgr().getModel();
+                            model.reorderChildren(getTreeNode(), order);
                         }
                         @Override
                         protected void hadSuccess() {

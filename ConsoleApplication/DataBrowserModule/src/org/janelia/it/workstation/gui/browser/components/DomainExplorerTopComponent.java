@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.components;
 
+import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
 
 import java.util.Collection;
@@ -8,8 +9,13 @@ import java.util.concurrent.Callable;
 
 import javax.swing.ActionMap;
 import javax.swing.text.DefaultEditorKit;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
@@ -80,6 +86,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private Lookup.Result<AbstractNode> result = null;
     private RootNode root;
     
+    private final Debouncer debouncer = new Debouncer();
+    
     public DomainExplorerTopComponent() {
         initComponents();
         
@@ -102,8 +110,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
 //        bindKeys();
 
-        this.root = new RootNode();
-        mgr.setRootContext(root);
+        selectRoot();
         
         CustomTreeToolbar toolbar = new CustomTreeToolbar(beanTreeView) {
             @Override
@@ -158,11 +165,13 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     public void componentOpened() {
         result = getLookup().lookupResult(AbstractNode.class);
         result.addLookupListener(this);
+        Events.getInstance().registerOnEventBus(this);
     }
 
     @Override
     public void componentClosed() {
         result.removeLookupListener(this);
+        Events.getInstance().unregisterOnEventBus(this);
     }
     
     @Override
@@ -189,26 +198,63 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     // Custom methods
     
+    private void selectRoot() {
+        this.root = new RootNode();
+        mgr.setRootContext(root);
+    }
+    
+    @Subscribe
+    public void objectsInvalidated(DomainObjectInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            refresh(false, true, null);
+        }
+        else {
+            // TODO: might want to refresh specific nodes in the future
+            refresh(false, true, null);
+        }
+    }
+    
     public void refresh() {
-        refresh(null);
+        refresh(true, true, null);
     }
     
     public void refresh(final Callable<Void> success) {
+        refresh(true, true, success);
+    }
+    
+    public void refresh(final boolean invalidateCache, final boolean restoreState, final Callable<Void> success) {
                         
-        final List<Long[]> expanded = beanTreeView.getExpandedPaths();
+        if (!debouncer.queue(success)) {
+            log.debug("Skipping refresh, since there is one already in progress");
+            return;
+        }
         
+        log.info("refresh(restoreState={})",restoreState);
+        
+        final List<Long[]> expanded = root!=null && restoreState ? beanTreeView.getExpandedPaths() : null;
+        final List<Long[]> selected = root!=null && restoreState ? beanTreeView.getSelectedPaths() : null;
+                
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
+                if (invalidateCache) {
+                    DomainModel model = DomainMgr.getDomainMgr().getModel();
+                    model.invalidateAll();
+                }
+//                selectRoot();
                 root.refreshChildren();
             }
 
             @Override
             protected void hadSuccess() {
                 try {
-                    beanTreeView.expand(expanded);
-                    ConcurrentUtils.invoke(success);
+                    if (restoreState) {
+                        beanTreeView.expand(expanded);
+                        beanTreeView.selectPaths(selected);
+                    }
+                    beanTreeView.grabFocus();
+                    debouncer.success();
                 }
                 catch (Exception e) {
                     hadError(e);
@@ -217,6 +263,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
             @Override
             protected void hadError(Throwable error) {
+                debouncer.failure();
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };

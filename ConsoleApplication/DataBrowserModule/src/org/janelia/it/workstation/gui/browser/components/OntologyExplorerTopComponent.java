@@ -11,7 +11,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -27,22 +26,25 @@ import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
+import org.janelia.it.jacs.model.domain.DomainObject;
 
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.OntologySelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.AutoAnnotationPermissionDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.BulkAnnotationPermissionDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.KeyBindDialog;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectComparator;
+import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.EmptyNode;
@@ -59,7 +61,6 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.JScrollPopupMenu;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -121,6 +122,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     private OntologyNode ontologyNode;
     private boolean recordingKeyBinds = false;
     
+    private final Debouncer debouncer = new Debouncer();
     
     public OntologyExplorerTopComponent() {
         initComponents();
@@ -186,7 +188,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                             }
     
                             // Refresh the entire tree (another key bind may have been overridden)
-                            refresh(true, new Callable<Void>() {
+                            refresh(new Callable<Void>() {
                                 @Override
                                 public Void call() throws Exception {
                                     // Move to the next row
@@ -302,13 +304,13 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     }
     
     @Subscribe
-    public void selectOntology(OntologySelectionEvent event) {
+    public void ontologySelected(OntologySelectionEvent event) {
         Long ontologyId = event.getOntologyId();
         log.trace("selectOntology({})",ontologyId);
         selectOntology(ontologyId, true);
     }
     
-    public void selectOntology(Long ontologyId, boolean expandAll) {
+    private void selectOntology(Long ontologyId, boolean expandAll) {
         if (ontologyId==null) {
             showOntology(null, expandAll);
         }
@@ -323,24 +325,49 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         }
     }
     
-    public KeyBindDialog getKeyBindDialog() {
-        return keyBindDialog;
+    @Subscribe
+    public void objectsInvalidated(DomainObjectInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            refresh(false, true, null);
+        }
+        else {
+            for(DomainObject domainObject : event.getDomainObjects()) {
+                if (domainObject instanceof Ontology) {
+                    refresh(false, true, null);
+                    break;
+                }
+            }
+        }
     }
     
-    @Override
-    public ExplorerManager getExplorerManager() {
-        return mgr;
-    }
-    
-    public OntologyNode getOntologyNode() {
-        return ontologyNode;
+    @Subscribe
+    public void objectCreated(DomainObjectCreateEvent event) {
+        final DomainObject domainObject = event.getDomainObject();
+        if (domainObject instanceof Ontology) {
+            refresh(false, false, new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    selectOntology(domainObject.getId(), true);
+                    return null;
+                }
+            });
+        }
     }
     
     public void refresh() {
-        refresh(true, null);
+        refresh(true, true, null);
     }
     
-    public void refresh(final boolean restoreState, final Callable<Void> success) {
+    public void refresh(final Callable<Void> success) {
+        refresh(true, true, success);
+    }
+    
+    public void refresh(final boolean invalidateCache, final boolean restoreState, final Callable<Void> success) {
+        
+        if (!debouncer.queue(success)) {
+            log.debug("Skipping refresh, since there is one already in progress");
+            return;
+        }
         
         log.info("refresh(restoreState={})",restoreState);
         
@@ -351,6 +378,10 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
 
             @Override
             protected void doStuff() throws Exception {
+                if (invalidateCache) {
+                    DomainModel model = DomainMgr.getDomainMgr().getModel();
+                    model.invalidateAll();
+                }
                 loadOntologies();
             }
 
@@ -365,7 +396,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                         }
                     }
                     beanTreeView.grabFocus();
-                    ConcurrentUtils.invoke(success);
+                    debouncer.success();
                 }
                 catch (Exception e) {
                     hadError(e);
@@ -374,6 +405,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
 
             @Override
             protected void hadError(Throwable error) {
+                debouncer.failure();
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
@@ -389,13 +421,10 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         return (OntologyTermNode)node;
     }
     
-    private void loadOntologies() {
+    private void loadOntologies() throws Exception {
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
         ontologies.clear();
-        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-        for (Ontology ontology : dao.getOntologies(SessionMgr.getSubjectKey())) {
-            ontologies.add(ontology);
-        }
-        Collections.sort(ontologies, new DomainObjectComparator());
+        ontologies.addAll(model.getOntologies());
     }
 
     private void showOntology(Ontology ontology, final boolean expandAll) {
@@ -418,6 +447,19 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 beanTreeView.replaceKeyListeners(keyListener);
             }
         });
+    }
+    
+    public KeyBindDialog getKeyBindDialog() {
+        return keyBindDialog;
+    }
+    
+    @Override
+    public ExplorerManager getExplorerManager() {
+        return mgr;
+    }
+    
+    public OntologyNode getOntologyNode() {
+        return ontologyNode;
     }
     
     private JToolBar getBottomToolbar() {

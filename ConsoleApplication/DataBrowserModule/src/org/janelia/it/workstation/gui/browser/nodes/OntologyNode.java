@@ -21,6 +21,7 @@ import org.janelia.it.workstation.gui.browser.actions.RunNodeDefaultAction;
 import org.janelia.it.workstation.gui.browser.actions.OntologyElementAction;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
@@ -111,8 +112,8 @@ public class OntologyNode extends OntologyTermNode {
             @Override
             protected void doStuff() throws Exception {
                 log.trace("Changing name from " + oldName + " to: " + newName);
-                DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                dao.updateProperty(SessionMgr.getSubjectKey(), ontology, "name", newName);
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                model.updateProperty(ontology, "name", newName);
             }
             @Override
             protected void hadSuccess() {

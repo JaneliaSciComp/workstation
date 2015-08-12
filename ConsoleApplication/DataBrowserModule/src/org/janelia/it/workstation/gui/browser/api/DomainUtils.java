@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,9 @@ import org.janelia.it.jacs.model.domain.interfaces.HasFilepath;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.support.SearchAttribute;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.util.ReflectionHelper;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.reflections.ReflectionUtils;
@@ -37,6 +40,10 @@ import org.slf4j.LoggerFactory;
 public class DomainUtils {
 
     private static final Logger log = LoggerFactory.getLogger(DomainUtils.class);
+    
+    public static String identify(DomainObject domainObject) {
+        return "("+(domainObject==null?"null entity":domainObject.getName())+", @"+System.identityHashCode(domainObject)+")";
+    }
     
     public static String getFilepath(HasFilepath hasFilepath) {
         return hasFilepath.getFilepath();
@@ -168,4 +175,31 @@ public class DomainUtils {
         });
     }
 
+    public static List<DomainObjectId> getDomainObjectIdList(Collection<DomainObject> objects) {
+        List<DomainObjectId> list = new ArrayList<>();
+        for(DomainObject domainObject : objects) {
+            list.add(DomainObjectId.createFor(domainObject));
+        }
+        return list;
+    }
+
+    public static Map<Long, DomainObject> mapById(Collection<DomainObject> objects) {
+        Map<Long, DomainObject> objectMap = new HashMap<>();
+        for (DomainObject domainObject : objects) {
+            if (domainObject != null) {
+                objectMap.put(domainObject.getId(), domainObject);
+            }
+        }
+        return objectMap;
+    }
+    
+    public static Map<DomainObjectId, DomainObject> mapByObjectId(Collection<DomainObject> objects) {
+        Map<DomainObjectId, DomainObject> objectMap = new HashMap<>();
+        for (DomainObject domainObject : objects) {
+            if (domainObject != null) {
+                objectMap.put(DomainObjectId.createFor(domainObject), domainObject);
+            }
+        }
+        return objectMap;
+    }
 }

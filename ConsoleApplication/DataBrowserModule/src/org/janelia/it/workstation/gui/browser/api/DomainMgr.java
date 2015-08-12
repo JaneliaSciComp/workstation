@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.browser.api;
 
 import java.net.UnknownHostException;
+import java.util.List;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
@@ -21,25 +23,31 @@ public class DomainMgr {
     protected static final String MONGO_USERNAME = "flyportal";
     protected static final String MONGO_PASSWORD = "flyportal";
     
-    
     private DomainDAO dao;
+    private DomainModel model;
     
     private DomainMgr() {
-    
-    }
-    
-    
-    public DomainDAO getDao() {
-        if (dao == null) {
-            try {
-                dao = new DomainDAO(MONGO_SERVER_URL, MONGO_DATABASE, MONGO_USERNAME, MONGO_PASSWORD);
-            }
-            catch (UnknownHostException e) {
-                SessionMgr.getSessionMgr().handleException(e);
-            }
+        try {
+            this.dao = new DomainDAO(MONGO_SERVER_URL, MONGO_DATABASE, MONGO_USERNAME, MONGO_PASSWORD);
         }
-        return dao;
+        catch (UnknownHostException e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
     }
     
+    public DomainModel getModel() {
+        if (model == null) {
+            model = new DomainModel(dao);
+        }
+        return model;
+    }
+    
+    public List<Subject> getSubjects() {
+        List<Subject> subjects = dao.getSubjects();
+        DomainUtils.sortSubjects(subjects);
+        return subjects;
+    }
 
+
+    
 }

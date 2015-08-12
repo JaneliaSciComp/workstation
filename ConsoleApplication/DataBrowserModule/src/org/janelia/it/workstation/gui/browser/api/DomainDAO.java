@@ -50,7 +50,6 @@ import com.mongodb.WriteResult;
 import java.util.HashSet;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
-import org.jongo.Update;
 
 /**
  * The main domain-object DAO for the JACS system.
@@ -79,6 +78,8 @@ public class DomainDAO {
     protected MongoCollection subjectCollection;
     protected MongoCollection treeNodeCollection;
     
+    private final Map<String,String> classNameToCollectionName = new HashMap<>();
+    
     public DomainDAO(String serverUrl, String databaseName) throws UnknownHostException {
     	this(serverUrl, databaseName, null, null);	
     }
@@ -101,20 +102,26 @@ public class DomainDAO {
                     .enable(MapperFeature.AUTO_DETECT_GETTERS)
                     .enable(MapperFeature.AUTO_DETECT_SETTERS)
                     .build());
-        this.alignmentBoardCollection = getCollectionByClass(AlignmentBoard.class);
-        this.annotationCollection = getCollectionByClass(Annotation.class);
-        this.compartmentSetCollection = getCollectionByClass(CompartmentSet.class);
-        this.dataSetCollection = getCollectionByClass(DataSet.class);
-        this.flyLineCollection = getCollectionByClass(FlyLine.class);
-        this.fragmentCollection = getCollectionByClass(NeuronFragment.class);
-        this.imageCollection = getCollectionByClass(Image.class);
-        this.objectSetCollection = getCollectionByClass(ObjectSet.class);
-        this.ontologyCollection = getCollectionByClass(Ontology.class);
-        this.patternMaskCollection = getCollectionByClass(PatternMask.class);
-        this.sampleCollection = getCollectionByClass(Sample.class);
-        this.screenSampleCollection = getCollectionByClass(ScreenSample.class);
-    	this.subjectCollection = getCollectionByClass(Subject.class);
-    	this.treeNodeCollection = getCollectionByClass(TreeNode.class);
+        this.alignmentBoardCollection = registerCollectionByClass(AlignmentBoard.class);
+        this.annotationCollection = registerCollectionByClass(Annotation.class);
+        this.compartmentSetCollection = registerCollectionByClass(CompartmentSet.class);
+        this.dataSetCollection = registerCollectionByClass(DataSet.class);
+        this.flyLineCollection = registerCollectionByClass(FlyLine.class);
+        this.fragmentCollection = registerCollectionByClass(NeuronFragment.class);
+        this.imageCollection = registerCollectionByClass(Image.class);
+        this.objectSetCollection = registerCollectionByClass(ObjectSet.class);
+        this.ontologyCollection = registerCollectionByClass(Ontology.class);
+        this.patternMaskCollection = registerCollectionByClass(PatternMask.class);
+        this.sampleCollection = registerCollectionByClass(Sample.class);
+        this.screenSampleCollection = registerCollectionByClass(ScreenSample.class);
+    	this.subjectCollection = registerCollectionByClass(Subject.class);
+    	this.treeNodeCollection = registerCollectionByClass(TreeNode.class);
+    }
+    
+    private MongoCollection registerCollectionByClass(Class<?> domainClass) {
+        String collectionName = getCollectionName(domainClass);
+        classNameToCollectionName.put(domainClass.getName(), collectionName);
+        return jongo.getCollection(collectionName);
     }
     
     public Jongo getJongo() {
@@ -141,13 +148,17 @@ public class DomainDAO {
         return MongoUtils.getCollectionName(domainObject);
     }
     
-    public MongoCollection getCollectionByName(String collectionName) {
+    public String getTypeNameByClassName(String domainClass) {
+        return classNameToCollectionName.get(domainClass);
+    }
+    
+    private MongoCollection getCollectionByName(String collectionName) {
         return jongo.getCollection(collectionName);
     }
 
-    public MongoCollection getCollectionByClass(Class<?> domainClass) {
-        return jongo.getCollection(getCollectionName(domainClass));
-    }
+//    private MongoCollection getCollectionByClass(Class<?> domainClass) {
+//        return jongo.getCollection(getCollectionName(domainClass));
+//    }
     
     /** 
      * Return all the subjects.
@@ -159,7 +170,7 @@ public class DomainDAO {
     /** 
      * Return the set of subjectKeys which are readable by the given subject. This includes the subject itself, and all of the groups it is part of. 
      */
-    public Set<String> getSubjectSet(String subjectKey) {
+    private Set<String> getSubjectSet(String subjectKey) {
         Subject subject = subjectCollection.findOne("{key:#}",subjectKey).projection("{_id:0,groups:1}").as(Subject.class);
         if (subject==null) throw new IllegalArgumentException("No such subject: "+subjectKey);
         Set<String> groups = subject.getGroups();
@@ -171,7 +182,7 @@ public class DomainDAO {
      * Create a list of the result set in iteration order.
      */
     private <T> List<T> toList(MongoCursor<? extends T> cursor) {
-        List<T> list = new ArrayList<T>();
+        List<T> list = new ArrayList<>();
         for(T item : cursor) {
             list.add(item);
         }
@@ -246,36 +257,6 @@ public class DomainDAO {
     }
 
     /**
-     * Get the domain objects referenced by the given ObjectSet/
-     */
-    public List<DomainObject> getDomainObjects(String subjectKey, ObjectSet objectSet) {
-
-        List<DomainObject> domainObjects = new ArrayList<>();
-        if (objectSet.getMembers()==null || objectSet.getMembers().isEmpty()) return domainObjects;
-        
-        List<Long> members = objectSet.getMembers();
-        
-        log.trace("getDomainObjects(subjectKey="+subjectKey+",references.size="+members.size()+")");
-  
-        Multimap<String,Long> referenceMap = ArrayListMultimap.<String,Long>create();
-        for(Long member : members) {
-            if (member==null) {
-                log.warn("Requested null member id");
-                continue;
-            }
-            referenceMap.put(objectSet.getTargetType(), member);
-        }
-        
-        for(String type : referenceMap.keySet()) {
-            List<DomainObject> objs = getDomainObjects(subjectKey, type, referenceMap.get(type));
-            //log.info("Found {} objects of type {}",objs.size(),type);
-            domainObjects.addAll(objs);
-        }
-        
-        return domainObjects;
-    }
-
-    /**
      * Get the domain objects of the given type and ids.
      */
     public List<DomainObject> getDomainObjects(String subjectKey, String type, Collection<Long> ids) {
@@ -305,25 +286,25 @@ public class DomainDAO {
         return list;
     }
 
-    public List<DomainObject> getDomainObjects(String subjectKey, ReverseReference reverseRef) {
-        Set<String> subjects = subjectKey==null?null:getSubjectSet(subjectKey);
-        String type = reverseRef.getReferringType();
-
-        MongoCursor<? extends DomainObject> cursor = null;
-        if (subjects==null) {
-        	cursor = getCollectionByName(type).find("{'"+reverseRef.getReferenceAttr()+"':#}", reverseRef.getReferenceId()).as(getObjectClass(type));
-        }
-        else {
-        	cursor = getCollectionByName(type).find("{'"+reverseRef.getReferenceAttr()+"':#,readers:{$in:#}}", reverseRef.getReferenceId(), subjects).as(getObjectClass(type));
-        }
-        
-        List<DomainObject> list = toList(cursor);
-        if (list.size()!=reverseRef.getCount()) {
-            log.warn("Reverse reference ("+reverseRef.getReferringType()+":"+reverseRef.getReferenceAttr()+":"+reverseRef.getReferenceId()+
-                    ") denormalized count ("+reverseRef.getCount()+") does not match actual count ("+list.size()+")");
-        }
-        return list;
-    }
+//    public List<DomainObject> getDomainObjects(String subjectKey, ReverseReference reverseRef) {
+//        Set<String> subjects = subjectKey==null?null:getSubjectSet(subjectKey);
+//        String type = reverseRef.getReferringType();
+//
+//        MongoCursor<? extends DomainObject> cursor = null;
+//        if (subjects==null) {
+//        	cursor = getCollectionByName(type).find("{'"+reverseRef.getReferenceAttr()+"':#}", reverseRef.getReferenceId()).as(getObjectClass(type));
+//        }
+//        else {
+//        	cursor = getCollectionByName(type).find("{'"+reverseRef.getReferenceAttr()+"':#,readers:{$in:#}}", reverseRef.getReferenceId(), subjects).as(getObjectClass(type));
+//        }
+//        
+//        List<DomainObject> list = toList(cursor);
+//        if (list.size()!=reverseRef.getCount()) {
+//            log.warn("Reverse reference ("+reverseRef.getReferringType()+":"+reverseRef.getReferenceAttr()+":"+reverseRef.getReferenceId()+
+//                    ") denormalized count ("+reverseRef.getCount()+") does not match actual count ("+list.size()+")");
+//        }
+//        return list;
+//    }
     
     public List<Annotation> getAnnotations(String subjectKey, Long targetId) {
         Set<String> subjects = subjectKey==null?null:getSubjectSet(subjectKey);
@@ -358,45 +339,45 @@ public class DomainDAO {
         return toList(ontologyCollection.find("{readers:{$in:#}}",subjects).as(Ontology.class));
     }
 
-    public List<LSMImage> getLsmsBySampleId(String subjectKey, Long id) {
-        Set<String> subjects = getSubjectSet(subjectKey);
-        return toList(imageCollection.find("{sampleId:#,readers:{$in:#}}",id, subjects).as(LSMImage.class));
-    }
-    
-    public List<ScreenSample> getScreenSampleByFlyLine(String subjectKey, String flyLine) {
-        Set<String> subjects = getSubjectSet(subjectKey);
-        return toList(screenSampleCollection.find("{flyLine:{$regex:#},readers:{$in:#}}",flyLine+".*", subjects).as(ScreenSample.class));
-    }
-    
-    public List<NeuronFragment> getNeuronFragmentsBySampleId(String subjectKey, Long sampleId) {
-        Set<String> subjects = getSubjectSet(subjectKey);
-        return toList(fragmentCollection.find("{sampleId:#,readers:{$in:#}}",sampleId,subjects).as(NeuronFragment.class));
-    }
-    
-    public List<NeuronFragment> getNeuronFragmentsBySeparationId(String subjectKey, Long separationId) {
-        Set<String> subjects = getSubjectSet(subjectKey);
-        return toList(fragmentCollection.find("{separationId:#,readers:{$in:#}}",separationId,subjects).as(NeuronFragment.class));
-    }
-    
-    public List<ScreenSample> getScreenSamples(String subjectKey) {
-        Set<String> subjects = getSubjectSet(subjectKey);
-        return toList(screenSampleCollection.find("{readers:{$in:#}}",subjectKey,subjects).as(ScreenSample.class));
-    }
-    
-    public List<PatternMask> getPatternMasks(String subjectKey, Long screenSampleId) {
-        Set<String> subjects = getSubjectSet(subjectKey);
-        return toList(patternMaskCollection.find("{screenSampleId:#,readers:{$in:#}}",screenSampleId,subjects).as(PatternMask.class));
-    }
-   
-    public TreeNode getTreeNodeById(String subjectKey, Long id) {
-        Set<String> subjects = getSubjectSet(subjectKey);
-        return treeNodeCollection.findOne("{_id:#,readers:{$in:#}}",id,subjects).as(TreeNode.class);
-    }
-    
-    public TreeNode getParentTreeNodes(String subjectKey, Long id) {
-        Set<String> subjects = getSubjectSet(subjectKey);
-        return treeNodeCollection.findOne("{'children.targetId':#,readers:{$in:#}}",id,subjects).as(TreeNode.class);
-    }
+//    public List<LSMImage> getLsmsBySampleId(String subjectKey, Long id) {
+//        Set<String> subjects = getSubjectSet(subjectKey);
+//        return toList(imageCollection.find("{sampleId:#,readers:{$in:#}}",id, subjects).as(LSMImage.class));
+//    }
+//    
+//    public List<ScreenSample> getScreenSampleByFlyLine(String subjectKey, String flyLine) {
+//        Set<String> subjects = getSubjectSet(subjectKey);
+//        return toList(screenSampleCollection.find("{flyLine:{$regex:#},readers:{$in:#}}",flyLine+".*", subjects).as(ScreenSample.class));
+//    }
+//    
+//    public List<NeuronFragment> getNeuronFragmentsBySampleId(String subjectKey, Long sampleId) {
+//        Set<String> subjects = getSubjectSet(subjectKey);
+//        return toList(fragmentCollection.find("{sampleId:#,readers:{$in:#}}",sampleId,subjects).as(NeuronFragment.class));
+//    }
+//    
+//    public List<NeuronFragment> getNeuronFragmentsBySeparationId(String subjectKey, Long separationId) {
+//        Set<String> subjects = getSubjectSet(subjectKey);
+//        return toList(fragmentCollection.find("{separationId:#,readers:{$in:#}}",separationId,subjects).as(NeuronFragment.class));
+//    }
+//    
+//    public List<ScreenSample> getScreenSamples(String subjectKey) {
+//        Set<String> subjects = getSubjectSet(subjectKey);
+//        return toList(screenSampleCollection.find("{readers:{$in:#}}",subjectKey,subjects).as(ScreenSample.class));
+//    }
+//    
+//    public List<PatternMask> getPatternMasks(String subjectKey, Long screenSampleId) {
+//        Set<String> subjects = getSubjectSet(subjectKey);
+//        return toList(patternMaskCollection.find("{screenSampleId:#,readers:{$in:#}}",screenSampleId,subjects).as(PatternMask.class));
+//    }
+//   
+//    public TreeNode getTreeNodeById(String subjectKey, Long id) {
+//        Set<String> subjects = getSubjectSet(subjectKey);
+//        return treeNodeCollection.findOne("{_id:#,readers:{$in:#}}",id,subjects).as(TreeNode.class);
+//    }
+//    
+//    public TreeNode getParentTreeNodes(String subjectKey, Long id) {
+//        Set<String> subjects = getSubjectSet(subjectKey);
+//        return treeNodeCollection.findOne("{'children.targetId':#,readers:{$in:#}}",id,subjects).as(TreeNode.class);
+//    }
     
     public void changePermissions(String subjectKey, String type, Long id, String granteeKey, String rights, boolean grant) throws Exception {
         Collection<Long> ids = new ArrayList<>();
@@ -600,6 +581,16 @@ public class DomainDAO {
         save(subjectKey, treeNode);
     }
 
+    public void removeReference(String subjectKey, TreeNode treeNode, Reference reference) throws Exception {
+        for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
+            Reference iref = i.next();
+            if (iref.equals(reference)) {
+                i.remove();
+            }
+        }
+        save(subjectKey, treeNode);
+    }
+    
     public void addMember(String subjectKey, ObjectSet objectSet, DomainObject domainObject) throws Exception {
         Collection<DomainObject> domainObjects = new ArrayList<>();
         domainObjects.add(domainObject);
@@ -646,16 +637,6 @@ public class DomainDAO {
         save(subjectKey, objectSet);
     }
     
-    public void removeReference(String subjectKey, TreeNode treeNode, Reference reference) throws Exception {
-        for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
-            Reference iref = i.next();
-            if (iref.equals(reference)) {
-                i.remove();
-            }
-        }
-        save(subjectKey, treeNode);
-    }
-    
     public void updateProperty(String subjectKey, DomainObject domainObject, String propName, String propValue) {
         try {
             ReflectionUtils.set(domainObject, propName, propValue);
@@ -678,7 +659,7 @@ public class DomainDAO {
      * Get the domain objects of the given type 
      */
     public <T extends DomainObject> MongoCursor<T> getDomainObjects(Class<T> domainClass) {
-        return getCollectionByClass(domainClass).find().as(domainClass);
+        return registerCollectionByClass(domainClass).find().as(domainClass);
     }
     
     /**

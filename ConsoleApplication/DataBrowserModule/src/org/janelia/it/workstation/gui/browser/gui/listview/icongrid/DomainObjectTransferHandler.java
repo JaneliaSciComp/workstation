@@ -8,7 +8,7 @@ import javax.swing.*;
 import java.awt.datatransfer.Transferable;
 import java.util.*;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectId;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 
 /**

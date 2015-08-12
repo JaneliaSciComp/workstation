@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.events.selection;
+package org.janelia.it.workstation.gui.browser.model;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 

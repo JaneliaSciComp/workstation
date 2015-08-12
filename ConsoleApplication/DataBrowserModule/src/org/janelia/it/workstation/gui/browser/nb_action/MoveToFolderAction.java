@@ -16,6 +16,7 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.support.NodeChooser;
@@ -79,8 +80,7 @@ public class MoveToFolderAction extends NodePresenterAction {
         
         JMenuItem createNewItem = new JMenuItem("Create New Folder...");
         
-        final DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-        final Workspace workspace = dao.getDefaultWorkspace(SessionMgr.getSubjectKey());
+        final DomainModel model = DomainMgr.getDomainMgr().getModel();
         
         createNewItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -101,9 +101,10 @@ public class MoveToFolderAction extends NodePresenterAction {
                     protected void doStuff() throws Exception {
                         folder = new TreeNode();
                         folder.setName(folderName);
-                        dao.save(SessionMgr.getSubjectKey(), folder);
+                        model.save(folder);
+                        Workspace workspace = model.getDefaultWorkspace();
                         idPath = NodeUtils.createIdPath(workspace, folder);
-                        dao.addChild(SessionMgr.getSubjectKey(), workspace, folder);
+                        model.addChild(workspace, folder);
                         moveSelectedObjectsToFolder(folder, idPath);
                     }
 
@@ -198,10 +199,17 @@ public class MoveToFolderAction extends NodePresenterAction {
                 final Long[] idPath = NodeUtils.createIdPath(path);
                 final Long folderId = idPath[idPath.length-1];
                 
-                final TreeNode folder = (TreeNode)dao.getDomainObject(SessionMgr.getSubjectKey(), TreeNode.class, folderId);
-                if (folder == null) continue;
+                TreeNode folder;
+                try {
+                    folder = (TreeNode)model.getDomainObject(TreeNode.class, folderId);
+                    if (folder == null) continue;
+                }
+                catch (Exception e) {
+                    log.error("Error getting recent folder with id "+folderId,e);
+                    continue;
+                }
 
-                DomainUtils.hasWriteAccess(folder);
+                final TreeNode finalFolder = folder;
 
                 JMenuItem commonRootItem = new JMenuItem(folder.getName());
                 commonRootItem.addActionListener(new ActionListener() {
@@ -210,12 +218,12 @@ public class MoveToFolderAction extends NodePresenterAction {
                         SimpleWorker worker = new SimpleWorker() {
                             @Override
                             protected void doStuff() throws Exception {
-                                moveSelectedObjectsToFolder(folder, idPath);
+                                moveSelectedObjectsToFolder(finalFolder, idPath);
                             }
 
                             @Override
                             protected void hadSuccess() {
-                                log.debug("Added to folder {}",folder.getId());
+                                log.debug("Added to folder {}",finalFolder.getId());
                                 explorer.refresh(new Callable<Void>() {
                                     @Override
                                     public Void call() throws Exception {
@@ -235,6 +243,7 @@ public class MoveToFolderAction extends NodePresenterAction {
                     }
                 });
 
+                commonRootItem.setEnabled(DomainUtils.hasWriteAccess(finalFolder));
                 newFolderMenu.add(commonRootItem);
             }
         }
@@ -244,7 +253,7 @@ public class MoveToFolderAction extends NodePresenterAction {
     
     private void moveSelectedObjectsToFolder(TreeNode folder, Long[] idPath) throws Exception {
         List<Node> selectedNodes = getSelectedNodes();
-        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
         
         // Build list of things to remove
         Multimap<TreeNode,DomainObject> removeMap = ArrayListMultimap.create();
@@ -263,12 +272,12 @@ public class MoveToFolderAction extends NodePresenterAction {
         }
         
         // Add them to the given folder
-        dao.addChildren(SessionMgr.getSubjectKey(), folder, domainObjects);
+        model.addChildren(folder, domainObjects);
         
         // Remove from existing folders
         for(TreeNode treeNode : removeMap.keys()) {
             if (DomainUtils.isOwner(treeNode)) {
-                dao.removeChildren(SessionMgr.getSubjectKey(), treeNode, removeMap.get(treeNode));
+                model.removeChildren(treeNode, removeMap.get(treeNode));
             }
         }
         

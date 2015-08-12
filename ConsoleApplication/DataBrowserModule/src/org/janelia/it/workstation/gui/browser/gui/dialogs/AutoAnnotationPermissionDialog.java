@@ -110,9 +110,8 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
         template = SessionMgr.getBrowser().getAutoShareTemplate();
         
         try {
-            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-            List<Subject> subjects = new ArrayList<>(dao.getSubjects());
-            DomainUtils.sortSubjects(subjects);
+            DomainMgr mgr = DomainMgr.getDomainMgr();
+            List<Subject> subjects = mgr.getSubjects();
             
             DefaultComboBoxModel model = (DefaultComboBoxModel) subjectCombobox.getModel();
             model.removeAllElements();

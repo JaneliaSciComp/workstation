@@ -10,8 +10,8 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.support.MongoUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -98,8 +98,8 @@ public class ObjectSetNode extends DomainObjectNode {
                 @Override
                 public Transferable paste() throws IOException {
                     try {
-                        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                        dao.addMembers(SessionMgr.getSubjectKey(), objectSet, toPaste);
+                        DomainModel model = DomainMgr.getDomainMgr().getModel();
+                        model.addMembers(objectSet, toPaste);
                     }
                     catch (Exception e) {
                         throw new IOException("Error pasting into object set",e);

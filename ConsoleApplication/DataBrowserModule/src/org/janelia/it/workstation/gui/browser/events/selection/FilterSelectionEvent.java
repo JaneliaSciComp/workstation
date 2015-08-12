@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.events.selection;
 
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
 

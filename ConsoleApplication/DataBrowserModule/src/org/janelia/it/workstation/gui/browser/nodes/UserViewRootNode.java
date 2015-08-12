@@ -11,6 +11,7 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.nodes.AbstractNode;
@@ -65,8 +66,8 @@ public class UserViewRootNode extends AbstractNode {
 
         @Override
         protected boolean createKeys(List<DomainObject> list) {
-            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-            List<Workspace> workspaces = new ArrayList<>(dao.getWorkspaces(SessionMgr.getSubjectKey()));
+            DomainModel model = DomainMgr.getDomainMgr().getModel();
+            List<Workspace> workspaces = new ArrayList<>(model.getWorkspaces());
 
             List<Workspace> owned = new ArrayList<>();
             for(Workspace workspace : workspaces) {

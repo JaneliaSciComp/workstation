@@ -9,6 +9,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
@@ -102,8 +103,8 @@ public final class RemoveAction extends NodeAction {
                 TreeNodeNode treeNodeNode = (TreeNodeNode)node.getParentNode();
                 TreeNode treeNode = (treeNodeNode).getTreeNode();
                 DomainObject domainObject = ((DomainObjectNode)node).getDomainObject();
-                DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                model.removeChild(treeNode, domainObject);
                 // TODO: delete the object if there are no more references
                 toRefresh.add(treeNodeNode);
             }

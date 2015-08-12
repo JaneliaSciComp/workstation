@@ -17,8 +17,9 @@ import org.janelia.it.jacs.model.domain.support.MongoUtils;
 
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectId;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -133,10 +134,8 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
         } 
         
         try {
-            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-            List<Subject> subjects = new ArrayList<>(dao.getSubjects());
-            DomainUtils.sortSubjects(subjects);
-
+            DomainMgr mgr = DomainMgr.getDomainMgr();
+            List<Subject> subjects = mgr.getSubjects();
             DefaultComboBoxModel model = (DefaultComboBoxModel) subjectCombobox.getModel();
             model.removeAllElements();
             for (Subject subject : subjects) {
@@ -167,19 +166,19 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
             @Override
             protected void doStuff() throws Exception {
                 
-                DomainDAO dao = DomainMgr.getDomainMgr().getDao();
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
                 Collection<Long> selectedIds = new ArrayList<>();
                 for(DomainObjectId id : selected) {
                     selectedIds.add(id.getId());
                 }
                 
-                for(Annotation annotation : dao.getAnnotations(SessionMgr.getSubjectKey(), selectedIds)) {
+                for(Annotation annotation : model.getAnnotations(selectedIds)) {
                     
                     // Must be owner to grant access
                     if (!DomainUtils.isOwner(annotation)) continue;
 
-                    dao.changePermissions(SessionMgr.getSubjectKey(), annotationType, selectedIds, subject.getKey(), "r", read);
-                    dao.changePermissions(SessionMgr.getSubjectKey(), annotationType, selectedIds, subject.getKey(), "w", write);
+                    model.changePermissions(annotationType, selectedIds, subject.getKey(), "r", read);
+                    model.changePermissions(annotationType, selectedIds, subject.getKey(), "w", write);
                     
                     numAnnotationsModified++;
                 }

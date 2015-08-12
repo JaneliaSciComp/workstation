@@ -11,10 +11,9 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.model.DeadReference;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -42,8 +41,8 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         if (treeNode==null) return false;
         log.debug("Creating children keys for {}",treeNode.getName());
         
-        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-        List<DomainObject> children = dao.getDomainObjects(SessionMgr.getSubjectKey(), treeNode.getChildren());
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        List<DomainObject> children = model.getDomainObjects(treeNode.getChildren());
         if (children.size()!=treeNode.getNumChildren()) {
             log.info("Got {} children but expected {}",children.size(),treeNode.getNumChildren());   
         }
@@ -105,7 +104,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     }
     
     public void refresh() {
-        log.warn("Refreshing {}",treeNodeRef.get().getName());
+        log.info("Refreshing {}",treeNodeRef.get().getName());
         refresh(true);
     }
     
@@ -117,8 +116,8 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         }   
         
         log.info("Adding child {} to {}",domainObject.getId(),treeNode.getName());
-        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-        dao.addChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        model.addChild(treeNode, domainObject);
         
         refresh();
     }
@@ -131,12 +130,13 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         }
 
         log.info("Removing child {} from {}", domainObject.getId(), treeNode.getName());
-        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
+        
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
         if (domainObject instanceof DeadReference) {
-            dao.removeReference(SessionMgr.getSubjectKey(), treeNode, ((DeadReference) domainObject).getReference());
+            model.removeReference(treeNode, ((DeadReference) domainObject).getReference());
         }
         else {
-            dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
+            model.removeChild(treeNode, domainObject);
         }
             
         refresh();

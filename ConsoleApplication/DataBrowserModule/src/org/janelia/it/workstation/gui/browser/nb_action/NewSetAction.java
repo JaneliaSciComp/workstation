@@ -10,6 +10,7 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.editor.ObjectSetEditorPanel;
@@ -75,10 +76,10 @@ public final class NewSetAction implements ActionListener {
 
             @Override
             protected void doStuff() throws Exception {
-                DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                dao.save(SessionMgr.getSubjectKey(), objectSet);
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                model.save(objectSet);
                 TreeNode parentFolder = parentNode.getTreeNode();
-                dao.addChild(SessionMgr.getSubjectKey(), parentFolder, objectSet);
+                model.addChild(parentFolder, objectSet);
             }
 
             @Override

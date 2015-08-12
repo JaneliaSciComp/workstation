@@ -10,7 +10,7 @@ import org.janelia.it.jacs.model.domain.ontology.*;
 import org.janelia.it.jacs.model.domain.support.MongoUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectId;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;

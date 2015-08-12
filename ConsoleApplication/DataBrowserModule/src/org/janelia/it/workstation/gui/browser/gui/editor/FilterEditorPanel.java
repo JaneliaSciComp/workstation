@@ -88,6 +88,7 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.it.jacs.model.domain.support.MongoMapped;
 import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator;
 import org.openide.util.datatransfer.ExTransferable;
@@ -162,8 +163,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                         
                     @Override
                     protected void doStuff() throws Exception {
-                        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                        dao.save(SessionMgr.getSubjectKey(), filter);
+                        DomainMgr.getDomainMgr().getModel().save(filter);
                     }
 
                     @Override
@@ -206,9 +206,9 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                         }
                                 
                         filter.setName(newName);
-                        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                        dao.save(SessionMgr.getSubjectKey(), filter);
-                        dao.addChild(SessionMgr.getSubjectKey(), dao.getDefaultWorkspace(SessionMgr.getSubjectKey()), filter);
+                        DomainModel model = DomainMgr.getDomainMgr().getModel();
+                        model.save(filter);
+                        model.addChild(model.getDefaultWorkspace(), filter);
                     }
 
                     @Override
@@ -805,9 +805,9 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             }
         }
         
-        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-        List<DomainObject> domainObjects = dao.getDomainObjects(SessionMgr.getSubjectKey(), refs);
-        List<Annotation> annotations = dao.getAnnotations(SessionMgr.getSubjectKey(), ids);
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        List<DomainObject> domainObjects = model.getDomainObjects(refs);
+        List<Annotation> annotations = model.getAnnotations(ids);
         
         int numFound = (int)qr.getResults().getNumFound();
         

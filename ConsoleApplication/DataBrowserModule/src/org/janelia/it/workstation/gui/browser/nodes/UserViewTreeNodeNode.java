@@ -12,6 +12,7 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
@@ -97,8 +98,8 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
             if (treeNode==null) return false;
             log.trace("Creating children keys for {}",treeNode.getName());   
 
-            DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-            List<DomainObject> children = dao.getDomainObjects(SessionMgr.getSubjectKey(), treeNode.getChildren());
+            DomainModel model = DomainMgr.getDomainMgr().getModel();
+            List<DomainObject> children = model.getDomainObjects(treeNode.getChildren());
             if (children.size()!=treeNode.getNumChildren()) {
                 log.info("Got {} children but expected {}",children.size(),treeNode.getNumChildren());   
             }

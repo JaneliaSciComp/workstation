@@ -18,6 +18,7 @@ import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.nb_action.AddOntologyTermAction;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
@@ -70,8 +71,8 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        DomainDAO dao = DomainMgr.getDomainMgr().getDao();
-                        //dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
+                        DomainModel model = DomainMgr.getDomainMgr().getModel();
+                        //model.reorderChildren(model, getTreeNode(), order);
                     }
                     @Override
                     protected void hadSuccess() {

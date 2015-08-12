@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.events.selection;
 
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.events.Events;

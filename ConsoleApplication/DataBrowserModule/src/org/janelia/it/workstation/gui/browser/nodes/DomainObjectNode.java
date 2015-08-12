@@ -27,6 +27,7 @@ import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
@@ -351,9 +352,9 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
                 return;
             }
             try {
-                DomainDAO dao = DomainMgr.getDomainMgr().getDao();
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
                 final String oldName = domainObject.getName();
-                dao.updateProperty(SessionMgr.getSubjectKey(), domainObject, "name", newName);
+                model.updateProperty(domainObject, "name", newName);
                 fireDisplayNameChange(oldName, newName); 
             } 
             catch (Exception ex) {
