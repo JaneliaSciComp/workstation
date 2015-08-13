@@ -225,6 +225,7 @@ public class Icons {
             return getIcon(large ? "folder_files_large.png" : "folder_page.png");
         }
         else if (EntityConstants.TYPE_SAMPLE_PROCESSING_RESULT.equals(type) ||
+                 EntityConstants.TYPE_LSM_SUMMARY_RESULT.equals(type) ||
                  EntityConstants.TYPE_CELL_COUNTING_RESULT.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "folder_image.png");
         }
