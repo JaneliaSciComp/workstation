@@ -113,6 +113,9 @@ public class ScreenDataset extends Dataset {
     }
 
     public boolean createRenderables() {
+        logger.info("createRenderables() start");
+        
+        logger.info("createRenderables() end");
         return true;
     }
 
