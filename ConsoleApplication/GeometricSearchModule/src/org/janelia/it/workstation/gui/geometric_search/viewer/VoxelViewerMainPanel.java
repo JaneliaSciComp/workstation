@@ -106,6 +106,33 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         add(viewer, BorderLayout.CENTER);
         add(actorManagermentPanel, BorderLayout.EAST);
 
+//        logger.info("NUMBER DEBUG START");
+//
+//        byte b0 = 99;
+//
+//        int i0 = b0;
+//
+//        byte b1 = -99;
+//
+//        int i1 = b1;
+//
+//        int i2 = 0x000000ff & b1;
+//
+//        logger.info("i0="+i0+" i1="+i1+" i2="+i2);
+//
+//        byte b3=-1;
+//        byte b4=-10;
+//        int i3 = b3 & 0x000000ff;
+//        int i4 = b4 & 0x000000ff;
+//        int i5 = i4 << 8;
+//        int i6 = i3 | i5;
+//        short s = ((short) (i6 & 0x0000ffff));
+//        int is = s & 0x0000ffff;
+//
+//        logger.info("b4="+b4+" b3="+b3+" s="+s+" is="+is);
+//
+//        logger.info("NUMBER DEBUG END");
+
     }
 
     public void displayReady() {
