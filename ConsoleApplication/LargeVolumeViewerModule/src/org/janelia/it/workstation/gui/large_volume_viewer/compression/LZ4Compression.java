@@ -6,7 +6,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.compression;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.Date;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4UnknownSizeDecompressor;
@@ -31,7 +30,7 @@ public class LZ4Compression implements CompressionAlgorithm {
      * it into original version, and return file handle to that.
      * 
      * @param infile what to uncompress
-     * @return file representing the uncompressed version
+     * @return uncompressed blob.
      * @throws CompressionException if invalid extension, or anything goes wrong
      */
     @Override
@@ -39,28 +38,16 @@ public class LZ4Compression implements CompressionAlgorithm {
         if (canUncompress(infile)) {
             try {
                 Date startTime = new Date();
-                LZ4Factory factory = LZ4Factory.fastestJavaInstance();
-                LZ4UnknownSizeDecompressor decompressor = factory.unknwonSizeDecompressor();
-                final int fileLen = (int)infile.length();
-                byte[] b = new byte[fileLen];
-                byte[] dest = new byte[fileLen * 3];
 
-                final FileInputStream fis = new FileInputStream(infile);
-                int readCount = fis.read(b);
-                fis.close();
-                if (readCount != fileLen) {
-                    throw new Exception("Failed to fully read infile " + infile);
-                }
+                FileCollector collector = new FileCollector();
+                collector.collectFile(infile);
+                byte[] b = collector.getData();
                 Date endFileRead = new Date();
-                log.info("Time required for file-to-memory: {}s.", (endFileRead.getTime() - startTime.getTime()) / 1000);
+                
+                log.info("Time required for file-read: {}s.", (endFileRead.getTime() - startTime.getTime()) / 1000);
+                
+                return uncompress(b);
 
-                int decompressedSize = decompressor.decompress(b, 0, fileLen, dest, 0, dest.length);                
-                Date endDecompress = new Date();
-                log.info("Time required for decompress-in-memory: {}s.", (endDecompress.getTime() - endFileRead.getTime()) / 1000);
-
-                byte[] trimmedDest = new byte[decompressedSize];
-                System.arraycopy(dest, 0, trimmedDest, 0, decompressedSize);
-                return trimmedDest;
             } catch (Exception ex) {
                 throw new CompressionException(ex);
             }
@@ -69,6 +56,29 @@ public class LZ4Compression implements CompressionAlgorithm {
         else {
             throw new CompressionException("Cannot uncompress file without extens "+TARGET_EXTENSION);
         }
+    }
+
+    /**
+     * Given a pre-digested byte array, uncompress it.
+     * @param inbytes some compressed blob.
+     * @return uncompressed blob.
+     * @throws CompressionException 
+     */
+    @Override
+    public byte[] uncompress(byte[] inbytes) throws CompressionException {
+        Date startTime = new Date();
+        LZ4Factory factory = LZ4Factory.fastestJavaInstance();
+        LZ4UnknownSizeDecompressor decompressor = factory.unknwonSizeDecompressor();
+        final int fileLen = (int) inbytes.length;
+
+        byte[] dest = new byte[fileLen * 3];
+        int decompressedSize = decompressor.decompress(inbytes, 0, fileLen, dest, 0, dest.length);
+        Date endDecompress = new Date();
+        log.info("Time required for decompress-in-memory: {}s.", (endDecompress.getTime() - startTime.getTime()) / 1000);
+
+        byte[] trimmedDest = new byte[decompressedSize];
+        System.arraycopy(dest, 0, trimmedDest, 0, decompressedSize);
+        return trimmedDest;
     }
 
 }

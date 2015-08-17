@@ -1086,6 +1086,57 @@
                 <package>org.apache.jackrabbit.webdav.version</package>
                 <package>org.apache.jackrabbit.webdav.version.report</package>
                 <package>org.apache.jackrabbit.webdav.xml</package>
+                <package>org.apache.jcs</package>
+                <package>org.apache.jcs.access</package>
+                <package>org.apache.jcs.access.behavior</package>
+                <package>org.apache.jcs.access.exception</package>
+                <package>org.apache.jcs.access.monitor</package>
+                <package>org.apache.jcs.admin</package>
+                <package>org.apache.jcs.admin.servlet</package>
+                <package>org.apache.jcs.auxiliary</package>
+                <package>org.apache.jcs.auxiliary.disk</package>
+                <package>org.apache.jcs.auxiliary.disk.behavior</package>
+                <package>org.apache.jcs.auxiliary.disk.block</package>
+                <package>org.apache.jcs.auxiliary.disk.indexed</package>
+                <package>org.apache.jcs.auxiliary.disk.jdbc</package>
+                <package>org.apache.jcs.auxiliary.disk.jdbc.hsql</package>
+                <package>org.apache.jcs.auxiliary.disk.jdbc.mysql</package>
+                <package>org.apache.jcs.auxiliary.disk.jdbc.mysql.util</package>
+                <package>org.apache.jcs.auxiliary.lateral</package>
+                <package>org.apache.jcs.auxiliary.lateral.behavior</package>
+                <package>org.apache.jcs.auxiliary.lateral.socket.tcp</package>
+                <package>org.apache.jcs.auxiliary.lateral.socket.tcp.behavior</package>
+                <package>org.apache.jcs.auxiliary.lateral.socket.tcp.discovery</package>
+                <package>org.apache.jcs.auxiliary.lateral.socket.tcp.utils</package>
+                <package>org.apache.jcs.auxiliary.remote</package>
+                <package>org.apache.jcs.auxiliary.remote.behavior</package>
+                <package>org.apache.jcs.auxiliary.remote.server</package>
+                <package>org.apache.jcs.auxiliary.remote.server.behavior</package>
+                <package>org.apache.jcs.config</package>
+                <package>org.apache.jcs.engine</package>
+                <package>org.apache.jcs.engine.behavior</package>
+                <package>org.apache.jcs.engine.control</package>
+                <package>org.apache.jcs.engine.control.event</package>
+                <package>org.apache.jcs.engine.control.event.behavior</package>
+                <package>org.apache.jcs.engine.control.group</package>
+                <package>org.apache.jcs.engine.memory</package>
+                <package>org.apache.jcs.engine.memory.behavior</package>
+                <package>org.apache.jcs.engine.memory.lru</package>
+                <package>org.apache.jcs.engine.memory.mru</package>
+                <package>org.apache.jcs.engine.memory.shrinking</package>
+                <package>org.apache.jcs.engine.memory.util</package>
+                <package>org.apache.jcs.engine.stats</package>
+                <package>org.apache.jcs.engine.stats.behavior</package>
+                <package>org.apache.jcs.utils.access</package>
+                <package>org.apache.jcs.utils.config</package>
+                <package>org.apache.jcs.utils.net</package>
+                <package>org.apache.jcs.utils.props</package>
+                <package>org.apache.jcs.utils.serialization</package>
+                <package>org.apache.jcs.utils.servlet</package>
+                <package>org.apache.jcs.utils.struct</package>
+                <package>org.apache.jcs.utils.threadpool</package>
+                <package>org.apache.jcs.utils.threadpool.behavior</package>
+                <package>org.apache.jcs.utils.timing</package>
                 <package>org.apache.juli</package>
                 <package>org.apache.juli.logging</package>
                 <package>org.apache.log4j</package>
@@ -2303,6 +2354,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jaxb-xjc-2.1.7.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jaxb-xjc-2.1.7.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jcs-1.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jcs-1.3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jai_core.jar</runtime-relative-path>

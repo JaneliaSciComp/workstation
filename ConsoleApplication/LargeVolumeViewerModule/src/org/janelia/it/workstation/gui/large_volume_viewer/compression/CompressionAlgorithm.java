@@ -17,4 +17,5 @@ public interface CompressionAlgorithm {
     
     /** Compression */
     byte[] uncompress(File infile) throws CompressionException;
+    byte[] uncompress(byte[] inbutes) throws CompressionException;
 }

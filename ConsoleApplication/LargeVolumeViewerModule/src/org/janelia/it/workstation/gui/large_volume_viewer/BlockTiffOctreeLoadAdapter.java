@@ -27,10 +27,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.cache.large_volume.CacheController;
+import org.janelia.it.workstation.cache.large_volume.CacheFacade;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
-import org.openide.util.Exceptions;
 
 /*
  * Loader for large volume viewer format negotiated with Nathan Clack
@@ -46,11 +47,12 @@ public class BlockTiffOctreeLoadAdapter
 extends AbstractTextureLoadAdapter 
 {
 	private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
-
+    
 	// Metadata: file location required for local system as mount point.
 	private File topFolder;
     // Metadata: file location required for remote system.
     private String remoteBasePath;
+    
 	public LoadTimer loadTimer = new LoadTimer();
     
 	public BlockTiffOctreeLoadAdapter()
@@ -258,6 +260,7 @@ extends AbstractTextureLoadAdapter
 		ImageDecoder decoders[] = new ImageDecoder[sc];
         StringBuilder missingTiffs = new StringBuilder();
         StringBuilder requestedTiffs = new StringBuilder();
+        CacheFacade cacheManager = CacheController.getInstance().getManager();
 		for (int c = 0; c < sc; ++c) {
 			File tiff = new File(folder, tiffBase+"."+c+".tif");
             if ( requestedTiffs.length() > 0 ) {
@@ -284,7 +287,13 @@ extends AbstractTextureLoadAdapter
                         InputStream inputStream = url.openStream();
                         decoders[c] = ImageCodec.createImageDecoder("tiff", inputStream, null);
                     } else {
-                        SeekableStream s = new FileSeekableStream(tiff);
+                        SeekableStream s = null;
+                        if (cacheManager != null) {
+                            s = cacheManager.get(tiff);
+                        }
+                        else {
+                            s = new FileSeekableStream(tiff);
+                        }
                         decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
                     }
                 } catch (IOException e) {

@@ -1,0 +1,11 @@
+<ehcache xsi:noNamespaceSchemaLocation="ehcache.xsd" updateCheck="true" monitoring="autodetect" dynamicConfig="true">
+    <transactionManagerLookup class="net.sf.ehcache.transaction.manager.DefaultTransactionManagerLookup" properties="jndiName=java:/TransactionManager" propertySeparator=";"/>
+    <cacheManagerEventListenerFactory class="" properties=""/>
+    <!--<terracottaConfig url="localhost:9510"/>-->
+    <defaultCache maxEntriesLocalHeap="0" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200">
+        <!--<terracotta/>-->
+    </defaultCache>
+    <cache name="CompressedTiffCache" maxEntriesLocalHeap="10000" maxEntriesLocalDisk="0" eternal="false" diskSpoolBufferSizeMB="0" timeToIdleSeconds="300" timeToLiveSeconds="600" memoryStoreEvictionPolicy="LFU" transactionalMode="off">
+        <!--<persistence strategy="localTempSwap"/>-->
+    </cache>
+</ehcache>

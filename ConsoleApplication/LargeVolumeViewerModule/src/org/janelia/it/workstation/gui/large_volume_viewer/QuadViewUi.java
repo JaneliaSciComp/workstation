@@ -1256,7 +1256,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
     public boolean loadURL(URL url) {  
         boolean rtnVal = false;
-    	// Check if url exists first...
+
+        // Initialize the cache for this new input source.
+        largeVolumeViewer.initCache();
+
+        // Check if url exists first...
     	try {
             if (url == null) {
                 throw new IllegalArgumentException("Location for re-centering not found.");

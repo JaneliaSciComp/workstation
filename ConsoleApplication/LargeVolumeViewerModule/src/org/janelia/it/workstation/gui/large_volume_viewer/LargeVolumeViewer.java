@@ -42,6 +42,9 @@ import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
 import java.util.List;
 import org.apache.commons.lang.SystemUtils;
+import org.janelia.it.workstation.cache.large_volume.CacheController;
+import org.janelia.it.workstation.cache.large_volume.CacheFacade;
+import org.janelia.it.workstation.cache.large_volume.WorldExtentSphereBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,6 +122,21 @@ implements MouseModalWidget, TileConsumer, RepaintListener
      */
     public void setMessageListener(MessageListener messageListener) {
         this.messageListener = messageListener;
+    }
+
+    public void initCache() {
+        try {
+            CacheFacade cacheManager = new CacheFacade();
+            cacheManager.setNeighborhoodBuilder(
+                    new WorldExtentSphereBuilder(sharedVolumeImage, 2000)
+            );
+            CacheController controller = CacheController.getInstance();
+            controller.setManager(cacheManager);
+            controller.registerForEvents(camera);
+        } catch (Exception ex) {
+            log.error("Failed to open the cache manager.");
+            ex.printStackTrace();
+        }
     }
 
 	private void init(ObservableCamera3d camera) {

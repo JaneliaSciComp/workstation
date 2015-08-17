@@ -37,4 +37,13 @@ public class CompressedFileResolver {
         }
         return null;
     }
+
+    public SeekableStream resolve(byte[] inbytes, File infile) throws Exception {
+        for (CompressionAlgorithm algorithm : chain) {
+            if (algorithm.canUncompress(infile)) {
+                return new ByteArraySeekableStream(algorithm.uncompress(inbytes));
+            }
+        }
+        return null;
+    }
 }
