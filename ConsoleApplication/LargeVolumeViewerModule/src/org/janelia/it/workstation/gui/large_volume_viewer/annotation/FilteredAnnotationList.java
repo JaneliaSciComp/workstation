@@ -12,7 +12,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteReq
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -47,7 +46,7 @@ public class FilteredAnnotationList extends JPanel {
 
     // GUI stuff
     private int width;
-    private static final int height = 2 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
+    private static final int height = 3 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
     private JTable filteredTable;
     private JTextField filterField;
     private TableRowSorter<FilteredAnnotationModel> sorter;
@@ -78,9 +77,7 @@ public class FilteredAnnotationList extends JPanel {
 
         // set up model & data-related stuff
         model = annotationModel.getFilteredAnnotationModel();
-//                new FilteredAnnotationModel();
         setupFilters();
-
 
         // GUI stuff
         setupUI();
@@ -96,7 +93,8 @@ public class FilteredAnnotationList extends JPanel {
 
 
         // single-click selects annotation, and
-        //  double-click shifts camera to annotation
+        //  double-click shifts camera to annotation, except if you
+        //  double-click note, then you get the edit/delete note dialog
         filteredTable.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
                 JTable table = (JTable) me.getSource();
@@ -107,11 +105,20 @@ public class FilteredAnnotationList extends JPanel {
                         InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
                         annoSelectListener.annotationSelected(ann.getAnnotationID());
                     } else if (me.getClickCount() == 2) {
-                        if (panListener != null) {
-                            InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
-                            TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getAnnotationID());
-                            if (ann != null) {
-                                panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                        // which column?
+                        int viewColumn = table.columnAtPoint(me.getPoint());
+                        int modelColumn = table.convertColumnIndexToModel(viewColumn);
+                        InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
+                        TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getAnnotationID());
+                        if (modelColumn == 2) {
+                            // double-click note: edit note dialog
+                            editNoteRequestedListener.editNote(ann);
+                        } else {
+                            // everyone else, shift camera to annotation
+                            if (panListener != null) {
+                                if (ann != null) {
+                                    panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                                }
                             }
                         }
                     }
@@ -122,7 +129,6 @@ public class FilteredAnnotationList extends JPanel {
         // set the current filter late, after both the filters and UI are
         //  set up
         setCurrentFilter(filters.get("default"));
-
     }
 
 
@@ -197,6 +203,10 @@ public class FilteredAnnotationList extends JPanel {
 
         // default filter: interesting = has a note or isn't a straight link (ie, root, end, branch)
         filters.put("default", new OrFilter(new HasNoteFilter(), new NotFilter(new GeometryFilter(AnnotationGeometry.LINK))));
+
+        // ...and those two conditions separately:
+        filters.put("notes", new HasNoteFilter());
+        filters.put("geometry", new NotFilter(new GeometryFilter(AnnotationGeometry.LINK)));
 
 
         // endpoint that isn't marked traced or problem
@@ -297,7 +307,8 @@ public class FilteredAnnotationList extends JPanel {
         JPanel filterMenuPanel = new JPanel();
         filterMenuPanel.setLayout(new BorderLayout(2, 2));
         filterMenuPanel.add(new JLabel("Filter:"), BorderLayout.LINE_START);
-        String[] filterNames = {"default", "ends", "branches", "roots", "interesting", "review"};
+        String[] filterNames = {"default", "ends", "branches", "roots", "notes",
+            "geometry", "interesting", "review"};
         final JComboBox filterMenu = new JComboBox(filterNames);
         filterMenu.addActionListener(new ActionListener() {
             @Override

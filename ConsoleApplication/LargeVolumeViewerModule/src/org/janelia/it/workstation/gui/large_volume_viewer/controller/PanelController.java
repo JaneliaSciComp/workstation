@@ -23,7 +23,6 @@ import java.util.List;
 public class PanelController implements TmGeoAnnotationAnchorListener {
     private PanelGlobalListener globalListener;
     private AnnotationPanel annotationPanel;
-    private NoteListPanel noteListPanel;
     private WorkspaceNeuronList wsNeuronList;
     private WorkspaceInfoPanel wsInfoPanel;
     private LargeVolumeViewerTranslator lvvTranslator;
@@ -31,20 +30,17 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
     
     public PanelController(
             AnnotationPanel annoPanel,
-            NoteListPanel noteListPanel,
             FilteredAnnotationList filteredAnnotationList,
             WorkspaceNeuronList wsNeuronList,
             LargeVolumeViewerTranslator lvvTranslator
     ) {
         this.annotationPanel = annoPanel;
-        this.noteListPanel = noteListPanel;
         this.filteredAnnotationList = filteredAnnotationList;
         this.wsNeuronList = wsNeuronList;
         this.lvvTranslator = lvvTranslator;
 
         PanelPanListener ppl = new PanelPanListener();
         this.filteredAnnotationList.setPanListener(ppl);
-        this.noteListPanel.setPanListener(ppl);
         this.wsNeuronList.setPanListener(ppl);
         
         PanelTmGeoSelectListener ptgsl = new PanelTmGeoSelectListener();
@@ -64,7 +60,6 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
     
     public void registerForEvents(AnnotationManager annotationManager) {
         PanelEditNoteRequestedListener penrl = new PanelEditNoteRequestedListener(annotationManager);
-        noteListPanel.setEditNoteRequestListener(penrl);
         filteredAnnotationList.setEditNoteRequestListener(penrl);
     }
     
@@ -82,7 +77,6 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         @Override
         public void workspaceLoaded(TmWorkspace workspace) {
             annotationPanel.loadWorkspace(workspace);
-            noteListPanel.loadWorkspace(workspace);
             filteredAnnotationList.loadWorkspace(workspace);
             wsNeuronList.loadWorkspace(workspace);
             wsInfoPanel.loadWorkspace(workspace);
@@ -117,7 +111,6 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
 
         @Override
         public void notesUpdated(TmWorkspace workspace) {
-            noteListPanel.loadWorkspace(workspace);
             filteredAnnotationList.loadWorkspace(workspace);
         }
         

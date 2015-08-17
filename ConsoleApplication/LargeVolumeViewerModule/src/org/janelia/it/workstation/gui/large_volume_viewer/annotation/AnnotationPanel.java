@@ -48,7 +48,6 @@ public class AnnotationPanel extends JPanel
     private WorkspaceNeuronList workspaceNeuronList;
     private JCheckBoxMenuItem automaticTracingMenuItem;
     private JCheckBoxMenuItem automaticRefinementMenuItem;
-    private NoteListPanel noteListPanel;
     private ViewStateListener viewStateListener;
     private LVVDevPanel lvvDevPanel;
 
@@ -134,7 +133,7 @@ public class AnnotationPanel extends JPanel
 
     private void setupSignals() {
         // outgoing from the model:
-        PanelController panelController = new PanelController(this, noteListPanel,
+        PanelController panelController = new PanelController(this,
                 filteredList, workspaceNeuronList, largeVolumeViewerTranslator);
         panelController.registerForEvents(annotationModel);
         panelController.registerForEvents(annotationMgr);
@@ -372,14 +371,6 @@ public class AnnotationPanel extends JPanel
         centerAnnotationButton.setHideActionText(true);
         neuriteButtonsPanel.add(centerAnnotationButton);
 
-
-        // ----- notes: simple panel to show notes
-        add(Box.createRigidArea(new Dimension(0, 20)), cVert);
-        noteListPanel = new NoteListPanel(width);
-        add(noteListPanel, cVert);
-
-        // testing
-        // showOutline(noteListPanel, Color.orange);
 
         // developer panel, only shown to me; used for various testing things
         if (SessionMgr.getSessionMgr().getSubject().getName().equals("olbrisd")) {
