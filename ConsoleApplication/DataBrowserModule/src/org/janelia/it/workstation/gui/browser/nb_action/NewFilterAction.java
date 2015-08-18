@@ -89,13 +89,13 @@ public final class NewFilterAction implements ActionListener {
             protected void hadSuccess() {
                 initView();
                 final Long[] idPath = NodeUtils.createIdPath(parentNode, filter);
-                explorer.refresh(new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        explorer.select(idPath);
-                        return null;
-                    }
-                });
+//                explorer.refresh(new Callable<Void>() {
+//                    @Override
+//                    public Void call() throws Exception {
+//                        explorer.select(idPath);
+//                        return null;
+//                    }
+//                });
             }
 
             @Override

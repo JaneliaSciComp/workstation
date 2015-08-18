@@ -119,7 +119,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         model.addChild(treeNode, domainObject);
         
-        refresh();
+//        refresh();
     }
 
     public void removeChild(final DomainObject domainObject) throws Exception {
@@ -139,6 +139,6 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             model.removeChild(treeNode, domainObject);
         }
             
-        refresh();
+//        refresh();
     }
 }

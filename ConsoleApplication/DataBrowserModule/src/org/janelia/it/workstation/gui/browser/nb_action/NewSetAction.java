@@ -8,7 +8,6 @@ import javax.swing.JOptionPane;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
@@ -77,7 +76,7 @@ public final class NewSetAction implements ActionListener {
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                model.save(objectSet);
+                model.create(objectSet);
                 TreeNode parentFolder = parentNode.getTreeNode();
                 model.addChild(parentFolder, objectSet);
             }
@@ -86,13 +85,13 @@ public final class NewSetAction implements ActionListener {
             protected void hadSuccess() {
                 initView();
                 final Long[] idPath = NodeUtils.createIdPath(parentNode, objectSet);
-                explorer.refresh(new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        explorer.select(idPath);
-                        return null;
-                    }
-                });
+//                explorer.refresh(new Callable<Void>() {
+//                    @Override
+//                    public Void call() throws Exception {
+//                        explorer.select(idPath);
+//                        return null;
+//                    }
+//                });
             }
 
             @Override

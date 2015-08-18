@@ -84,8 +84,10 @@ public class TreeNodeNode extends DomainObjectNode {
         }
     }
 
-    public void update(TreeNode treeNode) {
-        super.update(treeNode);
+    @Override
+    public void update(DomainObject domainObject) {
+        super.update(domainObject);
+        log.info("Refreshing children: {}",domainObject.getName());
         refreshChildren();
     }
     

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
@@ -48,6 +47,9 @@ import com.mongodb.WriteResult;
 import java.util.HashSet;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
+import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The main domain-object DAO for the JACS system.
@@ -56,7 +58,7 @@ import org.janelia.it.jacs.shared.utils.ReflectionUtils;
  */
 public class DomainDAO {
 
-    private static final Logger log = Logger.getLogger(DomainDAO.class);
+    private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
     
     protected MongoClient m;
     protected Jongo jongo;
@@ -197,9 +199,9 @@ public class DomainDAO {
     /**
      * Get the domain object referenced by the type and id. 
      */
-    public DomainObject getDomainObject(String subjectKey, Class<? extends DomainObject> domainClass, Long id) {
+    public <T extends DomainObject> T getDomainObject(String subjectKey, Class<T> domainClass, Long id) {
         Reference reference = new Reference(getCollectionName(domainClass), id);
-        return getDomainObject(subjectKey, reference);
+        return (T)getDomainObject(subjectKey, reference);
     }
     
     /**
@@ -213,6 +215,13 @@ public class DomainDAO {
         	return null;
         }
         return objs.get(0);
+    }
+    
+    public <T extends DomainObject> T getDomainObject(String subjectKey, T domainObject) {
+        Reference ref = new Reference();
+        ref.setTargetId(domainObject.getId());
+        ref.setTargetType(MongoUtils.getCollectionName(domainObject));
+        return (T)getDomainObject(subjectKey, ref);
     }
     
     /**
@@ -445,7 +454,7 @@ public class DomainDAO {
         }
     }
 
-    public void save(String subjectKey, DomainObject domainObject) throws Exception {
+    private <T extends DomainObject> T saveImpl(String subjectKey, T domainObject) throws Exception {
         String type = getCollectionName(domainObject);
         MongoCollection collection = getCollectionByName(type);
         try {
@@ -468,30 +477,38 @@ public class DomainDAO {
                 }
             }
             log.info("Saved "+domainObject.getClass().getName()+"#"+domainObject.getId());
+            return domainObject;
         }
         catch (MongoException e) {
             throw new Exception(e);
         }
     }
+    
+    public <T extends DomainObject> T save(String subjectKey, T domainObject) throws Exception {
+        saveImpl(subjectKey, domainObject);
+        return getDomainObject(subjectKey, domainObject);
+    }
 
-    public void reorderChildren(String subjectKey, TreeNode treeNode, int[] order) throws Exception {
+    public TreeNode reorderChildren(String subjectKey, TreeNode treeNode, int[] order) throws Exception {
         
         if (!treeNode.hasChildren()) {
             log.warn("Tree node has no children to reorder: "+treeNode.getId());
-            return;
+            return treeNode;
         }
         
         List<Reference> references = new ArrayList<>(treeNode.getChildren());
         
-//        log.info("{} has the following references: ",treeNode.getName());
-//        for(Reference reference : references) {
-//            log.info("  {}#{}",reference.getTargetType(),reference.getTargetId());
-//        }
-//        
-//        log.info("They should be put in this ordering: ");
-//        for(int i=0; i<order.length; i++) {
-//            log.info("  "+order[i]);
-//        }
+        if (log.isTraceEnabled()) {
+            log.trace("{} has the following references: ",treeNode.getName());
+            for(Reference reference : references) {
+                log.trace("  {}#{}",reference.getTargetType(),reference.getTargetId());
+            }
+
+            log.trace("They should be put in this ordering: ");
+            for(int i=0; i<order.length; i++) {
+                log.trace("  "+order[i]);
+            }
+        }
         
         int originalSize = references.size();
         Reference[] reordered = new Reference[references.size()];
@@ -517,17 +534,12 @@ public class DomainDAO {
             log.error("Reordered children have new size "+references.size()+" (was "+originalSize+")");
         }
         else {
-            save(subjectKey, treeNode);    
+            saveImpl(subjectKey, treeNode);    
         }
+        return getDomainObject(subjectKey, treeNode);
     }
 
-//    public void addChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) throws Exception {
-//        Collection<DomainObject> domainObjects = new ArrayList<>();
-//        domainObjects.add(domainObject);
-//        addChildren(subjectKey, treeNode, domainObjects);
-//    }
-    
-    public void addChildren(String subjectKey, TreeNode treeNode, Collection<Reference> references) throws Exception {
+    public TreeNode addChildren(String subjectKey, TreeNode treeNode, Collection<Reference> references) throws Exception {
         if (references==null) {
             throw new IllegalArgumentException("Cannot add null children");
         }
@@ -541,16 +553,11 @@ public class DomainDAO {
             treeNode.addChild(ref);
         }
         log.info("Adding "+references.size()+" objects to "+treeNode.getName());
-        save(subjectKey, treeNode);
+        saveImpl(subjectKey, treeNode);
+        return getDomainObject(subjectKey, treeNode);
     }
     
-//    public void removeChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) throws Exception {
-//        Collection<DomainObject> domainObjects = new ArrayList<>();
-//        domainObjects.add(domainObject);
-//        removeChildren(subjectKey, treeNode, domainObjects);
-//    }
-    
-    public void removeChildren(String subjectKey, TreeNode treeNode, Collection<Reference> references) throws Exception {
+    public TreeNode removeChildren(String subjectKey, TreeNode treeNode, Collection<Reference> references) throws Exception {
         if (references==null) {
             throw new IllegalArgumentException("Cannot remove null children");
         }
@@ -564,10 +571,11 @@ public class DomainDAO {
             treeNode.removeChild(ref);
         }
         log.info("Removing "+references.size()+" objects from "+treeNode.getName());
-        save(subjectKey, treeNode);
+        saveImpl(subjectKey, treeNode);
+        return getDomainObject(subjectKey, treeNode);
     }
 
-    public void removeReference(String subjectKey, TreeNode treeNode, Reference reference) throws Exception {
+    public TreeNode removeReference(String subjectKey, TreeNode treeNode, Reference reference) throws Exception {
         if (treeNode.hasChildren()) {
             for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
                 Reference iref = i.next();
@@ -575,11 +583,12 @@ public class DomainDAO {
                     i.remove();
                 }
             }
-            save(subjectKey, treeNode);
+            saveImpl(subjectKey, treeNode);
         }
+        return getDomainObject(subjectKey, treeNode);
     }
     
-    public void addMembers(String subjectKey, ObjectSet objectSet, Collection<Reference> references) throws Exception {
+    public ObjectSet addMembers(String subjectKey, ObjectSet objectSet, Collection<Reference> references) throws Exception {
         if (references==null) {
             throw new IllegalArgumentException("Cannot add null members");
         }
@@ -600,10 +609,11 @@ public class DomainDAO {
             objectSet.addMember(ref.getTargetId());
         }
         log.info("Adding "+references.size()+" objects to "+objectSet.getName());
-        save(subjectKey, objectSet);
+        saveImpl(subjectKey, objectSet);
+        return getDomainObject(subjectKey, objectSet);
     }
     
-    public void removeMembers(String subjectKey, ObjectSet objectSet, Collection<Reference> references) throws Exception {
+    public ObjectSet removeMembers(String subjectKey, ObjectSet objectSet, Collection<Reference> references) throws Exception {
         if (references==null) {
             throw new IllegalArgumentException("Cannot remove null members");
         }
@@ -615,10 +625,11 @@ public class DomainDAO {
             objectSet.removeMember(ref.getTargetId());
         }
         log.info("Removing "+references.size()+" objects from "+objectSet.getName());
-        save(subjectKey, objectSet);
+        saveImpl(subjectKey, objectSet);
+        return getDomainObject(subjectKey, objectSet);
     }
     
-    public void updateProperty(String subjectKey, DomainObject domainObject, String propName, String propValue) {
+    public DomainObject updateProperty(String subjectKey, DomainObject domainObject, String propName, String propValue) {
         try {
             ReflectionUtils.set(domainObject, propName, propValue);
         }
@@ -631,6 +642,7 @@ public class DomainDAO {
         if (wr.getN()!=1) {
             log.warn("Could not update "+type+"#"+domainObject.getId()+"."+propName+": "+wr.getError());
         }
+        return getDomainObject(subjectKey, domainObject);
     }
     
     // UNSECURE METHODS, SERVER SIDE ONLY
@@ -639,9 +651,9 @@ public class DomainDAO {
     /**
      * Get the domain objects of the given type 
      */
-    public <T extends DomainObject> MongoCursor<T> getDomainObjects(Class<T> domainClass) {
-        return registerCollectionByClass(domainClass).find().as(domainClass);
-    }
+//    public <T extends DomainObject> MongoCursor<T> getDomainObjects(Class<T> domainClass) {
+//        return registerCollectionByClass(domainClass).find().as(domainClass);
+//    }
     
     /**
      * Get the domain objects of the given type 
@@ -662,15 +674,15 @@ public class DomainDAO {
 //        return getCollectionByName(type).find().map(new RawResultHandler<DBObject>());
 //    }
     
-    public static void main(String[] args) throws Exception {
-        
-        String MONGO_SERVER_URL = "rokicki-ws";
-        String MONGO_DATABASE = "jacs";
-        DomainDAO dao = new DomainDAO(MONGO_SERVER_URL, MONGO_DATABASE);
-        Collection<Workspace> workspaces = dao.getWorkspaces("user:asoy");
-        for(Workspace workspace : workspaces) {
-            System.out.println(workspace.getId()+" "+workspace);
-        }
-    }
+//    public static void main(String[] args) throws Exception {
+//        
+//        String MONGO_SERVER_URL = "rokicki-ws";
+//        String MONGO_DATABASE = "jacs";
+//        DomainDAO dao = new DomainDAO(MONGO_SERVER_URL, MONGO_DATABASE);
+//        Collection<Workspace> workspaces = dao.getWorkspaces("user:asoy");
+//        for(Workspace workspace : workspaces) {
+//            System.out.println(workspace.getId()+" "+workspace);
+//        }
+//    }
     
 }

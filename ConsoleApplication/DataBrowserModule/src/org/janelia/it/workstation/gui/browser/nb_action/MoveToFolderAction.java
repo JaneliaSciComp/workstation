@@ -101,7 +101,7 @@ public class MoveToFolderAction extends NodePresenterAction {
                     protected void doStuff() throws Exception {
                         folder = new TreeNode();
                         folder.setName(folderName);
-                        model.save(folder);
+                        model.create(folder);
                         Workspace workspace = model.getDefaultWorkspace();
                         idPath = NodeUtils.createIdPath(workspace, folder);
                         model.addChild(workspace, folder);
@@ -111,13 +111,13 @@ public class MoveToFolderAction extends NodePresenterAction {
                     @Override
                     protected void hadSuccess() {
                         log.debug("Added to folder {}",folder.getId());
-                        explorer.refresh(new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                explorer.expand(idPath);
-                                return null;
-                            }
-                        });
+//                        explorer.refresh(new Callable<Void>() {
+//                            @Override
+//                            public Void call() throws Exception {
+//                                explorer.expand(idPath);
+//                                return null;
+//                            }
+//                        });
                     }
 
                     @Override

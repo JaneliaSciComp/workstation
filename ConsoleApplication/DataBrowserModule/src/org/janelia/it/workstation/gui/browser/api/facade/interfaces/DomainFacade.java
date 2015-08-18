@@ -39,22 +39,24 @@ public interface DomainFacade {
     
     public void changePermissions(String type, Collection<Long> ids, String granteeKey, String rights, boolean grant) throws Exception;
     
-    public void save(TreeNode treeNode) throws Exception;
+    public TreeNode create(TreeNode treeNode) throws Exception;
     
-    public void save(Filter filter) throws Exception;
+    public ObjectSet create(ObjectSet objectSet) throws Exception;
     
-    public void save(ObjectSet objectSet) throws Exception;
-            
-    public void reorderChildren(TreeNode treeNode, int[] order) throws Exception;       
+    public Filter create(Filter filter) throws Exception;
     
-    public void addChildren(TreeNode treeNode, Collection<Reference> references) throws Exception;
+    public Filter update(Filter filter) throws Exception;
     
-    public void removeChildren(TreeNode treeNode, Collection<Reference> references) throws Exception;
+    public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception;       
     
-    public void addMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception;
+    public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references) throws Exception;
     
-    public void removeMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception;
+    public TreeNode removeChildren(TreeNode treeNode, Collection<Reference> references) throws Exception;
     
-    public void updateProperty(DomainObject domainObject, String propName, String propValue);
+    public ObjectSet addMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception;
+    
+    public ObjectSet removeMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception;
+    
+    public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue);
     
 }
