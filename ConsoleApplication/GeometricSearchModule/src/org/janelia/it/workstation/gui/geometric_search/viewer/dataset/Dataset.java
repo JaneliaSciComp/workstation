@@ -18,12 +18,16 @@ public abstract class Dataset {
         return name;
     }
 
-    List<Renderable> renderableList=new ArrayList<>();
+    public List<Renderable> renderables=new ArrayList<>();
 
     public abstract boolean createRenderables();
 
-    public List<Renderable> getRenderableList() {
-        return renderableList;
+    public List<Renderable> getRenderables() {
+        return renderables;
+    }
+
+    public void clear() {
+        renderables.clear();
     }
 
 }

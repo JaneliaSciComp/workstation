@@ -5,7 +5,10 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.workstation.gui.framework.outline.TransferableEntityList;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewer4DImage;
+import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerUtil;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
+import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.DenseVolumeRenderable;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +96,7 @@ public class ScreenDataset extends Dataset {
                         throw new Exception("SessionMgr.getCachedFile() failed to retrieve file="+filePathED.getValue());
                     } else {
                         logger.info("file="+filePathED.getValue()+" successfully found");
-                        File alignedStack = new File(filePathED.getValue());
+                        File alignedStack = localFile;
                         ScreenDataset screenDataset = new ScreenDataset();
                         EntityData nameEd=alignedStackEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_NAME);
                         if (nameEd!=null) {
@@ -114,7 +117,30 @@ public class ScreenDataset extends Dataset {
 
     public boolean createRenderables() {
         logger.info("createRenderables() start");
-        
+        try {
+            VoxelViewer4DImage image = VoxelViewerUtil.createVoxelImageFromStack(alignedStack);
+
+            DenseVolumeRenderable c0r=new DenseVolumeRenderable();
+            if (image.getVoxelByteCount()==1) {
+                c0r.init(image.getXSize(), image.getYSize(), image.getZSize(), 0.2f, image.getData8ForChannel(0));
+            } else {
+                c0r.init(image.getXSize(), image.getYSize(), image.getZSize(), 0.2f, image.getData16ForChannel(0));
+            }
+            renderables.add(c0r);
+
+            DenseVolumeRenderable c1r=new DenseVolumeRenderable();
+            if (image.getVoxelByteCount()==1) {
+                c1r.init(image.getXSize(), image.getYSize(), image.getZSize(), 0.2f, image.getData8ForChannel(1));
+            } else {
+                c1r.init(image.getXSize(), image.getYSize(), image.getZSize(), 0.2f, image.getData16ForChannel(1));
+            }
+            renderables.add(c1r);
+
+            logger.info("createRenderables() done creating VoxelViewer4DImage");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
         logger.info("createRenderables() end");
         return true;
     }
