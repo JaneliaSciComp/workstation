@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.browser.model.search;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import java.util.*;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -29,9 +31,18 @@ public class SearchResults {
         SearchResults searchResults = null;
         List<DomainObject> pageObjects = new ArrayList<>();
         
+        ArrayListMultimap<Long, Annotation> objectAnnotations = ArrayListMultimap.<Long, Annotation>create();
+        for(Annotation annotation : annotations) {
+            objectAnnotations.put(annotation.getTarget().getTargetId(), annotation);
+        }
+        
+        List<Annotation> pageAnnotations = new ArrayList<>();
+        
         for(DomainObject domainObject : domainObjects)  {
+            if (domainObject==null) continue;
             pageObjects.add(domainObject);
-            List<Annotation> pageAnnotations = new ArrayList<>();
+            pageAnnotations.addAll(objectAnnotations.get(domainObject.getId()));
+            // TODO: populate pageAnnotations
             if (pageObjects.size()>=PAGE_SIZE) {
                 ResultPage page = new ResultPage(pageObjects, pageAnnotations, domainObjects.size());
                 if (searchResults==null) {
@@ -41,11 +52,15 @@ public class SearchResults {
                     searchResults.addPage(page);
                 }
                 pageObjects.clear();
+                pageAnnotations.clear();
             }
         }
         
         if (!pageObjects.isEmpty()) {
-            List<Annotation> pageAnnotations = new ArrayList<>();
+            pageAnnotations = new ArrayList<>();
+            for(DomainObject domainObject : pageObjects)  {
+                pageAnnotations.addAll(objectAnnotations.get(domainObject.getId()));
+            }
             ResultPage page = new ResultPage(pageObjects, pageAnnotations, domainObjects.size());
             if (searchResults==null) {
                 searchResults = new SearchResults(page);

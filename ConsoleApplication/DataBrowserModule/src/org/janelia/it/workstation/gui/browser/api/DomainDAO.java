@@ -14,7 +14,6 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
@@ -22,7 +21,6 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.Image;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.screen.FlyLine;
@@ -77,9 +75,7 @@ public class DomainDAO {
     protected MongoCollection screenSampleCollection;
     protected MongoCollection subjectCollection;
     protected MongoCollection treeNodeCollection;
-    
-    private final Map<String,String> classNameToCollectionName = new HashMap<>();
-    
+        
     public DomainDAO(String serverUrl, String databaseName) throws UnknownHostException {
     	this(serverUrl, databaseName, null, null);	
     }
@@ -120,7 +116,6 @@ public class DomainDAO {
     
     private MongoCollection registerCollectionByClass(Class<?> domainClass) {
         String collectionName = getCollectionName(domainClass);
-        classNameToCollectionName.put(domainClass.getName(), collectionName);
         return jongo.getCollection(collectionName);
     }
     
@@ -136,29 +131,21 @@ public class DomainDAO {
         m.setWriteConcern(writeConcern);
     }
 
-    public Class<? extends DomainObject> getObjectClass(String collectionName) {
+    private Class<? extends DomainObject> getObjectClass(String collectionName) {
         return MongoUtils.getObjectClass(collectionName);
     }
 
-    public String getCollectionName(Class<?> domainClass) {
+    private String getCollectionName(Class<?> domainClass) {
         return MongoUtils.getCollectionName(domainClass);
     }
     
-    public String getCollectionName(DomainObject domainObject) {
+    private String getCollectionName(DomainObject domainObject) {
         return MongoUtils.getCollectionName(domainObject);
-    }
-    
-    public String getTypeNameByClassName(String domainClass) {
-        return classNameToCollectionName.get(domainClass);
     }
     
     private MongoCollection getCollectionByName(String collectionName) {
         return jongo.getCollection(collectionName);
     }
-
-//    private MongoCollection getCollectionByClass(Class<?> domainClass) {
-//        return jongo.getCollection(getCollectionName(domainClass));
-//    }
     
     /** 
      * Return all the subjects.
@@ -260,8 +247,6 @@ public class DomainDAO {
      * Get the domain objects of the given type and ids.
      */
     public List<DomainObject> getDomainObjects(String subjectKey, String type, Collection<Long> ids) {
-        // TODO: remove this after the next db load fixes it
-        if ("workspace".equals(type)) type = "treeNode"; 
         
         long start = System.currentTimeMillis();
         log.trace("getDomainObjects(subjectKey="+subjectKey+",type="+type+",ids.size="+ids.size()+")");
@@ -378,13 +363,7 @@ public class DomainDAO {
 //        Set<String> subjects = getSubjectSet(subjectKey);
 //        return treeNodeCollection.findOne("{'children.targetId':#,readers:{$in:#}}",id,subjects).as(TreeNode.class);
 //    }
-    
-    public void changePermissions(String subjectKey, String type, Long id, String granteeKey, String rights, boolean grant) throws Exception {
-        Collection<Long> ids = new ArrayList<>();
-        ids.add(id);
-        changePermissions(subjectKey, type, ids, granteeKey, rights, grant);
-    }
-    
+        
     public void changePermissions(String subjectKey, String type, Collection<Long> ids, String granteeKey, String rights, boolean grant) throws Exception {
         String op = grant ? "addToSet" : "pull";
         String attr = rights.equals("w") ? "writers" : "readers";
@@ -440,14 +419,16 @@ public class DomainDAO {
                     throw new IllegalArgumentException("Could not find folder with id="+id);
                 }
                 
-                Multimap<String,Long> groupedIds = HashMultimap.<String,Long>create();
-                for(Reference ref : node.getChildren()) {
-                    groupedIds.put(ref.getTargetType(), ref.getTargetId());
-                }
-                
-                for(String refType : groupedIds.keySet()) {
-                    Collection<Long> refIds = groupedIds.get(refType);
-                    changePermissions(subjectKey, refType, refIds, granteeKey, rights, grant);
+                if (node.hasChildren()) {
+                    Multimap<String,Long> groupedIds = HashMultimap.<String,Long>create();
+                    for(Reference ref : node.getChildren()) {
+                        groupedIds.put(ref.getTargetType(), ref.getTargetId());
+                    }
+                    
+                    for(String refType : groupedIds.keySet()) {
+                        Collection<Long> refIds = groupedIds.get(refType);
+                        changePermissions(subjectKey, refType, refIds, granteeKey, rights, grant);
+                    }
                 }
             }
         }
@@ -495,6 +476,11 @@ public class DomainDAO {
 
     public void reorderChildren(String subjectKey, TreeNode treeNode, int[] order) throws Exception {
         
+        if (!treeNode.hasChildren()) {
+            log.warn("Tree node has no children to reorder: "+treeNode.getId());
+            return;
+        }
+        
         List<Reference> references = new ArrayList<>(treeNode.getChildren());
         
 //        log.info("{} has the following references: ",treeNode.getName());
@@ -535,105 +521,100 @@ public class DomainDAO {
         }
     }
 
-    public void addChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) throws Exception {
-        Collection<DomainObject> domainObjects = new ArrayList<>();
-        domainObjects.add(domainObject);
-        addChildren(subjectKey, treeNode, domainObjects);
-    }
+//    public void addChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) throws Exception {
+//        Collection<DomainObject> domainObjects = new ArrayList<>();
+//        domainObjects.add(domainObject);
+//        addChildren(subjectKey, treeNode, domainObjects);
+//    }
     
-    public void addChildren(String subjectKey, TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
-        if (domainObjects==null) {
-            throw new IllegalArgumentException("Cannot add null child");
+    public void addChildren(String subjectKey, TreeNode treeNode, Collection<Reference> references) throws Exception {
+        if (references==null) {
+            throw new IllegalArgumentException("Cannot add null children");
         }
-        for(DomainObject obj : domainObjects) {
-            if (obj.getId()==null) {
+        for(Reference ref : references) {
+            if (ref.getTargetId()==null) {
                 throw new IllegalArgumentException("Cannot add child without an id");
             }
-            Reference ref = new Reference();
-            ref.setTargetId(obj.getId());
-            ref.setTargetType(getCollectionName(obj));
+            if (ref.getTargetType()==null) {
+                throw new IllegalArgumentException("Cannot add child without a type");
+            }
             treeNode.addChild(ref);
         }
-        log.info("Adding "+domainObjects.size()+" objects to "+treeNode.getName());
+        log.info("Adding "+references.size()+" objects to "+treeNode.getName());
         save(subjectKey, treeNode);
     }
     
-    public void removeChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) throws Exception {
-        Collection<DomainObject> domainObjects = new ArrayList<>();
-        domainObjects.add(domainObject);
-        removeChildren(subjectKey, treeNode, domainObjects);
-    }
+//    public void removeChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) throws Exception {
+//        Collection<DomainObject> domainObjects = new ArrayList<>();
+//        domainObjects.add(domainObject);
+//        removeChildren(subjectKey, treeNode, domainObjects);
+//    }
     
-    public void removeChildren(String subjectKey, TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
-        if (domainObjects==null) {
-            throw new IllegalArgumentException("Cannot remove null child");
+    public void removeChildren(String subjectKey, TreeNode treeNode, Collection<Reference> references) throws Exception {
+        if (references==null) {
+            throw new IllegalArgumentException("Cannot remove null children");
         }
-        for(DomainObject obj : domainObjects) {
-            if (obj.getId()==null) {
-                throw new IllegalArgumentException("Cannot remove child without an id");
+        for(Reference ref : references) {
+            if (ref.getTargetId()==null) {
+                throw new IllegalArgumentException("Cannot add child without an id");
             }
-            Reference ref = new Reference();
-            ref.setTargetId(obj.getId());
-            ref.setTargetType(getCollectionName(obj));
+            if (ref.getTargetType()==null) {
+                throw new IllegalArgumentException("Cannot add child without a type");
+            }
             treeNode.removeChild(ref);
         }
-        log.info("Removing "+domainObjects.size()+" objects from "+treeNode.getName());
+        log.info("Removing "+references.size()+" objects from "+treeNode.getName());
         save(subjectKey, treeNode);
     }
 
     public void removeReference(String subjectKey, TreeNode treeNode, Reference reference) throws Exception {
-        for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
-            Reference iref = i.next();
-            if (iref.equals(reference)) {
-                i.remove();
+        if (treeNode.hasChildren()) {
+            for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
+                Reference iref = i.next();
+                if (iref.equals(reference)) {
+                    i.remove();
+                }
             }
+            save(subjectKey, treeNode);
         }
-        save(subjectKey, treeNode);
     }
     
-    public void addMember(String subjectKey, ObjectSet objectSet, DomainObject domainObject) throws Exception {
-        Collection<DomainObject> domainObjects = new ArrayList<>();
-        domainObjects.add(domainObject);
-        addMembers(subjectKey, objectSet, domainObjects);
-    }
-    
-    public void addMembers(String subjectKey, ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
-        if (domainObjects==null) {
-            throw new IllegalArgumentException("Cannot add null child");
+    public void addMembers(String subjectKey, ObjectSet objectSet, Collection<Reference> references) throws Exception {
+        if (references==null) {
+            throw new IllegalArgumentException("Cannot add null members");
         }
-        for(DomainObject obj : domainObjects) {
-            if (obj.getId()==null) {
-                throw new IllegalArgumentException("Cannot add child without an id");
+        for(Reference ref : references) {
+            if (ref.getTargetId()==null) {
+                throw new IllegalArgumentException("Cannot add member without an id");
             }
-            String type = MongoUtils.getCollectionName(obj);
+            String type = ref.getTargetType();
             if (objectSet.getTargetType()==null) {
+                if (ref.getTargetType()==null) {
+                    throw new IllegalArgumentException("Cannot add member without a type");
+                }
                 objectSet.setTargetType(type);
             }
-            if (type.equals(objectSet.getTargetType())) {
-                objectSet.addMember(obj.getId());
+            else if (!type.equals(objectSet.getTargetType())) {
+                throw new IllegalArgumentException("Cannot add reference to type "+type+" to object set of type "+objectSet.getTargetType());
             }
+            objectSet.addMember(ref.getTargetId());
         }
-        log.info("Adding "+domainObjects.size()+" objects to "+objectSet.getName());
+        log.info("Adding "+references.size()+" objects to "+objectSet.getName());
         save(subjectKey, objectSet);
     }
     
-    public void removeMember(String subjectKey, ObjectSet objectSet, DomainObject domainObject) throws Exception {
-        Collection<DomainObject> domainObjects = new ArrayList<>();
-        domainObjects.add(domainObject);
-        removeMembers(subjectKey, objectSet, domainObjects);
-    }
-    
-    public void removeMembers(String subjectKey, ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
-        if (domainObjects==null) {
-            throw new IllegalArgumentException("Cannot remove null child");
+    public void removeMembers(String subjectKey, ObjectSet objectSet, Collection<Reference> references) throws Exception {
+        if (references==null) {
+            throw new IllegalArgumentException("Cannot remove null members");
         }
-        for(DomainObject obj : domainObjects) {
-            if (obj.getId()==null) {
-                throw new IllegalArgumentException("Cannot remove child without an id");
+        
+        for(Reference ref : references) {
+            if (ref.getTargetId()==null) {
+                throw new IllegalArgumentException("Cannot remove member without an id");
             }
-            objectSet.removeMember(obj.getId());
+            objectSet.removeMember(ref.getTargetId());
         }
-        log.info("Removing "+domainObjects.size()+" objects from "+objectSet.getName());
+        log.info("Removing "+references.size()+" objects from "+objectSet.getName());
         save(subjectKey, objectSet);
     }
     

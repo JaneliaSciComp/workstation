@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import org.janelia.it.workstation.gui.browser.actions.RunNodeDefaultAction;
 import org.janelia.it.workstation.gui.browser.actions.OntologyElementAction;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;

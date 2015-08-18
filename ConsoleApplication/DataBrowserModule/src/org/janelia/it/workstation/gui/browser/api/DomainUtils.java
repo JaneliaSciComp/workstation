@@ -19,9 +19,9 @@ import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFilepath;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.it.jacs.model.domain.support.MongoUtils;
 import org.janelia.it.jacs.model.domain.support.SearchAttribute;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.util.ReflectionHelper;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
@@ -92,10 +92,12 @@ public class DomainUtils {
      * @return
      */
     public static boolean hasChild(TreeNode treeNode, DomainObject domainObject) {
-        for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
-            Reference iref = i.next();
-            if (iref.getTargetId().equals(domainObject.getId())) {
-                return true;
+        if (treeNode.hasChildren()) {
+            for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
+                Reference iref = i.next();
+                if (iref.getTargetId().equals(domainObject.getId())) {
+                    return true;
+                }
             }
         }
         return false;
@@ -178,12 +180,34 @@ public class DomainUtils {
     public static List<DomainObjectId> getDomainObjectIdList(Collection<DomainObject> objects) {
         List<DomainObjectId> list = new ArrayList<>();
         for(DomainObject domainObject : objects) {
-            list.add(DomainObjectId.createFor(domainObject));
+            if (domainObject!=null) {
+                list.add(DomainObjectId.createFor(domainObject));
+            }
         }
         return list;
     }
 
-    public static Map<Long, DomainObject> mapById(Collection<DomainObject> objects) {
+    public static List<Long> getIdList(Collection<DomainObject> objects) {
+        List<Long> list = new ArrayList<>();
+        for(DomainObject domainObject : objects) {
+            if (domainObject!=null) {
+                list.add(domainObject.getId());
+            }
+        }
+        return list;
+    }
+
+    public static Map<DomainObjectId, DomainObject> getMapByDomainObjectId(Collection<DomainObject> objects) {
+        Map<DomainObjectId, DomainObject> objectMap = new HashMap<>();
+        for (DomainObject domainObject : objects) {
+            if (domainObject != null) {
+                objectMap.put(DomainObjectId.createFor(domainObject), domainObject);
+            }
+        }
+        return objectMap;
+    }
+    
+    public static Map<Long, DomainObject> getMapById(Collection<DomainObject> objects) {
         Map<Long, DomainObject> objectMap = new HashMap<>();
         for (DomainObject domainObject : objects) {
             if (domainObject != null) {
@@ -193,13 +217,29 @@ public class DomainUtils {
         return objectMap;
     }
     
-    public static Map<DomainObjectId, DomainObject> mapByObjectId(Collection<DomainObject> objects) {
-        Map<DomainObjectId, DomainObject> objectMap = new HashMap<>();
-        for (DomainObject domainObject : objects) {
-            if (domainObject != null) {
-                objectMap.put(DomainObjectId.createFor(domainObject), domainObject);
-            }
+    public static Collection<Reference> getReferences(Collection<DomainObject> domainObjects) {
+        Collection<Reference> refs = new ArrayList<>();
+        for(DomainObject obj : domainObjects) {
+            Reference ref = new Reference();
+            ref.setTargetId(obj.getId());
+            ref.setTargetType(MongoUtils.getCollectionName(obj));
+            refs.add(ref);
         }
-        return objectMap;
+        return refs;
+    }
+    
+    public static DomainObjectId getIdForReference(Reference ref) {
+        Class<? extends DomainObject> clazz = MongoUtils.getObjectClass(ref.getTargetType());
+        if (clazz==null) {
+            log.warn("Cannot generate DomainObjectId for unrecognized target type: "+ref.getTargetType());
+            return null;
+        }
+        return new DomainObjectId(clazz.getName(), ref.getTargetId());
+    }
+    
+    public static <T> Collection<T> getCollectionOfOne(T object) {
+        List<T> list = new ArrayList<>();
+        list.add(object);
+        return list;
     }
 }

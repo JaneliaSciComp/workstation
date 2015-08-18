@@ -5,11 +5,10 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.swing.SwingUtilities;
@@ -18,9 +17,11 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.support.MongoUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
@@ -28,7 +29,6 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidat
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectComparator;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,12 +60,12 @@ public class DomainModel {
     
     private static final Logger log = LoggerFactory.getLogger(DomainModel.class);
     
-    private final DomainDAO dao;
+    private final DomainFacade facade;
     private final Cache<DomainObjectId, DomainObject> objectCache;
     private final Map<DomainObjectId, Workspace> workspaceCache;
     
-    public DomainModel(DomainDAO dao) {
-        this.dao = dao;
+    public DomainModel(DomainFacade facade) {
+        this.facade = facade;
         this.objectCache = CacheBuilder.newBuilder().softValues().removalListener(new RemovalListener<DomainObjectId, DomainObject>() {
             @Override
             public void onRemoval(RemovalNotification<DomainObjectId, DomainObject> notification) {
@@ -273,9 +273,15 @@ public class DomainModel {
     
     private DomainObject loadDomainObject(DomainObjectId id) {
         log.debug("loadDomainObject({})",id);
-        String type = dao.getTypeNameByClassName(id.getClassName());
-        Reference ref = new Reference(type, id.getId());
-        return dao.getDomainObject(SessionMgr.getSubjectKey(), ref);
+        Class<?> clazz;
+        try {
+            clazz = Class.forName(id.getClassName());
+        }
+        catch (ClassNotFoundException e) {
+            throw new RuntimeException("Illegal domain object class: "+id.getClassName());
+        }
+        Reference ref = new Reference(MongoUtils.getCollectionName(clazz), id.getId());
+        return facade.getDomainObject(ref);
     }
     
     private List<DomainObject> loadDomainObjects(Collection<DomainObjectId> ids) {
@@ -311,38 +317,45 @@ public class DomainModel {
     
     public List<DomainObject> getDomainObjects(List<Reference> references) {
                 
+        if (references==null) return new ArrayList<>();
+        
         log.debug("getDomainObjects(references.size={})",references.size());
         
-        DomainObject[] domainObjects = new DomainObject[references.size()];
+        Map<DomainObjectId,DomainObject> map = new HashMap<>();
         List<Reference> unsatisfiedRefs = new ArrayList<>();
-        int i = 0;
+        
         for(Reference ref : references) {
-            DomainObjectId did = getIdForReference(ref);
+            DomainObjectId did = DomainUtils.getIdForReference(ref);
             DomainObject domainObject = did==null?null:objectCache.getIfPresent(did);
             if (domainObject!=null) {
-                domainObjects[i] = domainObject;
+                map.put(did, domainObject);
             }
             else {
                 unsatisfiedRefs.add(ref);
             }
-            i++;
         }
         
         if (!unsatisfiedRefs.isEmpty()) {
-            List<DomainObject> objects = dao.getDomainObjects(SessionMgr.getSubjectKey(), unsatisfiedRefs);
-            LinkedList<DomainObject> objQueue = new LinkedList<>(objects);
-            synchronized (this) {
-                for(int j=0; j<domainObjects.length; j++) {
-                    if (domainObjects[j]==null) {
-                        DomainObject domainObject = putOrUpdate(objQueue.pop());
-                        domainObjects[j] = domainObject;
-                    }
-                }
+            List<DomainObject> objects = facade.getDomainObjects(unsatisfiedRefs);
+            map.putAll(DomainUtils.getMapByDomainObjectId(objects));
+        }
+        
+        unsatisfiedRefs.clear();
+        
+        List<DomainObject> domainObjects = new ArrayList<>();
+        for(Reference ref : references) {
+            DomainObjectId did = DomainUtils.getIdForReference(ref);
+            DomainObject domainObject = map.get(did);
+            if (domainObject!=null) {
+                domainObjects.add(domainObject);
+            }
+            else {
+                unsatisfiedRefs.add(ref);
             }
         }
         
-        log.debug("getDomainObjects: returning {} objects",domainObjects.length);
-        return Arrays.asList(domainObjects);
+        log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedRefs.size());
+        return domainObjects;
     }
     
     public DomainObject getDomainObject(String type, Long id) {
@@ -355,61 +368,67 @@ public class DomainModel {
     
     public List<DomainObject> getDomainObjects(String type, List<Long> ids) {
         
-        log.debug("getDomainObjects(type={},ids.size={})",type,ids.size());
+        if (ids==null) return new ArrayList<>();
         
-        DomainObject[] domainObjects = new DomainObject[ids.size()];
+        log.debug("getDomainObjects(ids.size={})",ids.size());
+        
+        Map<DomainObjectId,DomainObject> map = new HashMap<>();
         List<Long> unsatisfiedIds = new ArrayList<>();
-        int i = 0;
+        
         for(Long id : ids) {
-            DomainObjectId did = getIdForReference(new Reference(type, id));
+            Reference ref = new Reference(type, id);
+            DomainObjectId did = DomainUtils.getIdForReference(ref);
             DomainObject domainObject = did==null?null:objectCache.getIfPresent(did);
             if (domainObject!=null) {
-                domainObjects[i] = domainObject;
+                map.put(did, domainObject);
             }
             else {
                 unsatisfiedIds.add(id);
             }
-            i++;
         }
         
-        log.debug("getDomainObjects: there are {} unsatisfied ids ",unsatisfiedIds.size());
+        if (!unsatisfiedIds.isEmpty()) {
+            List<DomainObject> objects = facade.getDomainObjects(type, unsatisfiedIds);
+            map.putAll(DomainUtils.getMapByDomainObjectId(objects));
+        }
         
-        List<DomainObject> objects = dao.getDomainObjects(SessionMgr.getSubjectKey(), type, unsatisfiedIds);
-        if (!objects.isEmpty()) {
-            log.debug("getDomainObjects: got {} objects to fill unsatisfied ids",objects.size());
-            Map<Long,DomainObject> map = DomainUtils.mapById(objects);
-            
-            synchronized (this) {
-                for(int j=0; j<domainObjects.length; j++) {
-                    if (domainObjects[j]==null) {
-                        DomainObject domainObject = map.get(ids.get(j));
-                        if (domainObject!=null) {
-                            domainObjects[j] = putOrUpdate(domainObject);
-                        }
-                    }
-                }
+        unsatisfiedIds.clear();
+        
+        List<DomainObject> domainObjects = new ArrayList<>();
+        for(Long id : ids) {
+            Reference ref = new Reference(type, id);
+            DomainObjectId did = DomainUtils.getIdForReference(ref);
+            DomainObject domainObject = map.get(did);
+            if (domainObject!=null) {
+                domainObjects.add(domainObject);
+            }
+            else {
+                unsatisfiedIds.add(id);
             }
         }
         
-        log.debug("getDomainObjects: returning {} objects",domainObjects.length);
-        return Arrays.asList(domainObjects);
+        log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedIds.size());
+        return domainObjects;
     }
     
     public List<Annotation> getAnnotations(Long targetId) {
         // TODO: cache these?
-        return dao.getAnnotations(SessionMgr.getSubjectKey(), targetId);
+        return facade.getAnnotations(DomainUtils.getCollectionOfOne(targetId));
     }
     
     public List<Annotation> getAnnotations(Collection<Long> targetIds) {
+        
+        if (targetIds==null) return new ArrayList<>();
+        
         // TODO: cache these?
-        return dao.getAnnotations(SessionMgr.getSubjectKey(), targetIds);
+        return facade.getAnnotations(targetIds);
     }
     
     public Collection<Workspace> getWorkspaces() {
         synchronized (this) {
             if (workspaceCache.isEmpty()) {
                 log.debug("Getting workspaces from database");
-                for (Workspace workspace : dao.getWorkspaces(SessionMgr.getSubjectKey())) {
+                for (Workspace workspace : facade.getWorkspaces()) {
                     Workspace cachedRoot = (Workspace)putOrUpdate(workspace);
                     if (cachedRoot instanceof Workspace) {
                         workspaceCache.put(DomainObjectId.createFor(cachedRoot), cachedRoot);
@@ -429,7 +448,7 @@ public class DomainModel {
     
     public Collection<Ontology> getOntologies() throws Exception {
         List<Ontology> ontologies = new ArrayList<>();
-        for (Ontology ontology : dao.getOntologies(SessionMgr.getSubjectKey())) {
+        for (Ontology ontology : facade.getOntologies()) {
             putOrUpdate(ontology);
             ontologies.add(ontology);
         }
@@ -439,14 +458,14 @@ public class DomainModel {
     
     public void changePermissions(String type, Long id, String granteeKey, String rights, boolean grant) throws Exception {
         synchronized (this) {
-            dao.changePermissions(granteeKey, type, id, granteeKey, rights, grant);
+            facade.changePermissions(type, DomainUtils.getCollectionOfOne(id), granteeKey, rights, grant);
             putOrUpdate(getDomainObject(type, id));
         }
     }
     
     public void changePermissions(String type, Collection<Long> ids, String granteeKey, String rights, boolean grant) throws Exception {
         synchronized (this) {
-            dao.changePermissions(granteeKey, type, ids, granteeKey, rights, grant);
+            facade.changePermissions(type, ids, granteeKey, rights, grant);
             for(Long id : ids) {
                 putOrUpdate(getDomainObject(type, id));
             }
@@ -456,14 +475,14 @@ public class DomainModel {
     // TODO: replace this with creation and mutation methods
     public void save(TreeNode treeNode) throws Exception {
         synchronized (this) {
-            dao.save(SessionMgr.getSubjectKey(), treeNode);
+            facade.save(treeNode);
             putOrUpdate(treeNode);
         }
     }
     
     public void save(Filter filter) throws Exception {
         synchronized (this) {
-            dao.save(SessionMgr.getSubjectKey(), filter);
+            facade.save(filter);
             putOrUpdate(filter);
         }
     }
@@ -471,28 +490,28 @@ public class DomainModel {
     // TODO: replace this with creation and mutation methods
     public void save(ObjectSet objectSet) throws Exception {
         synchronized (this) {
-            dao.save(SessionMgr.getSubjectKey(), objectSet);
+            facade.save(objectSet);
             putOrUpdate(objectSet);
         }
     }
     
     public void reorderChildren(TreeNode treeNode, int[] order) throws Exception {
         synchronized (this) {
-            dao.reorderChildren(SessionMgr.getSubjectKey(), treeNode, order);
+            facade.reorderChildren(treeNode, order);
             putOrUpdate(treeNode);
         }
     }
     
     public void addChild(TreeNode treeNode, DomainObject domainObject) throws Exception {
         synchronized (this) {
-            dao.addChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
+            facade.addChildren(treeNode, DomainUtils.getReferences(DomainUtils.getCollectionOfOne(domainObject)));
             putOrUpdate(treeNode);
         }
     }
     
     public void addChildren(TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
         synchronized (this) {
-            dao.addChildren(SessionMgr.getSubjectKey(), treeNode, domainObjects);
+            facade.addChildren(treeNode, DomainUtils.getReferences(domainObjects));
             // TODO: when we make this remote, we need addChildren to return the updated object, 
             // or we need to get it separately to put it into the cache
             putOrUpdate(treeNode);
@@ -501,71 +520,58 @@ public class DomainModel {
     
     public void removeChild(TreeNode treeNode, DomainObject domainObject) throws Exception {
         synchronized (this) {
-            dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
+            facade.removeChildren(treeNode, DomainUtils.getReferences(DomainUtils.getCollectionOfOne(domainObject)));
             putOrUpdate(treeNode);
         }
     }
     
     public void removeChildren(TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
         synchronized (this) {
-            dao.removeChildren(SessionMgr.getSubjectKey(), treeNode, domainObjects);
+            facade.removeChildren(treeNode, DomainUtils.getReferences(domainObjects));
             putOrUpdate(treeNode);
         }
     }
     
-    // TODO: replace this with automatic dead reference clean up
     public void removeReference(TreeNode treeNode, Reference reference) throws Exception {
         synchronized (this) {
-            dao.removeReference(SessionMgr.getSubjectKey(), treeNode, reference);
+            facade.removeChildren(treeNode, DomainUtils.getCollectionOfOne(reference));
             putOrUpdate(treeNode);
         }
     }
     
     public void addMember(ObjectSet objectSet, DomainObject domainObject) throws Exception {
         synchronized (this) {
-            dao.addMember(SessionMgr.getSubjectKey(), objectSet, domainObject);
+            facade.addMembers(objectSet, DomainUtils.getReferences(DomainUtils.getCollectionOfOne(domainObject)));
             putOrUpdate(objectSet);
         }
     }
     
     public void addMembers(ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
         synchronized (this) {
-            dao.addMembers(SessionMgr.getSubjectKey(), objectSet, domainObjects);
+            facade.addMembers(objectSet, DomainUtils.getReferences(domainObjects));
             putOrUpdate(objectSet);
         }
     }
     
     public void removeMember(ObjectSet objectSet, DomainObject domainObject) throws Exception {
         synchronized (this) {
-            dao.removeMember(SessionMgr.getSubjectKey(), objectSet, domainObject);
+            facade.removeMembers(objectSet, DomainUtils.getReferences(DomainUtils.getCollectionOfOne(domainObject)));
             putOrUpdate(objectSet);
         }
     }
     
     public void removeMembers(ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
         synchronized (this) {
-            dao.removeMembers(SessionMgr.getSubjectKey(), objectSet, domainObjects);
+            facade.removeMembers(objectSet, DomainUtils.getReferences(domainObjects));
             putOrUpdate(objectSet);
         }
     }
     
     public void updateProperty(DomainObject domainObject, String propName, String propValue) {
         synchronized (this) {
-            dao.updateProperty(SessionMgr.getSubjectKey(), domainObject, propName, propValue);
+            facade.updateProperty(domainObject, propName, propValue);
             putOrUpdate(domainObject);
         }
-    }
-    
-    
-    
-    private DomainObjectId getIdForReference(Reference ref) {
-        Class<? extends DomainObject> clazz = dao.getObjectClass(ref.getTargetType());
-        if (clazz==null) {
-            log.warn("Unrecognized class for target type "+ref.getTargetType());
-            return null;
-        }
-        String className = clazz.getName();
-        return new DomainObjectId(className, ref.getTargetId());
     }
     
     private void notifyDomainObjectCreated(DomainObject domainObject) {
@@ -604,5 +610,4 @@ public class DomainModel {
         invalidated.add(domainObject);
         Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(invalidated));
     }
-
 }

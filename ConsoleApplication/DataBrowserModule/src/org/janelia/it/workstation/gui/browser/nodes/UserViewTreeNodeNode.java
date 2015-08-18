@@ -110,7 +110,7 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
             }
 
             List<DomainObject> temp = new ArrayList<>();
-            if (treeNode.getChildren()!=null) {
+            if (treeNode.hasChildren()) {
                 for(Reference reference : treeNode.getChildren()) {
                     if (reference==null) continue;
                     DomainObject obj = map.get(reference.getTargetId());

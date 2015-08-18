@@ -114,7 +114,7 @@ public final class RemoveAction extends NodeAction {
         }
         
         for(TreeNodeNode treeNodeNode : toRefresh) {
-            treeNodeNode.refresh();
+            treeNodeNode.refreshChildren();
         }
     }
 }
