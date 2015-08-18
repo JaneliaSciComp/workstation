@@ -50,6 +50,7 @@ public class VoxelViewerBasicController implements VoxelViewerController {
             @Override
             public void run() {
                 dataset.createRenderables();
+                model.getDatasetModel().addDataset(dataset);
                 model.setDisposeAndClearAllActorsMsg();
                 viewer.resetView();
             }
