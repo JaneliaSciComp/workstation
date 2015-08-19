@@ -16,30 +16,30 @@ public class DatasetModel {
 
     List<Dataset> datasetList = new ArrayList<>();
 
-    List<VoxelViewerEventListener> addDatasetListeners=new ArrayList<>();
+    List<VoxelViewerEventListener> additionListeners=new ArrayList<>();
 
-    List<VoxelViewerEventListener> removeDatasetListeners=new ArrayList<>();
+    List<VoxelViewerEventListener> removalListeners=new ArrayList<>();
 
     public void addDataset(Dataset dataset) {
         datasetList.add(dataset);
-        for (VoxelViewerEventListener listener : addDatasetListeners) {
+        for (VoxelViewerEventListener listener : additionListeners) {
             listener.processEvent(dataset);
         }
     }
 
     public void removeDataset(Dataset dataset) {
-        for (VoxelViewerEventListener listener : removeDatasetListeners) {
+        for (VoxelViewerEventListener listener : removalListeners) {
             listener.processEvent(dataset);
         }
         datasetList.remove(dataset);
     }
 
-    public void addAddDatasetListener(VoxelViewerEventListener listener) {
-        addDatasetListeners.add(listener);
+    public void addAdditionListener(VoxelViewerEventListener listener) {
+        additionListeners.add(listener);
     }
 
-    public void addRemoveDatasetListener(VoxelViewerEventListener listener) {
-        removeDatasetListeners.add(listener);
+    public void addRemovalListener(VoxelViewerEventListener listener) {
+        removalListeners.add(listener);
     }
 
 }

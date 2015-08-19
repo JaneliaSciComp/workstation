@@ -48,7 +48,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
     protected void setupDatasetPanel() {
         datasetPanel = new ScrollableRowPanel();
-        model.getDatasetModel().addAddDatasetListener(new VoxelViewerEventListener() {
+        model.getDatasetModel().addAdditionListener(new VoxelViewerEventListener() {
             @Override
             public void processEvent(Object o) {
                 Dataset dataset = (Dataset)o;

@@ -6,6 +6,7 @@ import org.janelia.it.workstation.gui.camera.BasicCamera3d;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.ActorModel;
+import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.DatasetModel;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderActionSequence;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4SimpleActor;
@@ -47,6 +48,8 @@ public class VoxelViewerModel {
     VoxelViewerGLPanel viewer;
 
     DatasetModel datasetModel=new DatasetModel();
+    Dataset selectedDataset=null;
+
     ActorModel actorModel=new ActorModel();
 
     public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 2.0;
@@ -74,6 +77,14 @@ public class VoxelViewerModel {
             maxActorIndex++;
             return index;
         }
+    }
+
+    public Dataset getSelectedDataset() {
+        return selectedDataset;
+    }
+
+    public void setSelectedDataset(Dataset dataset) {
+        selectedDataset=dataset;
     }
 
     public void setViewer(VoxelViewerGLPanel viewer) {

@@ -98,10 +98,7 @@ public class ScreenDataset extends Dataset {
                         logger.info("file="+filePathED.getValue()+" successfully found");
                         File alignedStack = localFile;
                         ScreenDataset screenDataset = new ScreenDataset();
-                        EntityData nameEd=alignedStackEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_NAME);
-                        if (nameEd!=null) {
-                            screenDataset.setName(nameEd.getValue());
-                        }
+                        screenDataset.setName(alignedStackEntity.getName());
                         screenDataset.setAlignedStack(alignedStack);
                         logger.info("returning screenDataset");
                         return screenDataset;
