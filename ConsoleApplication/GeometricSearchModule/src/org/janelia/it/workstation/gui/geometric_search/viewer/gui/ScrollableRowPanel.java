@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 
 /**
  * Created by murphys on 8/18/2015.
@@ -14,6 +15,8 @@ public class ScrollableRowPanel extends JPanel {
     private static final Logger logger = LoggerFactory.getLogger(ScrollableRowPanel.class);
 
     JPanel rowPanel = new JPanel();
+
+    java.util.List<Component> components=new ArrayList<>();
 
     public ScrollableRowPanel() {
         rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.Y_AXIS));
@@ -27,7 +30,15 @@ public class ScrollableRowPanel extends JPanel {
         JButton l = new JButton(name);
         l.putClientProperty("Synthetica.opaque", Boolean.FALSE);
         l.setBorder(BorderFactory.createBevelBorder(1));
+        components.add(l);
         rowPanel.add(l);
+    }
+
+    public void clear() {
+        for (Component component : components) {
+            remove(component);
+        }
+        components.clear();
     }
 
 }

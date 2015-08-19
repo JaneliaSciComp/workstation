@@ -19,6 +19,9 @@ public class DenseVolumeRenderable extends Renderable {
     public static final String INTENSITY_THRESHOLD_FLOAT="Intensity Threshold";
     public static final float INTENSITY_THRESHOLD_FLOAT_DEFAULT=0.2f;
 
+    private long totalVoxels;
+    private int selectedVoxels;
+
     public DenseVolumeRenderable() {
         parameterMap.put(INTENSITY_THRESHOLD_FLOAT, new Float(INTENSITY_THRESHOLD_FLOAT_DEFAULT));
     }
@@ -32,8 +35,8 @@ public class DenseVolumeRenderable extends Renderable {
     }
 
     public void init(int xsize, int ysize, int zsize, float voxelSize, byte[] data8) {
-        long totalVoxels=0;
-        int selectedVoxels=0;
+        totalVoxels=0;
+        selectedVoxels=0;
         float intensityThreshold=(Float)parameterMap.get(INTENSITY_THRESHOLD_FLOAT);
         for (int z=0;z<zsize;z++) {
             float fz=z*voxelSize;
@@ -58,8 +61,8 @@ public class DenseVolumeRenderable extends Renderable {
     }
 
     public void init(int xsize, int ysize, int zsize, float voxelSize, short[] data16) {
-        long totalVoxels=0;
-        int selectedVoxels=0;
+        totalVoxels=0;
+        selectedVoxels=0;
         float intensityThreshold=(Float)parameterMap.get(INTENSITY_THRESHOLD_FLOAT);
         for (int z=0;z<zsize;z++) {
             float fz=z*voxelSize;
@@ -81,6 +84,14 @@ public class DenseVolumeRenderable extends Renderable {
         }
         logger.info("totalVoxels="+totalVoxels);
         logger.info("selectedVoxels="+selectedVoxels);
+    }
+
+    public long getTotalVoxels() {
+        return totalVoxels;
+    }
+
+    public int getSelectedVoxels() {
+        return selectedVoxels;
     }
 
 }

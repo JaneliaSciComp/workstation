@@ -9,6 +9,7 @@ import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewer4DImage
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerUtil;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.DenseVolumeRenderable;
+import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Renderable;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,6 +124,7 @@ public class ScreenDataset extends Dataset {
             } else {
                 c0r.init(image.getXSize(), image.getYSize(), image.getZSize(), 0.2f, image.getData16ForChannel(0));
             }
+            setDenseVolumeRenderableName(c0r, 0);
             renderables.add(c0r);
 
             DenseVolumeRenderable c1r=new DenseVolumeRenderable();
@@ -132,7 +134,7 @@ public class ScreenDataset extends Dataset {
                 c1r.init(image.getXSize(), image.getYSize(), image.getZSize(), 0.2f, image.getData16ForChannel(1));
             }
             renderables.add(c1r);
-
+            setDenseVolumeRenderableName(c1r, 1);
             logger.info("createRenderables() done creating VoxelViewer4DImage");
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -140,6 +142,12 @@ public class ScreenDataset extends Dataset {
         }
         logger.info("createRenderables() end");
         return true;
+    }
+
+    protected void setDenseVolumeRenderableName(DenseVolumeRenderable renderable, int channel) {
+        Double voxelPerc = (renderable.getSelectedVoxels() *1.0) / (renderable.getTotalVoxels() * 1.0) * 100.0;
+        String dString = voxelPerc.toString().substring(0, voxelPerc.toString().indexOf("."));
+        renderable.setName("Channel "+channel+" "+dString+"%");
     }
 
 }

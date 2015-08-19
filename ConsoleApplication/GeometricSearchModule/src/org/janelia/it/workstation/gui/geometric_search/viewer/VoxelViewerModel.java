@@ -49,6 +49,7 @@ public class VoxelViewerModel {
 
     DatasetModel datasetModel=new DatasetModel();
     Dataset selectedDataset=null;
+    List<VoxelViewerEventListener> datasetSelectionListeners=new ArrayList<>();
 
     ActorModel actorModel=new ActorModel();
 
@@ -79,12 +80,22 @@ public class VoxelViewerModel {
         }
     }
 
+    public void addDatasetSelectionListener(VoxelViewerEventListener listener) {
+        datasetSelectionListeners.add(listener);
+    }
+
     public Dataset getSelectedDataset() {
         return selectedDataset;
     }
 
     public void setSelectedDataset(Dataset dataset) {
+        logger.info("setSelectedDataset() dataset="+dataset.getName());
         selectedDataset=dataset;
+        int listenerCount=datasetSelectionListeners.size();
+        logger.info("datasetSelectionListener count="+listenerCount);
+        for (VoxelViewerEventListener listener : datasetSelectionListeners) {
+            listener.processEvent(dataset);
+        }
     }
 
     public void setViewer(VoxelViewerGLPanel viewer) {

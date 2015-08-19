@@ -9,6 +9,26 @@ import java.util.Properties;
  */
 public class Renderable {
 
+    protected String name;
+    
+    protected boolean visible=true;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name=name;
+    }
+    
+    public void setVisible(boolean visible) {
+        this.visible=visible;
+    }
+    
+    public boolean isVisibile() {
+        return visible;
+    }
+
     Map<String, Object> parameterMap=new HashMap<>();
 
 }

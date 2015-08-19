@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.geometric_search.viewer;
 import de.javasoft.swing.JYScrollPaneMap;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
+import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Renderable;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gui.ScrollableRowPanel;
 import org.jdesktop.swingx.JXTextArea;
 import org.jdesktop.swingx.JXTextField;
@@ -51,7 +52,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         model.getDatasetModel().addAdditionListener(new VoxelViewerEventListener() {
             @Override
             public void processEvent(Object o) {
-                Dataset dataset = (Dataset)o;
+                Dataset dataset = (Dataset) o;
                 datasetPanel.addEntry(dataset.getName());
             }
         });
@@ -111,7 +112,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         add(actorManagermentPanel, BorderLayout.EAST);
 
         setupDatasetPanel();
-        renderablePanel = new ScrollableRowPanel();
+        setupRenderablePanel();
 
         datasetManagementPanel.add(datasetPanel);
         datasetManagementPanel.add(renderablePanel);
@@ -119,6 +120,20 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         JPanel actorPanel = new ScrollableRowPanel();
         actorManagermentPanel.add(actorPanel);
 
+    }
+
+    public void setupRenderablePanel() {
+        renderablePanel = new ScrollableRowPanel();
+        model.addDatasetSelectionListener(new VoxelViewerEventListener() {
+            @Override
+            public void processEvent(Object o) {
+                Dataset dataset = (Dataset)o;
+                renderablePanel.clear();
+                for (Renderable renderable : dataset.getRenderables()) {
+                    renderablePanel.addEntry(renderable.getName());
+                }
+            }
+        });
     }
 
     public void displayReady() {
