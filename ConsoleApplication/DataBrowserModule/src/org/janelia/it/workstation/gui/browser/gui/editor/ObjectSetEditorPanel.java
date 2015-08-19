@@ -58,20 +58,14 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
 
             @Override
             protected void doStuff() throws Exception {
-                log.debug("Getting children...");
-
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 domainObjects = model.getDomainObjects(objectSet.getTargetType(), objectSet.getMembers());
                 annotations = model.getAnnotations(DomainUtils.getIdList(domainObjects));
-                log.debug("  Showing "+domainObjects.size()+" items");
+                log.info("Showing "+domainObjects.size()+" items");
             }
 
             @Override
             protected void hadSuccess() {
-                if (domainObjects==null || domainObjects.isEmpty()) {
-                    resultsPanel.showNothing();
-                    return;
-                }
                 SearchResults searchResults = SearchResults.paginate(domainObjects, annotations);
                 resultsPanel.showSearchResults(searchResults);
             }

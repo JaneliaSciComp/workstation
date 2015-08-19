@@ -81,7 +81,7 @@ public class NodeUtils {
             }
         }
         else {
-            log.warn("Unsupported node type: {}",node.getClass());
+            log.warn("Unsupported node type {} for node with name {}",node.getClass(),node.getDisplayName());
             return null;
         }
 

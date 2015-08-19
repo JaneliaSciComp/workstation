@@ -105,8 +105,6 @@ public class ObjectSetNode extends DomainObjectNode {
                     catch (Exception e) {
                         throw new IOException("Error pasting into object set",e);
                     }
-                    final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
-                    explorer.refresh();
                     return null;
                 }
             };
