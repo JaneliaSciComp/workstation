@@ -16,6 +16,7 @@ import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopCompon
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.util.datatransfer.PasteType;
 import org.slf4j.Logger;
@@ -31,7 +32,7 @@ public class ObjectSetNode extends DomainObjectNode {
     
     private final static Logger log = LoggerFactory.getLogger(ObjectSetNode.class);
     
-    public ObjectSetNode(TreeNodeChildFactory parentChildFactory, ObjectSet objectSet) throws Exception {
+    public ObjectSetNode(ChildFactory parentChildFactory, ObjectSet objectSet) throws Exception {
         super(parentChildFactory, Children.LEAF, objectSet);
     }
     

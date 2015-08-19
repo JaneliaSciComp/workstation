@@ -82,7 +82,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
     }
     
     public void update(DomainObject domainObject) {
-        log.info("Updating node with: {}",domainObject.getName());
+        log.debug("Updating node with: {}",domainObject.getName());
         lookupContents.remove(getDomainObject());
         lookupContents.add(domainObject);
         fireCookieChange();

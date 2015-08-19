@@ -47,7 +47,6 @@ import com.mongodb.WriteResult;
 import java.util.HashSet;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
-import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +57,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DomainDAO {
 
-    private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
+    private static final Logger log = LoggerFactory.getLogger(DomainDAO.class);
     
     protected MongoClient m;
     protected Jongo jongo;

@@ -23,6 +23,7 @@ import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
 import org.openide.nodes.Node;
@@ -41,13 +42,13 @@ public class TreeNodeNode extends DomainObjectNode {
     
     private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
     
-    protected final TreeNodeChildFactory childFactory;
+    private final TreeNodeChildFactory childFactory;
     
-    public TreeNodeNode(TreeNodeChildFactory parentChildFactory, TreeNode treeNode) {
+    public TreeNodeNode(ChildFactory parentChildFactory, TreeNode treeNode) {
         this(parentChildFactory, new TreeNodeChildFactory(treeNode), treeNode);
     }
     
-    protected TreeNodeNode(TreeNodeChildFactory parentChildFactory, final TreeNodeChildFactory childFactory, TreeNode treeNode) {
+    private TreeNodeNode(ChildFactory parentChildFactory, final TreeNodeChildFactory childFactory, TreeNode treeNode) {
         super(parentChildFactory, Children.create(childFactory, false), treeNode);
         log.debug("Creating new tree node for {}",treeNode.getName());
         this.childFactory = childFactory;
@@ -71,7 +72,7 @@ public class TreeNodeNode extends DomainObjectNode {
                         }
                         @Override
                         protected void hadSuccess() {
-                            childFactory.refresh();
+                            refreshChildren();
                         }
                         @Override
                         protected void hadError(Throwable error) {
@@ -87,8 +88,10 @@ public class TreeNodeNode extends DomainObjectNode {
     @Override
     public void update(DomainObject domainObject) {
         super.update(domainObject);
-        log.info("Refreshing children: {}",domainObject.getName());
-        refreshChildren();
+        TreeNode treeNode = (TreeNode)domainObject;
+        log.debug("Refreshing children for {} (now has {} children)",domainObject.getName(),treeNode.getNumChildren());
+        childFactory.update(treeNode);
+        childFactory.refresh();
     }
     
     public void refreshChildren() {
