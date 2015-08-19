@@ -145,7 +145,7 @@ public class ScreenDataset extends Dataset {
     }
 
     protected void setDenseVolumeRenderableName(DenseVolumeRenderable renderable, int channel) {
-        Double voxelPerc = (renderable.getSelectedVoxels() *1.0) / (renderable.getTotalVoxels() * 1.0) * 100.0;
+        Double voxelPerc = (renderable.getSampledVoxelCount() *1.0) / (renderable.getTotalVoxelCount() * 1.0) * 100.0;
         String dString = voxelPerc.toString().substring(0, voxelPerc.toString().indexOf("."));
         renderable.setName("Channel "+channel+" "+dString+"%");
     }

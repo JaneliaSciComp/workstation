@@ -4,8 +4,8 @@ import org.janelia.geometry3d.Vector4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by murphys on 8/7/2015.
@@ -14,16 +14,27 @@ public class DenseVolumeRenderable extends Renderable {
 
     private static final Logger logger = LoggerFactory.getLogger(DenseVolumeRenderable.class);
 
-    Set<Vector4> voxels=new HashSet<>();
+    List<Vector4> voxels=new ArrayList<>();
+    List<Vector4> sampledVoxels=new ArrayList<>();
 
     public static final String INTENSITY_THRESHOLD_FLOAT="Intensity Threshold";
     public static final float INTENSITY_THRESHOLD_FLOAT_DEFAULT=0.2f;
 
-    private long totalVoxels;
-    private int selectedVoxels;
+    public static final String MAX_VOXELS_INT="Max Voxels";
+    public static final int MAX_VOXELS_INT_DEFAULT=1000000;
+
+    private long totalVoxelCount;
+    private int thresholdVoxelCount;
+    private int sampledVoxelCount;
+
+    int xSize=0;
+    int ySize=0;
+    int zSize=0;
+    float voxelSize=0.0f;
 
     public DenseVolumeRenderable() {
         parameterMap.put(INTENSITY_THRESHOLD_FLOAT, new Float(INTENSITY_THRESHOLD_FLOAT_DEFAULT));
+        parameterMap.put(MAX_VOXELS_INT, new Integer(MAX_VOXELS_INT_DEFAULT));
     }
 
     public float getIntensityThreshold() {
@@ -34,9 +45,19 @@ public class DenseVolumeRenderable extends Renderable {
         parameterMap.put(INTENSITY_THRESHOLD_FLOAT, new Float(intensityThreshold));
     }
 
+    public int getMaxVoxels() { return (Integer)parameterMap.get(MAX_VOXELS_INT); }
+
+    public void setMaxVoxels(int maxVoxels) {
+        parameterMap.put(MAX_VOXELS_INT, new Integer(maxVoxels));
+    }
+
     public void init(int xsize, int ysize, int zsize, float voxelSize, byte[] data8) {
-        totalVoxels=0;
-        selectedVoxels=0;
+        xSize=xsize;
+        ySize=ysize;
+        zSize=zsize;
+        this.voxelSize=voxelSize;
+        totalVoxelCount=0;
+        thresholdVoxelCount=0;
         float intensityThreshold=(Float)parameterMap.get(INTENSITY_THRESHOLD_FLOAT);
         for (int z=0;z<zsize;z++) {
             float fz=z*voxelSize;
@@ -47,22 +68,27 @@ public class DenseVolumeRenderable extends Renderable {
                     int p=z*ysize*xsize+y*xsize+x;
                     int cv=data8[p] & 0x000000ff;
                     float fw=(float) (cv*1.0/255.0);
-                    totalVoxels++;
+                    totalVoxelCount++;
                     if (fw > intensityThreshold) {
                         Vector4 v = new Vector4(fx, fy, fz, fw);
                         voxels.add(v);
-                        selectedVoxels++;
+                        thresholdVoxelCount++;
                     }
                 }
             }
         }
-        logger.info("totalVoxels="+totalVoxels);
-        logger.info("selectedVoxels="+selectedVoxels);
+        logger.info("totalVoxels="+totalVoxelCount);
+        logger.info("selectedVoxels="+thresholdVoxelCount);
+        consolidateVoxels();
     }
 
     public void init(int xsize, int ysize, int zsize, float voxelSize, short[] data16) {
-        totalVoxels=0;
-        selectedVoxels=0;
+        xSize=xsize;
+        ySize=ysize;
+        zSize=zsize;
+        this.voxelSize=voxelSize;
+        totalVoxelCount=0;
+        thresholdVoxelCount=0;
         float intensityThreshold=(Float)parameterMap.get(INTENSITY_THRESHOLD_FLOAT);
         for (int z=0;z<zsize;z++) {
             float fz=z*voxelSize;
@@ -73,25 +99,91 @@ public class DenseVolumeRenderable extends Renderable {
                     int p=z*ysize*xsize+y*xsize+x;
                     int cv=data16[p];
                     float fw=(float) (cv*1.0/255.0);
-                    totalVoxels++;
+                    totalVoxelCount++;
                     if (fw > intensityThreshold) {
                         Vector4 v = new Vector4(fx, fy, fz, fw);
                         voxels.add(v);
-                        selectedVoxels++;
+                        thresholdVoxelCount++;
                     }
                 }
             }
         }
-        logger.info("totalVoxels="+totalVoxels);
-        logger.info("selectedVoxels="+selectedVoxels);
+        logger.info("totalVoxels="+totalVoxelCount);
+        logger.info("selectedVoxels="+thresholdVoxelCount);
+        consolidateVoxels();
     }
 
-    public long getTotalVoxels() {
-        return totalVoxels;
+    public long getTotalVoxelCount() {
+        return totalVoxelCount;
     }
 
-    public int getSelectedVoxels() {
-        return selectedVoxels;
+    public int getThresholdVoxelCount() {
+        return thresholdVoxelCount;
+    }
+
+    public int getSampledVoxelCount() {
+        return sampledVoxelCount;
+    }
+
+    protected void consolidateVoxels() {
+        int maxVoxels=(Integer)parameterMap.get(MAX_VOXELS_INT);
+        int downsampleLevel=1;
+        logger.info("Starting viList size="+voxels.size());
+        while(sampledVoxels.size()==0 || sampledVoxels.size()>maxVoxels) {
+            if (sampledVoxels.size()==0) {
+                sampledVoxels.addAll(voxels);
+            } else {
+                // If here, we need to downsample
+                sampledVoxels.clear();
+                downsampleLevel++;
+                logger.info("Downsampling to level="+downsampleLevel);
+                ArrayList voxelMatrix[][][] = new ArrayList[zSize][ySize][xSize];
+                for (int vi=0;vi<voxels.size();vi++) {
+                    Vector4 vg=voxels.get(vi);
+                    float[] data=vg.toArray();
+                    int xIndex=(int) (data[0] / voxelSize);
+                    int yIndex=(int) (data[1] / voxelSize);
+                    int zIndex=(int) (data[2] / voxelSize);
+                    if (voxelMatrix[zIndex][yIndex][xIndex]==null) {
+                        voxelMatrix[zIndex][yIndex][xIndex]=new ArrayList<Vector4>();
+                    }
+                    voxelMatrix[zIndex][yIndex][xIndex].add(vg);
+                }
+                for (int z=0;z<zSize;z++) {
+                    for (int y=0;y<ySize;y++) {
+                        for (int x=0;x<xSize;x++) {
+                            List<Vector4> vList=voxelMatrix[z][y][x];
+                            if (vList!=null) {
+                                float ax=1000000f;
+                                float ay=1000000f;
+                                float az=1000000f;
+                                float aw=0.0f;
+                                for (int v=0;v<vList.size();v++) {
+                                    Vector4 vg=vList.get(v);
+                                    float[] data=vg.toArray();
+                                    if (data[0]<ax) {
+                                        ax=data[0];
+                                    }
+                                    if (data[1]<ay) {
+                                        ay=data[1];
+                                    }
+                                    if (data[2]<az) {
+                                        az=data[2];
+                                    }
+                                    if (data[3]>aw) { // MIP
+                                        aw=data[3];
+                                    }
+                                }
+                                float ls=new Float(vList.size());
+                                sampledVoxels.add(new Vector4(ax, ay, az, aw));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        sampledVoxelCount=sampledVoxels.size();
+        logger.info("Final downsample level="+downsampleLevel+" with voxelCount="+sampledVoxels.size());
     }
 
 }
