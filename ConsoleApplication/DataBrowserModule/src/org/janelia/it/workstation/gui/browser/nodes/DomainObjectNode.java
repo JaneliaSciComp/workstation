@@ -20,12 +20,12 @@ import javax.swing.Action;
 import static javax.swing.Action.NAME;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
@@ -71,8 +71,23 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         this.parentChildFactory = parentChildFactory;
         this.lookupContents = lookupContents;
         lookupContents.add(domainObject);
+        
+        // Can only get the top component instnace inside the EDT, running this in other threads caused a deadlock
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                DomainExplorerTopComponent.getInstance().registerNode(DomainObjectNode.this);
+            }
+        });
     }
-
+    
+    public void update(DomainObject domainObject) {
+        log.info("Updating node with: {}",domainObject.getName());
+        lookupContents.remove(getDomainObject());
+        lookupContents.add(domainObject);
+        fireCookieChange();
+    }
+    
     protected InstanceContent getLookupContents() {
         return lookupContents;
     }

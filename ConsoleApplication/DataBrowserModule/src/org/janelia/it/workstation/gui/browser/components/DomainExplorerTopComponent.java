@@ -1,17 +1,26 @@
 package org.janelia.it.workstation.gui.browser.components;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
+import java.lang.ref.WeakReference;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.ActionMap;
+import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
@@ -24,7 +33,6 @@ import org.janelia.it.workstation.gui.browser.nodes.RootNode;
 import org.janelia.it.workstation.gui.browser.nodes.WorkspaceNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -87,6 +95,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private RootNode root;
     
     private final Debouncer debouncer = new Debouncer();
+    
+    private Multimap<Long, WeakReference> nodesById = HashMultimap.<Long, WeakReference>create();
     
     public DomainExplorerTopComponent() {
         initComponents();
@@ -214,6 +224,18 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
     }
     
+    @Subscribe
+    public void objectChanged(DomainObjectChangeEvent event) {
+        
+        DomainObject domainObject = event.getDomainObject();
+        log.info("Object changed: {}",domainObject.getId());
+        
+        for(DomainObjectNode node : getNodesById(domainObject.getId())) {
+            log.info("  Updating matching node {}",node.getDisplayName());
+            node.update(domainObject);
+        }
+    }
+    
     public void refresh() {
         refresh(true, true, null);
     }
@@ -242,7 +264,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     DomainModel model = DomainMgr.getDomainMgr().getModel();
                     model.invalidateAll();
                 }
-//                selectRoot();
                 root.refreshChildren();
             }
 
@@ -321,5 +342,34 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     public void selectNodeById(Long id) {
         throw new UnsupportedOperationException("Not yet implemented");
+    }
+    
+    public void registerNode(final DomainObjectNode node) {
+        // Clear existing references to similar nodes
+        for(Iterator<WeakReference> iterator = nodesById.get(node.getId()).iterator(); iterator.hasNext(); ) {
+            WeakReference<DomainObjectNode> ref = iterator.next();
+            if (ref.get()==null) {
+                log.info("removing expired reference for {}",node.getId());
+                iterator.remove();
+            }
+        }
+        nodesById.put(node.getId(), new WeakReference(node));
+        log.info("registered {} ({} registered)",node.getDisplayName(), nodesById.size());
+    }
+    
+    public Set<DomainObjectNode> getNodesById(Long id) {
+        log.info("getting nodes with id {}",id);
+        Set<DomainObjectNode> nodes = new HashSet<>();
+        for(Iterator<WeakReference> iterator = nodesById.get(id).iterator(); iterator.hasNext(); ) {
+            WeakReference<DomainObjectNode> ref = iterator.next();
+            DomainObjectNode node = ref.get();
+            if (node==null) {
+                iterator.remove();
+            }
+            else {
+                nodes.add(node);
+            }
+        }
+        return nodes;
     }
 }

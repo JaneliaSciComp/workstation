@@ -6,11 +6,9 @@ import java.util.Collections;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectComparator;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -75,7 +73,7 @@ public class RootNode extends AbstractNode {
         protected Node createNodeForKey(DomainObject key) {
             try {
                 if (Workspace.class.isAssignableFrom(key.getClass())) {
-                    return new WorkspaceNode(null, (Workspace) key);
+                    return new WorkspaceNode((Workspace) key);
                 }
                 else {
                     throw new IllegalStateException("Illegal root node: " + key.getClass().getName());

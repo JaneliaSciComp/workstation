@@ -152,8 +152,13 @@ public class CustomTreeView extends BeanTreeView {
             List<Node> nodes = new ArrayList<>();
             for(Long[] path : paths) {
                 Node node = NodeUtils.findNodeWithPath(mgr.getRootContext(), path);
-                log.debug("Selecting node: {}",node.getDisplayName());
-                nodes.add(node);
+                if (node==null) {
+                    log.warn("Could not find node with path {}",NodeUtils.createPathString(path));
+                }
+                else {
+                    log.debug("Selecting node: {}",node.getDisplayName());
+                    nodes.add(node);
+                }
             }        
             Node[] ar = new Node[nodes.size()];
             nodes.toArray(ar);
@@ -206,6 +211,7 @@ public class CustomTreeView extends BeanTreeView {
     public void expand(List<Long[]> paths) {
         for (Iterator<Long[]> it = paths.iterator(); it.hasNext();) {
             Long[] path = it.next();
+            log.debug("Expanding {}",NodeUtils.createPathString(path));
             TreePath tp = getTreePath(path);
             log.debug("Expanding {}",tp);
             if (tp != null) {

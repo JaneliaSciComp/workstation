@@ -22,7 +22,14 @@ public class ResultPage implements AnnotatedDomainObjectList {
     private Map<Long, DomainObject> domainObjectById;
     
     public ResultPage(List<DomainObject> domainObjects, List<Annotation> annotations, int totalNumResults) {
-        this.domainObjects.addAll(domainObjects);
+        
+        for(DomainObject domainObject : domainObjects) {
+            // Filter out null objects, in case some references could not be resolved
+            if (domainObject!=null) {
+                this.domainObjects.add(domainObject);
+            }
+        }
+        
         for(Annotation annotation : annotations) {
             annotationsByDomainObjectId.put(annotation.getTarget().getTargetId(), annotation);
         }

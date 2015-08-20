@@ -96,7 +96,7 @@ public class NodeUtils {
             log.trace("findNodeWithPath({},{})",start.getDisplayName(),NodeUtils.createPathString(ids));
         }
         
-        if (ids.length==0) {
+        if (ids==null || ids.length==0) {
             return start;
         }
         

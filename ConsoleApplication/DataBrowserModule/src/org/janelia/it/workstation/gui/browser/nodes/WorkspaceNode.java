@@ -19,12 +19,8 @@ import org.janelia.it.workstation.gui.util.Icons;
  */
 public class WorkspaceNode extends TreeNodeNode {
     
-    public WorkspaceNode(TreeNodeChildFactory parentChildFactory, Workspace workspace) {
-        super(parentChildFactory, workspace);
-    }
-    
-    private WorkspaceNode(TreeNodeChildFactory parentChildFactory, final TreeNodeChildFactory childFactory, Workspace workspace) {
-        super(parentChildFactory, childFactory, workspace);
+    public WorkspaceNode(Workspace workspace) {
+        super(null, workspace);
     }
     
     public Workspace getWorkspace() {

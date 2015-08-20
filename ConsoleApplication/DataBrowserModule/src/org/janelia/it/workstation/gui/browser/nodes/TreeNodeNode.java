@@ -84,7 +84,12 @@ public class TreeNodeNode extends DomainObjectNode {
         }
     }
 
-    public void refresh() {
+    public void update(TreeNode treeNode) {
+        super.update(treeNode);
+        refreshChildren();
+    }
+    
+    public void refreshChildren() {
         childFactory.refresh();
     }
     
