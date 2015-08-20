@@ -32,6 +32,8 @@ public class DenseVolumeRenderable extends Renderable {
     int zSize=0;
     float voxelSize=0.0f;
 
+    int downsampleLevel=1;
+
     public DenseVolumeRenderable() {
         parameterMap.put(INTENSITY_THRESHOLD_FLOAT, new Float(INTENSITY_THRESHOLD_FLOAT_DEFAULT));
         parameterMap.put(MAX_VOXELS_INT, new Integer(MAX_VOXELS_INT_DEFAULT));
@@ -127,31 +129,35 @@ public class DenseVolumeRenderable extends Renderable {
 
     protected void consolidateVoxels() {
         int maxVoxels=(Integer)parameterMap.get(MAX_VOXELS_INT);
-        int downsampleLevel=1;
-        logger.info("Starting viList size="+voxels.size());
+        logger.info("Starting viList size="+voxels.size()+" with maxVoxels="+maxVoxels);
         while(sampledVoxels.size()==0 || sampledVoxels.size()>maxVoxels) {
             if (sampledVoxels.size()==0) {
                 sampledVoxels.addAll(voxels);
             } else {
                 // If here, we need to downsample
+                int failedSampledVoxelsSize=sampledVoxels.size();
                 sampledVoxels.clear();
                 downsampleLevel++;
-                logger.info("Downsampling to level="+downsampleLevel);
-                ArrayList voxelMatrix[][][] = new ArrayList[zSize][ySize][xSize];
+                int dZ=zSize/downsampleLevel;
+                int dY=ySize/downsampleLevel;
+                int dX=xSize/downsampleLevel;
+                logger.info("Downsampling to level="+downsampleLevel+" due to failed size="+failedSampledVoxelsSize);
+                ArrayList voxelMatrix[][][] = new ArrayList[dZ][dY][dX];
                 for (int vi=0;vi<voxels.size();vi++) {
                     Vector4 vg=voxels.get(vi);
                     float[] data=vg.toArray();
-                    int xIndex=(int) (data[0] / voxelSize);
-                    int yIndex=(int) (data[1] / voxelSize);
-                    int zIndex=(int) (data[2] / voxelSize);
+                    float sd=voxelSize*downsampleLevel;
+                    int xIndex=(int) (data[0] / sd);
+                    int yIndex=(int) (data[1] / sd);
+                    int zIndex=(int) (data[2] / sd);
                     if (voxelMatrix[zIndex][yIndex][xIndex]==null) {
                         voxelMatrix[zIndex][yIndex][xIndex]=new ArrayList<Vector4>();
                     }
                     voxelMatrix[zIndex][yIndex][xIndex].add(vg);
                 }
-                for (int z=0;z<zSize;z++) {
-                    for (int y=0;y<ySize;y++) {
-                        for (int x=0;x<xSize;x++) {
+                for (int z=0;z<dZ;z++) {
+                    for (int y=0;y<dY;y++) {
+                        for (int x=0;x<dX;x++) {
                             List<Vector4> vList=voxelMatrix[z][y][x];
                             if (vList!=null) {
                                 float ax=1000000f;
@@ -174,7 +180,7 @@ public class DenseVolumeRenderable extends Renderable {
                                         aw=data[3];
                                     }
                                 }
-                                float ls=new Float(vList.size());
+                                //float ls=new Float(vList.size());
                                 sampledVoxels.add(new Vector4(ax, ay, az, aw));
                             }
                         }
@@ -184,6 +190,10 @@ public class DenseVolumeRenderable extends Renderable {
         }
         sampledVoxelCount=sampledVoxels.size();
         logger.info("Final downsample level="+downsampleLevel+" with voxelCount="+sampledVoxels.size());
+    }
+
+    public float getVoxelSize() {
+        return voxelSize * downsampleLevel;
     }
 
 }
