@@ -34,7 +34,7 @@ import org.openide.util.NbBundle.Messages;
         displayName = "#CTL_NewFolderAction"
 )
 @ActionReference(path = "Menu/File/New", position = 2)
-@Messages("CTL_NewFolderAction=Filter")
+@Messages("CTL_NewFolderAction=Folder")
 public final class NewFolderAction implements ActionListener {
 
     protected final Component mainFrame = SessionMgr.getMainFrame();
