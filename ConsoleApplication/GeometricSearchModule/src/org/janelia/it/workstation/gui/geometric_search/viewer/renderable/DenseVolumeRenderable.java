@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.geometric_search.viewer.dataset;
+package org.janelia.it.workstation.gui.geometric_search.viewer.renderable;
 
 import org.janelia.geometry3d.Vector4;
 import org.slf4j.Logger;

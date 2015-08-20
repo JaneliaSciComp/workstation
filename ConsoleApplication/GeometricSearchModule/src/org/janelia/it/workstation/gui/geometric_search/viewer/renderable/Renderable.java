@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.geometric_search.viewer.dataset;
+package org.janelia.it.workstation.gui.geometric_search.viewer.renderable;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,17 +1,17 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
-import de.javasoft.swing.JYScrollPaneMap;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
-import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Renderable;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gui.ActorPanel;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gui.DatasetPanel;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gui.RenderablePanel;
+import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.Renderable;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gui.ScrollableRowPanel;
-import org.jdesktop.swingx.JXTextArea;
-import org.jdesktop.swingx.JXTextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
 
 /**
@@ -29,9 +29,10 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     TransferHandler transferHandler;
 
     JPanel datasetManagementPanel = new JPanel();
-    ScrollableRowPanel datasetPanel;
+    DatasetPanel datasetPanel;
+    RenderablePanel renderablePanel;
     JPanel actorManagermentPanel = new JPanel();
-    ScrollableRowPanel renderablePanel;
+    ActorPanel actorPanel;
 
 
     public VoxelViewerMainPanel() {
@@ -45,17 +46,6 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         add(actorManagermentPanel, BorderLayout.EAST);
 
         controller = new VoxelViewerBasicController();
-    }
-
-    protected void setupDatasetPanel() {
-        datasetPanel = new ScrollableRowPanel();
-        model.getDatasetModel().addAdditionListener(new VoxelViewerEventListener() {
-            @Override
-            public void processEvent(Object o) {
-                Dataset dataset = (Dataset) o;
-                datasetPanel.addEntry(dataset.getName());
-            }
-        });
     }
 
     @Override
@@ -113,6 +103,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
         setupDatasetPanel();
         setupRenderablePanel();
+        setupActorPanel();
 
         datasetManagementPanel.add(datasetPanel);
         datasetManagementPanel.add(renderablePanel);
@@ -122,18 +113,19 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
     }
 
+    protected void setupDatasetPanel() {
+        datasetPanel = new DatasetPanel();
+        EventManager.addListener(model.getDatasetModel(), datasetPanel);
+    }
+
     public void setupRenderablePanel() {
-        renderablePanel = new ScrollableRowPanel();
-        model.addDatasetSelectionListener(new VoxelViewerEventListener() {
-            @Override
-            public void processEvent(Object o) {
-                Dataset dataset = (Dataset)o;
-                renderablePanel.clear();
-                for (Renderable renderable : dataset.getRenderables()) {
-                    renderablePanel.addEntry(renderable.getName());
-                }
-            }
-        });
+        renderablePanel = new RenderablePanel();
+        EventManager.addListener(model.getRenderableModel(), renderablePanel);
+    }
+
+    public void setupActorPanel() {
+        actorPanel = new ActorPanel();
+        EventManager.addListener(model.getActorModel(), actorPanel);
     }
 
     public void displayReady() {

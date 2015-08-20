@@ -8,13 +8,11 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewer4DImage;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerUtil;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
-import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.DenseVolumeRenderable;
-import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Renderable;
+import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.DenseVolumeRenderable;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.awt.datatransfer.Transferable;
 import java.io.File;
 import java.util.List;
