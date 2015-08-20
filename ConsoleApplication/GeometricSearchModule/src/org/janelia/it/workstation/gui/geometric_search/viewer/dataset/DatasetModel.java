@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.dataset;
 
-import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerEventListener;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.DatasetRemovedEvent;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.DatasetSelectedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,30 +18,25 @@ public class DatasetModel {
 
     List<Dataset> datasetList = new ArrayList<>();
 
-    List<VoxelViewerEventListener> additionListeners=new ArrayList<>();
-
-    List<VoxelViewerEventListener> removalListeners=new ArrayList<>();
+    Dataset selectedDataset=null;
 
     public void addDataset(Dataset dataset) {
         datasetList.add(dataset);
-        for (VoxelViewerEventListener listener : additionListeners) {
-            listener.processEvent(dataset);
-        }
+        EventManager.sendEvent(this, new DatasetSelectedEvent(dataset));
     }
 
     public void removeDataset(Dataset dataset) {
-        for (VoxelViewerEventListener listener : removalListeners) {
-            listener.processEvent(dataset);
-        }
         datasetList.remove(dataset);
+        EventManager.sendEvent(this, new DatasetRemovedEvent(dataset));
     }
 
-    public void addAdditionListener(VoxelViewerEventListener listener) {
-        additionListeners.add(listener);
+    public Dataset getSelectedDataset() {
+        return selectedDataset;
     }
 
-    public void addRemovalListener(VoxelViewerEventListener listener) {
-        removalListeners.add(listener);
+    public void setSelectedDataset(Dataset selectedDataset) {
+        this.selectedDataset = selectedDataset;
+        EventManager.sendEvent(this, new DatasetSelectedEvent(selectedDataset));
     }
 
 }

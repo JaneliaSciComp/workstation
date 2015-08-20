@@ -58,11 +58,8 @@ public class VoxelViewerBasicController implements VoxelViewerController {
     }
 
     public void selectDataset(Dataset dataset) {
-        model.setSelectedDataset(dataset);
-        model.setDisposeAndClearAllActorsMsg(); // todo - reimplment with dataset:renderable:actor:glActor design
-
+        model.getDatasetModel().addDataset(dataset);
         viewer.resetView();
-
     }
 
 //    public List<ArrayCubeGLActor> createCubeGLActorsFromStack(File stackFile, int maxVoxels, List<Vector4> preferredColorList, Matrix4 rotation) {

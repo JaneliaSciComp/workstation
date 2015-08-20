@@ -1,17 +1,14 @@
-package org.janelia.it.workstation.gui.geometric_search.viewer.actor;
+package org.janelia.it.workstation.gui.geometric_search.viewer.gui;
 
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerEventListener;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.VoxelViewerEvent;
 
 /**
- * Created by murphys on 8/7/2015.
+ * Created by murphys on 8/20/2015.
  */
-public class ActorModel implements VoxelViewerEventListener {
-
-
+public class RenderablePanel extends ScrollableRowPanel implements VoxelViewerEventListener {
     @Override
     public void processEvent(VoxelViewerEvent event) {
 
     }
-
 }

@@ -8,10 +8,12 @@ import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.ActorModel;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.DatasetModel;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderActionSequence;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4SimpleActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GLDisplayUpdateCallback;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.*;
+import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.RenderableModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,9 +50,7 @@ public class VoxelViewerModel {
     VoxelViewerGLPanel viewer;
 
     DatasetModel datasetModel=new DatasetModel();
-    Dataset selectedDataset=null;
-    List<VoxelViewerEventListener> datasetSelectionListeners=new ArrayList<>();
-
+    RenderableModel renderableModel=new RenderableModel();
     ActorModel actorModel=new ActorModel();
 
     public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 2.0;
@@ -62,6 +62,12 @@ public class VoxelViewerModel {
         camera3d = new BasicObservableCamera3d();
         camera3d.setFocus(0.0,0.0,0.5);
         cameraDepth = new Vec3(0.0, 0.0, DEFAULT_CAMERA_FOCUS_DISTANCE);
+        setupModelEvents();
+    }
+
+    public void setupModelEvents() {
+        EventManager.addListener(datasetModel, renderableModel);
+        EventManager.addListener(renderableModel, actorModel);
     }
 
     public ActorModel getActorModel() {
@@ -72,29 +78,13 @@ public class VoxelViewerModel {
         return datasetModel;
     }
 
+    public RenderableModel getRenderableModel() { return renderableModel; }
+
     public int getNextActorIndex() {
         synchronized (this) {
             int index=maxActorIndex;
             maxActorIndex++;
             return index;
-        }
-    }
-
-    public void addDatasetSelectionListener(VoxelViewerEventListener listener) {
-        datasetSelectionListeners.add(listener);
-    }
-
-    public Dataset getSelectedDataset() {
-        return selectedDataset;
-    }
-
-    public void setSelectedDataset(Dataset dataset) {
-        logger.info("setSelectedDataset() dataset="+dataset.getName());
-        selectedDataset=dataset;
-        int listenerCount=datasetSelectionListeners.size();
-        logger.info("datasetSelectionListener count="+listenerCount);
-        for (VoxelViewerEventListener listener : datasetSelectionListeners) {
-            listener.processEvent(dataset);
         }
     }
 
