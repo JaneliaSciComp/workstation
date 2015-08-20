@@ -56,6 +56,7 @@ import org.janelia.it.workstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
+import org.janelia.it.workstation.gui.framework.actions.EditLVVSamplePathActionListener;
 import org.janelia.it.workstation.gui.framework.actions.GoToRelatedEntityAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
@@ -1984,44 +1985,7 @@ public class EntityContextMenu extends JPopupMenu {
         final String entityType = rootedEntity.getEntity().getEntityTypeName();
         if (entityType.equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             JMenuItem menuItem = new JMenuItem("  Edit sample path");
-            menuItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    final String editedPath = (String) JOptionPane.showInputDialog(
-                            mainFrame,
-                            "New Linux path to sample:",
-                            "Edit sample path",
-                            JOptionPane.PLAIN_MESSAGE,
-                            null, // icon
-                            null, // choice list
-                            rootedEntity.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH) // input value
-                            );
-                    if (editedPath == null || editedPath.length() == 0) {
-                        // canceled
-                        return;
-                    } else {
-                        final Entity sampleEntity = rootedEntity.getEntity();
-                        SimpleWorker saver = new SimpleWorker() {
-                            @Override
-                            protected void doStuff() throws Exception {
-                                sampleEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH, editedPath);
-                                ModelMgr.getModelMgr().saveOrUpdateEntity(sampleEntity);
-                            }
-
-                            @Override
-                            protected void hadSuccess() {
-                                // blah
-                            }
-
-                            @Override
-                            protected void hadError(Throwable error) {
-                                SessionMgr.getSessionMgr().handleException(error);
-                            }
-                        };
-                        saver.execute();
-                    }
-                }
-            });
+            menuItem.addActionListener(new EditLVVSamplePathActionListener(rootedEntity));
             return menuItem;
         } else {
             return null;
