@@ -52,6 +52,7 @@ public final class NewFilterAction implements ActionListener {
     public void actionPerformed(ActionEvent e) {
 
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
+        final DomainModel model = DomainMgr.getDomainMgr().getModel();
                     
         if (parentNode==null) {
             // If there is no parent node specified, we don't actually have to 
@@ -63,23 +64,23 @@ public final class NewFilterAction implements ActionListener {
         }
         
         // Since we're putting the filter under a parent, we need the name up front
-        String name = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), 
+        final String name = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), 
                         "Filter Name:\n", "Create new filter", JOptionPane.PLAIN_MESSAGE, null, null, null);
         if (StringUtils.isEmpty(name)) {
             return;
         }
         
-        final Filter filter = new Filter();
-        filter.setName(name);
-        filter.setSearchType(FilterEditorPanel.DEFAULT_SEARCH_CLASS.getName());
-        
         // Save the filter and select it in the explorer so that it opens 
         SimpleWorker newFilterWorker = new SimpleWorker() {
 
+            private Filter filter;
+
             @Override
             protected void doStuff() throws Exception {
-                DomainModel model = DomainMgr.getDomainMgr().getModel();
-                model.save(filter);
+                filter = new Filter();
+                filter.setName(name);
+                filter.setSearchType(FilterEditorPanel.DEFAULT_SEARCH_CLASS.getName());
+                filter = model.save(filter);
                 TreeNode parentFolder = parentNode.getTreeNode();
                 model.addChild(parentFolder, filter);
             }

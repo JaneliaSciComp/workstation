@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
 import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -24,6 +23,7 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
@@ -117,7 +117,7 @@ public class DomainModel {
      * @param domainObject
      * @return canonical domain object instance
      */
-    private DomainObject putOrUpdate(DomainObject domainObject) {
+    private <T extends DomainObject> T putOrUpdate(T domainObject) {
         if (domainObject == null) {
             // This is a null object, which cannot go into the cache
             log.trace("putOrUpdate: object is null");
@@ -128,21 +128,21 @@ public class DomainModel {
             DomainObject canonicalObject = objectCache.getIfPresent(id);
             if (canonicalObject != null) {
                 if (canonicalObject!=domainObject) {
-                    log.debug("putOrUpdate: Updating cached instance: {} ({})",id,DomainUtils.identify(canonicalObject));
+                    log.debug("putOrUpdate: Updating cached instance: {} {}",id,DomainUtils.identify(canonicalObject));
                     objectCache.put(id, domainObject);
                     notifyDomainObjectsInvalidated(canonicalObject);
                 }
                 else {
-                    log.debug("putOrUpdate: Returning cached instance: {} ({})",id,DomainUtils.identify(canonicalObject));
+                    log.debug("putOrUpdate: Returning cached instance: {} {}",id,DomainUtils.identify(canonicalObject));
                 }
             }
             else {
                 canonicalObject = domainObject;
-                log.debug("putOrUpdate: Caching: {} ({}",id,DomainUtils.identify(canonicalObject));
+                log.debug("putOrUpdate: Caching: {} {}",id,DomainUtils.identify(canonicalObject));
                 objectCache.put(id, domainObject);
             }
             
-            return canonicalObject;
+            return (T)canonicalObject;
         }
     }
     
@@ -301,7 +301,7 @@ public class DomainModel {
      * @return canonical domain object instance
      * @throws Exception
      */
-    public DomainObject getDomainObjectById(DomainObjectId id) throws Exception {
+    public DomainObject getDomainObjectByDomainObjectId(DomainObjectId id) throws Exception {
         log.info("Looking for {}",id);
         // This is sort of a hack to allow users to get objects by their superclass. 
         // TODO: Maybe instead of doing all this extra work, we could just key the cache by GUID. 
@@ -320,10 +320,10 @@ public class DomainModel {
     }
     
     public TreeNode getDomainObject(Class<? extends DomainObject> domainClass, Long id) throws Exception {
-        return (TreeNode)getDomainObjectById(new DomainObjectId(domainClass, id));
+        return (TreeNode)getDomainObjectByDomainObjectId(new DomainObjectId(domainClass, id));
     }
     
-    public List<DomainObject> getDomainObjects(List<Reference> references) {
+    public List<DomainObject> getDomainObjectsByReference(List<Reference> references) {
                 
         if (references==null) return new ArrayList<>();
         
@@ -364,6 +364,18 @@ public class DomainModel {
         
         log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedRefs.size());
         return domainObjects;
+    }
+    
+    public List<DomainObject> getDomainObjectsByDomainObjectId(List<DomainObjectId> domainObjectIds) {
+        List<Reference> references = new ArrayList<>();
+        for(DomainObjectId id : domainObjectIds) {
+            references.add(DomainUtils.getReferenceForId(id));
+        }
+        return getDomainObjectsByReference(references);
+    }
+    
+    public DomainObject getDomainObjectByReference(Reference reference) {
+        return getDomainObject(reference.getTargetType(), reference.getTargetId());
     }
     
     public DomainObject getDomainObject(String type, Long id) {
@@ -464,44 +476,64 @@ public class DomainModel {
         return ontologies;
     }
     
-    public void changePermissions(String type, Long id, String granteeKey, String rights, boolean grant) throws Exception {
+    public void changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
         synchronized (this) {
-            facade.changePermissions(type, DomainUtils.getCollectionOfOne(id), granteeKey, rights, grant);
-            putOrUpdate(getDomainObject(type, id));
+            ObjectSet objectSet = new ObjectSet();
+            String type = MongoUtils.getCollectionName(domainObject.getClass());
+            objectSet.setTargetType(type);
+            objectSet.addMember(domainObject.getId());
+            changePermissions(objectSet, granteeKey, rights, grant);
         }
-        // TODO: notify object changes
     }
     
-    public void changePermissions(String type, Collection<Long> ids, String granteeKey, String rights, boolean grant) throws Exception {
+    public void changePermissions(ObjectSet objectSet, String granteeKey, String rights, boolean grant) throws Exception {
         synchronized (this) {
-            facade.changePermissions(type, ids, granteeKey, rights, grant);
-            for(Long id : ids) {
-                putOrUpdate(getDomainObject(type, id));
+            facade.changePermissions(objectSet, granteeKey, rights, grant);
+            for(Long id : objectSet.getMembers()) {
+                putOrUpdate(getDomainObject(objectSet.getTargetType(), id));
             }
         }
-        // TODO: notify objects changes
     }
     
-    // TODO: replace this with creation and mutation methods
-    public void create(TreeNode treeNode) throws Exception {
+    public TreeNode create(TreeNode treeNode) throws Exception {
+        TreeNode canonicalObject;
         synchronized (this) {
-            putOrUpdate(facade.create(treeNode));
+            canonicalObject = (TreeNode)putOrUpdate(facade.create(treeNode));
         }
+        notifyDomainObjectCreated(canonicalObject);
+        return canonicalObject;
     }
     
-    public void save(Filter filter) throws Exception {
+    public Filter save(Filter filter) throws Exception {
+        Filter canonicalObject;
         synchronized (this) {
-            putOrUpdate(filter.getId()==null ? facade.create(filter) : facade.update(filter));
+            canonicalObject = (Filter)putOrUpdate(filter.getId()==null ? facade.create(filter) : facade.update(filter));
         }
-        notifyDomainObjectCreated(filter);
+        notifyDomainObjectCreated(canonicalObject);
+        return canonicalObject;
     }
     
-    // TODO: replace this with creation and mutation methods
-    public void create(ObjectSet objectSet) throws Exception {
+    public ObjectSet create(ObjectSet objectSet) throws Exception {
+        ObjectSet canonicalObject;
         synchronized (this) {
-            putOrUpdate(facade.create(objectSet));
+            canonicalObject = (ObjectSet)putOrUpdate(facade.create(objectSet));
         }
-        notifyDomainObjectCreated(objectSet);
+        notifyDomainObjectCreated(canonicalObject);
+        return canonicalObject;
+    }
+    
+    public Annotation create(Annotation annotation) throws Exception {
+        Annotation canonicalObject;
+        synchronized (this) {
+            canonicalObject = (Annotation)putOrUpdate(facade.create(annotation));
+        }
+        notifyDomainObjectChanged(getDomainObjectByReference(annotation.getTarget()));
+        return canonicalObject;
+    }
+    
+    public void remove(Annotation annotation) throws Exception {
+        facade.remove(annotation);
+        notifyAnnotationsChanged(getDomainObjectByReference(annotation.getTarget()));
     }
     
     public void reorderChildren(TreeNode treeNode, int[] order) throws Exception {
@@ -586,6 +618,13 @@ public class DomainModel {
         Events.getInstance().postOnEventBus(new DomainObjectCreateEvent(domainObject));
     }
 
+    private void notifyAnnotationsChanged(DomainObject domainObject) {
+        if (log.isTraceEnabled()) {
+            log.trace("Generating DomainObjectAnnotationChangeEvent for {}", DomainUtils.identify(domainObject));
+        }
+        Events.getInstance().postOnEventBus(new DomainObjectAnnotationChangeEvent(domainObject));
+    }
+    
     private void notifyDomainObjectChanged(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectChangeEvent for {}", DomainUtils.identify(domainObject));

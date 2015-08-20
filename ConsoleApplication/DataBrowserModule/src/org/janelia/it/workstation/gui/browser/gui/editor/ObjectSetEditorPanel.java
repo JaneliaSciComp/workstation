@@ -1,13 +1,11 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
 import java.awt.BorderLayout;
-import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JPanel;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;

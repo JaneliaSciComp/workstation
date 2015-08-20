@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.browser.gui.support;
 
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
@@ -18,6 +17,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -175,7 +175,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
             @Override
             protected void doStuff() throws Exception {
-                ModelMgr.getModelMgr().removeAnnotation(toDelete.getId());
+                DomainMgr.getDomainMgr().getModel().remove(toDelete);
             }
 
             @Override
@@ -203,7 +203,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             @Override
             protected void doStuff() throws Exception {
                 for (Annotation toDelete : toDeleteList) {
-                    ModelMgr.getModelMgr().removeAnnotation(toDelete.getId());
+                    DomainMgr.getDomainMgr().getModel().remove(toDelete);
                 }
             }
 

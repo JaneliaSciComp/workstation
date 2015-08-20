@@ -8,7 +8,10 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.*;
 import org.janelia.it.jacs.model.domain.support.MongoUtils;
+import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
@@ -94,6 +97,11 @@ public class ApplyAnnotationAction extends NodeAction {
         Long keyTermId = node.getId();
         String keyTermValue = node.getDisplayName();
 
+        if (ontologyTerm instanceof Category || ontologyTerm instanceof org.janelia.it.jacs.model.domain.ontology.Enum) {
+            // Cannot annotate with a category or enum
+            return;
+        }
+        
         log.info("Will annotate all selected objects with: {} ({})",keyTermValue,keyTermId);
         
         DomainListViewTopComponent listView = DomainListViewTopComponent.getActiveInstance();
@@ -106,17 +114,12 @@ public class ApplyAnnotationAction extends NodeAction {
             return;
         }
         
-        // TODO: get objects
-        final List<DomainObject> selectedDomainObjects = null;
-        if (true) {
-            log.info("ANNOTATION IS NOT YET IMPLEMENTED");
-            return;
+        for(DomainObjectId id : selectedIds) {
+            log.info("selected: "+id);
         }
         
-        if (ontologyTerm instanceof Category || ontologyTerm instanceof org.janelia.it.jacs.model.domain.ontology.Enum) {
-            // Cannot annotate with a category or enum
-            return;
-        }
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        final List<DomainObject> selectedDomainObjects = model.getDomainObjectsByDomainObjectId(selectedIds);
 
         // Get the input value, if required
 
@@ -244,16 +247,15 @@ public class ApplyAnnotationAction extends NodeAction {
     
     private void createAndShareAnnotation(Annotation annotation) throws Exception {
         
-        log.info("TODO: persist annotation "+annotation.getKey()+" on "+annotation.getTarget());
-        // TODO: persist
-//        Entity annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
-//        log.info("Saved annotation as " + annotationEntity.getId());
-//        
-//        PermissionTemplate template = SessionMgr.getBrowser().getAutoShareTemplate();
-//        if (template!=null) {
-//            ModelMgr.getModelMgr().grantPermissions(annotationEntity.getId(), template.getSubjectKey(), template.getPermissions(), false);
-//            log.info("Auto-shared annotation with " + template.getSubjectKey());
-//        }
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        Annotation savedAnnotation = model.create(annotation);
+        log.info("Saved annotation as " + savedAnnotation.getId());
+        
+        PermissionTemplate template = SessionMgr.getBrowser().getAutoShareTemplate();
+        if (template!=null) {
+            model.changePermissions(annotation, template.getSubjectKey(), template.getPermissions(), true);  
+            log.info("Auto-shared annotation with " + template.getSubjectKey());
+        }
     }
     
 }

@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.browser.gui.support;
 
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -11,6 +10,8 @@ import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.framework.viewer.TagCloudPanel;
 
 /**
@@ -30,7 +31,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<Annotation> implement
 
             @Override
             protected void doStuff() throws Exception {
-                ModelMgr.getModelMgr().removeAnnotation(tag.getId());
+                DomainMgr.getDomainMgr().getModel().remove(tag);
             }
 
             @Override

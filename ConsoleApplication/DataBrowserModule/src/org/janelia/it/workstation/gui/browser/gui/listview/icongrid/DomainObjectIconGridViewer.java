@@ -122,6 +122,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     public void showDomainObjects(AnnotatedDomainObjectList domainObjectList) {
+        
         showImageObjects(domainObjectList.getDomainObjects());
         // TODO: set annotations?
         

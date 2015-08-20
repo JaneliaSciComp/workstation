@@ -52,6 +52,7 @@ public final class NewFolderAction implements ActionListener {
     public void actionPerformed(ActionEvent e) {
 
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
+        final DomainModel model = DomainMgr.getDomainMgr().getModel();
         
         if (parentNode==null) {
             // If there is no parent node specified, we'll just use the default workspace. 
@@ -63,17 +64,17 @@ public final class NewFolderAction implements ActionListener {
         if (StringUtils.isEmpty(name)) {
             return;
         }
-        
-        final TreeNode folder = new TreeNode();
-        folder.setName(name);
 
         // Save the set and select it in the explorer so that it opens
         SimpleWorker newSetWorker = new SimpleWorker() {
 
+            private TreeNode folder;
+            
             @Override
             protected void doStuff() throws Exception {
-                DomainModel model = DomainMgr.getDomainMgr().getModel();
-                model.create(folder);
+                folder = new TreeNode();
+                folder.setName(name);
+                folder = model.create(folder);
                 TreeNode parentFolder = parentNode.getTreeNode();
                 model.addChild(parentFolder, folder);
             }

@@ -15,7 +15,7 @@ import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.MongoUtils;
 
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
@@ -167,18 +167,19 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
             protected void doStuff() throws Exception {
                 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                Collection<Long> selectedIds = new ArrayList<>();
+                ObjectSet selectedObjects = new ObjectSet();
+                selectedObjects.setTargetType(annotationType);
                 for(DomainObjectId id : selected) {
-                    selectedIds.add(id.getId());
+                    selectedObjects.addMember(id.getId());
                 }
                 
-                for(Annotation annotation : model.getAnnotations(selectedIds)) {
+                for(Annotation annotation : model.getAnnotations(selectedObjects.getMembers())) {
                     
                     // Must be owner to grant access
                     if (!DomainUtils.isOwner(annotation)) continue;
 
-                    model.changePermissions(annotationType, selectedIds, subject.getKey(), "r", read);
-                    model.changePermissions(annotationType, selectedIds, subject.getKey(), "w", write);
+                    model.changePermissions(selectedObjects, subject.getKey(), "r", read);
+                    model.changePermissions(selectedObjects, subject.getKey(), "w", write);
                     
                     numAnnotationsModified++;
                 }

@@ -55,6 +55,7 @@ public final class NewSetAction implements ActionListener {
     public void actionPerformed(ActionEvent e) {
 
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
+        final DomainModel model = DomainMgr.getDomainMgr().getModel();
         
         if (parentNode==null) {
             // If there is no parent node specified, we'll just use the default workspace. 
@@ -66,17 +67,17 @@ public final class NewSetAction implements ActionListener {
         if (StringUtils.isEmpty(name)) {
             return;
         }
-        
-        final ObjectSet objectSet = new ObjectSet();
-        objectSet.setName(name);
 
         // Save the set and select it in the explorer so that it opens
         SimpleWorker newSetWorker = new SimpleWorker() {
 
+            private ObjectSet objectSet;
+            
             @Override
             protected void doStuff() throws Exception {
-                DomainModel model = DomainMgr.getDomainMgr().getModel();
-                model.create(objectSet);
+                objectSet = new ObjectSet();
+                objectSet.setName(name);
+                objectSet = model.create(objectSet);
                 TreeNode parentFolder = parentNode.getTreeNode();
                 model.addChild(parentFolder, objectSet);
             }

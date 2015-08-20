@@ -81,8 +81,8 @@ public class MongoDomainFacade implements DomainFacade {
     }
 
     @Override
-    public void changePermissions(String type, Collection<Long> ids, String granteeKey, String rights, boolean grant) throws Exception {
-        dao.changePermissions(SessionMgr.getSubjectKey(), type, ids, granteeKey, rights, grant);
+    public void changePermissions(ObjectSet objectSet, String granteeKey, String rights, boolean grant) throws Exception {
+        dao.changePermissions(SessionMgr.getSubjectKey(), objectSet.getTargetType(), objectSet.getMembers(), granteeKey, rights, grant);
     }
 
     @Override
@@ -103,6 +103,16 @@ public class MongoDomainFacade implements DomainFacade {
     @Override
     public Filter update(Filter filter) throws Exception {
         return dao.save(SessionMgr.getSubjectKey(), filter);
+    }
+    
+    @Override
+    public Annotation create(Annotation annotation) throws Exception {
+        return dao.save(SessionMgr.getSubjectKey(), annotation);
+    }
+    
+    @Override
+    public void remove(Annotation annotation) throws Exception {
+        dao.remove(SessionMgr.getSubjectKey(), annotation);
     }
     
     @Override

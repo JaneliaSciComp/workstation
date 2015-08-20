@@ -27,6 +27,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationView;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -309,17 +310,17 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
 
     public synchronized void setImageSize(int maxWidth, int maxHeight) {
         setTitle(titleLabel.getText(), maxWidth);
-//        JPanel annotationPanel = (JPanel) annotationView;
-//        if (annotationView instanceof AnnotationTablePanel) {
-//            annotationPanel.setPreferredSize(new Dimension(maxWidth, annotationPanel.getPreferredSize().height));
-//        }
+        JPanel annotationPanel = (JPanel) annotationView;
+        if (annotationView instanceof AnnotationTablePanel) {
+            annotationPanel.setPreferredSize(new Dimension(maxWidth, annotationPanel.getPreferredSize().height));
+        }
     }
 
     public synchronized void resizeTable(int tableHeight) {
-//        JPanel annotationPanel = (JPanel) annotationView;
-//        if (annotationView instanceof AnnotationTablePanel) {
-//            annotationPanel.setPreferredSize(new Dimension(annotationPanel.getPreferredSize().width, tableHeight));
-//        }
+        JPanel annotationPanel = (JPanel) annotationView;
+        if (annotationView instanceof AnnotationTablePanel) {
+            annotationPanel.setPreferredSize(new Dimension(annotationPanel.getPreferredSize().width, tableHeight));
+        }
     }
 
     public void setViewable(boolean wantViewable) {
