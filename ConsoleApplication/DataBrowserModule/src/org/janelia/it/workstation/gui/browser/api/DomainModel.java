@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -71,7 +72,7 @@ public class DomainModel {
             public void onRemoval(RemovalNotification<DomainObjectId, DomainObject> notification) {
                 synchronized (DomainModel.this) {
                     DomainObjectId id = notification.getKey();
-                    //DomainObject domainObject = notification.getValue();
+                    log.debug("removing {}",id);
                     if (workspaceCache.containsKey(id)) {
                         workspaceCache.clear();
                     }
@@ -127,17 +128,17 @@ public class DomainModel {
             DomainObject canonicalObject = objectCache.getIfPresent(id);
             if (canonicalObject != null) {
                 if (canonicalObject!=domainObject) {
-                    log.debug("putOrUpdate: Updating cached instance: {}", DomainUtils.identify(canonicalObject));
+                    log.debug("putOrUpdate: Updating cached instance: {} ({})",id,DomainUtils.identify(canonicalObject));
                     objectCache.put(id, domainObject);
                     notifyDomainObjectsInvalidated(canonicalObject);
                 }
                 else {
-                    log.debug("putOrUpdate: Returning cached instance: {}", DomainUtils.identify(canonicalObject));
+                    log.debug("putOrUpdate: Returning cached instance: {} ({})",id,DomainUtils.identify(canonicalObject));
                 }
             }
             else {
                 canonicalObject = domainObject;
-                log.debug("putOrUpdate: Caching: {}", DomainUtils.identify(canonicalObject));
+                log.debug("putOrUpdate: Caching: {} ({}",id,DomainUtils.identify(canonicalObject));
                 objectCache.put(id, domainObject);
             }
             
@@ -301,11 +302,18 @@ public class DomainModel {
      * @throws Exception
      */
     public DomainObject getDomainObjectById(DomainObjectId id) throws Exception {
-        DomainObject domainObject = objectCache.getIfPresent(id);
-        if (domainObject != null) {
-            log.debug("getEntityById: returning cached domain object {}", DomainUtils.identify(domainObject));
-            return domainObject;
+        log.info("Looking for {}",id);
+        // This is sort of a hack to allow users to get objects by their superclass. 
+        // TODO: Maybe instead of doing all this extra work, we could just key the cache by GUID. 
+        for(Class<?> clazz : MongoUtils.getObjectClasses(MongoUtils.getObjectClassByName(id.getClassName()))) {
+            DomainObjectId did = new DomainObjectId(clazz, id.getId());
+            DomainObject domainObject = objectCache.getIfPresent(did);
+            if (domainObject != null) {
+                log.debug("getEntityById: returning cached domain object {}", DomainUtils.identify(domainObject));
+                return domainObject;
+            }
         }
+        
         synchronized (this) {
             return putOrUpdate(loadDomainObject(id));
         }
