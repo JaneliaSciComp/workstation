@@ -449,15 +449,14 @@ void main() {
             if  (localOpacity > integratedOpacity) {
                 vecIntegratedIntensity = vecLocalIntensity;
                 integratedOpacity = localOpacity;
-                bodyMaxI = localOpacity;
-                tFirstBodyMaxI = t;
-                tFinalBodyMaxI = t;
-                tMaxAbs = t;
+                // Prepare to follow ray to brightest spot
                 inLocalBody = true;
+                bodyMaxI = localOpacity;
+                tFirstBodyMaxI = tFinalBodyMaxI = tMaxAbs = t;
             }
 
-            // Walk to median location of saturated segments
-            if (inLocalBody) {
+            // Walk to median location of saturated segments, for accurate centering
+            else if (inLocalBody) {
                 if (localOpacity == bodyMaxI) { // local maximum plateau
                     tFinalBodyMaxI = t;
                     tMaxAbs = 0.5 * (tFirstBodyMaxI + tFinalBodyMaxI); // median location of plateau
@@ -466,11 +465,14 @@ void main() {
                     tFirstBodyMaxI = t;
                     tFinalBodyMaxI = t;
                     tMaxAbs = t;                    
+                    bodyMaxI = localOpacity;
                 }
                 else {
                     inLocalBody = false; // past local maximum
                 }
             }
+
+
         #elif PROJECTION_MODE == PROJECTION_OCCLUDING
             // vec4 c_src = mix(opacityFunctionMin, vecLocalIntensity, fade);
             vec4 c_src = vecLocalIntensity;
@@ -490,27 +492,31 @@ void main() {
 
             // Update brightest point along ray
             // TODO - click-to-center is not perfect yet...
-            float dI = a_out - a_src; 
+            float dI = a_src * (1.0 - a_dest/a_out); 
             if (dI > maxDI) { // found new biggest occluder
                 maxDI = dI;
                 // Prepare to follow ray to brightest spot
+                inLocalBody = true;
                 bodyMaxI = localOpacity;
                 tFirstBodyMaxI = t;
                 tFinalBodyMaxI = t;
                 tMaxAbs = t;
-                inLocalBody = true;
             }
-            else if (inLocalBody) { // advance to locally brightest voxel
-                if (localOpacity < bodyMaxI) inLocalBody = false; // end of local maximum
-                else if (localOpacity == bodyMaxI) { // local maximum plateau
+
+            // Walk to median location of saturated segments, for accurate centering
+            else if (inLocalBody) {
+                if (localOpacity == bodyMaxI) { // local maximum plateau
                     tFinalBodyMaxI = t;
                     tMaxAbs = 0.5 * (tFirstBodyMaxI + tFinalBodyMaxI); // median location of plateau
                 }
-                else { // new local maximum
-                    bodyMaxI = localOpacity;
+                else if (localOpacity > bodyMaxI) { // new local maximum
                     tFirstBodyMaxI = t;
                     tFinalBodyMaxI = t;
                     tMaxAbs = t;
+                    bodyMaxI = localOpacity;
+                }
+                else {
+                    inLocalBody = false; // past local maximum
                 }
             }
             

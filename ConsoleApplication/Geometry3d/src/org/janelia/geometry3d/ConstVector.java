@@ -36,11 +36,11 @@ package org.janelia.geometry3d;
  */
 public interface ConstVector {
 
-    float distance(BasicVector rhs);
+    float distance(ConstVector rhs);
 
-    float distanceSquared(BasicVector rhs);
+    float distanceSquared(ConstVector rhs);
 
-    float dot(BasicVector rhs);
+    float dot(ConstVector rhs);
 
     float get(int i);
 

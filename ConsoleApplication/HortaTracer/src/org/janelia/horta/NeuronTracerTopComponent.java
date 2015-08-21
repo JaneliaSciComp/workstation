@@ -724,7 +724,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         // (A: YES, if applied to the inner component)
         innerComponent.addMouseListener(new MouseUtils.PopupMouseAdapter() {
             private JPopupMenu createMenu() {
-                JPopupMenu menu = new JPopupMenu();
+                JPopupMenu menu = new JPopupMenu();                
 
                 // Setting popup menu title here instead of in JPopupMenu constructor,
                 // because title from constructor is not shown in default look and feel.
@@ -980,6 +980,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                         }
                     }
                 });
+
+                // Tracing options
+                menu.add(new JPopupMenu.Separator());
+                // Fetch anchor location before popping menu, because menu causes
+                // hover location to clear
+                NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
+                tracingInteractor.exportMenuItems(menu, hoverAnchor);
 
                 boolean showLinkToLvv = true;
                 if ( (mouseStageLocation != null) && (showLinkToLvv) ) {

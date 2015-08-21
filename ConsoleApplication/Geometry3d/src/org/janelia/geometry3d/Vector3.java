@@ -160,5 +160,4 @@ implements ConstVector3
         super.sub(rhs);
         return this;
     }
-
 }
