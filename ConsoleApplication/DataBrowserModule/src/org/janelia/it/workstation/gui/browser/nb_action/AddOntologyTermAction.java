@@ -40,7 +40,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
     }
     
     @Override
-    public JMenuItem getPopupPresenter() {
+    public synchronized JMenuItem getPopupPresenter() {
 
         List<Node> selectedNodes = getSelectedNodes();
         

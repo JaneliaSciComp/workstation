@@ -86,47 +86,52 @@ public class MongoDomainFacade implements DomainFacade {
     }
 
     @Override
-    public void save(TreeNode treeNode) throws Exception {
-        dao.save(SessionMgr.getSubjectKey(), treeNode);
+    public TreeNode create(TreeNode treeNode) throws Exception {
+        return dao.save(SessionMgr.getSubjectKey(), treeNode);
     }
 
     @Override
-    public void save(Filter filter) throws Exception {
-        dao.save(SessionMgr.getSubjectKey(), filter);
+    public ObjectSet create(ObjectSet objectSet) throws Exception {
+        return dao.save(SessionMgr.getSubjectKey(), objectSet);
     }
 
     @Override
-    public void save(ObjectSet objectSet) throws Exception {
-        dao.save(SessionMgr.getSubjectKey(), objectSet);
-    }
-
-    @Override
-    public void reorderChildren(TreeNode treeNode, int[] order) throws Exception {
-        dao.reorderChildren(SessionMgr.getSubjectKey(), treeNode, order);
-    }
-
-    @Override
-    public void addChildren(TreeNode treeNode, Collection<Reference> references) throws Exception {
-        dao.addChildren(SessionMgr.getSubjectKey(), treeNode, references);
-    }
-
-    @Override
-    public void removeChildren(TreeNode treeNode, Collection<Reference> references) throws Exception {
-        dao.removeChildren(SessionMgr.getSubjectKey(), treeNode, references);
+    public Filter create(Filter filter) throws Exception {
+        return dao.save(SessionMgr.getSubjectKey(), filter);
     }
     
     @Override
-    public void addMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
-        dao.addMembers(SessionMgr.getSubjectKey(), objectSet, references);
+    public Filter update(Filter filter) throws Exception {
+        return dao.save(SessionMgr.getSubjectKey(), filter);
+    }
+    
+    @Override
+    public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception {
+        return dao.reorderChildren(SessionMgr.getSubjectKey(), treeNode, order);
     }
 
     @Override
-    public void removeMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
-         dao.removeMembers(SessionMgr.getSubjectKey(), objectSet, references);
+    public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references) throws Exception {
+        return dao.addChildren(SessionMgr.getSubjectKey(), treeNode, references);
     }
 
     @Override
-    public void updateProperty(DomainObject domainObject, String propName, String propValue) {
-        dao.updateProperty(SessionMgr.getSubjectKey(), domainObject, propName, propValue);
+    public TreeNode removeChildren(TreeNode treeNode, Collection<Reference> references) throws Exception {
+        return dao.removeChildren(SessionMgr.getSubjectKey(), treeNode, references);
+    }
+    
+    @Override
+    public ObjectSet addMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
+        return dao.addMembers(SessionMgr.getSubjectKey(), objectSet, references);
+    }
+
+    @Override
+    public ObjectSet removeMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
+         return dao.removeMembers(SessionMgr.getSubjectKey(), objectSet, references);
+    }
+
+    @Override
+    public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) {
+        return dao.updateProperty(SessionMgr.getSubjectKey(), domainObject, propName, propValue);
     }
 }

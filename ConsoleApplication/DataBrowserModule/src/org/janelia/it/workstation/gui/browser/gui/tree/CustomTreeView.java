@@ -211,6 +211,7 @@ public class CustomTreeView extends BeanTreeView {
     public void expand(List<Long[]> paths) {
         for (Iterator<Long[]> it = paths.iterator(); it.hasNext();) {
             Long[] path = it.next();
+            if (path==null) continue;
             log.debug("Expanding {}",NodeUtils.createPathString(path));
             TreePath tp = getTreePath(path);
             log.debug("Expanding {}",tp);

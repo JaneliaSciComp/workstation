@@ -2,12 +2,11 @@ package org.janelia.it.workstation.gui.browser.nb_action;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.concurrent.Callable;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
@@ -89,11 +88,10 @@ public final class NewFilterAction implements ActionListener {
             protected void hadSuccess() {
                 initView();
                 final Long[] idPath = NodeUtils.createIdPath(parentNode, filter);
-                explorer.refresh(new Callable<Void>() {
+                SwingUtilities.invokeLater(new Runnable() {
                     @Override
-                    public Void call() throws Exception {
+                    public void run() {
                         explorer.select(idPath);
-                        return null;
                     }
                 });
             }

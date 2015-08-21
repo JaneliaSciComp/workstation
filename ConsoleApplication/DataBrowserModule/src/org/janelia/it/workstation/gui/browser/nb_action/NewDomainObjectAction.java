@@ -67,6 +67,10 @@ public final class NewDomainObjectAction extends NodeAction {
         
         JMenu newMenu = new JMenu("New");
         
+        JMenuItem newFolderItem = new JMenuItem("Folder");
+        newFolderItem.addActionListener(new NewFolderAction(node));
+        newMenu.add(newFolderItem);
+        
         JMenuItem newFilterItem = new JMenuItem("Filter");
         newFilterItem.addActionListener(new NewFilterAction(node));
         newMenu.add(newFilterItem);

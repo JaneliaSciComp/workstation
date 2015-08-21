@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,29 +28,33 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
 
     private final static Logger log = LoggerFactory.getLogger(TreeNodeChildFactory.class);
     
-    private final WeakReference<TreeNode> treeNodeRef;
-    
-    public TreeNodeChildFactory(TreeNode treeNode) {
-        this.treeNodeRef = new WeakReference<>(treeNode);
+    private TreeNode treeNode;
+
+    TreeNodeChildFactory(TreeNode treeNode) {
+        this.treeNode = treeNode;
     }
-    
+
+    public void update(TreeNode treeNode) {
+        this.treeNode = treeNode;
+    }
+
     @Override
     protected boolean createKeys(List<DomainObject> list) {
-        TreeNode treeNode = treeNodeRef.get();
         if (treeNode==null) return false;
         log.debug("Creating children keys for {}",treeNode.getName());
-        
+
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         List<DomainObject> children = model.getDomainObjects(treeNode.getChildren());
         if (children.size()!=treeNode.getNumChildren()) {
             log.info("Got {} children but expected {}",children.size(),treeNode.getNumChildren());   
         }
-        
+        log.debug("Got {} children",children.size());
+
         Map<Long,DomainObject> map = new HashMap<>();
         for (DomainObject obj : children) {
             map.put(obj.getId(), obj);
         }
-        
+
         List<DomainObject> temp = new ArrayList<>();
         if (treeNode.hasChildren()) {
             for(Reference reference : treeNode.getChildren()) {
@@ -70,17 +73,19 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
                     }
                 }
                 else {
+                    log.warn("Dead reference detected: "+reference.getTargetId());
                     //temp.add(new DeadReference(reference));
                 }
             }
         }
-        
+
         list.addAll(temp);
         return true;
     }
-    
+
     @Override
     protected Node createNodeForKey(DomainObject key) {
+        log.debug("Creating node for {}",key.getName());
         try {
             // TODO: would be nice to do this dynamically, 
             // or at least with some sort of annotation
@@ -102,35 +107,31 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         }
         return null;
     }
-    
+
     public void refresh() {
-        log.info("Refreshing {}",treeNodeRef.get().getName());
+        log.debug("Refreshing child factory for: {}",treeNode.getName());
         refresh(true);
     }
-    
+
     public void addChild(final DomainObject domainObject) throws Exception {
-        final TreeNode treeNode = treeNodeRef.get();
         if (treeNode==null) {
             log.warn("Cannot add child to unloaded treeNode");
             return;
         }   
-        
+
         log.info("Adding child {} to {}",domainObject.getId(),treeNode.getName());
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         model.addChild(treeNode, domainObject);
-        
-        refresh();
     }
 
     public void removeChild(final DomainObject domainObject) throws Exception {
-        final TreeNode treeNode = treeNodeRef.get();
         if (treeNode==null) {
             log.warn("Cannot remove child from unloaded treeNode");
             return;
         }
 
         log.info("Removing child {} from {}", domainObject.getId(), treeNode.getName());
-        
+
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         if (domainObject instanceof DeadReference) {
             model.removeReference(treeNode, ((DeadReference) domainObject).getReference());
@@ -138,7 +139,5 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         else {
             model.removeChild(treeNode, domainObject);
         }
-            
-        refresh();
     }
 }

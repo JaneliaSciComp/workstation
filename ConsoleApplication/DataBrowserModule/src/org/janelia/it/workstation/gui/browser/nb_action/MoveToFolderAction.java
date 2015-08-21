@@ -7,14 +7,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
@@ -101,7 +100,7 @@ public class MoveToFolderAction extends NodePresenterAction {
                     protected void doStuff() throws Exception {
                         folder = new TreeNode();
                         folder.setName(folderName);
-                        model.save(folder);
+                        model.create(folder);
                         Workspace workspace = model.getDefaultWorkspace();
                         idPath = NodeUtils.createIdPath(workspace, folder);
                         model.addChild(workspace, folder);
@@ -111,11 +110,11 @@ public class MoveToFolderAction extends NodePresenterAction {
                     @Override
                     protected void hadSuccess() {
                         log.debug("Added to folder {}",folder.getId());
-                        explorer.refresh(new Callable<Void>() {
+                        SwingUtilities.invokeLater(new Runnable() {
                             @Override
-                            public Void call() throws Exception {
+                            public void run() {
                                 explorer.expand(idPath);
-                                return null;
+                                explorer.select(idPath);
                             }
                         });
                     }
@@ -161,11 +160,11 @@ public class MoveToFolderAction extends NodePresenterAction {
                         @Override
                         protected void hadSuccess() {
                             log.info("Added to folder {}",folder.getId());
-                            explorer.refresh(new Callable<Void>() {
+                            SwingUtilities.invokeLater(new Runnable() {
                                 @Override
-                                public Void call() throws Exception {
+                                public void run() {
                                     explorer.expand(idPath);
-                                    return null;
+                                    explorer.select(idPath);
                                 }
                             });
                         }
@@ -223,13 +222,12 @@ public class MoveToFolderAction extends NodePresenterAction {
 
                             @Override
                             protected void hadSuccess() {
-                                log.debug("Added to folder {}",finalFolder.getId());
-                                explorer.refresh(new Callable<Void>() {
+                                log.info("Added to folder {}",finalFolder.getId());
+                                SwingUtilities.invokeLater(new Runnable() {
                                     @Override
-                                    public Void call() throws Exception {
-                                        // TODO: this only works if the folder is at the top level, we should fix this
+                                    public void run() {
                                         explorer.expand(idPath);
-                                        return null;
+                                        explorer.select(idPath);
                                     }
                                 });
                             }

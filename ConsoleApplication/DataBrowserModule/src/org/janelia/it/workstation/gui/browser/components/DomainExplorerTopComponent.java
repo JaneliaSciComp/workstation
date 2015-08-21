@@ -228,10 +228,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     public void objectChanged(DomainObjectChangeEvent event) {
         
         DomainObject domainObject = event.getDomainObject();
-        log.info("Object changed: {}",domainObject.getId());
+        log.debug("Object changed: {}",domainObject.getId());
         
         for(DomainObjectNode node : getNodesById(domainObject.getId())) {
-            log.info("  Updating matching node {}",node.getDisplayName());
+            log.debug("  Updating matching node: {}",node.getDisplayName());
             node.update(domainObject);
         }
     }
@@ -346,19 +346,26 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     
     public void registerNode(final DomainObjectNode node) {
         // Clear existing references to similar nodes
+        int c = 0;
         for(Iterator<WeakReference> iterator = nodesById.get(node.getId()).iterator(); iterator.hasNext(); ) {
             WeakReference<DomainObjectNode> ref = iterator.next();
             if (ref.get()==null) {
-                log.info("removing expired reference for {}",node.getId());
+                log.trace("removing expired reference for {}",node.getId());
                 iterator.remove();
             }
+            else {
+                c++;
+            }
+        }
+        if (c>1) {
+            log.trace("Domain object {} has {} nodes",node.getDisplayName(), c);
         }
         nodesById.put(node.getId(), new WeakReference(node));
-        log.info("registered {} ({} registered)",node.getDisplayName(), nodesById.size());
+        log.debug("registered {} ({} registered)",node.getDisplayName(), nodesById.size());
     }
     
     public Set<DomainObjectNode> getNodesById(Long id) {
-        log.info("getting nodes with id {}",id);
+        log.debug("getting nodes with id {}",id);
         Set<DomainObjectNode> nodes = new HashSet<>();
         for(Iterator<WeakReference> iterator = nodesById.get(id).iterator(); iterator.hasNext(); ) {
             WeakReference<DomainObjectNode> ref = iterator.next();

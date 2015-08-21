@@ -461,6 +461,7 @@ public class DomainModel {
             facade.changePermissions(type, DomainUtils.getCollectionOfOne(id), granteeKey, rights, grant);
             putOrUpdate(getDomainObject(type, id));
         }
+        // TODO: notify object changes
     }
     
     public void changePermissions(String type, Collection<Long> ids, String granteeKey, String rights, boolean grant) throws Exception {
@@ -470,108 +471,104 @@ public class DomainModel {
                 putOrUpdate(getDomainObject(type, id));
             }
         }
+        // TODO: notify objects changes
     }
     
     // TODO: replace this with creation and mutation methods
-    public void save(TreeNode treeNode) throws Exception {
+    public void create(TreeNode treeNode) throws Exception {
         synchronized (this) {
-            facade.save(treeNode);
-            putOrUpdate(treeNode);
+            putOrUpdate(facade.create(treeNode));
         }
     }
     
     public void save(Filter filter) throws Exception {
         synchronized (this) {
-            facade.save(filter);
-            putOrUpdate(filter);
+            putOrUpdate(filter.getId()==null ? facade.create(filter) : facade.update(filter));
         }
+        notifyDomainObjectCreated(filter);
     }
     
     // TODO: replace this with creation and mutation methods
-    public void save(ObjectSet objectSet) throws Exception {
+    public void create(ObjectSet objectSet) throws Exception {
         synchronized (this) {
-            facade.save(objectSet);
-            putOrUpdate(objectSet);
+            putOrUpdate(facade.create(objectSet));
         }
+        notifyDomainObjectCreated(objectSet);
     }
     
     public void reorderChildren(TreeNode treeNode, int[] order) throws Exception {
         synchronized (this) {
-            facade.reorderChildren(treeNode, order);
-            putOrUpdate(treeNode);
+            putOrUpdate(facade.reorderChildren(treeNode, order));
         }
+        notifyDomainObjectChanged(treeNode);
     }
     
     public void addChild(TreeNode treeNode, DomainObject domainObject) throws Exception {
         synchronized (this) {
-            facade.addChildren(treeNode, DomainUtils.getReferences(DomainUtils.getCollectionOfOne(domainObject)));
-            putOrUpdate(treeNode);
+            putOrUpdate(facade.addChildren(treeNode, DomainUtils.getReferences(DomainUtils.getCollectionOfOne(domainObject))));
         }
+        notifyDomainObjectChanged(treeNode);
     }
     
     public void addChildren(TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
         synchronized (this) {
-            facade.addChildren(treeNode, DomainUtils.getReferences(domainObjects));
-            // TODO: when we make this remote, we need addChildren to return the updated object, 
-            // or we need to get it separately to put it into the cache
-            putOrUpdate(treeNode);
+            putOrUpdate(facade.addChildren(treeNode, DomainUtils.getReferences(domainObjects)));
         }
+        notifyDomainObjectChanged(treeNode);
     }
     
     public void removeChild(TreeNode treeNode, DomainObject domainObject) throws Exception {
         synchronized (this) {
-            facade.removeChildren(treeNode, DomainUtils.getReferences(DomainUtils.getCollectionOfOne(domainObject)));
-            putOrUpdate(treeNode);
+            putOrUpdate(facade.removeChildren(treeNode, DomainUtils.getReferences(DomainUtils.getCollectionOfOne(domainObject))));
         }
+        notifyDomainObjectChanged(treeNode);
     }
     
     public void removeChildren(TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
         synchronized (this) {
-            facade.removeChildren(treeNode, DomainUtils.getReferences(domainObjects));
-            putOrUpdate(treeNode);
+            putOrUpdate(facade.removeChildren(treeNode, DomainUtils.getReferences(domainObjects)));
         }
+        notifyDomainObjectChanged(treeNode);
     }
     
     public void removeReference(TreeNode treeNode, Reference reference) throws Exception {
         synchronized (this) {
-            facade.removeChildren(treeNode, DomainUtils.getCollectionOfOne(reference));
-            putOrUpdate(treeNode);
+            putOrUpdate(facade.removeChildren(treeNode, DomainUtils.getCollectionOfOne(reference)));
         }
     }
     
     public void addMember(ObjectSet objectSet, DomainObject domainObject) throws Exception {
         synchronized (this) {
-            facade.addMembers(objectSet, DomainUtils.getReferences(DomainUtils.getCollectionOfOne(domainObject)));
-            putOrUpdate(objectSet);
+            putOrUpdate(facade.addMembers(objectSet, DomainUtils.getReferences(DomainUtils.getCollectionOfOne(domainObject))));
         }
+        notifyDomainObjectChanged(objectSet);
     }
     
     public void addMembers(ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
         synchronized (this) {
-            facade.addMembers(objectSet, DomainUtils.getReferences(domainObjects));
-            putOrUpdate(objectSet);
+            putOrUpdate(facade.addMembers(objectSet, DomainUtils.getReferences(domainObjects)));
         }
+        notifyDomainObjectChanged(objectSet);
     }
     
     public void removeMember(ObjectSet objectSet, DomainObject domainObject) throws Exception {
         synchronized (this) {
-            facade.removeMembers(objectSet, DomainUtils.getReferences(DomainUtils.getCollectionOfOne(domainObject)));
-            putOrUpdate(objectSet);
+            putOrUpdate(facade.removeMembers(objectSet, DomainUtils.getReferences(DomainUtils.getCollectionOfOne(domainObject))));
         }
     }
     
     public void removeMembers(ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
         synchronized (this) {
-            facade.removeMembers(objectSet, DomainUtils.getReferences(domainObjects));
-            putOrUpdate(objectSet);
+            putOrUpdate(facade.removeMembers(objectSet, DomainUtils.getReferences(domainObjects)));
         }
+        notifyDomainObjectChanged(objectSet);
     }
     
     public void updateProperty(DomainObject domainObject, String propName, String propValue) {
         synchronized (this) {
-            facade.updateProperty(domainObject, propName, propValue);
-            putOrUpdate(domainObject);
+            putOrUpdate(facade.updateProperty(domainObject, propName, propValue));
         }
+        notifyDomainObjectChanged(domainObject);
     }
     
     private void notifyDomainObjectCreated(DomainObject domainObject) {

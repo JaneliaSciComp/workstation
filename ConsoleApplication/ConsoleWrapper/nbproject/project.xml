@@ -604,6 +604,8 @@
                 <package>javax.transaction</package>
                 <package>javax.transaction.xa</package>
                 <package>javax.vecmath</package>
+                <package>javax.ws.rs.client</package>
+                <package>javax.ws.rs.core</package>
                 <package>javax.wsdl</package>
                 <package>javax.wsdl.extensions</package>
                 <package>javax.wsdl.extensions.http</package>
@@ -1429,6 +1431,9 @@
                 <package>org.eclipse.jetty.util.ssl</package>
                 <package>org.eclipse.jetty.util.statistic</package>
                 <package>org.eclipse.jetty.util.thread</package>
+                <package>org.glassfish.jersey</package>
+                <package>org.glassfish.jersey.client</package>
+                <package>org.glassfish.jersey.jackson</package>
                 <package>org.hibernate</package>
                 <package>org.hibernate.action</package>
                 <package>org.hibernate.annotationfactory</package>
@@ -1957,6 +1962,26 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jackson-core-2.4.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jackson-core-2.4.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-common-2.19.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-common-2.19.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-client-2.19.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-client-2.19.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-media-jaxb-2.19.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-media-jaxb-2.19.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-media-json-jackson-2.19.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-media-json-jackson-2.19.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/javax.ws.rs-api-2.0.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javax.ws.rs-api-2.0.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/neethi-2.0.5.jar</runtime-relative-path>
