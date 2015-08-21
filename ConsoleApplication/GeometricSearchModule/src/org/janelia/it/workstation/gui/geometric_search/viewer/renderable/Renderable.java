@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.renderable;
 
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.Actor;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -7,7 +9,9 @@ import java.util.Properties;
 /**
  * Created by murphys on 8/7/2015.
  */
-public class Renderable {
+public abstract class Renderable {
+
+    protected Actor actor;
 
     protected String name;
     
@@ -30,5 +34,9 @@ public class Renderable {
     }
 
     Map<String, Object> parameterMap=new HashMap<>();
+
+    public abstract Actor createAndSetActor();
+
+    public abstract void disposeActor();
 
 }

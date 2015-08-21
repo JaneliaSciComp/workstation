@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.renderable;
 
 import org.janelia.geometry3d.Vector4;
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.Actor;
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.DenseVolumeActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -194,6 +196,22 @@ public class DenseVolumeRenderable extends Renderable {
 
     public float getVoxelSize() {
         return voxelSize * downsampleLevel;
+    }
+
+    @Override
+    public Actor createAndSetActor() {
+        if (actor!=null) {
+            disposeActor();
+        }
+        actor = new DenseVolumeActor(this.name, sampledVoxels);
+        return actor;
+    }
+
+    @Override
+    public void disposeActor() {
+        if (actor!=null) {
+            actor.dispose();
+        }
     }
 
 }

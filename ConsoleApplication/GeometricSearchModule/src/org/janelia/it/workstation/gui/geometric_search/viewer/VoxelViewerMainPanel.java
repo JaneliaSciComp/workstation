@@ -89,7 +89,11 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         controller.setViewer(viewer);
 
         model.setViewer(viewer);
-        model.postViewerIntegrationSetup();
+        model.getGLModel().setViewer(viewer);
+        model.getGLModel().setModel(model);
+        model.getGLModel().setProperties(properties);
+
+        model.getGLModel().postViewerIntegrationSetup();
 
         // Experiment setup goes here ==============
 
@@ -108,9 +112,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         datasetManagementPanel.add(datasetPanel);
         datasetManagementPanel.add(renderablePanel);
 
-        JPanel actorPanel = new ScrollableRowPanel();
         actorManagermentPanel.add(actorPanel);
-
     }
 
     protected void setupDatasetPanel() {

@@ -9,6 +9,7 @@ import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderActionSequence;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4SimpleActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GLDisplayUpdateCallback;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GLModel;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +106,7 @@ public class VoxelViewerRenderer implements GLEventListener
     public void dispose(GLAutoDrawable glDrawable)
     {
         final GL4 gl = glDrawable.getGL().getGL4();
-        model.disposeAndClearAll(gl);
+        model.getGLModel().disposeAndClearAll(gl);
         ass.dispose(gl);
         atc.dispose(gl);
     }
@@ -144,7 +145,7 @@ public class VoxelViewerRenderer implements GLEventListener
 
             ass.setProperties(properties);
             ass.setTransparencyContext(atc);
-            final int transparencyQuarterDepth=model.getTransparencyQuarterDepth();
+            final int transparencyQuarterDepth=model.getGLModel().getTransparencyQuarterDepth();
             ass.setUpdateCallback(new GLDisplayUpdateCallback() {
                 @Override
                 public void update(GL4 gl) {
@@ -160,7 +161,7 @@ public class VoxelViewerRenderer implements GLEventListener
             assActionSequence.setApplyMemoryBarrier(true);
             assActionSequence.init(gl);
 
-            model.initAll(atc, gl);
+            model.getGLModel().initAll(atc, gl);
 
             logger.info("Done with init()");
 
@@ -186,7 +187,7 @@ public class VoxelViewerRenderer implements GLEventListener
     }
 
     public void clear() {
-        model.setDisposeAndClearAllActorsMsg();
+        model.getGLModel().setDisposeAndClearAllActorsMsg();
     }
 
     public void requestReset() {
@@ -202,35 +203,35 @@ public class VoxelViewerRenderer implements GLEventListener
         logger.info("display() check 1");
 
         // First, handle messages
-        Deque<String> msgQueue=model.getMessageQueue();
+        Deque<String> msgQueue=model.getGLModel().getMessageQueue();
         while (msgQueue.size()>0) {
             String msg=msgQueue.pop();
-            if (msg.equals(VoxelViewerModel.DISPOSE_AND_CLEAR_ALL_ACTORS_MSG)) {
-                model.disposeAndClearAllActors(gl);
+            if (msg.equals(GLModel.DISPOSE_AND_CLEAR_ALL_ACTORS_MSG)) {
+                model.getGLModel().disposeAndClearAllActors(gl);
             }
         }
 
         logger.info("display() check 2");
 
         // Next, handle any inits
-        Deque<GL4SimpleActor> initQueue=model.getInitQueue();
+        Deque<GL4SimpleActor> initQueue=model.getGLModel().getInitQueue();
         while (initQueue.size()>0) {
             GL4SimpleActor actor = initQueue.pop();
             actor.init(gl);
             if (actor instanceof ArrayCubeGLActor) {
-                model.getDenseVolumeShaderActionSequence().getActorSequence().add(actor);
+                model.getGLModel().getDenseVolumeShaderActionSequence().getActorSequence().add(actor);
             } else if (actor instanceof ArrayMeshGLActor) {
-                model.getMeshShaderActionSequence().getActorSequence().add(actor);
+                model.getGLModel().getMeshShaderActionSequence().getActorSequence().add(actor);
             }
         }
 
         logger.info("display() check 3");
 
         // Last, handle any removals
-        Deque<Integer> removalQueue=model.getDisposeQueue();
+        Deque<Integer> removalQueue=model.getGLModel().getDisposeQueue();
         while (removalQueue.size()>0) {
             Integer actorIdToRemove=removalQueue.pop();
-            model.removeActor(actorIdToRemove, gl);
+            model.getGLModel().removeActor(actorIdToRemove, gl);
         }
 
         logger.info("display() check 4");
@@ -282,8 +283,8 @@ public class VoxelViewerRenderer implements GLEventListener
 
         logger.info("display() check 5");
 
-        if (model.getDenseVolumeShaderActionSequence().getActorSequence().size()>0 ||
-                model.getMeshShaderActionSequence().getActorSequence().size()>0) {
+        if (model.getGLModel().getDenseVolumeShaderActionSequence().getActorSequence().size()>0 ||
+                model.getGLModel().getMeshShaderActionSequence().getActorSequence().size()>0) {
 
             try {
                 logger.info("display() check 6");
@@ -301,11 +302,11 @@ public class VoxelViewerRenderer implements GLEventListener
 
             logger.info("display() check 8");
 
-            model.getDenseVolumeShaderActionSequence().display(gl);
+            model.getGLModel().getDenseVolumeShaderActionSequence().display(gl);
 
             logger.info("display() check 9");
 
-            model.getMeshShaderActionSequence().display(gl);
+            model.getGLModel().getMeshShaderActionSequence().display(gl);
 
             logger.info("display() check 10");
 
