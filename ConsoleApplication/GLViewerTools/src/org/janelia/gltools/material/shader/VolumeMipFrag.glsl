@@ -314,7 +314,13 @@ void main() {
                 // vec3(0.6, 0.6, 0.6); // slightly off-center is not better
     }
 
-    float maxDI = 0;
+    // variables used to find local max intensity in occluding projection
+    float maxDI = 0; // most occluding dAlpha "most visible point"
+    float bodyMaxI = 0; // brightest intensity past maxDI
+    // Store two locations, so we could center on median location of saturated values
+    float tFirstBodyMaxI; // first location of bodyMaxI
+    float tFinalBodyMaxI; // last location of bodyMaxI
+    bool inLocalBody = false;
 
     float previousDeltaT = 0;
 
@@ -443,7 +449,27 @@ void main() {
             if  (localOpacity > integratedOpacity) {
                 vecIntegratedIntensity = vecLocalIntensity;
                 integratedOpacity = localOpacity;
+                bodyMaxI = localOpacity;
+                tFirstBodyMaxI = t;
+                tFinalBodyMaxI = t;
                 tMaxAbs = t;
+                inLocalBody = true;
+            }
+
+            // Walk to median location of saturated segments
+            if (inLocalBody) {
+                if (localOpacity == bodyMaxI) { // local maximum plateau
+                    tFinalBodyMaxI = t;
+                    tMaxAbs = 0.5 * (tFirstBodyMaxI + tFinalBodyMaxI); // median location of plateau
+                }
+                else if (localOpacity > bodyMaxI) { // new local maximum
+                    tFirstBodyMaxI = t;
+                    tFinalBodyMaxI = t;
+                    tMaxAbs = t;                    
+                }
+                else {
+                    inLocalBody = false; // past local maximum
+                }
             }
         #elif PROJECTION_MODE == PROJECTION_OCCLUDING
             // vec4 c_src = mix(opacityFunctionMin, vecLocalIntensity, fade);
@@ -464,11 +490,30 @@ void main() {
 
             // Update brightest point along ray
             // TODO - click-to-center is not perfect yet...
-            float dI = localOpacity * (1.0 - a_dest/a_out);
-            if (dI > maxDI) {
+            float dI = a_out - a_src; 
+            if (dI > maxDI) { // found new biggest occluder
                 maxDI = dI;
+                // Prepare to follow ray to brightest spot
+                bodyMaxI = localOpacity;
+                tFirstBodyMaxI = t;
+                tFinalBodyMaxI = t;
                 tMaxAbs = t;
+                inLocalBody = true;
             }
+            else if (inLocalBody) { // advance to locally brightest voxel
+                if (localOpacity < bodyMaxI) inLocalBody = false; // end of local maximum
+                else if (localOpacity == bodyMaxI) { // local maximum plateau
+                    tFinalBodyMaxI = t;
+                    tMaxAbs = 0.5 * (tFirstBodyMaxI + tFinalBodyMaxI); // median location of plateau
+                }
+                else { // new local maximum
+                    bodyMaxI = localOpacity;
+                    tFirstBodyMaxI = t;
+                    tFinalBodyMaxI = t;
+                    tMaxAbs = t;
+                }
+            }
+            
         #else // isosurface
             float threshDist = maxElement(vecLocalIntensity - isoThreshold) - 1e-6;
             if (threshDist > 0) // surface intersected
