@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.dataset;
 
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.DatasetAddedEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.DatasetRemovedEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.DatasetSelectedEvent;
@@ -22,7 +23,8 @@ public class DatasetModel {
 
     public void addDataset(Dataset dataset) {
         datasetList.add(dataset);
-        EventManager.sendEvent(this, new DatasetSelectedEvent(dataset));
+        EventManager.sendEvent(this, new DatasetAddedEvent(dataset));
+        setSelectedDataset(dataset);
     }
 
     public void removeDataset(Dataset dataset) {

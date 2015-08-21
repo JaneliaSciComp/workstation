@@ -5,11 +5,11 @@ import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.Rendera
 /**
  * Created by murphys on 8/20/2015.
  */
-public class AddRenderableEvent extends VoxelViewerEvent {
+public class RenderableAddedEvent extends VoxelViewerEvent {
 
     Renderable renderable;
 
-    public AddRenderableEvent(Renderable renderable) {
+    public RenderableAddedEvent(Renderable renderable) {
         this.renderable = renderable;
     }
 

@@ -5,11 +5,11 @@ import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
 /**
  * Created by murphys on 8/20/2015.
  */
-public class AddDatasetEvent extends VoxelViewerEvent {
+public class DatasetAddedEvent extends VoxelViewerEvent {
 
     Dataset dataset;
 
-    public AddDatasetEvent(Dataset dataset) {
+    public DatasetAddedEvent(Dataset dataset) {
         this.dataset = dataset;
     }
 
