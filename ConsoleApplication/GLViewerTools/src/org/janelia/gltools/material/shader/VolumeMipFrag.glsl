@@ -281,8 +281,8 @@ void main() {
     float previousEdge = tMinMax.x; // track upstream voxel edge
 
     #if PROJECTION_MODE == PROJECTION_ISOSURFACE
-        // vec4 opacityFunctionMid = 0.5 * (opacityFunctionMin + opacityFunctionMax);
-        vec4 isoThreshold = opacityFunctionMin;
+        vec4 isoThreshold = 0.5 * (opacityFunctionMin + opacityFunctionMax);
+        // vec4 isoThreshold = opacityFunctionMin;
         float previousThreshDist = 0;
         float previousT = previousEdge;
     #endif
@@ -378,6 +378,7 @@ void main() {
         }
 
         // Update before next iteration; AND before any shortcuts...
+        float cachedPreviousEdge = previousEdge; // for isosurface nearest neighbor surface location
         previousEdge = nextEdge;
         previousDeltaT = deltaT;
 
@@ -402,7 +403,14 @@ void main() {
         float localOpacity = maxElement(rampstep(opacityFunctionMin, opacityFunctionMax, vecLocalIntensity));
 
         // shortcut - skip sufficiently dim intensities
-        if (localOpacity <= 0) continue;
+        if (localOpacity <= 0) {
+            #if PROJECTION_MODE == PROJECTION_ISOSURFACE
+                // Update ray parameters for isosurface, even in case of shortcut
+                previousThreshDist = maxElement(vecLocalIntensity.xyz - isoThreshold.xyz); // should be negative...
+                previousT = t;
+            #endif
+            continue;
+        }
 
         // for occluding projection, incorporation path length into opacity exponent
         #if PROJECTION_MODE == PROJECTION_OCCLUDING
@@ -521,22 +529,36 @@ void main() {
             }
             
         #else // isosurface
-            float threshDist = maxElement(vecLocalIntensity - isoThreshold) - 1e-6;
+            // Use only first 3 channels, since alpha is a headache when I want to see negative components.
+            float threshDist = maxElement(vecLocalIntensity.xyz - isoThreshold.xyz);
             if (threshDist > 0) // surface intersected
             {
-                vecIntegratedIntensity = vecLocalIntensity;
+                // vecIntegratedIntensity = vecLocalIntensity;
                 integratedOpacity = 1.0;
-                // TODO - trying to interpolate ray parameter causes some thread pools to die
-                float alpha = 0.5;
-                // float alpha = (-previousThreshDist) / (threshDist - previousThreshDist);
-                // if (isinf(alpha)) alpha = 1.0;
-                // if (isnan(alpha)) alpha = 1.0;
-                // alpha = clamp(alpha, 0, 1);
-                // tMaxAbs = mix(previousT, t, alpha);
-                // tMaxAbs = max(tMinMax.x, tMaxAbs);
-                // tMaxAbs = min(tMaxAbs, t);
-                tMaxAbs = mix(previousT, t, alpha);
-                break;
+
+                if (filteringOrder == 0) { // nearest neighbor
+                    tMaxAbs = cachedPreviousEdge; // retreat to voxel surface
+                    vecIntegratedIntensity = vecLocalIntensity; // using intensity of voxel center
+                }
+                else { // interpolate surface location using measured intensities, to get closer to true isosurface
+                    float alpha = (-previousThreshDist) / (threshDist - previousThreshDist);
+                    tMaxAbs = mix(previousT, t, alpha);
+                    // Resample intensity at interpolated location
+                    // (should be very close to threshold intensity...)
+                    // But not for nearest neighbor...
+                    vec3 currentTexelPos2 = (x0 + tMaxAbs*x1); 
+                    vec3 texCoord2 = currentTexelPos2 * textureScale; // converted back to normalized texture coordinates,
+                    if (filteringOrder == 3) {
+                        // slow tricubic filtering
+                        vecIntegratedIntensity = filterFastCubic3D(volumeTexture, currentTexelPos2, textureScale, levelOfDetail);
+                    }
+                    else {
+                        // fast linear or nearest-neighbor filtering
+                        vecIntegratedIntensity = textureLod(volumeTexture, texCoord2, levelOfDetail);
+                    }
+                    // vecIntegratedIntensity += vec4(0.05, 0.05, 0.05, 0); // brighten it up a little...
+                }
+                break; // stop casting! we found the surface along this ray
             }
             previousThreshDist = threshDist; // negative value
             previousT = t;
@@ -560,7 +582,9 @@ void main() {
     }
 
     // vec3 c = color*integratedIntensity;
-    #if PROJECTION_MODE == PROJECTION_ISOSURFACE
+    // #if PROJECTION_MODE == PROJECTION_ISOSURFACE
+    // TODO - put normals in a separate frame buffer
+    #if false
     vec3 uvw = x0 + tMaxAbs * x1;
     vec3 voxelMicrometers = volumeMicrometers / volumeSize;
     vec3 normal = calculateNormalInScreenSpace(
