@@ -236,6 +236,17 @@ public class DomainUtils {
         }
         return new DomainObjectId(clazz.getName(), ref.getTargetId());
     }
+
+    public static Reference getReferenceForId(DomainObjectId id) {
+        Reference ref = new Reference();
+        Class<? extends DomainObject> objectClass = MongoUtils.getObjectClassByName(id.getClassName());
+        if (objectClass==null) {
+            throw new IllegalArgumentException("No such object class: "+id.getClassName());
+        }
+        ref.setTargetType(MongoUtils.getCollectionName(objectClass));
+        ref.setTargetId(id.getId());
+        return ref;
+    }
     
     public static <T> Collection<T> getCollectionOfOne(T object) {
         List<T> list = new ArrayList<>();

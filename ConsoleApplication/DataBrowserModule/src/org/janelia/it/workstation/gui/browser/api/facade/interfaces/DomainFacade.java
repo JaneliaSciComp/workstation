@@ -37,7 +37,7 @@ public interface DomainFacade {
     
     public Collection<Ontology> getOntologies();
     
-    public void changePermissions(String type, Collection<Long> ids, String granteeKey, String rights, boolean grant) throws Exception;
+    public void changePermissions(ObjectSet objectSet, String granteeKey, String rights, boolean grant) throws Exception;
     
     public TreeNode create(TreeNode treeNode) throws Exception;
     
@@ -46,6 +46,10 @@ public interface DomainFacade {
     public Filter create(Filter filter) throws Exception;
     
     public Filter update(Filter filter) throws Exception;
+    
+    public Annotation create(Annotation annotation) throws Exception;
+    
+    public void remove(Annotation annotation) throws Exception;
     
     public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception;       
     

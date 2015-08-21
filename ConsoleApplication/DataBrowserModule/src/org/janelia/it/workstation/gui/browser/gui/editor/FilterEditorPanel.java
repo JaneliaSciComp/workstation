@@ -164,7 +164,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                         
                     @Override
                     protected void doStuff() throws Exception {
-                        DomainMgr.getDomainMgr().getModel().save(filter);
+                        filter = DomainMgr.getDomainMgr().getModel().save(filter);
                     }
 
                     @Override
@@ -208,7 +208,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                                 
                         filter.setName(newName);
                         DomainModel model = DomainMgr.getDomainMgr().getModel();
-                        model.save(filter);
+                        filter = model.save(filter);
                         model.addChild(model.getDefaultWorkspace(), filter);
                     }
 
@@ -818,7 +818,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         }
         
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        List<DomainObject> domainObjects = model.getDomainObjects(refs);
+        List<DomainObject> domainObjects = model.getDomainObjectsByReference(refs);
         List<Annotation> annotations = model.getAnnotations(ids);
         
         int numFound = (int)qr.getResults().getNumFound();

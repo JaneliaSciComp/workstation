@@ -59,6 +59,7 @@ public class MoveToFolderAction extends NodePresenterAction {
         assert !selectedNodes.isEmpty() : "No nodes are selected";
         
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
+        final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
         int numOwned = 0;
         for(Node node : selectedNodes) {
@@ -79,8 +80,6 @@ public class MoveToFolderAction extends NodePresenterAction {
         
         JMenuItem createNewItem = new JMenuItem("Create New Folder...");
         
-        final DomainModel model = DomainMgr.getDomainMgr().getModel();
-        
         createNewItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
@@ -100,7 +99,7 @@ public class MoveToFolderAction extends NodePresenterAction {
                     protected void doStuff() throws Exception {
                         folder = new TreeNode();
                         folder.setName(folderName);
-                        model.create(folder);
+                        folder = model.create(folder);
                         Workspace workspace = model.getDefaultWorkspace();
                         idPath = NodeUtils.createIdPath(workspace, folder);
                         model.addChild(workspace, folder);

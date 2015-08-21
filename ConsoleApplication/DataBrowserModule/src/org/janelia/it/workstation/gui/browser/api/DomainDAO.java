@@ -472,7 +472,7 @@ public class DomainDAO {
             else {
                 WriteResult result = collection.update("{_id:#,writers:#,updatedDate:#}", domainObject.getId(), subjectKey, domainObject.getUpdatedDate()).with(domainObject);
                 if (result.getN()!=1) {
-                    throw new IllegalStateException("Updated "+result.getN()+" records instead of "+type+"#"+domainObject.getId());
+                    throw new IllegalStateException("Updated "+result.getN()+" records instead of one: "+type+"#"+domainObject.getId());
                 }
             }
             log.info("Saved "+domainObject.getClass().getName()+"#"+domainObject.getId());
@@ -488,6 +488,19 @@ public class DomainDAO {
         return getDomainObject(subjectKey, domainObject);
     }
 
+    public void remove(String subjectKey, DomainObject domainObject) throws Exception {
+        
+        String type = getCollectionName(domainObject);
+        MongoCollection collection = getCollectionByName(type);
+        
+        WriteResult result = collection.remove("{_id:#,writers:#}", domainObject.getId(), subjectKey);
+        if (result.getN()!=1) {
+            throw new IllegalStateException("Deleted "+result.getN()+" records instead of one: "+type+"#"+domainObject.getId());
+        }
+        
+        // TODO: remove dependant objects?
+    }
+    
     public TreeNode reorderChildren(String subjectKey, TreeNode treeNode, int[] order) throws Exception {
 
         if (!treeNode.hasChildren()) {
