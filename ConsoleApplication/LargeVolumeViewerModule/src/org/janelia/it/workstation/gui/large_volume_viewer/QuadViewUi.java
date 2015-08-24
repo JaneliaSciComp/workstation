@@ -1258,7 +1258,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         boolean rtnVal = false;
 
         // Initialize the cache for this new input source.
-        largeVolumeViewer.initCache();
+        largeVolumeViewer.initCache(url);
 
         // Check if url exists first...
     	try {

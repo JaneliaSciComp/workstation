@@ -6,6 +6,8 @@
 package org.janelia.it.workstation.cache.large_volume;
 
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.slf4j.Logger;
@@ -52,9 +54,11 @@ public class CacheController {
      * 
      * @param camera observed.
      */
-    public void registerForEvents(ObservableCamera3d camera) {
+    public void registerForEvents(ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage) {
         if (cameraListener != null) {
             camera.addCameraListener(cameraListener);
+            cameraListener.setCamera(camera);
+            cameraListener.setSharedVolumeImage(sharedVolumeImage);
         }
         else {
             Logger log = LoggerFactory.getLogger(CacheController.class);
@@ -65,8 +69,19 @@ public class CacheController {
     private static class CacheCameraListener implements CameraListener {
 
         private CacheFacade manager;
+        private SharedVolumeImage sharedVolumeImage;
+        private ObservableCamera3d camera;
+        
         public CacheCameraListener( CacheFacade manager ) {
             this.manager = manager;
+        }
+        
+        public void setCamera(ObservableCamera3d camera) {
+            this.camera = camera;
+        }
+        
+        public void setSharedVolumeImage( SharedVolumeImage sharedVolumeImage ) {
+            this.sharedVolumeImage = sharedVolumeImage;
         }
         
         @Override
@@ -81,6 +96,12 @@ public class CacheController {
 
         @Override
         public void focusChanged(Vec3 focus) {
+            TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
+            Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
+            if (zoom != null) {
+                zoomChanged(zoom);
+            }
+            
             double[] focusArr = new double[3];
             for (int i = 0; i < focusArr.length; i++) {
                 focusArr[i] = focus.elementAt(i);

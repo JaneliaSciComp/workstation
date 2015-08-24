@@ -6,6 +6,8 @@
 package org.janelia.it.workstation.cache.large_volume;
 
 import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -28,6 +30,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
     private SharedVolumeImage sharedVolumeImage;
     private double radiusInMicrons;
     private double[] tileHalfSize;
+    private File topFolder;
     private static Logger log = LoggerFactory.getLogger(WorldExtentSphereBuilder.class);
 
     /**
@@ -73,11 +76,13 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
      * the repository.
      * 
      * @param tileFormat used to calculate the extents in all directions.
+     * @param topFolderURL base point for all files in repo.
      * @param radius lower-bound micrometers to extend.
      */
-    public WorldExtentSphereBuilder(SharedVolumeImage sharedVolumeImage, double radius) {
+    public WorldExtentSphereBuilder(SharedVolumeImage sharedVolumeImage, URL topFolderURL, double radius) throws URISyntaxException {
         this.sharedVolumeImage = sharedVolumeImage;
         this.radiusInMicrons = radius;
+        this.topFolder = new File(topFolderURL.toURI());
     }
 
 	/**
@@ -116,8 +121,10 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         // Establish a collection with required order and guaranteed uniqueness.
         FocusProximityComparator comparator = new FocusProximityComparator();
         Set<File> tileFiles = new TreeSet<>( comparator );
+        String tiffBase = BlockTiffOctreeLoadAdapter.getTiffBase(CoordinateAxis.Z);
         for (TileIndex tileIndex: getCenteredTileSet(tileFormat, center, micrometerVoxels, dimensions, zoomLevel)) {
-            File tilePath = BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat, true);
+            File tilePath = BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat, true);            
+            tilePath = new File(topFolder, tilePath.getName());
             double[] tileCenter = findTileCenterInMicrons(tileFormat, tileIndex);
             double sigmaSquare = 0.0;
             for (int i = 0; i < 3; i++) {
@@ -125,8 +132,13 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                 sigmaSquare += absDist;
             }
             double distanceFromFocus = Math.sqrt(sigmaSquare);
-            comparator.addFile(tilePath, distanceFromFocus);
-            tileFiles.add(tilePath);
+            for (int channel = 0; channel < tileFormat.getChannelCount(); channel ++) {
+                String fileName = BlockTiffOctreeLoadAdapter.getFilenameForChannel(tiffBase, channel);
+                File fullTilePath = new File(tilePath, fileName);
+                comparator.addFile(fullTilePath, distanceFromFocus);
+                tileFiles.add(fullTilePath);
+                log.info("Adding file {} to cache.", fullTilePath);
+            }
         }
         neighborhood.setFiles(tileFiles);
         return neighborhood;

@@ -17,11 +17,7 @@ import com.sun.media.jai.codec.FileSeekableStream;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.SeekableStream;
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -243,7 +239,7 @@ extends AbstractTextureLoadAdapter
 
 	// TODO - cache decoders if folder has not changed
 	public ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis)
-			throws MissingTileException, TileLoadError 
+			throws MissingTileException, TileLoadError
 	{
 		return createImageDecoders(folder, axis, false);
 	}
@@ -251,18 +247,14 @@ extends AbstractTextureLoadAdapter
 	public ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders)
 			throws MissingTileException, TileLoadError 
 	{
-		String tiffBase = "default"; // Z-view; XY plane
-		if (axis == CoordinateAxis.Y)
-			tiffBase = "ZX";
-		else if (axis == CoordinateAxis.X)
-			tiffBase = "YZ";
+        String tiffBase = getTiffBase(axis);
 		int sc = tileFormat.getChannelCount();
 		ImageDecoder decoders[] = new ImageDecoder[sc];
         StringBuilder missingTiffs = new StringBuilder();
         StringBuilder requestedTiffs = new StringBuilder();
         CacheFacade cacheManager = CacheController.getInstance().getManager();
 		for (int c = 0; c < sc; ++c) {
-			File tiff = new File(folder, tiffBase+"."+c+".tif");
+			File tiff = new File(folder, getFilenameForChannel(tiffBase, c));
             if ( requestedTiffs.length() > 0 ) {
                 requestedTiffs.append("; ");
             }
@@ -307,6 +299,19 @@ extends AbstractTextureLoadAdapter
         }
 		return decoders;
 	}
+
+    public static String getFilenameForChannel(String tiffBase, int c) {
+        return tiffBase+"."+c+".tif";
+    }
+
+    public static String getTiffBase(CoordinateAxis axis) {
+        String tiffBase = "default"; // Z-view; XY plane
+        if (axis == CoordinateAxis.Y)
+            tiffBase = "ZX";
+        else if (axis == CoordinateAxis.X)
+            tiffBase = "YZ";
+        return tiffBase;
+    }
     
     private boolean sniffOriginAndScaleFromFolder(int [] origin, double [] scale) {
         File transformFile = new File(getTopFolder(), "transform.txt");

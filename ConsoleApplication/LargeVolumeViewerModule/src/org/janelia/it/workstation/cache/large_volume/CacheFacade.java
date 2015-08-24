@@ -8,7 +8,6 @@ package org.janelia.it.workstation.cache.large_volume;
 import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
 import java.io.Serializable;
-import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -16,6 +15,7 @@ import java.util.concurrent.Future;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+//import java.net.URL;
 //import org.apache.jcs.JCS;
 //import org.apache.jcs.access.CacheAccess;
 //import org.apache.jcs.access.exception.CacheException;
@@ -50,7 +50,7 @@ public class CacheFacade {
     private CachePopulator cachePopulator;
     //private CacheAccess jcs;
     private CacheManager manager;
-    private CompressedFileResolver resolver;
+    private CompressedFileResolver resolver = new CompressedFileResolver();
     private Double cameraZoom;
     
     private Logger log = LoggerFactory.getLogger(CacheFacade.class);
@@ -136,8 +136,14 @@ public class CacheFacade {
     public SeekableStream get(String id) {
         SeekableStream rtnVal = null;
         try {
-            byte[] compressedData = getFuture(id).get();
-            return resolver.resolve(compressedData, new File(id));
+            Future<byte[]> futureBytes = getFuture(id);
+            if (futureBytes != null) {
+                byte[] compressedData = futureBytes.get();
+                rtnVal = resolver.resolve(compressedData, new File(id));
+            }
+            else {
+                log.warn("No Future found for {}.", id);
+            }
         } catch (InterruptedException | ExecutionException ie) {
             log.warn("Interrupted thread, while returning {}.", id);
         } catch (Exception ex) {
@@ -191,7 +197,7 @@ public class CacheFacade {
     protected boolean calculateRegion(double[] focus) {
         boolean rtnVal = false;
         GeometricNeighborhood calculatedNeighborhood = neighborhoodBuilder.buildNeighborhood(focus, cameraZoom);
-        if (!calculatedNeighborhood.equals(this.neighborhood)) {
+        if (!(calculatedNeighborhood.getFiles().isEmpty()  ||  calculatedNeighborhood.equals(this.neighborhood))) {
             this.neighborhood = calculatedNeighborhood;
             rtnVal = true;
         }

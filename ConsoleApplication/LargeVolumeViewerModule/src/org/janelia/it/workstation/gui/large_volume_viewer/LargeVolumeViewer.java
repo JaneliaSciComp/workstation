@@ -39,6 +39,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.List;
 import org.apache.commons.lang.SystemUtils;
@@ -124,15 +125,15 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         this.messageListener = messageListener;
     }
 
-    public void initCache() {
+    public void initCache(URL topFolderURL) {
         try {
             CacheFacade cacheManager = new CacheFacade();
             cacheManager.setNeighborhoodBuilder(
-                    new WorldExtentSphereBuilder(sharedVolumeImage, 2000)
+                    new WorldExtentSphereBuilder(sharedVolumeImage, topFolderURL, 2000)
             );
             CacheController controller = CacheController.getInstance();
             controller.setManager(cacheManager);
-            controller.registerForEvents(camera);
+            controller.registerForEvents(camera, sharedVolumeImage);
         } catch (Exception ex) {
             log.error("Failed to open the cache manager.");
             ex.printStackTrace();
