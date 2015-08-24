@@ -23,6 +23,7 @@ public class CachePopulatorWorker implements java.util.concurrent.Callable {
     @Override
     public Object call() throws Exception {
         FileCollector collector = new FileCollector();
+        collector.collectFile(infile);
         return collector.getData();
 //        CompressedFileResolver resolver = new CompressedFileResolver();
 //        SeekableStream stream = resolver.resolve(infile);

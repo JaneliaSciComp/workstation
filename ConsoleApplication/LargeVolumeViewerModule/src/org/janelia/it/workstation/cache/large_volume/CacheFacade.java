@@ -34,7 +34,17 @@ import org.janelia.it.workstation.gui.large_volume_viewer.compression.Compressed
  * @author fosterl
  */
 public class CacheFacade {
-    private static final String REGION_NAME = "CompressedTiffCache";
+    private static final String CACHE_NAME = "CompressedTiffCache";
+    private static final boolean CACHE_OFLOW_DISK = false;
+    private static final boolean CACHE_ETERNAL = false;
+    private static final int CACHE_MAX_IN_MEM = 10000;
+    // Time-to-* settings are about making things stale, so that new versions
+    // could be fetched.  However, these applications hit precomputed (not
+    // dynamically updated) repositories.  Nothing will change during the
+    // session.
+    private static final int CACHE_TIME2LIVE_S = 0; // Do not evict based on time spent in cache.
+    private static final int CACHE_TIME2IDLE_S = 0; // Do not evict based on time between accesses.
+    
     private GeometricNeighborhoodBuilder neighborhoodBuilder;
     private GeometricNeighborhood neighborhood;
     private CachePopulator cachePopulator;
@@ -66,15 +76,27 @@ public class CacheFacade {
 //        CompositeCacheManager ccm = CompositeCacheManager.getUnconfiguredInstance();
 //        ccm.configure(props);
 
-        URL url = getClass().getResource("/ehcacheCompressedTiff.xml");
-        manager = CacheManager.create(url);
+//        URL url = getClass().getResource("/ehcacheCompressedTiff.xml");
+//        manager = CacheManager.create(url);
+        // Establishing in-memory cache, programmatically.
+        manager = CacheManager.create();
+        Cache memoryOnlyCache = new Cache(
+                CACHE_NAME, 
+                CACHE_MAX_IN_MEM, 
+                CACHE_OFLOW_DISK, 
+                CACHE_ETERNAL, 
+                CACHE_TIME2LIVE_S, 
+                CACHE_TIME2IDLE_S
+        );
+        manager.addCache(memoryOnlyCache);
+        
         //jcs = CacheAccess.getAccess(REGION_NAME); // Seed with defaults.
         //jcs = JCS.getInstance(region);
         cachePopulator = new CachePopulator();
     }
 
     public CacheFacade() throws Exception {
-        this(REGION_NAME);
+        this(CACHE_NAME);
     }
 
     /**
@@ -86,7 +108,7 @@ public class CacheFacade {
      */
 	public Future<byte[]> getFuture(String id) {
         Future<byte[]> rtnVal = null;
-        Cache cache = manager.getCache(REGION_NAME);
+        Cache cache = manager.getCache(CACHE_NAME);
         Element cachedElement = cache.get(id);
         CachableWrapper wrapper = (CachableWrapper)cachedElement.getValue();
         if (wrapper != null) {
@@ -170,7 +192,7 @@ public class CacheFacade {
 
     protected void populateRegion() {
         Map<String,Future<byte[]>> futureArrays = cachePopulator.populateCache(neighborhood);
-        Cache cache = manager.getCache(REGION_NAME);
+        Cache cache = manager.getCache(CACHE_NAME);
         for (String id: futureArrays.keySet()) {
             Future<byte[]> futureArray = futureArrays.get(id);
             CachableWrapper wrapper = new CachableWrapper(futureArray);
