@@ -76,7 +76,7 @@ public class CacheController {
 
         @Override
         public void zoomChanged(Double zoom) {
-            
+            manager.setCameraZoom(zoom);
         }
 
         @Override

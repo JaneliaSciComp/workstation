@@ -84,10 +84,10 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
      * Wish to produce the list of all files needed to fill in the
      * spherical neighborhood centered at the focus.
      * 
-	 * @see GeometricNeighborhoodBuilder#buildNeighborhood(double[])
+	 * @see GeometricNeighborhoodBuilder#buildNeighborhood(double[], double)
 	 */
     @Override
-    public GeometricNeighborhood buildNeighborhood(double[] focus) {
+    public GeometricNeighborhood buildNeighborhood(double[] focus, Double zoom) {
         WorldExtentSphere neighborhood = new WorldExtentSphere();
         TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
         if (tileHalfSize == null) {
@@ -111,7 +111,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             }
         }
         double micrometerVoxels = 1.0 / minVoxelMicrometers;
-        ZoomLevel zoomLevel = new ZoomLevel(0); // TODO
+        ZoomLevel zoomLevel = new ZoomLevel(zoom.intValue());
 
         // Establish a collection with required order and guaranteed uniqueness.
         FocusProximityComparator comparator = new FocusProximityComparator();

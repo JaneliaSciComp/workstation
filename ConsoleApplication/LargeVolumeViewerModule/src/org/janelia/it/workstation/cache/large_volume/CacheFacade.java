@@ -51,6 +51,7 @@ public class CacheFacade {
     //private CacheAccess jcs;
     private CacheManager manager;
     private CompressedFileResolver resolver;
+    private Double cameraZoom;
     
     private Logger log = LoggerFactory.getLogger(CacheFacade.class);
     
@@ -110,9 +111,11 @@ public class CacheFacade {
         Future<byte[]> rtnVal = null;
         Cache cache = manager.getCache(CACHE_NAME);
         Element cachedElement = cache.get(id);
-        CachableWrapper wrapper = (CachableWrapper)cachedElement.getValue();
-        if (wrapper != null) {
-            rtnVal = wrapper.getWrappedObject();
+        if (cachedElement != null) {
+            CachableWrapper wrapper = (CachableWrapper) cachedElement.getValue();
+            if (wrapper != null) {
+                rtnVal = wrapper.getWrappedObject();
+            }
         }
 		return rtnVal;
 	}
@@ -139,6 +142,7 @@ public class CacheFacade {
             log.warn("Interrupted thread, while returning {}.", id);
         } catch (Exception ex) {
             log.error("Failure to resolve cached version of {}", id);
+            ex.printStackTrace();
         }
         return rtnVal;
     }
@@ -160,6 +164,10 @@ public class CacheFacade {
             populateRegion();
         }
 	}
+    
+    public void setCameraZoom(Double zoom) {
+        this.cameraZoom = zoom;
+    }
 
     /**
      * @return the neighborhoodBuilder
@@ -182,7 +190,7 @@ public class CacheFacade {
 
     protected boolean calculateRegion(double[] focus) {
         boolean rtnVal = false;
-        GeometricNeighborhood calculatedNeighborhood = neighborhoodBuilder.buildNeighborhood(focus);
+        GeometricNeighborhood calculatedNeighborhood = neighborhoodBuilder.buildNeighborhood(focus, cameraZoom);
         if (!calculatedNeighborhood.equals(this.neighborhood)) {
             this.neighborhood = calculatedNeighborhood;
             rtnVal = true;
