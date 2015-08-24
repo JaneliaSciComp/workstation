@@ -124,6 +124,19 @@ public class RESTDomainFacade implements DomainFacade {
         return null;
     }
 
+    public Annotation create(Annotation annotation) throws Exception {
+         return null;
+    }
+
+    public void remove(Annotation annotation) throws Exception {
+
+    }
+
+    public void changePermissions(ObjectSet objectSet, String granteeKey, String rights, boolean grant) throws Exception {
+
+    }
+
+
     public TreeNode removeChildren(TreeNode treeNode, Collection<Reference> references) throws Exception {
         return null;
     }
