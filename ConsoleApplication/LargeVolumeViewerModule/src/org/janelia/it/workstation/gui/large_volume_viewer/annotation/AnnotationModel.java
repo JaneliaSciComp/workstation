@@ -709,6 +709,7 @@ called from a  SimpleWorker thread.
     /**
      * this method deletes a link, which is defined as an annotation with
      * one parent and no more than one child (not a root, not a branch point)
+     * (unless it's a root with no children)
      *
      * @param link = annotation object
      * @throws Exception
@@ -718,8 +719,12 @@ called from a  SimpleWorker thread.
             return;
         }
 
-        // check it's a link; trust no one; error or return?
-        if (link.isRoot() || link.getChildIds().size() > 1) {
+        // check it's not a branch or a root with children
+        if (link.getChildIds().size() > 1) {
+            return;
+        }
+
+        if (link.isRoot() && link.getChildIds().size() > 0) {
             return;
         }
 
