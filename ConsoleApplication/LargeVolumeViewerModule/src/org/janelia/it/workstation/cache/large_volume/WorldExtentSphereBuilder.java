@@ -38,6 +38,8 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
     private CompressedFileResolver resolver = new CompressedFileResolver();
     private double radiusInMicrons;
     private double[] tileHalfSize;
+    private int[] dimensions;
+    private double micrometerVoxels;
     private File topFolder;
     private static Logger log = LoggerFactory.getLogger(WorldExtentSphereBuilder.class);
 
@@ -111,19 +113,22 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         // Will wish to ensure that a proper distance-from-focus has been
         // calculated, so that ordering / priority is given to near tiles.        
         Vec3 center = new Vec3(focus[0], focus[1], focus[2]);
-        int[] dimensions = new int[] {
-            (int)(radiusInMicrons * tileFormat.getVoxelMicrometers()[0]),
-            (int)(radiusInMicrons * tileFormat.getVoxelMicrometers()[1]),
-            (int)(radiusInMicrons * tileFormat.getVoxelMicrometers()[2]),
-            //4000,4000,4000
-        };
-        double minVoxelMicrometers = Double.MAX_VALUE;
-        for (double voxMicron: tileFormat.getVoxelMicrometers()) {
-            if (minVoxelMicrometers > voxMicron) {
-                minVoxelMicrometers = voxMicron;
-            }
+        if (dimensions == null) {
+            dimensions = new int[]{
+                (int) (radiusInMicrons * tileFormat.getVoxelMicrometers()[0]),
+                (int) (radiusInMicrons * tileFormat.getVoxelMicrometers()[1]),
+                (int) (radiusInMicrons * tileFormat.getVoxelMicrometers()[2]), //4000,4000,4000
+            };
         }
-        double micrometerVoxels = 1.0 / minVoxelMicrometers;
+        if (micrometerVoxels == 0) {
+            double minVoxelMicrometers = Double.MAX_VALUE;
+            for (double voxMicron : tileFormat.getVoxelMicrometers()) {
+                if (minVoxelMicrometers > voxMicron) {
+                    minVoxelMicrometers = voxMicron;
+                }
+            }
+            micrometerVoxels = 1.0 / minVoxelMicrometers;
+        }
         ZoomLevel zoomLevel = new ZoomLevel(zoom.intValue());
 
         // Establish a collection with required order and guaranteed uniqueness.
@@ -131,23 +136,28 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         Set<File> tileFiles = new TreeSet<>( comparator );
         String tiffBase = BlockTiffOctreeLoadAdapter.getTiffBase(CoordinateAxis.Z);
         for (TileIndex tileIndex: getCenteredTileSet(tileFormat, center, micrometerVoxels, dimensions, zoomLevel)) {
-            File tilePath = BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat, true);            
-            tilePath = new File(topFolder, tilePath.getName());
-            double[] tileCenter = findTileCenterInMicrons(tileFormat, tileIndex);
-            double sigmaSquare = 0.0;
-            for (int i = 0; i < 3; i++) {
-                double absDist = Math.abs(tileCenter[i] - focus[i]);
-                sigmaSquare += absDist;
+            File tilePath = BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat, true);  
+            if (tilePath == null) {
+                log.warn("Null octree file path for {}.", tileIndex);
             }
-            double distanceFromFocus = Math.sqrt(sigmaSquare);
-            for (int channel = 0; channel < tileFormat.getChannelCount(); channel ++) {
-                String fileName = BlockTiffOctreeLoadAdapter.getFilenameForChannel(tiffBase, channel);
-                File fullTilePath = new File(tilePath, fileName);
-                // Work out what needs to be uncompressed, here.
-                fullTilePath = resolver.compressAs(fullTilePath);
-                comparator.addFile(fullTilePath, distanceFromFocus);
-                tileFiles.add(fullTilePath);
-                log.info("Adding file {} to cache.", fullTilePath);
+            else {
+                tilePath = new File(topFolder, tilePath.getName());
+                double[] tileCenter = findTileCenterInMicrons(tileFormat, tileIndex);
+                double sigmaSquare = 0.0;
+                for (int i = 0; i < 3; i++) {
+                    double absDist = Math.abs(tileCenter[i] - focus[i]);
+                    sigmaSquare += absDist;
+                }
+                double distanceFromFocus = Math.sqrt(sigmaSquare);
+                for (int channel = 0; channel < tileFormat.getChannelCount(); channel++) {
+                    String fileName = BlockTiffOctreeLoadAdapter.getFilenameForChannel(tiffBase, channel);
+                    File fullTilePath = new File(tilePath, fileName);
+                    // Work out what needs to be uncompressed, here.
+                    fullTilePath = resolver.compressAs(fullTilePath);
+                    comparator.addFile(fullTilePath, distanceFromFocus);
+                    tileFiles.add(fullTilePath);
+                    log.info("Adding file {} to neighborhood.", fullTilePath);
+                }
             }
         }
         neighborhood.setFiles(tileFiles);

@@ -286,7 +286,13 @@ extends AbstractTextureLoadAdapter
                         else {
                             s = new FileSeekableStream(tiff);
                         }
-                        decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
+                        // Can have s null, if its task was cancelled.
+                        if (s != null) {                            
+                            decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
+                        }
+                        else {
+                            missingTiffs.append(tiff);
+                        }
                     }
                 } catch (IOException e) {
                     throw new TileLoadError(e);

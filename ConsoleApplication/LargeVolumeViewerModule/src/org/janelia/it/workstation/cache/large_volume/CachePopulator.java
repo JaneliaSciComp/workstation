@@ -28,26 +28,30 @@ public class CachePopulator {
         this.executor = Executors.newFixedThreadPool(THREAD_COUNT);
     }
     
-    public Map<String,Future<byte[]>> populateCache(GeometricNeighborhood neighborhood) {
+    public Map<String,Future<byte[]>> populateCache(GeometricNeighborhood neighborhood, boolean cancelOld) {
         Map<String,Future<byte[]>> populatedMap = new HashMap<>();
         // Avoid re-launching on non-significant movement.
         if (! neighborhood.equals(this.neighborhood)) {
             this.neighborhood = neighborhood;
             // Kill any non-running tasks in the executor.
-            for (String key: compressedDataFutures.keySet()) {
-                Future<byte[]> futureShock = compressedDataFutures.get(key);
-                // false: cancel any which do not require interruption.
-                futureShock.cancel(false);                
+            if (cancelOld) {
+                for (String key : compressedDataFutures.keySet()) {
+                    Future<byte[]> futureShock = compressedDataFutures.get(key);
+                    // false: cancel any which do not require interruption.
+                    futureShock.cancel(false);
+                }
+                compressedDataFutures.clear();
             }
-            compressedDataFutures.clear();
             // Now, repopulate the running queue with the new neighborhood.
             // Any co-inciding un-processed items will simply be re-prioritized
             // according to the new focus' relative position.
             for (File file: neighborhood.getFiles()) {
-                Future<byte[]> future = executor.submit(new CachePopulatorWorker( file ));
                 final String key = file.getAbsolutePath();
-                compressedDataFutures.put( key, future );
-                populatedMap.put( key, future );
+                if (! compressedDataFutures.containsKey(key)) {
+                    Future<byte[]> future = executor.submit(new CachePopulatorWorker(file));
+                    compressedDataFutures.put(key, future);
+                    populatedMap.put(key, future);
+                }
 //                Future<SeekableStream> seekableFuture = executor.submit(new CachePopulatorWorker(file));
 //                final String key = file.getAbsolutePath();
 //                streamFutures.put(key, seekableFuture);

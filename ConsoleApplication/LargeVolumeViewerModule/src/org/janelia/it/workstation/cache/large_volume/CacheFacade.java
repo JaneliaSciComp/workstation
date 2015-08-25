@@ -8,7 +8,9 @@ package org.janelia.it.workstation.cache.large_volume;
 import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -133,17 +135,31 @@ public class CacheFacade {
      * @param id what to dig up.
      * @return result, after awaiting the future, or null on exception.
      */
-    public SeekableStream get(String id) {
+    public SeekableStream get(final String id) {
+        log.info("Getting {}", id);
         SeekableStream rtnVal = null;
         try {
             Future<byte[]> futureBytes = getFuture(id);
-            if (futureBytes != null) {
+            if (futureBytes == null) {
+                log.warn("No Future found for {}. Pushing data into cache.", id);
+                GeometricNeighborhood gn = new GeometricNeighborhood() {
+                    @Override
+                    public Set<File> getFiles() {
+                        Set<File> rtnVal = new HashSet<>();
+                        rtnVal.add(new File(id));
+                        return rtnVal;
+                    }
+                    
+                };
+                populateRegion(gn, false); // Add this, but do not kill old neighborhood.
+                futureBytes = getFuture(id);
+            }
+
+            if (futureBytes != null   &&   !futureBytes.isCancelled()) {
                 byte[] compressedData = futureBytes.get();
                 rtnVal = resolver.resolve(compressedData, new File(id));
             }
-            else {
-                log.warn("No Future found for {}.", id);
-            }
+
         } catch (InterruptedException | ExecutionException ie) {
             log.warn("Interrupted thread, while returning {}.", id);
         } catch (Exception ex) {
@@ -174,6 +190,7 @@ public class CacheFacade {
      * @param focus neighborhood is around this point.
      */
 	public void setFocus(double[] focus) {
+        log.info("Setting focus...");
         if (calculateRegion(focus)) {
             populateRegion();
         }
@@ -213,11 +230,15 @@ public class CacheFacade {
     }
 
     protected void populateRegion() {
-        Map<String,Future<byte[]>> futureArrays = cachePopulator.populateCache(neighborhood);
+        populateRegion(neighborhood, true);
+    }
+    
+    protected void populateRegion(GeometricNeighborhood neighborhood, boolean cancelOld) {
+        Map<String, Future<byte[]>> futureArrays = cachePopulator.populateCache(neighborhood, cancelOld);
         Cache cache = manager.getCache(CACHE_NAME);
-        for (String id: futureArrays.keySet()) {
+        for (String id : futureArrays.keySet()) {
             Future<byte[]> futureArray = futureArrays.get(id);
-            CachableWrapper wrapper = new CachableWrapper(futureArray);            
+            CachableWrapper wrapper = new CachableWrapper(futureArray);
             cache.put(new Element(id, wrapper));
 //            try {
 //                jcs.putSafe(id, futureArray);
@@ -227,7 +248,7 @@ public class CacheFacade {
 //            }
         }
     }
-    
+
     /**
      * May require serializable objects.  Neither 'Future' nor its generic 
      * target will ever be serializable.  However, since our cache resides
