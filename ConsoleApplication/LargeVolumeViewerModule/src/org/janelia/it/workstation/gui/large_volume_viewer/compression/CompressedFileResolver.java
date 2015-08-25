@@ -38,6 +38,16 @@ public class CompressedFileResolver {
         return null;
     }
 
+    /**
+     * Given a bunch of bytes that came-from the infile, use the infile's name
+     * to decide how to decompress the bytes.  THen invoke the algorithm for
+     * the decompression.
+     * 
+     * @param inbytes bytes in compressed format.
+     * @param infile name of file from which compressed bytes came, originally.
+     * @return stream into the decompressed version of the inbytes.
+     * @throws Exception for any called methods.
+     */
     public SeekableStream resolve(byte[] inbytes, File infile) throws Exception {
         for (CompressionAlgorithm algorithm : chain) {
             if (algorithm.canUncompress(infile)) {
@@ -45,5 +55,46 @@ public class CompressedFileResolver {
             }
         }
         return null;
+    }
+    
+    /**
+     * This resolver can uncompressed the input file either with an
+     * algorithm or trivially with no action.  This method will find
+     * out which uncompression algorithm has what it needs, to uncompress
+     * into the root input file.
+     * 
+     * @param decompressedFile what we want ultimately.
+     * @return what needs to be uncompressed/resolved
+     * @see #resolve(java.io.File) 
+     * @see #decompressedAs(java.io.File) 
+     */
+    public File compressAs(File decompressedFile) {
+        File compressedVersion = decompressedFile;
+        for (CompressionAlgorithm algorithm: chain) {
+            File algorithmCompressedVersion = algorithm.compressedVersion(decompressedFile);
+            if (algorithmCompressedVersion.canRead()) {
+                compressedVersion = algorithmCompressedVersion;
+                break;
+            }
+        }
+        return compressedVersion;
+    }
+    
+    /**
+     * Given some compressed file, this method tells its name after uncompression.
+     * @param compressedFile what it looks like before uncompress
+     * @return what it looks like after uncompress
+     * @see #compressAs(java.io.File) 
+     */
+    public File decompressedAs(File compressedFile) {
+        File decompressedFile = compressedFile;
+        for (CompressionAlgorithm algorithm: chain) {
+            File algoUncompressedVersion = algorithm.uncompressedVersion(compressedFile);
+            if (algoUncompressedVersion != null) {
+                decompressedFile = algoUncompressedVersion;
+                break;
+            }
+        }
+        return decompressedFile;
     }
 }

@@ -24,6 +24,29 @@ public class LZ4Compression implements CompressionAlgorithm {
     public boolean canUncompress(File infile) {
         return infile.getName().endsWith(TARGET_EXTENSION);
     }
+    
+    @Override
+    public File compressedVersion(File infile) {
+        return new File(infile.getParentFile(), infile.getName() + TARGET_EXTENSION);
+    }
+    
+    /**
+     * Checks to see if the "compressed file" has the target extension of this
+     * LZ4 algorithm.  If it does, return the 'root' version of the file name.
+     * Otherwise, return null--indicating this algorithm will not uncompress.
+     * 
+     * @param compressedFile final result of having run LZ4
+     * @return original file name, uncompressed by LZ4, or null
+     */
+    @Override
+    public File uncompressedVersion(File compressedFile) {
+        File rtnVal = null;
+        final String fileName = compressedFile.getName();
+        if (fileName.endsWith(TARGET_EXTENSION)) {
+            rtnVal = new File(compressedFile.getParentFile(), fileName.substring(0, fileName.length() - TARGET_EXTENSION.length()));
+        }
+        return rtnVal;
+    }
 
     /**
      * Given the input file, of appropriate extension and contents, uncompress

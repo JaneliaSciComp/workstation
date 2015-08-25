@@ -126,7 +126,7 @@ public class CacheFacade {
 
     /**
      * Blocking getters. Let the cache manager worry about the threading.
-     * Most likely ID is an absolute path.  Also, packages an uncompressed
+     * Most likely ID is an absolute path.  Also, packages a decompressed
      * version of the cached data, into a seekable stream.
      * 
      * @see CacheManager#get(java.io.File) calls this.
@@ -153,8 +153,16 @@ public class CacheFacade {
         return rtnVal;
     }
 
+    /**
+     * This getter takes the name of the decompressed version of the input file.
+     * 
+     * @param file decompressed file's name.
+     * @return stream of data, fully decompressed.
+     */
     public SeekableStream get(File file) {
-        return get(file.getAbsolutePath());
+        // The key stored in the cache is the compressed file name.
+        File compressedFile = resolver.compressAs(file);        
+        return get(compressedFile.getAbsolutePath());
     }
     
 
@@ -209,7 +217,7 @@ public class CacheFacade {
         Cache cache = manager.getCache(CACHE_NAME);
         for (String id: futureArrays.keySet()) {
             Future<byte[]> futureArray = futureArrays.get(id);
-            CachableWrapper wrapper = new CachableWrapper(futureArray);
+            CachableWrapper wrapper = new CachableWrapper(futureArray);            
             cache.put(new Element(id, wrapper));
 //            try {
 //                jcs.putSafe(id, futureArray);
@@ -221,7 +229,7 @@ public class CacheFacade {
     }
     
     /**
-     * JCS requires serializable objects.  Neither 'Future' nor its generic 
+     * May require serializable objects.  Neither 'Future' nor its generic 
      * target will ever be serializable.  However, since our cache resides
      * at all times in memory, making the cached object transient should not 
      * be problematic.

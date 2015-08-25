@@ -19,15 +19,23 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileBoundingBox;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
 import org.janelia.it.workstation.gui.large_volume_viewer.ViewBoundingBox;
+import org.janelia.it.workstation.gui.large_volume_viewer.compression.CompressedFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.octree.ZoomLevel;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;                
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This neighborhood builder, delineates the environ files by testing their
+ * micron distance from the focus.  Nearby ones are included.
+ * 
+ * @author fosterl
+ */
 public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
     
     private SharedVolumeImage sharedVolumeImage;
+    private CompressedFileResolver resolver = new CompressedFileResolver();
     private double radiusInMicrons;
     private double[] tileHalfSize;
     private File topFolder;
@@ -135,6 +143,8 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             for (int channel = 0; channel < tileFormat.getChannelCount(); channel ++) {
                 String fileName = BlockTiffOctreeLoadAdapter.getFilenameForChannel(tiffBase, channel);
                 File fullTilePath = new File(tilePath, fileName);
+                // Work out what needs to be uncompressed, here.
+                fullTilePath = resolver.compressAs(fullTilePath);
                 comparator.addFile(fullTilePath, distanceFromFocus);
                 tileFiles.add(fullTilePath);
                 log.info("Adding file {} to cache.", fullTilePath);

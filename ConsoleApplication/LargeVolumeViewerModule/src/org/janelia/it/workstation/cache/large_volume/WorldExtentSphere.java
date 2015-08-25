@@ -24,4 +24,20 @@ public class WorldExtentSphere implements GeometricNeighborhood {
         this.files = files;
     }
 
+    /** Need to support comparison to decide whether to populate or not. */
+    @Override
+    public boolean equals(Object o) {
+        boolean isEq = false;
+        if (o != null  &&  o instanceof GeometricNeighborhood) {
+            GeometricNeighborhood otherHood = (GeometricNeighborhood)o;
+            isEq = files.equals(otherHood.getFiles());
+        }
+        return isEq;
+    }
+
+    /** @see #equals(java.lang.Object) */
+    @Override
+    public int hashCode() {
+        return files.hashCode();
+    }
 }

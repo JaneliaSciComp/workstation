@@ -15,6 +15,19 @@ public interface CompressionAlgorithm {
     /** Chain-of-responsibility support. */
     boolean canUncompress(File infile);
     
+    /** Tells what to look for, to figure out if this algorithm will work. */
+    File compressedVersion(File infile);
+    
+    /**
+     * Given you have a compressed file name, that can be decompressed by
+     * this algorithm, this method tells what the uncompressed file will be
+     * named.  Only TELLS the name. Decompression is not done here.
+     * 
+     * @param compressedFile pre-uncompress.
+     * @return post-uncompress.
+     */
+    File uncompressedVersion(File compressedFile);
+    
     /** Compression */
     byte[] uncompress(File infile) throws CompressionException;
     byte[] uncompress(byte[] inbutes) throws CompressionException;
