@@ -258,7 +258,7 @@ public class TracingInteractor extends MouseAdapter
 
     @Override
     public void mouseExited(MouseEvent event) {
-        System.out.println("mouse exited");
+        // System.out.println("mouse exited");
         if (hoverModel.isEmpty()) {
             return;
         }
