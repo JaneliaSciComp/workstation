@@ -31,18 +31,28 @@
 package org.janelia.horta.nodes;
 
 import java.awt.Image;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import static javax.swing.Action.NAME;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import org.apache.commons.io.FilenameUtils;
 import org.janelia.horta.modelapi.NeuroanatomyWorkspace;
+import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
+import org.openide.util.Exceptions;
 import org.openide.util.ImageUtilities;
 import org.openide.util.actions.Presenter;
+import org.openide.util.datatransfer.PasteType;
 import org.openide.util.lookup.Lookups;
 
 /**
@@ -53,15 +63,40 @@ import org.openide.util.lookup.Lookups;
 public class NeuroanatomyWorkspaceNode extends AbstractNode
 {
     private final NeuroanatomyWorkspace workspace;
-    private final NeuroanatomyWorkspaceChildFactory factory;
+    private final NeuroanatomyWorkspaceChildFactory childFactory;
     
     public NeuroanatomyWorkspaceNode(NeuroanatomyWorkspace workspace) {
         super(Children.create(new NeuroanatomyWorkspaceChildFactory(workspace), true), Lookups.singleton(workspace));
         setDisplayName("Neuroanatomy workspace");
         this.workspace = workspace;
-        // Recreate children, so we can keep a handle on the factory, for dynamic refresh
-        factory = new NeuroanatomyWorkspaceChildFactory(workspace);
-        setChildren(Children.create(factory, true));
+        // Recreate children, so we can keep a handle on the childFactory, for dynamic refresh
+        childFactory = new NeuroanatomyWorkspaceChildFactory(workspace);
+        setChildren(Children.create(childFactory, true));
+    }
+    
+    @Override
+    public PasteType getDropType(final Transferable transferable, int action, int index) {
+        return new PasteType() {
+            @Override
+            public Transferable paste() throws IOException
+            {
+                System.out.println("Dropping neuron...");
+                try {
+                    List<File> fileList = (List) transferable.getTransferData(DataFlavor.javaFileListFlavor);
+                    for (File f : fileList) {
+                        String extension = FilenameUtils.getExtension(f.getName());
+                        if (extension.toUpperCase().equals("SWC")) {
+                            NeuronReconstruction neuron = new BasicNeuronReconstruction(f);
+                            workspace.getNeurons().add(neuron);
+                            childFactory.publicRefresh(true);
+                        }
+                    }
+                } catch (UnsupportedFlavorException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+                return null;
+            }
+        };
     }
     
     @Override
@@ -95,9 +130,9 @@ public class NeuroanatomyWorkspaceNode extends AbstractNode
             workspace.getNeurons().add(new BasicNeuronReconstruction());
 
             // Refresh display of children
-            factory.publicRefresh(true);
+            childFactory.publicRefresh(true);
 
-            JOptionPane.showMessageDialog(null, "New neuron created");
+            // JOptionPane.showMessageDialog(null, "New neuron created");
             
         }
     }

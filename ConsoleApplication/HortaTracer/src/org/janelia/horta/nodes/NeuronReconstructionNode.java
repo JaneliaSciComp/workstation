@@ -30,10 +30,11 @@
 
 package org.janelia.horta.nodes;
 
-import java.util.Collection;
+import java.awt.Image;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
+import org.openide.util.ImageUtilities;
 import org.openide.util.lookup.Lookups;
 
 /**
@@ -45,6 +46,17 @@ public class NeuronReconstructionNode extends AbstractNode
 
     public NeuronReconstructionNode(NeuronReconstruction neuron) {
         super(Children.create(new NeuronReconstructionChildFactory(), true), Lookups.singleton(neuron));
+        setDisplayName(neuron.getName() + "(" + neuron.getSegments().size() + ")");
+    }
+    
+    @Override
+    public Image getIcon(int type) {
+        return ImageUtilities.loadImage("org/janelia/horta/images/neuron1.png");
+    }
+    
+    @Override
+    public Image getOpenedIcon(int i) {
+        return getIcon(i);
     }
     
 }

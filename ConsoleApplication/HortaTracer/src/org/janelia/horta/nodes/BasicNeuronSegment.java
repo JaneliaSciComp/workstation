@@ -28,18 +28,95 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.modelapi;
+package org.janelia.horta.nodes;
 
-import java.util.Collection;
+import org.janelia.horta.modelapi.NeuronSegment;
 
 /**
  *
  * @author Christopher Bruns
  */
-public interface NeuronReconstruction
+public class BasicNeuronSegment implements NeuronSegment
 {
-    String getName();
-    void setName(String name);
+    private double[] location = {0, 0, 0};
+    private double radius = 1.0; // micrometers
+    private int label = 1;
+    private int parentLabel = -1;
+    private int typeIndex = 0;
+
+    BasicNeuronSegment(double x, double y, double z)
+    {
+        location[0] = x;
+        location[1] = y;
+        location[2] = z;
+    }
+
+    @Override
+    public double[] getLocation()
+    {
+        return location;
+    }
+
+    public void setLocation(double[] location)
+    {
+        this.location = location;
+    }
+
+    @Override
+    public void setLocation(double x, double y, double z)
+    {
+        location[0] = x;
+        location[1] = y;
+        location[2] = z;
+    }
+
+    @Override
+    public double getRadius()
+    {
+        return radius;
+    }
+
+    @Override
+    public void setRadius(double radius)
+    {
+        this.radius = radius;
+    }
+
+    @Override
+    public int getLabel()
+    {
+        return label;
+    }
+
+    @Override
+    public void setLabel(int label)
+    {
+        this.label = label;
+    }
+
+    @Override
+    public int getParentLabel()
+    {
+        return parentLabel;
+    }
+
+    @Override
+    public void setParentLabel(int parentLabel)
+    {
+        this.parentLabel = parentLabel;
+    }
+
+    @Override
+    public int getTypeIndex()
+    {
+        return typeIndex;
+    }
+
+    @Override
+    public void setTypeIndex(int typeIndex)
+    {
+        this.typeIndex = typeIndex;
+    }
+
     
-    Collection<NeuronSegment> getSegments();
 }

@@ -30,6 +30,16 @@
 
 package org.janelia.horta.nodes;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import org.apache.commons.io.FilenameUtils;
+import org.janelia.horta.modelapi.NeuronSegment;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 
 /**
@@ -38,5 +48,60 @@ import org.janelia.horta.modelapi.NeuronReconstruction;
  */
 public class BasicNeuronReconstruction implements NeuronReconstruction
 {
+    private String name = "(unnamed neuron)";
+    private List<NeuronSegment> nodes = new ArrayList<NeuronSegment>();
+
+    public BasicNeuronReconstruction()
+    {
+    }
+
+    public BasicNeuronReconstruction(File file) throws FileNotFoundException, IOException
+    {
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String line;
+        while ((line = br.readLine()) != null) {
+            if (line.startsWith("#")) // skip comments
+                continue;
+            // 1 2 77299.3 56354.5 22206.5 1.00 -1
+            String[] fields = line.split("\\s+");
+            if (fields.length < 7)
+                continue; // blank line?
+            int label = Integer.parseInt(fields[0]);
+            int type = Integer.parseInt(fields[1]);
+            double x = Double.parseDouble(fields[2]);
+            double y = Double.parseDouble(fields[3]);
+            double z = Double.parseDouble(fields[4]);
+            double radius = Double.parseDouble(fields[5]);
+            int parentLabel = Integer.parseInt(fields[6]);
+            NeuronSegment node = new BasicNeuronSegment(x, y, z);
+            node.setLabel(label);
+            node.setTypeIndex(type);
+            node.setRadius(radius);
+            node.setParentLabel(parentLabel);
+            nodes.add(node);
+        }
+        // Take name from file
+        if (nodes.size() > 0) {
+            String neuronName = FilenameUtils.getBaseName(file.getName());
+            setName(neuronName);
+        }
+    }
+
+    @Override
+    public String getName()
+    {
+        return name;
+    }
+    
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public Collection<NeuronSegment> getSegments()
+    {
+        return nodes;
+    }
     
 }

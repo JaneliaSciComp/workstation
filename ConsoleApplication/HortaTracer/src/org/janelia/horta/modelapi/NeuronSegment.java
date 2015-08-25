@@ -30,16 +30,24 @@
 
 package org.janelia.horta.modelapi;
 
-import java.util.Collection;
-
 /**
  *
  * @author Christopher Bruns
  */
-public interface NeuronReconstruction
+public interface NeuronSegment
 {
-    String getName();
-    void setName(String name);
+    int getLabel();
+    void setLabel(int label);
+
+    int getParentLabel();
+    void setParentLabel(int label); // -1 means no parent
     
-    Collection<NeuronSegment> getSegments();
+    double getRadius();
+    void setRadius(double radius);
+    
+    int getTypeIndex();
+    void setTypeIndex(int index);
+    
+    double[] getLocation();
+    void setLocation(double x, double y, double z);
 }
