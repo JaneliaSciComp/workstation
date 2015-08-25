@@ -200,8 +200,6 @@ public class VoxelViewerRenderer implements GLEventListener
 
         final GL4 gl = glDrawable.getGL().getGL4();
 
-        logger.info("display() check 1");
-
         // First, handle messages
         Deque<String> msgQueue=model.getGLModel().getMessageQueue();
         while (msgQueue.size()>0) {
@@ -210,8 +208,6 @@ public class VoxelViewerRenderer implements GLEventListener
                 model.getGLModel().disposeAndClearAllActors(gl);
             }
         }
-
-        logger.info("display() check 2");
 
         // Next, handle any inits
         Deque<GL4SimpleActor> initQueue=model.getGLModel().getInitQueue();
@@ -225,16 +221,12 @@ public class VoxelViewerRenderer implements GLEventListener
             }
         }
 
-        logger.info("display() check 3");
-
         // Last, handle any removals
         Deque<Integer> removalQueue=model.getGLModel().getDisposeQueue();
         while (removalQueue.size()>0) {
             Integer actorIdToRemove=removalQueue.pop();
             model.getGLModel().removeActor(actorIdToRemove, gl);
         }
-
-        logger.info("display() check 4");
 
         // NOTE: THIS STUFF SHOULD BE HANDLED IN THE SHADERS
         // Preset background from the volume model.
@@ -281,39 +273,21 @@ public class VoxelViewerRenderer implements GLEventListener
         // Copy member list of actors local for independent iteration.
         //logger.info("Display shader sequence starting");
 
-        logger.info("display() check 5");
-
         if (model.getGLModel().getDenseVolumeShaderActionSequence().getActorSequence().size()>0 ||
                 model.getGLModel().getMeshShaderActionSequence().getActorSequence().size()>0) {
 
             try {
-                logger.info("display() check 6");
-
-                atc.display(gl);
-
-                logger.info("display() check 7");
-
-
+                atc.display(gl); // clears the OIT state
             }
             catch (Exception ex) {
                 logger.error("Error in ArrayTransparencyContext display(): " + ex.getMessage());
                 ex.printStackTrace();
             }
-
-            logger.info("display() check 8");
-
             model.getGLModel().getDenseVolumeShaderActionSequence().display(gl);
-
-            logger.info("display() check 9");
-
             model.getGLModel().getMeshShaderActionSequence().display(gl);
-
-            logger.info("display() check 10");
 
             assActionSequence.display(gl);
         }
-
-        logger.info("display() check 11");
 
     }
 
