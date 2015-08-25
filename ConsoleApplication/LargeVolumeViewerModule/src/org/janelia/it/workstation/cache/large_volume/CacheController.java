@@ -5,6 +5,8 @@
  */
 package org.janelia.it.workstation.cache.large_volume;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
@@ -20,6 +22,7 @@ import org.slf4j.LoggerFactory;
 public class CacheController {
     private CacheFacade manager;
     private CacheCameraListener cameraListener;
+    private static ExecutorService executor;
     
     private static CacheController instance = new CacheController();
     
@@ -30,7 +33,9 @@ public class CacheController {
     /**
      * Singleton use only.
      */
-    private CacheController() {  
+    private CacheController() {
+        // Create a queue-like thread pool.
+        executor = Executors.newFixedThreadPool(1);
     }
     
     /**
@@ -96,19 +101,43 @@ public class CacheController {
 
         @Override
         public void focusChanged(Vec3 focus) {
+            // Create a new change-of-focus runnable, and
+            // run it in a thread, serialized behind all others before it.
+            Runnable r = new FocusChanger(camera, sharedVolumeImage, manager, focus);
+            executor.submit(r);
+        }
+        
+    }
+
+    /**
+     * This task will carry out focus modification in a separate thread
+     * from the event thread.
+     */
+    private static class FocusChanger implements Runnable {
+        private ObservableCamera3d camera;
+        private SharedVolumeImage sharedVolumeImage;
+        private CacheFacade manager;
+        private Vec3 focus;
+        
+        public FocusChanger(ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage, CacheFacade manager, Vec3 focus) {
+            this.camera = camera;
+            this.sharedVolumeImage = sharedVolumeImage;
+            this.manager = manager;
+            this.focus = focus;
+        }
+        
+        public void run() {
             TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
             Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
             if (zoom != null) {
-                zoomChanged(zoom);
+                manager.setCameraZoom(zoom);
             }
-            
+
             double[] focusArr = new double[3];
             for (int i = 0; i < focusArr.length; i++) {
                 focusArr[i] = focus.elementAt(i);
             }
             manager.setFocus(focusArr);
         }
-        
     }
-    
 }

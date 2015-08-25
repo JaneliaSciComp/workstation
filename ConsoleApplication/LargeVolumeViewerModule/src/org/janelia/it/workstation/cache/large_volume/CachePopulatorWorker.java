@@ -4,7 +4,9 @@
  * and open the template in the editor.
  */
 package org.janelia.it.workstation.cache.large_volume;
+
 import java.io.File;
+import org.janelia.it.workstation.gui.large_volume_viewer.compression.CompressedFileResolver;
 import org.janelia.it.workstation.gui.large_volume_viewer.compression.FileCollector;
 
 /**
@@ -24,10 +26,8 @@ public class CachePopulatorWorker implements java.util.concurrent.Callable {
     public Object call() throws Exception {
         FileCollector collector = new FileCollector();
         collector.collectFile(infile);
-        return collector.getData();
-//        CompressedFileResolver resolver = new CompressedFileResolver();
-//        SeekableStream stream = resolver.resolve(infile);
-//        return stream;
+        CompressedFileResolver resolver = new CompressedFileResolver();
+        return resolver.uncompress(infile);
     }
 
 }

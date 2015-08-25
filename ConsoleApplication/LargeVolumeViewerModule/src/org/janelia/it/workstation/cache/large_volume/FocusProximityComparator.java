@@ -38,8 +38,11 @@ public class FocusProximityComparator implements Comparator<File> {
     public int compare(File o1, File o2) {
         Double prox1 = proximityMap.get(o1);
         Double prox2 = proximityMap.get(o2);
-        if (prox1 == null  ||  prox2 == null) {
-            throw new IllegalArgumentException("Use this comparator only on files whose proximities have been added.");
+        if (prox1 == null) {
+            return -1;
+        }
+        if (prox2 == null) {
+            return 1;
         }
         return prox1 == prox2 ? 0 : prox1 < prox2 ? -1 : 1;
     }

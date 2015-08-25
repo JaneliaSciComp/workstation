@@ -5,6 +5,7 @@
  */
 package org.janelia.it.workstation.cache.large_volume;
 
+import com.sun.media.jai.codec.ByteArraySeekableStream;
 import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
 import java.io.Serializable;
@@ -155,9 +156,10 @@ public class CacheFacade {
                 futureBytes = getFuture(id);
             }
 
-            if (futureBytes != null   &&   !futureBytes.isCancelled()) {
-                byte[] compressedData = futureBytes.get();
-                rtnVal = resolver.resolve(compressedData, new File(id));
+            if (futureBytes != null   &&   !futureBytes.isCancelled()) {                
+                byte[] decompressedData = futureBytes.get();
+                //rtnVal = resolver.resolve(compressedData, new File(id));
+                rtnVal = new ByteArraySeekableStream(decompressedData);
             }
 
         } catch (InterruptedException | ExecutionException ie) {
@@ -230,12 +232,12 @@ public class CacheFacade {
     }
 
     protected void populateRegion() {
-        populateRegion(neighborhood, true);
+        populateRegion(neighborhood, false); // Cancellation is causing conflicts.
     }
     
     protected void populateRegion(GeometricNeighborhood neighborhood, boolean cancelOld) {
-        Map<String, Future<byte[]>> futureArrays = cachePopulator.populateCache(neighborhood, cancelOld);
         Cache cache = manager.getCache(CACHE_NAME);
+        Map<String, Future<byte[]>> futureArrays = cachePopulator.retargetCache(neighborhood, cancelOld, cache);
         for (String id : futureArrays.keySet()) {
             Future<byte[]> futureArray = futureArrays.get(id);
             CachableWrapper wrapper = new CachableWrapper(futureArray);

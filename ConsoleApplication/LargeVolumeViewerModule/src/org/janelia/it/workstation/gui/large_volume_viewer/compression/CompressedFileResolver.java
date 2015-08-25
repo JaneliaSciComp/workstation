@@ -39,6 +39,23 @@ public class CompressedFileResolver {
     }
 
     /**
+     * Uses chain-of-responsibility to decide how to uncompress, and then
+     * uncompresses, returning the uncompressed bytes.
+     * 
+     * @param infile what to read
+     * @return uncompressed version
+     * @throws Exception by called methods.
+     */
+    public byte[] uncompress(File infile) throws Exception {
+        for (CompressionAlgorithm algorithm : chain) {
+            if (algorithm.canUncompress(infile)) {
+                return algorithm.uncompress(infile);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Given a bunch of bytes that came-from the infile, use the infile's name
      * to decide how to decompress the bytes.  THen invoke the algorithm for
      * the decompression.

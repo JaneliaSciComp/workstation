@@ -156,7 +156,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                     fullTilePath = resolver.compressAs(fullTilePath);
                     comparator.addFile(fullTilePath, distanceFromFocus);
                     tileFiles.add(fullTilePath);
-                    log.info("Adding file {} to neighborhood.", fullTilePath);
+                    log.debug("Adding file {} to neighborhood.", fullTilePath);
                 }
             }
         }
@@ -207,6 +207,10 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         BoundingBox3d bb = tileFormat.calcBoundingBox();
         int maxDepth = this.calcZCoord(bb, xyzFromWhd, tileFormat, (int) (center.getZ() + halfDepth));
         int minDepth = maxDepth - dimensions[xyzFromWhd[2]];
+//if (minDepth < 0){
+//    minDepth = 0;
+//}
+//        minDepth = minDepth < 0 ? 0 : minDepth;
 
         int minWidth = tileBoundingBox.getwMin();
         int maxWidth = tileBoundingBox.getwMax();
