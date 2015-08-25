@@ -203,7 +203,7 @@ public class DenseVolumeRenderable extends Renderable {
         if (actor!=null) {
             disposeActor();
         }
-        actor = new DenseVolumeActor(this.name, sampledVoxels);
+        actor = new DenseVolumeActor(this.name, sampledVoxels, xSize, ySize, zSize, voxelSize);
         return actor;
     }
 

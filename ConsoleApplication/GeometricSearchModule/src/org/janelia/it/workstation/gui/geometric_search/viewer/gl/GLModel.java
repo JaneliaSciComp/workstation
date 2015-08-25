@@ -2,9 +2,13 @@ package org.janelia.it.workstation.gui.geometric_search.viewer.gl;
 
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerEventListener;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerGLPanel;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerModel;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerProperties;
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.Actor;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorAddedEvent;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.VoxelViewerEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.*;
 
 import javax.media.opengl.GL4;
@@ -14,7 +18,7 @@ import java.util.Deque;
 /**
  * Created by murphys on 8/21/2015.
  */
-public class GLModel {
+public class GLModel implements VoxelViewerEventListener {
 
     public static final String DISPOSE_AND_CLEAR_ALL_ACTORS_MSG = "DISPOSE_AND_CLEAR_ALL_ACTORS_MSG";
 
@@ -219,5 +223,16 @@ public class GLModel {
             ex.printStackTrace();
         }
     }
+
+    @Override
+    public void processEvent(VoxelViewerEvent event) {
+        if (event instanceof ActorAddedEvent) {
+            ActorAddedEvent actorAddedEvent=(ActorAddedEvent)event;
+            Actor actor=actorAddedEvent.getActor();
+            GL4SimpleActor gl4SimpleActor=actor.createAndSetGLActor();
+            initQueue.add(gl4SimpleActor);
+        }
+    }
+
 
 }

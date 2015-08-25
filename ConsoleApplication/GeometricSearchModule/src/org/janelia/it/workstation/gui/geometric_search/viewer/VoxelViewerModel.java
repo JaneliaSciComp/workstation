@@ -59,6 +59,7 @@ public class VoxelViewerModel {
     public void setupModelEvents() {
         EventManager.addListener(datasetModel, renderableModel);
         EventManager.addListener(renderableModel, actorModel);
+        EventManager.addListener(actorModel, glModel);
     }
 
     public ActorModel getActorModel() {
