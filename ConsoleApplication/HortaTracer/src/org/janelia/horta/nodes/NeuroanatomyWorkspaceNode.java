@@ -43,9 +43,9 @@ import javax.swing.Action;
 import static javax.swing.Action.NAME;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.horta.modelapi.NeuroanatomyWorkspace;
+import org.janelia.geometry3d.Vantage;
+import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
@@ -62,16 +62,25 @@ import org.openide.util.lookup.Lookups;
  */
 public class NeuroanatomyWorkspaceNode extends AbstractNode
 {
-    private final NeuroanatomyWorkspace workspace;
+    private final HortaWorkspace workspace;
     private final NeuroanatomyWorkspaceChildFactory childFactory;
     
-    public NeuroanatomyWorkspaceNode(NeuroanatomyWorkspace workspace) {
+    public NeuroanatomyWorkspaceNode(HortaWorkspace workspace) {
         super(Children.create(new NeuroanatomyWorkspaceChildFactory(workspace), true), Lookups.singleton(workspace));
-        setDisplayName("Neuroanatomy workspace");
         this.workspace = workspace;
         // Recreate children, so we can keep a handle on the childFactory, for dynamic refresh
         childFactory = new NeuroanatomyWorkspaceChildFactory(workspace);
         setChildren(Children.create(childFactory, true));
+        updateNeurons();
+    }
+    
+    private void updateNeurons() {
+        setDisplayName("Horta workspace" + " (" + workspace.getNeurons().size() + " neurons)");
+        childFactory.publicRefresh(true);
+    }
+    
+    public Vantage getVantage() {
+        return workspace.getVantage();
     }
     
     @Override
@@ -85,10 +94,11 @@ public class NeuroanatomyWorkspaceNode extends AbstractNode
                     List<File> fileList = (List) transferable.getTransferData(DataFlavor.javaFileListFlavor);
                     for (File f : fileList) {
                         String extension = FilenameUtils.getExtension(f.getName());
-                        if (extension.toUpperCase().equals("SWC")) {
+                        if ( "SWC".equals(extension.toUpperCase()) ) {
                             NeuronReconstruction neuron = new BasicNeuronReconstruction(f);
                             workspace.getNeurons().add(neuron);
-                            childFactory.publicRefresh(true);
+                            updateNeurons();
+                        } else {
                         }
                     }
                 } catch (UnsupportedFlavorException ex) {
@@ -130,7 +140,7 @@ public class NeuroanatomyWorkspaceNode extends AbstractNode
             workspace.getNeurons().add(new BasicNeuronReconstruction());
 
             // Refresh display of children
-            childFactory.publicRefresh(true);
+            updateNeurons();
 
             // JOptionPane.showMessageDialog(null, "New neuron created");
             

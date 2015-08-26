@@ -31,21 +31,34 @@
 package org.janelia.horta.nodes;
 
 import java.util.List;
-import org.openide.nodes.AbstractNode;
+import org.janelia.horta.modelapi.NeuronReconstruction;
+import org.janelia.horta.modelapi.NeuronVertex;
 import org.openide.nodes.ChildFactory;
+import org.openide.nodes.Node;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class NeuronReconstructionChildFactory extends ChildFactory<AbstractNode>
+public class NeuronReconstructionChildFactory extends ChildFactory<NeuronVertex>
 {
+    private NeuronReconstruction neuron;
+    
+    public NeuronReconstructionChildFactory(NeuronReconstruction neuron) {
+        this.neuron = neuron;
+    }
 
     @Override
-    protected boolean createKeys(List<AbstractNode> toPopulate)
+    protected boolean createKeys(List<NeuronVertex> toPopulate)
     {
+        for ( NeuronVertex vertex : neuron.getVertexes()) {
+            toPopulate.add(vertex);
+        }
         return true;
     }
 
-    
+    @Override
+    protected Node createNodeForKey(NeuronVertex key) {
+        return new NeuronVertexNode(key);
+    }
 }

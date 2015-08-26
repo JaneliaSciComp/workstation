@@ -28,43 +28,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.nodes;
+package org.janelia.horta.modelapi;
 
-import org.janelia.horta.modelapi.HortaWorkspace;
-import java.util.List;
-import org.janelia.horta.modelapi.NeuronReconstruction;
-import org.openide.nodes.ChildFactory;
-import org.openide.nodes.Node;
+import org.janelia.geometry3d.Vector3;
 
 /**
- *
+ * Method in common to all neuron reconstructions
  * @author Christopher Bruns
  */
-class NeuroanatomyWorkspaceChildFactory extends ChildFactory
+public interface NeuronVertex
 {
-    private HortaWorkspace workspace;
-
-    public NeuroanatomyWorkspaceChildFactory(HortaWorkspace workspace)  {
-        this.workspace = workspace;
-    }
-
-    @Override
-    protected boolean createKeys(List toPopulate)
-    {
-        for (NeuronReconstruction neuron : workspace.getNeurons()) {
-            toPopulate.add(neuron);
-        }
-        return true;
-    }
+    Vector3 getLocation();
+    void setLocation(float x, float y, float z);
     
-    @Override
-    protected Node createNodeForKey(Object key)
-    {
-        return new NeuronReconstructionNode((NeuronReconstruction)key);
-    }
-    
-    public void publicRefresh(boolean b) {
-        super.refresh(b);
-    }
-    
+    NeuronVertex getParentVertex(); // can be null
+    void setParentVertex(NeuronVertex parent);
 }

@@ -100,7 +100,8 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
-import org.janelia.horta.modelapi.NeuroanatomyWorkspace;
+import org.janelia.horta.modelapi.HortaWorkspace;
+import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.volume.BrickActor;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -146,7 +147,7 @@ import org.slf4j.LoggerFactory;
     "HINT_NeuronTracerTopComponent=Horta Neuron Tracer window"
 })
 public final class NeuronTracerTopComponent extends TopComponent
-        implements VolumeProjection, YamlStreamLoader, LookupListener
+        implements VolumeProjection, YamlStreamLoader
 {
     public static final String PREFERRED_ID = "NeuronTracerTopComponent";
     public static final String BASE_YML_FILE = "tilebase.cache.yml";
@@ -184,7 +185,9 @@ public final class NeuronTracerTopComponent extends TopComponent
     public static NeuronTracerTopComponent findThisComponent() {
         return (NeuronTracerTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
     }
-    private Lookup.Result<NeuroanatomyWorkspace> neuronResult;
+    
+    // private NeuroanHortaWorkspaceace;
+    private Lookup.Result<HortaWorkspace> workspaceResult;
 
     public NeuronTracerTopComponent() {
         // This block is what the wizard created
@@ -614,9 +617,11 @@ public final class NeuronTracerTopComponent extends TopComponent
        // associateLookup(Lookups.singleton(vantage)); // ONE item in lookup
         // associateLookup(Lookups.fixed(vantage, brightnessModel)); // TWO items in lookup
         FrameTracker frameTracker = sceneWindow.getRenderer().getFrameTracker();
+        HortaWorkspace workspace = new BasicHortaWorkspace(sceneWindow.getVantage());        
         associateLookup(Lookups.fixed(
                 vantage, 
                 brightnessModel, 
+                workspace, 
                 frameTracker));
 
         // Tooltips cannot be used, because there might be a AWT Component inside..
@@ -1088,16 +1093,6 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     // Variables declaration - do not modify                     
     // End of variables declaration                   
-    @Override
-    public void componentOpened() {
-        neuronResult = Utilities.actionsGlobalContext().lookupResult(NeuroanatomyWorkspace.class); 
-        neuronResult.addLookupListener (this); // - See more at: https://platform.netbeans.org/tutorials/74/nbm-selection-1.html#sthash.NU9Nsszy.dpuf          
-    }
-
-    @Override
-    public void componentClosed() {
-        neuronResult.removeLookupListener(this);
-    }
 
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
@@ -1162,20 +1157,5 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     public void setBackgroundColor(Color topColor, Color bottomColor) {
         neuronMPRenderer.setBackgroundColor(topColor, bottomColor);
-    }
-
-    @Override
-    public void resultChanged(LookupEvent le)
-    {
-        Collection<? extends NeuroanatomyWorkspace> allNeurons = neuronResult.allInstances(); 
-        if (!allNeurons.isEmpty()) {
-            NeuroanatomyWorkspace neuron = allNeurons.iterator().next(); 
-            // TODO - do something with the newly selected neuron
-            // jLabel1.setText(Integer.toString(event.getIndex())); 
-            // jLabel2.setText(event.getDate().toString()); 
-        } else { 
-            // jLabel1.setText("[no selection]");
-            // jLabel2.setText(""); 
-        } // - See more at: https://platform.netbeans.org/tutorials/74/nbm-selection-1.html#sthash.NU9Nsszy.dpuf    
     }
 }

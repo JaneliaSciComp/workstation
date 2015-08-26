@@ -31,23 +31,17 @@
 package org.janelia.horta.modelapi;
 
 /**
- *
+ * Full interface for SWC format neuron reconstructions
  * @author Christopher Bruns
  */
-public interface NeuronSegment
+public interface SwcVertex extends NeuronVertex
 {
     int getLabel();
     void setLabel(int label);
 
-    int getParentLabel();
-    void setParentLabel(int label); // -1 means no parent
-    
     double getRadius();
     void setRadius(double radius);
     
     int getTypeIndex();
     void setTypeIndex(int index);
-    
-    double[] getLocation();
-    void setLocation(double x, double y, double z);
 }

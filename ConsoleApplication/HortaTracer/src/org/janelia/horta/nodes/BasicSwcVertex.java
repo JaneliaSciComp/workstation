@@ -30,36 +30,91 @@
 
 package org.janelia.horta.nodes;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import org.janelia.horta.modelapi.NeuroanatomyWorkspace;
-import org.janelia.horta.modelapi.NeuronReconstruction;
+import org.janelia.geometry3d.Vector3;
+import org.janelia.horta.modelapi.NeuronVertex;
+import org.janelia.horta.modelapi.SwcVertex;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class BasicNeuroanatomyWorkspace implements NeuroanatomyWorkspace
+public class BasicSwcVertex implements SwcVertex
 {
-    private boolean visible;
-    private List<NeuronReconstruction> neurons = new ArrayList<NeuronReconstruction>();
+    private final Vector3 location = new Vector3(0,0,0);
+    private double radius = 0.0; // micrometers
+    private int label = 1;
+    private int typeIndex = 0;
+    private SwcVertex parent = null;
 
-    @Override
-    public boolean isVisible()
+    BasicSwcVertex(float x, float y, float z)
     {
-        return visible;
+        location.set(x, y, z);
     }
 
     @Override
-    public void setVisible(boolean visible)
+    public Vector3 getLocation()
     {
-        this.visible = visible;
+        return location;
+    }
+
+    public void setLocation(Vector3 location)
+    {
+        this.location.copy(location);
     }
 
     @Override
-    public Collection<NeuronReconstruction> getNeurons()
+    public void setLocation(float x, float y, float z)
     {
-        return neurons;
+        location.set(x, y, z);
     }
+
+    @Override
+    public double getRadius()
+    {
+        return radius;
+    }
+
+    @Override
+    public void setRadius(double radius)
+    {
+        this.radius = radius;
+    }
+
+    @Override
+    public int getLabel()
+    {
+        return label;
+    }
+
+    @Override
+    public void setLabel(int label)
+    {
+        this.label = label;
+    }
+
+    @Override
+    public int getTypeIndex()
+    {
+        return typeIndex;
+    }
+
+    @Override
+    public void setTypeIndex(int typeIndex)
+    {
+        this.typeIndex = typeIndex;
+    }
+
+    @Override
+    public NeuronVertex getParentVertex()
+    {
+        return parent;
+    }
+
+    @Override
+    public void setParentVertex(NeuronVertex parent)
+    {
+        this.parent = (SwcVertex) parent;
+    }
+
+    
 }

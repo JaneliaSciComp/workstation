@@ -30,7 +30,7 @@
 
 package org.janelia.horta.nodes;
 
-import org.janelia.horta.modelapi.NeuroanatomyWorkspace;
+import org.janelia.horta.modelapi.HortaWorkspace;
 import java.awt.BorderLayout;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -43,6 +43,7 @@ import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.TooManyListenersException;
 import javax.swing.JComponent;
@@ -59,7 +60,11 @@ import org.openide.explorer.view.ListView;
 import org.openide.explorer.view.MenuView;
 import org.openide.explorer.view.OutlineView;
 import org.openide.util.Exceptions;
+import org.openide.util.Lookup;
+import org.openide.util.LookupEvent;
+import org.openide.util.LookupListener;
 import org.openide.util.NbBundle;
+import org.openide.util.Utilities;
 import org.openide.windows.TopComponent;
 
 /**
@@ -70,7 +75,7 @@ import org.openide.windows.TopComponent;
         preferredID = "HortaSceneEditorTopComponent", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS) 
 @TopComponent.Registration( 
-        mode = "editor", 
+        mode = "properties", 
         openAtStartup = false) 
 @ActionID( 
         category = "Window", id = "org.janelia.horta.nodes.HortaSceneEditorTopComponent") 
@@ -83,13 +88,14 @@ import org.openide.windows.TopComponent;
     "CTL_HortaSceneEditorTopComponent=Scene Editor",
     "HINT_HortaSceneEditorTopComponent=Horta Scene Editor"
 })
-// - See more at: https://platform.netbeans.org/tutorials/74/nbm-selection-1.html#sthash.NU9Nsszy.dpufpublic 
 public class HortaSceneEditorTopComponent extends TopComponent
-implements ExplorerManager.Provider
+implements ExplorerManager.Provider,  LookupListener
 {
     // private final InstanceContent content = new InstanceContent();
     private final ExplorerManager mgr = new ExplorerManager();
-    private final NeuroanatomyWorkspace workspace;
+
+    // private HortaWorkspace workspace = null;
+    private Lookup.Result<HortaWorkspace> workspaceResult = null;
     
     // https://platform.netbeans.org/tutorials/74/nbm-selection-2.html
     private final BeanTreeView treeView = new BeanTreeView();
@@ -101,7 +107,7 @@ implements ExplorerManager.Provider
 
 
     /**
-     * Creates new form NeuroanatomyWorkspaceEditorTopComponent
+     * Creates new form HortaWorkspaceEditorTopComponent
      */
     public HortaSceneEditorTopComponent()
     {
@@ -109,87 +115,13 @@ implements ExplorerManager.Provider
         setName(Bundle.CTL_HortaSceneEditorTopComponent());
         setToolTipText(Bundle.HINT_HortaSceneEditorTopComponent());
         setDisplayName("Horta Scene Editor");
-        
-        workspace = new BasicNeuroanatomyWorkspace();
+
         associateLookup(ExplorerUtils.createLookup(mgr, getActionMap()));
         
         setLayout(new BorderLayout());
         add(
                treeView, 
                BorderLayout.CENTER);
-        
-        // setDisplayName("Horta Scene");
-        // mgr.setRootContext(new AbstractNode(Children.create(new NeuroanatomyWorkspaceChildFactory(), true)));
-        mgr.setRootContext(new NeuroanatomyWorkspaceNode(workspace));
-        
-        // Drop SWC files to create new neurons
-        DropTargetListener dtl = new DropTargetListener() {
-                        
-            @Override
-            public void dragEnter(DropTargetDragEvent dtde)
-            {
-                System.out.println("dragEnter");
-            }
-
-            @Override
-            public void dragOver(DropTargetDragEvent dtde)
-            {
-                System.out.println("dragOver");
-            }
-
-            @Override
-            public void dropActionChanged(DropTargetDragEvent dtde)
-            {
-                System.out.println("dragActionChanged");
-            }
-
-            @Override
-            public void dragExit(DropTargetEvent dte)
-            {
-                System.out.println("dragExit");
-            }
-
-            @Override
-            public void drop(DropTargetDropEvent dtde)
-            {
-                System.out.println("drop");
-                
-                if (!dtde.isDataFlavorSupported(DataFlavor.javaFileListFlavor))
-                {
-                    dtde.rejectDrop();
-                    return;
-                }
-                dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
-                Transferable t = dtde.getTransferable();
-                try {
-                    List<File> fileList = (List) t.getTransferData(DataFlavor.javaFileListFlavor);
-                    for (File f : fileList) {
-                        String extension = FilenameUtils.getExtension(f.getName());
-                        if (extension.toUpperCase() == "SWC") {
-                            NeuronReconstruction neuron = new BasicNeuronReconstruction(f);
-                            workspace.getNeurons().add(neuron);
-                        }
-                    }
-                } catch (UnsupportedFlavorException ex) {
-                    Exceptions.printStackTrace(ex);
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-             }
-        };
-
-        JComponent dropComponent = this;
-        DropTarget dropTarget = dropComponent.getDropTarget();
-        if (dropTarget == null) {
-            dropComponent.setDropTarget(new DropTarget(dropComponent, dtl));
-        }
-        else {
-            try {
-                dropTarget.addDropTargetListener(dtl);
-            } catch (TooManyListenersException ex) {
-                Exceptions.printStackTrace(ex);
-            }
-        }
     }
 
     /**
@@ -223,4 +155,25 @@ implements ExplorerManager.Provider
     {
         return mgr;
     }
+    
+    @Override
+    public void componentOpened() {
+        workspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaWorkspace.class);
+        workspaceResult.addLookupListener(this);
+    }
+    
+    @Override 
+    public void componentClosed() {
+        workspaceResult.removeLookupListener(this);
+    }
+    
+    @Override 
+    public void resultChanged(LookupEvent lookupEvent) {
+        Collection<? extends HortaWorkspace> allWorkspaces = workspaceResult.allInstances();
+        if (allWorkspaces.isEmpty())
+            return; // leave current workspace populated as is
+        HortaWorkspace workspace = allWorkspaces.iterator().next();
+        mgr.setRootContext(new NeuroanatomyWorkspaceNode(workspace));        
+    }
+
 }

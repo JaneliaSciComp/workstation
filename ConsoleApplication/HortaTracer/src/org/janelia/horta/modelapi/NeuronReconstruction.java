@@ -41,5 +41,5 @@ public interface NeuronReconstruction
     String getName();
     void setName(String name);
     
-    Collection<NeuronSegment> getSegments();
+    Collection<NeuronVertex> getVertexes();
 }

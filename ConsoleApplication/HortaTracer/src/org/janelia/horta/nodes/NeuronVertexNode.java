@@ -30,41 +30,23 @@
 
 package org.janelia.horta.nodes;
 
-import org.janelia.horta.modelapi.HortaWorkspace;
-import java.util.List;
-import org.janelia.horta.modelapi.NeuronReconstruction;
-import org.openide.nodes.ChildFactory;
-import org.openide.nodes.Node;
+import org.janelia.horta.modelapi.NeuronVertex;
+import org.openide.nodes.AbstractNode;
+import org.openide.nodes.Children;
+import org.openide.util.lookup.Lookups;
 
 /**
  *
  * @author Christopher Bruns
  */
-class NeuroanatomyWorkspaceChildFactory extends ChildFactory
+public class NeuronVertexNode extends AbstractNode
 {
-    private HortaWorkspace workspace;
+    private NeuronVertex vertex;
 
-    public NeuroanatomyWorkspaceChildFactory(HortaWorkspace workspace)  {
-        this.workspace = workspace;
-    }
-
-    @Override
-    protected boolean createKeys(List toPopulate)
+    NeuronVertexNode(NeuronVertex vertex)
     {
-        for (NeuronReconstruction neuron : workspace.getNeurons()) {
-            toPopulate.add(neuron);
-        }
-        return true;
-    }
-    
-    @Override
-    protected Node createNodeForKey(Object key)
-    {
-        return new NeuronReconstructionNode((NeuronReconstruction)key);
-    }
-    
-    public void publicRefresh(boolean b) {
-        super.refresh(b);
+        super(Children.create(new NeuronVertexChildFactory(), true), Lookups.singleton(vertex));
+        this.vertex = vertex;
     }
     
 }

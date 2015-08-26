@@ -37,10 +37,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.horta.modelapi.NeuronSegment;
+import org.janelia.horta.modelapi.SwcVertex;
 import org.janelia.horta.modelapi.NeuronReconstruction;
+import org.janelia.horta.modelapi.NeuronVertex;
 
 /**
  *
@@ -49,7 +52,7 @@ import org.janelia.horta.modelapi.NeuronReconstruction;
 public class BasicNeuronReconstruction implements NeuronReconstruction
 {
     private String name = "(unnamed neuron)";
-    private List<NeuronSegment> nodes = new ArrayList<NeuronSegment>();
+    private List<NeuronVertex> nodes = new ArrayList<NeuronVertex>();
 
     public BasicNeuronReconstruction()
     {
@@ -59,6 +62,9 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
     {
         BufferedReader br = new BufferedReader(new FileReader(file));
         String line;
+        // Store parent relationships for resolution after reading
+        Map<Integer, Integer> childParentMap = new HashMap<Integer, Integer>();
+        Map<Integer, SwcVertex> vertexMap = new HashMap<Integer, SwcVertex>();
         while ((line = br.readLine()) != null) {
             if (line.startsWith("#")) // skip comments
                 continue;
@@ -68,17 +74,33 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
                 continue; // blank line?
             int label = Integer.parseInt(fields[0]);
             int type = Integer.parseInt(fields[1]);
-            double x = Double.parseDouble(fields[2]);
-            double y = Double.parseDouble(fields[3]);
-            double z = Double.parseDouble(fields[4]);
-            double radius = Double.parseDouble(fields[5]);
+            float x = Float.parseFloat(fields[2]);
+            float y = Float.parseFloat(fields[3]);
+            float z = Float.parseFloat(fields[4]);
+            float radius = Float.parseFloat(fields[5]);
             int parentLabel = Integer.parseInt(fields[6]);
-            NeuronSegment node = new BasicNeuronSegment(x, y, z);
+            SwcVertex node = new BasicSwcVertex(x, y, z);
             node.setLabel(label);
             node.setTypeIndex(type);
             node.setRadius(radius);
-            node.setParentLabel(parentLabel);
+            vertexMap.put(label, node);
+            if (parentLabel >= 0)
+                childParentMap.put(label, parentLabel);
+            // node.setParentLabel(parentLabel);
             nodes.add(node);
+        }
+        // Assign parents  
+        // ...after full load, in case node order is imperfect
+        for (int childLabel : childParentMap.keySet()) {
+            int parentLabel = childParentMap.get(childLabel);
+            if (parentLabel < 0)
+                continue;
+            SwcVertex parentVertex = vertexMap.get(parentLabel);
+            if (parentVertex == null)
+                continue;
+            SwcVertex childVertex = vertexMap.get(childLabel); 
+            assert(childVertex != null);
+            childVertex.setParentVertex(parentVertex);
         }
         // Take name from file
         if (nodes.size() > 0) {
@@ -99,7 +121,7 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
     }
 
     @Override
-    public Collection<NeuronSegment> getSegments()
+    public Collection<NeuronVertex> getVertexes()
     {
         return nodes;
     }

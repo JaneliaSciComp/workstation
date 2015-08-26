@@ -28,15 +28,50 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.modelapi;
+package org.janelia.horta.nodes;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import org.janelia.geometry3d.Vantage;
+import org.janelia.horta.modelapi.HortaWorkspace;
+import org.janelia.horta.modelapi.NeuronReconstruction;
 
 /**
  *
  * @author Christopher Bruns
  */
-public interface NeuroanatomyWorkspace extends Hideable
+public class BasicHortaWorkspace implements HortaWorkspace
 {
-    public Collection<NeuronReconstruction> getNeurons();
+    private boolean visible;
+    private final List<NeuronReconstruction> neurons = new ArrayList<NeuronReconstruction>();
+    private final Vantage vantage;
+
+    public BasicHortaWorkspace(Vantage vantage) {
+        this.vantage = vantage;
+    }
+    
+    @Override
+    public boolean isVisible()
+    {
+        return visible;
+    }
+
+    @Override
+    public void setVisible(boolean visible)
+    {
+        this.visible = visible;
+    }
+
+    @Override
+    public Collection<NeuronReconstruction> getNeurons()
+    {
+        return neurons;
+    }
+
+    @Override
+    public Vantage getVantage()
+    {
+        return vantage;
+    }
 }
