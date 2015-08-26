@@ -72,7 +72,7 @@ public class ArrayCubeGLActor extends GL4SimpleActor
         gl.glEnableVertexAttribArray(1);
         checkGlError(gl, "d glEnableVertexAttribArray 1 error");
 
-        logger.info("display() calling glDrawArrays for GL4.GL_POINTS with viList.size="+voxels.size());
+        logger.info("display() calling glDrawArrays for GL4.GL_POINTS with size="+voxels.size());
         gl.glDrawArrays(GL4.GL_POINTS, 0, voxels.size());
         checkGlError(gl, "d glDrawArrays error");
         
@@ -80,6 +80,8 @@ public class ArrayCubeGLActor extends GL4SimpleActor
 
     @Override
     public void init(GL4 gl) {
+
+        logger.info("init() for ArrayCubeGLActor - size="+voxels.size());
 
         FloatBuffer fb=FloatBuffer.allocate(voxels.size()*4); // 3 floats per vertex, 1 for intensity
 

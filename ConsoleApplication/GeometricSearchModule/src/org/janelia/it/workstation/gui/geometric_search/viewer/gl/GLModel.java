@@ -13,6 +13,8 @@ import org.janelia.it.workstation.gui.geometric_search.viewer.actor.DenseVolumeA
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorAddedEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.VoxelViewerEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL4;
 import java.util.ArrayDeque;
@@ -22,6 +24,8 @@ import java.util.Deque;
  * Created by murphys on 8/21/2015.
  */
 public class GLModel implements VoxelViewerEventListener {
+
+    private final Logger logger = LoggerFactory.getLogger(GLModel.class);
 
     public static final String DISPOSE_AND_CLEAR_ALL_ACTORS_MSG = "DISPOSE_AND_CLEAR_ALL_ACTORS_MSG";
 
@@ -248,9 +252,14 @@ public class GLModel implements VoxelViewerEventListener {
 
                 arrayCubeGLActor.setModel(gal4Rotation);
 
-                gl4SimpleActor.setUpdateCallback(new GLDisplayUpdateCallback() {
+                logger.info("setting callback for arrayCubeGLActor");
+
+                arrayCubeGLActor.setUpdateCallback(new GLDisplayUpdateCallback() {
                     @Override
                     public void update(GL4 gl) {
+
+                        logger.info("update() called for arrayCubeGLActor");
+
                         Matrix4 view = viewer.getRenderer().getViewMatrix();
                         Matrix4 proj = viewer.getRenderer().getProjectionMatrix();
                         Matrix4 model = arrayCubeGLActor.getModel();

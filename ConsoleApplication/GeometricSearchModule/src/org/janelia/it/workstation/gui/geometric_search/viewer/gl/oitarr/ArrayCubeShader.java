@@ -34,21 +34,33 @@ public class ArrayCubeShader extends ArrayDrawShader {
     }
 
     public void setVoxelUnitSize(GL4 gl, Vector3 voxelUnitSize) {
+
+        logger.info("setVoxelUnitSize() = "+voxelUnitSize);
+
         setUniform3v(gl, "voxelUnitSize", 1, voxelUnitSize.toArray());
         checkGlError(gl, "ArrayCubeShader setVoxelUnitSize() error");
     }
 
     public void setWidth(GL4 gl, int width) {
+
+        logger.info("setWidth() = "+width);
+
         setUniform(gl, "hpi_width", width);
         checkGlError(gl, "ArrayCubeShader setWidth() error");
     }
 
     public void setHeight(GL4 gl, int height) {
+
+        logger.info("setHeight() = "+height);
+
         setUniform(gl, "hpi_height", height);
         checkGlError(gl, "ArrayCubeShader setHeight() error");
     }
 
     public void setDepth(GL4 gl, int depth) {
+
+        logger.info("setDepth() = "+depth);
+
         setUniform(gl, "hpi_depth", depth);
         checkGlError(gl, "ArrayCubeShader setDepth() error");
     }

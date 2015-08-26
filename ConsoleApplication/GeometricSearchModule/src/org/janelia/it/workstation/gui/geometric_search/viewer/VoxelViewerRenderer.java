@@ -286,7 +286,7 @@ public class VoxelViewerRenderer implements GLEventListener
             model.getGLModel().getDenseVolumeShaderActionSequence().display(gl);
             model.getGLModel().getMeshShaderActionSequence().display(gl);
 
-            assActionSequence.display(gl);
+            //assActionSequence.display(gl);
         }
 
     }
