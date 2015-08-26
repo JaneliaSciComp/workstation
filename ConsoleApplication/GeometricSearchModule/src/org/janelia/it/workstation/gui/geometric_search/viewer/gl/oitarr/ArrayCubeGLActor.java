@@ -31,7 +31,6 @@ public class ArrayCubeGLActor extends GL4SimpleActor
     float getVoxelUnitSize;
 
     public Vector4 color=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-    public Matrix4 vertexRotation=null;
 
     public ArrayCubeGLActor(List<Vector4> voxels, int xSize, int ySize, int zSize, float voxelUnitSize) {
         this.voxels=voxels;
@@ -41,8 +40,12 @@ public class ArrayCubeGLActor extends GL4SimpleActor
         this.getVoxelUnitSize=voxelUnitSize;
     }
 
-    public void setVertexRotation(Matrix4 rotation) {
-        this.vertexRotation=rotation;
+    public Vector4 getColor() {
+        return color;
+    }
+
+    public void setColor(Vector4 color) {
+        this.color = color;
     }
 
     @Override

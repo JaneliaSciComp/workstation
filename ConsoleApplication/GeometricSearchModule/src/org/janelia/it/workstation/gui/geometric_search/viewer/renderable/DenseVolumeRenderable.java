@@ -204,6 +204,7 @@ public class DenseVolumeRenderable extends Renderable {
             disposeActor();
         }
         actor = new DenseVolumeActor(this.name, sampledVoxels, xSize, ySize, zSize, voxelSize);
+        actor.setColor(preferredColor);
         return actor;
     }
 

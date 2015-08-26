@@ -1,12 +1,15 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.gl;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerEventListener;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerGLPanel;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerModel;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerProperties;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.Actor;
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.DenseVolumeActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorAddedEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.VoxelViewerEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.*;
@@ -228,8 +231,49 @@ public class GLModel implements VoxelViewerEventListener {
     public void processEvent(VoxelViewerEvent event) {
         if (event instanceof ActorAddedEvent) {
             ActorAddedEvent actorAddedEvent=(ActorAddedEvent)event;
-            Actor actor=actorAddedEvent.getActor();
-            GL4SimpleActor gl4SimpleActor=actor.createAndSetGLActor();
+            final Actor actor=actorAddedEvent.getActor();
+            final GL4SimpleActor gl4SimpleActor = actor.createAndSetGLActor();
+
+            if (gl4SimpleActor instanceof ArrayCubeGLActor) {
+                final ArrayCubeGLActor arrayCubeGLActor=(ArrayCubeGLActor)gl4SimpleActor;
+                final ArrayCubeShader cubeShader = (ArrayCubeShader) denseVolumeShaderActionSequence.getShader();
+
+                Matrix4 gal4Rotation=new Matrix4();
+
+                // Empirically derived - for GAL4 samples
+                gal4Rotation.setTranspose(-1.0f, 0.0f, 0.0f, 0.5f,
+                    0.0f, -1.0f, 0.0f, 0.25f,
+                    0.0f, 0.0f, -1.0f, 0.625f,
+                    0.0f, 0.0f, 0.0f, 1.0f);
+
+                arrayCubeGLActor.setModel(gal4Rotation);
+
+                gl4SimpleActor.setUpdateCallback(new GLDisplayUpdateCallback() {
+                    @Override
+                    public void update(GL4 gl) {
+                        Matrix4 view = viewer.getRenderer().getViewMatrix();
+                        Matrix4 proj = viewer.getRenderer().getProjectionMatrix();
+                        Matrix4 model = arrayCubeGLActor.getModel();
+
+                        Matrix4 viewCopy = new Matrix4(view);
+                        Matrix4 projCopy = new Matrix4(proj);
+                        Matrix4 modelCopy = new Matrix4(model);
+
+                        Matrix4 vp = viewCopy.multiply(projCopy);
+                        Matrix4 mvp = modelCopy.multiply(vp);
+
+                        cubeShader.setMVP(gl, mvp);
+                        cubeShader.setProjection(gl, projCopy);
+                        cubeShader.setWidth(gl, viewer.getWidth());
+                        cubeShader.setHeight(gl, viewer.getHeight());
+
+                        float voxelUnitSize = arrayCubeGLActor.getVoxelUnitSize();
+                        cubeShader.setVoxelUnitSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
+                        cubeShader.setDrawColor(gl, actor.getColor());
+                    }
+                });
+            }
+
             initQueue.add(gl4SimpleActor);
         }
     }

@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.actor;
 
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4SimpleActor;
 
 /**
@@ -9,6 +10,15 @@ public abstract class Actor {
 
     String name;
     GL4SimpleActor glActor;
+    Vector4 color;
+
+    public Vector4 getColor() {
+        return color;
+    }
+
+    public void setColor(Vector4 color) {
+        this.color = color;
+    }
 
     public String getName() {
         return name;

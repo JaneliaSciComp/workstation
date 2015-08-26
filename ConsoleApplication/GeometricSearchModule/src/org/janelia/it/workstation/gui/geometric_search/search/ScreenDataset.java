@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.search;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Vector4;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.workstation.gui.framework.outline.TransferableEntityList;
@@ -123,6 +124,7 @@ public class ScreenDataset extends Dataset {
                 c0r.init(image.getXSize(), image.getYSize(), image.getZSize(), 0.2f, image.getData16ForChannel(0));
             }
             setDenseVolumeRenderableName(c0r, 0);
+            c0r.setPreferredColor(new Vector4(1.0f, 0.0f, 0.0f, 0.01f));
             renderables.add(c0r);
 
             DenseVolumeRenderable c1r=new DenseVolumeRenderable();
@@ -131,8 +133,10 @@ public class ScreenDataset extends Dataset {
             } else {
                 c1r.init(image.getXSize(), image.getYSize(), image.getZSize(), 0.2f, image.getData16ForChannel(1));
             }
-            renderables.add(c1r);
+            c1r.setPreferredColor(new Vector4(0.0f, 1.0f, 0.0f, 0.01f));
             setDenseVolumeRenderableName(c1r, 1);
+            renderables.add(c1r);
+
             logger.info("createRenderables() done creating VoxelViewer4DImage");
         } catch (Exception ex) {
             ex.printStackTrace();
