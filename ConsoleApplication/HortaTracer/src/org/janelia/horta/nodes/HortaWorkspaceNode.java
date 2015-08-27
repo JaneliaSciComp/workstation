@@ -109,6 +109,8 @@ public class HortaWorkspaceNode extends AbstractNode
                             workspace.getNeurons().add(neuron);
                             workspace.setChanged();
                             workspace.notifyObservers();
+                            neuron.setChanged();
+                            neuron.notifyObservers();
                         } else {
                         }
                     }

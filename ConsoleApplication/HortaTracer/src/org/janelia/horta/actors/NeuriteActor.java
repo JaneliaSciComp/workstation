@@ -49,6 +49,8 @@ import org.janelia.gltools.material.ImageParticleMaterial;
 import org.janelia.gltools.material.Material;
 import org.janelia.horta.NeuriteAnchor;
 import org.janelia.horta.NeuriteModel;
+import org.janelia.horta.modelapi.NeuronReconstruction;
+import org.janelia.horta.modelapi.NeuronVertex;
 import org.openide.util.Exceptions;
 
 /**
@@ -101,6 +103,55 @@ public class NeuriteActor extends BasicGL3Actor {
                     for (NeuriteAnchor anchor : neuriteModel) {
                         Vertex vertex = meshGeometry.addVertex(anchor.getLocationUm());
                         vertex.setAttribute("radius", anchor.getRadiusUm());
+                        geometryChanged = true;
+                        // System.out.println("Neurite actor anchor location "+anchor.getLocationUm()+"; radius = "+anchor.getRadiusUm()); // works
+                    }
+                }
+                if (geometryChanged)
+                    meshGeometry.notifyObservers();
+            }
+        });
+    }
+    
+    public NeuriteActor(final NeuronReconstruction neuron) 
+    {
+        super(null);
+        BufferedImage ringImage = null;
+        try {
+            ringImage = ImageIO.read(
+                    getClass().getResourceAsStream(
+                            // "/org/janelia/gltools/material/lightprobe/"
+                            //         + "ComponentSphere.png"));
+                            "/org/janelia/horta/images/"
+                                    + "frame_circle.png"));
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        Texture2d ringTexture = new Texture2d();
+        ringTexture.loadFromBufferedImage(ringImage);
+        ringTexture.setGenerateMipmaps(true);
+        ringTexture.setMinFilter(GL3.GL_LINEAR_MIPMAP_LINEAR);
+        material = new ImageParticleMaterial(ringTexture);
+        // TODO - update meshGeometry after anchor moves...
+        meshGeometry = new MeshGeometry();
+        meshActor = new MeshActor(meshGeometry, material, this);
+        this.addChild(meshActor);
+
+        this.neuriteModel = null;
+        neuron.addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                // System.out.println("Neurite actor update");
+                boolean geometryChanged = false;
+                if (! meshGeometry.isEmpty()) {
+                    meshGeometry.clear();
+                    geometryChanged = true;
+                }
+                
+                if (! neuron.getVertexes().isEmpty()) {
+                    for (NeuronVertex neuronVertex : neuron.getVertexes()) {
+                        Vertex vertex = meshGeometry.addVertex(neuronVertex.getLocation());
+                        vertex.setAttribute("radius", 10.0f);
                         geometryChanged = true;
                         // System.out.println("Neurite actor anchor location "+anchor.getLocationUm()+"; radius = "+anchor.getRadiusUm()); // works
                     }

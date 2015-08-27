@@ -65,10 +65,14 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Set;
 import javax.imageio.ImageIO;
+import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -104,6 +108,9 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.geometry3d.Object3d;
+import org.janelia.gltools.BasicGL3Actor;
+import org.janelia.horta.actors.NeuriteLineActor;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
@@ -161,6 +168,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor interactor;
     private HortaWorkspace workspace;
+    private Map<NeuronReconstruction, GL3Actor> currentNeuronActors = new HashMap<>();
     
     // private MultipassVolumeActor mprActor;
     // private VolumeMipMaterial volumeMipMaterial;
@@ -301,7 +309,27 @@ public final class NeuronTracerTopComponent extends TopComponent
                     scaleBar.setBackgroundColor(new Color(0, 0, 0, 50));                    
                 }
                 
-                // TODO - update neuron models
+                // Update neuron models
+                Set<NeuronReconstruction> latestNeurons = new java.util.HashSet<>();
+                // 1 - enumerate latest neurons
+                for (NeuronReconstruction neuron : workspace.getNeurons()) {
+                    latestNeurons.add(neuron);
+                }
+                // 2 - remove obsolete neurons
+                for (NeuronReconstruction neuron : currentNeuronActors.keySet()) {
+                    if (! latestNeurons.contains(neuron)) {
+                        currentNeuronActors.remove(neuron);
+                    }
+                }
+                // 3 - add new neurons
+                for (NeuronReconstruction neuron : workspace.getNeurons()) {
+                    if (! currentNeuronActors.containsKey(neuron)) {
+                        NeuriteActor na = new NeuriteActor(neuron);
+                        na.setColor(Color.PINK);
+                        na.setVisible(true);
+                        currentNeuronActors.put(neuron, new NeuriteActor(neuron));
+                    }
+                }
                 
                 sceneWindow.getInnerComponent().repaint();
             }
@@ -378,6 +406,16 @@ public final class NeuronTracerTopComponent extends TopComponent
             });
         }
 
+        // 3.5) Other neurite model Aug 2015 CMB
+        sceneWindow.getRenderer().addActor(new BasicGL3Actor(null) {
+            @Override
+            public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
+                for (GL3Actor actor : currentNeuronActors.values()) {
+                    actor.display(gl, camera, parentModelViewMatrix);
+                }
+            }
+        });
+        
         // 4) Scale bar
         sceneWindow.getRenderer().addActor(scaleBar);
         
@@ -756,6 +794,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 workspace.getNeurons().add(neuron);
                                 workspace.setChanged();
                                 workspace.notifyObservers();
+                                neuron.setChanged();
+                                neuron.notifyObservers();
                                 logger.info("dragged SWC file loaded!");
                                 break;
                             case "YML":
