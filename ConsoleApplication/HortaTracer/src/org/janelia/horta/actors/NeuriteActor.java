@@ -28,7 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta;
+package org.janelia.horta.actors;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -47,6 +47,8 @@ import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.texture.Texture2d;
 import org.janelia.gltools.material.ImageParticleMaterial;
 import org.janelia.gltools.material.Material;
+import org.janelia.horta.NeuriteAnchor;
+import org.janelia.horta.NeuriteModel;
 import org.openide.util.Exceptions;
 
 /**
@@ -69,7 +71,7 @@ public class NeuriteActor extends BasicGL3Actor {
                     getClass().getResourceAsStream(
                             // "/org/janelia/gltools/material/lightprobe/"
                             //         + "ComponentSphere.png"));
-                            "/org/janelia/horta/"
+                            "/org/janelia/horta/images/"
                                     + "frame_circle.png"));
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
@@ -119,12 +121,12 @@ public class NeuriteActor extends BasicGL3Actor {
         // System.out.println("Finished display anchors");        
     }
 
-    void setColor(Color color) {
+    public void setColor(Color color) {
         material.setDiffuseColor(color);
         material.setSpecularColor(Color.BLACK);
     }
 
-    NeuriteModel getModel() {
+    public NeuriteModel getModel() {
         return neuriteModel; //To change body of generated methods, choose Tools | Templates.
     }
     

@@ -36,7 +36,7 @@ import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.horta.BrainTileInfo;
-import org.janelia.horta.BrainTileMesh;
+import org.janelia.horta.actors.BrainTileMesh;
 
 /**
  *

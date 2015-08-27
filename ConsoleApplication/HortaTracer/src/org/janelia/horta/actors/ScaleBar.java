@@ -28,7 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta;
+package org.janelia.horta.actors;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -236,7 +236,7 @@ public class ScaleBar extends MeshActor {
         
     }
 
-    void setForegroundColor(Color c)
+    public void setForegroundColor(Color c)
     {
         if (c.equals(foregroundColor)) return;
         foregroundColor = c;
@@ -249,7 +249,7 @@ public class ScaleBar extends MeshActor {
         updateLabelString(labelString);
     }
 
-    void setBackgroundColor(Color c)
+    public void setBackgroundColor(Color c)
     {
         if (c.equals(backgroundColor)) return;
         backgroundColor = c;

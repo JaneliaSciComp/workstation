@@ -29,6 +29,7 @@
  */
 package org.janelia.horta;
 
+import org.janelia.horta.actors.NeuriteActor;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.ActionEvent;

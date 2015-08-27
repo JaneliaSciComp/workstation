@@ -29,6 +29,9 @@
  */
 package org.janelia.horta;
 
+import org.janelia.horta.actors.ScaleBar;
+import org.janelia.horta.actors.NeuriteActor;
+import org.janelia.horta.actors.CenterCrossHairActor;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 // import com.jogamp.opengl.util.awt.TextRenderer;
 // import com.jogamp.opengl.util.awt.Screenshot;
@@ -134,7 +137,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Description(
         preferredID = NeuronTracerTopComponent.PREFERRED_ID,
-        iconBase = "org/janelia/horta/neuronTracerCubic16.png",
+        iconBase = "org/janelia/horta/images/neuronTracerCubic16.png",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
@@ -259,7 +262,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 for (int i = 0; i < 3; ++i)
                     cf[i] = cf[i]*cf[i]; // second power is close enough...
                 // Create color gradient from single color
-                double deltaLuma = 0.1; // desired intensity change
+                double deltaLuma = 0.05; // desired intensity change
                 double midLuma = 0.30*cf[0] + 0.59*cf[1] + 0.11*cf[2];
                 double topLuma = midLuma - 0.5*deltaLuma;
                 double bottomLuma = midLuma + 0.5*deltaLuma;
@@ -311,7 +314,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // tracingInteractor
         );
         
-        workspace.setBackgroundColor(Color.darkGray);        
+        workspace.setBackgroundColor(Color.darkGray);
+        workspace.notifyObservers();
     }
 
     public void setVolumeSource(StaticVolumeBrickSource volumeSource) {
