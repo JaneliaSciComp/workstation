@@ -12,13 +12,13 @@ import java.util.List;
 public class DenseVolumeActor extends Actor {
 
     List<Vector4> voxels;
-    int xSize;
-    int ySize;
-    int zSize;
+    float xSize;
+    float ySize;
+    float zSize;
     float voxelUnitSize;
     ArrayCubeGLActor arrayCubeGLActor;
 
-    public DenseVolumeActor(String name, List<Vector4> voxels, int xSize, int ySize, int zSize, float voxelUnitSize) {
+    public DenseVolumeActor(String name, List<Vector4> voxels, float xSize, float ySize, float zSize, float voxelUnitSize) {
         this.name=name;
         this.voxels=voxels;
         this.xSize=xSize;

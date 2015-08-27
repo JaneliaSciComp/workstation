@@ -142,6 +142,7 @@ public class VoxelViewerGLPanel extends GLJPanel
     }
 
     public void refresh() {
+        repaint();
     }
 
     public void refreshRendering()

@@ -123,13 +123,13 @@ void main(void) {
     int frag_count=0;
     frag_count = build_local_fragment_list();
     sort_fragment_list(frag_count);
-    //output_color = calculate_final_color(frag_count);
+    output_color = calculate_final_color(frag_count);
 
-    if (frag_count>0) {
-        output_color = vec4(0.0, 0.0, 1.0, 1.0);
-     } else {
-        output_color = vec4(1.0, 0.0, 0.0, 1.0);
-     }
+//    if (frag_count>0) {
+//        output_color = vec4(0.0, 0.0, 1.0, 1.0);
+//     } else {
+//        output_color = vec4(1.0, 0.0, 0.0, 1.0);
+//     }
 
     //if (frag_count>=MAX_DEPTH) {
     //    output_color = vec4(0.0, 0.0, 1.0, 1.0);

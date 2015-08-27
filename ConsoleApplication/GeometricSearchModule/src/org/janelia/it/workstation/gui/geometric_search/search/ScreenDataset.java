@@ -116,12 +116,13 @@ public class ScreenDataset extends Dataset {
         logger.info("createRenderables() start");
         try {
             VoxelViewer4DImage image = VoxelViewerUtil.createVoxelImageFromStack(alignedStack);
+            float voxelSize = (float)(1.0 / (1.0 * image.getXSize()));
 
             DenseVolumeRenderable c0r=new DenseVolumeRenderable();
             if (image.getVoxelByteCount()==1) {
-                c0r.init(image.getXSize(), image.getYSize(), image.getZSize(), 0.2f, image.getData8ForChannel(0));
+                c0r.init(image.getXSize(), image.getYSize(), image.getZSize(), voxelSize, image.getData8ForChannel(0));
             } else {
-                c0r.init(image.getXSize(), image.getYSize(), image.getZSize(), 0.2f, image.getData16ForChannel(0));
+                c0r.init(image.getXSize(), image.getYSize(), image.getZSize(), voxelSize, image.getData16ForChannel(0));
             }
             setDenseVolumeRenderableName(c0r, 0);
             c0r.setPreferredColor(new Vector4(1.0f, 0.0f, 0.0f, 0.01f));
@@ -129,9 +130,9 @@ public class ScreenDataset extends Dataset {
 
             DenseVolumeRenderable c1r=new DenseVolumeRenderable();
             if (image.getVoxelByteCount()==1) {
-                c1r.init(image.getXSize(), image.getYSize(), image.getZSize(), 0.2f, image.getData8ForChannel(1));
+                c1r.init(image.getXSize(), image.getYSize(), image.getZSize(), voxelSize, image.getData8ForChannel(1));
             } else {
-                c1r.init(image.getXSize(), image.getYSize(), image.getZSize(), 0.2f, image.getData16ForChannel(1));
+                c1r.init(image.getXSize(), image.getYSize(), image.getZSize(), voxelSize, image.getData16ForChannel(1));
             }
             c1r.setPreferredColor(new Vector4(0.0f, 1.0f, 0.0f, 0.01f));
             setDenseVolumeRenderableName(c1r, 1);
