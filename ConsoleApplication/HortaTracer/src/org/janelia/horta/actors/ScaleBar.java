@@ -259,6 +259,7 @@ public class ScaleBar extends MeshActor {
             backgroundColor.getBlue()/255f,
             backgroundColor.getAlpha()/255f
         };
+        updateLabelString(labelString);
     }
     
     static class ScaleBarGeometry extends MeshGeometry {

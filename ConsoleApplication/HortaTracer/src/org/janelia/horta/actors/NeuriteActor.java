@@ -141,8 +141,23 @@ public class NeuriteActor extends BasicGL3Actor {
         neuron.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
-                // System.out.println("Neurite actor update");
                 boolean geometryChanged = false;
+
+                // Did the neuron just become invisible?
+                if (isVisible() != neuron.isVisible()) {
+                    meshGeometry.setChanged();
+                    geometryChanged = true;
+                }
+                setVisible(neuron.isVisible());
+                
+                // color
+                if (! neuron.getColor().equals(material.getColor())) {
+                    setColor(neuron.getColor());
+                    meshGeometry.setChanged();
+                    geometryChanged = true;
+                }
+                
+                // System.out.println("Neurite actor update");
                 if (! meshGeometry.isEmpty()) {
                     meshGeometry.clear();
                     geometryChanged = true;

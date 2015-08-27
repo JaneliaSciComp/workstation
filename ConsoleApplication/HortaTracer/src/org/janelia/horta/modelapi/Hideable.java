@@ -30,21 +30,12 @@
 
 package org.janelia.horta.modelapi;
 
-import java.awt.Color;
-import java.util.Collection;
-import org.janelia.console.viewerapi.ObservableInterface;
-
 /**
  *
  * @author Christopher Bruns
  */
-public interface NeuronReconstruction extends ObservableInterface, Hideable
+public interface Hideable
 {
-    String getName();
-    void setName(String name);
-    
-    Color getColor();
-    void setColor(Color color);
-    
-    Collection<NeuronVertex> getVertexes();
+    boolean isVisible();
+    void setVisible(boolean visible);
 }

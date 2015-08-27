@@ -30,6 +30,7 @@
 
 package org.janelia.horta.nodes;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -56,6 +57,8 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
     private String name = "(unnamed neuron)";
     private List<NeuronVertex> nodes = new ArrayList<NeuronVertex>();
     private final ComposableObservable changeObservable = new ComposableObservable();
+    private Color color = Color.WHITE;
+    private boolean visible = true;
 
     public BasicNeuronReconstruction()
     {
@@ -129,6 +132,38 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
         return nodes;
     }
 
+    @Override
+    public Color getColor()
+    {
+        return color;
+    }
+
+    @Override
+    public void setColor(Color color)
+    {
+        if (color.equals(this.color))
+            return;
+        this.color = color;
+        setChanged();
+        notifyObservers();
+    }
+
+    @Override
+    public boolean isVisible()
+    {
+        return visible;
+    }
+
+    @Override
+    public void setVisible(boolean visible)
+    {
+        if (visible == this.visible)
+            return;
+        this.visible = visible;
+        setChanged();
+        notifyObservers();
+    }
+    
     @Override
     public void setChanged()
     {

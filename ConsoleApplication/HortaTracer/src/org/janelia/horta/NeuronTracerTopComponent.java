@@ -785,7 +785,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         = ProgressHandleFactory.createHandle("Loading File...");
                 try {
                     List<File> fileList = (List) t.getTransferData(DataFlavor.javaFileListFlavor);
-                    // Drop could be YAML and/or SWC            
+                    // Drop could be YAML and/or SWC
                     for (File f : fileList) {
                         String extension = FilenameUtils.getExtension(f.getName()).toUpperCase();
                         switch (extension) {

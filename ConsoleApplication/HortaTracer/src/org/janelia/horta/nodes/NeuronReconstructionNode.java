@@ -30,6 +30,7 @@
 
 package org.janelia.horta.nodes;
 
+import java.awt.Color;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
@@ -117,6 +118,14 @@ public class NeuronReconstructionNode extends AbstractNode
                     // 3 - center on that vertex
                     Vector3 center = closestVertex.getLocation();
                     vantage.setFocusPosition(center);
+                    // 4 - adjust scale
+                    float maxScale = 5.0f;
+                    for (int i = 0; i < 3; ++i) {
+                        float boxEdge = boundingBox.max.get(i) - boundingBox.min.get(i);
+                        maxScale = Math.max(maxScale, boxEdge);
+                    }
+                    vantage.setSceneUnitsPerViewportHeight(maxScale);
+                    
                     vantage.notifyObservers();
                 }
             });
@@ -131,9 +140,19 @@ public class NeuronReconstructionNode extends AbstractNode
         Sheet sheet = Sheet.createDefault(); 
         Sheet.Set set = Sheet.createPropertiesSet(); 
         try { 
-            Property sizeProp = new PropertySupport.Reflection(this, Integer.class, "getSize", null); 
-            sizeProp.setName("size"); 
-            set.put(sizeProp); 
+            Property prop;
+            // visible
+            prop = new PropertySupport.Reflection(neuron, boolean.class, "isVisible", "setVisible"); 
+            prop.setName("visible");
+            set.put(prop); 
+            // size
+            prop = new PropertySupport.Reflection(this, int.class, "getSize", null); 
+            prop.setName("size"); 
+            set.put(prop); 
+            // color
+            prop = new PropertySupport.Reflection(neuron, Color.class, "getColor", "setColor"); 
+            prop.setName("color");
+            set.put(prop); 
         } 
         catch (NoSuchMethodException ex) {
             ErrorManager.getDefault(); 
