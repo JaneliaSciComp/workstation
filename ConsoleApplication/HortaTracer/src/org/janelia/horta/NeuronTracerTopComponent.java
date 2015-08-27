@@ -186,9 +186,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         return (NeuronTracerTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
     }
     
-    // private NeuroanHortaWorkspaceace;
-    private Lookup.Result<HortaWorkspace> workspaceResult;
-
     public NeuronTracerTopComponent() {
         // This block is what the wizard created
         initComponents();

@@ -60,23 +60,18 @@ import org.openide.util.lookup.Lookups;
  * Following tutorial at https://platform.netbeans.org/tutorials/74/nbm-nodesapi2.html
  * @author Christopher Bruns
  */
-public class NeuroanatomyWorkspaceNode extends AbstractNode
+public class HortaWorkspaceNode extends AbstractNode
 {
     private final HortaWorkspace workspace;
-    private final NeuroanatomyWorkspaceChildFactory childFactory;
     
-    public NeuroanatomyWorkspaceNode(HortaWorkspace workspace) {
-        super(Children.create(new NeuroanatomyWorkspaceChildFactory(workspace), true), Lookups.singleton(workspace));
+    public HortaWorkspaceNode(HortaWorkspace workspace) {
+        super(Children.create(new HortaWorkspaceChildFactory(workspace), true), Lookups.singleton(workspace));
         this.workspace = workspace;
-        // Recreate children, so we can keep a handle on the childFactory, for dynamic refresh
-        childFactory = new NeuroanatomyWorkspaceChildFactory(workspace);
-        setChildren(Children.create(childFactory, true));
-        updateNeurons();
+        updateDisplayName();
     }
     
-    private void updateNeurons() {
+    private void updateDisplayName() {
         setDisplayName("Horta workspace" + " (" + workspace.getNeurons().size() + " neurons)");
-        childFactory.publicRefresh(true);
     }
     
     public Vantage getVantage() {
@@ -97,7 +92,9 @@ public class NeuroanatomyWorkspaceNode extends AbstractNode
                         if ( "SWC".equals(extension.toUpperCase()) ) {
                             NeuronReconstruction neuron = new BasicNeuronReconstruction(f);
                             workspace.getNeurons().add(neuron);
-                            updateNeurons();
+                            workspace.setChanged();
+                            workspace.notifyObservers();
+                            updateDisplayName();
                         } else {
                         }
                     }
@@ -123,7 +120,6 @@ public class NeuroanatomyWorkspaceNode extends AbstractNode
     public Action[] getActions(boolean popup) {
         return new Action[] {
             new AddNeuronAction(),
-            new HideWorkspaceAction(),
         };
     }
 
@@ -138,42 +134,10 @@ public class NeuroanatomyWorkspaceNode extends AbstractNode
         public void actionPerformed(ActionEvent e)
         {
             workspace.getNeurons().add(new BasicNeuronReconstruction());
-
-            // Refresh display of children
-            updateNeurons();
-
-            // JOptionPane.showMessageDialog(null, "New neuron created");
-            
+            workspace.setChanged();
+            workspace.notifyObservers();
+            updateDisplayName();
         }
     }
     
-    private class HideWorkspaceAction extends AbstractAction implements Presenter.Popup
-    {
-        
-        public HideWorkspaceAction()
-        {
-            putValue(NAME, "Show this workspace");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e)
-        {
-            if (workspace == null) return;
-            boolean toggled = ! workspace.isVisible();
-            workspace.setVisible(toggled);
-        }
-
-        @Override
-        public JMenuItem getPopupPresenter()
-        {
-            JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem();
-            if ((workspace != null) && (workspace.isVisible()))
-                menuItem.setSelected(true);
-            else
-                menuItem.setSelected(false);
-            menuItem.setAction(this);
-            return menuItem;
-        }
-    }
-
 }

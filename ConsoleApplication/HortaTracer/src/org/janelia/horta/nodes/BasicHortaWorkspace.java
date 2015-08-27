@@ -33,36 +33,26 @@ package org.janelia.horta.nodes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Observer;
+import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 
 /**
- *
+ * TODO: - in future, set Observable interface on workspace subcomponents
  * @author Christopher Bruns
  */
 public class BasicHortaWorkspace implements HortaWorkspace
 {
-    private boolean visible;
-    private final List<NeuronReconstruction> neurons = new ArrayList<NeuronReconstruction>();
+    private final List<NeuronReconstruction> neurons = new ArrayList<>();
     private final Vantage vantage;
+    private final ComposableObservable changeObservable = new ComposableObservable();
 
     public BasicHortaWorkspace(Vantage vantage) {
         this.vantage = vantage;
     }
     
-    @Override
-    public boolean isVisible()
-    {
-        return visible;
-    }
-
-    @Override
-    public void setVisible(boolean visible)
-    {
-        this.visible = visible;
-    }
-
     @Override
     public Collection<NeuronReconstruction> getNeurons()
     {
@@ -73,5 +63,35 @@ public class BasicHortaWorkspace implements HortaWorkspace
     public Vantage getVantage()
     {
         return vantage;
+    }
+
+    @Override
+    public void setChanged()
+    {
+        changeObservable.setChanged();
+    }
+
+    @Override
+    public void notifyObservers()
+    {
+        changeObservable.notifyObservers();
+    }
+
+    @Override
+    public void addObserver(Observer observer)
+    {
+        changeObservable.addObserver(observer);
+    }
+
+    @Override
+    public void deleteObserver(Observer observer)
+    {
+        changeObservable.deleteObserver(observer);
+    }
+
+    @Override
+    public void deleteObservers()
+    {
+        changeObservable.deleteObservers();
     }
 }

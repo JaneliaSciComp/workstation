@@ -32,6 +32,8 @@ package org.janelia.horta.nodes;
 
 import org.janelia.horta.modelapi.HortaWorkspace;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -40,16 +42,22 @@ import org.openide.nodes.Node;
  *
  * @author Christopher Bruns
  */
-class NeuroanatomyWorkspaceChildFactory extends ChildFactory
+class HortaWorkspaceChildFactory extends ChildFactory<NeuronReconstruction>
 {
-    private HortaWorkspace workspace;
+    private final HortaWorkspace workspace;
 
-    public NeuroanatomyWorkspaceChildFactory(HortaWorkspace workspace)  {
+    public HortaWorkspaceChildFactory(HortaWorkspace workspace)  {
         this.workspace = workspace;
+        workspace.addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                refresh(false);
+            }
+        });
     }
 
     @Override
-    protected boolean createKeys(List toPopulate)
+    protected boolean createKeys(List<NeuronReconstruction> toPopulate)
     {
         for (NeuronReconstruction neuron : workspace.getNeurons()) {
             toPopulate.add(neuron);
@@ -58,13 +66,9 @@ class NeuroanatomyWorkspaceChildFactory extends ChildFactory
     }
     
     @Override
-    protected Node createNodeForKey(Object key)
+    protected Node createNodeForKey(NeuronReconstruction key)
     {
-        return new NeuronReconstructionNode((NeuronReconstruction)key);
-    }
-    
-    public void publicRefresh(boolean b) {
-        super.refresh(b);
+        return new NeuronReconstructionNode(key);
     }
     
 }

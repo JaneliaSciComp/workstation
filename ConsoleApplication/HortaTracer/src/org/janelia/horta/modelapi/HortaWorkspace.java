@@ -31,13 +31,14 @@
 package org.janelia.horta.modelapi;
 
 import java.util.Collection;
+import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.geometry3d.Vantage;
 
 /**
  *
  * @author Christopher Bruns
  */
-public interface HortaWorkspace extends Hideable
+public interface HortaWorkspace extends ObservableInterface
 {
     public Vantage getVantage();
     public Collection<NeuronReconstruction> getNeurons();

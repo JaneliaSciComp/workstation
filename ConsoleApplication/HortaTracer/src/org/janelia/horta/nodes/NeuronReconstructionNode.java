@@ -57,7 +57,7 @@ public class NeuronReconstructionNode extends AbstractNode
 
     public NeuronReconstructionNode(NeuronReconstruction neuron) {
         super(Children.create(new NeuronReconstructionChildFactory(neuron), true), Lookups.singleton(neuron));
-        setDisplayName(neuron.getName() + " (" + neuron.getVertexes().size() + ")");
+        setDisplayName(neuron.getName() + " (" + neuron.getVertexes().size() + " vertices)");
         this.neuron = neuron;
     }
     
@@ -75,8 +75,8 @@ public class NeuronReconstructionNode extends AbstractNode
         Node node = this;
         while (node != null) {
             node = node.getParentNode();
-            if (node instanceof NeuroanatomyWorkspaceNode) {
-                return ((NeuroanatomyWorkspaceNode) node).getVantage();
+            if (node instanceof HortaWorkspaceNode) {
+                return ((HortaWorkspaceNode)node).getVantage();
             }
         }
         return null;

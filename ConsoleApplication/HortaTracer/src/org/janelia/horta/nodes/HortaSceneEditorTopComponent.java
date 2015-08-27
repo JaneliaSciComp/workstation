@@ -32,34 +32,12 @@ package org.janelia.horta.nodes;
 
 import org.janelia.horta.modelapi.HortaWorkspace;
 import java.awt.BorderLayout;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetDragEvent;
-import java.awt.dnd.DropTargetDropEvent;
-import java.awt.dnd.DropTargetEvent;
-import java.awt.dnd.DropTargetListener;
-import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
-import java.util.TooManyListenersException;
-import javax.swing.JComponent;
-import org.apache.commons.io.FilenameUtils;
-import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
 import org.openide.explorer.view.BeanTreeView;
-import org.openide.explorer.view.ChoiceView;
-import org.openide.explorer.view.IconView;
-import org.openide.explorer.view.ListView;
-import org.openide.explorer.view.MenuView;
-import org.openide.explorer.view.OutlineView;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -100,11 +78,6 @@ implements ExplorerManager.Provider,  LookupListener
     // https://platform.netbeans.org/tutorials/74/nbm-selection-2.html
     private final BeanTreeView treeView = new BeanTreeView();
     // private final OutlineView treeView = new OutlineView(); // allows small area for dnd of parent
-    // private final IconView treeView = new IconView(); // I see nothing
-    // private final ListView treeView = new ListView(); // I see nothing
-    // private final ChoiceView treeView = new ChoiceView(); // allows drop, but I don't understand the rest
-    // private final MenuView treeView = new MenuView(); // weird
-
 
     /**
      * Creates new form HortaWorkspaceEditorTopComponent
@@ -170,10 +143,12 @@ implements ExplorerManager.Provider,  LookupListener
     @Override 
     public void resultChanged(LookupEvent lookupEvent) {
         Collection<? extends HortaWorkspace> allWorkspaces = workspaceResult.allInstances();
-        if (allWorkspaces.isEmpty())
-            return; // leave current workspace populated as is
+        if (allWorkspaces.isEmpty()) {
+            // mgr.setRootContext(null); 
+            return;
+        }
         HortaWorkspace workspace = allWorkspaces.iterator().next();
-        mgr.setRootContext(new NeuroanatomyWorkspaceNode(workspace));        
+        mgr.setRootContext( new HortaWorkspaceNode(workspace) );        
     }
 
 }
