@@ -30,6 +30,7 @@
 
 package org.janelia.horta.nodes;
 
+import java.awt.Color;
 import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -138,14 +139,28 @@ public class HortaWorkspaceNode extends AbstractNode
     
     public Integer getSize() {return workspace.getNeurons().size();}
     
+    public Color getBackgroundColor() {
+        return workspace.getBackgroundColor();
+    }
+    
+    public void setBackgroundColor(Color color) {
+        workspace.setBackgroundColor(color);
+        workspace.notifyObservers();
+    }
+    
     @Override 
     protected Sheet createSheet() { 
         Sheet sheet = Sheet.createDefault(); 
         Sheet.Set set = Sheet.createPropertiesSet(); 
         try { 
-            Property sizeProp = new PropertySupport.Reflection(this, Integer.class, "getSize", null); 
-            sizeProp.setName("size"); 
-            set.put(sizeProp); 
+            // size - number of neurons
+            Property prop = new PropertySupport.Reflection(this, Integer.class, "getSize", null); 
+            prop.setName("size");
+            set.put(prop);
+            // color
+            prop = new PropertySupport.Reflection(this, Color.class, "getBackgroundColor", "setBackgroundColor");
+            prop.setName("color");
+            set.put(prop);
         } 
         catch (NoSuchMethodException ex) {
             ErrorManager.getDefault(); 

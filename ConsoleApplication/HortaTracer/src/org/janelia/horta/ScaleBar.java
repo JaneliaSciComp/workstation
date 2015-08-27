@@ -235,6 +235,31 @@ public class ScaleBar extends MeshActor {
                 0, 1);
         
     }
+
+    void setForegroundColor(Color c)
+    {
+        if (c.equals(foregroundColor)) return;
+        foregroundColor = c;
+        barColor = new float[] {
+            foregroundColor.getRed()/255f,
+            foregroundColor.getGreen()/255f,
+            foregroundColor.getBlue()/255f,
+            foregroundColor.getAlpha()/255f
+        };
+        updateLabelString(labelString);
+    }
+
+    void setBackgroundColor(Color c)
+    {
+        if (c.equals(backgroundColor)) return;
+        backgroundColor = c;
+        borderColor = new float[] {
+            backgroundColor.getRed()/255f,
+            backgroundColor.getGreen()/255f,
+            backgroundColor.getBlue()/255f,
+            backgroundColor.getAlpha()/255f
+        };
+    }
     
     static class ScaleBarGeometry extends MeshGeometry {
         ScaleBarGeometry() {

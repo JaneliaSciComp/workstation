@@ -30,6 +30,7 @@
 
 package org.janelia.horta.nodes;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -48,6 +49,7 @@ public class BasicHortaWorkspace implements HortaWorkspace
     private final List<NeuronReconstruction> neurons = new ArrayList<>();
     private final Vantage vantage;
     private final ComposableObservable changeObservable = new ComposableObservable();
+    private Color backgroundColor = Color.BLUE;
 
     public BasicHortaWorkspace(Vantage vantage) {
         this.vantage = vantage;
@@ -93,5 +95,19 @@ public class BasicHortaWorkspace implements HortaWorkspace
     public void deleteObservers()
     {
         changeObservable.deleteObservers();
+    }
+
+    @Override
+    public Color getBackgroundColor()
+    {
+        return backgroundColor;
+    }
+
+    @Override
+    public void setBackgroundColor(Color color)
+    {
+        if (backgroundColor.equals(color)) return;
+        backgroundColor = color;
+        setChanged();
     }
 }

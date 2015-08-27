@@ -177,6 +177,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private TracingInteractor tracingInteractor;
     private StaticVolumeBrickSource volumeSource;
     private CenterCrossHairActor crossHairActor;
+    private ScaleBar scaleBar = new ScaleBar();
         
     private final NeuronMPRenderer neuronMPRenderer;
     
@@ -246,6 +247,62 @@ public final class NeuronTracerTopComponent extends TopComponent
         });
 
         neuronMPRenderer = setUpActors();
+        
+        workspace.addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                // Update background color
+                Color c = workspace.getBackgroundColor();
+                float[] cf = c.getColorComponents(new float[3]);
+                // Convert sRGB to linear RGB
+                for (int i = 0; i < 3; ++i)
+                    cf[i] = cf[i]*cf[i]; // second power is close enough...
+                // Create color gradient from single color
+                double deltaLuma = 0.1; // desired intensity change
+                double midLuma = 0.30*cf[0] + 0.59*cf[1] + 0.11*cf[2];
+                double topLuma = midLuma - 0.5*deltaLuma;
+                double bottomLuma = midLuma + 0.5*deltaLuma;
+                if (bottomLuma > 1.0) { // user wants it REALLY light
+                    bottomLuma = 1.0; // white
+                    topLuma = midLuma; // whatever color user said
+                }
+                if (topLuma < 0.0) { // user wants it REALLY dark
+                    topLuma = 0.0; // black
+                    bottomLuma = midLuma; // whatever color user said
+                }
+                Color topColor = c;
+                Color bottomColor = c;
+                if (midLuma > 0) {
+                    float t = (float) (255 * topLuma / midLuma);
+                    float b = (float) (255 * bottomLuma / midLuma);
+                    int[] tb = {
+                        (int)(cf[0]*t), (int)(cf[1]*t), (int)(cf[2]*t),
+                        (int)(cf[0]*b), (int)(cf[1]*b), (int)(cf[2]*b)
+                    };
+                    // Clamp color components to range 0-255
+                    for (int i = 0; i < 6; ++i) {
+                        if (tb[i] < 0) tb[i] = 0;
+                        if (tb[i] > 255) tb[i] = 255;
+                    }
+                    topColor = new Color(tb[0], tb[1], tb[2]);
+                    bottomColor = new Color(tb[3], tb[4], tb[5]);
+                }
+                setBackgroundColor(topColor, bottomColor);
+                if (bottomLuma > 0.25) { // sRGB luma 0.5 == lRGB luma 0.25...
+                    scaleBar.setForegroundColor(Color.black);
+                    scaleBar.setBackgroundColor(new Color(255, 255, 255, 50));
+                }
+                else {
+                    scaleBar.setForegroundColor(Color.white);
+                    scaleBar.setBackgroundColor(new Color(0, 0, 0, 50));                    
+                }
+                
+                // TODO - update neuron models
+                
+                sceneWindow.getInnerComponent().repaint();
+            }
+        });
 
         loader = new NeuronTraceLoader(
                 NeuronTracerTopComponent.this,
@@ -253,6 +310,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                 sceneWindow
                 // tracingInteractor
         );
+        
+        workspace.setBackgroundColor(Color.darkGray);        
     }
 
     public void setVolumeSource(StaticVolumeBrickSource volumeSource) {
@@ -316,7 +375,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
 
         // 4) Scale bar
-        sceneWindow.getRenderer().addActor(new ScaleBar());
+        sceneWindow.getRenderer().addActor(scaleBar);
         
         // 5) Cross hair
         /* */
@@ -624,38 +683,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 brightnessModel, 
                 workspace, 
                 frameTracker));
-
-        // Tooltips cannot be used, because there might be a AWT Component inside..
-        // sceneWindow.getOuterComponent().setToolTipText("Tool tip test...");
-        // sceneWindow.getRenderer().setAutoSrgb(false); // TODO sRGB correctness...
-        // Draw scale bar...
-        // TODO - TextRenderer does not work with GL3
-        /*
-         sceneWindow.getGLAutoDrawable().addGLEventListener(new GLEventListener() {
-         TextRenderer renderer;
-            
-         @Override
-         public void init(GLAutoDrawable glad) {
-         renderer = new TextRenderer(new Font("SansSerif", Font.BOLD, 36));
-         }
-
-         @Override
-         public void dispose(GLAutoDrawable glad) {}
-
-         @Override
-         public void display(GLAutoDrawable drawable) {
-         renderer.beginRendering(drawable.getWidth(), drawable.getHeight());
-         // optionally set the color
-         renderer.setColor(1.0f, 0.2f, 0.2f, 0.8f);
-         renderer.draw("Text to draw", 100, 100);
-         // ... more draw commands, color changes, etc.
-         renderer.endRendering();
-         }
-
-         @Override
-         public void reshape(GLAutoDrawable glad, int i, int i1, int i2, int i3) {}
-         });
-         */
+        
         // reduce near clipping of volume block surfaces
         Viewport vp = sceneWindow.getCamera().getViewport();
         vp.setzNearRelative(0.50f);
