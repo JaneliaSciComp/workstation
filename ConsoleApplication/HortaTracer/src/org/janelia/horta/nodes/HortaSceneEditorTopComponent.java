@@ -38,6 +38,7 @@ import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
 import org.openide.explorer.view.BeanTreeView;
+import org.openide.explorer.view.OutlineView;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -76,8 +77,9 @@ implements ExplorerManager.Provider,  LookupListener
     private Lookup.Result<HortaWorkspace> workspaceResult = null;
     
     // https://platform.netbeans.org/tutorials/74/nbm-selection-2.html
-    private final BeanTreeView treeView = new BeanTreeView();
-    // private final OutlineView treeView = new OutlineView(); // allows small area for dnd of parent
+    // private final BeanTreeView treeView = new BeanTreeView();
+    // child actions may reveal better with OutlineView than with BeanTreeView
+    private final OutlineView treeView = new OutlineView("Scene Items"); 
 
     /**
      * Creates new form HortaWorkspaceEditorTopComponent
@@ -88,6 +90,10 @@ implements ExplorerManager.Provider,  LookupListener
         setName(Bundle.CTL_HortaSceneEditorTopComponent());
         setToolTipText(Bundle.HINT_HortaSceneEditorTopComponent());
         setDisplayName("Horta Scene Editor");
+        
+        treeView.addPropertyColumn("visible", "Visible?");
+        treeView.addPropertyColumn("size", "Size");
+        treeView.addPropertyColumn("color", "Color");
 
         associateLookup(ExplorerUtils.createLookup(mgr, getActionMap()));
         

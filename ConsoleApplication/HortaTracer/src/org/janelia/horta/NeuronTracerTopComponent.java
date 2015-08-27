@@ -75,6 +75,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
+import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.horta.volume.MouseLightYamlBrickSource;
@@ -101,7 +102,9 @@ import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.horta.modelapi.HortaWorkspace;
+import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
+import org.janelia.horta.nodes.BasicNeuronReconstruction;
 import org.janelia.horta.volume.BrickActor;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -154,6 +157,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor interactor;
+    private HortaWorkspace workspace;
     
     // private MultipassVolumeActor mprActor;
     // private VolumeMipMaterial volumeMipMaterial;
@@ -614,7 +618,7 @@ public final class NeuronTracerTopComponent extends TopComponent
        // associateLookup(Lookups.singleton(vantage)); // ONE item in lookup
         // associateLookup(Lookups.fixed(vantage, brightnessModel)); // TWO items in lookup
         FrameTracker frameTracker = sceneWindow.getRenderer().getFrameTracker();
-        HortaWorkspace workspace = new BasicHortaWorkspace(sceneWindow.getVantage());        
+        workspace = new BasicHortaWorkspace(sceneWindow.getVantage());        
         associateLookup(Lookups.fixed(
                 vantage, 
                 brightnessModel, 
@@ -706,21 +710,35 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
                 dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
                 Transferable t = dtde.getTransferable();
+                
                 ProgressHandle progress
-                        = ProgressHandleFactory.createHandle("Loading Yaml File...");
+                        = ProgressHandleFactory.createHandle("Loading File...");
                 try {
                     List<File> fileList = (List) t.getTransferData(DataFlavor.javaFileListFlavor);
+                    // Drop could be YAML and/or SWC            
                     for (File f : fileList) {
-                        InputStream sourceYamlStream = new FileInputStream(f);
-                        currentSource = f.toURI().toURL().toString();
-
-                        volumeSource = loadYaml(sourceYamlStream, loader, progress);                        
-                        sourceYamlStream.close();
-                        loader.loadTileAtCurrentFocus(volumeSource);
+                        String extension = FilenameUtils.getExtension(f.getName()).toUpperCase();
+                        switch (extension) {
+                            case "SWC":
+                                NeuronReconstruction neuron = new BasicNeuronReconstruction(f);
+                                workspace.getNeurons().add(neuron);
+                                workspace.setChanged();
+                                workspace.notifyObservers();
+                                logger.info("dragged SWC file loaded!");
+                                break;
+                            case "YML":
+                            case "YAML":
+                                InputStream sourceYamlStream = new FileInputStream(f);
+                                currentSource = Utilities.toURI(f).toURL().toString();
+                                volumeSource = loadYaml(sourceYamlStream, loader, progress);
+                                sourceYamlStream.close();
+                                loader.loadTileAtCurrentFocus(volumeSource);
+                                logger.info("dragged Yaml file loaded!");
+                                break;
+                        }
                     }
-                    logger.info("Yaml files loaded!");
                 } catch (UnsupportedFlavorException | IOException | ParseException ex) {
-                    JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading yaml file");
+                    JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading dragged file");
                     Exceptions.printStackTrace(ex);
                 } finally {
                     progress.finish();

@@ -31,12 +31,13 @@
 package org.janelia.horta.modelapi;
 
 import java.util.Collection;
+import org.janelia.console.viewerapi.ObservableInterface;
 
 /**
  *
  * @author Christopher Bruns
  */
-public interface NeuronReconstruction
+public interface NeuronReconstruction extends ObservableInterface
 {
     String getName();
     void setName(String name);

@@ -38,6 +38,8 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import static javax.swing.Action.NAME;
@@ -47,8 +49,11 @@ import org.apache.commons.io.FilenameUtils;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.horta.modelapi.NeuronReconstruction;
+import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
+import org.openide.nodes.PropertySupport;
+import org.openide.nodes.Sheet;
 import org.openide.util.Exceptions;
 import org.openide.util.ImageUtilities;
 import org.openide.util.actions.Presenter;
@@ -68,10 +73,19 @@ public class HortaWorkspaceNode extends AbstractNode
         super(Children.create(new HortaWorkspaceChildFactory(workspace), true), Lookups.singleton(workspace));
         this.workspace = workspace;
         updateDisplayName();
+        // The factory is already listening on behalf of the children, 
+        // so we just need to update the label, in case the neuron count has changed.
+        workspace.addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                updateDisplayName();
+            }
+        });
     }
     
     private void updateDisplayName() {
-        setDisplayName("Horta workspace" + " (" + workspace.getNeurons().size() + " neurons)");
+        setDisplayName("Horta workspace"); //  + " (" + workspace.getNeurons().size() + " neurons)");
     }
     
     public Vantage getVantage() {
@@ -94,7 +108,6 @@ public class HortaWorkspaceNode extends AbstractNode
                             workspace.getNeurons().add(neuron);
                             workspace.setChanged();
                             workspace.notifyObservers();
-                            updateDisplayName();
                         } else {
                         }
                     }
@@ -122,7 +135,25 @@ public class HortaWorkspaceNode extends AbstractNode
             new AddNeuronAction(),
         };
     }
-
+    
+    public Integer getSize() {return workspace.getNeurons().size();}
+    
+    @Override 
+    protected Sheet createSheet() { 
+        Sheet sheet = Sheet.createDefault(); 
+        Sheet.Set set = Sheet.createPropertiesSet(); 
+        try { 
+            Property sizeProp = new PropertySupport.Reflection(this, Integer.class, "getSize", null); 
+            sizeProp.setName("size"); 
+            set.put(sizeProp); 
+        } 
+        catch (NoSuchMethodException ex) {
+            ErrorManager.getDefault(); 
+        } 
+        sheet.put(set); 
+        return sheet; 
+    } // - See more at: https://platform.netbeans.org/tutorials/nbm-nodesapi2.html#sthash.0xrEv8DO.dpuf
+    
     private class AddNeuronAction extends AbstractAction
     {
         public AddNeuronAction()
@@ -136,7 +167,6 @@ public class HortaWorkspaceNode extends AbstractNode
             workspace.getNeurons().add(new BasicNeuronReconstruction());
             workspace.setChanged();
             workspace.notifyObservers();
-            updateDisplayName();
         }
     }
     

@@ -40,7 +40,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Observer;
 import org.apache.commons.io.FilenameUtils;
+import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.horta.modelapi.SwcVertex;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.janelia.horta.modelapi.NeuronVertex;
@@ -53,6 +55,7 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
 {
     private String name = "(unnamed neuron)";
     private List<NeuronVertex> nodes = new ArrayList<NeuronVertex>();
+    private final ComposableObservable changeObservable = new ComposableObservable();
 
     public BasicNeuronReconstruction()
     {
@@ -124,6 +127,36 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
     public Collection<NeuronVertex> getVertexes()
     {
         return nodes;
+    }
+
+    @Override
+    public void setChanged()
+    {
+        changeObservable.setChanged();
+    }
+
+    @Override
+    public void notifyObservers()
+    {
+        changeObservable.notifyObservers();
+    }
+
+    @Override
+    public void addObserver(Observer observer)
+    {
+        changeObservable.addObserver(observer);
+    }
+
+    @Override
+    public void deleteObserver(Observer observer)
+    {
+        changeObservable.deleteObserver(observer);
+    }
+
+    @Override
+    public void deleteObservers()
+    {
+        changeObservable.deleteObservers();
     }
     
 }

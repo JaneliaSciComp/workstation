@@ -41,9 +41,12 @@ import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.janelia.horta.modelapi.NeuronVertex;
+import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
+import org.openide.nodes.PropertySupport;
+import org.openide.nodes.Sheet;
 import org.openide.util.ImageUtilities;
 import org.openide.util.lookup.Lookups;
 
@@ -57,7 +60,7 @@ public class NeuronReconstructionNode extends AbstractNode
 
     public NeuronReconstructionNode(NeuronReconstruction neuron) {
         super(Children.create(new NeuronReconstructionChildFactory(neuron), true), Lookups.singleton(neuron));
-        setDisplayName(neuron.getName() + " (" + neuron.getVertexes().size() + " vertices)");
+        setDisplayName(neuron.getName()); //  + " (" + neuron.getVertexes().size() + " vertices)");
         this.neuron = neuron;
     }
     
@@ -120,4 +123,22 @@ public class NeuronReconstructionNode extends AbstractNode
         }
         return result.toArray(new Action[result.size()]);
     }
+    
+    public Integer getSize() {return neuron.getVertexes().size();}
+    
+    @Override 
+    protected Sheet createSheet() { 
+        Sheet sheet = Sheet.createDefault(); 
+        Sheet.Set set = Sheet.createPropertiesSet(); 
+        try { 
+            Property sizeProp = new PropertySupport.Reflection(this, Integer.class, "getSize", null); 
+            sizeProp.setName("size"); 
+            set.put(sizeProp); 
+        } 
+        catch (NoSuchMethodException ex) {
+            ErrorManager.getDefault(); 
+        } 
+        sheet.put(set); 
+        return sheet; 
+    } // - See more at: https://platform.netbeans.org/tutorials/nbm-nodesapi2.html#sthash.0xrEv8DO.dpuf
 }
