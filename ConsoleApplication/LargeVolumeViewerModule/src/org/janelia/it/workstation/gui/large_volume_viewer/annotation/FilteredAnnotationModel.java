@@ -10,7 +10,8 @@ import javax.swing.table.AbstractTableModel;
  */
 public class FilteredAnnotationModel extends AbstractTableModel {
 
-    private String[] columnNames = {"ID", "geo", "note"};
+    // private String[] columnNames = {"ID", "geo", "note"};
+    private String[] columnNames = {"date", "geo", "note"};
 
     private ArrayList<InterestingAnnotation> annotations = new ArrayList<>();
 
@@ -42,7 +43,7 @@ public class FilteredAnnotationModel extends AbstractTableModel {
     public Object getValueAt(int row, int column) {
         switch (column) {
             case 0:
-                return annotations.get(row).getAnnIDText();
+                return annotations.get(row).getCreationDateText();
             case 1:
                 return annotations.get(row).getGeometryText();
             case 2:

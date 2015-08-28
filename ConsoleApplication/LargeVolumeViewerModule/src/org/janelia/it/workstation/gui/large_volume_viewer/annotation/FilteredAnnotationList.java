@@ -181,6 +181,7 @@ public class FilteredAnnotationList extends JPanel {
                     InterestingAnnotation maybeInteresting =
                         new InterestingAnnotation(ann.getId(),
                             neuron.getId(),
+                            ann.getCreationDate(),
                             getAnnotationGeometry(ann),
                             note);
                     if (filter.isInteresting(maybeInteresting)) {
@@ -258,8 +259,8 @@ public class FilteredAnnotationList extends JPanel {
                     int realRowIndex = convertRowIndexToModel(rowIndex);
 
                     if (realColumnIndex == 0) {
-                        // show full ID
-                        tip = model.getAnnotationAtRow(realRowIndex).getAnnotationID().toString();
+                        // show creation date
+                        tip = model.getAnnotationAtRow(realRowIndex).getCreationDate().toString();
                     } else if (realColumnIndex == 1) {
                         // no tip here
                         tip = null;
@@ -281,9 +282,9 @@ public class FilteredAnnotationList extends JPanel {
 
 
         // inelegant, but hand-tune column widths (finally seems to work):
-        filteredTable.getColumnModel().getColumn(0).setPreferredWidth(60);
+        filteredTable.getColumnModel().getColumn(0).setPreferredWidth(70);
         filteredTable.getColumnModel().getColumn(1).setPreferredWidth(50);
-        filteredTable.getColumnModel().getColumn(2).setPreferredWidth(115);
+        filteredTable.getColumnModel().getColumn(2).setPreferredWidth(105);
         filteredTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
         JScrollPane scrollPane = new JScrollPane(filteredTable);
