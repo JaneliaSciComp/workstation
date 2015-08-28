@@ -132,13 +132,6 @@ public class HortaWorkspaceNode extends AbstractNode
         return getIcon(i);
     }
     
-    @Override
-    public Action[] getActions(boolean popup) {
-        return new Action[] {
-            new AddNeuronAction(),
-        };
-    }
-    
     public Integer getSize() {return workspace.getNeurons().size();}
     
     public Color getBackgroundColor() {
@@ -176,22 +169,6 @@ public class HortaWorkspaceNode extends AbstractNode
         // logger.info("Workspace repaint triggered");
         workspace.setChanged();
         workspace.notifyObservers();
-    }
-    
-    private class AddNeuronAction extends AbstractAction
-    {
-        public AddNeuronAction()
-        {
-            putValue(NAME, "Create New Neuron");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e)
-        {
-            workspace.getNeurons().add(new BasicNeuronReconstruction());
-            workspace.setChanged();
-            workspace.notifyObservers();
-        }
     }
     
 }

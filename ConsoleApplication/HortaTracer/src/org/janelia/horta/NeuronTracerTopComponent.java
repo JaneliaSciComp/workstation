@@ -111,6 +111,7 @@ import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.Object3d;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.horta.actors.NeuriteLineActor;
+import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
@@ -324,10 +325,10 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // 3 - add new neurons
                 for (NeuronReconstruction neuron : workspace.getNeurons()) {
                     if (! currentNeuronActors.containsKey(neuron)) {
-                        NeuriteActor na = new NeuriteActor(neuron);
+                        SpheresActor na = new SpheresActor(neuron);
                         na.setColor(Color.PINK);
                         na.setVisible(true);
-                        currentNeuronActors.put(neuron, new NeuriteActor(neuron));
+                        currentNeuronActors.put(neuron, na);
                     }
                 }
                 
