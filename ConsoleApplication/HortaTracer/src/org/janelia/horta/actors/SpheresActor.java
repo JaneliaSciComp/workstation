@@ -75,9 +75,9 @@ public class SpheresActor extends BasicGL3Actor
                 meshGeometry.clear();
                 for (NeuronVertex neuronVertex : neuron.getVertexes()) {
                     Vertex vertex = meshGeometry.addVertex(neuronVertex.getLocation());
-                    vertex.setAttribute("radius", 5.0f);
+                    vertex.setAttribute("radius", (float)neuronVertex.getRadius());
                 }
-                 meshGeometry.notifyObservers(); // especially the Material?
+                meshGeometry.notifyObservers(); // especially the Material?
             }
         });
     }

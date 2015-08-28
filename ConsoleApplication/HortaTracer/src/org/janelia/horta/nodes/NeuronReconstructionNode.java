@@ -144,12 +144,12 @@ public class NeuronReconstructionNode extends AbstractNode
     }
     public Color getColor() {return neuron.getColor();}
     public void setColor(Color color) {
-        logger.info("NeuronNode color set to "+color);
+        // logger.info("NeuronNode color set to "+color);
         neuron.setColor(color);
         triggerRepaint();
     }
     public void triggerRepaint() {
-        logger.info("NeuronNode repaint triggered");
+        // logger.info("NeuronNode repaint triggered");
         // Maybe the parent node would have better access to repainting...
         HortaWorkspaceNode parentNode = (HortaWorkspaceNode)getParentNode();
         if (parentNode != null)

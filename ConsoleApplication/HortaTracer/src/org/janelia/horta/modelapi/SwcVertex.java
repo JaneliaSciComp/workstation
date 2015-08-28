@@ -39,9 +39,6 @@ public interface SwcVertex extends NeuronVertex
     int getLabel();
     void setLabel(int label);
 
-    double getRadius();
-    void setRadius(double radius);
-    
     int getTypeIndex();
     void setTypeIndex(int index);
 }
