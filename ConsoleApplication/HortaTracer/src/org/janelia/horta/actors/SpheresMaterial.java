@@ -128,12 +128,12 @@ public class SpheresMaterial extends BasicMaterial
                 getShaderSteps().add(new ShaderStep(GL3.GL_VERTEX_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "SpheresVrtx.glsl"))
+                                        + "SpheresVrtx330.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_GEOMETRY_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "SpheresGeom.glsl"))
+                                        + "SpheresGeom330.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
                         getClass().getResourceAsStream(
@@ -143,7 +143,7 @@ public class SpheresMaterial extends BasicMaterial
                 getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "SpheresFrag.glsl"))
+                                        + "SpheresFrag330.glsl"))
                 );
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);

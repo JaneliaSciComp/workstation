@@ -35,5 +35,4 @@ void main() {
         light_rig(vec4(s, 1), normal, color.rgb),
         1);
     gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
-    // gl_FragColor = color;
 }
