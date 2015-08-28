@@ -21,6 +21,7 @@ out float fragRadius;
 out vec3 center;
 out float c2; // sphere linear coefficient cee-squared
 out float pc; // sphere linear coefficient pos-dot-center
+out vec3 imposterPos;
 
 
 // Rotate cube of size 2, so that corner 1,1,1 points toward +Z
@@ -79,7 +80,7 @@ void main() {
     // each with 3 triangles
 
     // First strip: 2-3-1-4-5
-    vec3 imposterPos = center + radius*p2;
+    imposterPos = center + radius*p2;
     gl_Position = projectionMatrix * vec4(imposterPos, 1);
     pc = dot(imposterPos, center);
     EmitVertex();
