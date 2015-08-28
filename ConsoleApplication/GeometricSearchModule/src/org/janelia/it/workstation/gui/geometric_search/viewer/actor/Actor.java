@@ -32,4 +32,12 @@ public abstract class Actor {
 
     public void dispose() {}
 
+    public boolean isVisible() {
+        return glActor.isVisible();
+    }
+
+    public void setIsVisible(boolean isVisible) {
+        glActor.setIsVisible(isVisible);
+    }
+
 }

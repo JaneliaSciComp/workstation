@@ -131,6 +131,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     public void setupActorPanel() {
         actorPanel = new ActorPanel();
         EventManager.addListener(model.getActorModel(), actorPanel);
+        EventManager.addListener(actorPanel, model.getActorModel());
     }
 
     public void displayReady() {

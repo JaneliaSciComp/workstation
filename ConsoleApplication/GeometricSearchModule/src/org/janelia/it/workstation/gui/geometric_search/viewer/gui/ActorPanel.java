@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by murphys on 8/20/2015.
  */
-public class ActorPanel extends ScrollableRowPanel implements VoxelViewerEventListener {
+public class ActorPanel extends ScrollableColorRowPanel implements VoxelViewerEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ActorPanel.class);
 

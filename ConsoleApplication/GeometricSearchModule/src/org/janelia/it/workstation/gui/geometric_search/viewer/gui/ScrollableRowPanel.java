@@ -18,9 +18,9 @@ public class ScrollableRowPanel extends JPanel {
 
     private static final Logger logger = LoggerFactory.getLogger(ScrollableRowPanel.class);
 
-    JPanel rowPanel = new JPanel();
+    protected JPanel rowPanel = new JPanel();
 
-    java.util.List<Component> components=new ArrayList<>();
+    protected java.util.List<Component> components=new ArrayList<>();
 
     public ScrollableRowPanel() {
         rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.Y_AXIS));
