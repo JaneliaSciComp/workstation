@@ -28,7 +28,8 @@ out vec3 imposterPos;
 // First rotate -45 degrees about Y axis, to orient +XZ edge toward +Z
 // These values are all "const", so they are computed once at shader compile time.
 // Y-axis is DOWN in mouse brain space, due to Fiji image convention
-// But I'm thinking of this cube in Y-axis UP orientation
+// But I'm thinking of this cube in Y-axis UP orientation.
+// ...which is stupid, but I just flipped signs until it looked right.
 const float cos_45 = sqrt(2)/2;
 const float sin_45 = sqrt(2)/2;
 const mat3 rotY45 = mat3(
@@ -74,7 +75,7 @@ void main() {
     center = center4a.xyz/center4a.w;
     float radius = geomRadius[0];
     fragRadius = radius;
-    c2 = dot(center, center) - radius*radius;
+    c2 = dot(center, center) - radius*radius; // same for all points
 
     // Half cube can be constructed using 2 triangle strips,
     // each with 3 triangles
