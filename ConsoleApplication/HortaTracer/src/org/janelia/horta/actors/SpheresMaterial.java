@@ -113,11 +113,19 @@ public class SpheresMaterial extends BasicMaterial
         this.color[1] = color.getGreen()/255f;
         this.color[2] = color.getBlue()/255f;
         this.color[3] = color.getAlpha()/255f;
+        // Convert sRGB to linear-ish (RGB, but not alpha)
+        for (int i = 0; i < 3; ++i)
+            this.color[i] = this.color[i] * this.color[i];
     }
     
     public Color getColor()
     {
-        return new Color(color[0], color[1], color[2], color[3]);
+        return new Color(
+                // convert linear to sRGB (but not alpha)
+                (float)Math.sqrt(color[0]), 
+                (float)Math.sqrt(color[1]), 
+                (float)Math.sqrt(color[2]), 
+                color[3]);
     }    
     
     private static class SpheresShader extends BasicShaderProgram

@@ -45,7 +45,6 @@ import java.util.Observable;
 import java.util.Observer;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.BasicVector;
 import org.janelia.geometry3d.ConstVector;
 import org.janelia.geometry3d.CompositeObject3d;
 import org.janelia.geometry3d.Vertex;
@@ -69,7 +68,7 @@ public class MeshActor extends BasicGL3Actor
     private int particleIndexCount = 0;
     private int triangleAdjacencyIndexCount = 0;
     // Intermediate list of actual vbo vertex index for all triangles
-    private List<VertexIndex> triangleVertices = new ArrayList<VertexIndex>();
+    private List<VertexIndex> triangleVertices = new ArrayList<>();
     private int vboTriangleIndices = 0;
     private int vboTriangleAdjacencyIndices = 0;
     private int vboParticleIndices = 0;

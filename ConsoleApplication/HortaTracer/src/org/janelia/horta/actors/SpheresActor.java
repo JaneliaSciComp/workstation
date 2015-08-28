@@ -69,6 +69,8 @@ public class SpheresActor extends BasicGL3Actor
             @Override
             public void update(Observable o, Object arg)
             {
+                setColor(neuron.getColor());
+                setVisible(neuron.isVisible());
                 // TODO: more careful updating of nodes
                 meshGeometry.clear();
                 for (NeuronVertex neuronVertex : neuron.getVertexes()) {
@@ -85,6 +87,7 @@ public class SpheresActor extends BasicGL3Actor
         // Propagate any pending structure changes...
         if (neuron != null)
             neuron.notifyObservers();
+        if (! isVisible()) return;
         // if (meshGeometry.size() < 1) return;
         gl.glDisable(GL3.GL_DEPTH_TEST);
         super.display(gl, camera, parentModelViewMatrix);       
