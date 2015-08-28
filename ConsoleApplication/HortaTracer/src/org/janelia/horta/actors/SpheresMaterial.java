@@ -138,6 +138,11 @@ public class SpheresMaterial extends BasicMaterial
                 getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
+                                        + "imposter_fns330.glsl"))
+                );
+                getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/horta/shader/"
                                         + "SpheresFrag.glsl"))
                 );
             } catch (IOException ex) {
