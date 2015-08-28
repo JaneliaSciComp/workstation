@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.event;
 
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerEventListener;
+import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerGLPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,9 +15,19 @@ import java.util.Map;
  */
 public class EventManager {
 
+    private static VoxelViewerGLPanel viewer;
+
     private static final Logger logger = LoggerFactory.getLogger(EventManager.class);
 
     private static Map<Object, List<VoxelViewerEventListener>> listenerMap= new HashMap<>();
+
+    public static VoxelViewerGLPanel getViewer() {
+        return viewer;
+    }
+
+    public static void setViewer(VoxelViewerGLPanel viewer) {
+        EventManager.viewer = viewer;
+    }
 
     public static synchronized void addListener(Object object, VoxelViewerEventListener listener) {
         List<VoxelViewerEventListener> listeners=listenerMap.get(object);
@@ -38,6 +49,7 @@ public class EventManager {
         } else {
             logger.error("Could not find listenerMap for object type="+object.getClass().getName());
         }
+        viewer.refreshIfPending();
     }
 
 }

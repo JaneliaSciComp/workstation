@@ -80,6 +80,8 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         }
         model=new VoxelViewerModel(properties);
         viewer = new VoxelViewerGLPanel(width, height, model);
+        EventManager.setViewer(viewer);
+
         viewer.setProperties(properties);
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
@@ -118,6 +120,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     protected void setupDatasetPanel() {
         datasetPanel = new DatasetPanel();
         EventManager.addListener(model.getDatasetModel(), datasetPanel);
+        EventManager.addListener(datasetPanel, model.getDatasetModel());
     }
 
     public void setupRenderablePanel() {

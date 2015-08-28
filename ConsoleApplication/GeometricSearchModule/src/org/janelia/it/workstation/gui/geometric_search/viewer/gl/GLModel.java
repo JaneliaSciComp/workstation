@@ -43,6 +43,13 @@ public class GLModel implements VoxelViewerEventListener {
     protected Deque<Integer> disposeQueue = new ArrayDeque<>();
     protected Deque<String> messageQueue = new ArrayDeque<>();
 
+    public boolean hasPendingEvents() {
+        if (initQueue.size()>0 || disposeQueue.size()>0 || messageQueue.size()>0) {
+            return true;
+        }
+        return false;
+    }
+
     public VoxelViewerModel getModel() {
         return model;
     }
