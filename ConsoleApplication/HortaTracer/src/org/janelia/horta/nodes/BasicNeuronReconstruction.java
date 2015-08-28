@@ -47,6 +47,8 @@ import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.horta.modelapi.SwcVertex;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.janelia.horta.modelapi.NeuronVertex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -55,10 +57,11 @@ import org.janelia.horta.modelapi.NeuronVertex;
 public class BasicNeuronReconstruction implements NeuronReconstruction
 {
     private String name = "(unnamed neuron)";
-    private List<NeuronVertex> nodes = new ArrayList<NeuronVertex>();
+    private List<NeuronVertex> nodes = new ArrayList<>();
     private final ComposableObservable changeObservable = new ComposableObservable();
     private Color color = Color.WHITE;
     private boolean visible = true;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public BasicNeuronReconstruction()
     {
@@ -69,8 +72,8 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
         BufferedReader br = new BufferedReader(new FileReader(file));
         String line;
         // Store parent relationships for resolution after reading
-        Map<Integer, Integer> childParentMap = new HashMap<Integer, Integer>();
-        Map<Integer, SwcVertex> vertexMap = new HashMap<Integer, SwcVertex>();
+        Map<Integer, Integer> childParentMap = new HashMap<>();
+        Map<Integer, SwcVertex> vertexMap = new HashMap<>();
         while ((line = br.readLine()) != null) {
             if (line.startsWith("#")) // skip comments
                 continue;
@@ -110,8 +113,7 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
         }
         // Take name from file
         if (nodes.size() > 0) {
-            String neuronName = FilenameUtils.getBaseName(file.getName());
-            setName(neuronName);
+            this.name = FilenameUtils.getBaseName(file.getName());
         }
     }
 
@@ -141,11 +143,12 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
     @Override
     public void setColor(Color color)
     {
+        // logger.info("Neuron color set to "+color);
         if (color.equals(this.color))
             return;
         this.color = color;
         setChanged();
-        notifyObservers();
+        // notifyObservers(); // commented, so delegate to a higher authority...
     }
 
     @Override
@@ -161,7 +164,7 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
             return;
         this.visible = visible;
         setChanged();
-        notifyObservers();
+        // notifyObservers(); // delegate to a higher authority...
     }
     
     @Override

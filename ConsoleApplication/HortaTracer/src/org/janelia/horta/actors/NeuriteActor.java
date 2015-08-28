@@ -46,12 +46,13 @@ import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.texture.Texture2d;
 import org.janelia.gltools.material.ImageParticleMaterial;
-import org.janelia.gltools.material.Material;
 import org.janelia.horta.NeuriteAnchor;
 import org.janelia.horta.NeuriteModel;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.janelia.horta.modelapi.NeuronVertex;
 import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -62,7 +63,9 @@ public class NeuriteActor extends BasicGL3Actor {
     private final NeuriteModel neuriteModel;
     private final MeshGeometry meshGeometry;
     private final MeshActor meshActor;
-    private ImageParticleMaterial material;
+    private final ImageParticleMaterial material;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private NeuronReconstruction neuron = null;
     
     public NeuriteActor(CompositeObject3d parent, final NeuriteModel neuriteModel) 
     {
@@ -92,6 +95,7 @@ public class NeuriteActor extends BasicGL3Actor {
         neuriteModel.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
+                // logger.info("Neuron actor responds to neuriteModel change");
                 // System.out.println("Neurite actor update");
                 boolean geometryChanged = false;
                 if (! meshGeometry.isEmpty()) {
@@ -116,6 +120,7 @@ public class NeuriteActor extends BasicGL3Actor {
     public NeuriteActor(final NeuronReconstruction neuron) 
     {
         super(null);
+        this.neuron = neuron;
         BufferedImage ringImage = null;
         try {
             ringImage = ImageIO.read(
@@ -141,6 +146,7 @@ public class NeuriteActor extends BasicGL3Actor {
         neuron.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
+                // logger.info("Neuron actor responds to NeuronReconstruction change");
                 boolean geometryChanged = false;
 
                 // Did the neuron just become invisible?
@@ -179,6 +185,10 @@ public class NeuriteActor extends BasicGL3Actor {
     
     @Override
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
+        // logger.info("display neuron anchor");
+        // Propagate any pending structure changes...
+        if (neuron != null)
+            neuron.notifyObservers();
         // if (meshGeometry.size() < 1) return;
         // System.out.println("Displaying anchors, geometry size = "+meshGeometry.size()); // works
         gl.glDisable(GL3.GL_DEPTH_TEST);

@@ -44,8 +44,6 @@ import java.util.Observer;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import static javax.swing.Action.NAME;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JMenuItem;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.horta.modelapi.HortaWorkspace;
@@ -57,9 +55,10 @@ import org.openide.nodes.PropertySupport;
 import org.openide.nodes.Sheet;
 import org.openide.util.Exceptions;
 import org.openide.util.ImageUtilities;
-import org.openide.util.actions.Presenter;
 import org.openide.util.datatransfer.PasteType;
 import org.openide.util.lookup.Lookups;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Presentation layer for neuron reconstructions in Horta.
@@ -69,6 +68,7 @@ import org.openide.util.lookup.Lookups;
 public class HortaWorkspaceNode extends AbstractNode
 {
     private final HortaWorkspace workspace;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public HortaWorkspaceNode(HortaWorkspace workspace) {
         super(Children.create(new HortaWorkspaceChildFactory(workspace), true), Lookups.singleton(workspace));
@@ -170,6 +170,13 @@ public class HortaWorkspaceNode extends AbstractNode
         sheet.put(set); 
         return sheet; 
     } // - See more at: https://platform.netbeans.org/tutorials/nbm-nodesapi2.html#sthash.0xrEv8DO.dpuf
+
+    void triggerRepaint()
+    {
+        // logger.info("Workspace repaint triggered");
+        workspace.setChanged();
+        workspace.notifyObservers();
+    }
     
     private class AddNeuronAction extends AbstractAction
     {

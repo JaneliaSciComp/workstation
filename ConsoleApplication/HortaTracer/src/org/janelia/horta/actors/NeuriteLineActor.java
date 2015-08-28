@@ -32,6 +32,9 @@ package org.janelia.horta.actors;
 
 import java.util.Observable;
 import java.util.Observer;
+import javax.media.opengl.GL3;
+import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vertex;
@@ -40,6 +43,8 @@ import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.WireframeMaterial;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.janelia.horta.modelapi.NeuronVertex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -50,6 +55,8 @@ public class NeuriteLineActor extends BasicGL3Actor
     private final WireframeMaterial material;
     private final MeshGeometry meshGeometry;
     private final MeshActor meshActor;
+    private final NeuronReconstruction neuron;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public NeuriteLineActor(final NeuronReconstruction neuron) {
         super(null);
@@ -58,17 +65,29 @@ public class NeuriteLineActor extends BasicGL3Actor
         meshActor = new MeshActor(meshGeometry, material, this);
         this.addChild(meshActor);
         buildMesh(neuron);
+        meshGeometry.notifyObservers();
         neuron.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
             {
+                logger.info("Neuron actor respond to neuron change");
                 buildMesh(neuron);
                 meshGeometry.notifyObservers();
             }
         });
+        this.neuron = neuron;
+    }
+    
+    @Override
+    public void display(GL3 gl, AbstractCamera camera, Matrix4 modelViewMatrix) {
+        // First accomodate any unrealized changes to neuron model
+        logger.info("Neuron actor display");
+        neuron.notifyObservers();
+        super.display(gl, camera, modelViewMatrix);
     }
     
     private void buildMesh(NeuronReconstruction neuron) {
+        logger.info("Neuron actor rebuild mesh");
         meshGeometry.clear();
         for (NeuronVertex neuronVertex : neuron.getVertexes()) {
             NeuronVertex parent = neuronVertex.getParentVertex();

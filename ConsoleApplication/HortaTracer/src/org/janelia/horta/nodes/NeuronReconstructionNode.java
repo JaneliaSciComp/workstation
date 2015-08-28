@@ -50,6 +50,8 @@ import org.openide.nodes.PropertySupport;
 import org.openide.nodes.Sheet;
 import org.openide.util.ImageUtilities;
 import org.openide.util.lookup.Lookups;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -57,7 +59,8 @@ import org.openide.util.lookup.Lookups;
  */
 public class NeuronReconstructionNode extends AbstractNode
 {
-    private NeuronReconstruction neuron;
+    private final NeuronReconstruction neuron;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public NeuronReconstructionNode(NeuronReconstruction neuron) {
         super(Children.create(new NeuronReconstructionChildFactory(neuron), true), Lookups.singleton(neuron));
@@ -133,7 +136,25 @@ public class NeuronReconstructionNode extends AbstractNode
         return result.toArray(new Action[result.size()]);
     }
     
-    public Integer getSize() {return neuron.getVertexes().size();}
+    public int getSize() {return neuron.getVertexes().size();}
+    public boolean isVisible() {return neuron.isVisible();}
+    public void setVisible(boolean visible) {
+        neuron.setVisible(visible);
+        triggerRepaint();
+    }
+    public Color getColor() {return neuron.getColor();}
+    public void setColor(Color color) {
+        logger.info("NeuronNode color set to "+color);
+        neuron.setColor(color);
+        triggerRepaint();
+    }
+    public void triggerRepaint() {
+        logger.info("NeuronNode repaint triggered");
+        // Maybe the parent node would have better access to repainting...
+        HortaWorkspaceNode parentNode = (HortaWorkspaceNode)getParentNode();
+        if (parentNode != null)
+            parentNode.triggerRepaint();
+    }
     
     @Override 
     protected Sheet createSheet() { 
@@ -142,7 +163,7 @@ public class NeuronReconstructionNode extends AbstractNode
         try { 
             Property prop;
             // visible
-            prop = new PropertySupport.Reflection(neuron, boolean.class, "isVisible", "setVisible"); 
+            prop = new PropertySupport.Reflection(this, boolean.class, "isVisible", "setVisible"); 
             prop.setName("visible");
             set.put(prop); 
             // size
@@ -150,7 +171,7 @@ public class NeuronReconstructionNode extends AbstractNode
             prop.setName("size"); 
             set.put(prop); 
             // color
-            prop = new PropertySupport.Reflection(neuron, Color.class, "getColor", "setColor"); 
+            prop = new PropertySupport.Reflection(this, Color.class, "getColor", "setColor"); 
             prop.setName("color");
             set.put(prop); 
         } 
