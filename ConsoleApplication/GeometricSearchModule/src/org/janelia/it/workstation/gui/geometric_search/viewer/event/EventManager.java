@@ -28,9 +28,11 @@ public class EventManager {
     }
 
     public static void sendEvent(Object object, VoxelViewerEvent event) {
+        logger.info("*** sending event from "+object.getClass().getName()+" of type="+event.getClass().getName());
         List<VoxelViewerEventListener> listeners=listenerMap.get(object);
         if (listeners!=null) {
             for (VoxelViewerEventListener listener : listeners) {
+                logger.info("*** >>> sending event to listener="+listener.getClass().getName());
                 listener.processEvent(event);
             }
         } else {

@@ -28,6 +28,7 @@ public class ScrollableRowPanel extends JPanel {
     public void addEntry(String name) {
         logger.info("Adding row for name="+name);
         JButton l = new JButton(name);
+        l.setName(name);
         l.putClientProperty("Synthetica.opaque", Boolean.FALSE);
         l.setBorder(BorderFactory.createBevelBorder(1));
         components.add(l);
@@ -35,8 +36,12 @@ public class ScrollableRowPanel extends JPanel {
     }
 
     public void clear() {
+
+        logger.info("clear() start");
+
         for (Component component : components) {
-            remove(component);
+            logger.info("removing component="+component.getName());
+            rowPanel.remove(component);
         }
         components.clear();
     }

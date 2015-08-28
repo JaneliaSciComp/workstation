@@ -11,6 +11,7 @@ import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerPropert
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.Actor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.DenseVolumeActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorAddedEvent;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorsClearAllEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.VoxelViewerEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.*;
 import org.slf4j.Logger;
@@ -233,6 +234,7 @@ public class GLModel implements VoxelViewerEventListener {
 
     @Override
     public void processEvent(VoxelViewerEvent event) {
+
         if (event instanceof ActorAddedEvent) {
             ActorAddedEvent actorAddedEvent=(ActorAddedEvent)event;
             final Actor actor=actorAddedEvent.getActor();
@@ -285,6 +287,11 @@ public class GLModel implements VoxelViewerEventListener {
 
             initQueue.add(gl4SimpleActor);
         }
+
+        else if (event instanceof ActorsClearAllEvent) {
+            setDisposeAndClearAllActorsMsg();
+        }
+
     }
 
 
