@@ -25,14 +25,14 @@ public class ArrayCubeGLActor extends GL4SimpleActor
     public IntBuffer vertexBufferId=IntBuffer.allocate(1);
 
     List<Vector4> voxels;
-    int xSize;
-    int ySize;
-    int zSize;
+    float xSize;
+    float ySize;
+    float zSize;
     float getVoxelUnitSize;
 
     public Vector4 color=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 
-    public ArrayCubeGLActor(List<Vector4> voxels, int xSize, int ySize, int zSize, float voxelUnitSize) {
+    public ArrayCubeGLActor(List<Vector4> voxels, float xSize, float ySize, float zSize, float voxelUnitSize) {
         this.voxels=voxels;
         this.xSize=xSize;
         this.ySize=ySize;

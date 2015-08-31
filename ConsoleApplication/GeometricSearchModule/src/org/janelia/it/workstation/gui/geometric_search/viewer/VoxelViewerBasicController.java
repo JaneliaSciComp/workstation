@@ -51,6 +51,8 @@ public class VoxelViewerBasicController implements VoxelViewerController {
             public void run() {
                 dataset.createRenderables();
                 model.getDatasetModel().addDataset(dataset);
+                logger.info("calling viewer.refresh()");
+                viewer.refresh();
             }
         };
         return runnable;

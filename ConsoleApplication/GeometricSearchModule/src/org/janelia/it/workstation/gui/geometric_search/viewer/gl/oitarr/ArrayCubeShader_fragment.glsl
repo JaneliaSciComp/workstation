@@ -46,8 +46,6 @@ void main()
     vec4 color = dcolor * intensityF;
     color.w = dopac;
 
-    color = vec4(0.5, 1.0, 0.5, 1.0);
-
     ivec2 fl = ivec2(gl_FragCoord.xy);
     uint oldPosition = imageAtomicAdd(head_pointer_image, fl, 1);
     int iPosition = int(oldPosition);
@@ -68,7 +66,7 @@ void main()
         nodes3[xyOffset + zSize*(iPosition-BUFFER_DEPTH*3)].depth = dz;
     } 
 
-    blankOut = vec4(1.0, 1.0, 1.0, 1.0);
+    blankOut = vec4(0.0, 0.0, 0.0, 0.0);
 
     memoryBarrier();
     

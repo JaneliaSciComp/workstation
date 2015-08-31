@@ -25,7 +25,7 @@ public class RenderableModel implements VoxelViewerEventListener {
 
     public void clear() {
         renderableList.clear();
-        EventManager.sendEvent(this, new ClearAllRenderablesEvent());
+        EventManager.sendEvent(this, new RenderablesClearAllEvent());
     }
 
     @Override

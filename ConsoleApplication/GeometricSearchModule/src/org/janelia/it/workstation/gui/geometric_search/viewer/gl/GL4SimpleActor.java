@@ -19,6 +19,8 @@ public abstract class GL4SimpleActor {
 
     protected Matrix4 model=new Matrix4();
 
+    protected boolean isVisible=true;
+
     protected int actorId=0;
 
     // Callable within a non-GL setup thread before init()
@@ -58,4 +60,11 @@ public abstract class GL4SimpleActor {
         logger.error( "OpenGL Error " + errorNumber + ": " + errorStr + ": " + message );
     }
 
+    public boolean isVisible() {
+        return isVisible;
+    }
+
+    public void setIsVisible(boolean isVisible) {
+        this.isVisible = isVisible;
+    }
 }

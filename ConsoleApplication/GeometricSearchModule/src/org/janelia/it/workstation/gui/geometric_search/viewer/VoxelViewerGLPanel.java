@@ -142,6 +142,13 @@ public class VoxelViewerGLPanel extends GLJPanel
     }
 
     public void refresh() {
+        repaint();
+    }
+
+    public void refreshIfPending() {
+        if (model.getGLModel().hasPendingEvents()) {
+            refresh();
+        }
     }
 
     public void refreshRendering()

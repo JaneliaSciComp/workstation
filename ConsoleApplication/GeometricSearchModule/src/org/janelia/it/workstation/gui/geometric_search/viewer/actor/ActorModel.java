@@ -1,10 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.actor;
 
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerEventListener;
-import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorAddedEvent;
-import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
-import org.janelia.it.workstation.gui.geometric_search.viewer.event.RenderableAddedEvent;
-import org.janelia.it.workstation.gui.geometric_search.viewer.event.VoxelViewerEvent;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +24,21 @@ public class ActorModel implements VoxelViewerEventListener {
             RenderableAddedEvent renderableAddedEvent = (RenderableAddedEvent)event;
             Actor actor=renderableAddedEvent.getRenderable().createAndSetActor();
             addActor(actor);
+        } else if (event instanceof RenderablesClearAllEvent) {
+            actors.clear();
+            EventManager.sendEvent(this, new ActorsClearAllEvent());
+        } else if (event instanceof ActorSetVisibleEvent) {
+            ActorSetVisibleEvent actorSetVisibleEvent=(ActorSetVisibleEvent)event;
+            for (Actor actor : actors) {
+                if (actor.getName().equals(actorSetVisibleEvent.getName())) {
+                    boolean isVisible=actorSetVisibleEvent.isVisible();
+                    boolean alreadyVisible=actor.isVisible();
+                    if (isVisible!=alreadyVisible) {
+                        actor.setIsVisible(isVisible);
+                        EventManager.sendEvent(this, new ActorModifiedEvent());
+                    }
+                }
+            }
         }
     }
 
