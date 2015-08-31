@@ -199,6 +199,7 @@ extends AbstractTextureLoadAdapter
                 emptyChannel = true;
         }
         if (emptyChannel) {
+            log.info("Empty channel at {}, returning null.", relativeZ);
             return null;
         }
         else {

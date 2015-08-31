@@ -51,8 +51,8 @@ public class CachePopulator {
             // according to the new focus' relative position.
             for (File file: neighborhood.getFiles()) {
                 final String key = file.getAbsolutePath();
-                if (! compressedDataFutures.containsKey(key)  &&  cache.get(key) == null) {
-                    Future<byte[]> future = executor.submit(new CachePopulatorWorker(file));
+                if (! compressedDataFutures.containsKey(key)  &&  cache.get(key) == null) {                    
+                    Future<byte[]> future = cache(file);
                     compressedDataFutures.put(key, future);
                     populatedMap.put(key, future);
                 }
@@ -60,5 +60,15 @@ public class CachePopulator {
         }
         return populatedMap;
         
+    }
+    
+    /**
+     * Push one file to cache.
+     * 
+     * @param file which file.
+     * @return 'future' version.
+     */
+    public Future<byte[]> cache(File file) {
+        return executor.submit(new CachePopulatorWorker(file));
     }
 }

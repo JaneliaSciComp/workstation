@@ -8,6 +8,7 @@ package org.janelia.it.workstation.cache.large_volume;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -133,8 +134,8 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
 
         // Establish a collection with required order and guaranteed uniqueness.
         FocusProximityComparator comparator = new FocusProximityComparator();
-        Set<File> tileFiles = new TreeSet<>( comparator );
         String tiffBase = BlockTiffOctreeLoadAdapter.getTiffBase(CoordinateAxis.Z);
+        Set<String> tileFilePaths = new HashSet<>();
         for (TileIndex tileIndex: getCenteredTileSet(tileFormat, center, micrometerVoxels, dimensions, zoomLevel)) {
             File tilePath = BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat, true);  
             if (tilePath == null) {
@@ -151,14 +152,22 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                 double distanceFromFocus = Math.sqrt(sigmaSquare);
                 for (int channel = 0; channel < tileFormat.getChannelCount(); channel++) {
                     String fileName = BlockTiffOctreeLoadAdapter.getFilenameForChannel(tiffBase, channel);
-                    File fullTilePath = new File(tilePath, fileName);
+                    File tileFile = new File(tilePath, fileName);
                     // Work out what needs to be uncompressed, here.
-                    fullTilePath = resolver.compressAs(fullTilePath);
-                    comparator.addFile(fullTilePath, distanceFromFocus);
-                    tileFiles.add(fullTilePath);
-                    log.debug("Adding file {} to neighborhood.", fullTilePath);
+                    tileFile = resolver.compressAs(tileFile);
+                    String fullTilePath = tileFile.getAbsolutePath();
+                    // With the comparator in use, this test is necessary.
+                    if (!tileFilePaths.contains(fullTilePath)) {
+                        comparator.addFile(tileFile, distanceFromFocus);
+                        tileFilePaths.add(fullTilePath);
+                        log.debug("Adding file {} to neighborhood.", fullTilePath);
+                    }
                 }
             }
+        }
+        Set<File> tileFiles = new TreeSet<>(comparator);
+        for ( String tileFilePath: tileFilePaths) {
+            tileFiles.add(new File(tileFilePath));
         }
         neighborhood.setFiles(tileFiles);
         return neighborhood;
@@ -207,9 +216,10 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         BoundingBox3d bb = tileFormat.calcBoundingBox();
         int maxDepth = this.calcZCoord(bb, xyzFromWhd, tileFormat, (int) (center.getZ() + halfDepth));
         int minDepth = maxDepth - dimensions[xyzFromWhd[2]];
-//if (minDepth < 0){
-//    minDepth = 0;
-//}
+if (minDepth < 0){
+    minDepth = 0;
+log.info("Min-depth is negative.");
+}
 //        minDepth = minDepth < 0 ? 0 : minDepth;
 
         int minWidth = tileBoundingBox.getwMin();

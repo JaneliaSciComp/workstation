@@ -18,6 +18,7 @@ public class CompressedFileResolver {
     private List<CompressionAlgorithm> chain;
     public CompressedFileResolver() {
         chain = new ArrayList<>();
+        chain.add( new TrivialCompression() );
         chain.add( new LZ4Compression() );
     }
     

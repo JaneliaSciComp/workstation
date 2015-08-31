@@ -36,6 +36,10 @@ public class FocusProximityComparator implements Comparator<File> {
      */
     @Override
     public int compare(File o1, File o2) {
+        // Absolute, same-object bypass.
+        if (o1.getAbsolutePath().equals(o2.getAbsolutePath())) {
+            return 0;
+        }
         Double prox1 = proximityMap.get(o1);
         Double prox2 = proximityMap.get(o2);
         if (prox1 == null) {

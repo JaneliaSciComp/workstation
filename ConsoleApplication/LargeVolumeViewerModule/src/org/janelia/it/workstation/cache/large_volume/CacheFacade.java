@@ -9,6 +9,7 @@ import com.sun.media.jai.codec.ByteArraySeekableStream;
 import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -18,11 +19,6 @@ import java.util.concurrent.Future;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-//import java.net.URL;
-//import org.apache.jcs.JCS;
-//import org.apache.jcs.access.CacheAccess;
-//import org.apache.jcs.access.exception.CacheException;
-//import org.apache.jcs.engine.control.CompositeCacheManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,15 +34,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.compression.Compressed
  */
 public class CacheFacade {
     private static final String CACHE_NAME = "CompressedTiffCache";
-    private static final boolean CACHE_OFLOW_DISK = false;
-    private static final boolean CACHE_ETERNAL = false;
-    private static final int CACHE_MAX_IN_MEM = 10000;
-    // Time-to-* settings are about making things stale, so that new versions
-    // could be fetched.  However, these applications hit precomputed (not
-    // dynamically updated) repositories.  Nothing will change during the
-    // session.
-    private static final int CACHE_TIME2LIVE_S = 0; // Do not evict based on time spent in cache.
-    private static final int CACHE_TIME2IDLE_S = 0; // Do not evict based on time between accesses.
+    // TODO use more dynamic means of determining how many of the slabs
+    // to put into memory at one time.
     
     private GeometricNeighborhoodBuilder neighborhoodBuilder;
     private GeometricNeighborhood neighborhood;
@@ -67,35 +56,9 @@ public class CacheFacade {
      * @throws Exception from called methods.
      */
     public CacheFacade(String region) throws Exception {
-//        CompositeCacheManager ccm = CompositeCacheManager.getUnconfiguredInstance();
-//        Properties props = new Properties();
-//
-//        props.put("jcs.default", "DC");
-//        props.put("jcs.default.cacheattributes",
-//                "org.apache.jcs.engine.CompositeCacheAttributes");
-//
-//        ccm.configure(props);
-//        Properties props = new Properties();
-//        props.load(this.getClass().getResourceAsStream("/cache.ccf"));
-//        CompositeCacheManager ccm = CompositeCacheManager.getUnconfiguredInstance();
-//        ccm.configure(props);
-
-//        URL url = getClass().getResource("/ehcacheCompressedTiff.xml");
-//        manager = CacheManager.create(url);
-        // Establishing in-memory cache, programmatically.
-        manager = CacheManager.create();
-        Cache memoryOnlyCache = new Cache(
-                CACHE_NAME, 
-                CACHE_MAX_IN_MEM, 
-                CACHE_OFLOW_DISK, 
-                CACHE_ETERNAL, 
-                CACHE_TIME2LIVE_S, 
-                CACHE_TIME2IDLE_S
-        );
-        manager.addCache(memoryOnlyCache);
-        
-        //jcs = CacheAccess.getAccess(REGION_NAME); // Seed with defaults.
-        //jcs = JCS.getInstance(region);
+        // Establishing in-memory cache, declaratively.
+        URL url = getClass().getResource("/ehcacheCompressedTiff.xml");
+        manager = CacheManager.create(url);
         cachePopulator = new CachePopulator();
     }
 
@@ -137,23 +100,26 @@ public class CacheFacade {
      * @return result, after awaiting the future, or null on exception.
      */
     public SeekableStream get(final String id) {
-        log.info("Getting {}", id);
+        log.debug("Getting {}", id);
         SeekableStream rtnVal = null;
         try {
             Future<byte[]> futureBytes = getFuture(id);
             if (futureBytes == null) {
                 log.warn("No Future found for {}. Pushing data into cache.", id);
-                GeometricNeighborhood gn = new GeometricNeighborhood() {
-                    @Override
-                    public Set<File> getFiles() {
-                        Set<File> rtnVal = new HashSet<>();
-                        rtnVal.add(new File(id));
-                        return rtnVal;
-                    }
-                    
-                };
-                populateRegion(gn, false); // Add this, but do not kill old neighborhood.
-                futureBytes = getFuture(id);
+                // Ensure we get this exact, required file.
+                futureBytes = cachePopulator.cache(new File(id));
+//                // Now, 'move' the neighborhood.
+//                GeometricNeighborhood gn = new GeometricNeighborhood() {
+//                    @Override
+//                    public Set<File> getFiles() {
+//                        Set<File> rtnVal = new HashSet<>();
+//                        rtnVal.add(new File(id));
+//                        return rtnVal;
+//                    }
+//                    
+//                };
+//                populateRegion(gn, false); // Add this, but do not kill old neighborhood.
+//                futureBytes = getFuture(id);
             }
 
             if (futureBytes != null   &&   !futureBytes.isCancelled()) {                
@@ -167,6 +133,9 @@ public class CacheFacade {
         } catch (Exception ex) {
             log.error("Failure to resolve cached version of {}", id);
             ex.printStackTrace();
+        }
+        if (rtnVal == null) {
+            log.warn("Ultimately returning a null value for {}.", id);
         }
         return rtnVal;
     }
@@ -191,7 +160,7 @@ public class CacheFacade {
      * @todo get the zoom level as number or object, into this calculation.
      * @param focus neighborhood is around this point.
      */
-	public void setFocus(double[] focus) {
+	public synchronized void setFocus(double[] focus) {
         log.info("Setting focus...");
         if (calculateRegion(focus)) {
             populateRegion();
@@ -232,6 +201,7 @@ public class CacheFacade {
     }
 
     protected void populateRegion() {
+        log.info("Repopulating on focus.");
         populateRegion(neighborhood, false); // Cancellation is causing conflicts.
     }
     
@@ -241,13 +211,8 @@ public class CacheFacade {
         for (String id : futureArrays.keySet()) {
             Future<byte[]> futureArray = futureArrays.get(id);
             CachableWrapper wrapper = new CachableWrapper(futureArray);
+            log.debug("Adding {} to cache.", id);
             cache.put(new Element(id, wrapper));
-//            try {
-//                jcs.putSafe(id, futureArray);
-//            } catch (CacheException ce) {
-//                log.warn("Failed to put {}'s value into cache.  Error '{}'.", id, ce.getMessage());
-//                ce.printStackTrace();
-//            }
         }
     }
 
