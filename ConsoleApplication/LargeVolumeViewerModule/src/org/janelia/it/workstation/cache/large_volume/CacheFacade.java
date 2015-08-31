@@ -10,9 +10,7 @@ import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
 import java.io.Serializable;
 import java.net.URL;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -105,21 +103,12 @@ public class CacheFacade {
         try {
             Future<byte[]> futureBytes = getFuture(id);
             if (futureBytes == null) {
-                log.warn("No Future found for {}. Pushing data into cache.", id);
+                log.warn("No Future found for {}. Pushing data into cache.  Thread: {}.", id, Thread.currentThread().getName());
                 // Ensure we get this exact, required file.
                 futureBytes = cachePopulator.cache(new File(id));
-//                // Now, 'move' the neighborhood.
-//                GeometricNeighborhood gn = new GeometricNeighborhood() {
-//                    @Override
-//                    public Set<File> getFiles() {
-//                        Set<File> rtnVal = new HashSet<>();
-//                        rtnVal.add(new File(id));
-//                        return rtnVal;
-//                    }
-//                    
-//                };
-//                populateRegion(gn, false); // Add this, but do not kill old neighborhood.
-//                futureBytes = getFuture(id);
+                Cache cache = manager.getCache(CACHE_NAME);
+                log.info("Adding {} to cache.", id);
+                cache.put(new Element(id, new CachableWrapper(futureBytes)));
             }
 
             if (futureBytes != null   &&   !futureBytes.isCancelled()) {                
