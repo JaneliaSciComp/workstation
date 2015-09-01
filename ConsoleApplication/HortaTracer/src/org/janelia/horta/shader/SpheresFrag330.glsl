@@ -4,35 +4,35 @@
  * Sphere imposter fragment shader.
  */
 
-uniform vec4 color = vec4(0, 1, 0, 1);
-uniform mat4 projectionMatrix;
+uniform vec4 color = vec4(0, 1, 0, 1); // one color for all spheres
+uniform mat4 projectionMatrix; // needed for proper sphere depth calculation
 
 
-in vec3 imposterPos;
-in float pc, c2; // linear coefficients
-in vec3 center;
-in float fragRadius;
+in vec3 imposterPos; // imposter geometry location, in camera frame
+in float pc, c2; // pre-computed ray-casting quadratic formula linear coefficients
+in vec3 center; // sphere center in camera frame
+in float fragRadius; // sphere radius
 
 
 out vec4 fragColor;
 
 
-// defined in imposter_fns330.glsl
-vec2 sphere_nonlinear_coeffs(vec3 pos, vec2 pc_c2);
-vec3 sphere_surface_from_coeffs(vec3 pos, vec2 pc_c2, vec2 a2_d);
-vec3 light_rig(vec4 pos, vec3 normal, vec3 color);
-float fragDepthFromEyeXyz(vec3 eyeXyz, mat4 projectionMatrix);
+// methods defined in imposter_fns330.glsl
+vec2 sphere_nonlinear_coeffs(vec3 pos, float pc, float c2); // sphere surface ray-casting intermediate parameters
+vec3 sphere_surface_from_coeffs(vec3 pos, float pc, vec2 a2_d); //
+vec3 light_rig(vec3 pos, vec3 normal, vec3 color); // simple hard-coded shading, for testing
+float fragDepthFromEyeXyz(vec3 eyeXyz, mat4 projectionMatrix); // computes correct sphere depth-buffer value
 
 
 void main() {
-    vec2 pc_c2 = vec2(pc, c2);
-    vec2 a2_d = sphere_nonlinear_coeffs(imposterPos, pc_c2);
-    if (a2_d.y < 0)
+    vec2 a2_d = sphere_nonlinear_coeffs(imposterPos, pc, c2);
+    // fast-fail rays that miss sphere, before expensively solving exact surface location
+    if (a2_d.y < 0) // quadratic formula discriminant, (b^2 - 4ac) < 0
         discard; // ray through point does not intersect sphere
-    vec3 s = sphere_surface_from_coeffs(imposterPos, pc_c2, a2_d);
-    vec3 normal = 1.0 / fragRadius * (s - center);
+    vec3 s = sphere_surface_from_coeffs(imposterPos, pc, a2_d);
+    vec3 normal = 1.0 / fragRadius * (s - center); // normalized without an additional sqrt! :)
     fragColor = vec4(
-        light_rig(vec4(s, 1), normal, color.rgb),
-        1);
+        light_rig(s, normal, color.rgb),
+        color.a);
     gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
 }

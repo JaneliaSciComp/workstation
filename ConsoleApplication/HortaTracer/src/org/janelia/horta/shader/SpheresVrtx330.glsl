@@ -17,7 +17,6 @@ out float geomRadius; // pass radius to geometry shader
 
 
 void main() {
-    vec4 eyePos = modelViewMatrix * vec4(position, 1); // sphere center in camera frame
-    gl_Position = eyePos;
+    gl_Position = modelViewMatrix * vec4(position, 1); // sphere center in camera frame
     geomRadius = radius;
 }

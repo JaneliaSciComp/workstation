@@ -18,11 +18,11 @@ layout(triangle_strip, max_vertices=6) out; // only six vertices needed for "mid
 in float geomRadius[]; // sphere radius as vertex attribute
 
 
-out float fragRadius; // radius of sphere
+out float fragRadius; // pass radius of sphere to fragment shader
 out vec3 center; // center of sphere, in camera frame
 // the *linear* coefficients of the ray-tracing quadratic formula can be computed per-vertex, rather than per fragment.
-out float c2; // sphere ray-tracing quadratic-formula linear (actually constant) coefficient cee-squared
-out float pc; // sphere ray-tracing quadratic-formula linear coefficient pos-dot-center
+out float c2; // sphere ray-casting quadratic-formula linear (actually constant) coefficient cee-squared
+out float pc; // sphere ray-casting quadratic-formula linear coefficient pos-dot-center
 out vec3 imposterPos; // location of imposter bounding geometry, in camera frame
 
 
@@ -144,13 +144,13 @@ void mid_hull() {
 
 
 void main() {
-    vec4 center4a = gl_PositionIn[0];
-    center = center4a.xyz/center4a.w;
-    float radius = geomRadius[0];
-    fragRadius = radius;
-    c2 = dot(center, center) - radius*radius; // constant for all points
+    center = gl_PositionIn[0].xyz/gl_PositionIn[0].w; // sphere center is constant for all vertices
+    fragRadius = geomRadius[0]; // sphere radius is constant for all vertices
+    c2 = dot(center, center) - fragRadius*fragRadius; // c^2 coefficient is constant for all vertices
 
-    // near_hull(); // imposter in front of sphere
-    // far_hull(); // imposter behind sphere
-    mid_hull(); // simpler geometry, imposter intersects sphere
+    // Choice of imposter hull strategies below
+    // NOTE: modify the above "layout(..., max_vertices=...) out;" statement to match your chosen hull strategy
+    // near_hull(); // imposter in front of sphere (10 vertices)
+    // far_hull(); // imposter behind sphere (10 vertices)
+    mid_hull(); // simpler geometry, imposter intersects sphere (6 vertices)
  }
