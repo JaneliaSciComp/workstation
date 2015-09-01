@@ -7,18 +7,17 @@
 
 
 uniform mat4 modelViewMatrix = mat4(1);
-uniform float particleScale = 10.0; // pixels per scene unit?
-// uniform vec4 color;
 
 
-in vec3 position;
-in float radius;
+in vec3 position; // center of sphere
+in float radius; // radius of sphere
 
-out float geomRadius;
+
+out float geomRadius; // pass radius to geometry shader
 
 
 void main() {
-    vec4 eyePos = modelViewMatrix * vec4(position, 1);
+    vec4 eyePos = modelViewMatrix * vec4(position, 1); // sphere center in camera frame
     gl_Position = eyePos;
     geomRadius = radius;
 }

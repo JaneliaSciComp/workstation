@@ -48,7 +48,6 @@ import org.openide.util.Exceptions;
  */
 public class SpheresMaterial extends BasicMaterial
 {
-    private int particleScaleIndex = -1;
     private int colorIndex = 0;
     
     private final float[] color = new float[] {1, 0, 0, 1};
@@ -67,7 +66,6 @@ public class SpheresMaterial extends BasicMaterial
     @Override
     public void dispose(GL3 gl) {
         super.dispose(gl);
-        particleScaleIndex = 0;
         colorIndex = 0;
     }
     
@@ -79,9 +77,6 @@ public class SpheresMaterial extends BasicMaterial
     @Override
     public void init(GL3 gl) {
         super.init(gl);
-        particleScaleIndex = gl.glGetUniformLocation(
-            shaderProgram.getProgramHandle(),
-            "particleScale");
         colorIndex = gl.glGetUniformLocation(
             shaderProgram.getProgramHandle(),
             "color");
@@ -89,17 +84,9 @@ public class SpheresMaterial extends BasicMaterial
 
     @Override
     public void load(GL3 gl, AbstractCamera camera) {
-        if (particleScaleIndex == 0) 
+        if (colorIndex == 0) 
             init(gl);
         super.load(gl, camera);
-        float particleScale = 1.0f; // in pixels
-        if (camera instanceof PerspectiveCamera) {
-            PerspectiveCamera pc = (PerspectiveCamera)camera;
-            particleScale = 0.5f * pc.getViewport().getHeightPixels()
-                    / (float)Math.tan(0.5 * pc.getFovRadians());
-        }
-        // System.out.println("Particle scale = "+particleScale);
-        gl.glUniform1f(particleScaleIndex, particleScale);
         gl.glUniform4fv(colorIndex, 1, color, 0);
     }
     
