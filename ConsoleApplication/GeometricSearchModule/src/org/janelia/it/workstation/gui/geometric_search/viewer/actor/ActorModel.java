@@ -27,6 +27,18 @@ public class ActorModel implements VoxelViewerEventListener {
         } else if (event instanceof RenderablesClearAllEvent) {
             actors.clear();
             EventManager.sendEvent(this, new ActorsClearAllEvent());
+        } else if (event instanceof ActorSetVisibleEvent) {
+            ActorSetVisibleEvent actorSetVisibleEvent=(ActorSetVisibleEvent)event;
+            for (Actor actor : actors) {
+                if (actor.getName().equals(actorSetVisibleEvent.getName())) {
+                    boolean isVisible=actorSetVisibleEvent.isVisible();
+                    boolean alreadyVisible=actor.isVisible();
+                    if (isVisible!=alreadyVisible) {
+                        actor.setIsVisible(isVisible);
+                        EventManager.sendEvent(this, new ActorModifiedEvent());
+                    }
+                }
+            }
         }
     }
 

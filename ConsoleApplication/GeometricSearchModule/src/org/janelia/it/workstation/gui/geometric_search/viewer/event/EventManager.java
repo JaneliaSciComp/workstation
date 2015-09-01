@@ -40,16 +40,20 @@ public class EventManager {
 
     public static void sendEvent(Object object, VoxelViewerEvent event) {
         logger.info("*** sending event from "+object.getClass().getName()+" of type="+event.getClass().getName());
-        List<VoxelViewerEventListener> listeners=listenerMap.get(object);
-        if (listeners!=null) {
-            for (VoxelViewerEventListener listener : listeners) {
-                logger.info("*** >>> sending event to listener="+listener.getClass().getName());
-                listener.processEvent(event);
-            }
+        if (event instanceof ActorModifiedEvent) {
+            viewer.refresh();
         } else {
-            logger.error("Could not find listenerMap for object type="+object.getClass().getName());
+            List<VoxelViewerEventListener> listeners = listenerMap.get(object);
+            if (listeners != null) {
+                for (VoxelViewerEventListener listener : listeners) {
+                    logger.info("*** >>> sending event to listener=" + listener.getClass().getName());
+                    listener.processEvent(event);
+                }
+            } else {
+                logger.error("Could not find listenerMap for object type=" + object.getClass().getName());
+            }
+            viewer.refreshIfPending();
         }
-        viewer.refreshIfPending();
     }
 
 }

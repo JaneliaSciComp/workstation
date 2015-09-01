@@ -29,6 +29,7 @@ public class DenseVolumeActor extends Actor {
 
     public GL4SimpleActor createAndSetGLActor() {
         arrayCubeGLActor=new ArrayCubeGLActor(voxels, xSize, ySize, zSize, voxelUnitSize);
+        this.glActor=arrayCubeGLActor;
         return arrayCubeGLActor;
     }
 
