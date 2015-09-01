@@ -43,6 +43,7 @@ public class BlockTiffOctreeLoadAdapter
 extends AbstractTextureLoadAdapter 
 {
 	private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
+    public static final String CHANNEL_0_STD_TIFF_NAME = "default.0.tif";
     
 	// Metadata: file location required for local system as mount point.
 	private File topFolder;
@@ -141,6 +142,16 @@ extends AbstractTextureLoadAdapter
 		}
 		return path;
 	}
+    
+    public static int getStandardTiffFileSize(File topFolderParam) {
+        File file = new File(topFolderParam, CHANNEL_0_STD_TIFF_NAME);
+        if (file.exists()) {
+            return (int)file.length();
+        }
+        else {
+            throw new IllegalArgumentException("Invalid root directory.  No " + CHANNEL_0_STD_TIFF_NAME);
+        }
+    }
 	
 	@Override
 	public TextureData2dGL loadToRam(TileIndex tileIndex)
@@ -426,19 +437,19 @@ extends AbstractTextureLoadAdapter
             // X and Y slices?
             tileFormat.setHasXSlices(new File(topFolderParam, "YZ.0.tif").exists());
             tileFormat.setHasYSlices(new File(topFolderParam, "ZX.0.tif").exists());
-            tileFormat.setHasZSlices(new File(topFolderParam, "default.0.tif").exists());
+            tileFormat.setHasZSlices(new File(topFolderParam, CHANNEL_0_STD_TIFF_NAME).exists());
 
             // Deduce octree depth from directory structure depth
             int octreeDepth = 0;
             File deepFolder = topFolderParam;
-            File deepFile = new File(topFolderParam, "default.0.tif");
+            File deepFile = new File(topFolderParam, CHANNEL_0_STD_TIFF_NAME);
             while (deepFile.exists()) {
                 octreeDepth += 1;
                 File parentFolder = deepFolder;
                 // Check all possible children: some might be empty
                 for (int branch = 1; branch <= 8; ++branch) {
                     deepFolder = new File(parentFolder, "" + branch);
-                    deepFile = new File(deepFolder, "default.0.tif");
+                    deepFile = new File(deepFolder, CHANNEL_0_STD_TIFF_NAME);
                     if (deepFile.exists()) {
                         break; // found a deeper branch
                     }
@@ -448,7 +459,7 @@ extends AbstractTextureLoadAdapter
             tileFormat.setZoomLevelCount(octreeDepth);
 
             // Deduce other parameters from first image file contents
-            File tiff = new File(topFolderParam, "default.0.tif");
+            File tiff = new File(topFolderParam, CHANNEL_0_STD_TIFF_NAME);
             SeekableStream s = new FileSeekableStream(tiff);
             ImageDecoder decoder = ImageCodec.createImageDecoder("tiff", s, null);
             // Z dimension is related to number of tiff pages

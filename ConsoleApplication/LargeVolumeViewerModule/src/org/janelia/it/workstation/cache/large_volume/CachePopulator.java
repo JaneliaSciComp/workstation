@@ -24,13 +24,18 @@ public class CachePopulator {
     private final ExecutorService executor;
     private GeometricNeighborhood neighborhood;
     private final Map<String,Future<byte[]>> compressedDataFutures = new HashMap<>();
+    private int standardFileSize = 0;
     
     public CachePopulator() {
         this.executor = Executors.newFixedThreadPool(THREAD_COUNT);
     }
     
-    public Map<String,Future<byte[]>> retargetCache(GeometricNeighborhood neighborhood, boolean cancelOld, Cache cache) {
-        Map<String,Future<byte[]>> populatedMap = new HashMap<>();
+    public void setStandadFileSize(int size) {
+        standardFileSize = size;
+    }
+    
+    public Map<String,CacheFacade.CachableWrapper> retargetCache(GeometricNeighborhood neighborhood, boolean cancelOld, Cache cache) {
+        Map<String,CacheFacade.CachableWrapper> populatedMap = new HashMap<>();
         // Avoid re-launching on non-significant movement.
         if (! neighborhood.equals(this.neighborhood)) {
             this.neighborhood = neighborhood;
@@ -51,10 +56,17 @@ public class CachePopulator {
             // according to the new focus' relative position.
             for (File file: neighborhood.getFiles()) {
                 final String key = file.getAbsolutePath();
-                if (! compressedDataFutures.containsKey(key)  &&  cache.get(key) == null) {                    
-                    Future<byte[]> future = cache(file);
-                    compressedDataFutures.put(key, future);
-                    populatedMap.put(key, future);
+                if (! compressedDataFutures.containsKey(key)  &&  cache.get(key) == null) {    
+                    if (standardFileSize > 0) {
+                        byte[] bytes = new byte[standardFileSize];
+                        Future<byte[]> future = cache(file, bytes);
+                        compressedDataFutures.put(key, future);
+                        CacheFacade.CachableWrapper wrapper = new CacheFacade.CachableWrapper(future, bytes);
+                        populatedMap.put(key, wrapper);
+                    }
+                    else {
+                        throw new IllegalArgumentException("Pre-sized byte array required.");
+                    }
                 }
             }
         }
@@ -70,5 +82,15 @@ public class CachePopulator {
      */
     public Future<byte[]> cache(File file) {
         return executor.submit(new CachePopulatorWorker(file));
+    }
+
+    /**
+     * Push one file to cache.
+     *
+     * @param file which file.
+     * @return 'future' version.
+     */
+    public Future<byte[]> cache(File file, byte[] storage) {
+        return executor.submit(new CachePopulatorWorker(file, storage));
     }
 }

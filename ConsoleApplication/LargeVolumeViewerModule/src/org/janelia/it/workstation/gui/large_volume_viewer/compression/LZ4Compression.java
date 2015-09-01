@@ -61,10 +61,7 @@ public class LZ4Compression implements CompressionAlgorithm {
         if (canUncompress(infile)) {
             try {
                 Date startTime = new Date();
-
-                FileCollector collector = new FileCollector();
-                collector.collectFile(infile);
-                byte[] b = collector.getData();
+                byte[] b = collectBytes(infile);
                 Date endFileRead = new Date();
                 
                 log.info("Time required for file-read: {}s.", (endFileRead.getTime() - startTime.getTime()) / 1000);
@@ -89,12 +86,13 @@ public class LZ4Compression implements CompressionAlgorithm {
      */
     @Override
     public byte[] uncompress(byte[] inbytes) throws CompressionException {
+        
         Date startTime = new Date();
+        final int fileLen = (int) inbytes.length;
+        byte[] dest = new byte[fileLen * 3];
+        
         LZ4Factory factory = LZ4Factory.fastestJavaInstance();
         LZ4UnknownSizeDecompressor decompressor = factory.unknwonSizeDecompressor();
-        final int fileLen = (int) inbytes.length;
-
-        byte[] dest = new byte[fileLen * 3];
         int decompressedSize = decompressor.decompress(inbytes, 0, fileLen, dest, 0, dest.length);
         Date endDecompress = new Date();
         log.info("Time required for decompress-in-memory: {}s.", (endDecompress.getTime() - startTime.getTime()) / 1000);
@@ -102,6 +100,48 @@ public class LZ4Compression implements CompressionAlgorithm {
         byte[] trimmedDest = new byte[decompressedSize];
         System.arraycopy(dest, 0, trimmedDest, 0, decompressedSize);
         return trimmedDest;
+    }
+
+    @Override
+    public byte[] uncompress(File infile, byte[] outbytes) throws CompressionException {
+        if (canUncompress(infile)) {
+            try {
+                Date startTime = new Date();
+                byte[] b = collectBytes(infile);
+                Date endFileRead = new Date();
+
+                log.info("Time required for file-read: {}s.", (endFileRead.getTime() - startTime.getTime()) / 1000);
+
+                return uncompress(b, outbytes);
+
+            } catch (Exception ex) {
+                throw new CompressionException(ex);
+            }
+
+        } else {
+            throw new CompressionException("Cannot uncompress file without extens " + TARGET_EXTENSION);
+        }
+    }
+
+    public byte[] collectBytes(File infile) throws Exception {
+        FileCollector collector = new FileCollector();
+        collector.collectFile(infile);
+        byte[] b = collector.getData();
+        return b;
+    }
+
+    @Override
+    public byte[] uncompress(byte[] inbytes, byte[] outbytes) throws CompressionException {
+        Date startTime = new Date();
+        LZ4Factory factory = LZ4Factory.fastestJavaInstance();
+        LZ4UnknownSizeDecompressor decompressor = factory.unknwonSizeDecompressor();
+        final int fileLen = (int) inbytes.length;
+
+        decompressor.decompress(inbytes, 0, fileLen, outbytes, 0, outbytes.length);
+        Date endDecompress = new Date();
+        log.info("Time required for decompress-in-memory: {}s.", (endDecompress.getTime() - startTime.getTime()) / 1000);
+
+        return outbytes;
     }
 
 }

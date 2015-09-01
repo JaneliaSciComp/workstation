@@ -17,6 +17,7 @@ import java.util.concurrent.Future;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +43,26 @@ public class CacheFacade {
     private CacheManager manager;
     private CompressedFileResolver resolver = new CompressedFileResolver();
     private Double cameraZoom;
+    private int standardFileSize;
     
     private Logger log = LoggerFactory.getLogger(CacheFacade.class);
+    
+    /**
+     * Possibly temporary: using this class to wrap use of BTOLA, and hide
+     * the dependency.  If another way can be found to find the standard
+     * TIFF file size, this method need not be used.
+     * 
+     * @param folderUrl base folder containing TIFF files.
+     * @return size of a known one, as returned by BTOLA
+     */
+    public static int getStandardFileLength(URL folderUrl) {
+        try {
+            File folder = new File(folderUrl.toURI());
+            return BlockTiffOctreeLoadAdapter.getStandardTiffFileSize(folder);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
     
     /**
      * This is the guardian around the cache implementation.  Note that
@@ -53,15 +72,17 @@ public class CacheFacade {
      * @param region unique key for cache namespace.
      * @throws Exception from called methods.
      */
-    public CacheFacade(String region) throws Exception {
+    public CacheFacade(String region, int standardFileSize) throws Exception {
         // Establishing in-memory cache, declaratively.
         URL url = getClass().getResource("/ehcacheCompressedTiff.xml");
+        this.standardFileSize = standardFileSize;
         manager = CacheManager.create(url);
         cachePopulator = new CachePopulator();
+        cachePopulator.setStandadFileSize(standardFileSize);
     }
 
-    public CacheFacade() throws Exception {
-        this(CACHE_NAME);
+    public CacheFacade(int standardFileSize) throws Exception {
+        this(CACHE_NAME, standardFileSize);
     }
 
     /**
@@ -110,7 +131,8 @@ public class CacheFacade {
                     futureBytes = cachePopulator.cache(new File(id));
                     Cache cache = manager.getCache(CACHE_NAME);
                     log.info("Adding {} to cache.", id);
-                    cache.put(new Element(id, new CachableWrapper(futureBytes)));
+                    byte[] bytes = new byte[ standardFileSize ];
+                    cache.put(new Element(id, new CachableWrapper(futureBytes, bytes)));
                 }
             }
 
@@ -199,11 +221,9 @@ public class CacheFacade {
     
     protected void populateRegion(GeometricNeighborhood neighborhood, boolean cancelOld) {
         Cache cache = manager.getCache(CACHE_NAME);
-        Map<String, Future<byte[]>> futureArrays = cachePopulator.retargetCache(neighborhood, cancelOld, cache);
+        Map<String, CachableWrapper> futureArrays = cachePopulator.retargetCache(neighborhood, cancelOld, cache);
         for (String id : futureArrays.keySet()) {
-            Future<byte[]> futureArray = futureArrays.get(id);
-            CachableWrapper wrapper = new CachableWrapper(futureArray);
-            log.debug("Adding {} to cache.", id);
+            CachableWrapper wrapper = futureArrays.get(id);
             cache.put(new Element(id, wrapper));
         }
     }
@@ -214,14 +234,19 @@ public class CacheFacade {
      * at all times in memory, making the cached object transient should not 
      * be problematic.
      */
-    private static class CachableWrapper implements Serializable {
+    public static class CachableWrapper implements Serializable {
         private transient Future<byte[]> wrappedObject;
-        public CachableWrapper(Future<byte[]> object) {
+        private byte[] bytes; // The actual, final data.
+        public CachableWrapper(Future<byte[]> object, byte[] bytes) {
             wrappedObject = object;
         }
         
         public Future<byte[]> getWrappedObject() {
             return wrappedObject;
+        }
+        
+        public byte[] getStorage() {
+            return bytes;
         }
     }
 

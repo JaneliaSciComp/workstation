@@ -29,8 +29,21 @@ public class FileCollector {
      * @throws Exception 
      */
     public void collectFile(File infile) throws Exception {
-        final int fileLen = (int) infile.length();
+        final int fileLen = (int) infile.length();        
         byte[] b = new byte[fileLen];
+        
+        collectFile(infile, b);
+    }
+
+    /**
+     * "Read Fully" the bytes of the input file, to memory. Keep metadata found
+     * during the process.
+     *
+     * @param infile
+     * @throws Exception
+     */
+    public void collectFile(File infile, byte[] b) throws Exception {
+        final int fileLen = (int) infile.length();
         final FileInputStream fis = new FileInputStream(infile);
         readCount = fis.read(b);
         fis.close();

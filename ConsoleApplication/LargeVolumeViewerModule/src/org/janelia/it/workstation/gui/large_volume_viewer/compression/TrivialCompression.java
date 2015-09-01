@@ -50,4 +50,21 @@ public class TrivialCompression implements CompressionAlgorithm {
         return inbytes;
     }
 
+    @Override
+    public byte[] uncompress(File infile, byte[] outbytes) throws CompressionException {        
+        try {
+            FileCollector collector = new FileCollector();
+            collector.collectFile(infile, outbytes);
+            return collector.getData();
+        } catch (Exception ex) {
+            throw new CompressionException(ex);
+        }
+    }
+
+    @Override
+    public byte[] uncompress(byte[] inbytes, byte[] outbytes) throws CompressionException {
+        System.arraycopy(inbytes, 0, outbytes, 0, outbytes.length);
+        return outbytes;
+    }
+
 }

@@ -30,5 +30,9 @@ public interface CompressionAlgorithm {
     
     /** Compression */
     byte[] uncompress(File infile) throws CompressionException;
-    byte[] uncompress(byte[] inbutes) throws CompressionException;
+    byte[] uncompress(byte[] inbytes) throws CompressionException;
+
+    /** These may be used, if the uncompressed size is known in advance.  */
+    byte[] uncompress(File infile, byte[] outbytes) throws CompressionException;
+    byte[] uncompress(byte[] inbytes, byte[] outbytes) throws CompressionException;
 }

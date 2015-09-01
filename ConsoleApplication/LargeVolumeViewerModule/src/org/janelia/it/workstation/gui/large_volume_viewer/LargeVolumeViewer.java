@@ -127,7 +127,9 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 
     public void initCache(URL topFolderURL) {
         try {
-            CacheFacade cacheManager = new CacheFacade();
+            CacheFacade cacheManager = new CacheFacade(
+                    CacheFacade.getStandardFileLength(topFolderURL)
+            );
             cacheManager.setNeighborhoodBuilder(
                     new WorldExtentSphereBuilder(sharedVolumeImage, topFolderURL, 2000)
             );

@@ -40,6 +40,25 @@ public class CompressedFileResolver {
     }
 
     /**
+     * Resolves to seekable stream, and stores intermediate bytes into the
+     * provided destination--which must be the correct size for output.
+     * 
+     * @see #resolve(java.io.File) 
+     * @param infile what to uncompress.
+     * @param dest where to place uncompressed bytes.
+     * @return stream wrapped around byte array.
+     * @throws Exception 
+     */
+    public SeekableStream resolve(File infile, byte[] dest) throws Exception {
+        for (CompressionAlgorithm algorithm : chain) {
+            if (algorithm.canUncompress(infile)) {
+                return new ByteArraySeekableStream(algorithm.uncompress(infile, dest));
+            }
+        }
+        return null;
+    }
+
+    /**
      * Uses chain-of-responsibility to decide how to uncompress, and then
      * uncompresses, returning the uncompressed bytes.
      * 
@@ -51,6 +70,24 @@ public class CompressedFileResolver {
         for (CompressionAlgorithm algorithm : chain) {
             if (algorithm.canUncompress(infile)) {
                 return algorithm.uncompress(infile);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * As above, but specify a destination for the storage of uncompressed data.
+     * 
+     * @see #uncompress(java.io.File) 
+     * @param infile
+     * @param dest
+     * @return
+     * @throws Exception 
+     */
+    public byte[] uncompress(File infile, byte[] dest) throws Exception {
+        for (CompressionAlgorithm algorithm : chain) {
+            if (algorithm.canUncompress(infile)) {
+                return algorithm.uncompress(infile, dest);
             }
         }
         return null;
@@ -75,6 +112,26 @@ public class CompressedFileResolver {
         return null;
     }
     
+    /**
+     * Like above, but throw uncompressed bytes into a supplied buffer which
+     * must be the right side.
+     * 
+     * @see #resolve(byte[], java.io.File) 
+     * @param inbytes
+     * @param dest
+     * @param infile
+     * @return
+     * @throws Exception 
+     */
+    public SeekableStream resolve(byte[] inbytes, byte[] dest, File infile) throws Exception {
+        for (CompressionAlgorithm algorithm : chain) {
+            if (algorithm.canUncompress(infile)) {
+                return new ByteArraySeekableStream(algorithm.uncompress(inbytes, dest));
+            }
+        }
+        return null;
+    }
+
     /**
      * This resolver can uncompressed the input file either with an
      * algorithm or trivially with no action.  This method will find
