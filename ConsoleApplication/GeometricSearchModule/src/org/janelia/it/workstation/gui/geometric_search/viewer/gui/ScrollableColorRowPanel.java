@@ -55,4 +55,24 @@ public class ScrollableColorRowPanel extends ScrollableRowPanel {
             }
         }
     }
+
+    public void setEntryStatusColor(String name, Color color) {
+        ColorSelectionRow row=getRowByName(name);
+        if (row!=null) {
+            row.setColorStatus(color);
+        }
+    }
+
+    private ColorSelectionRow getRowByName(String name) {
+        for (Component component : components) {
+            if (component instanceof ColorSelectionRow) {
+                ColorSelectionRow row = (ColorSelectionRow)component;
+                if (row.getName().equals(name)) {
+                    return row;
+                }
+            }
+        }
+        return null;
+    }
+
 }
