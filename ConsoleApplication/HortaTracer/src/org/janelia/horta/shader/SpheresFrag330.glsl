@@ -6,6 +6,7 @@
 
 uniform vec4 color = vec4(0, 1, 0, 1); // one color for all spheres
 uniform mat4 projectionMatrix; // needed for proper sphere depth calculation
+uniform sampler2D lightProbe;
 
 
 in vec3 imposterPos; // imposter geometry location, in camera frame
@@ -22,6 +23,12 @@ vec2 sphere_nonlinear_coeffs(vec3 pos, float pc, float c2); // sphere surface ra
 vec3 sphere_surface_from_coeffs(vec3 pos, float pc, vec2 a2_d); //
 vec3 light_rig(vec3 pos, vec3 normal, vec3 color); // simple hard-coded shading, for testing
 float fragDepthFromEyeXyz(vec3 eyeXyz, mat4 projectionMatrix); // computes correct sphere depth-buffer value
+vec3 image_based_lighting(
+        vec3 pos, // surface position, in camera frame
+        vec3 normal, // surface normal, in camera frame
+        vec3 diffuseColor, 
+        vec3 reflectColor,
+        sampler2D lightProbe);
 
 
 void main() {
@@ -32,7 +39,8 @@ void main() {
     vec3 s = sphere_surface_from_coeffs(imposterPos, pc, a2_d);
     vec3 normal = 1.0 / fragRadius * (s - center); // normalized without an additional sqrt! :)
     fragColor = vec4(
-        light_rig(s, normal, color.rgb),
+        image_based_lighting(s, normal, color.rgb, color.rgb, lightProbe),
+        // light_rig(s, normal, color.rgb),
         color.a);
     gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
 }

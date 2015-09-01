@@ -9,6 +9,37 @@
  * license terms ( http://license.janelia.org/license/jfrc_copyright_1_1.html ).
  */
 
+
+// color patch using image based lighting, using only diffuse and reflection components, for now.
+vec3 image_based_lighting(
+        vec3 pos, // surface position, in camera frame
+        vec3 normal, // surface normal, in camera frame
+        vec3 diffuseColor, 
+        vec3 reflectColor,
+        sampler2D lightProbe)
+{
+    // Assume light probe has diffuse probe on left, reflection probe on right
+    const vec4 diffuseTcPos = vec4(0.25, 0.5, 0.245, -0.49); // center and radius of light probe image
+    const vec4 reflectTcPos = vec4(0.75, 0.5, 0.245, -0.49); // center and radius of light probe image
+
+    // convert normal vector to position in diffuse light probe texture
+    float radius = 0.50 * (-normal.z + 1.0);
+    vec2 direction = normalize(normal.xy);
+    vec2 diffuseTc = diffuseTcPos.xy + diffuseTcPos.zw * radius * direction;
+    vec3 iblDiffuse = texture(lightProbe, diffuseTc).rgb;
+
+    // convert position and normal to position in reflection light probe texture
+    vec3 view = pos;
+    vec3 r = normalize(view - 2.0 * dot(normal, view) * normal); // reflection vector
+    radius = 0.50 * (-r.z + 1.0);
+    direction = normalize(r.xy);
+    vec2 reflectTc = reflectTcPos.xy + reflectTcPos.zw * radius * direction;
+    vec3 iblReflect = texture(lightProbe, reflectTc).rgb;
+
+    return iblDiffuse * diffuseColor + iblReflect * reflectColor;
+}
+
+
 // Hard coded light system, just for testing.
 // Light parameters should be same ones in CPU host program, for comparison
 vec3 light_rig(vec3 pos, vec3 normal, vec3 surface_color) {

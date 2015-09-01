@@ -40,6 +40,7 @@ import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.ShaderStep;
 import org.janelia.gltools.material.BasicMaterial;
+import org.janelia.gltools.texture.Texture2d;
 import org.openide.util.Exceptions;
 
 /**
@@ -48,12 +49,23 @@ import org.openide.util.Exceptions;
  */
 public class SpheresMaterial extends BasicMaterial
 {
+    // shader uniform parameter handles
     private int colorIndex = 0;
+    private int lightProbeIndex = 0;
     
+    private Texture2d lightProbeTexture;
     private final float[] color = new float[] {1, 0, 0, 1};
 
     public SpheresMaterial() {
         shaderProgram = new SpheresShader();
+        try {
+            lightProbeTexture = new Texture2d();
+            lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
+                    "/org/janelia/gltools/material/lightprobe/"
+                            + "Office1W165Both.ppm"));
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }    
     }
 
     // Override displayMesh() to display something other than triangles
@@ -67,6 +79,8 @@ public class SpheresMaterial extends BasicMaterial
     public void dispose(GL3 gl) {
         super.dispose(gl);
         colorIndex = 0;
+        lightProbeIndex = 0;
+        lightProbeTexture.dispose(gl);
     }
     
     @Override
@@ -80,6 +94,10 @@ public class SpheresMaterial extends BasicMaterial
         colorIndex = gl.glGetUniformLocation(
             shaderProgram.getProgramHandle(),
             "color");
+        lightProbeIndex = gl.glGetUniformLocation(
+            shaderProgram.getProgramHandle(),
+            "lightProbe");
+        lightProbeTexture.init(gl);
     }
 
     @Override
@@ -87,7 +105,15 @@ public class SpheresMaterial extends BasicMaterial
         if (colorIndex == 0) 
             init(gl);
         super.load(gl, camera);
+        lightProbeTexture.bind(gl, 0);
         gl.glUniform4fv(colorIndex, 1, color, 0);
+        gl.glUniform1i(lightProbeIndex, 0); // use default texture unit, 0
+    }
+    
+    @Override
+    public void unload(GL3 gl) {
+        super.unload(gl);
+        lightProbeTexture.unbind(gl);
     }
     
     @Override

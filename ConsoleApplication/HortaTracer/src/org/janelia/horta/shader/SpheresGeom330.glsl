@@ -131,7 +131,8 @@ void far_hull() {
 
 // Simplified imposter geometry using only edge points, i.e. ignoring near/far corner.
 // Uses only 4 triangles and 1 triangle strip
-// Intersects sphere roughly near center plane, but sort of undulating triangles
+// Intersects sphere roughly near center plane, but sort of undulating triangles,
+// like a cyclohexane "chair" configuration, if you know what that is...
 void mid_hull() {
     emit_one_vertex(p3);
     emit_one_vertex(p4);
