@@ -11,6 +11,8 @@ public abstract class Actor {
     String name;
     GL4SimpleActor glActor;
     Vector4 color;
+    float brightness=1.0f;
+    float transparency=1.0f;
 
     public Vector4 getColor() {
         return color;
@@ -18,6 +20,22 @@ public abstract class Actor {
 
     public void setColor(Vector4 color) {
         this.color = color;
+    }
+
+    public float getBrightness() {
+        return brightness;
+    }
+
+    public void setBrightness(float brightness) {
+        this.brightness = brightness;
+    }
+
+    public float getTransparency() {
+        return transparency;
+    }
+
+    public void setTransparency(float transparency) {
+        this.transparency = transparency;
     }
 
     public String getName() {

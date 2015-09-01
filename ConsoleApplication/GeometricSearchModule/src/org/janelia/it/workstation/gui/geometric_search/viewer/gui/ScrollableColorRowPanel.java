@@ -15,21 +15,29 @@ import java.util.ArrayList;
 /**
  * Created by murphys on 8/28/2015.
  */
-public class ScrollableColorRowPanel extends ScrollableRowPanel {
+public class ScrollableColorRowPanel extends JPanel {
 
     private static final Logger logger = LoggerFactory.getLogger(ScrollableColorRowPanel.class);
 
+    protected JPanel rowPanel = new JPanel();
+
+    protected java.util.List<Component> components=new ArrayList<>();
+
     public ScrollableColorRowPanel() {
-        super();
+        rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.Y_AXIS));
+        JScrollPane scrollPane = new JScrollPane(rowPanel);
+        scrollPane.setPreferredSize(new Dimension(250, 800));
+        add(scrollPane);
     }
 
-    public void addEntry(final String name) {
+    public void addEntry(final String name, SyncedCallback colorCallback) {
         logger.info("Adding row for name="+name);
         final ColorSelectionRow l = new ColorSelectionRow(name);
+        l.setColorSelectionCallback(colorCallback);
         l.setName(name);
         l.putClientProperty("Synthetica.opaque", Boolean.FALSE);
         l.setBorder(BorderFactory.createBevelBorder(1));
-        final ScrollableRowPanel actionSource=this;
+        final ScrollableColorRowPanel actionSource=this;
 
         l.getVisibleCheckBox().addActionListener(new ActionListener() {
             @Override
@@ -73,6 +81,17 @@ public class ScrollableColorRowPanel extends ScrollableRowPanel {
             }
         }
         return null;
+    }
+
+    public void clear() {
+
+        logger.info("clear() start");
+
+        for (Component component : components) {
+            logger.info("removing component="+component.getName());
+            rowPanel.remove(component);
+        }
+        components.clear();
     }
 
 }

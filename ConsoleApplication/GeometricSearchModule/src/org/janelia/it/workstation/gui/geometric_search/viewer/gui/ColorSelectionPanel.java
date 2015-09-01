@@ -1,8 +1,5 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.gui;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -10,28 +7,13 @@ import java.awt.image.BufferedImage;
 /**
  * Created by murphys on 9/1/2015.
  */
-public class ColorPanel extends JPanel {
-
-    private static final Logger logger = LoggerFactory.getLogger(ScrollableColorRowPanel.class);
+public class ColorSelectionPanel extends JPanel {
 
     private BufferedImage img;
     boolean initialized=false;
-    Color color;
 
-    public ColorPanel(int width, int height, Color color) {
+    public ColorSelectionPanel(int width, int height) {
         img=new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        this.color=color;
-    }
-
-    public Color getColor() {
-        return color;
-    }
-
-    public void setColor(Color color) {
-        this.color = color;
-        initialized=false;
-        logger.info("setColor set to "+color.toString());
-        repaint();
     }
 
     @Override
@@ -72,8 +54,44 @@ public class ColorPanel extends JPanel {
 
     private void initializeImage() {
         Graphics2D g = img.createGraphics();
-        g.setPaint (color);
-        g.fillRect(0, 0, img.getWidth(), img.getHeight());
+
+        float XMAX=1.0f*img.getWidth()-1.0f;
+        float YMAX=1.0f*img.getHeight()-1.0f;
+        for (int x=0;x<img.getWidth();x++) {
+            for (int y=0;y<img.getHeight();y++) {
+                float xf=x*1.0f;
+                float yf=y*1.0f;
+                float xn=(xf/XMAX)*3.0f;
+                float yn=yf/YMAX;
+                int red=0;
+                int green=0;
+                int blue=0;
+
+                if (xn <= 1.0f) {               // RED...green(X) blue (Y)
+                    red=255;
+                    green=(int)(255f*xn);
+                    blue=(int)(255f*yn);
+                } else if (xn <= 2.0f) {        // GREEN...red(X) blue (Y)
+                    xn -= 1.0f;
+                    red=(int)(255f*xn);
+                    green=255;
+                    blue=(int)(255f*yn);
+                } else {                        // BLUE...red (X) green (Y)
+                    xn -= 2.0f;
+                    red=(int)(255f*xn);
+                    green=(int)(255f*yn);
+                    blue=255;
+                }
+
+                g.setPaint(new Color(red, green, blue));
+                g.fillRect(x, y, x+1, y+1);
+            }
+        }
+    }
+
+    public Color getColorFromClickCoordinate(Point point) {
+        Color color = new Color(img.getRGB(point.x, point.y));
+        return color;
     }
 
 }
