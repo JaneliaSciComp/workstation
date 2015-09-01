@@ -3,27 +3,28 @@
 
 /**
  * Geometry shader for sphere imposters.
- * Eventually, this will convert points into camera-facing bounding geometry
+ * Converts points at sphere center, into camera-facing bounding geometry
  */
 
 uniform mat4 projectionMatrix = mat4(1);
 
 
-layout(points) in;
+layout(points) in; // input vertices are sphere centers
 // Create viewer-facing half-cube imposter geometry 
 layout(triangle_strip, max_vertices=10) out;
 
 
-in float geomRadius[];
+in float geomRadius[]; // sphere radius as vertex attribute
 
 
-out float fragRadius;
-out vec3 center;
-out float c2; // sphere linear coefficient cee-squared
-out float pc; // sphere linear coefficient pos-dot-center
-out vec3 imposterPos;
+out float fragRadius; // radius of sphere
+out vec3 center; // center of sphere, in camera frame
+out float c2; // sphere ray-tracing quadratic-formula linear coefficient cee-squared
+out float pc; // sphere ray-tracing quadratic-formula linear coefficient pos-dot-center
+out vec3 imposterPos; // location of imposter bounding geometry, in camera frame
 
 
+// Create a bounding cube, with one corner oriented toward the viewer.
 // Rotate cube of size 2, so that corner 1,1,1 points toward +Z
 // First rotate -45 degrees about Y axis, to orient +XZ edge toward +Z
 // These values are all "const", so they are computed once at shader compile time.
@@ -48,6 +49,7 @@ const mat3 identity = mat3(
     0, 1, 0,
     0, 0, 1);
 const mat3 rotCorner = rotXfoo * rotY45; // identity; // rotXfoo * rotYm45;
+// Relative locations of all eight corners of the cube (see diagram below)
 const vec3 p1 = rotCorner * vec3(+1,+1,+1); // corner oriented toward viewer
 const vec3 p2 = rotCorner * vec3(-1,+1,-1); // upper rear corner
 const vec3 p3 = rotCorner * vec3(-1,+1,+1); // upper left corner
@@ -55,19 +57,88 @@ const vec3 p4 = rotCorner * vec3(-1,-1,+1); // lower left corner
 const vec3 p5 = rotCorner * vec3(+1,-1,+1); // lower rear corner
 const vec3 p6 = rotCorner * vec3(+1,-1,-1); // lower right corner
 const vec3 p7 = rotCorner * vec3(+1,+1,-1); // upper right corner
+const vec3 p8 = rotCorner * vec3(-1, -1, -1); // rear back corner
 
-/***
+/*
       2___________7                  
       /|         /|
      / |        / |                Y
    3/_________1/  |                ^
-    |  |_______|__|6               |
+    | 8|_______|__|6               |
     |  /       |  /                |
     | /        | /                 /---->X
     |/_________|/                 /
     4          5                 /
                                 Z
 */
+
+
+void emit_one_vertex(vec3 offset) {
+    imposterPos = center + geomRadius[0] * offset;
+    gl_Position = projectionMatrix * vec4(imposterPos, 1);
+    pc = dot(imposterPos, center);
+    EmitVertex();
+}
+
+
+// half-cube imposter hull that is strictly closer to viewer than actual sphere
+// (this property might be useful for clever early-depth-test optimization)
+// (position of hull also affects pattern of appearance/disappearance at near and far clip planes.)
+void near_hull() {
+    // Half cube can be constructed using 2 triangle strips,
+    // each with 3 triangles
+    // First strip: 2-3-1-4-5
+    emit_one_vertex(p2);
+    emit_one_vertex(p3);
+    emit_one_vertex(p1);
+    emit_one_vertex(p4);
+    emit_one_vertex(p5);
+    EndPrimitive();
+    // Second strip: 5-6-1-7-2
+    emit_one_vertex(p5);
+    emit_one_vertex(p6);
+    emit_one_vertex(p1);
+    emit_one_vertex(p7);
+    emit_one_vertex(p2);
+    EndPrimitive();
+}
+
+
+// half-cube imposter hull that is strictly further from viewer than actual sphere
+// (this property might be useful for clever early-depth-test optimization)
+// (position of hull also affects pattern of appearance/disappearance at near and far clip planes.)
+// The far hull differs from the near hull only in replacing p1 with p8.
+void far_hull() {
+    // Half cube can be constructed using 2 triangle strips,
+    // each with 3 triangles
+    // First strip: 2-3-8-4-5
+    emit_one_vertex(p2);
+    emit_one_vertex(p3);
+    emit_one_vertex(p8);
+    emit_one_vertex(p4);
+    emit_one_vertex(p5);
+    EndPrimitive();
+    // Second strip: 5-6-8-7-2
+    emit_one_vertex(p5);
+    emit_one_vertex(p6);
+    emit_one_vertex(p8);
+    emit_one_vertex(p7);
+    emit_one_vertex(p2);
+    EndPrimitive();
+}
+
+// Simplified imposter geometry using only edge points, i.e. ignoring near/far corner.
+// Uses only 4 triangles and 1 triangle strip
+// Intersects sphere roughly near center plane, but sort of undulating triangles
+void mid_hull() {
+    emit_one_vertex(p3);
+    emit_one_vertex(p4);
+    emit_one_vertex(p2);
+    emit_one_vertex(p5);
+    emit_one_vertex(p7);
+    emit_one_vertex(p6);
+    EndPrimitive();
+}
 
 
 void main() {
@@ -77,63 +148,7 @@ void main() {
     fragRadius = radius;
     c2 = dot(center, center) - radius*radius; // same for all points
 
-    // Half cube can be constructed using 2 triangle strips,
-    // each with 3 triangles
-
-    // First strip: 2-3-1-4-5
-    imposterPos = center + radius*p2;
-    gl_Position = projectionMatrix * vec4(imposterPos, 1);
-    pc = dot(imposterPos, center);
-    EmitVertex();
-
-    imposterPos = center + radius*p3;
-    gl_Position = projectionMatrix * vec4(imposterPos, 1);
-    pc = dot(imposterPos, center);
-    EmitVertex();
-
-    imposterPos = center + radius*p1;
-    gl_Position = projectionMatrix * vec4(imposterPos, 1);
-    pc = dot(imposterPos, center);
-    EmitVertex();
-
-    imposterPos = center + radius*p4;
-    gl_Position = projectionMatrix * vec4(imposterPos, 1);
-    pc = dot(imposterPos, center);
-    EmitVertex();
-
-    imposterPos = center + radius*p5;
-    gl_Position = projectionMatrix * vec4(imposterPos, 1);
-    pc = dot(imposterPos, center);
-    EmitVertex();
-
-    EndPrimitive();
-
-    // Second strip: 5-6-1-7-2
-    imposterPos = center + radius*p5;
-    gl_Position = projectionMatrix * vec4(imposterPos, 1);
-    pc = dot(imposterPos, center);
-    EmitVertex();
-
-    imposterPos = center + radius*p6;
-    gl_Position = projectionMatrix * vec4(imposterPos, 1);
-    pc = dot(imposterPos, center);
-    EmitVertex();
-
-    imposterPos = center + radius*p1;
-    gl_Position = projectionMatrix * vec4(imposterPos, 1);
-    pc = dot(imposterPos, center);
-    EmitVertex();
-
-    imposterPos = center + radius*p7;
-    gl_Position = projectionMatrix * vec4(imposterPos, 1);
-    pc = dot(imposterPos, center);
-    EmitVertex();
-
-    imposterPos = center + radius*p2;
-    gl_Position = projectionMatrix * vec4(imposterPos, 1);
-    pc = dot(imposterPos, center);
-    EmitVertex();
-
-    EndPrimitive();
-
+    // near_hull();
+    // far_hull();
+    mid_hull();
  }
