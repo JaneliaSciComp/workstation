@@ -46,7 +46,7 @@ import org.openide.util.Exceptions;
  *
  * @author Christopher Bruns
  */
-public class SpheresMaterial extends BasicMaterial
+public class ConesMaterial extends BasicMaterial
 {
     // shader uniform parameter handles
     private int colorIndex = 0;
@@ -55,8 +55,8 @@ public class SpheresMaterial extends BasicMaterial
     private Texture2d lightProbeTexture;
     private final float[] color = new float[] {1, 0, 0, 1};
 
-    public SpheresMaterial() {
-        shaderProgram = new SpheresShader();
+    public ConesMaterial() {
+        shaderProgram = new ConesShader();
         try {
             lightProbeTexture = new Texture2d();
             lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
@@ -70,7 +70,7 @@ public class SpheresMaterial extends BasicMaterial
     // Override displayMesh() to display something other than triangles
     @Override
     protected void displayMesh(GL3 gl, MeshActor mesh, AbstractCamera camera, Matrix4 modelViewMatrix) {
-        mesh.displayParticles(gl);
+        mesh.displayEdges(gl);
     }
     
     @Override
@@ -139,20 +139,25 @@ public class SpheresMaterial extends BasicMaterial
                 color[3]);
     }    
     
-    private static class SpheresShader extends BasicShaderProgram
+    private static class ConesShader extends BasicShaderProgram
     {
-        public SpheresShader()
+        public ConesShader()
         {
             try {
                 getShaderSteps().add(new ShaderStep(GL3.GL_VERTEX_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "SpheresVrtx330.glsl"))
+                                        + "ConesVrtx330.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_GEOMETRY_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "SpheresGeom330.glsl"))
+                                        + "imposter_fns330.glsl"))
+                );
+                getShaderSteps().add(new ShaderStep(GL3.GL_GEOMETRY_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/horta/shader/"
+                                        + "ConesGeom330.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
                         getClass().getResourceAsStream(
@@ -162,7 +167,7 @@ public class SpheresMaterial extends BasicMaterial
                 getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "SpheresFrag330.glsl"))
+                                        + "ConesFrag330.glsl"))
                 );
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);

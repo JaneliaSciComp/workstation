@@ -70,6 +70,14 @@ implements ConstVector3
             data[i] += rhs.data[i];
         return this;
     }
+    
+    public Vector3 plus(Vector3 rhs) {
+        return new Vector3(this).add(rhs);
+    }
+
+    public Vector3 minus(Vector3 rhs) {
+        return new Vector3(this).sub(rhs);
+    }
 
     public void copy(Vector3 rhs) {
         System.arraycopy(rhs.data, 0, data, 0, 3);

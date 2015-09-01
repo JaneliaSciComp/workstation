@@ -84,6 +84,15 @@ implements Collection<Vertex>, ObservableInterface
             return null;
     }
     
+    public int addEdge(int ix1, int ix2) {
+        return addEdge(new Edge(ix1, ix2));
+    }
+    
+    public int addEdge(Edge edge) {
+        edges.add(edge);
+        return edges.size() - 1;
+    }
+    
 //    public int addFace(Integer[] indices) {
 //        return addFace(new Face(indices));
 //    }

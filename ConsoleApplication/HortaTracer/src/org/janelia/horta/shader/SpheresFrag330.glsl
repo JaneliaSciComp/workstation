@@ -38,8 +38,9 @@ void main() {
         discard; // ray through point does not intersect sphere
     vec3 s = sphere_surface_from_coeffs(imposterPos, pc, a2_d);
     vec3 normal = 1.0 / fragRadius * (s - center); // normalized without an additional sqrt! :)
+    vec3 reflectColor = mix(color.rgb, vec3(1,1,1), 0.5); // midway between metal and plastic.
     fragColor = vec4(
-        image_based_lighting(s, normal, color.rgb, color.rgb, lightProbe),
+        image_based_lighting(s, normal, color.rgb, reflectColor, lightProbe),
         // light_rig(s, normal, color.rgb),
         color.a);
     gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
