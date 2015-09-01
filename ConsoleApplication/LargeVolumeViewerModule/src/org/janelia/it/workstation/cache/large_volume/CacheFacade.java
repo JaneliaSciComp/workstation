@@ -101,14 +101,17 @@ public class CacheFacade {
         log.debug("Getting {}", id);
         SeekableStream rtnVal = null;
         try {
-            Future<byte[]> futureBytes = getFuture(id);
-            if (futureBytes == null) {
-                log.warn("No Future found for {}. Pushing data into cache.  Thread: {}.", id, Thread.currentThread().getName());
-                // Ensure we get this exact, required file.
-                futureBytes = cachePopulator.cache(new File(id));
-                Cache cache = manager.getCache(CACHE_NAME);
-                log.info("Adding {} to cache.", id);
-                cache.put(new Element(id, new CachableWrapper(futureBytes)));
+            Future<byte[]> futureBytes = null;
+            synchronized (this) {
+                futureBytes = getFuture(id);
+                if (futureBytes == null) {
+                    log.warn("No Future found for {}. Pushing data into cache.  Thread: {}.", id, Thread.currentThread().getName());
+                    // Ensure we get this exact, required file.
+                    futureBytes = cachePopulator.cache(new File(id));
+                    Cache cache = manager.getCache(CACHE_NAME);
+                    log.info("Adding {} to cache.", id);
+                    cache.put(new Element(id, new CachableWrapper(futureBytes)));
+                }
             }
 
             if (futureBytes != null   &&   !futureBytes.isCancelled()) {                
