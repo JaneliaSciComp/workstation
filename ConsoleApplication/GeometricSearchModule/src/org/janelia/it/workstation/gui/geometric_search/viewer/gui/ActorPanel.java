@@ -23,17 +23,13 @@ public class ActorPanel extends ScrollableColorRowPanel implements VoxelViewerEv
         if (event instanceof ActorAddedEvent) {
             ActorAddedEvent actorAddedEvent=(ActorAddedEvent)event;
             final Actor actor=actorAddedEvent.getActor();
-            addEntry(actor.getName(), new SyncedCallback() {
-                @Override
-                public void performAction(Object o) {
-                    Color selectedColor=(Color)o;
-                    Vector4 colorVector=new Vector4(0,0,0,1f);
-                    selectedColor.getRGBColorComponents(colorVector.toArray());
-                    actor.setColor(colorVector);
-                    setEntryStatusColor(actor.getName(), selectedColor);
-                    EventManager.sendEvent(this, new ActorModifiedEvent());
-                }
-            });
+
+            SyncedCallback colorSelectionCallback=createColorSelectionCallback(actor);
+            SyncedCallback brightnessCallback=createBrightnessCallback(actor);
+            SyncedCallback transparencyCallback=createTransparencyCallback(actor);
+
+
+            addEntry(actor.getName(), colorSelectionCallback, brightnessCallback, transparencyCallback);
             Vector4 actorColor = actor.getColor();
             if (actorColor!=null) {
                 float[] colorData = actorColor.toArray();
@@ -49,4 +45,39 @@ public class ActorPanel extends ScrollableColorRowPanel implements VoxelViewerEv
         }
     }
 
+    private SyncedCallback createColorSelectionCallback(final Actor actor) {
+        return new SyncedCallback() {
+            @Override
+            public void performAction(Object o) {
+                Color selectedColor=(Color)o;
+                Vector4 colorVector=new Vector4(0,0,0,1f);
+                selectedColor.getRGBColorComponents(colorVector.toArray());
+                actor.setColor(colorVector);
+                setEntryStatusColor(actor.getName(), selectedColor);
+                EventManager.sendEvent(this, new ActorModifiedEvent());
+            }
+        };
+    }
+
+    private SyncedCallback createBrightnessCallback(final Actor actor) {
+        return new SyncedCallback() {
+            @Override
+            public void performAction(Object o) {
+                Float brightness=(Float)o;
+                actor.setBrightness(brightness);
+                EventManager.sendEvent(this, new ActorModifiedEvent());
+            }
+        };
+    }
+
+    private SyncedCallback createTransparencyCallback(final Actor actor) {
+        return new SyncedCallback() {
+            @Override
+            public void performAction(Object o) {
+                Float transparency=(Float)o;
+                actor.setTransparency(transparency);
+                EventManager.sendEvent(this, new ActorModifiedEvent());
+            }
+        };
+    }
 }

@@ -3,11 +3,8 @@ package org.janelia.it.workstation.gui.geometric_search.viewer;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gui.ActorPanel;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gui.DatasetPanel;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gui.RenderablePanel;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gui.*;
 import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.Renderable;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gui.ScrollableRowPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

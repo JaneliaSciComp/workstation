@@ -26,14 +26,16 @@ public class ScrollableColorRowPanel extends JPanel {
     public ScrollableColorRowPanel() {
         rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane(rowPanel);
-        scrollPane.setPreferredSize(new Dimension(250, 800));
+        scrollPane.setPreferredSize(new Dimension(320, 800));
         add(scrollPane);
     }
 
-    public void addEntry(final String name, SyncedCallback colorCallback) {
+    public void addEntry(final String name, SyncedCallback colorCallback, SyncedCallback brightnessCallback, SyncedCallback transparencyCallback) {
         logger.info("Adding row for name="+name);
         final ColorSelectionRow l = new ColorSelectionRow(name);
         l.setColorSelectionCallback(colorCallback);
+        l.setBrightnessCallback(brightnessCallback);
+        l.setTransparencyCallback(transparencyCallback);
         l.setName(name);
         l.putClientProperty("Synthetica.opaque", Boolean.FALSE);
         l.setBorder(BorderFactory.createBevelBorder(1));

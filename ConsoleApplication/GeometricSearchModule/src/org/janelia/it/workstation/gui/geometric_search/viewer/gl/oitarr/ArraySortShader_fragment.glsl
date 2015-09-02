@@ -86,22 +86,7 @@ void sort_fragment_list(int frag_count)
 }
 
 vec4 blend(vec4 current_color, vec4 new_color) {
-
-    float cIntensity=current_color.x*current_color.x+
-                     current_color.y*current_color.y+
-                     current_color.z*current_color.z;
-
-    float nIntensity=new_color.x*new_color.x+
-                      new_color.y*new_color.y+
-                      new_color.z*new_color.z;
-
-
-    if (nIntensity>cIntensity) {
-        return new_color;
-    } else {
-        return current_color;
-    }
-    //return mix(current_color, new_color, new_color.a);
+    return mix(current_color, new_color, new_color.a);
 }
 
 vec4 calculate_final_color(int frag_count) {
@@ -109,11 +94,18 @@ vec4 calculate_final_color(int frag_count) {
     vec4 final_color = vec4(0.0, 0.0, 0.0, 0.0);
     for (i=0; i < frag_count; i++) {
        vec4 color = unpackUnorm4x8(frags[i].colorUPack);
+
+       // MIP
        float f=final_color.x+final_color.y+final_color.z;
        float c=color.x+color.y+color.z;
        if (c>f) {
             final_color=color;
+            f=c;
        }
+
+       if (f>650) break;
+
+       // Transparency
        //final_color = blend(final_color, color);
     }
     return final_color;

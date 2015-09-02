@@ -5,83 +5,142 @@ package org.janelia.it.workstation.gui.geometric_search.viewer.gui;
  *
  *  From GNU Lesser GPL re:
  *
- *  https://code.google.com/p/synthetizer-studio/
+ *  adapted from https://code.google.com/p/synthetizer-studio/
  *
  */
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.Point;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.Formatter;
 import java.util.Locale;
 
-import javax.swing.ImageIcon;
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 public class Knob extends JPanel implements MouseListener, MouseMotionListener
 {
-    private static final long serialVersionUID = -2398408682438548381L;
+    private final Logger logger = LoggerFactory.getLogger(Knob.class);
+
+    private static final int PREF_WIDTH=50;
+    private static final int PREF_HEIGHT=50;
+
+    private Image  background2_;
+    private Image  pointer_;
+    private double value_;
+    private Point  dragStart_;
+    private String name_;
+
+    private double min=-1.0;
+    private double max=1.0;
+
+    boolean showValue=true;
+    boolean showName=true;
 
     public Knob(String name)
     {
         super();
+        setup(name);
+    }
 
-        name_ = name;
+    public Knob(String name, double min, double max, double initialValue) {
+        super();
+        this.min=min;
+        this.max=max;
+        setValue(initialValue);
+        setup(name);
+    }
 
+    private void setup(String name) {
+        name_=name;
         setupGeneral();
         setupImages();
+    }
+
+    public void setShowValue(boolean showValue) {
+        this.showValue=showValue;
+    }
+
+    public void setShowName(boolean showName) {
+        this.showName=showName;
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(PREF_WIDTH, PREF_HEIGHT);
     }
 
     public void setupGeneral()
     {
         setOpaque(false);
         setVisible(true);
-
-        value_ = -1;
-
         addMouseListener(this);
         addMouseMotionListener(this);
-
-        setBounds(0, 0, 55, 65);
     }
 
     public void setupImages()
     {
-        background1_ = new ImageIcon("../images/scale_minmax.png").getImage();
-        background2_ = new ImageIcon("../images/knob.png").getImage();
 
-        pointer_ = new ImageIcon("../images/green_pointer.png").getImage();
+        try {
+            background2_ = ImageIO.read(getClass().getResourceAsStream("/org/janelia/it/workstation/gui/geometric_search/viewer/images/knob.png"));
+            pointer_ = ImageIO.read(getClass().getResourceAsStream("/org/janelia/it/workstation/gui/geometric_search/viewer/images/green_pointer.png"));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            logger.error(ex.toString());
+        }
+
     }
 
     public void paint(Graphics g)
     {
+
         super.paint(g);
 
-        g.drawImage(background1_, 0, 0, null);
-        g.drawImage(background2_, 7, 4, null);
+        int panelWidth=getWidth();
+        int panelHeight=getHeight();
+
+        int imageWidth=background2_.getWidth(null);
+        int imageHeight=background2_.getHeight(null);
+
+        int widthOffset = (panelWidth-imageWidth)/2;
+        int heightOffset = (panelHeight-imageHeight)/2;
+
+        g.drawImage(background2_, widthOffset, heightOffset, null);
 
         // Interpolate value between 5pi/4 and -pi/4
-        double angle = ((-value_ + 1.) / 2.) * ((6. * Math.PI) / 4.)
-                - (Math.PI / 4.);
+        double angle = ((-value_ + 1.) / 2.) * ((6. * Math.PI) / 4.) - (Math.PI / 4.);
+
         angle = 2 * Math.PI - angle;
-        g.drawImage(pointer_, (int) (Math.cos(angle) * 12.) + 2,
-                (int) (Math.sin(angle) * 12.) + 16, null);
+
+        g.drawImage(pointer_,
+                (int) (Math.cos(angle) * 12.) + widthOffset - 4,
+                (int) (Math.sin(angle) * 12.) + imageHeight/2 + heightOffset - 7,
+                null);
 
         Font f = g.getFont();
-        g.setFont(new Font("Arial", Font.BOLD, 9));
-        g.setColor(Color.white);
-        g.drawString(
-                new Formatter(new StringBuilder(), Locale.FRENCH).format("%+1.1f",
-                        value_).toString(), 18, 27);
-        g.setColor(Color.black);
-        g.setFont(new Font("Arial", Font.BOLD, 10));
-        g.drawString(name_, 55/2 - (g.getFontMetrics().stringWidth(name_)/2), 62);
-        g.setFont(f);
+
+        if (showValue) {
+            g.setFont(new Font("Arial", Font.BOLD, 9));
+            g.setColor(Color.lightGray);
+            String valueString = new Formatter(new StringBuilder(), Locale.FRENCH).format("%+1.1f", getNumericalValue()).toString();
+            g.drawString(valueString,
+                    PREF_WIDTH / 2 - (g.getFontMetrics().stringWidth(name_) / 2),
+                    heightOffset + imageHeight + 6);
+        }
+
+        if (showName) {
+            g.setColor(Color.black);
+            g.setFont(new Font("Arial", Font.BOLD, 10));
+            g.drawString(name_,
+                    PREF_WIDTH / 2 - (g.getFontMetrics().stringWidth(name_) / 2),
+                    heightOffset + imageHeight/2 + 4);
+            g.setFont(f);
+        }
+
     }
 
     public void inc(double delta)
@@ -144,11 +203,22 @@ public class Knob extends JPanel implements MouseListener, MouseMotionListener
 
     }
 
-    private Image  background1_;
-    private Image  background2_;
-    private Image  pointer_;
-    private double value_;
-    private Point  dragStart_;
-    private String name_;
+    private double getNumericalValue() {
+        return ((value_+1.0)/2.0)*(max-min)+min;
+    }
+
+    public void setValue(double value) {
+        value_=(((value-min)/(max-min))*2.0)-1.0;
+        if (value_<-1.0) {
+            value_=-1.0;
+        } else if (value_>1.0) {
+            value_=1.0;
+        }
+    }
+
+    public double getValue() {
+        return getNumericalValue();
+    }
+
 }
 
