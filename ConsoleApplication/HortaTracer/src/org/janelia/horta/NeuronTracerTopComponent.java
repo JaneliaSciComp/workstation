@@ -387,6 +387,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         sceneWindow.getRenderer().addActor(new BasicGL3Actor(null) {
             @Override
             public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
+                super.display(gl, camera, parentModelViewMatrix);
                 gl.glEnable(GL3.GL_DEPTH_TEST);
                 // gl.glDepthFunc(GL3.GL_LESS);
                 // gl.glDepthMask(true);
@@ -394,6 +395,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                 for (GL3Actor actor : currentNeuronActors.values()) {
                     actor.display(gl, camera, parentModelViewMatrix);
                 }
+            }
+            @Override
+            public void dispose(GL3 gl) {
+                for (GL3Actor actor : currentNeuronActors.values()) {
+                    actor.dispose(gl);
+                }                
+                super.dispose(gl);
             }
         });
         
