@@ -28,8 +28,10 @@ out float tAP; // cone ray-casting quadratic-formula linear (actually constant) 
 out float qe_c; // cone ray-casting quadratic-formula linear coefficient
 out float qe_half_b; // cone ray-casting quadratic-formula linear coefficient
 out vec3 qe_undot_half_a; // cone ray-casting quadratic-formula linear coefficient
-
+out float halfConeLength;
+out vec3 aHat;
 out vec3 imposterPos; // location of imposter bounding geometry, in camera frame
+out float normalScale;
 
 
 // forward declaration of methods defined in imposter_fns330.glsl
@@ -102,6 +104,9 @@ void main() {
     float cone_length = length(cone_spine);
     fragRadius = mix(geomRadius[0], geomRadius[1], 0.5); // radius at cone center
     taper = (geomRadius[1] - geomRadius[0]) / cone_length;
+    halfConeLength = 0.5 * cone_length;
+    aHat = -cone_spine/cone_length;
+    normalScale = 1.0 / sqrt(1.0 + taper*taper);
 
     // Compute local coordinate system of cone bounding box
     // Put "X" axis of bounding geometry along cone axis
