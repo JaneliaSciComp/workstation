@@ -10,6 +10,12 @@
  */
 
 
+// TODO - parameterize these lighting parameters
+const float specularCoefficient = 0.3; // range 0-1
+const float diffuseCoefficient = 1.0 - specularCoefficient; // range 0-1
+const float metallicCoefficient = 0.5; // range 0-1
+const float roughnessCoefficient = 0.5; // range 0-1, currently unused TODO
+
 // color patch using image based lighting, using only diffuse and reflection components, for now.
 vec3 image_based_lighting(
         vec3 pos, // surface position, in camera frame
@@ -26,7 +32,7 @@ vec3 image_based_lighting(
     float radius = 0.50 * (-normal.z + 1.0);
     vec2 direction = normalize(normal.xy);
     vec2 diffuseTc = diffuseTcPos.xy + diffuseTcPos.zw * radius * direction;
-    vec3 iblDiffuse = texture(lightProbe, diffuseTc).rgb;
+    vec3 iblDiffuse = diffuseCoefficient * texture(lightProbe, diffuseTc).rgb;
 
     // convert position and normal to position in reflection light probe texture
     vec3 view = pos;
@@ -34,7 +40,7 @@ vec3 image_based_lighting(
     radius = 0.50 * (-r.z + 1.0);
     direction = normalize(r.xy);
     vec2 reflectTc = reflectTcPos.xy + reflectTcPos.zw * radius * direction;
-    vec3 iblReflect = texture(lightProbe, reflectTc).rgb;
+    vec3 iblReflect = 35 * specularCoefficient * texture(lightProbe, reflectTc).rgb;
 
     return iblDiffuse * diffuseColor + iblReflect * reflectColor;
 }

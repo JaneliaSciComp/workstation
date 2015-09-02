@@ -72,6 +72,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
 import javax.imageio.ImageIO;
+import javax.media.opengl.GL;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
@@ -381,21 +382,20 @@ public final class NeuronTracerTopComponent extends TopComponent
         List<MultipassRenderer> renderers = sceneWindow.getRenderer().getMultipassRenderers();
         renderers.clear();
         renderers.add(neuronMPRenderer0);
-        
-        // OLD WAY : TODO - remove below
-        
-        // 1) First actor in the list creates a background color gradient
-        // sceneWindow.getRenderer().addActor(new ColorBackgroundActor(topColor, bottomColor));
-        
-        // 2) Second actor draws volume images
-        /* 
-        mprActor = new MultipassVolumeActor(
-                null,
-                sceneWindow.getGLAutoDrawable(),
-                brightnessModel
-        );
-        sceneWindow.getRenderer().addActor(mprActor);
-        */
+                
+        // 2.5) Other neurite model Aug 2015 CMB
+        sceneWindow.getRenderer().addActor(new BasicGL3Actor(null) {
+            @Override
+            public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
+                gl.glEnable(GL3.GL_DEPTH_TEST);
+                // gl.glDepthFunc(GL3.GL_LESS);
+                // gl.glDepthMask(true);
+                gl.glClear(GL3.GL_DEPTH_BUFFER_BIT);
+                for (GL3Actor actor : currentNeuronActors.values()) {
+                    actor.display(gl, camera, parentModelViewMatrix);
+                }
+            }
+        });
         
         // 3) Neurite model
         for (NeuriteActor tracingActor : tracingInteractor.createActors()) {
@@ -408,16 +408,6 @@ public final class NeuronTracerTopComponent extends TopComponent
             });
         }
 
-        // 3.5) Other neurite model Aug 2015 CMB
-        sceneWindow.getRenderer().addActor(new BasicGL3Actor(null) {
-            @Override
-            public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
-                for (GL3Actor actor : currentNeuronActors.values()) {
-                    actor.display(gl, camera, parentModelViewMatrix);
-                }
-            }
-        });
-        
         // 4) Scale bar
         sceneWindow.getRenderer().addActor(scaleBar);
         

@@ -133,7 +133,7 @@ public class ConesActor extends BasicGL3Actor
             neuron.notifyObservers();
         if (! isVisible()) return;
         // if (meshGeometry.size() < 1) return;
-        gl.glDisable(GL3.GL_DEPTH_TEST);
+        // gl.glDisable(GL3.GL_DEPTH_TEST);
         super.display(gl, camera, parentModelViewMatrix);       
     }
 
