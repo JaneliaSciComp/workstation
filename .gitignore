@@ -2,6 +2,7 @@ flyworkstation.log
 workstation.log
 build
 build_eclipse
+target
 dist
 private
 jacs/src/org/janelia/it/jacs/server/ie/jaxb
@@ -10,6 +11,10 @@ shared/src/org/janelia/it/jacs/shared/blast/blastxmlparser/jaxb
 /ConsoleApplication/SharedModelComputeWrapper/src/jacs.properties
 /buildprocess/intellij-make/
 ConsoleApplication/SharedModelComputeWrapper/release
-jacs.iws
 /.metadata
 /ConsoleApplication/HortaTracer/*.log
+.idea
+*.iws
+*.ipr
+*.iws
+*~
