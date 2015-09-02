@@ -59,7 +59,7 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
     private String name = "(unnamed neuron)";
     private List<NeuronVertex> nodes = new ArrayList<>();
     private final ComposableObservable changeObservable = new ComposableObservable();
-    private Color color = Color.WHITE;
+    private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private boolean visible = true;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 

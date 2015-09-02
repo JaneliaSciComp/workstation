@@ -328,7 +328,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 for (NeuronReconstruction neuron : workspace.getNeurons()) {
                     if (! currentNeuronActors.containsKey(neuron)) {
                         SwcActor na = new SwcActor(neuron);
-                        na.setColor(Color.PINK);
+                        // na.setColor(Color.PINK);
                         na.setVisible(true);
                         currentNeuronActors.put(neuron, na);
                     }
