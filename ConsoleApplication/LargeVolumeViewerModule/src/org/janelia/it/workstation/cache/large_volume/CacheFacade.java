@@ -10,6 +10,7 @@ import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
 import java.io.Serializable;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -44,6 +45,7 @@ public class CacheFacade {
     private CompressedFileResolver resolver = new CompressedFileResolver();
     private Double cameraZoom;
     private int standardFileSize;
+    private String cacheName;
     
     private Logger log = LoggerFactory.getLogger(CacheFacade.class);
     
@@ -74,6 +76,8 @@ public class CacheFacade {
      */
     public CacheFacade(String region, int standardFileSize) throws Exception {
         // Establishing in-memory cache, declaratively.
+        log.info("Creating a cache {}.", region);
+        cacheName = region;
         URL url = getClass().getResource("/ehcacheCompressedTiff.xml");
         this.standardFileSize = standardFileSize;
         manager = CacheManager.create(url);
@@ -94,7 +98,7 @@ public class CacheFacade {
      */
 	public Future<byte[]> getFuture(String id) {
         Future<byte[]> rtnVal = null;
-        Cache cache = manager.getCache(CACHE_NAME);
+        Cache cache = manager.getCache(cacheName);
         Element cachedElement = cache.get(id);
         if (cachedElement != null) {
             CachableWrapper wrapper = (CachableWrapper) cachedElement.getValue();
@@ -129,10 +133,11 @@ public class CacheFacade {
                     log.warn("No Future found for {}. Pushing data into cache.  Thread: {}.", id, Thread.currentThread().getName());
                     // Ensure we get this exact, required file.
                     futureBytes = cachePopulator.cache(new File(id));
-                    Cache cache = manager.getCache(CACHE_NAME);
+                    Cache cache = manager.getCache(cacheName);
                     log.info("Adding {} to cache.", id);
                     byte[] bytes = new byte[ standardFileSize ];
                     cache.put(new Element(id, new CachableWrapper(futureBytes, bytes)));
+                    dumpKeys();
                 }
             }
 
@@ -152,6 +157,15 @@ public class CacheFacade {
             log.warn("Ultimately returning a null value for {}.", id);
         }
         return rtnVal;
+    }
+
+    public void dumpKeys() {
+        Cache cache = manager.getCache(cacheName);
+        List keys = cache.getKeys();
+        System.out.println("All Keys:=-----------------------------------");
+        for (Object key: keys) {
+            System.out.println("KEY:" + key);
+        }
     }
 
     /**
@@ -220,12 +234,14 @@ public class CacheFacade {
     }
     
     protected void populateRegion(GeometricNeighborhood neighborhood, boolean cancelOld) {
-        Cache cache = manager.getCache(CACHE_NAME);
+        Cache cache = manager.getCache(cacheName);
         Map<String, CachableWrapper> futureArrays = cachePopulator.retargetCache(neighborhood, cancelOld, cache);
         for (String id : futureArrays.keySet()) {
             CachableWrapper wrapper = futureArrays.get(id);
+            log.info("Populating {} to cache.", id);
             cache.put(new Element(id, wrapper));
         }
+        dumpKeys();
     }
 
     /**
@@ -243,6 +259,10 @@ public class CacheFacade {
         
         public Future<byte[]> getWrappedObject() {
             return wrappedObject;
+        }
+        
+        public byte[] getWrappedByteArray() {
+            return bytes;
         }
         
         public byte[] getStorage() {
