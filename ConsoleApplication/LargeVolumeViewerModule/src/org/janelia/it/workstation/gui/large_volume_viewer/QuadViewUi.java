@@ -1144,7 +1144,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             String [] mbmPrefixes = {
                     "/groups/mousebrainmicro/mousebrainmicro/",
                     "/nobackup/mousebrainmicro/",
-                    "/tier2/mousebrainmicro/mousebrainmicro/"
+                    "/tier2/mousebrainmicro/mousebrainmicro/",
+                    "/tier2/mousebrainmicro-nb/"
             };
             Path linuxPrefix = null;
             for (String testPrefix: mbmPrefixes) {
@@ -1175,7 +1176,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
             // the last, middle piece can be nothing or one of these
             //  mounts names (nothing = enclosing dir is mounted directly
-            String [] mountNames = {"", "mousebrainmicro",
+            String [] mountNames = {"", "mousebrainmicro", "mousebrainmicro-nb",
                     "nobackup/mousebrainmicro", "mousebrainmicro/mousebrainmicro"};
 
             boolean found = false;
