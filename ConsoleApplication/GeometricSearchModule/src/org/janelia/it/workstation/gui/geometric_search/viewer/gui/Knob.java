@@ -212,7 +212,6 @@ public class Knob extends JPanel implements MouseListener, MouseMotionListener
         if (exponential) {
             double expValue=Math.expm1(normedValue)/(Math.E - 1.0);
             double expScaledValue = expValue*expValue*(max-min)+min;
-            logger.info("scaledValue="+scaledValue+" expScaledValue="+expScaledValue);
             return expScaledValue;
         } else {
             return scaledValue;

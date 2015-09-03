@@ -288,10 +288,9 @@ public class GLModel implements VoxelViewerEventListener {
                         float voxelUnitSize = arrayCubeGLActor.getVoxelUnitSize();
                         cubeShader.setVoxelUnitSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
                         Vector4 actorColor=actor.getColor();
-                        float brightness=actor.getBrightness();
                         float transparency=actor.getTransparency();
                         float[] data=actorColor.toArray();
-                        Vector4 actualColor=new Vector4(data[0]*brightness, data[1]*brightness, data[2]*brightness, transparency);
+                        Vector4 actualColor=new Vector4(data[0], data[1], data[2], transparency);
                         float[] actualData=actualColor.toArray();
                         for (int i=0;i<4;i++) {
                             if (actualData[i]<0f) {
@@ -301,6 +300,8 @@ public class GLModel implements VoxelViewerEventListener {
                             }
                         }
                         cubeShader.setDrawColor(gl, actualColor);
+                        float brightness=actor.getBrightness();
+                        cubeShader.setBrightness(gl, brightness);
                     }
                 });
             }

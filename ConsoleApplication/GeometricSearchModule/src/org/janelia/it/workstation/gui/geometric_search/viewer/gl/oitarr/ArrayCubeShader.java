@@ -65,4 +65,10 @@ public class ArrayCubeShader extends ArrayDrawShader {
         checkGlError(gl, "ArrayCubeShader setDepth() error");
     }
 
+    public void setBrightness(GL4 gl, float brightness) {
+        logger.info("setBrightness()="+brightness);
+        setUniform(gl, "brightness", brightness);
+        checkGlError(gl, "ArrayCubeShader setBrightness() error");
+    }
+
 }
