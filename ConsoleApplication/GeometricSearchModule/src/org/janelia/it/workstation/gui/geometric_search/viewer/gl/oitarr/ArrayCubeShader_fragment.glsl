@@ -53,7 +53,7 @@ void main()
     color.w = dopac;
     float totalIntensity=color.x+color.y+color.z;
 
-    if (totalIntensity>0.05) {
+    if (totalIntensity>0.03) {
 
         ivec2 fl = ivec2(gl_FragCoord.xy);
         uint oldPosition = imageAtomicAdd(head_pointer_image, fl, 1);
