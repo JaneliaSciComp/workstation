@@ -43,6 +43,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
     private double voxelMicrometers;
     private File topFolder;
     private TileFormatSource tileFormatSource;
+    private double[] focusPlusZoom = null;
     private static Logger log = LoggerFactory.getLogger(WorldExtentSphereBuilder.class);
 
     /**
@@ -128,6 +129,30 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
 	 */
     @Override
     public GeometricNeighborhood buildNeighborhood(double[] focus, Double zoom) {
+        //synchronized(this) {
+            double[] newFnZ = new double[4];
+            newFnZ[0] = focus[0];
+            newFnZ[1] = focus[1];
+            newFnZ[2] = focus[2];
+            newFnZ[3] = zoom;
+            if (focusPlusZoom == null) {
+                focusPlusZoom = newFnZ;
+            }
+            else {
+                boolean sameAsBefore = true;
+                for (int i = 0; i < 4; i++) {
+                    if (focusPlusZoom[i] != newFnZ[i]) {
+                        sameAsBefore = false;
+                    }
+                }
+                if (sameAsBefore) {
+                    log.debug("Bailing...same as before.");
+                    return null;
+                } else {
+                    focusPlusZoom = newFnZ;
+                }
+            }
+        //}
         WorldExtentSphere neighborhood = new WorldExtentSphere();
         TileFormat tileFormat = tileFormatSource.getTileFormat();
         if (tileHalfSize == null) {

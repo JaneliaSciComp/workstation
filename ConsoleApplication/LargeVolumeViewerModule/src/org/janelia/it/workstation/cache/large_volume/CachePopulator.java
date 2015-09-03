@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import net.sf.ehcache.Cache;
 
 /**
@@ -27,7 +28,7 @@ public class CachePopulator {
     private int standardFileSize = 0;
     
     public CachePopulator() {
-        this.executor = Executors.newFixedThreadPool(THREAD_COUNT);
+        this.executor = Executors.newFixedThreadPool(THREAD_COUNT, new CustomNamedThreadFactory());
     }
     
     public void setStandadFileSize(int size) {
@@ -92,5 +93,18 @@ public class CachePopulator {
      */
     public Future<byte[]> cache(File file, byte[] storage) {
         return executor.submit(new CachePopulatorWorker(file, storage));
+    }
+    
+    private static class CustomNamedThreadFactory implements ThreadFactory {
+
+        private static int _threadNum = 1;
+        
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r);
+            t.setName("CachePopulatorThread_" + _threadNum++);
+            return t;
+        }
+        
     }
 }

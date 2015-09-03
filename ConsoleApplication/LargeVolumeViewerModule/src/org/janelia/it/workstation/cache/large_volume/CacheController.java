@@ -96,7 +96,8 @@ public class CacheController {
 
         @Override
         public void zoomChanged(Double zoom) {
-            manager.setCameraZoom(zoom);
+            Runnable r = new ZoomChanger(manager, zoom);
+            executor.submit(r);
         }
 
         @Override
@@ -139,5 +140,20 @@ public class CacheController {
             }
             manager.setFocus(focusArr);
         }
+    }
+    
+    private static class ZoomChanger implements Runnable {
+        private CacheFacade manager;
+        private Double zoom;
+        public ZoomChanger(CacheFacade manager, Double zoom) {
+            this.manager = manager;
+            this.zoom = zoom;
+        }
+        
+        @Override
+        public void run() {
+            manager.setCameraZoom(zoom);
+        }
+        
     }
 }
