@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
  */
 public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
     
-    private SharedVolumeImage sharedVolumeImage;
     private CompressedFileResolver resolver = new CompressedFileResolver();
     private double radiusInMicrons;
     private double[] tileHalfSize;
@@ -43,6 +42,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
     private double micrometerVoxels;
     private double voxelMicrometers;
     private File topFolder;
+    private TileFormatSource tileFormatSource;
     private static Logger log = LoggerFactory.getLogger(WorldExtentSphereBuilder.class);
 
     /**
@@ -92,9 +92,32 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
      * @param radius lower-bound micrometers to extend.
      */
     public WorldExtentSphereBuilder(SharedVolumeImage sharedVolumeImage, URL topFolderURL, double radius) throws URISyntaxException {
-        this.sharedVolumeImage = sharedVolumeImage;
+        setTileFormatSource( new SVITileFormatSource(sharedVolumeImage));
+        
         this.radiusInMicrons = radius;
         this.topFolder = new File(topFolderURL.toURI());
+    }
+    
+    /**
+     * Simplistic constructor, helpful for testing.
+     * 
+     * @see #WorldExtentSphereBuilder(org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage, java.net.URL, double) 
+     * @param tileFormat
+     * @param topFolder
+     * @param radius 
+     */
+    public WorldExtentSphereBuilder(final TileFormat tileFormat, File topFolder, double radius) {
+        setTileFormatSource( new TileFormatSource() {
+            public TileFormat getTileFormat() {
+                return tileFormat;
+            }
+        });
+        this.radiusInMicrons = radius;
+        this.topFolder = topFolder;
+    }
+    
+    public void setTileFormatSource(TileFormatSource tfs) {
+        this.tileFormatSource = tfs;
     }
 
 	/**
@@ -106,7 +129,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
     @Override
     public GeometricNeighborhood buildNeighborhood(double[] focus, Double zoom) {
         WorldExtentSphere neighborhood = new WorldExtentSphere();
-        TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
+        TileFormat tileFormat = tileFormatSource.getTileFormat();
         if (tileHalfSize == null) {
             tileHalfSize = getTileHalfSize(tileFormat);
         }
@@ -277,5 +300,21 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         return neededTiles;
     }
 
+    public static interface TileFormatSource {
+        TileFormat getTileFormat();
+    }
+    
+    private static class SVITileFormatSource implements TileFormatSource {
+        private SharedVolumeImage svi;
+        public SVITileFormatSource(SharedVolumeImage svi) {
+            this.svi = svi;
+        }
+        @Override
+        public TileFormat getTileFormat() {
+            TileFormat tileFormat = svi.getLoadAdapter().getTileFormat();
+            return tileFormat;
+        }
+        
+    }
 
 }

@@ -18,6 +18,7 @@ import java.util.concurrent.Future;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
 
 import org.slf4j.Logger;
@@ -137,7 +138,7 @@ public class CacheFacade {
                     log.info("Adding {} to cache.", id);
                     byte[] bytes = new byte[ standardFileSize ];
                     cache.put(new Element(id, new CachableWrapper(futureBytes, bytes)));
-                    dumpKeys();
+                    //dumpKeys();
                 }
             }
 
@@ -162,7 +163,7 @@ public class CacheFacade {
     public void dumpKeys() {
         Cache cache = manager.getCache(cacheName);
         List keys = cache.getKeys();
-        System.out.println("All Keys:=-----------------------------------");
+        System.out.println("All Keys:=-----------------------------------: " + keys.size());
         for (Object key: keys) {
             System.out.println("KEY:" + key);
         }
@@ -239,9 +240,10 @@ public class CacheFacade {
         for (String id : futureArrays.keySet()) {
             CachableWrapper wrapper = futureArrays.get(id);
             log.info("Populating {} to cache.", id);
-            cache.put(new Element(id, wrapper));
+            final Element element = new Element(id, wrapper);
+            cache.put(element);
         }
-        dumpKeys();
+        //dumpKeys();
     }
 
     /**
@@ -251,23 +253,29 @@ public class CacheFacade {
      * be problematic.
      */
     public static class CachableWrapper implements Serializable {
+        
+        // The sizing of this transient, future object must be ignored,
+        // because otherwise, the ObjectGraphWalker from ehcache will
+        // leak into the entire JVM, signalling many warnings.
+        @IgnoreSizeOf
         private transient Future<byte[]> wrappedObject;
+
+        // Not seeing max depth exceeded problems with empty future ref.
+        //private Future<String> someObjectWhichMightCauseProblems;
+        
+        // No max depth exceeded problem with just transient;
+        //private transient String aThing = "I BET YOU THIS WILL CAUSE PROBLEMS\n";
+        
         private byte[] bytes; // The actual, final data.
         public CachableWrapper(Future<byte[]> object, byte[] bytes) {
             wrappedObject = object;
+            this.bytes = bytes;
         }
         
         public Future<byte[]> getWrappedObject() {
             return wrappedObject;
         }
         
-        public byte[] getWrappedByteArray() {
-            return bytes;
-        }
-        
-        public byte[] getStorage() {
-            return bytes;
-        }
     }
 
 }

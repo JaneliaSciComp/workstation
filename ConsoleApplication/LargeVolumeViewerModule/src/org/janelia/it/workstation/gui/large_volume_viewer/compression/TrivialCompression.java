@@ -61,10 +61,17 @@ public class TrivialCompression implements CompressionAlgorithm {
         }
     }
 
+    /**
+     * Ignoring the outbytes, here.  Truly a trivial operation.
+     * 
+     * @param inbytes data, which is returned.
+     * @param outbytes unused
+     * @return the inbytes
+     * @throws CompressionException 
+     */
     @Override
     public byte[] uncompress(byte[] inbytes, byte[] outbytes) throws CompressionException {
-        System.arraycopy(inbytes, 0, outbytes, 0, outbytes.length);
-        return outbytes;
+        return inbytes;
     }
 
 }
