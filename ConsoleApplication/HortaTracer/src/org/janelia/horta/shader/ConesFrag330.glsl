@@ -1,11 +1,11 @@
 #version 330
 
 /**
- * Sphere imposter fragment shader.
+ * Truncated cone imposter fragment shader.
  */
 
-uniform vec4 color = vec4(0, 1, 0, 1); // one color for all spheres
-uniform mat4 projectionMatrix; // needed for proper sphere depth calculation
+uniform vec4 color = vec4(0, 1, 0, 1); // one color for all cones
+uniform mat4 projectionMatrix; // needed for proper depth calculation
 uniform sampler2D lightProbe;
 
 

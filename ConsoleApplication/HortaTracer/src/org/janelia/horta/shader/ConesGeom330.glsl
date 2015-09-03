@@ -98,12 +98,52 @@ void cone_hull(mat3 frame2348, mat3 frame1567) {
 void main() {
     vec3 c1 = gl_PositionIn[0].xyz/gl_PositionIn[0].w; // center of smaller cone end
     vec3 c2 = gl_PositionIn[1].xyz/gl_PositionIn[1].w; // center of larger cone end
+    float r1 = geomRadius[0];
+    float r2 = geomRadius[1];
+
+    // To make cones line up perfectly with the spheres, the ends
+    // and radii need to be changed. Either on the CPU,
+    // or here, in the shader on the GPU. Doing so on the GPU could
+    // allow better dynamic changes to the radii.
+    // This is a subtle effect that mainly affects cones 
+    // connecting spheres of very different radii.
+    bool postModifyRadii = true;
+    if (postModifyRadii) {
+        // Modify locations and radii, so cone is flush with adjacent spheres
+        vec3 cs1 = c1; // center of first sphere
+        vec3 cs2 = c2; // center of second sphere
+        float rs1 = r1;
+        float rs2 = r2;
+        // Swap so r2 is always the largest
+        if (rs2 < rs1) {
+            cs2 = c1;
+            cs1 = c2;
+            rs2 = r1;
+            rs1 = r2;
+        }
+        float d = length(cs2 - cs1); // distance between sphere centers
+        // half cone angle, to just touch each sphere
+        float sinAlpha = (rs2 - rs1) / d;
+        float cosAlpha = sqrt(1 - sinAlpha*sinAlpha);
+
+        // Actual cone terminal radii might be smaller than sphere radii
+        r1 = cosAlpha * rs1;
+        r2 = cosAlpha * rs2;
+        // Cone termini might not lie at sphere centers
+        vec3 aHat0 = (cs1 - cs2)/d;
+        vec3 dC1 = aHat0 * sinAlpha * rs1;
+        vec3 dC2 = aHat0 * sinAlpha * rs2;
+        // Cone termini
+        c1 = cs1 + dC1;
+        c2 = cs2 + dC2;
+    }
+
     center = mix(c1, c2, 0.5); // centroid of cone
     vec3 cone_spine = c2 - c1;
     halfAxis = -0.5 * cone_spine;
     float cone_length = length(cone_spine);
-    fragRadius = mix(geomRadius[0], geomRadius[1], 0.5); // radius at cone center
-    taper = (geomRadius[1] - geomRadius[0]) / cone_length;
+    fragRadius = mix(r1, r2, 0.5); // radius at cone center
+    taper = (r2 - r1) / cone_length;
     halfConeLength = 0.5 * cone_length;
     aHat = -cone_spine/cone_length;
     normalScale = 1.0 / sqrt(1.0 + taper*taper);
@@ -111,15 +151,13 @@ void main() {
     // Compute local coordinate system of cone bounding box
     // Put "X" axis of bounding geometry along cone axis
     vec3 x = cone_spine / cone_length;
-    bool invertedX = false;
     // ensure X axis points generally toward viewer
-    float r1 = geomRadius[0];
-    float r2 = geomRadius[1];
     if (dot(x, center) > 0) {
-        invertedX = true;
         x = -x; // point in opposite direction
-        r1 = geomRadius[1];
-        r2 = geomRadius[0];
+        // swap radii
+        float tmp = r1;
+        r1 = r2;
+        r2 = r1;
     }
     // To minimize overdraw, y should point out of the screen
     vec3 in_screen = cross(x, center);
@@ -136,15 +174,16 @@ void main() {
     }
 
     // Linear matrices to convert cube corner offsets to cone bounding prism
-    // Low-x, smaller radius transform for cube points p2, p3, p4, and p8.
+    // smaller-x, transform for cube points p2, p3, p4, and p8.
     mat3 frame2348 = mat3(
             0.5 * x * cone_length, 
             y * r1, 
             z * r1);
+    // larger-x, transform for cube points p1, p5, p6, and p7.
     mat3 frame1567 = mat3(
             0.5 * x * cone_length, 
             y * r2, 
             z * r2);
 
-    cone_hull(frame2348, frame1567); // simpler geometry, imposter intersects cone (6 vertices)
+    cone_hull(frame2348, frame1567); // near cone hull
 }
