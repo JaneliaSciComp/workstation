@@ -75,6 +75,11 @@ public class SceneWindow implements GLJComponent, Scene {
         // to fail too.
         requestedCapabilities.setDoubleBuffered(true);
         // requestedCapabilities.setStereo(true); // Causes double buffering to fail on Linux
+
+        // Antialiasing
+        requestedCapabilities.setSampleBuffers(true);
+        requestedCapabilities.setNumSamples(8);
+        
         glCanvas = GLJComponentFactory.createGLJComponent(requestedCapabilities);
         
         renderer = new SceneRenderer(vantage, viewport, cameraType);
