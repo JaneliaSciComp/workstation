@@ -45,6 +45,7 @@ public class CacheFacade {
     private CacheManager manager;
     private CompressedFileResolver resolver = new CompressedFileResolver();
     private Double cameraZoom;
+    private double[] cameraFocus;
     private int standardFileSize;
     private String cacheName;
     
@@ -168,6 +169,12 @@ public class CacheFacade {
             System.out.println("KEY:" + key);
         }
     }
+    
+    public void reportCacheOccupancy() {
+        Cache cache = manager.getCache(cacheName);
+        List keys = cache.getKeys();
+        log.info("--- Cache now contains this {} keys.", keys.size());
+    }
 
     /**
      * This getter takes the name of the decompressed version of the input file.
@@ -191,13 +198,17 @@ public class CacheFacade {
      */
 	public synchronized void setFocus(double[] focus) {
         log.info("Setting focus...");
-        if (calculateRegion(focus)) {
-            populateRegion();
-        }
+        cameraFocus = focus;
+        updateRegion();
 	}
-    
+
     public void setCameraZoom(Double zoom) {
+        log.info("Setting zoom....");
         this.cameraZoom = zoom;
+        // Force a recalculation, based on both focus and zoom.
+        if (this.cameraFocus != null) {
+            updateRegion();
+        }
     }
 
     /**
@@ -219,9 +230,15 @@ public class CacheFacade {
         
     }
 
-    protected boolean calculateRegion(double[] focus) {
+    private void updateRegion() {
+        if (calculateRegion()) {
+            populateRegion();
+        }
+    }
+
+    private boolean calculateRegion() {
         boolean rtnVal = false;
-        GeometricNeighborhood calculatedNeighborhood = neighborhoodBuilder.buildNeighborhood(focus, cameraZoom);
+        GeometricNeighborhood calculatedNeighborhood = neighborhoodBuilder.buildNeighborhood(this.cameraFocus, cameraZoom);
         if (!(calculatedNeighborhood.getFiles().isEmpty()  ||  calculatedNeighborhood.equals(this.neighborhood))) {
             this.neighborhood = calculatedNeighborhood;
             rtnVal = true;
@@ -229,12 +246,12 @@ public class CacheFacade {
         return rtnVal;
     }
 
-    protected void populateRegion() {
+    private void populateRegion() {
         log.info("Repopulating on focus.");
         populateRegion(neighborhood, false); // Cancellation is causing conflicts.
     }
     
-    protected void populateRegion(GeometricNeighborhood neighborhood, boolean cancelOld) {
+    private void populateRegion(GeometricNeighborhood neighborhood, boolean cancelOld) {
         Cache cache = manager.getCache(cacheName);
         Map<String, CachableWrapper> futureArrays = cachePopulator.retargetCache(neighborhood, cancelOld, cache);
         for (String id : futureArrays.keySet()) {
@@ -243,6 +260,7 @@ public class CacheFacade {
             final Element element = new Element(id, wrapper);
             cache.put(element);
         }
+        reportCacheOccupancy();
         //dumpKeys();
     }
 
