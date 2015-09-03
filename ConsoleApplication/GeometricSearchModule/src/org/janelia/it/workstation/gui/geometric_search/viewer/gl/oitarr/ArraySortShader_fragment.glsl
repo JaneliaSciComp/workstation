@@ -96,17 +96,18 @@ vec4 calculate_final_color(int frag_count) {
        vec4 color = unpackUnorm4x8(frags[i].colorUPack);
 
        // MIP
-       float f=final_color.x+final_color.y+final_color.z;
-       float c=color.x+color.y+color.z;
-       if (c>f) {
-            final_color=color;
-            f=c;
-       }
+       //float f=final_color.x+final_color.y+final_color.z;
+       //float c=color.x+color.y+color.z;
+       //if (c>f) {
+       //     final_color=color;
+       //     f=c;
+       //}
 
-       if (f>650) break;
+       //if (f>650) break;
 
        // Transparency
        //final_color = blend(final_color, color);
+       final_color = mix(final_color, color, color.a);
     }
     return final_color;
 }

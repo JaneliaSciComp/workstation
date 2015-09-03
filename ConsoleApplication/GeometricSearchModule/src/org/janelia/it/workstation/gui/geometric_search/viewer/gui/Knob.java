@@ -41,16 +41,19 @@ public class Knob extends JPanel implements MouseListener, MouseMotionListener
     boolean showValue=true;
     boolean showName=true;
 
+    boolean exponential=false;
+
     public Knob(String name)
     {
         super();
         setup(name);
     }
 
-    public Knob(String name, double min, double max, double initialValue) {
+    public Knob(String name, double min, double max, double initialValue, boolean exponential) {
         super();
         this.min=min;
         this.max=max;
+        this.exponential=exponential;
         setValue(initialValue);
         setup(name);
     }
@@ -204,11 +207,25 @@ public class Knob extends JPanel implements MouseListener, MouseMotionListener
     }
 
     private double getNumericalValue() {
-        return ((value_+1.0)/2.0)*(max-min)+min;
+        double normedValue=((value_+1.0)/2.0);
+        double scaledValue=normedValue*(max-min)+min;
+        if (exponential) {
+            double expValue=Math.expm1(normedValue)/(Math.E - 1.0);
+            double expScaledValue = expValue*expValue*(max-min)+min;
+            logger.info("scaledValue="+scaledValue+" expScaledValue="+expScaledValue);
+            return expScaledValue;
+        } else {
+            return scaledValue;
+        }
     }
 
     public void setValue(double value) {
-        value_=(((value-min)/(max-min))*2.0)-1.0;
+        double normedValue=(value - min) / (max - min);
+        if (exponential) {
+            value_ = Math.sqrt( Math.log(normedValue * (Math.E-1.0)+1.0) ) * 2.0 - 1.0;
+        } else {
+            value_ = normedValue * 2.0 - 1.0;
+        }
         if (value_<-1.0) {
             value_=-1.0;
         } else if (value_>1.0) {

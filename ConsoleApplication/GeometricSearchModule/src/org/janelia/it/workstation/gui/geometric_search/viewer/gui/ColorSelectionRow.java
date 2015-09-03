@@ -54,7 +54,7 @@ public class ColorSelectionRow extends JPanel {
             }
         });
 
-        brightnessKnob=new Knob("B", 0.0, 3.0, 1.0);
+        brightnessKnob=new Knob("B", 0.0, 3.0, 1.0, true);
         brightnessKnob.addMouseMotionListener(new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
@@ -69,7 +69,7 @@ public class ColorSelectionRow extends JPanel {
             }
         });
 
-        transparencyKnob=new Knob("T", 0.0, 1.0, 1.0);
+        transparencyKnob=new Knob("T", 0.0, 1.0, 1.0, true);
         transparencyKnob.addMouseMotionListener(new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
