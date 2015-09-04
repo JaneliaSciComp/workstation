@@ -135,7 +135,7 @@ public class Knob extends JPanel implements MouseListener, MouseMotionListener
             String valueString = new Formatter(new StringBuilder(), Locale.FRENCH).format("%+1.1f", getNumericalValue()).toString();
             g.drawString(valueString,
                     imageCenterX - (g.getFontMetrics().stringWidth(name_) / 2) - 4,
-                    heightOffset + imageHeight + 6);
+                    imageCenterY + 10);
         }
 
         if (showName) {
@@ -143,7 +143,7 @@ public class Knob extends JPanel implements MouseListener, MouseMotionListener
             g.setFont(new Font("Arial", Font.BOLD, 10));
             g.drawString(name_,
                     imageCenterX - (g.getFontMetrics().stringWidth(name_) / 2),
-                    heightOffset + imageHeight/2 + 4);
+                    imageCenterY);
             g.setFont(f);
         }
 
