@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.dataset;
 
+import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.Renderable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,12 +20,16 @@ public abstract class Dataset {
         return name;
     }
 
-    List<Renderable> renderableList=new ArrayList<>();
+    public List<Renderable> renderables=new ArrayList<>();
 
     public abstract boolean createRenderables();
 
-    public List<Renderable> getRenderableList() {
-        return renderableList;
+    public List<Renderable> getRenderables() {
+        return renderables;
+    }
+
+    public void clear() {
+        renderables.clear();
     }
 
 }

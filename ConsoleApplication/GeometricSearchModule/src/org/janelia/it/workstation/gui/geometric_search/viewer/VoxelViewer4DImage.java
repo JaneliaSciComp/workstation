@@ -36,6 +36,11 @@ public class VoxelViewer4DImage implements VolumeDataAcceptor {
         return data16[channel];
     }
 
+    public int getXSize() { return size[3]; }
+    public int getYSize() { return size[2]; }
+    public int getZSize() { return size[1]; }
+    public int getCSize() { return size[0]; }
+
     @Override
     public void setPrimaryTextureData(TextureDataI textureData) {
         if (textureData==null) return;
@@ -78,12 +83,12 @@ public class VoxelViewer4DImage implements VolumeDataAcceptor {
         size[2]=textureData.getSy();
         size[3]=textureData.getSx();
 
-        for (int c=0;c<textureData.getChannelCount();c++) {
-            if (voxelByteCount==1) {
-                data8[c]=new byte[channelUnitCount];
-            } else {
-                data16[c]=new short[channelUnitCount];
-            }
+        if (voxelByteCount==1) {
+            data8 = new byte[textureData.getChannelCount()][];
+            for (int c=0;c<textureData.getChannelCount();c++) data8[c]=new byte[channelUnitCount];
+        } else {
+            data16 = new short[textureData.getChannelCount()][];
+            for (int c=0;c<textureData.getChannelCount();c++) data16[c]=new short[channelUnitCount];
         }
 
         VolumeDataChunk[] volumeChunks = textureData.getTextureData().getVolumeChunks();

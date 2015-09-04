@@ -131,9 +131,14 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
      */
     public void deleteAnnotations(List<TmGeoAnnotation> annotationList) {
         // remove all the individual annotations from 2D view
-
         for (TmGeoAnnotation ann: annotationList) {
             fireAnchorDeleted(ann);
+        }
+
+        // if first annotation in delete list has a parent, select it
+        //  (usually if you delete a point, you want to continue working there)
+        if (!annotationList.get(0).isRoot()) {
+            annotationSelected(annotationList.get(0).getParentId());
         }
     }
 

@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL4;
 import java.io.File;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 

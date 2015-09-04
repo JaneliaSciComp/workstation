@@ -57,6 +57,9 @@ public class ArraySortShader extends GL4Shader {
 
     @Override
     public void display(GL4 gl) {
+
+        logger.info("display() called");
+
         super.display(gl);
         checkGlError(gl, "d1 super.display() error");
 

@@ -363,9 +363,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                         "No annotation to delete.",
                         "No such annotation");
             }
-            if (annotation.isRoot() || annotation.getChildIds().size() > 1) {
+            if (annotation.isRoot() && annotation.getChildIds().size() > 0) {
                 presentError(
-                        "This annotation is either a root (no parent) or branch (many children), not a link!",
+                        "This annotation is a root with children, not a link!",
+                        "Not a link!");
+                return;
+            }
+            if (annotation.getChildIds().size() > 1) {
+                presentError(
+                        "This annotation is a branch (many children), not a link!",
                         "Not a link!");
                 return;
             }
