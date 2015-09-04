@@ -114,6 +114,9 @@ public class Knob extends JPanel implements MouseListener, MouseMotionListener
 
         g.drawImage(background2_, widthOffset, heightOffset, null);
 
+        int imageCenterX=widthOffset+imageWidth/2;
+        int imageCenterY=heightOffset+imageHeight/2;
+
         // Interpolate value between 5pi/4 and -pi/4
         double angle = ((-value_ + 1.) / 2.) * ((6. * Math.PI) / 4.) - (Math.PI / 4.);
 
@@ -131,7 +134,7 @@ public class Knob extends JPanel implements MouseListener, MouseMotionListener
             g.setColor(Color.lightGray);
             String valueString = new Formatter(new StringBuilder(), Locale.FRENCH).format("%+1.1f", getNumericalValue()).toString();
             g.drawString(valueString,
-                    PREF_WIDTH / 2 - (g.getFontMetrics().stringWidth(name_) / 2),
+                    imageCenterX - (g.getFontMetrics().stringWidth(name_) / 2) - 4,
                     heightOffset + imageHeight + 6);
         }
 
@@ -139,7 +142,7 @@ public class Knob extends JPanel implements MouseListener, MouseMotionListener
             g.setColor(Color.black);
             g.setFont(new Font("Arial", Font.BOLD, 10));
             g.drawString(name_,
-                    PREF_WIDTH / 2 - (g.getFontMetrics().stringWidth(name_) / 2),
+                    imageCenterX - (g.getFontMetrics().stringWidth(name_) / 2),
                     heightOffset + imageHeight/2 + 4);
             g.setFont(f);
         }

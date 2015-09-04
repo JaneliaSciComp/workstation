@@ -31,6 +31,9 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     JPanel actorManagermentPanel = new JPanel();
     ActorPanel actorPanel;
 
+    JPanel viewerGLWrapperPanel = new JPanel();
+    ViewerControlPanel viewerControlPanel = new ViewerControlPanel();
+
 
     public VoxelViewerMainPanel() {
 
@@ -40,7 +43,6 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
         // Actor Panel
         actorManagermentPanel.setLayout(new BoxLayout(actorManagermentPanel, BoxLayout.X_AXIS));
-        add(actorManagermentPanel, BorderLayout.EAST);
 
         controller = new VoxelViewerBasicController();
     }
@@ -101,17 +103,27 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
         //===========================================
 
-        add(viewer, BorderLayout.CENTER);
+        viewerGLWrapperPanel.setLayout(new BoxLayout(viewerGLWrapperPanel, BoxLayout.Y_AXIS));
+        viewerGLWrapperPanel.add(viewer);
+        viewerGLWrapperPanel.add(viewerControlPanel);
+        add(viewerGLWrapperPanel, BorderLayout.CENTER);
+
         add(actorManagermentPanel, BorderLayout.EAST);
 
         setupDatasetPanel();
         setupRenderablePanel();
         setupActorPanel();
+        setupViewerControlPanel();
 
         datasetManagementPanel.add(datasetPanel);
         datasetManagementPanel.add(renderablePanel);
-
         actorManagermentPanel.add(actorPanel);
+
+    }
+
+    protected void setupViewerControlPanel() {
+        EventManager.addListener(viewerControlPanel, model.getGLModel());
+        EventManager.addListener(viewerControlPanel, viewer.getRenderer());
     }
 
     protected void setupDatasetPanel() {

@@ -9,8 +9,15 @@ import java.awt.image.BufferedImage;
  */
 public class ColorSelectionPanel extends JPanel {
 
+    private static final int DEFAULT_WIDTH=90;
+    private static final int DEFAULT_HEIGHT=30;
+
     private BufferedImage img;
     boolean initialized=false;
+
+    public ColorSelectionPanel() {
+        this(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    }
 
     public ColorSelectionPanel(int width, int height) {
         img=new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);

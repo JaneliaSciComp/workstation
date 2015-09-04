@@ -52,7 +52,10 @@ public class EventManager {
             } else {
                 logger.error("Could not find listenerMap for object type=" + object.getClass().getName());
             }
-            viewer.refreshIfPending();
+            boolean alreadyRefreshed=viewer.refreshIfPending();
+            if (event instanceof BackgroundColorChangeEvent && !alreadyRefreshed) {
+                viewer.refresh();
+            }
         }
     }
 
