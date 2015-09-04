@@ -15,7 +15,7 @@
            memoryStoreEvictionPolicy="LRU"
            eternal="true"
            overflowToOffHeap="false"
-           maxBytesLocalHeap="32G"
+           maxBytesLocalHeap="20G"
     >
         <!--transactionalMode="off"-->
         <!-- maxEntriesLocalHeap="0"

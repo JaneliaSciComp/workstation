@@ -39,8 +39,6 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
     private double radiusInMicrons;
     private double[] tileHalfSize;
     private int[] dimensions;
-    private double micrometerVoxels;
-    private double voxelMicrometers;
     private File topFolder;
     private TileFormatSource tileFormatSource;
     private double[] focusPlusZoom = null;
@@ -120,15 +118,15 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
     public void setTileFormatSource(TileFormatSource tfs) {
         this.tileFormatSource = tfs;
     }
-
+    
 	/**
      * Wish to produce the list of all files needed to fill in the
      * spherical neighborhood centered at the focus.
      * 
-	 * @see GeometricNeighborhoodBuilder#buildNeighborhood(double[], double)
+	 * @see GeometricNeighborhoodBuilder#buildNeighborhood(double[], double, double)
 	 */
     @Override
-    public GeometricNeighborhood buildNeighborhood(double[] focus, Double zoom) {
+    public GeometricNeighborhood buildNeighborhood(double[] focus, Double zoom, double pixelsPerSceneUnit) {
         //synchronized(this) {
             double[] newFnZ = new double[4];
             newFnZ[0] = focus[0];
@@ -153,7 +151,11 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                 }
             }
         //}
+        log.debug("Building neighborhood at zoom {}, focus {},{},{}", zoom, focus[0], focus[1], focus[2] );
         WorldExtentSphere neighborhood = new WorldExtentSphere();
+        neighborhood.setFocus(focus);
+        neighborhood.setZoom(zoom);
+        
         TileFormat tileFormat = tileFormatSource.getTileFormat();
         if (tileHalfSize == null) {
             tileHalfSize = getTileHalfSize(tileFormat);
@@ -170,29 +172,18 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                 (int) (radiusInMicrons * tileFormat.getVoxelMicrometers()[2]), //4000,4000,4000
             };
         }
-        if (micrometerVoxels == 0) {
-            double minVoxelMicrometers = Double.MAX_VALUE;
-            for (double voxMicron : tileFormat.getVoxelMicrometers()) {
-                if (minVoxelMicrometers > voxMicron) {
-                    minVoxelMicrometers = voxMicron;
-                }
-            }
-            micrometerVoxels = 1.0 / minVoxelMicrometers;
-            voxelMicrometers = minVoxelMicrometers;
-        }
-        ZoomLevel zoomLevel = new ZoomLevel(zoom.intValue());
 
         // Establish a collection with required order and guaranteed uniqueness.
         FocusProximityComparator comparator = new FocusProximityComparator();
         String tiffBase = BlockTiffOctreeLoadAdapter.getTiffBase(CoordinateAxis.Z);
         Set<String> tileFilePaths = new HashSet<>();
-        for (TileIndex tileIndex: getCenteredTileSet(tileFormat, center, voxelMicrometers, dimensions, zoomLevel)) {
+        for (TileIndex tileIndex: getCenteredTileSet(tileFormat, center, pixelsPerSceneUnit, dimensions, zoom)) {
             File tilePath = BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat, true);  
             if (tilePath == null) {
                 log.warn("Null octree file path for {}.", tileIndex);
             }
             else {
-                tilePath = new File(topFolder, tilePath.getName());
+                tilePath = new File(topFolder, tilePath.toString());
                 double[] tileCenter = findTileCenterInMicrons(tileFormat, tileIndex);
                 double sigmaSquare = 0.0;
                 for (int i = 0; i < 3; i++) {
@@ -220,6 +211,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             tileFiles.add(new File(tileFilePath));
         }
         neighborhood.setFiles(tileFiles);
+        log.info("Neighborhood contains {} files.", tileFiles.size());
         return neighborhood;
     }
     
@@ -242,7 +234,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
      * 
      * Borrowed from Sub-volume class.
      */
-    private Set<TileIndex> getCenteredTileSet(TileFormat tileFormat, Vec3 center, double voxelMicrometers, int[] dimensions, ZoomLevel zoomLevel) {
+    private Set<TileIndex> getCenteredTileSet(TileFormat tileFormat, Vec3 center, double pixelsPerSceneUnit, int[] dimensions, Double zoom) {
         // Ensure dimensions are divisible evenly, by two.
         for (int i = 0; i < dimensions.length; i++) {
             if (dimensions[i] % 2 == 1) {
@@ -252,10 +244,10 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         
         int[] xyzFromWhd = new int[]{0, 1, 2};
         CoordinateAxis sliceAxis = CoordinateAxis.Z;
-        ViewBoundingBox micrometerBounds = tileFormat.findViewBounds(
-                dimensions[0], dimensions[1], center, voxelMicrometers, xyzFromWhd
+        ViewBoundingBox voxelBounds = tileFormat.findViewBounds(
+                dimensions[0], dimensions[1], center, pixelsPerSceneUnit, xyzFromWhd
         );
-        TileBoundingBox tileBoundingBox = tileFormat.viewBoundsToTileBounds(xyzFromWhd, micrometerBounds, zoomLevel.getLog2ZoomOutFactor());
+        TileBoundingBox tileBoundingBox = tileFormat.viewBoundsToTileBounds(xyzFromWhd, voxelBounds, zoom.intValue());
 
         // Now I have the tile outline.  Can just iterate over that, and for all
         // required depth.
@@ -271,6 +263,9 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             log.info("Min-depth is negative.");
         }
 
+        if (zoom > 1.5) {
+log.debug("what");
+        }
         int minWidth = tileBoundingBox.getwMin();
         int maxWidth = tileBoundingBox.getwMax();
         int minHeight = tileBoundingBox.gethMin();
@@ -280,7 +275,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                 minWidth, maxWidth,
                 minHeight, maxHeight,
                 xyzFromWhd,
-                zoomLevel,
+                zoom.intValue(),
                 zoomMax,
                 indexStyle,
                 sliceAxis);
@@ -301,7 +296,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             int minWidth, int maxWidth,
             int minHeight, int maxHeight,
             int[] xyzFromWhd,
-            ZoomLevel zoomLevel,
+            int zoom,
             int zoomMax,
             TileIndex.IndexStyle indexStyle,
             CoordinateAxis sliceAxis) {
@@ -315,7 +310,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                             whd[xyzFromWhd[0]],
                             whd[xyzFromWhd[1]],
                             whd[xyzFromWhd[2]],
-                            zoomLevel.getLog2ZoomOutFactor(),
+                            zoom,
                             zoomMax, indexStyle, sliceAxis);
                     neededTiles.add(key);
 

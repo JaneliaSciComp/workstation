@@ -11,6 +11,8 @@ import java.util.Set;
 public class WorldExtentSphere implements GeometricNeighborhood {
 
     private Set<File> files;
+    private Double zoom;
+    private double[] focus;
     
 	/**
 	 * @see GeometricNeighborhood#getFiles()
@@ -39,5 +41,23 @@ public class WorldExtentSphere implements GeometricNeighborhood {
     @Override
     public int hashCode() {
         return files.hashCode();
+    }
+
+    @Override
+    public Double getZoom() {
+        return zoom;
+    }
+
+    @Override
+    public double[] getFocus() {
+        return focus;
+    }
+    
+    public void setZoom(Double zoom) {
+        this.zoom = zoom;
+    }
+    
+    public void setFocus(double[] focus) {
+        this.focus = focus;
     }
 }

@@ -13,6 +13,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import net.sf.ehcache.Cache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Build up the cache, in response to some new neighborhood of locations
@@ -21,11 +23,12 @@ import net.sf.ehcache.Cache;
  * @author fosterl
  */
 public class CachePopulator {
-    private static final int THREAD_COUNT = 10;
+    private static final int THREAD_COUNT = 4;
     private final ExecutorService executor;
     private GeometricNeighborhood neighborhood;
     private final Map<String,Future<byte[]>> compressedDataFutures = new HashMap<>();
     private int standardFileSize = 0;
+    private Logger log = LoggerFactory.getLogger(CachePopulator.class);
     
     public CachePopulator() {
         this.executor = Executors.newFixedThreadPool(THREAD_COUNT, new CustomNamedThreadFactory());
@@ -57,6 +60,9 @@ public class CachePopulator {
             // according to the new focus' relative position.
             for (File file: neighborhood.getFiles()) {
                 final String key = file.getAbsolutePath();
+                if (cache.get(key) != null) {
+                    log.info("Not populating {}.  Already in cache.", key);
+                }
                 if (! compressedDataFutures.containsKey(key)  &&  cache.get(key) == null) {    
                     if (standardFileSize > 0) {
                         byte[] bytes = new byte[standardFileSize];
@@ -70,6 +76,15 @@ public class CachePopulator {
                     }
                 }
             }
+            if (neighborhood.getFiles().isEmpty()) {
+                double[] focus = neighborhood.getFocus();
+                log.warn(
+                        "Neighborhood of size 0, at zoom {}.  Focus {},{},{}.", neighborhood.getZoom(), focus[0], focus[1], focus[2]
+                );
+            }
+        }
+        else {
+            log.info("No retarget: identical neighborhood.");
         }
         return populatedMap;
         

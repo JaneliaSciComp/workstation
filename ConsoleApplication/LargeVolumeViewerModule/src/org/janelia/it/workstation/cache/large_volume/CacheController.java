@@ -96,7 +96,7 @@ public class CacheController {
 
         @Override
         public void zoomChanged(Double zoom) {
-            Runnable r = new ZoomChanger(manager, zoom);
+            Runnable r = new ZoomChanger(manager, camera, sharedVolumeImage);
             executor.submit(r);
         }
 
@@ -131,7 +131,7 @@ public class CacheController {
             TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
             Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
             if (zoom != null) {
-                manager.setCameraZoom(zoom);
+                manager.setCameraZoomValue(zoom);
             }
 
             double[] focusArr = new double[3];
@@ -144,15 +144,19 @@ public class CacheController {
     
     private static class ZoomChanger implements Runnable {
         private CacheFacade manager;
-        private Double zoom;
-        public ZoomChanger(CacheFacade manager, Double zoom) {
+        private SharedVolumeImage sharedVolumeImage;
+        private ObservableCamera3d camera;
+        public ZoomChanger(CacheFacade manager, ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage) {
             this.manager = manager;
-            this.zoom = zoom;
+            this.camera = camera;
         }
         
         @Override
         public void run() {
+            TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
+            Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
             manager.setCameraZoom(zoom);
+            manager.setPixelsPerSceneUnit(camera.getPixelsPerSceneUnit());
         }
         
     }

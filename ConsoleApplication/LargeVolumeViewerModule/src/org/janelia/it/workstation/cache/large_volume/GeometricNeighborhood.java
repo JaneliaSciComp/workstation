@@ -10,6 +10,8 @@ import java.util.Set;
 
 public interface GeometricNeighborhood {
 
-	public abstract Set<File> getFiles();
+	Set<File> getFiles();
+    Double getZoom();
+    double[] getFocus();
 
 }
