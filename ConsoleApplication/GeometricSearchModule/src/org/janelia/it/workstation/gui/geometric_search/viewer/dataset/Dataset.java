@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.dataset;
 
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.ActorSharedResource;
 import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.Renderable;
 
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.List;
 public abstract class Dataset {
 
     private String name;
+    List<ActorSharedResource> neededActorSharedResources;
 
     public void setName(String name) {
         this.name=name;
@@ -31,5 +33,7 @@ public abstract class Dataset {
     public void clear() {
         renderables.clear();
     }
+
+    public List<ActorSharedResource> getNeededActorSharedResources() { return neededActorSharedResources; }
 
 }

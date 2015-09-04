@@ -17,8 +17,8 @@ public class ColorSelectionRow extends JPanel {
 
     private static final Logger logger = LoggerFactory.getLogger(ColorSelectionRow.class);
 
-    private static final int COLOR_STATUS_WIDTH=15;
-    private static final int COLOR_STATUS_HEIGHT=15;
+    private static final int COLOR_STATUS_WIDTH=20;
+    private static final int COLOR_STATUS_HEIGHT=20;
 
     JCheckBox visibleCheckBox;
     JLabel nameLabel;
@@ -34,14 +34,14 @@ public class ColorSelectionRow extends JPanel {
     public ColorSelectionRow(String name) {
         setName(name);
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        setPreferredSize(new Dimension(320, 55));
-        setMaximumSize(new Dimension(320, 55));
+        setPreferredSize(new Dimension(320, 45));
+        setMaximumSize(new Dimension(320, 45));
         visibleCheckBox=new JCheckBox();
         visibleCheckBox.setSelected(true);
         nameLabel=new JLabel(name);
         colorStatusPanel=new ColorPanel(COLOR_STATUS_WIDTH, COLOR_STATUS_HEIGHT, new Color(0, 0, 0));
 
-        colorSelectionPanel=new ColorSelectionPanel(COLOR_STATUS_WIDTH*5, COLOR_STATUS_HEIGHT+10);
+        colorSelectionPanel=new ColorSelectionPanel();
         colorSelectionPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

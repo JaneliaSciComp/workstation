@@ -15,6 +15,8 @@ uniform int hpi_width;
 uniform int hpi_height;
 uniform int hpi_depth;
 
+uniform vec4 background_color;
+
 layout (binding = 0, rgba32ui) uniform coherent uimage1D fragment_buffer;
 
 layout (std430, binding = 0) buffer FragmentArrays0 {
@@ -91,7 +93,7 @@ vec4 blend(vec4 current_color, vec4 new_color) {
 
 vec4 calculate_final_color(int frag_count) {
     int i;
-    vec4 final_color = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 final_color = background_color;
     for (i=0; i < frag_count; i++) {
        vec4 color = unpackUnorm4x8(frags[i].colorUPack);
 
