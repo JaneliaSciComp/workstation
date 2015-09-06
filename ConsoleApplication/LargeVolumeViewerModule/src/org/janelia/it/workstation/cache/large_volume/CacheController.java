@@ -138,6 +138,7 @@ public class CacheController {
             for (int i = 0; i < focusArr.length; i++) {
                 focusArr[i] = focus.elementAt(i);
             }
+            manager.setPixelsPerSceneUnit(camera.getPixelsPerSceneUnit());
             manager.setFocus(focusArr);
         }
     }
@@ -155,8 +156,8 @@ public class CacheController {
         public void run() {
             TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
             Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
-            manager.setCameraZoom(zoom);
             manager.setPixelsPerSceneUnit(camera.getPixelsPerSceneUnit());
+            manager.setCameraZoom(zoom);
         }
         
     }

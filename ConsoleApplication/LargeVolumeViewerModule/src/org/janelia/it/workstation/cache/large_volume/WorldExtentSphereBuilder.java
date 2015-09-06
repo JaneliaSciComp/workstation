@@ -242,6 +242,14 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             }
         }
         
+        if (pixelsPerSceneUnit < 0.000001) {
+            log.warn("Zero value in pixelsPerSceneUnit.  Resetting to 1.");
+            pixelsPerSceneUnit = 1.0;
+        }
+        else {
+            log.info("PixelsPerSceneUnit={}.", pixelsPerSceneUnit);
+        }
+        
         int[] xyzFromWhd = new int[]{0, 1, 2};
         CoordinateAxis sliceAxis = CoordinateAxis.Z;
         ViewBoundingBox voxelBounds = tileFormat.findViewBounds(
