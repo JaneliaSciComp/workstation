@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public class CachePopulator {
     private static final int THREAD_COUNT = 4;
     private final ExecutorService executor;
-    private GeometricNeighborhood neighborhood;
+//    private GeometricNeighborhood neighborhood;
     private int standardFileSize = 0;
     private Logger log = LoggerFactory.getLogger(CachePopulator.class);
     
@@ -43,8 +43,8 @@ public class CachePopulator {
     public Collection<String> retargetCache(GeometricNeighborhood neighborhood, Cache cache) {
         Set<String> populatedList = new HashSet<>();
         // Avoid re-launching on non-significant movement.
-        if (! neighborhood.equals(this.neighborhood)) {
-            this.neighborhood = neighborhood;
+//        if (! neighborhood.equals(this.neighborhood)) {
+//            this.neighborhood = neighborhood;
             // Now, repopulate the running queue with the new neighborhood.
             // Any co-inciding un-processed items will simply be re-prioritized
             // according to the new focus' relative position.
@@ -73,10 +73,10 @@ public class CachePopulator {
                         "Neighborhood of size 0, at zoom {}.  Focus {},{},{}.", neighborhood.getZoom(), focus[0], focus[1], focus[2]
                 );
             }
-        }
-        else {
-            log.info("No retarget: identical neighborhood.");
-        }
+//        }
+//        else {
+//            log.info("No retarget: identical neighborhood.");
+//        }
         return populatedList;
         
     }
