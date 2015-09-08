@@ -139,7 +139,7 @@ public class CacheFacade {
                     Cache cache = manager.getCache(cacheName);
                     log.info("Adding {} to cache.", id);
                     byte[] bytes = new byte[ standardFileSize ];
-                    cache.put(new Element(id, new CachableWrapper(futureBytes, bytes)));
+                    cache.put(new Element(id, new NonNeighborhoodCachableWrapper(futureBytes, bytes)));
                     //dumpKeys();
                 }
             }
@@ -213,6 +213,9 @@ public class CacheFacade {
     }
     
     public void setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
+        if (pixelsPerSceneUnit < 1.0) {
+            pixelsPerSceneUnit = 1.0;
+        }
         this.pixelsPerSceneUnit = pixelsPerSceneUnit;
     }
     
@@ -311,6 +314,12 @@ public class CacheFacade {
             return wrappedObject;
         }
         
+    }
+    
+    public static class NonNeighborhoodCachableWrapper extends CachableWrapper {
+        public NonNeighborhoodCachableWrapper(Future<byte[]> object, byte[] bytes) {
+            super(object, bytes);
+        }
     }
 
 }

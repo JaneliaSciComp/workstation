@@ -61,7 +61,7 @@ public class CachePopulator {
             for (File file: neighborhood.getFiles()) {
                 final String key = file.getAbsolutePath();
                 if (cache.get(key) != null) {
-                    log.info("Not populating {}.  Already in cache.", key);
+                    log.info("Not populating {}.  Already in cache as {}.", key, cache.get(key).getClass().getName());
                 }
                 if (! compressedDataFutures.containsKey(key)  &&  cache.get(key) == null) {    
                     if (standardFileSize > 0) {
