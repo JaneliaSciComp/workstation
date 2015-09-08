@@ -9,11 +9,11 @@ import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.ArrayMes
  * Created by murphys on 8/6/2015.
  */
 public class MeshActor extends Actor {
-
     VoxelViewerObjData objData;
     Matrix4 vertexRotation;
 
-    public MeshActor(VoxelViewerObjData objData, Matrix4 vertexRotation) {
+    public MeshActor(String name, VoxelViewerObjData objData, Matrix4 vertexRotation) {
+        this.name=name;
         this.objData=objData;
         this.vertexRotation=vertexRotation;
     }
@@ -25,6 +25,7 @@ public class MeshActor extends Actor {
         }
         ArrayMeshGLActor meshGLActor=new ArrayMeshGLActor(objData);
         if (vertexRotation!=null) meshGLActor.setVertexRotation(vertexRotation);
+        glActor=meshGLActor;
         return glActor;
     }
 

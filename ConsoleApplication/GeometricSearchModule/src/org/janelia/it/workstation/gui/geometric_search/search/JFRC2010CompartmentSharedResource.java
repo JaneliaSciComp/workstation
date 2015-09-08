@@ -28,7 +28,12 @@ public class JFRC2010CompartmentSharedResource extends ActorSharedResource {
     public void load() {
 
         File localJaneliaMeshDir = new File("U:\\meshes");
-        File[] meshFiles = localJaneliaMeshDir.listFiles();
+        File homeMeshDir = new File("C:\\cygwin64\\home\\murphys\\meshes");
+        File meshDir=localJaneliaMeshDir;
+        if (!meshDir.exists()) {
+            meshDir=homeMeshDir;
+        }
+        File[] meshFiles = meshDir.listFiles();
         Random rand = new Random();
         Matrix4 vertexRotation=new Matrix4();
 
@@ -43,7 +48,7 @@ public class JFRC2010CompartmentSharedResource extends ActorSharedResource {
                 try {
                     logger.info("Creating VoxelViewerObjData from file="+meshFile.getAbsolutePath());
                     VoxelViewerObjData objData = VoxelViewerObjData.createObjDataFromFile(meshFile);
-                    MeshActor ma=new MeshActor(objData, vertexRotation);
+                    MeshActor ma=new MeshActor(meshFile.getName().substring(0,meshFile.getName().length()-4),objData, vertexRotation);
                     ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.5f));
                     getSharedActorList().add(ma);
                 } catch (Exception ex) {

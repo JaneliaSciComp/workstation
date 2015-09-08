@@ -25,15 +25,15 @@ public class DatasetModel implements VoxelViewerEventListener {
 
     public void addDataset(Dataset dataset) {
         EventManager.sendEvent(this, new DatasetAddedEvent(dataset));
+        setSelectedDataset(dataset);
         addSharedResourcesForDatasetIfNeeded(dataset);
         datasetList.add(dataset); // order is important here
-        setSelectedDataset(dataset);
     }
 
     public void removeDataset(Dataset dataset) {
         datasetList.remove(dataset); // order is important here
-        EventManager.sendEvent(this, new DatasetRemovedEvent(dataset));
         removeSharedResourcesForDatasetIfNotNeeded(dataset);
+        EventManager.sendEvent(this, new DatasetRemovedEvent(dataset));
     }
 
     public Dataset getSelectedDataset() {
