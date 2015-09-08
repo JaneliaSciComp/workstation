@@ -35,6 +35,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.compression.Compressed
  */
 public class CacheFacade {
     private static final String CACHE_NAME = "CompressedTiffCache";
+    public static final int GIGA = 1024*1024*1024;
     // TODO use more dynamic means of determining how many of the slabs
     // to put into memory at one time.
     
@@ -133,13 +134,14 @@ public class CacheFacade {
             synchronized (this) {
                 futureBytes = getFuture(id);
                 if (futureBytes == null) {
-                    log.warn("No Future found for {}. Pushing data into cache.  Thread: {}.", id, Thread.currentThread().getName());
+                    log.warn("No Future found for {}. Pushing data into cache.  Thread: {}.", cachePopulator.trimToOctreePath(id), Thread.currentThread().getName());
                     // Ensure we get this exact, required file.
                     futureBytes = cachePopulator.cache(new File(id));
                     Cache cache = manager.getCache(cacheName);
-                    log.info("Adding {} to cache.", id);
+                    log.info("Adding {} to cache.", cachePopulator.trimToOctreePath(id));
                     byte[] bytes = new byte[ standardFileSize ];
                     cache.put(new Element(id, new NonNeighborhoodCachableWrapper(futureBytes, bytes)));
+                    reportCacheOccupancy();
                     //dumpKeys();
                 }
             }
@@ -174,7 +176,8 @@ public class CacheFacade {
     public void reportCacheOccupancy() {
         Cache cache = manager.getCache(cacheName);
         List keys = cache.getKeys();
-        log.info("--- Cache now contains {} keys.", keys.size());
+        int requiredGb = (int)(((long)standardFileSize * (long)keys.size()) / (GIGA));
+        log.info("--- Cache has {} keys.  {}gb required.", keys.size(), requiredGb);
     }
 
     /**
@@ -276,7 +279,7 @@ public class CacheFacade {
         Map<String, CachableWrapper> futureArrays = cachePopulator.retargetCache(neighborhood, cancelOld, cache);
         for (String id : futureArrays.keySet()) {
             CachableWrapper wrapper = futureArrays.get(id);
-            log.info("Populating {} to cache at zoom {}.", id, cameraZoom);
+            log.info("Populating {} to cache at zoom {}.", cachePopulator.trimToOctreePath(id), cameraZoom);
             final Element element = new Element(id, wrapper);
             cache.put(element);
         }

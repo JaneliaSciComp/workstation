@@ -61,7 +61,7 @@ public class CachePopulator {
             for (File file: neighborhood.getFiles()) {
                 final String key = file.getAbsolutePath();
                 if (cache.get(key) != null) {
-                    log.info("Not populating {}.  Already in cache as {}.", key, cache.get(key).getClass().getName());
+                    log.info("In cache as {}.  Not populating {}.", cache.get(key).getObjectValue().getClass().getSimpleName(), trimToOctreePath(key));
                 }
                 if (! compressedDataFutures.containsKey(key)  &&  cache.get(key) == null) {    
                     if (standardFileSize > 0) {
@@ -100,6 +100,24 @@ public class CachePopulator {
         return executor.submit(new CachePopulatorWorker(file));
     }
 
+    String trimToOctreePath(String id) {
+        if (id.endsWith(".tif")) {
+            int endPoint = id.lastIndexOf("/");
+            int startPoint = 0;
+            boolean foundAlpha = false;
+            while (! foundAlpha) {
+                endPoint --;
+                if (Character.isAlphabetic(id.charAt(endPoint))) {
+                    foundAlpha = true;
+                    startPoint = endPoint;
+                    startPoint = id.indexOf("/", startPoint);
+                }
+            }
+            return id.substring(startPoint);
+        }
+        return id;
+    }
+    
     /**
      * Push one file to cache.
      *
