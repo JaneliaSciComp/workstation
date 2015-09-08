@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import com.google.common.base.Stopwatch;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -306,12 +307,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void doStuff() throws Exception {
                 Vec3 finalLocation;
                 if (annotationModel.automatedRefinementEnabled()) {
-                    // Stopwatch stopwatch = new Stopwatch();
-                    // stopwatch.start();
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.start();
                     PointRefiner refiner = new PointRefiner(quadViewUi.getSubvolumeProvider());
                     finalLocation = refiner.refine(xyz);
-                    // stopwatch.stop();
+                    stopwatch.stop();
                     // System.out.println("refined annotation; elapsed time = " + stopwatch.toString());
+                    log.info("refined annotation; elapsed time = " + stopwatch.toString());
 
                     // System.out.println("add annotation: input point " + xyz);
                     // System.out.println("add annotation: refined point " + finalLocation);
@@ -319,8 +321,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     finalLocation = xyz;
                 }
 
-                // Stopwatch stopwatch = new Stopwatch();
-                // stopwatch.start();
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.start();
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
                     annotationModel.addRootAnnotation(currentNeuron, finalLocation);
@@ -328,8 +330,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     annotationModel.addChildAnnotation(
                             currentNeuron.getGeoAnnotationMap().get(parentID), finalLocation);
                 }
-                // stopwatch.stop();
+                stopwatch.stop();
                 // System.out.println("added annotation; elapsed time = " + stopwatch.toString());
+                log.info("added annotation; elapsed time = " + stopwatch.toString());
             }
 
             @Override
