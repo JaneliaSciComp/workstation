@@ -313,7 +313,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     finalLocation = refiner.refine(xyz);
                     stopwatch.stop();
                     // System.out.println("refined annotation; elapsed time = " + stopwatch.toString());
-                    log.info("refined annotation; elapsed time = " + stopwatch.toString());
+                    log.info("refined annotation; elapsed time = " + stopwatch);
 
                     // System.out.println("add annotation: input point " + xyz);
                     // System.out.println("add annotation: refined point " + finalLocation);
@@ -332,7 +332,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 }
                 stopwatch.stop();
                 // System.out.println("added annotation; elapsed time = " + stopwatch.toString());
-                log.info("added annotation; elapsed time = " + stopwatch.toString());
+                log.info("added annotation; elapsed time = " + stopwatch);
             }
 
             @Override

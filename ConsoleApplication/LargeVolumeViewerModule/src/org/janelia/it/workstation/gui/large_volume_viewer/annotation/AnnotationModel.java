@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.awt.Color;
+
+import com.google.common.base.Stopwatch;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -466,12 +468,19 @@ called from a  SimpleWorker thread.
             return;
         }
 
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.start();
+        System.out.println("entering addChildAnnotation: " + stopwatch);
+
         final TmNeuron neuron = getNeuronFromAnnotationID(parentAnn.getId());
+        System.out.println("adding annotation (calling modelMgr): " + stopwatch);
         final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
+        System.out.println("updating workspace: " + stopwatch);
         updateCurrentWorkspace();
         if (neuron.getId().equals(getCurrentNeuron().getId())) {
+            System.out.println("updating neuron: " + stopwatch);
             updateCurrentNeuron();
         }
 
@@ -481,13 +490,17 @@ called from a  SimpleWorker thread.
         //  when appropriate
 
         // note2 : need to get updated copy of neuron:
+
+        System.out.println("stripping predef notes: " + stopwatch);
         stripPredefNotes(getNeuronFromAnnotationID(parentAnn.getId()), parentAnn.getId());
 
         if (automatedTracingEnabled()) {
+            System.out.println("updating traced path: " + stopwatch);
             if (viewStateListener != null)
                 viewStateListener.pathTraceRequested(annotation.getId());
         }
 
+        System.out.println("dispatching update events: " + stopwatch);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -496,6 +509,8 @@ called from a  SimpleWorker thread.
             }
         });
 
+        System.out.println("leaving addChildAnnotation: " + stopwatch);
+        stopwatch.stop();
     }
 
     /**
