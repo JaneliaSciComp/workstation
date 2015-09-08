@@ -113,9 +113,9 @@ public class CacheFacade {
 		return rtnVal;
 	}
 
-	public Future<byte[]> getFuture(File file) {
-        return getFuture(file.getAbsolutePath());
-	}
+//	public Future<byte[]> getFuture(File file) {
+//        return getFuture(file.getAbsolutePath());
+//	}
 
     /**
      * Blocking getters. Let the cache manager worry about the threading.
@@ -131,22 +131,23 @@ public class CacheFacade {
         SeekableStream rtnVal = null;
         try {
             Future<byte[]> futureBytes = null;
+            Cache cache = manager.getCache(cacheName);
             synchronized (this) {
                 futureBytes = getFuture(id);
                 if (futureBytes == null) {
                     log.warn("No Future found for {}. Pushing data into cache.  Thread: {}.", cachePopulator.trimToOctreePath(id), Thread.currentThread().getName());
                     // Ensure we get this exact, required file.
-                    futureBytes = cachePopulator.cache(new File(id));
-                    Cache cache = manager.getCache(cacheName);
+                    final byte[] bytes = new byte[ standardFileSize ];
+                    final NonNeighborhoodCachableWrapper wrapper = new NonNeighborhoodCachableWrapper(futureBytes, bytes);
+                    futureBytes = cachePopulator.cache(new File(id), bytes);
                     log.info("Adding {} to cache.", cachePopulator.trimToOctreePath(id));
-                    byte[] bytes = new byte[ standardFileSize ];
-                    cache.put(new Element(id, new NonNeighborhoodCachableWrapper(futureBytes, bytes)));
+                    cache.put(new Element(id, wrapper));
                     reportCacheOccupancy();
                     //dumpKeys();
                 }
             }
 
-            if (futureBytes != null   &&   !futureBytes.isCancelled()) {                
+            if (futureBytes != null   &&   !futureBytes.isCancelled()) {
                 byte[] decompressedData = futureBytes.get();
                 //rtnVal = resolver.resolve(compressedData, new File(id));
                 rtnVal = new ByteArraySeekableStream(decompressedData);
@@ -313,7 +314,15 @@ public class CacheFacade {
             this.bytes = bytes;
         }
         
-        public Future<byte[]> getWrappedObject() {
+        public byte[] getBytes() throws InterruptedException, ExecutionException {
+            if (getWrappedObject() != null  &&  (! getWrappedObject().isDone())) {
+                getWrappedObject().get();  // All threads await...
+                wrappedObject = null;      // Eligible for GC
+            }
+            return bytes;
+        }
+        
+        private Future<byte[]> getWrappedObject() {
             return wrappedObject;
         }
         
