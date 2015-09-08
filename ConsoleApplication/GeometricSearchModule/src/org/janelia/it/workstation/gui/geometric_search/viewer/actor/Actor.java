@@ -58,4 +58,6 @@ public abstract class Actor {
         glActor.setIsVisible(isVisible);
     }
 
+    public GL4SimpleActor getGlActor() { return glActor; }
+
 }

@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.actor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -8,7 +9,7 @@ import java.util.List;
 public abstract class ActorSharedResource {
 
     String name;
-    List<Actor> sharedActorList;
+    List<Actor> sharedActorList=new ArrayList<>();
 
     protected ActorSharedResource(String name) {
         this.name=name;

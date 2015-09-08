@@ -27,6 +27,10 @@ public class ScreenDataset extends Dataset {
 
     File alignedStack;
 
+    public ScreenDataset() {
+        getNeededActorSharedResources().add(new JFRC2010CompartmentSharedResource());
+    }
+
     public void setAlignedStack(File alignedStack) {
         this.alignedStack=alignedStack;
     }

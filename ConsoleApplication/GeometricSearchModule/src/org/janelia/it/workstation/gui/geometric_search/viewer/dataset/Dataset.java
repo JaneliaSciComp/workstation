@@ -12,7 +12,7 @@ import java.util.List;
 public abstract class Dataset {
 
     private String name;
-    List<ActorSharedResource> neededActorSharedResources;
+    List<ActorSharedResource> neededActorSharedResources=new ArrayList<>();
 
     public void setName(String name) {
         this.name=name;
