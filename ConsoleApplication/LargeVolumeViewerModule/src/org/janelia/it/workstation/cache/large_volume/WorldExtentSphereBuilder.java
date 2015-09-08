@@ -271,9 +271,6 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             log.info("Min-depth is negative.");
         }
 
-        if (zoom > 1.5) {
-log.debug("what");
-        }
         int minWidth = tileBoundingBox.getwMin();
         int maxWidth = tileBoundingBox.getwMax();
         int minHeight = tileBoundingBox.gethMin();

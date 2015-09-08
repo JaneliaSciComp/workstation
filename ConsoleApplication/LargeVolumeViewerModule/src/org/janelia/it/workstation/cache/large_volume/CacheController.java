@@ -24,7 +24,7 @@ public class CacheController {
     private CacheCameraListener cameraListener;
     private static ExecutorService executor;
     
-    private static CacheController instance = new CacheController();
+    private static final CacheController instance = new CacheController();
     
     public static CacheController getInstance() {
         return instance;

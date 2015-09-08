@@ -10,8 +10,8 @@ import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
 import java.io.Serializable;
 import java.net.URL;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -271,18 +271,15 @@ public class CacheFacade {
 
     private void populateRegion() {
         log.info("Repopulating on focus.  Zoom={}", cameraZoom);
-        populateRegion(neighborhood, false); // Cancellation is causing conflicts.
+        populateRegion(neighborhood);
     }
     
-    private void populateRegion(GeometricNeighborhood neighborhood, boolean cancelOld) {
-        Cache cache = manager.getCache(cacheName);
+    private void populateRegion(GeometricNeighborhood neighborhood) {
         log.info("Retargeting cache at zoom {}.", cameraZoom);
-        Map<String, CachableWrapper> futureArrays = cachePopulator.retargetCache(neighborhood, cancelOld, cache);
-        for (String id : futureArrays.keySet()) {
-            CachableWrapper wrapper = futureArrays.get(id);
+        Cache cache = manager.getCache(cacheName);
+        Collection<String> futureArrays = cachePopulator.retargetCache(neighborhood, cache);
+        for (String id: futureArrays) {
             log.info("Populating {} to cache at zoom {}.", cachePopulator.trimToOctreePath(id), cameraZoom);
-            final Element element = new Element(id, wrapper);
-            cache.put(element);
         }
         reportCacheOccupancy();
         //dumpKeys();
@@ -322,7 +319,7 @@ public class CacheFacade {
             return bytes;
         }
         
-        private Future<byte[]> getWrappedObject() {
+        Future<byte[]> getWrappedObject() {
             return wrappedObject;
         }
         

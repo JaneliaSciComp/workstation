@@ -6,13 +6,16 @@
 package org.janelia.it.workstation.cache.large_volume;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
+import net.sf.ehcache.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +29,6 @@ public class CachePopulator {
     private static final int THREAD_COUNT = 4;
     private final ExecutorService executor;
     private GeometricNeighborhood neighborhood;
-    private final Map<String,Future<byte[]>> compressedDataFutures = new HashMap<>();
     private int standardFileSize = 0;
     private Logger log = LoggerFactory.getLogger(CachePopulator.class);
     
@@ -38,42 +40,31 @@ public class CachePopulator {
         standardFileSize = size;
     }
     
-    public Map<String,CacheFacade.CachableWrapper> retargetCache(GeometricNeighborhood neighborhood, boolean cancelOld, Cache cache) {
-        Map<String,CacheFacade.CachableWrapper> populatedMap = new HashMap<>();
+    public Collection<String> retargetCache(GeometricNeighborhood neighborhood, Cache cache) {
+        Set<String> populatedList = new HashSet<>();
         // Avoid re-launching on non-significant movement.
         if (! neighborhood.equals(this.neighborhood)) {
             this.neighborhood = neighborhood;
-            // Kill any non-running tasks in the executor.
-            if (cancelOld) {
-                for (String key : compressedDataFutures.keySet()) {
-                    Future<byte[]> futureShock = compressedDataFutures.get(key);
-                    // false: cancel any which do not require interruption.
-                    boolean wasCancelled = futureShock.cancel(false);
-                    if (wasCancelled) {
-                        cache.remove(key);
-                    }
-                }                
-                compressedDataFutures.clear();
-            }
             // Now, repopulate the running queue with the new neighborhood.
             // Any co-inciding un-processed items will simply be re-prioritized
             // according to the new focus' relative position.
             for (File file: neighborhood.getFiles()) {
                 final String key = file.getAbsolutePath();
-                if (cache.get(key) != null) {
-                    log.info("In cache as {}.  Not populating {}.", cache.get(key).getObjectValue().getClass().getSimpleName(), trimToOctreePath(key));
-                }
-                if (! compressedDataFutures.containsKey(key)  &&  cache.get(key) == null) {    
+                if (cache.get(key) == null   &&   (! populatedList.contains(key))) {    
                     if (standardFileSize > 0) {
                         byte[] bytes = new byte[standardFileSize];
                         Future<byte[]> future = cache(file, bytes);
-                        compressedDataFutures.put(key, future);
                         CacheFacade.CachableWrapper wrapper = new CacheFacade.CachableWrapper(future, bytes);
-                        populatedMap.put(key, wrapper);
+                        
+                        populateElement(file.getAbsolutePath(), wrapper, cache);
+                        populatedList.add(key);
                     }
                     else {
                         throw new IllegalArgumentException("Pre-sized byte array required.");
                     }
+                }
+                else {
+                    log.info("In cache as {}.  Not populating {}.", cache.get(key).getObjectValue().getClass().getSimpleName(), trimToOctreePath(key));
                 }
             }
             if (neighborhood.getFiles().isEmpty()) {
@@ -86,9 +77,14 @@ public class CachePopulator {
         else {
             log.info("No retarget: identical neighborhood.");
         }
-        return populatedMap;
+        return populatedList;
         
     }
+    
+    private void populateElement(String id, CacheFacade.CachableWrapper wrapper, Cache cache) throws IllegalStateException, CacheException, IllegalArgumentException {
+        final Element element = new Element(id, wrapper);
+        cache.put(element);
+    }        
     
     /**
      * Push one file to cache.
