@@ -62,7 +62,7 @@ public class CachePopulator {
                     throw new IllegalArgumentException("Pre-sized byte array required.");
                 }
             } else {
-                log.info("In cache as {}.  Not populating {}.", cache.get(key).getObjectValue().getClass().getSimpleName(), trimToOctreePath(key));
+                log.debug("In cache as {}.  Not populating {}.", cache.get(key).getObjectValue().getClass().getSimpleName(), trimToOctreePath(key));
             }
         }
         if (neighborhood.getFiles().isEmpty()) {

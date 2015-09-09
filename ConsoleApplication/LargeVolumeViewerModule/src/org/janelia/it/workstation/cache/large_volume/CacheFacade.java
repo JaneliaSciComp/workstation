@@ -141,10 +141,10 @@ public class CacheFacade {
                     final byte[] bytes = new byte[ standardFileSize ];
                     futureBytes = cachePopulator.cache(new File(id), bytes);
                     final NonNeighborhoodCachableWrapper wrapper = new NonNeighborhoodCachableWrapper(futureBytes, bytes);
-                    log.info("Adding {} to cache.", cachePopulator.trimToOctreePath(id));
+                    log.debug("Adding {} to cache.", cachePopulator.trimToOctreePath(id));
                     cache.put(new Element(id, wrapper));
                     rtnVal = new ByteArraySeekableStream(wrapper.getBytes());
-                    reportCacheOccupancy();
+                    //reportCacheOccupancy();
                     //dumpKeys();
                 }
                 else {
@@ -279,7 +279,7 @@ public class CacheFacade {
         Cache cache = manager.getCache(cacheName);
         Collection<String> futureArrays = cachePopulator.retargetCache(neighborhood, cache);
         for (String id: futureArrays) {
-            log.info("Populating {} to cache at zoom {}.", cachePopulator.trimToOctreePath(id), cameraZoom);
+            log.debug("Populating {} to cache at zoom {}.", cachePopulator.trimToOctreePath(id), cameraZoom);
         }
         reportCacheOccupancy();
         //dumpKeys();
