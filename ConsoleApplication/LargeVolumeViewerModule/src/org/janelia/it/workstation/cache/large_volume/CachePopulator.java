@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class CachePopulator {
-    private static final int THREAD_COUNT = 4;
+    private static final int THREAD_COUNT = 12;
     private final ExecutorService executor;
 //    private GeometricNeighborhood neighborhood;
     private int standardFileSize = 0;
@@ -45,42 +45,40 @@ public class CachePopulator {
         // Avoid re-launching on non-significant movement.
 //        if (! neighborhood.equals(this.neighborhood)) {
 //            this.neighborhood = neighborhood;
-            // Now, repopulate the running queue with the new neighborhood.
-            // Any co-inciding un-processed items will simply be re-prioritized
-            // according to the new focus' relative position.
-            for (File file: neighborhood.getFiles()) {
-                final String key = file.getAbsolutePath();
-                if (cache.get(key) == null   &&   (! populatedList.contains(key))) {    
-                    if (standardFileSize > 0) {
-                        byte[] bytes = new byte[standardFileSize];
-                        Future<byte[]> future = cache(file, bytes);
-                        CacheFacade.CachableWrapper wrapper = new CacheFacade.CachableWrapper(future, bytes);
-                        
-                        populateElement(file.getAbsolutePath(), wrapper, cache);
-                        populatedList.add(key);
-                    }
-                    else {
-                        throw new IllegalArgumentException("Pre-sized byte array required.");
-                    }
+        // Now, repopulate the running queue with the new neighborhood.
+        // Any co-inciding un-processed items will simply be re-prioritized
+        // according to the new focus' relative position.
+        for (File file : neighborhood.getFiles()) {
+            final String key = file.getAbsolutePath();
+            if (cache.get(key) == null && (!populatedList.contains(key))) {
+                if (standardFileSize > 0) {
+                    byte[] bytes = new byte[standardFileSize];
+                    Future<byte[]> future = cache(file, bytes);
+                    CacheFacade.CachableWrapper wrapper = new CacheFacade.CachableWrapper(future, bytes);
+
+                    populateElement(file.getAbsolutePath(), wrapper, cache);
+                    populatedList.add(key);
+                } else {
+                    throw new IllegalArgumentException("Pre-sized byte array required.");
                 }
-                else {
-                    log.info("In cache as {}.  Not populating {}.", cache.get(key).getObjectValue().getClass().getSimpleName(), trimToOctreePath(key));
-                }
+            } else {
+                log.info("In cache as {}.  Not populating {}.", cache.get(key).getObjectValue().getClass().getSimpleName(), trimToOctreePath(key));
             }
-            if (neighborhood.getFiles().isEmpty()) {
-                double[] focus = neighborhood.getFocus();
-                log.warn(
-                        "Neighborhood of size 0, at zoom {}.  Focus {},{},{}.", neighborhood.getZoom(), focus[0], focus[1], focus[2]
-                );
-            }
+        }
+        if (neighborhood.getFiles().isEmpty()) {
+            double[] focus = neighborhood.getFocus();
+            log.warn(
+                "Neighborhood of size 0, at zoom {}.  Focus {},{},{}.", neighborhood.getZoom(), focus[0], focus[1], focus[2]
+            );
+        }
 //        }
 //        else {
 //            log.info("No retarget: identical neighborhood.");
 //        }
         return populatedList;
-        
+
     }
-    
+
     private void populateElement(String id, CacheFacade.CachableWrapper wrapper, Cache cache) throws IllegalStateException, CacheException, IllegalArgumentException {
         final Element element = new Element(id, wrapper);
         cache.put(element);
