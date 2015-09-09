@@ -17,9 +17,9 @@ public class VoxelViewerObjData {
 
     private static Logger logger = LoggerFactory.getLogger(VoxelViewerObjData.class);
 
-    List<Vector3> vertexList=new ArrayList<>();
-    List<Vector3> normalList=new ArrayList<>();
-    List<Integer> faceList=new ArrayList<>(); // in sequential sets of 3 for each vertex and normal
+    public List<Vector3> vertexList=new ArrayList<>();
+    public List<Vector3> normalList=new ArrayList<>();
+    public List<Integer> faceList=new ArrayList<>(); // in sequential sets of 3 for each vertex and normal
 
     static public VoxelViewerObjData createObjDataFromFile(File objFile) throws Exception {
         VoxelViewerObjData objData=new VoxelViewerObjData();

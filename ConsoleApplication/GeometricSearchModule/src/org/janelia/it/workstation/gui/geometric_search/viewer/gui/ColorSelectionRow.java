@@ -24,12 +24,8 @@ public class ColorSelectionRow extends JPanel {
     JLabel nameLabel;
     ColorPanel colorStatusPanel;
     ColorSelectionPanel colorSelectionPanel;
-    Knob brightnessKnob;
-    Knob transparencyKnob;
-
     SyncedCallback colorSelectionCallback;
-    SyncedCallback brightnessCallback;
-    SyncedCallback transparencyCallback;
+
 
     public ColorSelectionRow(String name) {
         setName(name);
@@ -54,42 +50,11 @@ public class ColorSelectionRow extends JPanel {
             }
         });
 
-        brightnessKnob=new Knob("B", 0.0, 3.0, 1.0, true);
-        brightnessKnob.addMouseMotionListener(new MouseMotionListener() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (brightnessCallback!=null) {
-                    brightnessCallback.performAction(new Float(brightnessKnob.getValue()));
-                }
-            }
-
-            @Override
-            public void mouseMoved(MouseEvent e) {
-
-            }
-        });
-
-        transparencyKnob=new Knob("T", 0.0, 1.0, 1.0, true);
-        transparencyKnob.addMouseMotionListener(new MouseMotionListener() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (transparencyCallback!=null) {
-                    transparencyCallback.performAction(new Float(transparencyKnob.getValue()));
-                }
-            }
-
-            @Override
-            public void mouseMoved(MouseEvent e) {
-
-            }
-        });
-
         add(visibleCheckBox);
         add(colorStatusPanel);
         add(nameLabel);
         add(colorSelectionPanel);
-        add(brightnessKnob);
-        add(transparencyKnob);
+
     }
 
     public JCheckBox getVisibleCheckBox() {
@@ -107,9 +72,5 @@ public class ColorSelectionRow extends JPanel {
     public void setColorSelectionCallback(SyncedCallback callback) {
         this.colorSelectionCallback=callback;
     }
-
-    public void setBrightnessCallback(SyncedCallback callback) { this.brightnessCallback=callback; }
-
-    public void setTransparencyCallback(SyncedCallback callback) { this.transparencyCallback=callback; }
 
 }

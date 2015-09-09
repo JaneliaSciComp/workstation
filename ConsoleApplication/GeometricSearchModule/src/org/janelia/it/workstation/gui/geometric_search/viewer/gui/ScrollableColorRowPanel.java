@@ -11,13 +11,19 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Created by murphys on 8/28/2015.
  */
-public class ScrollableColorRowPanel extends JPanel {
+public abstract class ScrollableColorRowPanel extends JPanel {
 
     private static final Logger logger = LoggerFactory.getLogger(ScrollableColorRowPanel.class);
+
+    public static final String COLOR_CALLBACK = "COLOR_CALLBACK";
+
+    public static int DEFAULT_WIDTH = 320;
+    public static int DEFAULT_HEIGHT = 800;
 
     protected JPanel rowPanel = new JPanel();
 
@@ -26,32 +32,11 @@ public class ScrollableColorRowPanel extends JPanel {
     public ScrollableColorRowPanel() {
         rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane(rowPanel);
-        scrollPane.setPreferredSize(new Dimension(320, 800));
+        scrollPane.setPreferredSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
         add(scrollPane);
     }
 
-    public void addEntry(final String name, SyncedCallback colorCallback, SyncedCallback brightnessCallback, SyncedCallback transparencyCallback) {
-        logger.info("Adding row for name="+name);
-        final ColorSelectionRow l = new ColorSelectionRow(name);
-        l.setColorSelectionCallback(colorCallback);
-        l.setBrightnessCallback(brightnessCallback);
-        l.setTransparencyCallback(transparencyCallback);
-        l.setName(name);
-        l.putClientProperty("Synthetica.opaque", Boolean.FALSE);
-        l.setBorder(BorderFactory.createBevelBorder(1));
-        final ScrollableColorRowPanel actionSource=this;
-
-        l.getVisibleCheckBox().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                logger.info("checkbox set to="+l.getVisibleCheckBox().isSelected());
-                EventManager.sendEvent(actionSource, new ActorSetVisibleEvent(name, l.getVisibleCheckBox().isSelected()));
-            }
-        });
-
-        components.add(l);
-        rowPanel.add(l);
-    }
+    public abstract void addEntry(final String name, Map<String,SyncedCallback> callbackMap) throws Exception;
 
     public void setSelectedRowByName(String name) {
         for (Component component : components) {
@@ -94,6 +79,14 @@ public class ScrollableColorRowPanel extends JPanel {
             rowPanel.remove(component);
         }
         components.clear();
+    }
+
+    protected SyncedCallback getCallback(String key, Map<String, SyncedCallback> callbackMap) throws Exception {
+        SyncedCallback syncedCallback=callbackMap.get(key);
+        if (syncedCallback==null) {
+            throw new Exception("Could not find SyncedCallback entry for key="+key);
+        }
+        return syncedCallback;
     }
 
 }
