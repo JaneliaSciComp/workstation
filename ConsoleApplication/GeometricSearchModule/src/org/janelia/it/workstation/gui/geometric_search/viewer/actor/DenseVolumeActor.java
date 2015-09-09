@@ -18,6 +18,9 @@ public class DenseVolumeActor extends Actor {
     float voxelUnitSize;
     ArrayCubeGLActor arrayCubeGLActor;
 
+    float brightness=1.0f;
+    float transparency=1.0f;
+
     public DenseVolumeActor(String name, List<Vector4> voxels, float xSize, float ySize, float zSize, float voxelUnitSize) {
         this.name=name;
         this.voxels=voxels;
@@ -33,5 +36,20 @@ public class DenseVolumeActor extends Actor {
         return arrayCubeGLActor;
     }
 
+    public float getBrightness() {
+        return brightness;
+    }
+
+    public void setBrightness(float brightness) {
+        this.brightness = brightness;
+    }
+
+    public float getTransparency() {
+        return transparency;
+    }
+
+    public void setTransparency(float transparency) {
+        this.transparency = transparency;
+    }
 
 }

@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by murphys on 8/20/2015.
@@ -17,9 +19,9 @@ public class ActorPanel extends JTabbedPane implements VoxelViewerEventListener 
 
     private static final Logger logger = LoggerFactory.getLogger(ActorPanel.class);
 
-    ScrollableColorRowPanel volumeRowPanel=new ScrollableColorRowPanel();
-    ScrollableColorRowPanel meshRowPanel=new ScrollableColorRowPanel();
-    ScrollableColorRowPanel elementRowPanel=new ScrollableColorRowPanel();
+    ScrollableColorRowPanel volumeRowPanel=new VolumeScrollableRowPanel();
+    ScrollableColorRowPanel meshRowPanel=new MeshScrollableRowPanel();
+    ScrollableColorRowPanel elementRowPanel=new VolumeScrollableRowPanel();
 
     public ActorPanel() {
         addTab("Element", elementRowPanel);
@@ -39,11 +41,14 @@ public class ActorPanel extends JTabbedPane implements VoxelViewerEventListener 
             final Actor actor=actorAddedEvent.getActor();
 
             if (actor instanceof DenseVolumeActor) {
-                addActor(volumeRowPanel, actor);
+                DenseVolumeActor denseVolumeActor=(DenseVolumeActor)actor;
+                addVolumeActor(volumeRowPanel, denseVolumeActor);
             } else if (actor instanceof MeshActor) {
-                addActor(meshRowPanel, actor);
+                MeshActor meshActor=(MeshActor)actor;
+                addMeshActor(meshRowPanel, meshActor);
             } else if (actor instanceof SparseVolumeActor) {
-                addActor(elementRowPanel, actor);
+                SparseVolumeActor sparseVolumeActor=(SparseVolumeActor)actor;
+                addVolumeActor(elementRowPanel, sparseVolumeActor);
             }
 
         } else if (event instanceof ActorsClearAllEvent) {
@@ -51,21 +56,61 @@ public class ActorPanel extends JTabbedPane implements VoxelViewerEventListener 
         }
     }
 
-    private void addActor(ScrollableColorRowPanel rowPanel, Actor actor) {
+    private void addVolumeActor(ScrollableColorRowPanel rowPanel, DenseVolumeActor actor) {
         SyncedCallback colorSelectionCallback=createColorSelectionCallback(rowPanel, actor);
         SyncedCallback brightnessCallback=createBrightnessCallback(actor);
         SyncedCallback transparencyCallback=createTransparencyCallback(actor);
 
-        rowPanel.addEntry(actor.getName(), colorSelectionCallback, brightnessCallback, transparencyCallback);
-        Vector4 actorColor = actor.getColor();
-        if (actorColor!=null) {
-            float[] colorData = actorColor.toArray();
-            if (colorData!=null) {
-                int red=(int)(colorData[0] * 255);
-                int green=(int)(colorData[1] * 255);
-                int blue=(int)(colorData[2] * 255);
-                rowPanel.setEntryStatusColor(actor.getName(), new Color(red, green, blue));
+        Map<String, SyncedCallback> callbackMap=new HashMap<>();
+        callbackMap.put(ScrollableColorRowPanel.COLOR_CALLBACK, colorSelectionCallback);
+        callbackMap.put(VolumeScrollableRowPanel.BRIGHTNESS_CALLBACK, brightnessCallback);
+        callbackMap.put(VolumeScrollableRowPanel.TRANSPARENCY_CALLBACK, transparencyCallback);
+
+        try {
+            rowPanel.addEntry(actor.getName(), callbackMap);
+            Vector4 actorColor = actor.getColor();
+            if (actorColor != null) {
+                float[] colorData = actorColor.toArray();
+                if (colorData != null) {
+                    int red = (int) (colorData[0] * 255);
+                    int green = (int) (colorData[1] * 255);
+                    int blue = (int) (colorData[2] * 255);
+                    rowPanel.setEntryStatusColor(actor.getName(), new Color(red, green, blue));
+                }
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            logger.error(ex.toString());
+        }
+    }
+
+    private void addMeshActor(ScrollableColorRowPanel rowPanel, MeshActor actor) {
+        SyncedCallback colorSelectionCallback=createColorSelectionCallback(rowPanel, actor);
+        SyncedCallback edgefalloffCallback=createEdgeFalloffCallback(actor);
+        SyncedCallback intensityCallback=createIntensityCallback(actor);
+        SyncedCallback ambientCallback=createAmbientCallback(actor);
+
+        Map<String, SyncedCallback> callbackMap=new HashMap<>();
+        callbackMap.put(ScrollableColorRowPanel.COLOR_CALLBACK, colorSelectionCallback);
+        callbackMap.put(MeshScrollableRowPanel.EDGEFALLOFF_CALLBACK, edgefalloffCallback);
+        callbackMap.put(MeshScrollableRowPanel.INTENSITY_CALLBACK, intensityCallback);
+        callbackMap.put(MeshScrollableRowPanel.AMBIENT_CALLBACK, ambientCallback);
+
+        try {
+            rowPanel.addEntry(actor.getName(), callbackMap);
+            Vector4 actorColor = actor.getColor();
+            if (actorColor != null) {
+                float[] colorData = actorColor.toArray();
+                if (colorData != null) {
+                    int red = (int) (colorData[0] * 255);
+                    int green = (int) (colorData[1] * 255);
+                    int blue = (int) (colorData[2] * 255);
+                    rowPanel.setEntryStatusColor(actor.getName(), new Color(red, green, blue));
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            logger.error(ex.toString());
         }
     }
 
@@ -83,7 +128,7 @@ public class ActorPanel extends JTabbedPane implements VoxelViewerEventListener 
         };
     }
 
-    private SyncedCallback createBrightnessCallback(final Actor actor) {
+    private SyncedCallback createBrightnessCallback(final DenseVolumeActor actor) {
         return new SyncedCallback() {
             @Override
             public void performAction(Object o) {
@@ -94,7 +139,7 @@ public class ActorPanel extends JTabbedPane implements VoxelViewerEventListener 
         };
     }
 
-    private SyncedCallback createTransparencyCallback(final Actor actor) {
+    private SyncedCallback createTransparencyCallback(final DenseVolumeActor actor) {
         return new SyncedCallback() {
             @Override
             public void performAction(Object o) {
@@ -104,6 +149,40 @@ public class ActorPanel extends JTabbedPane implements VoxelViewerEventListener 
             }
         };
     }
+
+    private SyncedCallback createEdgeFalloffCallback(final MeshActor actor) {
+        return new SyncedCallback() {
+            @Override
+            public void performAction(Object o) {
+                Float edgeFalloff=(Float)o;
+                actor.setEdgeFalloff(edgeFalloff);
+                EventManager.sendEvent(this, new ActorModifiedEvent());
+            }
+        };
+    }
+
+    private SyncedCallback createIntensityCallback(final MeshActor actor) {
+        return new SyncedCallback() {
+            @Override
+            public void performAction(Object o) {
+                Float intensity=(Float)o;
+                actor.setIntensity(intensity);
+                EventManager.sendEvent(this, new ActorModifiedEvent());
+            }
+        };
+    }
+
+    private SyncedCallback createAmbientCallback(final MeshActor actor) {
+        return new SyncedCallback() {
+            @Override
+            public void performAction(Object o) {
+                Float ambience=(Float)o;
+                actor.setAmbience(ambience);
+                EventManager.sendEvent(this, new ActorModifiedEvent());
+            }
+        };
+    }
+
 
     private void clear() {
         volumeRowPanel.clear();

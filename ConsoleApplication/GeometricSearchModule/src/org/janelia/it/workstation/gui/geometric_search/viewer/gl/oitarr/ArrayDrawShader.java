@@ -52,6 +52,11 @@ public abstract class ArrayDrawShader extends GL4Shader {
         checkGlError(gl, "ArrayDrawShader setMVP() error");
     }
 
+    public void setNM(GL4 gl, Matrix4 nm) {
+        setUniformMatrix4fv(gl, "nm", false, nm.asArray());
+        checkGlError(gl, "ArrayDrawShader setNM() error");
+    }
+
     public void setWidth(GL4 gl, int width) {
         setUniform(gl, "hpi_width", width);
     }

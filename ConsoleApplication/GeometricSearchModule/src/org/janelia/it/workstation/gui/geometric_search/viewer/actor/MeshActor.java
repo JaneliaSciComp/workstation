@@ -12,6 +12,10 @@ public class MeshActor extends Actor {
     VoxelViewerObjData objData;
     Matrix4 vertexRotation;
 
+    float edgeFalloff;
+    float intensity;
+    float ambience;
+
     public MeshActor(String name, VoxelViewerObjData objData, Matrix4 vertexRotation) {
         this.name=name;
         this.objData=objData;
@@ -29,4 +33,27 @@ public class MeshActor extends Actor {
         return glActor;
     }
 
+    public float getEdgeFalloff() {
+        return edgeFalloff;
+    }
+
+    public void setEdgeFalloff(float edgeFalloff) {
+        this.edgeFalloff = edgeFalloff;
+    }
+
+    public float getIntensity() {
+        return intensity;
+    }
+
+    public void setIntensity(float intensity) {
+        this.intensity = intensity;
+    }
+
+    public float getAmbience() {
+        return ambience;
+    }
+
+    public void setAmbience(float ambience) {
+        this.ambience = ambience;
+    }
 }

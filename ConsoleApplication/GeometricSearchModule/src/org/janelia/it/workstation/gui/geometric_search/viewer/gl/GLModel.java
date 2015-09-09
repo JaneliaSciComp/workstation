@@ -10,6 +10,7 @@ import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerModel;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerProperties;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.Actor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.DenseVolumeActor;
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.MeshActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorAddedEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorRemovedEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorsClearAllEvent;
@@ -257,6 +258,8 @@ public class GLModel implements VoxelViewerEventListener {
 
                 if (gl4SimpleActor instanceof ArrayCubeGLActor) {
 
+                    final DenseVolumeActor denseVolumeActor=(DenseVolumeActor)actor;
+
                     logger.info("adding instance of ArrayCubeGLActor");
 
                     final ArrayCubeGLActor arrayCubeGLActor = (ArrayCubeGLActor) gl4SimpleActor;
@@ -299,8 +302,8 @@ public class GLModel implements VoxelViewerEventListener {
 
                             float voxelUnitSize = arrayCubeGLActor.getVoxelUnitSize();
                             cubeShader.setVoxelUnitSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
-                            Vector4 actorColor = actor.getColor();
-                            float transparency = actor.getTransparency();
+                            Vector4 actorColor = denseVolumeActor.getColor();
+                            float transparency = denseVolumeActor.getTransparency();
                             float[] data = actorColor.toArray();
                             Vector4 actualColor = new Vector4(data[0], data[1], data[2], transparency);
                             float[] actualData = actualColor.toArray();
@@ -312,7 +315,7 @@ public class GLModel implements VoxelViewerEventListener {
                                 }
                             }
                             cubeShader.setDrawColor(gl, actualColor);
-                            float brightness = actor.getBrightness();
+                            float brightness = denseVolumeActor.getBrightness();
                             cubeShader.setBrightness(gl, brightness);
                         }
                     });
@@ -320,6 +323,7 @@ public class GLModel implements VoxelViewerEventListener {
 
                     logger.info("adding instance of ArrayMeshGLActor");
 
+                    final MeshActor meshActor=(MeshActor)actor;
                     final ArrayMeshGLActor arrayMeshGLActor = (ArrayMeshGLActor) gl4SimpleActor;
                     final ArrayMeshShader meshShader = (ArrayMeshShader) meshShaderActionSequence.getShader();
 
@@ -340,16 +344,23 @@ public class GLModel implements VoxelViewerEventListener {
                             Matrix4 modelCopy = new Matrix4(model);
 
                             meshShader.setProjection(gl, projCopy);
-                            meshShader.setView(gl, viewCopy);
-                            meshShader.setModel(gl, modelCopy);
+                            Matrix4 MV = viewCopy.multiply(modelCopy);
+                            meshShader.setMV(gl, MV);
+
+                            Matrix4 NM = MV.inverse().transpose();
+                            meshShader.setNM(gl, NM);
 
                             meshShader.setWidth(gl, viewer.getWidth());
                             meshShader.setHeight(gl, viewer.getHeight());
 
-                            Vector4 actorColor = actor.getColor();
-                            float transparency = actor.getTransparency();
+                            Vector4 actorColor = meshActor.getColor();
+
+                            float edgeFalloff = meshActor.getEdgeFalloff();
+                            float intensity = meshActor.getIntensity();
+                            float ambience = meshActor.getAmbience();
+
                             float[] data = actorColor.toArray();
-                            Vector4 actualColor = new Vector4(data[0], data[1], data[2], transparency);
+                            Vector4 actualColor = new Vector4(data[0], data[1], data[2], 1.0f);
                             float[] actualData = actualColor.toArray();
                             for (int i = 0; i < 4; i++) {
                                 if (actualData[i] < 0f) {
@@ -359,6 +370,10 @@ public class GLModel implements VoxelViewerEventListener {
                                 }
                             }
                             meshShader.setDrawColor(gl, actualColor);
+                            meshShader.setEdgefalloff(gl, edgeFalloff);
+                            meshShader.setIntensity(gl, intensity);
+                            meshShader.setAmbience(gl, ambience);
+
                             //float brightness=actor.getBrightness();
                             //meshShader.setBrightness(gl, brightness);
                         }
