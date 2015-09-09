@@ -166,11 +166,12 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         // calculated, so that ordering / priority is given to near tiles.        
         Vec3 center = new Vec3(focus[0], focus[1], focus[2]);
 //        if (dimensions == null) {
-            dimensions = new int[]{
-                (int) (radiusInMicrons / tileFormat.getVoxelMicrometers()[0]),
-                (int) (radiusInMicrons / tileFormat.getVoxelMicrometers()[1]),
-                (int) (radiusInMicrons / tileFormat.getVoxelMicrometers()[2]), //4000,4000,4000
-            };
+        dimensions = new int[]{(int)radiusInMicrons,(int)radiusInMicrons,(int)radiusInMicrons};
+//        dimensions = new int[]{
+//            (int) (radiusInMicrons / tileFormat.getVoxelMicrometers()[0]),
+//            (int) (radiusInMicrons / tileFormat.getVoxelMicrometers()[1]),
+//            (int) (radiusInMicrons / tileFormat.getVoxelMicrometers()[2]), //4000,4000,4000
+//        };
 //        }
         log.info("Dimensions in voxels are: {},{},{}.", dimensions[0], dimensions[1], dimensions[2]);
         

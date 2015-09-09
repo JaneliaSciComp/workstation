@@ -119,6 +119,9 @@ public class CacheFacade {
         return (cachedElement != null);
     }
 
+    private int totalGets;
+    private int noFutureGets;
+    
     /**
      * Blocking getters. Let the cache manager worry about the threading.
      * Most likely ID is an absolute path.  Also, packages a decompressed
@@ -130,13 +133,15 @@ public class CacheFacade {
      */
     public SeekableStream get(final String id) {
         log.debug("Getting {}", id);
+        totalGets ++;
         SeekableStream rtnVal = null;
         try {
             Future<byte[]> futureBytes = null;
             Cache cache = manager.getCache(cacheName);
             synchronized (this) {                
                 if (! isInCache(id)) {
-                    log.warn("No Future found for {}. Pushing data into cache.  Thread: {}.", cachePopulator.trimToOctreePath(id), Thread.currentThread().getName());
+                    noFutureGets ++;
+                    log.debug("No Future found for {}. Pushing data into cache.  Thread: {}.", cachePopulator.trimToOctreePath(id), Thread.currentThread().getName());
                     // Ensure we get this exact, required file.
                     final byte[] bytes = new byte[ standardFileSize ];
                     futureBytes = cachePopulator.cache(new File(id), bytes);
@@ -161,6 +166,10 @@ public class CacheFacade {
         }
         if (rtnVal == null) {
             log.warn("Ultimately returning a null value for {}.", id);
+        }
+        
+        if (totalGets % 50 == 0) {
+            log.info("No-future get ratio: {}/{} = {}.", noFutureGets, totalGets, ((double)noFutureGets/(double)totalGets));
         }
         return rtnVal;
     }
