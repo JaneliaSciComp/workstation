@@ -35,7 +35,7 @@ public class CacheController {
      */
     private CacheController() {
         // Create a queue-like thread pool.
-        executor = Executors.newFixedThreadPool(1);
+        executor = Executors.newFixedThreadPool(1, new CustomNamedThreadFactory("CacheControllerThread"));
     }
     
     /**

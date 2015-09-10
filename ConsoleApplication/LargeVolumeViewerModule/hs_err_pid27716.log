@@ -1,0 +1,2029 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x0000000000000000, pid=27716, tid=47256164923136
+#
+# JRE version: Java(TM) SE Runtime Environment (7.0_67-b01) (build 1.7.0_67-b01)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (24.65-b04 mixed mode linux-amd64 )
+# Problematic frame:
+# C  0x0000000000000000
+#
+# Core dump written. Default location: /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/LargeVolumeViewerModule/core or core.27716
+#
+# If you would like to submit a bug report, please visit:
+#   http://bugreport.sun.com/bugreport/crash.jsp
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x00002af1783bf800):  JavaThread "*** Profiler Agent Communication Thread" daemon [_thread_in_vm, id=27741, stack(0x00002afaaedc7000,0x00002afaaeec8000)]
+
+siginfo:si_signo=SIGSEGV: si_errno=0, si_code=1 (SEGV_MAPERR), si_addr=0x0000000000000000
+
+Registers:
+RAX=0x00002afac0059d50, RBX=0x00002afac0000020, RCX=0x000000357fc182a0, RDX=0x00002afac0059250
+RSP=0x00002afaaeec6588, RBP=0x00002afaaeec65a0, RSI=0x00002af1783bf800, RDI=0x00002afac0059260
+R8 =0x0000000000000000, R9 =0x0000000000000002, R10=0x000000000000001e, R11=0x00002af1697f4870
+R12=0x00002af1783bf800, R13=0x00002af1780056e0, R14=0x0000000000000017, R15=0x00002afaaeec6660
+RIP=0x0000000000000000, EFLAGS=0x0000000000010246, CSGSFS=0x0000000000000033, ERR=0x0000000000000014
+  TRAPNO=0x000000000000000e
+
+Top of Stack: (sp=0x00002afaaeec6588)
+0x00002afaaeec6588:   00002af1695e8c53 00002af1783bf800
+0x00002afaaeec6598:   00002afac0000000 00002afaaeec6610
+0x00002afaaeec65a8:   00002af1695db44e 00002af1783bf800
+0x00002afaaeec65b8:   00002afaaeec65c0 00002af1783bf800
+0x00002afaaeec65c8:   0000000000000000 0000000000000000
+0x00002afaaeec65d8:   0000000000000000 00002afaaeec6728
+0x00002afaaeec65e8:   00002afac0000000 00002af169d59da0
+0x00002afaaeec65f8:   00002afaaeec6728 0000000000000001
+0x00002afaaeec6608:   0000000000000000 00002af169d58900
+0x00002afaaeec6618:   00002af17c441e13 00002afac0058b10
+0x00002afaaeec6628:   00002afaaeec6720 00002af1783bf9e8
+0x00002afaaeec6638:   00002af1709d42e9 0000000000000000
+0x00002afaaeec6648:   00002afaaeec6700 00002af1783c01d8
+0x00002afaaeec6658:   00002af1783c01d8 00002af7327f5f48
+0x00002afaaeec6668:   00002af17d282278 00002afaaeec6700
+0x00002afaaeec6678:   00002afaaeec64f0 00002af17d282278
+0x00002afaaeec6688:   00002afaaeec6730 00002af1783bf800
+0x00002afaaeec6698:   00002af170913d98 0000000100000001
+0x00002afaaeec66a8:   0000000100000000 00002af1feab4378
+0x00002afaaeec66b8:   00002af1783bf800 00002afaaeec66c0
+0x00002afaaeec66c8:   0000000000000000 00002afaaeec6730
+0x00002afaaeec66d8:   00002af17d282870 0000000000000000
+0x00002afaaeec66e8:   00002af17d282278 0000000000000000
+0x00002afaaeec66f8:   00002afaaeec6720 00002afaaeec6778
+0x00002afaaeec6708:   00002af170907233 00002af1fce80e08
+0x00002afaaeec6718:   00002af17090fcdb 00002af7327f5f48
+0x00002afaaeec6728:   00002af7327f5f28 0000000000000001
+0x00002afaaeec6738:   00002afaaeec6738 00002af17d13d3fa
+0x00002afaaeec6748:   00002afaaeec67a8 00002af17d1426d0
+0x00002afaaeec6758:   00002af17ed3bc18 00002af17d13d458
+0x00002afaaeec6768:   00002afaaeec6720 00002afaaeec67a8
+0x00002afaaeec6778:   00002afaaeec67f8 00002af170907233 
+
+Instructions: (pc=0x0000000000000000)
+0xffffffffffffffe0:   
+
+Register to memory mapping:
+
+RAX=0x00002afac0059d50 is an unknown value
+RBX=0x00002afac0000020 is an unknown value
+RCX=0x000000357fc182a0: <offset 0x2182a0> in /lib64/libpthread.so.0 at 0x000000357fa00000
+RDX=0x00002afac0059250 is an unknown value
+RSP=0x00002afaaeec6588 is pointing into the stack for thread: 0x00002af1783bf800
+RBP=0x00002afaaeec65a0 is pointing into the stack for thread: 0x00002af1783bf800
+RSI=0x00002af1783bf800 is a thread
+RDI=0x00002afac0059260 is an unknown value
+R8 =0x0000000000000000 is an unknown value
+R9 =0x0000000000000002 is an unknown value
+R10=0x000000000000001e is an unknown value
+R11=0x00002af1697f4870: <offset 0x8b2870> in /misc/local/jdk1.7.0_67/jre/lib/amd64/server/libjvm.so at 0x00002af168f42000
+R12=0x00002af1783bf800 is a thread
+R13=0x00002af1780056e0 is an unknown value
+R14=0x0000000000000017 is an unknown value
+R15=0x00002afaaeec6660 is pointing into the stack for thread: 0x00002af1783bf800
+
+
+Stack: [0x00002afaaedc7000,0x00002afaaeec8000],  sp=0x00002afaaeec6588,  free space=1021k
+Java frames: (J=compiled Java code, j=interpreted, Vv=VM code)
+j  org.netbeans.lib.profiler.server.system.Stacks.getMethodNamesForJMethodIds(I[I[I)[B+0
+j  org.netbeans.lib.profiler.server.ProfilerInterface.getMethodNamesForJMethodIds([I)Lorg/netbeans/lib/profiler/wireprotocol/MethodNamesResponse;+18
+j  org.netbeans.lib.profiler.server.ProfilerServer.handleClientCommand(Lorg/netbeans/lib/profiler/wireprotocol/Command;)V+675
+j  org.netbeans.lib.profiler.server.ProfilerServer.listenToClient()V+48
+j  org.netbeans.lib.profiler.server.ProfilerServer.run()V+22
+v  ~StubRoutines::call_stub
+
+---------------  P R O C E S S  ---------------
+
+Java Threads: ( => current thread )
+  0x00002af178500000 JavaThread "DestroyJavaVM" [_thread_blocked, id=27718, stack(0x00002af1705e5000,0x00002af1706e6000)]
+  0x00002afaf41bc000 JavaThread "Flushing caches" [_thread_blocked, id=29006, stack(0x00002aaaab39e000,0x00002aaaab49f000)]
+  0x00002afaf4024000 JavaThread "Thread-12" daemon [_thread_blocked, id=29001, stack(0x00002aaaab29d000,0x00002aaaab39e000)]
+  0x00002aaab4001000 JavaThread "SwingWorker-pool-3-thread-3" daemon [_thread_blocked, id=28974, stack(0x00002aaaab19c000,0x00002aaaab29d000)]
+  0x00002afb147b4000 JavaThread "SwingWorker-pool-3-thread-2" daemon [_thread_blocked, id=28973, stack(0x00002aaaab09b000,0x00002aaaab19c000)]
+  0x00002aaaac002800 JavaThread "TimerQueue" daemon [_thread_blocked, id=28946, stack(0x00002aaaaaf9a000,0x00002aaaab09b000)]
+  0x00002afb14d72800 JavaThread "SwingWorker-pool-3-thread-1" daemon [_thread_blocked, id=28945, stack(0x00002aaaaae99000,0x00002aaaaaf9a000)]
+  0x00002afb149da800 JavaThread "On Start/Stop-SharedResourceRunner" daemon [_thread_blocked, id=28842, stack(0x00002af9d691a000,0x00002af9d6a1b000)]
+  0x00002afb14097000 JavaThread "RMI Scheduler(0)" daemon [_thread_blocked, id=28691, stack(0x00002af9d67dc000,0x00002af9d68dd000)]
+  0x00002afb14144000 JavaThread "GC Daemon" daemon [_thread_blocked, id=28690, stack(0x00002af9d6e4b000,0x00002af9d6f4c000)]
+  0x00002afb14584000 JavaThread "RMI RenewClean-[e02u19.int.janelia.org:1198]" daemon [_thread_blocked, id=28689, stack(0x00002af9d6d4a000,0x00002af9d6e4b000)]
+  0x00002afb14cf4800 JavaThread "Thread-9" daemon [_thread_blocked, id=28619, stack(0x00002af9d65da000,0x00002af9d66db000)]
+  0x00002afb14c52800 JavaThread "Image Fetcher 3" daemon [_thread_blocked, id=28602, stack(0x00002af9d6c49000,0x00002af9d6d4a000)]
+  0x00002afb140d6800 JavaThread "SyntheticaCleanerThread" daemon [_thread_blocked, id=28560, stack(0x00002af9d66db000,0x00002af9d67dc000)]
+  0x00002afb08026000 JavaThread "Thread-7" daemon [_thread_blocked, id=28276, stack(0x00002af9d64b5000,0x00002af9d65b6000)]
+  0x00002afb08251000 JavaThread "Thread-6" daemon [_thread_blocked, id=28165, stack(0x00002af9d63ad000,0x00002af9d64ae000)]
+  0x00002afb0c0b3000 JavaThread "File Watcher" daemon [_thread_in_native, id=28104, stack(0x00002af9d5d98000,0x00002af9d5e99000)]
+  0x00002afaf4176000 JavaThread "Inactive RequestProcessor thread [Was:Logging Flush/org.netbeans.core.startup.logging.DispatchingHandler]" daemon [_thread_blocked, id=28102, stack(0x00002af9d5b53000,0x00002af9d5c54000)]
+  0x00002afaf4172000 JavaThread "Inactive RequestProcessor thread [Was:Folder recognizer/org.openide.loaders.FolderList$ListTask]" daemon [_thread_blocked, id=28101, stack(0x00002af9d5a52000,0x00002af9d5b53000)]
+  0x00002afaf4173000 JavaThread "Inactive RequestProcessor thread [Was:On Start/Stop/org.netbeans.modules.masterfs.Installer]" daemon [_thread_blocked, id=28100, stack(0x00002af9d5951000,0x00002af9d5a52000)]
+  0x00002afaf4171000 JavaThread "Inactive RequestProcessor thread [Was:Folder recognizer/org.openide.loaders.FolderList$ListTask]" daemon [_thread_blocked, id=28099, stack(0x00002af9d5850000,0x00002af9d5951000)]
+  0x00002afaf40d3800 JavaThread "AWT-EventQueue-0" [_thread_blocked, id=27836, stack(0x00002afae8c32000,0x00002afae8d33000)]
+  0x00002afaf40d2000 JavaThread "AWT-Shutdown" [_thread_blocked, id=27835, stack(0x00002afae8b31000,0x00002afae8c32000)]
+  0x00002afaf407c800 JavaThread "AWT-XAWT" daemon [_thread_in_native, id=27834, stack(0x00002afae8a30000,0x00002afae8b31000)]
+  0x00002afaf406b800 JavaThread "Java2D Disposer" daemon [_thread_blocked, id=27833, stack(0x00002afae892f000,0x00002afae8a30000)]
+  0x00002afaf4027000 JavaThread "RequestProcessor queue manager" daemon [_thread_blocked, id=27820, stack(0x00002afae882e000,0x00002afae892f000)]
+  0x00002af1784ee000 JavaThread "Inactive RequestProcessor thread [Was:StdErr Flush/org.netbeans.core.startup.logging.PrintStreamLogger]" daemon [_thread_blocked, id=27818, stack(0x00002afae862c000,0x00002afae872d000)]
+  0x00002af1784e2800 JavaThread "CLI Requests Server" daemon [_thread_in_native, id=27817, stack(0x00002afae8000000,0x00002afae8101000)]
+  0x00002af1784b4000 JavaThread "Active Reference Queue Daemon" daemon [_thread_blocked, id=27816, stack(0x00002afaafeda000,0x00002afaaffdb000)]
+  0x00002af178430800 JavaThread "Service Thread" daemon [_thread_blocked, id=27814, stack(0x00002afaafb5f000,0x00002afaafc60000)]
+  0x00002af17842d800 JavaThread "C2 CompilerThread1" daemon [_thread_in_native, id=27813, stack(0x00002afaafa5e000,0x00002afaafb5f000)]
+  0x00002af178412800 JavaThread "C2 CompilerThread0" daemon [_thread_blocked, id=27812, stack(0x00002afaaf6fa000,0x00002afaaf7fb000)]
+  0x00002afad0001800 JavaThread "*** Profiler Agent Special Execution Thread 10" daemon [_thread_blocked, id=27811, stack(0x00002afaaf95d000,0x00002afaafa5e000)]
+  0x00002afac0092000 JavaThread "process reaper" daemon [_thread_blocked, id=27809, stack(0x00002afaaf7ff000,0x00002afaaf838000)]
+  0x00002af1783c5800 JavaThread "*** Profiler Agent Special Execution Thread 6" daemon [_thread_blocked, id=27746, stack(0x00002afaaf3f1000,0x00002afaaf4f2000)]
+  0x00002af1783c3800 JavaThread "*** JFluid Monitor thread ***" daemon [_thread_blocked, id=27745, stack(0x00002afaaf2f0000,0x00002afaaf3f1000)]
+=>0x00002af1783bf800 JavaThread "*** Profiler Agent Communication Thread" daemon [_thread_in_vm, id=27741, stack(0x00002afaaedc7000,0x00002afaaeec8000)]
+  0x00002af178340800 JavaThread "Signal Dispatcher" daemon [_thread_blocked, id=27740, stack(0x00002afaaec30000,0x00002afaaed31000)]
+  0x00002af17831f800 JavaThread "Finalizer" daemon [_thread_blocked, id=27739, stack(0x00002afaaeb2f000,0x00002afaaec30000)]
+  0x00002af17831d800 JavaThread "Reference Handler" daemon [_thread_blocked, id=27738, stack(0x00002afaaea2e000,0x00002afaaeb2f000)]
+
+Other Threads:
+  0x00002af178318800 VMThread [stack: 0x00002afaae92d000,0x00002afaaea2e000] [id=27737]
+  0x00002af17843b800 WatcherThread [stack: 0x00002afaafc60000,0x00002afaafd61000] [id=27815]
+
+VM state:synchronizing (normal execution)
+
+VM Mutex/Monitor currently owned by a thread:  ([mutex/lock_event])
+[0x00002af178009050] Threads_lock - owner thread: 0x00002af178318800
+
+Heap
+ PSYoungGen      total 286208K, used 112264K [0x00002af732380000, 0x00002af749a00000, 0x00002af9cce80000)
+  eden space 242688K, 37% used [0x00002af732380000,0x00002af737d38a68,0x00002af741080000)
+  from space 43520K, 46% used [0x00002af744e80000,0x00002af746269640,0x00002af747900000)
+  to   space 63488K, 0% used [0x00002af741080000,0x00002af741080000,0x00002af744e80000)
+ ParOldGen       total 699392K, used 47791K [0x00002af1fce80000, 0x00002af227980000, 0x00002af732380000)
+  object space 699392K, 6% used [0x00002af1fce80000,0x00002af1ffd2bed8,0x00002af227980000)
+ PSPermGen       total 196608K, used 49346K [0x00002af17ce80000, 0x00002af188e80000, 0x00002af1fce80000)
+  object space 196608K, 25% used [0x00002af17ce80000,0x00002af17feb0978,0x00002af188e80000)
+
+Card table byte_map: [0x00002af9cce80000,0x00002af9d1101000] byte_map_base: 0x00002ae454298c00
+
+Polling page: 0x00002af17c43a000
+
+Code Cache  [0x00002af170901000, 0x00002af170bc1000, 0x00002af173901000)
+ total_blobs=1782 nmethods=787 adapters=947 free_code_cache=46416Kb largest_free_block=47474432
+
+Compilation events (10 events):
+Event: 20.585 Thread 0x00002af178412800 nmethod 908 0x00002af170b28290 code [0x00002af170b283e0, 0x00002af170b28498]
+Event: 20.585 Thread 0x00002af178412800  909             sun.misc.ProxyGenerator$ConstantPool$IndirectEntry::<init> (21 bytes)
+Event: 20.586 Thread 0x00002af178412800 nmethod 909 0x00002af170b28090 code [0x00002af170b281c0, 0x00002af170b28218]
+Event: 20.586 Thread 0x00002af178412800  910             sun.misc.ProxyGenerator$ConstantPool::getClass (21 bytes)
+Event: 20.594 Thread 0x00002af178412800 nmethod 910 0x00002af170bb37d0 code [0x00002af170bb3980, 0x00002af170bb3d78]
+Event: 20.647 Thread 0x00002af178412800  911   !         java.util.logging.Logger::doSetParent (174 bytes)
+Event: 20.665 Thread 0x00002af178412800 nmethod 911 0x00002af170b3a9d0 code [0x00002af170b3abe0, 0x00002af170b3b848]
+Event: 20.693 Thread 0x00002af178412800  912             org.openide.filesystems.AbstractFolder::stripNulls (87 bytes)
+Event: 20.704 Thread 0x00002af178412800 nmethod 912 0x00002af170b51490 code [0x00002af170b51640, 0x00002af170b51c78]
+Event: 20.707 Thread 0x00002af178412800  913   !         org.openide.filesystems.AbstractFolder::refreshFolder (494 bytes)
+
+GC Heap History (10 events):
+Event: 10.846 GC heap before
+{Heap before GC invocations=3 (full 0):
+ PSYoungGen      total 306176K, used 282671K [0x00002af732380000, 0x00002af747900000, 0x00002af9cce80000)
+  eden space 262656K, 100% used [0x00002af732380000,0x00002af742400000,0x00002af742400000)
+  from space 43520K, 45% used [0x00002af744e80000,0x00002af74620bd30,0x00002af747900000)
+  to   space 43520K, 0% used [0x00002af742400000,0x00002af742400000,0x00002af744e80000)
+ ParOldGen       total 699392K, used 80K [0x00002af1fce80000, 0x00002af227980000, 0x00002af732380000)
+  object space 699392K, 0% used [0x00002af1fce80000,0x00002af1fce94018,0x00002af227980000)
+ PSPermGen       total 196608K, used 26549K [0x00002af17ce80000, 0x00002af188e80000, 0x00002af1fce80000)
+  object space 196608K, 13% used [0x00002af17ce80000,0x00002af17e86d7b8,0x00002af188e80000)
+Event: 10.874 GC heap after
+Heap after GC invocations=3 (full 0):
+ PSYoungGen      total 306176K, used 39628K [0x00002af732380000, 0x00002af747900000, 0x00002af9cce80000)
+  eden space 262656K, 0% used [0x00002af732380000,0x00002af732380000,0x00002af742400000)
+  from space 43520K, 91% used [0x00002af742400000,0x00002af744ab3100,0x00002af744e80000)
+  to   space 43520K, 0% used [0x00002af744e80000,0x00002af744e80000,0x00002af747900000)
+ ParOldGen       total 699392K, used 88K [0x00002af1fce80000, 0x00002af227980000, 0x00002af732380000)
+  object space 699392K, 0% used [0x00002af1fce80000,0x00002af1fce96018,0x00002af227980000)
+ PSPermGen       total 196608K, used 26549K [0x00002af17ce80000, 0x00002af188e80000, 0x00002af1fce80000)
+  object space 196608K, 13% used [0x00002af17ce80000,0x00002af17e86d7b8,0x00002af188e80000)
+}
+Event: 14.537 GC heap before
+{Heap before GC invocations=4 (full 0):
+ PSYoungGen      total 306176K, used 302284K [0x00002af732380000, 0x00002af747900000, 0x00002af9cce80000)
+  eden space 262656K, 100% used [0x00002af732380000,0x00002af742400000,0x00002af742400000)
+  from space 43520K, 91% used [0x00002af742400000,0x00002af744ab3100,0x00002af744e80000)
+  to   space 43520K, 0% used [0x00002af744e80000,0x00002af744e80000,0x00002af747900000)
+ ParOldGen       total 699392K, used 88K [0x00002af1fce80000, 0x00002af227980000, 0x00002af732380000)
+  object space 699392K, 0% used [0x00002af1fce80000,0x00002af1fce96018,0x00002af227980000)
+ PSPermGen       total 196608K, used 32211K [0x00002af17ce80000, 0x00002af188e80000, 0x00002af1fce80000)
+  object space 196608K, 16% used [0x00002af17ce80000,0x00002af17edf4fd0,0x00002af188e80000)
+Event: 14.566 GC heap after
+Heap after GC invocations=4 (full 0):
+ PSYoungGen      total 306176K, used 43494K [0x00002af732380000, 0x00002af747900000, 0x00002af9cce80000)
+  eden space 262656K, 0% used [0x00002af732380000,0x00002af732380000,0x00002af742400000)
+  from space 43520K, 99% used [0x00002af744e80000,0x00002af7478f9bf8,0x00002af747900000)
+  to   space 43520K, 0% used [0x00002af742400000,0x00002af742400000,0x00002af744e80000)
+ ParOldGen       total 699392K, used 8327K [0x00002af1fce80000, 0x00002af227980000, 0x00002af732380000)
+  object space 699392K, 1% used [0x00002af1fce80000,0x00002af1fd6a1fa8,0x00002af227980000)
+ PSPermGen       total 196608K, used 32211K [0x00002af17ce80000, 0x00002af188e80000, 0x00002af1fce80000)
+  object space 196608K, 16% used [0x00002af17ce80000,0x00002af17edf4fd0,0x00002af188e80000)
+}
+Event: 14.979 GC heap before
+{Heap before GC invocations=5 (full 0):
+ PSYoungGen      total 306176K, used 82928K [0x00002af732380000, 0x00002af747900000, 0x00002af9cce80000)
+  eden space 262656K, 15% used [0x00002af732380000,0x00002af734a02648,0x00002af742400000)
+  from space 43520K, 99% used [0x00002af744e80000,0x00002af7478f9bf8,0x00002af747900000)
+  to   space 43520K, 0% used [0x00002af742400000,0x00002af742400000,0x00002af744e80000)
+ ParOldGen       total 699392K, used 8327K [0x00002af1fce80000, 0x00002af227980000, 0x00002af732380000)
+  object space 699392K, 1% used [0x00002af1fce80000,0x00002af1fd6a1fa8,0x00002af227980000)
+ PSPermGen       total 196608K, used 32641K [0x00002af17ce80000, 0x00002af188e80000, 0x00002af1fce80000)
+  object space 196608K, 16% used [0x00002af17ce80000,0x00002af17ee606b8,0x00002af188e80000)
+Event: 14.993 GC heap after
+Heap after GC invocations=5 (full 0):
+ PSYoungGen      total 306176K, used 43501K [0x00002af732380000, 0x00002af747900000, 0x00002af9cce80000)
+  eden space 262656K, 0% used [0x00002af732380000,0x00002af732380000,0x00002af742400000)
+  from space 43520K, 99% used [0x00002af742400000,0x00002af744e7b4e0,0x00002af744e80000)
+  to   space 43520K, 0% used [0x00002af744e80000,0x00002af744e80000,0x00002af747900000)
+ ParOldGen       total 699392K, used 9975K [0x00002af1fce80000, 0x00002af227980000, 0x00002af732380000)
+  object space 699392K, 1% used [0x00002af1fce80000,0x00002af1fd83dca8,0x00002af227980000)
+ PSPermGen       total 196608K, used 32641K [0x00002af17ce80000, 0x00002af188e80000, 0x00002af1fce80000)
+  object space 196608K, 16% used [0x00002af17ce80000,0x00002af17ee606b8,0x00002af188e80000)
+}
+Event: 14.993 GC heap before
+{Heap before GC invocations=6 (full 1):
+ PSYoungGen      total 306176K, used 43501K [0x00002af732380000, 0x00002af747900000, 0x00002af9cce80000)
+  eden space 262656K, 0% used [0x00002af732380000,0x00002af732380000,0x00002af742400000)
+  from space 43520K, 99% used [0x00002af742400000,0x00002af744e7b4e0,0x00002af744e80000)
+  to   space 43520K, 0% used [0x00002af744e80000,0x00002af744e80000,0x00002af747900000)
+ ParOldGen       total 699392K, used 9975K [0x00002af1fce80000, 0x00002af227980000, 0x00002af732380000)
+  object space 699392K, 1% used [0x00002af1fce80000,0x00002af1fd83dca8,0x00002af227980000)
+ PSPermGen       total 196608K, used 32641K [0x00002af17ce80000, 0x00002af188e80000, 0x00002af1fce80000)
+  object space 196608K, 16% used [0x00002af17ce80000,0x00002af17ee606b8,0x00002af188e80000)
+Event: 15.123 GC heap after
+Heap after GC invocations=6 (full 1):
+ PSYoungGen      total 306176K, used 0K [0x00002af732380000, 0x00002af747900000, 0x00002af9cce80000)
+  eden space 262656K, 0% used [0x00002af732380000,0x00002af732380000,0x00002af742400000)
+  from space 43520K, 0% used [0x00002af742400000,0x00002af742400000,0x00002af744e80000)
+  to   space 43520K, 0% used [0x00002af744e80000,0x00002af744e80000,0x00002af747900000)
+ ParOldGen       total 699392K, used 47783K [0x00002af1fce80000, 0x00002af227980000, 0x00002af732380000)
+  object space 699392K, 6% used [0x00002af1fce80000,0x00002af1ffd29ed8,0x00002af227980000)
+ PSPermGen       total 196608K, used 32623K [0x00002af17ce80000, 0x00002af188e80000, 0x00002af1fce80000)
+  object space 196608K, 16% used [0x00002af17ce80000,0x00002af17ee5bff0,0x00002af188e80000)
+}
+Event: 19.629 GC heap before
+{Heap before GC invocations=7 (full 1):
+ PSYoungGen      total 306176K, used 262656K [0x00002af732380000, 0x00002af747900000, 0x00002af9cce80000)
+  eden space 262656K, 100% used [0x00002af732380000,0x00002af742400000,0x00002af742400000)
+  from space 43520K, 0% used [0x00002af742400000,0x00002af742400000,0x00002af744e80000)
+  to   space 43520K, 0% used [0x00002af744e80000,0x00002af744e80000,0x00002af747900000)
+ ParOldGen       total 699392K, used 47783K [0x00002af1fce80000, 0x00002af227980000, 0x00002af732380000)
+  object space 699392K, 6% used [0x00002af1fce80000,0x00002af1ffd29ed8,0x00002af227980000)
+ PSPermGen       total 196608K, used 43618K [0x00002af17ce80000, 0x00002af188e80000, 0x00002af1fce80000)
+  object space 196608K, 22% used [0x00002af17ce80000,0x00002af17f918bc8,0x00002af188e80000)
+Event: 19.642 GC heap after
+Heap after GC invocations=7 (full 1):
+ PSYoungGen      total 286208K, used 20389K [0x00002af732380000, 0x00002af749a00000, 0x00002af9cce80000)
+  eden space 242688K, 0% used [0x00002af732380000,0x00002af732380000,0x00002af741080000)
+  from space 43520K, 46% used [0x00002af744e80000,0x00002af746269640,0x00002af747900000)
+  to   space 63488K, 0% used [0x00002af741080000,0x00002af741080000,0x00002af744e80000)
+ ParOldGen       total 699392K, used 47791K [0x00002af1fce80000, 0x00002af227980000, 0x00002af732380000)
+  object space 699392K, 6% used [0x00002af1fce80000,0x00002af1ffd2bed8,0x00002af227980000)
+ PSPermGen       total 196608K, used 43618K [0x00002af17ce80000, 0x00002af188e80000, 0x00002af1fce80000)
+  object space 196608K, 22% used [0x00002af17ce80000,0x00002af17f918bc8,0x00002af188e80000)
+}
+
+Deoptimization events (10 events):
+Event: 20.335 Thread 0x00002afaf40d3800 Uncommon trap: reason=bimorphic action=maybe_recompile pc=0x00002af1709fed64 method=java.util.HashMap$KeySet.iterator()Ljava/util/Iterator; @ 4
+Event: 20.467 Thread 0x00002afb147b4000 Uncommon trap: reason=unreached action=reinterpret pc=0x00002af1709aec30 method=java.util.HashMap.getEntry(Ljava/lang/Object;)Ljava/util/HashMap$Entry; @ 10
+Event: 20.468 Thread 0x00002afb147b4000 Uncommon trap: reason=predicate action=maybe_recompile pc=0x00002af170a12ec4 method=java.util.TreeMap.getEntryUsingComparator(Ljava/lang/Object;)Ljava/util/TreeMap$Entry; @ 22
+Event: 20.503 Thread 0x00002afb147b4000 Uncommon trap: reason=unreached action=reinterpret pc=0x00002af170a96634 method=java.lang.Class$MethodArray.addIfNotPresent(Ljava/lang/reflect/Method;)V @ 19
+Event: 20.677 Thread 0x00002afb147b4000 Uncommon trap: reason=unreached action=reinterpret pc=0x00002af170b72ff8 method=java.util.regex.Pattern.expr(Ljava/util/regex/Pattern$Node;)Ljava/util/regex/Pattern$Node; @ 21
+Event: 20.678 Thread 0x00002afb147b4000 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00002af1709dfc90 method=java.util.regex.Pattern$Branch.study(Ljava/util/regex/Pattern$TreeInfo;)Z @ 57
+Event: 20.678 Thread 0x00002afb147b4000 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00002af1709be968 method=java.util.regex.Pattern$Branch.match(Ljava/util/regex/Matcher;ILjava/lang/CharSequence;)Z @ 50
+Event: 20.678 Thread 0x00002afb147b4000 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00002af1709be968 method=java.util.regex.Pattern$Branch.match(Ljava/util/regex/Matcher;ILjava/lang/CharSequence;)Z @ 50
+Event: 20.678 Thread 0x00002afb147b4000 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00002af1709be968 method=java.util.regex.Pattern$Branch.match(Ljava/util/regex/Matcher;ILjava/lang/CharSequence;)Z @ 50
+Event: 20.678 Thread 0x00002afb147b4000 Uncommon trap: reason=class_check action=maybe_recompile pc=0x00002af1709be968 method=java.util.regex.Pattern$Branch.match(Ljava/util/regex/Matcher;ILjava/lang/CharSequence;)Z @ 50
+
+Internal exceptions (10 events):
+Event: 20.439 Thread 0x00002afb147b4000 Threw 0x00002af736af01a8 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 20.441 Thread 0x00002afb147b4000 Threw 0x00002af736afae68 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 20.442 Thread 0x00002afb147b4000 Threw 0x00002af736afd7b8 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 20.442 Thread 0x00002afb147b4000 Threw 0x00002af736b01400 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 20.442 Thread 0x00002afb147b4000 Threw 0x00002af736b03e08 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jvm.cpp:1244
+Event: 20.467 Thread 0x00002afb147b4000 Implicit null exception at 0x00002af1709aeab2 to 0x00002af1709aec21
+Event: 20.660 Thread 0x00002afb147b4000 Threw 0x00002af7378cfa20 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/classfile/systemDictionary.cpp:185
+Event: 20.664 Thread 0x00002afb147b4000 Threw 0x00002af7378d49f8 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/classfile/systemDictionary.cpp:185
+Event: 20.685 Thread 0x00002afb147b4000 Threw 0x00002af7379b6070 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jni.cpp:717
+Event: 20.685 Thread 0x00002afb147b4000 Threw 0x00002af7379b6ba0 at /HUDSON/workspace/7u-2-build-linux-amd64/jdk7u67/1368/hotspot/src/share/vm/prims/jni.cpp:717
+
+Events (10 events):
+Event: 20.724 loading class 0x00002afab0369070
+Event: 20.724 loading class 0x00002afab0369070 done
+Event: 20.724 Executing VM operation: GetAllStackTraces
+Event: 20.724 Executing VM operation: GetAllStackTraces done
+Event: 20.724 loading class 0x00002afab0369030
+Event: 20.724 Executing VM operation: GetAllStackTraces
+Event: 20.724 loading class 0x00002afab0369030 done
+Event: 20.724 Executing VM operation: GetAllStackTraces done
+Event: 20.724 Executing VM operation: GetAllStackTraces
+Event: 20.725 Executing VM operation: GetAllStackTraces done
+
+
+Dynamic libraries:
+00400000-00401000 r-xp 00000000 00:71 3428354302                         /misc/local/jdk1.7.0_67/bin/java
+00600000-00601000 rw-p 00000000 00:71 3428354302                         /misc/local/jdk1.7.0_67/bin/java
+016df000-01700000 rw-p 00000000 00:00 0                                  [heap]
+40266000-40268000 r-xs 00000000 fd:00 2363152                            /tmp/1534.1.vnc13.q/.glUzMJvF (deleted)
+40b7f000-40c1e000 rw-p 00000000 00:00 0 
+357ee00000-357ee20000 r-xp 00000000 fd:00 656099                         /lib64/ld-2.12.so
+357f01f000-357f020000 r--p 0001f000 fd:00 656099                         /lib64/ld-2.12.so
+357f020000-357f021000 rw-p 00020000 fd:00 656099                         /lib64/ld-2.12.so
+357f021000-357f022000 rw-p 00000000 00:00 0 
+357f200000-357f202000 r-xp 00000000 fd:00 660880                         /lib64/libdl-2.12.so
+357f202000-357f402000 ---p 00002000 fd:00 660880                         /lib64/libdl-2.12.so
+357f402000-357f403000 r--p 00002000 fd:00 660880                         /lib64/libdl-2.12.so
+357f403000-357f404000 rw-p 00003000 fd:00 660880                         /lib64/libdl-2.12.so
+357f600000-357f78b000 r-xp 00000000 fd:00 656101                         /lib64/libc-2.12.so
+357f78b000-357f98a000 ---p 0018b000 fd:00 656101                         /lib64/libc-2.12.so
+357f98a000-357f98e000 r--p 0018a000 fd:00 656101                         /lib64/libc-2.12.so
+357f98e000-357f98f000 rw-p 0018e000 fd:00 656101                         /lib64/libc-2.12.so
+357f98f000-357f994000 rw-p 00000000 00:00 0 
+357fa00000-357fa17000 r-xp 00000000 fd:00 656105                         /lib64/libpthread-2.12.so
+357fa17000-357fc17000 ---p 00017000 fd:00 656105                         /lib64/libpthread-2.12.so
+357fc17000-357fc18000 r--p 00017000 fd:00 656105                         /lib64/libpthread-2.12.so
+357fc18000-357fc19000 rw-p 00018000 fd:00 656105                         /lib64/libpthread-2.12.so
+357fc19000-357fc1d000 rw-p 00000000 00:00 0 
+357fe00000-357fe83000 r-xp 00000000 fd:00 679011                         /lib64/libm-2.12.so
+357fe83000-3580082000 ---p 00083000 fd:00 679011                         /lib64/libm-2.12.so
+3580082000-3580083000 r--p 00082000 fd:00 679011                         /lib64/libm-2.12.so
+3580083000-3580084000 rw-p 00083000 fd:00 679011                         /lib64/libm-2.12.so
+3580200000-3580215000 r-xp 00000000 fd:00 679006                         /lib64/libz.so.1.2.3
+3580215000-3580414000 ---p 00015000 fd:00 679006                         /lib64/libz.so.1.2.3
+3580414000-3580415000 r--p 00014000 fd:00 679006                         /lib64/libz.so.1.2.3
+3580415000-3580416000 rw-p 00015000 fd:00 679006                         /lib64/libz.so.1.2.3
+3580600000-3580607000 r-xp 00000000 fd:00 656106                         /lib64/librt-2.12.so
+3580607000-3580806000 ---p 00007000 fd:00 656106                         /lib64/librt-2.12.so
+3580806000-3580807000 r--p 00006000 fd:00 656106                         /lib64/librt-2.12.so
+3580807000-3580808000 rw-p 00007000 fd:00 656106                         /lib64/librt-2.12.so
+3580a00000-3580b03000 r-xp 00000000 fd:00 656107                         /lib64/libglib-2.0.so.0.2600.1
+3580b03000-3580d03000 ---p 00103000 fd:00 656107                         /lib64/libglib-2.0.so.0.2600.1
+3580d03000-3580d04000 rw-p 00103000 fd:00 656107                         /lib64/libglib-2.0.so.0.2600.1
+3580d04000-3580d05000 rw-p 00000000 00:00 0 
+3580e00000-3580e16000 r-xp 00000000 fd:00 678999                         /lib64/libresolv-2.12.so
+3580e16000-3581016000 ---p 00016000 fd:00 678999                         /lib64/libresolv-2.12.so
+3581016000-3581017000 r--p 00016000 fd:00 678999                         /lib64/libresolv-2.12.so
+3581017000-3581018000 rw-p 00017000 fd:00 678999                         /lib64/libresolv-2.12.so
+3581018000-358101a000 rw-p 00000000 00:00 0 
+3581200000-358121d000 r-xp 00000000 fd:00 679007                         /lib64/libselinux.so.1
+358121d000-358141c000 ---p 0001d000 fd:00 679007                         /lib64/libselinux.so.1
+358141c000-358141d000 r--p 0001c000 fd:00 679007                         /lib64/libselinux.so.1
+358141d000-358141e000 rw-p 0001d000 fd:00 679007                         /lib64/libselinux.so.1
+358141e000-358141f000 rw-p 00000000 00:00 0 
+3581600000-3581604000 r-xp 00000000 fd:00 656108                         /lib64/libgthread-2.0.so.0.2600.1
+3581604000-3581803000 ---p 00004000 fd:00 656108                         /lib64/libgthread-2.0.so.0.2600.1
+3581803000-3581804000 rw-p 00003000 fd:00 656108                         /lib64/libgthread-2.0.so.0.2600.1
+3581a00000-3581a4a000 r-xp 00000000 fd:00 656113                         /lib64/libgobject-2.0.so.0.2600.1
+3581a4a000-3581c49000 ---p 0004a000 fd:00 656113                         /lib64/libgobject-2.0.so.0.2600.1
+3581c49000-3581c4b000 rw-p 00049000 fd:00 656113                         /lib64/libgobject-2.0.so.0.2600.1
+3581c4b000-3581c4c000 rw-p 00000000 00:00 0 
+3582200000-3582202000 r-xp 00000000 fd:00 1443203                        /usr/lib64/libXau.so.6.0.0
+3582202000-3582402000 ---p 00002000 fd:00 1443203                        /usr/lib64/libXau.so.6.0.0
+3582402000-3582403000 rw-p 00002000 fd:00 1443203                        /usr/lib64/libXau.so.6.0.0
+3582600000-358261d000 r-xp 00000000 fd:00 1451763                        /usr/lib64/libxcb.so.1.1.0
+358261d000-358281d000 ---p 0001d000 fd:00 1451763                        /usr/lib64/libxcb.so.1.1.0
+358281d000-358281e000 rw-p 0001d000 fd:00 1451763                        /usr/lib64/libxcb.so.1.1.0
+3582a00000-3582b37000 r-xp 00000000 fd:00 1443281                        /usr/lib64/libX11.so.6.3.0
+3582b37000-3582d37000 ---p 00137000 fd:00 1443281                        /usr/lib64/libX11.so.6.3.0
+3582d37000-3582d3d000 rw-p 00137000 fd:00 1443281                        /usr/lib64/libX11.so.6.3.0
+3582e00000-3582e16000 r-xp 00000000 fd:00 679012                         /lib64/libgcc_s-4.4.7-20120601.so.1
+3582e16000-3583015000 ---p 00016000 fd:00 679012                         /lib64/libgcc_s-4.4.7-20120601.so.1
+3583015000-3583016000 rw-p 00015000 fd:00 679012                         /lib64/libgcc_s-4.4.7-20120601.so.1
+3583200000-3583212000 r-xp 00000000 fd:00 1443863                        /usr/lib64/libXext.so.6.4.0
+3583212000-3583412000 ---p 00012000 fd:00 1443863                        /usr/lib64/libXext.so.6.4.0
+3583412000-3583413000 rw-p 00012000 fd:00 1443863                        /usr/lib64/libXext.so.6.4.0
+3583600000-3583626000 r-xp 00000000 fd:00 679026                         /lib64/libexpat.so.1.5.2
+3583626000-3583825000 ---p 00026000 fd:00 679026                         /lib64/libexpat.so.1.5.2
+3583825000-3583828000 rw-p 00025000 fd:00 679026                         /lib64/libexpat.so.1.5.2
+3583a00000-3583a98000 r-xp 00000000 fd:00 1447674                        /usr/lib64/libfreetype.so.6.3.22
+3583a98000-3583c97000 ---p 00098000 fd:00 1447674                        /usr/lib64/libfreetype.so.6.3.22
+3583c97000-3583c9d000 rw-p 00097000 fd:00 1447674                        /usr/lib64/libfreetype.so.6.3.22
+3583e00000-3583e34000 r-xp 00000000 fd:00 1449972                        /usr/lib64/libfontconfig.so.1.4.4
+3583e34000-3584034000 ---p 00034000 fd:00 1449972                        /usr/lib64/libfontconfig.so.1.4.4
+3584034000-3584036000 rw-p 00034000 fd:00 1449972                        /usr/lib64/libfontconfig.so.1.4.4
+3584200000-3584225000 r-xp 00000000 fd:00 1451761                        /usr/lib64/libpng12.so.0.49.0
+3584225000-3584425000 ---p 00025000 fd:00 1451761                        /usr/lib64/libpng12.so.0.49.0
+3584425000-3584426000 rw-p 00025000 fd:00 1451761                        /usr/lib64/libpng12.so.0.49.0
+3584600000-3584609000 r-xp 00000000 fd:00 1449129                        /usr/lib64/libXrender.so.1.3.0
+3584609000-3584809000 ---p 00009000 fd:00 1449129                        /usr/lib64/libXrender.so.1.3.0
+3584809000-358480a000 rw-p 00009000 fd:00 1449129                        /usr/lib64/libXrender.so.1.3.0
+3585200000-358520e000 r-xp 00000000 fd:00 1449127                        /usr/lib64/libXi.so.6.1.0
+358520e000-358540e000 ---p 0000e000 fd:00 1449127                        /usr/lib64/libXi.so.6.1.0
+358540e000-358540f000 rw-p 0000e000 fd:00 1449127                        /usr/lib64/libXi.so.6.1.0
+3585600000-358560a000 r-xp 00000000 fd:00 1449960                        /usr/lib64/libXrandr.so.2.2.0
+358560a000-3585809000 ---p 0000a000 fd:00 1449960                        /usr/lib64/libXrandr.so.2.2.0
+3585809000-358580a000 rw-p 00009000 fd:00 1449960                        /usr/lib64/libXrandr.so.2.2.0
+3585a00000-3585a05000 r-xp 00000000 fd:00 1461739                        /usr/lib64/libXxf86vm.so.1.0.0
+3585a05000-3585c04000 ---p 00005000 fd:00 1461739                        /usr/lib64/libXxf86vm.so.1.0.0
+3585c04000-3585c05000 rw-p 00004000 fd:00 1461739                        /usr/lib64/libXxf86vm.so.1.0.0
+3585e00000-3585e09000 r-xp 00000000 fd:00 1449958                        /usr/lib64/libXcursor.so.1.0.2
+3585e09000-3586009000 ---p 00009000 fd:00 1449958                        /usr/lib64/libXcursor.so.1.0.2
+3586009000-358600a000 rw-p 00009000 fd:00 1449958                        /usr/lib64/libXcursor.so.1.0.2
+3586200000-3586202000 r-xp 00000000 fd:00 1449964                        /usr/lib64/libXinerama.so.1.0.0
+3586202000-3586401000 ---p 00002000 fd:00 1449964                        /usr/lib64/libXinerama.so.1.0.0
+3586401000-3586402000 rw-p 00001000 fd:00 1449964                        /usr/lib64/libXinerama.so.1.0.0
+3586e00000-3586e05000 r-xp 00000000 fd:00 1449131                        /usr/lib64/libXfixes.so.3.1.0
+3586e05000-3587005000 ---p 00005000 fd:00 1449131                        /usr/lib64/libXfixes.so.3.1.0
+3587005000-3587006000 rw-p 00005000 fd:00 1449131                        /usr/lib64/libXfixes.so.3.1.0
+3589600000-3589603000 r-xp 00000000 fd:00 678998                         /lib64/libgmodule-2.0.so.0.2600.1
+3589603000-3589802000 ---p 00003000 fd:00 678998                         /lib64/libgmodule-2.0.so.0.2600.1
+3589802000-3589803000 rw-p 00002000 fd:00 678998                         /lib64/libgmodule-2.0.so.0.2600.1
+3589e00000-3589f0b000 r-xp 00000000 fd:00 679009                         /lib64/libgio-2.0.so.0.2600.1
+3589f0b000-358a10b000 ---p 0010b000 fd:00 679009                         /lib64/libgio-2.0.so.0.2600.1
+358a10b000-358a110000 rw-p 0010b000 fd:00 679009                         /lib64/libgio-2.0.so.0.2600.1
+358a110000-358a111000 rw-p 00000000 00:00 0 
+358a600000-358a676000 r-xp 00000000 fd:00 1460603                        /usr/lib64/libcairo.so.2.10800.8
+358a676000-358a876000 ---p 00076000 fd:00 1460603                        /usr/lib64/libcairo.so.2.10800.8
+358a876000-358a879000 rw-p 00076000 fd:00 1460603                        /usr/lib64/libcairo.so.2.10800.8
+358aa00000-358aa83000 r-xp 00000000 fd:00 1460602                        /usr/lib64/libpixman-1.so.0.26.2
+358aa83000-358ac82000 ---p 00083000 fd:00 1460602                        /usr/lib64/libpixman-1.so.0.26.2
+358ac82000-358ac88000 rw-p 00082000 fd:00 1460602                        /usr/lib64/libpixman-1.so.0.26.2
+358ae00000-358ae1e000 r-xp 00000000 fd:00 1450062                        /usr/lib64/libgdk_pixbuf-2.0.so.0.2000.1
+358ae1e000-358b01e000 ---p 0001e000 fd:00 1450062                        /usr/lib64/libgdk_pixbuf-2.0.so.0.2000.1
+358b01e000-358b01f000 rw-p 0001e000 fd:00 1450062                        /usr/lib64/libgdk_pixbuf-2.0.so.0.2000.1
+358b400000-358b405000 r-xp 00000000 fd:00 1443303                        /usr/lib64/libXtst.so.6.1.0
+358b405000-358b605000 ---p 00005000 fd:00 1443303                        /usr/lib64/libXtst.so.6.1.0
+358b605000-358b606000 rw-p 00005000 fd:00 1443303                        /usr/lib64/libXtst.so.6.1.0
+358b800000-358b805000 r-xp 00000000 fd:00 1462974                        /usr/lib64/libogg.so.0.6.0
+358b805000-358ba05000 ---p 00005000 fd:00 1462974                        /usr/lib64/libogg.so.0.6.0
+358ba05000-358ba06000 rw-p 00005000 fd:00 1462974                        /usr/lib64/libogg.so.0.6.0
+358bc00000-358bc07000 r-xp 00000000 fd:00 679023                         /lib64/libcrypt-2.12.so
+358bc07000-358be07000 ---p 00007000 fd:00 679023                         /lib64/libcrypt-2.12.so
+358be07000-358be08000 r--p 00007000 fd:00 679023                         /lib64/libcrypt-2.12.so
+358be08000-358be09000 rw-p 00008000 fd:00 679023                         /lib64/libcrypt-2.12.so
+358be09000-358be37000 rw-p 00000000 00:00 0 
+358c800000-358c848000 r-xp 00000000 fd:00 1444056                        /usr/lib64/libpango-1.0.so.0.2800.1
+358c848000-358ca48000 ---p 00048000 fd:00 1444056                        /usr/lib64/libpango-1.0.so.0.2800.1
+358ca48000-358ca4b000 rw-p 00048000 fd:00 1444056                        /usr/lib64/libpango-1.0.so.0.2800.1
+358d200000-358d20b000 r-xp 00000000 fd:00 1460109                        /usr/lib64/libpangocairo-1.0.so.0.2800.1
+358d20b000-358d40b000 ---p 0000b000 fd:00 1460109                        /usr/lib64/libpangocairo-1.0.so.0.2800.1
+358d40b000-358d40c000 rw-p 0000b000 fd:00 1460109                        /usr/lib64/libpangocairo-1.0.so.0.2800.1
+358d600000-358da6a000 r-xp 00000000 fd:00 1460128                        /usr/lib64/libgtk-x11-2.0.so.0.2000.1
+358da6a000-358dc69000 ---p 0046a000 fd:00 1460128                        /usr/lib64/libgtk-x11-2.0.so.0.2000.1
+358dc69000-358dc74000 rw-p 00469000 fd:00 1460128                        /usr/lib64/libgtk-x11-2.0.so.0.2000.1
+358dc74000-358dc76000 rw-p 00000000 00:00 0 
+358e000000-358e066000 r-xp 00000000 fd:00 679022                         /lib64/libfreebl3.so
+358e066000-358e266000 ---p 00066000 fd:00 679022                         /lib64/libfreebl3.so
+358e266000-358e267000 r--p 00066000 fd:00 679022                         /lib64/libfreebl3.so
+358e267000-358e268000 rw-p 00067000 fd:00 679022                         /lib64/libfreebl3.so
+358e268000-358e26c000 rw-p 00000000 00:00 0 
+358e400000-358e41e000 r-xp 00000000 fd:00 1460130                        /usr/lib64/libatk-1.0.so.0.3009.1
+358e41e000-358e61e000 ---p 0001e000 fd:00 1460130                        /usr/lib64/libatk-1.0.so.0.3009.1
+358e61e000-358e621000 rw-p 0001e000 fd:00 1460130                        /usr/lib64/libatk-1.0.so.0.3009.1
+358ec00000-358ecb6000 r-xp 00000000 fd:00 1450057                        /usr/lib64/libgdk-x11-2.0.so.0.2000.1
+358ecb6000-358eeb6000 ---p 000b6000 fd:00 1450057                        /usr/lib64/libgdk-x11-2.0.so.0.2000.1
+358eeb6000-358eebb000 rw-p 000b6000 fd:00 1450057                        /usr/lib64/libgdk-x11-2.0.so.0.2000.1
+358f000000-358f029000 r-xp 00000000 fd:00 1449133                        /usr/lib64/libpangoft2-1.0.so.0.2800.1
+358f029000-358f228000 ---p 00029000 fd:00 1449133                        /usr/lib64/libpangoft2-1.0.so.0.2800.1
+358f228000-358f22a000 rw-p 00028000 fd:00 1449133                        /usr/lib64/libpangoft2-1.0.so.0.2800.1
+3590a00000-3590a2c000 r-xp 00000000 fd:00 1448804                        /usr/lib64/libvorbis.so.0.4.3
+3590a2c000-3590c2b000 ---p 0002c000 fd:00 1448804                        /usr/lib64/libvorbis.so.0.4.3
+3590c2b000-3590c2c000 rw-p 0002b000 fd:00 1448804                        /usr/lib64/libvorbis.so.0.4.3
+3591800000-3591802000 r-xp 00000000 fd:00 1460608                        /usr/lib64/libXdamage.so.1.1.0
+3591802000-3591a01000 ---p 00002000 fd:00 1460608                        /usr/lib64/libXdamage.so.1.1.0
+3591a01000-3591a02000 rw-p 00001000 fd:00 1460608                        /usr/lib64/libXdamage.so.1.1.0
+3591c00000-3591c02000 r-xp 00000000 fd:00 1460607                        /usr/lib64/libXcomposite.so.1.0.0
+3591c02000-3591e01000 ---p 00002000 fd:00 1460607                        /usr/lib64/libXcomposite.so.1.0.0
+3591e01000-3591e02000 rw-p 00001000 fd:00 1460607                        /usr/lib64/libXcomposite.so.1.0.0
+3592800000-3592811000 r-xp 00000000 fd:00 1443346                        /usr/lib64/libtdb.so.1.2.10
+3592811000-3592a10000 ---p 00011000 fd:00 1443346                        /usr/lib64/libtdb.so.1.2.10
+3592a10000-3592a11000 rw-p 00010000 fd:00 1443346                        /usr/lib64/libtdb.so.1.2.10
+3593000000-3593009000 r-xp 00000000 fd:00 1447240                        /usr/lib64/libltdl.so.7.2.1
+3593009000-3593208000 ---p 00009000 fd:00 1447240                        /usr/lib64/libltdl.so.7.2.1
+3593208000-3593209000 rw-p 00008000 fd:00 1447240                        /usr/lib64/libltdl.so.7.2.1
+3598c00000-3598c07000 r-xp 00000000 fd:00 1443330                        /usr/lib64/libvorbisfile.so.3.3.2
+3598c07000-3598e06000 ---p 00007000 fd:00 1443330                        /usr/lib64/libvorbisfile.so.3.3.2
+3598e06000-3598e07000 rw-p 00006000 fd:00 1443330                        /usr/lib64/libvorbisfile.so.3.3.2
+3599400000-3599404000 r-xp 00000000 fd:00 1462976                        /usr/lib64/libcanberra-gtk.so.0.1.5
+3599404000-3599603000 ---p 00004000 fd:00 1462976                        /usr/lib64/libcanberra-gtk.so.0.1.5
+3599603000-3599604000 rw-p 00003000 fd:00 1462976                        /usr/lib64/libcanberra-gtk.so.0.1.5
+3599800000-359980f000 r-xp 00000000 fd:00 1462975                        /usr/lib64/libcanberra.so.0.2.1
+359980f000-3599a0f000 ---p 0000f000 fd:00 1462975                        /usr/lib64/libcanberra.so.0.2.1
+3599a0f000-3599a10000 rw-p 0000f000 fd:00 1462975                        /usr/lib64/libcanberra.so.0.2.1
+3979600000-3979677000 r-xp 00000000 fd:00 1460381                        /usr/lib64/libGL.so.99999.99999.99999
+3979677000-3979877000 ---p 00077000 fd:00 1460381                        /usr/lib64/libGL.so.99999.99999.99999
+3979877000-397987e000 rw-p 00077000 fd:00 1460381                        /usr/lib64/libGL.so.99999.99999.99999
+397987e000-3979894000 rw-p 00000000 00:00 0 
+2aaaaaaac000-2aaaaaaad000 rw-s 1014a82000 00:05 9641                     /dev/nvidiactl
+2aaaaaaad000-2aaaaaaae000 rw-s 1f2e774000 00:05 9641                     /dev/nvidiactl
+2aaaaaaae000-2aaaaaaaf000 rw-s dc641000 00:05 9631                       /dev/nvidia0
+2aaaaaaaf000-2aaaaaacf000 rw-s b64e8a000 00:05 9641                      /dev/nvidiactl
+2aaaaaacf000-2aaaaab0f000 rw-s bb4363000 00:05 9641                      /dev/nvidiactl
+2aaaaab0f000-2aaaaab10000 rw-s 381ff7d61000 00:05 9631                   /dev/nvidia0
+2aaaaab10000-2aaaaab11000 rw-s dc060000 00:05 9631                       /dev/nvidia0
+2aaaaab11000-2aaaaab31000 rw-s 165de94000 00:05 9641                     /dev/nvidiactl
+2aaaaab31000-2aaaaab71000 rw-s 1d70ede000 00:05 9641                     /dev/nvidiactl
+2aaaaab71000-2aaaaab72000 rw-s 381ff7d61000 00:05 9631                   /dev/nvidia0
+2aaaaab72000-2aaaaab76000 rw-s 1d0feab000 00:05 9641                     /dev/nvidiactl
+2aaaaab76000-2aaaaab77000 rw-s fc0b9f000 00:05 9641                      /dev/nvidiactl
+2aaaaab77000-2aaaaab97000 rw-s 381ff0320000 00:05 9631                   /dev/nvidia0
+2aaaaab97000-2aaaaabaa000 rw-s 1e55170000 00:05 9641                     /dev/nvidiactl
+2aaaaabaa000-2aaaaacaa000 rw-s f7df2f000 00:05 9641                      /dev/nvidiactl
+2aaaaacaa000-2aaaaad2a000 rw-s 1e835e3000 00:05 9641                     /dev/nvidiactl
+2aaaaad2a000-2aaaaadaa000 rw-s ef8cdb000 00:05 9641                      /dev/nvidiactl
+2aaaaadaa000-2aaaaadac000 rw-s 00000000 fd:00 2363152                    /tmp/1534.1.vnc13.q/.glUzMJvF (deleted)
+2aaaaadac000-2aaaaae2c000 rw-s 11b1a4d000 00:05 9641                     /dev/nvidiactl
+2aaaaae2c000-2aaaaae31000 r--s 00014000 00:7a 573723881                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaGreenDream.jar
+2aaaaae42000-2aaaaae7f000 r--s 0024f000 00:7a 563711942                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/xmlbeans-2.3.0.jar
+2aaaaae99000-2aaaaae9c000 ---p 00000000 00:00 0 
+2aaaaae9c000-2aaaaaf9a000 rw-p 00000000 00:00 0 
+2aaaaaf9a000-2aaaaaf9d000 ---p 00000000 00:00 0 
+2aaaaaf9d000-2aaaab09b000 rw-p 00000000 00:00 0 
+2aaaab09b000-2aaaab09e000 ---p 00000000 00:00 0 
+2aaaab09e000-2aaaab19c000 rw-p 00000000 00:00 0 
+2aaaab19c000-2aaaab19f000 ---p 00000000 00:00 0 
+2aaaab19f000-2aaaab29d000 rw-p 00000000 00:00 0 
+2aaaab29d000-2aaaab2a0000 ---p 00000000 00:00 0 
+2aaaab2a0000-2aaaab39e000 rw-p 00000000 00:00 0 
+2aaaab39e000-2aaaab3a1000 ---p 00000000 00:00 0 
+2aaaab3a1000-2aaaab49f000 rw-p 00000000 00:00 0 
+2aaaac000000-2aaaac021000 rw-p 00000000 00:00 0 
+2aaaac021000-2aaab0000000 ---p 00000000 00:00 0 
+2aaab0000000-2aaab0021000 rw-p 00000000 00:00 0 
+2aaab0021000-2aaab4000000 ---p 00000000 00:00 0 
+2aaab4000000-2aaab420a000 rw-p 00000000 00:00 0 
+2aaab420a000-2aaab8000000 ---p 00000000 00:00 0 
+2aaab8000000-2aaab8021000 rw-p 00000000 00:00 0 
+2aaab8021000-2aaabc000000 ---p 00000000 00:00 0 
+2aaabc000000-2aaabc021000 rw-p 00000000 00:00 0 
+2aaabc021000-2aaac0000000 ---p 00000000 00:00 0 
+2aaac0000000-2aaac0021000 rw-p 00000000 00:00 0 
+2aaac0021000-2aaac4000000 ---p 00000000 00:00 0 
+2af168cfa000-2af168cfb000 rw-p 00000000 00:00 0 
+2af168d28000-2af168d29000 rw-p 00000000 00:00 0 
+2af168d29000-2af168d3f000 r-xp 00000000 00:71 3556705651                 /misc/local/jdk1.7.0_67/lib/amd64/jli/libjli.so
+2af168d3f000-2af168f3f000 ---p 00016000 00:71 3556705651                 /misc/local/jdk1.7.0_67/lib/amd64/jli/libjli.so
+2af168f3f000-2af168f40000 rw-p 00016000 00:71 3556705651                 /misc/local/jdk1.7.0_67/lib/amd64/jli/libjli.so
+2af168f40000-2af168f42000 rw-p 00000000 00:00 0 
+2af168f42000-2af169ab2000 r-xp 00000000 00:71 3495631905                 /misc/local/jdk1.7.0_67/jre/lib/amd64/server/libjvm.so
+2af169ab2000-2af169cb1000 ---p 00b70000 00:71 3495631905                 /misc/local/jdk1.7.0_67/jre/lib/amd64/server/libjvm.so
+2af169cb1000-2af169d76000 rw-p 00b6f000 00:71 3495631905                 /misc/local/jdk1.7.0_67/jre/lib/amd64/server/libjvm.so
+2af169d76000-2af169db6000 rw-p 00000000 00:00 0 
+2af169db6000-2af169e0f000 r-xp 00000000 00:71 3429750223                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libsplashscreen.so
+2af169e0f000-2af16a00f000 ---p 00059000 00:71 3429750223                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libsplashscreen.so
+2af16a00f000-2af16a010000 rw-p 00059000 00:71 3429750223                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libsplashscreen.so
+2af16a010000-2af16a013000 rw-p 00000000 00:00 0 
+2af16a040000-2af16a04c000 r-xp 00000000 fd:00 655389                     /lib64/libnss_files-2.12.so
+2af16a04c000-2af16a24c000 ---p 0000c000 fd:00 655389                     /lib64/libnss_files-2.12.so
+2af16a24c000-2af16a24d000 r--p 0000c000 fd:00 655389                     /lib64/libnss_files-2.12.so
+2af16a24d000-2af16a24e000 rw-p 0000d000 fd:00 655389                     /lib64/libnss_files-2.12.so
+2af16a24e000-2af16a253000 r-xp 00000000 fd:00 655387                     /lib64/libnss_dns-2.12.so
+2af16a253000-2af16a452000 ---p 00005000 fd:00 655387                     /lib64/libnss_dns-2.12.so
+2af16a452000-2af16a453000 r--p 00004000 fd:00 655387                     /lib64/libnss_dns-2.12.so
+2af16a453000-2af16a454000 rw-p 00005000 fd:00 655387                     /lib64/libnss_dns-2.12.so
+2af16a54c000-2af16a54d000 ---p 00000000 00:00 0 
+2af16a54d000-2af16a74d000 rw-p 00000000 00:00 0 
+2af16a74d000-2af1705de000 r--p 00000000 fd:00 1462140                    /usr/lib/locale/locale-archive
+2af1705de000-2af1705e5000 r--s 00000000 fd:00 1450631                    /usr/lib64/gconv/gconv-modules.cache
+2af1705e5000-2af1705e8000 ---p 00000000 00:00 0 
+2af1705e8000-2af1706e6000 rw-p 00000000 00:00 0 
+2af1706e6000-2af170700000 r-xp 00000000 00:71 3461965465                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libzip.so
+2af170700000-2af170900000 ---p 0001a000 00:71 3461965465                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libzip.so
+2af170900000-2af170901000 rw-p 0001a000 00:71 3461965465                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libzip.so
+2af170901000-2af170bc1000 rwxp 00000000 00:00 0 
+2af170bc1000-2af173901000 rw-p 00000000 00:00 0 
+2af173901000-2af17390c000 rw-p 00000000 00:00 0 
+2af17390c000-2af1739c1000 rw-p 00000000 00:00 0 
+2af1739c1000-2af173a26000 r-xp 00000000 00:71 3429750214                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libfontmanager.so
+2af173a26000-2af173c25000 ---p 00065000 00:71 3429750214                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libfontmanager.so
+2af173c25000-2af173c29000 rw-p 00064000 00:71 3429750214                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libfontmanager.so
+2af173c29000-2af173c3a000 rw-p 00000000 00:00 0 
+2af173c3a000-2af173ca3000 r-xp 00000000 00:71 3429750232                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libt2k.so
+2af173ca3000-2af173ea2000 ---p 00069000 00:71 3429750232                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libt2k.so
+2af173ea2000-2af173ea9000 rw-p 00068000 00:71 3429750232                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libt2k.so
+2af173ea9000-2af173eb9000 rw-p 00000000 00:00 0 
+2af173eb9000-2af173eba000 r--s 00004000 00:7a 775425972                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-api-annotations-common.jar
+2af173eba000-2af173ec1000 r--s 000a5000 00:7a 775426001                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-openide-awt.jar
+2af173ec1000-2af173ec3000 r--s 00014000 00:7a 776865081                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-api-progress.jar
+2af173ec3000-2af173ec6000 r--s 00033000 00:7a 635547174                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-openide-dialogs.jar
+2af173ec6000-2af173ecc000 r--s 0008e000 00:7a 635547185                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-openide-nodes.jar
+2af173ecf000-2af173ed1000 r--s 0000b000 00:7a 632212727                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-editor-mimelookup.jar
+2af173ed1000-2af173ed5000 r--s 00066000 00:7a 775425992                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-openide-text.jar
+2af173ed5000-2af173ee3000 r--s 00110000 00:7a 707601472                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-swing-tabcontrol.jar
+2af173ee3000-2af173ee6000 r--s 00042000 00:7a 635547081                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-swing-outline.jar
+2af173ee6000-2af173ef3000 r--s 001b5000 00:7a 755635454                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-openide-explorer.jar
+2af173ef3000-2af173ef6000 r--s 00034000 00:7a 635547173                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-openide-actions.jar
+2af173ef6000-2af173ef8000 r--s 0000d000 00:7a 635547036                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-queries.jar
+2af173ef8000-2af173f03000 r--s 00151000 00:7a 776865126                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-openide-loaders.jar
+2af173f03000-2af173f04000 r--s 0000c000 00:7a 635547194                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-openide-io.jar
+2af173f05000-2af173f09000 r--s 0003a000 00:7a 635547146                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-swing-plaf.jar
+2af173f09000-2af173f0b000 r--s 0000a000 00:7a 755635685                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-spi-tasklist.jar
+2af173f0b000-2af173f0e000 r--s 0002e000 00:7a 635547038                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-spi-quicksearch.jar
+2af173f0e000-2af173f13000 r--s 0006b000 00:7a 776865476                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-spi-palette.jar
+2af173f13000-2af173f15000 r--s 00017000 00:7a 635548039                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-spi-navigator.jar
+2af173f15000-2af173f17000 r--s 00016000 00:7a 775426264                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-api-xml.jar
+2af173f17000-2af173f18000 r--s 00000000 00:7a 635548077                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-apache-xml-resolver.jar
+2af173f18000-2af173f1a000 r--s 00014000 00:7a 775426303                  /home/fosterl/tools/netbeans-7.4/ide/modules/ext/resolver-1.2.jar
+2af173f1a000-2af173f1f000 r--s 0006f000 00:7a 635547914                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-xml-catalog.jar
+2af173f1f000-2af173f22000 r--s 0003f000 00:7a 635546973                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-settings.jar
+2af173f22000-2af173f23000 r--s 00009000 00:7a 635547032                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-sampler.jar
+2af173f23000-2af173f24000 r--s 00002000 00:7a 707601667                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-errorstripe-api.jar
+2af173f24000-2af173f26000 r--s 00023000 00:7a 635547903                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-util.jar
+2af173f26000-2af173f29000 r--s 00086000 00:7a 598250794                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-lexer.jar
+2af173f29000-2af173f2b000 r--s 00015000 00:7a 635547725                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-settings.jar
+2af173f2b000-2af173f2d000 r--s 00003000 00:7a 635547034                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-keyring.jar
+2af173f2d000-2af173f33000 r--s 00095000 00:7a 635547187                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-core.jar
+2af173f33000-2af173f38000 r--s 0007a000 00:7a 291633177                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-options-api.jar
+2af173f38000-2af173f3b000 r--s 0002e000 00:7a 564689351                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/servlet-api-3.0.jar
+2af173f3c000-2af173f40000 r--s 0005d000 00:7a 635547518                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-settings-storage.jar
+2af173f40000-2af173f43000 r--s 0003f000 00:7a 775426177                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-fold.jar
+2af173f43000-2af173f4e000 r--s 0012f000 00:7a 755635677                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-lib2.jar
+2af173f4e000-2af173f50000 r--s 00013000 00:7a 776865452                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-indent.jar
+2af173f50000-2af173f5f000 r--s 001d3000 00:7a 775426236                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-lib.jar
+2af173f5f000-2af173f61000 r--s 00015000 00:7a 635547627                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-errorstripe.jar
+2af173f61000-2af173f66000 r--s 00044000 00:7a 775426227                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-projectapi.jar
+2af173f66000-2af173f68000 r--s 00033000 00:7a 635547702                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-fold-nbui.jar
+2af173f68000-2af173f72000 r--s 000d6000 00:7a 598250744                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor.jar
+2af173f72000-2af173f77000 r--s 0007a000 00:7a 635547803                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-options-editor.jar
+2af173f77000-2af173f80000 r--s 0010c000 00:7a 776865471                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-diff.jar
+2af173f80000-2af173f85000 r--s 00054000 00:7a 755635671                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-projectuiapi.jar
+2af173f85000-2af173f87000 r--s 00017000 00:7a 776865449                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-guards.jar
+2af173f87000-2af173f88000 r--s 00002000 00:7a 707601665                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-project-indexingbridge.jar
+2af173f88000-2af173f8a000 r--s 0001f000 00:7a 775426231                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-api-java-classpath.jar
+2af173f8a000-2af173f8b000 r--s 00000000 00:7a 755635712                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-libs-lucene.jar
+2af173f8b000-2af173fa4000 r--s 00149000 00:7a 775426260                  /home/fosterl/tools/netbeans-7.4/ide/modules/ext/lucene-core-3.5.0.jar
+2af173fa4000-2af173fa9000 r--s 0006f000 00:7a 598250522                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-masterfs.jar
+2af173fa9000-2af173fad000 r--s 0003a000 00:7a 635547794                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-parsing-lucene.jar
+2af173fad000-2af173fd1000 r--s 00249000 00:7a 535595704                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jacs-shared.jar
+2af173fd3000-2af173ff0000 r--s 00101000 00:7a 535684046                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jacs-model.jar
+2af174000000-2af1740e9000 rw-p 00000000 00:00 0 
+2af1740e9000-2af178000000 ---p 00000000 00:00 0 
+2af178000000-2af17850f000 rw-p 00000000 00:00 0 
+2af17850f000-2af17c000000 ---p 00000000 00:00 0 
+2af17c001000-2af17c00e000 r-xp 00000000 00:71 3429750210                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libverify.so
+2af17c00e000-2af17c20d000 ---p 0000d000 00:71 3429750210                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libverify.so
+2af17c20d000-2af17c20f000 rw-p 0000c000 00:71 3429750210                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libverify.so
+2af17c20f000-2af17c238000 r-xp 00000000 00:71 3543077422                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libjava.so
+2af17c238000-2af17c438000 ---p 00029000 00:71 3543077422                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libjava.so
+2af17c438000-2af17c43a000 rw-p 00029000 00:71 3543077422                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libjava.so
+2af17c43a000-2af17c43b000 ---p 00000000 00:00 0 
+2af17c43b000-2af17c43c000 rw-p 00000000 00:00 0 
+2af17c43c000-2af17c445000 r-xp 00000000 00:7a 775427548                  /home/fosterl/tools/netbeans-7.4/profiler/lib/deployed/jdk16/linux-amd64/libprofilerinterface.so
+2af17c445000-2af17c545000 ---p 00009000 00:7a 775427548                  /home/fosterl/tools/netbeans-7.4/profiler/lib/deployed/jdk16/linux-amd64/libprofilerinterface.so
+2af17c545000-2af17c546000 rw-p 00009000 00:7a 775427548                  /home/fosterl/tools/netbeans-7.4/profiler/lib/deployed/jdk16/linux-amd64/libprofilerinterface.so
+2af17c546000-2af17c547000 rw-p 00000000 00:00 0 
+2af17c574000-2af17c57b000 r-xp 00000000 fd:00 655779                     /lib64/libnss_sss.so.2
+2af17c57b000-2af17c77a000 ---p 00007000 fd:00 655779                     /lib64/libnss_sss.so.2
+2af17c77a000-2af17c77b000 rw-p 00006000 fd:00 655779                     /lib64/libnss_sss.so.2
+2af17c77b000-2af17cdf9000 r--s 00000000 fd:00 527956                     /var/lib/sss/mc/passwd
+2af17cdf9000-2af17ce01000 rw-p 00000000 00:00 0 
+2af17ce01000-2af17ce2f000 r--s 00586000 00:7a 547210292                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-it-workstation-nb_action.jar
+2af17ce80000-2af188e80000 rw-p 00000000 00:00 0 
+2af188e80000-2af1fce80000 rw-p 00000000 00:00 0 
+2af1fce80000-2af227980000 rw-p 00000000 00:00 0 
+2af227980000-2af732380000 rw-p 00000000 00:00 0 
+2af732380000-2af749a00000 rw-p 00000000 00:00 0 
+2af749a00000-2af9cce80000 rw-p 00000000 00:00 0 
+2af9cce80000-2af9ccee0000 rw-p 00000000 00:00 0 
+2af9ccee0000-2af9cd280000 rw-p 00000000 00:00 0 
+2af9cd280000-2af9cd3d6000 rw-p 00000000 00:00 0 
+2af9cd3d6000-2af9cfc2a000 rw-p 00000000 00:00 0 
+2af9cfc2a000-2af9cfce6000 rw-p 00000000 00:00 0 
+2af9cfce6000-2af9d1100000 rw-p 00000000 00:00 0 
+2af9d1100000-2af9d1257000 rw-p 00000000 00:00 0 
+2af9d1257000-2af9d3aac000 rw-p 00000000 00:00 0 
+2af9d3aac000-2af9d3b0c000 rw-p 00000000 00:00 0 
+2af9d3b0c000-2af9d3eac000 rw-p 00000000 00:00 0 
+2af9d3eac000-2af9d3ead000 ---p 00000000 00:00 0 
+2af9d3ead000-2af9d3fad000 rw-p 00000000 00:00 0 
+2af9d3fad000-2af9d3fae000 ---p 00000000 00:00 0 
+2af9d3fae000-2af9d40ae000 rw-p 00000000 00:00 0 
+2af9d40ae000-2af9d40af000 ---p 00000000 00:00 0 
+2af9d40af000-2af9d41af000 rw-p 00000000 00:00 0 
+2af9d41af000-2af9d41b0000 ---p 00000000 00:00 0 
+2af9d41b0000-2af9d42b0000 rw-p 00000000 00:00 0 
+2af9d42b0000-2af9d42b1000 ---p 00000000 00:00 0 
+2af9d42b1000-2af9d43b1000 rw-p 00000000 00:00 0 
+2af9d43b1000-2af9d43b2000 ---p 00000000 00:00 0 
+2af9d43b2000-2af9d44b2000 rw-p 00000000 00:00 0 
+2af9d44b2000-2af9d44b3000 ---p 00000000 00:00 0 
+2af9d44b3000-2af9d45b3000 rw-p 00000000 00:00 0 
+2af9d45b3000-2af9d45b4000 ---p 00000000 00:00 0 
+2af9d45b4000-2af9d46b4000 rw-p 00000000 00:00 0 
+2af9d46b4000-2af9d46b5000 ---p 00000000 00:00 0 
+2af9d46b5000-2af9d47b5000 rw-p 00000000 00:00 0 
+2af9d47b5000-2af9d47b6000 ---p 00000000 00:00 0 
+2af9d47b6000-2af9d48b6000 rw-p 00000000 00:00 0 
+2af9d48b6000-2af9d48b7000 ---p 00000000 00:00 0 
+2af9d48b7000-2af9d49b7000 rw-p 00000000 00:00 0 
+2af9d49b7000-2af9d49b8000 ---p 00000000 00:00 0 
+2af9d49b8000-2af9d4ab8000 rw-p 00000000 00:00 0 
+2af9d4ab8000-2af9d4ab9000 ---p 00000000 00:00 0 
+2af9d4ab9000-2af9d4bb9000 rw-p 00000000 00:00 0 
+2af9d4bb9000-2af9d4bba000 ---p 00000000 00:00 0 
+2af9d4bba000-2af9d4cba000 rw-p 00000000 00:00 0 
+2af9d4cba000-2af9d4cbb000 ---p 00000000 00:00 0 
+2af9d4cbb000-2af9d4dbb000 rw-p 00000000 00:00 0 
+2af9d4dbb000-2af9d4dbc000 ---p 00000000 00:00 0 
+2af9d4dbc000-2af9d4ebc000 rw-p 00000000 00:00 0 
+2af9d4ebc000-2af9d4ebd000 ---p 00000000 00:00 0 
+2af9d4ebd000-2af9d4fbd000 rw-p 00000000 00:00 0 
+2af9d4fbd000-2af9d4fbe000 ---p 00000000 00:00 0 
+2af9d4fbe000-2af9d50be000 rw-p 00000000 00:00 0 
+2af9d50be000-2af9d50ca000 r--s 00159000 00:7a 635547906                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-parsing-api.jar
+2af9d50ca000-2af9d50d3000 r--s 000a7000 00:7a 635547732                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-refactoring-api.jar
+2af9d50d3000-2af9d50d7000 r--s 0004e000 00:7a 635547631                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-project-libraries.jar
+2af9d50d7000-2af9d50de000 r--s 000af000 00:7a 755635676                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-project-ant.jar
+2af9d50de000-2af9d50e1000 r--s 00023000 00:7a 707601438                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-progress-ui.jar
+2af9d50e1000-2af9d50e5000 r--s 0003e000 00:7a 635547085                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-print.jar
+2af9d50e5000-2af9d50e7000 r--s 00001000 00:7a 632212897                  /home/fosterl/tools/netbeans-7.4/extide/modules/org-netbeans-modules-options-java.jar
+2af9d50e8000-2af9d50ec000 r--s 000f1000 00:7a 775426004                  /home/fosterl/tools/netbeans-7.4/platform/modules/ext/jna-3.4.0.jar
+2af9d50ec000-2af9d50ed000 r--s 00002000 00:7a 734927058                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-masterfs-linux.jar
+2af9d50ed000-2af9d50ef000 r--s 00008000 00:7a 632212754                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-keyring-fallback.jar
+2af9d50ef000-2af9d50f1000 r--s 00008000 00:7a 635546961                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-keyring-impl.jar
+2af9d50f1000-2af9d50f2000 r--s 00000000 00:7a 635550403                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-libs-junit4.jar
+2af9d50f2000-2af9d50f9000 r--s 00037000 00:7a 635550401                  /home/fosterl/tools/netbeans-7.4/platform/modules/ext/junit-4.10.jar
+2af9d50f9000-2af9d50fa000 r--s 00030000 00:7a 541411304                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jogl-all-natives-linux-i586.jar
+2af9d50fa000-2af9d50fc000 r--s 00008000 00:7a 775426526                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-modules-java-source-queries.jar
+2af9d50fc000-2af9d50ff000 r--s 00028000 00:7a 707601883                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-modules-classfile.jar
+2af9d50ff000-2af9d5103000 r--s 0003c000 00:7a 635547067                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-core-multiview.jar
+2af9d5103000-2af9d5108000 r--s 00083000 00:7a 632212903                  /home/fosterl/tools/netbeans-7.4/extide/modules/org-apache-tools-ant-module.jar
+2af9d5108000-2af9d510a000 r--s 0000c000 00:7a 755636000                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-api-java.jar
+2af9d510a000-2af9d510d000 r--s 0002a000 00:7a 755635919                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-modules-java-platform.jar
+2af9d510d000-2af9d511a000 r--s 0011b000 00:7a 776865095                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-api-search.jar
+2af9d511a000-2af9d511b000 r--s 00002000 00:7a 776865684                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-libs-javacapi.jar
+2af9d511b000-2af9d5122000 r--s 00024000 00:7a 635548588                  /home/fosterl/tools/netbeans-7.4/java/modules/ext/nb-javac-api.jar
+2af9d5122000-2af9d5123000 r--s 00001000 00:7a 776865668                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-libs-javacimpl.jar
+2af9d5123000-2af9d5145000 r--s 0025b000 00:7a 755636032                  /home/fosterl/tools/netbeans-7.4/java/modules/ext/nb-javac-impl.jar
+2af9d5145000-2af9d5146000 r--s 00005000 00:7a 635548441                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-modules-java-preprocessorbridge.jar
+2af9d5146000-2af9d5148000 r--s 0001c000 00:7a 776865713                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-lib-nbjavac.jar
+2af9d5148000-2af9d5149000 r--s 0000f000 00:7a 776865657                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-modules-java-lexer.jar
+2af9d5149000-2af9d514b000 r--s 00012000 00:7a 776865297                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-indent-project.jar
+2af9d514b000-2af9d5164000 r--s 003df000 00:7a 755635970                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-modules-java-source.jar
+2af9d5164000-2af9d516d000 r--s 000cf000 00:7a 755635946                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-modules-java-project.jar
+2af9d516d000-2af9d516e000 r--s 0000f000 00:7a 635548439                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-modules-java-source-queriesimpl.jar
+2af9d516f000-2af9d5174000 r--s 000bc000 00:7a 775425925                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-autoupdate-services.jar
+2af9d5174000-2af9d5176000 r--s 0003e000 00:7a 635550428                  /home/fosterl/tools/netbeans-7.4/platform/modules/ext/updater.jar
+2af9d5176000-2af9d517e000 r--s 000f3000 00:7a 775425984                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-autoupdate-ui.jar
+2af9d517e000-2af9d51a8000 r--s 00562000 00:7a 776865699                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-modules-form.jar
+2af9d51a8000-2af9d51a9000 r--s 00000000 00:7a 707601919                  /home/fosterl/tools/netbeans-7.4/java/modules/ext/AbsoluteLayout.jar
+2af9d51a9000-2af9d51ab000 r--s 00000000 00:7a 776865128                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-jdesktop-layout.jar
+2af9d51ab000-2af9d51ac000 r--s 0001c000 00:7a 635547159                  /home/fosterl/tools/netbeans-7.4/platform/modules/ext/swing-layout-1.0.4.jar
+2af9d51ac000-2af9d51af000 r--s 00041000 00:7a 734927363                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-modules-form-nb.jar
+2af9d51af000-2af9d51b0000 r--s 00000000 00:7a 775426638                  /home/fosterl/tools/netbeans-7.4/java/modules/org-jdesktop-beansbinding.jar
+2af9d51b0000-2af9d51b7000 r--s 00094000 00:7a 755635991                  /home/fosterl/tools/netbeans-7.4/java/modules/ext/beansbinding-1.2.1.jar
+2af9d51b7000-2af9d51b9000 r--s 00014000 00:7a 291633434                  /home/fosterl/tools/netbeans-7.4/java/modules/org-netbeans-modules-form-binding.jar
+2af9d51b9000-2af9d51bb000 r--s 0000b000 00:7a 635546899                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-modules-editor-mimelookup-impl.jar
+2af9d51bb000-2af9d51bc000 r--s 0000d000 00:7a 635547801                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-modules-editor-actions.jar
+2af9d51bd000-2af9d51be000 r--s 00001000 00:7a 563711925                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gluegen-rt-natives-windows-i586.jar
+2af9d51be000-2af9d51bf000 r--s 00030000 00:7a 535684028                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jogl-all-natives-linux-amd64.jar
+2af9d51bf000-2af9d51c2000 r--s 00024000 00:7a 564689569                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-it-workstation-gui-dataview.jar
+2af9d51c4000-2af9d51cc000 r--s 0005d000 00:7a 635547175                  /home/fosterl/tools/netbeans-7.4/platform/modules/ext/osgi.core-5.0.0.jar
+2af9d51cc000-2af9d51ce000 r--s 00000000 00:7a 707601454                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-libs-jna-platform.jar
+2af9d51ce000-2af9d51d8000 r--s 000d5000 00:7a 776865132                  /home/fosterl/tools/netbeans-7.4/platform/modules/ext/platform-3.4.0.jar
+2af9d51d8000-2af9d51d9000 r--s 00007000 00:7a 775426248                  /home/fosterl/tools/netbeans-7.4/ide/modules/org-netbeans-libs-freemarker.jar
+2af9d51d9000-2af9d51e5000 r--s 00097000 00:7a 755635759                  /home/fosterl/tools/netbeans-7.4/ide/modules/ext/freemarker-2.3.19.jar
+2af9d51e5000-2af9d51f5000 r--s 00226000 00:7a 635547115                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-core-windows.jar
+2af9d51f5000-2af9d51f6000 r--s 00000000 00:7a 564238471                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/locale/org-netbeans-core-windows_janeliaws.jar
+2af9d51f6000-2af9d51fb000 r--s 0005f000 00:7a 635547170                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-core-ui.jar
+2af9d51fb000-2af9d5200000 r--s 0007e000 00:7a 635547113                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-core-output2.jar
+2af9d5200000-2af9d5202000 r--s 00017000 00:7a 776865083                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-core-network.jar
+2af9d5202000-2af9d5203000 r--s 0000d000 00:7a 776865085                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-core-netigso.jar
+2af9d5203000-2af9d5204000 r--s 00001000 00:7a 291633206                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-core-nativeaccess.jar
+2af9d5204000-2af9d5208000 r--s 00033000 00:7a 635547063                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-core-multitabs.jar
+2af9d5208000-2af9d520a000 r--s 00009000 00:7a 635547148                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-core-io-ui.jar
+2af9d520a000-2af9d520b000 r--s 00000000 00:7a 563712420                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-jogl224.jar
+2af9d520b000-2af9d520c000 r--s 0002d000 00:7a 573724139                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jogl-all-2.2.4-natives-windows-i586.jar
+2af9d520c000-2af9d520d000 r--s 0002f000 00:7a 535684510                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jogl-all-2.2.4-natives-linux-amd64.jar
+2af9d520d000-2af9d5230000 r--s 002ec000 00:7a 573724140                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jogl-all-2.2.4.jar
+2af9d5233000-2af9d5234000 r--s 00003000 00:7a 564238480                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-spring-1.5.5.jar
+2af9d523e000-2af9d523f000 r--s 00001000 00:7a 775426007                  /home/fosterl/tools/netbeans-7.4/platform/core/locale/core_ru.jar
+2af9d523f000-2af9d5241000 r--s 00001000 00:71 3424349982                 /misc/local/jdk1.7.0_67/jre/lib/ext/dnsns.jar
+2af9d524a000-2af9d524b000 r--s 00000000 00:7a 573723875                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gluegen-rt-natives-linux-amd64.jar
+2af9d524b000-2af9d524d000 r--s 00000000 00:7a 535595946                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gluegen-rt-2.2.4-natives-linux-i586.jar
+2af9d524d000-2af9d524e000 r--s 00001000 00:7a 577593775                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gluegen-rt-2.2.4-natives-macosx-universal.jar
+2af9d524f000-2af9d5250000 r--s 0002d000 00:7a 564689586                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jogl-all-2.2.4-natives-linux-i586.jar
+2af9d5250000-2af9d5252000 r--s 00000000 00:7a 548546830                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gluegen-rt-2.2.4-natives-linux-amd64.jar
+2af9d5252000-2af9d5254000 r--s 00034000 00:7a 564238979                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jogl-all-2.2.4-natives-windows-amd64.jar
+2af9d5254000-2af9d525a000 r--s 0034c000 00:7a 563712422                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gluegen-rt-2.2.4-sources.jar
+2af9d525a000-2af9d525b000 r--s 00000000 00:7a 577593776                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jogl-all-2.2.4-javadoc.jar
+2af9d525b000-2af9d525c000 r--s 00000000 00:7a 564689585                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gluegen-rt-2.2.4-javadoc.jar
+2af9d525c000-2af9d5265000 r--s 000a3000 00:7a 564238978                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gluegen-2.2.4.jar
+2af9d5265000-2af9d5266000 r--s 00001000 00:7a 563712421                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gluegen-rt-2.2.4-natives-windows-i586.jar
+2af9d5266000-2af9d5267000 r--s 00032000 00:7a 563711915                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-it-workstation.jar
+2af9d5269000-2af9d526a000 r--s 00001000 00:7a 563711924                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gluegen-rt-natives-windows-amd64.jar
+2af9d526b000-2af9d526c000 r--p 00000000 00:00 0 
+2af9d52a4000-2af9d52a6000 r--s 0000e000 00:7a 548546566                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/activation-1.1.jar
+2af9d52a6000-2af9d52a9000 r--s 00015000 00:7a 548546571                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jetty-http-8.1.8.v20121106.jar
+2af9d52a9000-2af9d52ab000 r--s 00004000 00:7a 563711917                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-ant-plugin-1.5.5.jar
+2af9d52ad000-2af9d52af000 r--s 00011000 00:7a 563711919                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-fastinfoset-1.5.5.jar
+2af9d52af000-2af9d52b0000 r--s 00003000 00:7a 541411301                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/geronimo-jta_1.1_spec-1.1.jar
+2af9d52b0000-2af9d52b6000 r--s 0005f000 00:7a 564689347                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/ome-xml.jar
+2af9d52b6000-2af9d52b8000 r--s 00017000 00:7a 563711937                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/loci-common.jar
+2af9d52b8000-2af9d52bb000 r--s 00019000 00:7a 564238483                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/hibernate-entitymanager.jar
+2af9d52bb000-2af9d52bc000 r--s 00034000 00:7a 535684029                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jogl-all-natives-windows-amd64.jar
+2af9d52bc000-2af9d52bd000 r--s 0002d000 00:7a 563711934                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jogl-all-natives-windows-i586.jar
+2af9d52bd000-2af9d52be000 r--s 0000a000 00:7a 563711945                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-it-jacs-shared.jar
+2af9d52be000-2af9d52c2000 r--s 00039000 00:7a 563711918                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-codegen-1.5.5.jar
+2af9d52c2000-2af9d52c4000 r--s 007a9000 00:7a 541411299                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/ffmpeg-linux-x86_64.jar
+2af9d52c4000-2af9d52c6000 r--s 00007000 00:7a 564689349                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/pal-optimization.jar
+2af9d52c6000-2af9d52cd000 r--s 00053000 00:7a 535684020                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/commons-compress-1.8.1.jar
+2af9d52cf000-2af9d52d1000 r--s 0001a000 00:7a 541411323                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-geometry3d.jar
+2af9d52d1000-2af9d52d4000 r--s 00697000 00:7a 564239002                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-gltools.jar
+2af9d52d4000-2af9d52dc000 r--s 0003e000 00:7a 535595701                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaSkyMetallic.jar
+2af9d52dc000-2af9d52e3000 r--s 00094000 00:7a 535595691                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/beansbinding-1.2.1.jar
+2af9d52e3000-2af9d52e8000 r--s 00020000 00:7a 564238495                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/woden-api-1.0M8.jar
+2af9d52e8000-2af9d52e9000 r--s 00007000 00:7a 564689336                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-xmlbeans-1.5.5.jar
+2af9d52e9000-2af9d52ec000 r--s 00023000 00:7a 535595690                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-transport-http-1.5.5.jar
+2af9d52ec000-2af9d52ed000 r--s 00061000 00:7a 564238488                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jogl-all-natives-macosx-universal.jar
+2af9d52ed000-2af9d52f7000 r--s 0004a000 00:7a 535684039                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaClassy.jar
+2af9d52f7000-2af9d5300000 r--s 00062000 00:7a 564689343                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jcs-1.3.jar
+2af9d5300000-2af9d5303000 r--s 00024000 00:7a 541411561                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-scenegraph.jar
+2af9d5303000-2af9d5304000 r--s 00000000 00:7a 563711968                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-jogl213.jar
+2af9d5304000-2af9d5306000 r--s 00008000 00:7a 563711921                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-soapmonitor-servlet-1.5.5.jar
+2af9d5306000-2af9d530f000 r--s 001b7000 00:7a 535595695                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/ij-1.48c.jar
+2af9d530f000-2af9d531d000 r--s 000e8000 00:7a 535595689                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-kernel-1.5.5.jar
+2af9d531d000-2af9d5322000 r--s 00026000 00:7a 563711928                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/httpcore-4.0.jar
+2af9d5322000-2af9d5325000 r--s 00024000 00:7a 548546567                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axiom-dom-1.2.11.jar
+2af9d5325000-2af9d5328000 r--s 00031000 00:7a 535684014                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/MagicApplet.jar
+2af9d532e000-2af9d5334000 r--s 0003d000 00:7a 547210142                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gluegen-rt.jar
+2af9d5334000-2af9d533a000 r--s 0007a000 00:7a 564689352                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/wstx-asl-3.2.9.jar
+2af9d533a000-2af9d5343000 r--s 000fe000 00:7a 564689338                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/commons-lang3-3.3.2-javadoc.jar
+2af9d5343000-2af9d5344000 r--s 00003000 00:7a 577593520                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/ome_plugins.jar
+2af9d5348000-2af9d534d000 r--s 00026000 00:7a 577593523                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaBlueSteel.jar
+2af9d534d000-2af9d534f000 r--s 00008000 00:7a 564238491                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/mex-1.5.5-impl.jar
+2af9d534f000-2af9d535d000 r--s 00091000 00:7a 564238492                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/synthetica.jar
+2af9d535d000-2af9d5363000 r--s 0002c000 00:7a 547210146                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaBlueMoon.jar
+2af9d5363000-2af9d5365000 r--s 00007000 00:7a 577593517                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jdatepicker-1.3.2.jar
+2af9d5366000-2af9d536b000 r--s 0002a000 00:7a 548546569                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gson-2.2.2.jar
+2af9d536b000-2af9d5373000 r--s 00038000 00:7a 564238494                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/vlcj-1.3.0-b1.jar
+2af9d5373000-2af9d537b000 r--s 0003f000 00:7a 535684040                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaOrangeMetallic.jar
+2af9d537b000-2af9d5386000 r--s 000d5000 00:7a 548546574                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/platform.jar
+2af9d5386000-2af9d5387000 r--s 00009000 00:7a 563711920                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-jibx-1.5.5.jar
+2af9d5387000-2af9d538e000 r--s 0266d000 00:7a 564238498                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/xuggle-xuggler-5.4.jar
+2af9d538e000-2af9d5391000 r--s 00015000 00:7a 535684034                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/perf4j-0.9.16-logbackonly.jar
+2af9d5391000-2af9d539b000 r--s 00035000 00:7a 564238493                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaWhiteVision.jar
+2af9d539b000-2af9d539f000 r--s 0001f000 00:7a 564238476                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/XmlSchema-1.4.3.jar
+2af9d539f000-2af9d53a1000 r--s 0000b000 00:7a 535595692                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/commons-fileupload-1.2.jar
+2af9d53a1000-2af9d53a5000 r--s 0003e000 00:7a 564239027                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-horta.jar
+2af9d53a5000-2af9d53a7000 r--s 000bc000 00:7a 577593522                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/snappy-java-1.0.5-M3.jar
+2af9d53a7000-2af9d53a9000 r--s 00000000 00:7a 635547144                  /home/fosterl/tools/netbeans-7.4/platform/modules/org-netbeans-libs-felix.jar
+2af9d53ac000-2af9d53b1000 r--s 00020000 00:7a 564238496                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/wsdl4j-1.6.2.jar
+2af9d53b1000-2af9d53b5000 r--s 00027000 00:7a 541411308                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/snakeyaml-1.11-sources.jar
+2af9d53b5000-2af9d53b8000 r--s 00013000 00:7a 535684025                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jaxb-api-2.1.jar
+2af9d53b8000-2af9d53d6000 r--s 0027d000 00:7a 564238497                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/xalan-2.7.0.jar
+2af9d53db000-2af9d53fc000 r--s 0020b000 00:7a 535595694                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/hibernate3.jar
+2af9d53fe000-2af9d5407000 r--s 00064000 00:7a 563711927                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/hibernate-annotations.jar
+2af9d5407000-2af9d540f000 r--s 00048000 00:7a 535684024                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jackrabbit-webdav-2.5.2.jar
+2af9d540f000-2af9d5410000 r--s 00008000 00:7a 563711933                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jktx-1.6.jar
+2af9d5410000-2af9d5416000 r--s 00032000 00:7a 563711932                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jaxen-1.1.1.jar
+2af9d5416000-2af9d5433000 r--s 00153000 00:7a 535684036                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/swingx-1.6.5.jar
+2af9d5433000-2af9d5435000 r--s 00029000 00:7a 564238477                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-adb-codegen-1.5.5.jar
+2af9d5435000-2af9d543f000 r--s 0005d000 00:7a 573723877                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/logback-core-1.0.13.jar
+2af9d5442000-2af9d5448000 r--s 00029000 00:7a 563711938                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaBlackMoon.jar
+2af9d5448000-2af9d5449000 r--s 00004000 00:7a 577593510                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-mtompolicy-1.5.5.jar
+2af9d5449000-2af9d5462000 r--s 00112000 00:7a 535684022                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/ehcache-core-2.5.1.jar
+2af9d5462000-2af9d546a000 r--s 00059000 00:7a 573723871                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-metadata-1.5.5.jar
+2af9d546a000-2af9d546d000 r--s 00017000 00:7a 535595696                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jetty-io-8.1.8.v20121106.jar
+2af9d546d000-2af9d5471000 r--s 000f2000 00:7a 535684027                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jna.jar
+2af9d5471000-2af9d5473000 r--s 007ff000 00:7a 563711923                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/ffmpeg-macosx-x86_64.jar
+2af9d5477000-2af9d547e000 r--s 0003c000 00:7a 548546575                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/snakeyaml-1.11.jar
+2af9d547e000-2af9d5480000 r--s 00004000 00:7a 564238479                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-json-1.5.5.jar
+2af9d5480000-2af9d548a000 r--s 00035000 00:7a 548546576                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaBlackEye.jar
+2af9d548a000-2af9d548c000 r--s 00006000 00:7a 547210140                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-jaxbri-1.5.5.jar
+2af9d548c000-2af9d548f000 r--s 00006000 00:7a 577593515                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jackson-annotations-2.2.3.jar
+2af9d548f000-2af9d5490000 r--s 00001000 00:7a 535595693                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gluegen-rt-natives-macosx-universal.jar
+2af9d5490000-2af9d5492000 r--s 00005000 00:7a 573723879                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/slf4j-api-1.7.5.jar
+2af9d5492000-2af9d54a3000 r--s 000c3000 00:7a 564238484                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jackson-databind-2.2.3.jar
+2af9d54a3000-2af9d54a5000 r--s 00001000 00:7a 573723878                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/metakit.jar
+2af9d54a5000-2af9d54af000 r--s 00059000 00:7a 541411309                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaAluOxide.jar
+2af9d54af000-2af9d54b9000 r--s 0004b000 00:7a 535595699                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaBlueLight.jar
+2af9d54b9000-2af9d54bb000 r--s 00766000 00:7a 535684023                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/ffmpeg-linux-x86.jar
+2af9d54bb000-2af9d54bc000 r--s 00002000 00:7a 541411300                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/geronimo-annotation_1.0_spec-1.1.jar
+2af9d54bc000-2af9d54e7000 r--s 001d9000 00:7a 577593521                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/owlapi-bin.jar
+2af9d54e7000-2af9d54ee000 r--s 00030000 00:7a 573723874                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/ffmpeg.jar
+2af9d54ee000-2af9d54ef000 r--s 00000000 00:7a 541411303                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/gwt-serializable.jar
+2af9d54ef000-2af9d54f0000 r--s 00004000 00:7a 535684018                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-transport-local-1.5.5.jar
+2af9d54f3000-2af9d54f5000 r--s 00006000 00:7a 541411302                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/geronimo-stax-api_1.0_spec-1.0.1.jar
+2af9d54f5000-2af9d5515000 r--s 002bb000 00:7a 547210144                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jogl-all.jar
+2af9d5519000-2af9d551d000 r--s 00034000 00:7a 563711940                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/tribes-6.0.16.jar
+2af9d551d000-2af9d552a000 r--s 00092000 00:7a 535684017                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-jaxws-1.5.5.jar
+2af9d552a000-2af9d552d000 r--s 0001d000 00:7a 535684026                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jibx-run-1.2.1.jar
+2af9d5531000-2af9d553c000 r--s 000b4000 00:7a 535595688                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-adb-1.5.5.jar
+2af9d553c000-2af9d5541000 r--s 0004e000 00:7a 548546572                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jetty-server-8.1.8.v20121106.jar
+2af9d5541000-2af9d559d000 r--s 00586000 00:7a 564689341                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/groovy-all-1.8.6.jar
+2af9d559d000-2af9d559f000 r--s 00013000 00:7a 535684043                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/xml-resolver-1.2.jar
+2af9d559f000-2af9d55a1000 r--s 00006000 00:7a 564689350                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/regexp-1.2.jar
+2af9d55a2000-2af9d55ab000 r--s 00075000 00:7a 535684019                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/bcel-5.1.jar
+2af9d55ab000-2af9d55b1000 r--s 0003d000 00:7a 563711916                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/apache-solr-solrj-3.5.0.jar
+2af9d55b1000-2af9d55b2000 r--s 00012000 00:7a 541411305                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/miglayout-4.0-swing.jar
+2af9d55b2000-2af9d55b8000 r--s 000d5000 00:7a 541411307                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/scifio.jar
+2af9d55b8000-2af9d55bb000 r--s 00025000 00:7a 564689574                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-it-workstation-gui-split_picking.jar
+2af9d55bb000-2af9d55bc000 r--s 0000c000 00:7a 563712329                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-it-workstation-gui-qc_view.jar
+2af9d55be000-2af9d55c0000 r--s 00006000 00:7a 577593513                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/geronimo-saaj_1.3_spec-1.0.1.jar
+2af9d55c0000-2af9d55c3000 r--s 0001b000 00:7a 535684016                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axiom-impl-1.2.11.jar
+2af9d55c3000-2af9d55c9000 r--s 00045000 00:7a 541411298                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/commons-httpclient-3.1.jar
+2af9d55c9000-2af9d55d1000 r--s 00043000 00:7a 535595700                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaMauveMetallic.jar
+2af9d55d1000-2af9d55d8000 r--s 0006f000 00:7a 573724136                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-it-workstation-gui-geometric_search.jar
+2af9d55d8000-2af9d5613000 r--s 002c1000 00:7a 563711931                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jaxb-xjc-2.1.7.jar
+2af9d5613000-2af9d5616000 r--s 00018000 00:7a 541411295                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-clustering-1.5.5.jar
+2af9d5616000-2af9d5618000 r--s 00da0000 00:7a 564238482                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/ffmpeg-windows-x86_64.jar
+2af9d5618000-2af9d561a000 r--s 0000a000 00:7a 564689339                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/de-javasoft-synthetica-netbeans.jar
+2af9d561a000-2af9d561d000 r--s 0001b000 00:7a 563711939                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaSimple2D.jar
+2af9d561d000-2af9d562e000 r--s 00136000 00:7a 564238485                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jalopy-1.5rc3.jar
+2af9d562e000-2af9d5635000 r--s 00079000 00:7a 535595702                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/wstx-asl-3.2.7.jar
+2af9d5635000-2af9d564a000 r--s 00165000 00:7a 573723876                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jai_core.jar
+2af9d564a000-2af9d564f000 r--s 00017000 00:7a 535595698                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaBlackStar.jar
+2af9d564f000-2af9d5651000 r--s 00010000 00:7a 563711922                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/commons-codec-1.5.jar
+2af9d5651000-2af9d5656000 r--s 0003f000 00:7a 577593516                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jai_codec.jar
+2af9d5656000-2af9d5658000 r--s 00007000 00:7a 564689346                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/neethi-2.0.5.jar
+2af9d5658000-2af9d5699000 r--s 001d7000 00:7a 535684038                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaAddonsWithThemes.jar
+2af9d5699000-2af9d569b000 r--s 0000d000 00:7a 535684021                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/commons-logging-1.1.1.jar
+2af9d569b000-2af9d56bb000 r--s 0094e000 00:7a 547210145                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/sis-jhdf5-batteries_included.jar
+2af9d56bb000-2af9d56c1000 r--s 0003f000 00:7a 564238481                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/cglib-2.1.3.jar
+2af9d56c1000-2af9d56c7000 r--s 0003b000 00:7a 577593519                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/logback-classic-1.0.13.jar
+2af9d56c7000-2af9d56ca000 r--s 0003a000 00:7a 548546565                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/Simple_Neurite_Tracer-2.0.2-SNAPSHOT.jar
+2af9d56ca000-2af9d56cb000 r--s 00007000 00:7a 564238478                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-java2wsdl-1.5.5.jar
+2af9d56cb000-2af9d56d0000 r--s 00068000 00:7a 577593509                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/antlr-2.7.7.jar
+2af9d56d0000-2af9d56d5000 r--s 00040000 00:7a 564238487                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jetty-util-8.1.8.v20121106.jar
+2af9d56d5000-2af9d56d7000 r--s 00015000 00:7a 541411297                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axis2-saaj-1.5.5.jar
+2af9d56d7000-2af9d56d8000 r--s 00004000 00:7a 535595697                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/juli-6.0.16.jar
+2af9d56d8000-2af9d56e2000 r--s 0005f000 00:7a 535684030                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jywidgets.jar
+2af9d56e2000-2af9d56e7000 r--s 0005f000 00:7a 547210143                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jibx-bind-1.2.1.jar
+2af9d56e7000-2af9d56e9000 r--s 00016000 00:7a 564689344                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jetty-servlet-8.1.8.v20121106.jar
+2af9d56e9000-2af9d56eb000 r--s 0000c000 00:7a 548546570                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jettison-1.0-RC2.jar
+2af9d56eb000-2af9d56ed000 r--s 0001f000 00:7a 564238489                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/lz4-1.1.1.jar
+2af9d56ed000-2af9d56f5000 r--s 0008b000 00:7a 563711929                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/javassist.jar
+2af9d56f5000-2af9d56f7000 r--s 00018000 00:7a 547210141                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/forms-1.2.1.jar
+2af9d56f7000-2af9d56fc000 r--s 0001b000 00:7a 573723880                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaBlueIce.jar
+2af9d56fc000-2af9d5702000 r--s 00059000 00:7a 564238490                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/mail-1.4.jar
+2af9d5702000-2af9d5719000 r--s 00112000 00:7a 577593524                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/xercesImpl-2.8.1.jar
+2af9d5719000-2af9d57a6000 r--s 0075d000 00:7a 563711935                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jython.jar
+2af9d57a6000-2af9d57ac000 r--s 00018000 00:7a 535684041                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/syntheticaSilverMoon.jar
+2af9d57ac000-2af9d57b6000 r--s 0005f000 00:7a 535684015                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/axiom-api-1.2.11.jar
+2af9d57b6000-2af9d57c8000 r--s 000bf000 00:7a 563711930                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jaxb-impl-2.1.7.jar
+2af9d57c8000-2af9d57d0000 r--s 0004b000 00:7a 535684033                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/mac_widgets-0.9.5.jar
+2af9d57d0000-2af9d582e000 r--s 00467000 00:7a 535684322                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/jbossall-client.jar
+2af9d582e000-2af9d5841000 r--s 001a1000 00:7a 564238885                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-it-workstation-gui-large_volume_viewer.jar
+2af9d5841000-2af9d5848000 r--s 0006f000 00:7a 635547190                  /home/fosterl/tools/netbeans-7.4/platform/modules/ext/felix-4.0.2.jar
+2af9d584a000-2af9d5850000 r--s 00036000 00:7a 573724036                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/junit-4.11.jar
+2af9d5850000-2af9d5853000 ---p 00000000 00:00 0 
+2af9d5853000-2af9d5951000 rw-p 00000000 00:00 0 
+2af9d5951000-2af9d5954000 ---p 00000000 00:00 0 
+2af9d5954000-2af9d5a52000 rw-p 00000000 00:00 0 
+2af9d5a52000-2af9d5a55000 ---p 00000000 00:00 0 
+2af9d5a55000-2af9d5b53000 rw-p 00000000 00:00 0 
+2af9d5b53000-2af9d5b56000 ---p 00000000 00:00 0 
+2af9d5b56000-2af9d5c54000 rw-p 00000000 00:00 0 
+2af9d5c54000-2af9d5c6a000 r-xp 00000000 00:7a 635547107                  /home/fosterl/tools/netbeans-7.4/platform/modules/lib/amd64/linux/libjnidispatch-340.so
+2af9d5c6a000-2af9d5d69000 ---p 00016000 00:7a 635547107                  /home/fosterl/tools/netbeans-7.4/platform/modules/lib/amd64/linux/libjnidispatch-340.so
+2af9d5d69000-2af9d5d6b000 rw-p 00015000 00:7a 635547107                  /home/fosterl/tools/netbeans-7.4/platform/modules/lib/amd64/linux/libjnidispatch-340.so
+2af9d5d6b000-2af9d5d6c000 r--s 00000000 fd:00 524652                     /var/cache/fontconfig/1248881498ac025e45c3042f6afe9284-le64.cache-3
+2af9d5d70000-2af9d5d73000 r--s 00000000 fd:00 525747                     /var/cache/fontconfig/beeeeb3dfe132a8a0633a017c99ce0c0-le64.cache-3
+2af9d5d73000-2af9d5d74000 r--s 00000000 fd:00 528056                     /var/cache/fontconfig/d04038e664b0033ae700a78c51f179d3-le64.cache-3
+2af9d5d74000-2af9d5d75000 r--s 00000000 fd:00 524671                     /var/cache/fontconfig/211368abcb0ff835c229ff05c9ec01dc-le64.cache-3
+2af9d5d75000-2af9d5d76000 r--s 00000000 fd:00 524672                     /var/cache/fontconfig/860639f272b8b4b3094f9e399e41bccd-le64.cache-3
+2af9d5d76000-2af9d5d77000 r--s 00000000 fd:00 524673                     /var/cache/fontconfig/b887eea8f1b96e1d899b44ed6681fc27-le64.cache-3
+2af9d5d77000-2af9d5d78000 r--s 00000000 fd:00 524674                     /var/cache/fontconfig/46d51d90fe9d963f6f4186edb936a931-le64.cache-3
+2af9d5d78000-2af9d5d79000 r--s 00000000 fd:00 524675                     /var/cache/fontconfig/6cfc7d49b27ba7d3eb71ab86e04def2c-le64.cache-3
+2af9d5d79000-2af9d5d7a000 r--s 00000000 fd:00 524676                     /var/cache/fontconfig/ac68f755438cc3dc5a526084839fc7ca-le64.cache-3
+2af9d5d7a000-2af9d5d7b000 r--s 00000000 fd:00 524677                     /var/cache/fontconfig/81a173283b451552b599cfaafd6236bd-le64.cache-3
+2af9d5d80000-2af9d5d85000 r--s 00000000 fd:00 524653                     /var/cache/fontconfig/18db0204b1f108dd01663673626fcd3d-le64.cache-3
+2af9d5d85000-2af9d5d8c000 r--s 00000000 fd:00 527875                     /var/cache/fontconfig/fa1582dab13e7e8e44e5a9424d309f0e-le64.cache-3
+2af9d5d8c000-2af9d5d93000 r--s 00000000 fd:00 527879                     /var/cache/fontconfig/928306c3ad40271d946e41014a49fc28-le64.cache-3
+2af9d5d93000-2af9d5d95000 r--s 00000000 fd:00 524678                     /var/cache/fontconfig/830f035fa84a65ce80e050178dbb630d-le64.cache-3
+2af9d5d95000-2af9d5d97000 r--s 00000000 fd:00 524679                     /var/cache/fontconfig/3f821257dd33660ba7bbb45c32deb84c-le64.cache-3
+2af9d5d97000-2af9d5d98000 r--s 00000000 fd:00 524680                     /var/cache/fontconfig/b966c23d19cce9e9a98d55765cf2a0c7-le64.cache-3
+2af9d5d98000-2af9d5d9b000 ---p 00000000 00:00 0 
+2af9d5d9b000-2af9d5e99000 rw-p 00000000 00:00 0 
+2af9d5e99000-2af9d5ec3000 r-xp 00000000 fd:00 1712863                    /usr/lib64/gtk-2.0/2.10.0/engines/libclearlooks.so
+2af9d5ec3000-2af9d60c3000 ---p 0002a000 fd:00 1712863                    /usr/lib64/gtk-2.0/2.10.0/engines/libclearlooks.so
+2af9d60c3000-2af9d60c4000 rw-p 0002a000 fd:00 1712863                    /usr/lib64/gtk-2.0/2.10.0/engines/libclearlooks.so
+2af9d60c4000-2af9d60c7000 r--s 00000000 fd:00 524681                     /var/cache/fontconfig/5c755b2f27115486aa6359c84dd3cbda-le64.cache-3
+2af9d60c7000-2af9d60c9000 r--s 00000000 fd:00 524682                     /var/cache/fontconfig/2e1514a9fdd499050989183bb65136db-le64.cache-3
+2af9d60c9000-2af9d60ce000 r-xp 00000000 fd:00 1711696                    /usr/lib64/gtk-2.0/modules/libcanberra-gtk-module.so
+2af9d60ce000-2af9d62ce000 ---p 00005000 fd:00 1711696                    /usr/lib64/gtk-2.0/modules/libcanberra-gtk-module.so
+2af9d62ce000-2af9d62cf000 rw-p 00005000 fd:00 1711696                    /usr/lib64/gtk-2.0/modules/libcanberra-gtk-module.so
+2af9d62d6000-2af9d62e0000 r--s 00000000 fd:00 524659                     /var/cache/fontconfig/12b26b760a24f8b4feb03ad48a333a72-le64.cache-3
+2af9d62e0000-2af9d62e1000 r--s 00000000 fd:00 524660                     /var/cache/fontconfig/b4d0b56f766d89640448751fcd18ec1e-le64.cache-3
+2af9d62e1000-2af9d62e3000 r--s 00000000 fd:00 524661                     /var/cache/fontconfig/d3379abda271c4acd2ad0c01f565d0b0-le64.cache-3
+2af9d62e3000-2af9d62e4000 r--s 00000000 fd:00 524662                     /var/cache/fontconfig/991510d2da7f7b2bf8468002aae90060-le64.cache-3
+2af9d62e4000-2af9d62e8000 r--s 00000000 fd:00 524663                     /var/cache/fontconfig/b67b32625a2bb51b023d3814a918f351-le64.cache-3
+2af9d62e8000-2af9d62e9000 r--s 00000000 fd:00 524664                     /var/cache/fontconfig/e61abf8156cc476151baa07d67337cae-le64.cache-3
+2af9d62e9000-2af9d62ea000 r--s 00000000 fd:00 524665                     /var/cache/fontconfig/3c3fb04d32a5211b073874b125d29701-le64.cache-3
+2af9d62ea000-2af9d62eb000 r--s 00000000 fd:00 524666                     /var/cache/fontconfig/2881ed3fd21ca306ddad6f9b0dd3189f-le64.cache-3
+2af9d62eb000-2af9d62ec000 r--s 00000000 fd:00 524667                     /var/cache/fontconfig/47f48679023f44a4d1e44699a69464f6-le64.cache-3
+2af9d62ec000-2af9d62ed000 r--s 00000000 fd:00 524668                     /var/cache/fontconfig/900402270e15d763a6e008bb2d4c7686-le64.cache-3
+2af9d62ed000-2af9d62ee000 r--s 00000000 fd:00 524669                     /var/cache/fontconfig/df893b4576ad6107f9397134092c4059-le64.cache-3
+2af9d62ee000-2af9d62ef000 r--s 00000000 fd:00 524670                     /var/cache/fontconfig/c46020d7221988a13df853d2b46304fc-le64.cache-3
+2af9d62ef000-2af9d62f2000 r--s 00000000 fd:00 524683                     /var/cache/fontconfig/0b1bcc92b4d25cc154d77dafe3bceaa0-le64.cache-3
+2af9d62f2000-2af9d62fb000 r--s 00000000 fd:00 524657                     /var/cache/fontconfig/b79f3aaa7d385a141ab53ec885cc22a8-le64.cache-3
+2af9d62fb000-2af9d62ff000 r--s 00000000 fd:00 524658                     /var/cache/fontconfig/87f5e051180a7a75f16eb6fe7dbd3749-le64.cache-3
+2af9d6304000-2af9d639c000 r--p 00000000 fd:00 1847478                    /usr/share/fonts/dejavu/DejaVuSans.ttf
+2af9d63a1000-2af9d63ab000 r--s 00251000 00:71 3429750266                 /misc/local/jdk1.7.0_67/jre/lib/resources.jar
+2af9d63ad000-2af9d63b0000 ---p 00000000 00:00 0 
+2af9d63b0000-2af9d64ae000 rw-p 00000000 00:00 0 
+2af9d64b5000-2af9d64b8000 ---p 00000000 00:00 0 
+2af9d64b8000-2af9d65b6000 rw-p 00000000 00:00 0 
+2af9d65da000-2af9d65dd000 ---p 00000000 00:00 0 
+2af9d65dd000-2af9d66db000 rw-p 00000000 00:00 0 
+2af9d66db000-2af9d66de000 ---p 00000000 00:00 0 
+2af9d66de000-2af9d67dc000 rw-p 00000000 00:00 0 
+2af9d67dc000-2af9d67df000 ---p 00000000 00:00 0 
+2af9d67df000-2af9d68dd000 rw-p 00000000 00:00 0 
+2af9d691a000-2af9d691d000 ---p 00000000 00:00 0 
+2af9d691d000-2af9d6a1b000 rw-p 00000000 00:00 0 
+2af9d6a1b000-2af9d6a1d000 r-xp 00000000 fd:00 2246131                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libgluegen-rt.so
+2af9d6a1d000-2af9d6c1d000 ---p 00002000 fd:00 2246131                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libgluegen-rt.so
+2af9d6c1d000-2af9d6c1e000 rw-p 00002000 fd:00 2246131                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libgluegen-rt.so
+2af9d6c49000-2af9d6c4c000 ---p 00000000 00:00 0 
+2af9d6c4c000-2af9d6d4a000 rw-p 00000000 00:00 0 
+2af9d6d4a000-2af9d6d4d000 ---p 00000000 00:00 0 
+2af9d6d4d000-2af9d6e4b000 rw-p 00000000 00:00 0 
+2af9d6e4b000-2af9d6e4e000 ---p 00000000 00:00 0 
+2af9d6e4e000-2af9d6f4c000 rw-p 00000000 00:00 0 
+2af9d6f4c000-2af9d6f4d000 r-xp 00000000 00:71 3429750226                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libjawt.so
+2af9d6f4d000-2af9d714c000 ---p 00001000 00:71 3429750226                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libjawt.so
+2af9d714c000-2af9d714d000 rw-p 00000000 00:71 3429750226                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libjawt.so
+2af9d714d000-2af9d714f000 r-xp 00000000 fd:00 2246143                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libnativewindow_awt.so
+2af9d714f000-2af9d734e000 ---p 00002000 fd:00 2246143                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libnativewindow_awt.so
+2af9d734e000-2af9d734f000 rw-p 00001000 fd:00 2246143                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libnativewindow_awt.so
+2af9d734f000-2af9d7356000 r-xp 00000000 fd:00 2246144                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libnativewindow_x11.so
+2af9d7356000-2af9d7555000 ---p 00007000 fd:00 2246144                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libnativewindow_x11.so
+2af9d7555000-2af9d7556000 rw-p 00006000 fd:00 2246144                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libnativewindow_x11.so
+2af9d7556000-2af9d75be000 r-xp 00000000 fd:00 1179718                    /opt/nice/dcv/lib64/libGL_RVN.so.1.0.0
+2af9d75be000-2af9d77be000 ---p 00068000 fd:00 1179718                    /opt/nice/dcv/lib64/libGL_RVN.so.1.0.0
+2af9d77be000-2af9d77c3000 rw-p 00068000 fd:00 1179718                    /opt/nice/dcv/lib64/libGL_RVN.so.1.0.0
+2af9d77c3000-2af9d77d5000 rw-p 00000000 00:00 0 
+2af9d77d5000-2af9d77fd000 r-xp 00000000 fd:00 1447631                    /usr/lib64/libnvidia-ifr.so.346.47
+2af9d77fd000-2af9d79fc000 ---p 00028000 fd:00 1447631                    /usr/lib64/libnvidia-ifr.so.346.47
+2af9d79fc000-2af9d7a01000 rw-p 00027000 fd:00 1447631                    /usr/lib64/libnvidia-ifr.so.346.47
+2af9d7a01000-2af9d7acd000 r-xp 00000000 fd:00 1451980                    /usr/lib64/libGL.so.346.47
+2af9d7acd000-2af9d7aff000 rwxp 000cc000 fd:00 1451980                    /usr/lib64/libGL.so.346.47
+2af9d7aff000-2af9d7b1c000 r-xp 000fe000 fd:00 1451980                    /usr/lib64/libGL.so.346.47
+2af9d7b1c000-2af9d7d1c000 ---p 0011b000 fd:00 1451980                    /usr/lib64/libGL.so.346.47
+2af9d7d1c000-2af9d7d43000 rw-p 0011b000 fd:00 1451980                    /usr/lib64/libGL.so.346.47
+2af9d7d43000-2af9d7d59000 rw-p 00000000 00:00 0 
+2af9d7d86000-2af9d7d89000 r-xp 00000000 fd:00 1453575                    /usr/lib64/tls/libnvidia-tls.so.346.47
+2af9d7d89000-2af9d7f88000 ---p 00003000 fd:00 1453575                    /usr/lib64/tls/libnvidia-tls.so.346.47
+2af9d7f88000-2af9d7f89000 rw-p 00002000 fd:00 1453575                    /usr/lib64/tls/libnvidia-tls.so.346.47
+2af9d8000000-2af9d8021000 rw-p 00000000 00:00 0 
+2af9d8021000-2af9dc000000 ---p 00000000 00:00 0 
+2af9dc000000-2af9dd9f8000 r-xp 00000000 fd:00 1451956                    /usr/lib64/libnvidia-glcore.so.346.47
+2af9dd9f8000-2af9dda18000 rwxp 019f8000 fd:00 1451956                    /usr/lib64/libnvidia-glcore.so.346.47
+2af9dda18000-2af9ddeaf000 r-xp 01a18000 fd:00 1451956                    /usr/lib64/libnvidia-glcore.so.346.47
+2af9ddeaf000-2af9de0af000 ---p 01eaf000 fd:00 1451956                    /usr/lib64/libnvidia-glcore.so.346.47
+2af9de0af000-2af9decbb000 rw-p 01eaf000 fd:00 1451956                    /usr/lib64/libnvidia-glcore.so.346.47
+2af9decbb000-2af9decd9000 rw-p 00000000 00:00 0 
+2af9decd9000-2af9ded81000 r-xp 00000000 fd:00 2246138                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libjogl_desktop.so
+2af9ded81000-2af9def80000 ---p 000a8000 fd:00 2246138                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libjogl_desktop.so
+2af9def80000-2af9def81000 rw-p 000a7000 fd:00 2246138                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libjogl_desktop.so
+2af9def81000-2af9def8b000 r-xp 00000000 fd:00 1443350                    /usr/lib64/libGLESv1_CM.so.346.47
+2af9def8b000-2af9df18b000 ---p 0000a000 fd:00 1443350                    /usr/lib64/libGLESv1_CM.so.346.47
+2af9df18b000-2af9df18e000 rw-p 0000a000 fd:00 1443350                    /usr/lib64/libGLESv1_CM.so.346.47
+2af9df18e000-2af9df24f000 r-xp 00000000 fd:00 1443375                    /usr/lib64/libEGL.so.346.47
+2af9df24f000-2af9df44e000 ---p 000c1000 fd:00 1443375                    /usr/lib64/libEGL.so.346.47
+2af9df44e000-2af9df477000 rw-p 000c0000 fd:00 1443375                    /usr/lib64/libEGL.so.346.47
+2af9df477000-2af9df48f000 rw-p 00000000 00:00 0 
+2af9df48f000-2af9df4fe000 r-xp 00000000 fd:00 1443216                    /usr/lib64/libnvidia-glsi.so.346.47
+2af9df4fe000-2af9df6fe000 ---p 0006f000 fd:00 1443216                    /usr/lib64/libnvidia-glsi.so.346.47
+2af9df6fe000-2af9df707000 rw-p 0006f000 fd:00 1443216                    /usr/lib64/libnvidia-glsi.so.346.47
+2af9df707000-2af9df719000 rw-p 00000000 00:00 0 
+2af9df719000-2af9df75f000 r-xp 00000000 fd:00 2246142                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libjogl_mobile.so
+2af9df75f000-2af9df95f000 ---p 00046000 fd:00 2246142                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libjogl_mobile.so
+2af9df95f000-2af9df960000 rw-p 00046000 fd:00 2246142                    /tmp/jogamp_0000/file_cache/jln8767733474396358515/jln3928251096708971621/libjogl_mobile.so
+2af9df98d000-2af9df99c000 r-xp 00000000 fd:00 1443301                    /usr/lib64/libGLESv2.so.346.47
+2af9df99c000-2af9dfb9c000 ---p 0000f000 fd:00 1443301                    /usr/lib64/libGLESv2.so.346.47
+2af9dfb9c000-2af9dfb9f000 rw-p 0000f000 fd:00 1443301                    /usr/lib64/libGLESv2.so.346.47
+2af9dfb9f000-2af9dfba0000 rw-p 00000000 00:00 0 
+2af9dfba0000-2af9dfba1000 ---p 00000000 00:00 0 
+2af9dfba1000-2af9dfda1000 rw-p 00000000 00:00 0 
+2af9dfda1000-2af9dfda2000 ---p 00000000 00:00 0 
+2af9dfda2000-2af9dffa2000 rw-p 00000000 00:00 0 
+2af9e0000000-2af9e0021000 rw-p 00000000 00:00 0 
+2af9e0021000-2af9e4000000 ---p 00000000 00:00 0 
+2af9e4000000-2af9e4001000 ---p 00000000 00:00 0 
+2af9e4001000-2af9e4201000 rw-p 00000000 00:00 0 
+2af9e8000000-2af9e8021000 rw-p 00000000 00:00 0 
+2af9e8021000-2af9ec000000 ---p 00000000 00:00 0 
+2af9f0000000-2af9f0021000 rw-p 00000000 00:00 0 
+2af9f0021000-2af9f4000000 ---p 00000000 00:00 0 
+2af9f8000000-2af9f8021000 rw-p 00000000 00:00 0 
+2af9f8021000-2af9fc000000 ---p 00000000 00:00 0 
+2afa00000000-2afa00021000 rw-p 00000000 00:00 0 
+2afa00021000-2afa04000000 ---p 00000000 00:00 0 
+2afa08000000-2afa08021000 rw-p 00000000 00:00 0 
+2afa08021000-2afa0c000000 ---p 00000000 00:00 0 
+2afa10000000-2afa10021000 rw-p 00000000 00:00 0 
+2afa10021000-2afa14000000 ---p 00000000 00:00 0 
+2afa18000000-2afa18021000 rw-p 00000000 00:00 0 
+2afa18021000-2afa1c000000 ---p 00000000 00:00 0 
+2afa20000000-2afa20021000 rw-p 00000000 00:00 0 
+2afa20021000-2afa24000000 ---p 00000000 00:00 0 
+2afa28000000-2afa28021000 rw-p 00000000 00:00 0 
+2afa28021000-2afa2c000000 ---p 00000000 00:00 0 
+2afa30000000-2afa30021000 rw-p 00000000 00:00 0 
+2afa30021000-2afa34000000 ---p 00000000 00:00 0 
+2afa38000000-2afa38021000 rw-p 00000000 00:00 0 
+2afa38021000-2afa3c000000 ---p 00000000 00:00 0 
+2afa40000000-2afa40021000 rw-p 00000000 00:00 0 
+2afa40021000-2afa44000000 ---p 00000000 00:00 0 
+2afa48000000-2afa48021000 rw-p 00000000 00:00 0 
+2afa48021000-2afa4c000000 ---p 00000000 00:00 0 
+2afa50000000-2afa50021000 rw-p 00000000 00:00 0 
+2afa50021000-2afa54000000 ---p 00000000 00:00 0 
+2afa58000000-2afa58021000 rw-p 00000000 00:00 0 
+2afa58021000-2afa5c000000 ---p 00000000 00:00 0 
+2afa60000000-2afa60021000 rw-p 00000000 00:00 0 
+2afa60021000-2afa64000000 ---p 00000000 00:00 0 
+2afa64000000-2afaaadea000 rw-p 00000000 00:00 0 
+2afaaadea000-2afaaafa9000 r--s 039e5000 00:71 3429750323                 /misc/local/jdk1.7.0_67/jre/lib/rt.jar
+2afaaafa9000-2afaae92d000 rw-p 00000000 00:00 0 
+2afaae92d000-2afaae92e000 ---p 00000000 00:00 0 
+2afaae92e000-2afaaea2e000 rw-p 00000000 00:00 0 
+2afaaea2e000-2afaaea31000 ---p 00000000 00:00 0 
+2afaaea31000-2afaaeb2f000 rw-p 00000000 00:00 0 
+2afaaeb2f000-2afaaeb32000 ---p 00000000 00:00 0 
+2afaaeb32000-2afaaec30000 rw-p 00000000 00:00 0 
+2afaaec30000-2afaaec33000 ---p 00000000 00:00 0 
+2afaaec33000-2afaaed31000 rw-p 00000000 00:00 0 
+2afaaed31000-2afaaed34000 r--s 0005f000 00:7a 707601942                  /home/fosterl/tools/netbeans-7.4/profiler/lib/jfluid-server.jar
+2afaaed34000-2afaaed35000 r--s 00004000 00:7a 755636254                  /home/fosterl/tools/netbeans-7.4/profiler/lib/jfluid-server-15.jar
+2afaaed35000-2afaaed38000 r--s 00072000 00:7a 775426008                  /home/fosterl/tools/netbeans-7.4/platform/lib/boot.jar
+2afaaed38000-2afaaed3a000 r--s 00009000 00:7a 775425996                  /home/fosterl/tools/netbeans-7.4/platform/lib/org-openide-modules.jar
+2afaaed3a000-2afaaed40000 r--s 000b1000 00:7a 593534075                  /home/fosterl/tools/netbeans-7.4/platform/lib/org-openide-util.jar
+2afaaed40000-2afaaed43000 r--s 00054000 00:7a 755635458                  /home/fosterl/tools/netbeans-7.4/platform/lib/org-openide-util-lookup.jar
+2afaaed43000-2afaaed44000 r--s 00000000 00:7a 593534084                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/boot_ja.jar
+2afaaed44000-2afaaed45000 r--s 00000000 00:7a 635547201                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/boot_pt_BR.jar
+2afaaed45000-2afaaed46000 r--s 00000000 00:7a 593534082                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/boot_ru.jar
+2afaaed46000-2afaaed47000 r--s 00000000 00:7a 775426002                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/boot_zh_CN.jar
+2afaaed47000-2afaaed48000 r--s 00000000 00:7a 635547093                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/org-openide-modules_ja.jar
+2afaaed48000-2afaaed49000 r--s 00000000 00:7a 635547016                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/org-openide-modules_pt_BR.jar
+2afaaed49000-2afaaed4a000 r--s 00000000 00:7a 635547095                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/org-openide-modules_ru.jar
+2afaaed4a000-2afaaed4b000 r--s 00000000 00:7a 635547018                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/org-openide-modules_zh_CN.jar
+2afaaed4b000-2afaaed4d000 r--s 00000000 00:7a 635547156                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/org-openide-util_ja.jar
+2afaaed4d000-2afaaed4e000 r--s 00000000 00:7a 707601462                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/org-openide-util-lookup_ja.jar
+2afaaed4e000-2afaaed4f000 r--s 00000000 00:7a 291633143                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/org-openide-util-lookup_pt_BR.jar
+2afaaed4f000-2afaaed50000 r--s 00000000 00:7a 707601460                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/org-openide-util-lookup_ru.jar
+2afaaed50000-2afaaed51000 r--s 00000000 00:7a 291633145                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/org-openide-util-lookup_zh_CN.jar
+2afaaed51000-2afaaed53000 r--s 00000000 00:7a 635547091                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/org-openide-util_pt_BR.jar
+2afaaed53000-2afaaed54000 r--s 00001000 00:7a 776865097                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/org-openide-util_ru.jar
+2afaaed54000-2afaaed56000 r--s 00000000 00:7a 635547097                  /home/fosterl/tools/netbeans-7.4/platform/lib/locale/org-openide-util_zh_CN.jar
+2afaaed56000-2afaaed5c000 r--s 0001e000 00:71 3495631790                 /misc/local/jdk1.7.0_67/lib/dt.jar
+2afaaed5c000-2afaaedc7000 r--s 00e22000 00:71 3495631793                 /misc/local/jdk1.7.0_67/lib/tools.jar
+2afaaedc7000-2afaaedca000 ---p 00000000 00:00 0 
+2afaaedca000-2afaaeec8000 rw-p 00000000 00:00 0 
+2afaaeec8000-2afaaeede000 r-xp 00000000 00:71 3429750211                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libnet.so
+2afaaeede000-2afaaf0de000 ---p 00016000 00:71 3429750211                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libnet.so
+2afaaf0de000-2afaaf0df000 rw-p 00016000 00:71 3429750211                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libnet.so
+2afaaf0df000-2afaaf0ef000 r-xp 00000000 00:71 3543077425                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libnio.so
+2afaaf0ef000-2afaaf2ef000 ---p 00010000 00:71 3543077425                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libnio.so
+2afaaf2ef000-2afaaf2f0000 rw-p 00010000 00:71 3543077425                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libnio.so
+2afaaf2f0000-2afaaf2f3000 ---p 00000000 00:00 0 
+2afaaf2f3000-2afaaf3f1000 rw-p 00000000 00:00 0 
+2afaaf3f1000-2afaaf3f4000 ---p 00000000 00:00 0 
+2afaaf3f4000-2afaaf4f2000 rw-p 00000000 00:00 0 
+2afaaf4f2000-2afaaf4fa000 r-xp 00000000 00:71 3461965464                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libmanagement.so
+2afaaf4fa000-2afaaf6f9000 ---p 00008000 00:71 3461965464                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libmanagement.so
+2afaaf6f9000-2afaaf6fa000 rw-p 00007000 00:71 3461965464                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libmanagement.so
+2afaaf6fa000-2afaaf6fd000 ---p 00000000 00:00 0 
+2afaaf6fd000-2afaaf7fb000 rw-p 00000000 00:00 0 
+2afaaf7fb000-2afaaf7ff000 r--s 0008a000 00:71 3556705936                 /misc/local/jdk1.7.0_67/jre/lib/jsse.jar
+2afaaf7ff000-2afaaf802000 ---p 00000000 00:00 0 
+2afaaf802000-2afaaf838000 rw-p 00000000 00:00 0 
+2afaaf838000-2afaaf95d000 rw-s 00000000 fd:00 2246108                    /tmp/jfluidbuf1179434568543433429.tmp
+2afaaf95d000-2afaaf960000 ---p 00000000 00:00 0 
+2afaaf960000-2afaafa5e000 rw-p 00000000 00:00 0 
+2afaafa5e000-2afaafa61000 ---p 00000000 00:00 0 
+2afaafa61000-2afaafb5f000 rw-p 00000000 00:00 0 
+2afaafb5f000-2afaafb62000 ---p 00000000 00:00 0 
+2afaafb62000-2afaafc60000 rw-p 00000000 00:00 0 
+2afaafc60000-2afaafc61000 ---p 00000000 00:00 0 
+2afaafc61000-2afaafd61000 rw-p 00000000 00:00 0 
+2afaafd61000-2afaafd67000 r--s 000bf000 00:7a 593534086                  /home/fosterl/tools/netbeans-7.4/platform/core/core.jar
+2afaafd6f000-2afaafd70000 r--s 00001000 00:7a 635546967                  /home/fosterl/tools/netbeans-7.4/platform/core/locale/org-openide-filesystems_zh_CN.jar
+2afaafde3000-2afaafde4000 r--s 00001000 00:7a 707601456                  /home/fosterl/tools/netbeans-7.4/platform/core/locale/org-openide-filesystems_ja.jar
+2afaafde5000-2afaafde6000 r--s 00001000 00:7a 635546965                  /home/fosterl/tools/netbeans-7.4/platform/core/locale/org-openide-filesystems_pt_BR.jar
+2afaafde6000-2afaafde7000 r--s 00001000 00:7a 593534077                  /home/fosterl/tools/netbeans-7.4/platform/core/locale/core_ja.jar
+2afaafe5b000-2afaafe5c000 r--s 00004000 00:7a 535684006                  /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster/core/locale/core_janeliaws.jar
+2afaafed9000-2afaafeda000 r--s 00001000 00:7a 635547196                  /home/fosterl/tools/netbeans-7.4/platform/core/locale/core_pt_BR.jar
+2afaafeda000-2afaafedd000 ---p 00000000 00:00 0 
+2afaafedd000-2afaaffdb000 rw-p 00000000 00:00 0 
+2afab0000000-2afab0dbb000 rw-p 00000000 00:00 0 
+2afab0dbb000-2afab4000000 ---p 00000000 00:00 0 
+2afab4000000-2afab4021000 rw-p 00000000 00:00 0 
+2afab4021000-2afab8000000 ---p 00000000 00:00 0 
+2afab8000000-2afab8021000 rw-p 00000000 00:00 0 
+2afab8021000-2afabc000000 ---p 00000000 00:00 0 
+2afabc000000-2afabc021000 rw-p 00000000 00:00 0 
+2afabc021000-2afac0000000 ---p 00000000 00:00 0 
+2afac0000000-2afac009f000 rw-p 00000000 00:00 0 
+2afac009f000-2afac4000000 ---p 00000000 00:00 0 
+2afac4000000-2afac4021000 rw-p 00000000 00:00 0 
+2afac4021000-2afac8000000 ---p 00000000 00:00 0 
+2afac8000000-2afac8021000 rw-p 00000000 00:00 0 
+2afac8021000-2afacc000000 ---p 00000000 00:00 0 
+2afacc000000-2afacc021000 rw-p 00000000 00:00 0 
+2afacc021000-2afad0000000 ---p 00000000 00:00 0 
+2afad0000000-2afad0a6a000 rw-p 00000000 00:00 0 
+2afad0a6a000-2afad4000000 ---p 00000000 00:00 0 
+2afad4000000-2afad424d000 rw-p 00000000 00:00 0 
+2afad424d000-2afad8000000 ---p 00000000 00:00 0 
+2afad8000000-2afad9029000 rw-p 00000000 00:00 0 
+2afad9029000-2afadc000000 ---p 00000000 00:00 0 
+2afadc000000-2afadc021000 rw-p 00000000 00:00 0 
+2afadc021000-2afae0000000 ---p 00000000 00:00 0 
+2afae0000000-2afae0021000 rw-p 00000000 00:00 0 
+2afae0021000-2afae4000000 ---p 00000000 00:00 0 
+2afae4000000-2afae4021000 rw-p 00000000 00:00 0 
+2afae4021000-2afae8000000 ---p 00000000 00:00 0 
+2afae8000000-2afae8003000 ---p 00000000 00:00 0 
+2afae8003000-2afae8101000 rw-p 00000000 00:00 0 
+2afae8101000-2afae8105000 r--s 000f7000 00:71 3429749893                 /misc/local/jdk1.7.0_67/jre/lib/ext/localedata.jar
+2afae8105000-2afae81a7000 r-xp 00000000 00:71 3470074292                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libawt.so
+2afae81a7000-2afae83a7000 ---p 000a2000 00:71 3470074292                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libawt.so
+2afae83a7000-2afae83b3000 rw-p 000a2000 00:71 3470074292                 /misc/local/jdk1.7.0_67/jre/lib/amd64/libawt.so
+2afae83b3000-2afae83d7000 rw-p 00000000 00:00 0 
+2afae83d7000-2afae8427000 r-xp 00000000 00:71 3429750231                 /misc/local/jdk1.7.0_67/jre/lib/amd64/xawt/libmawt.so
+2afae8427000-2afae8627000 ---p 00050000 00:71 3429750231                 /misc/local/jdk1.7.0_67/jre/lib/amd64/xawt/libmawt.so
+2afae8627000-2afae862b000 rw-p 00050000 00:71 3429750231                 /misc/local/jdk1.7.0_67/jre/lib/amd64/xawt/libmawt.so
+2afae862b000-2afae862c000 rw-p 00000000 00:00 0 
+2afae862c000-2afae862f000 ---p 00000000 00:00 0 
+2afae862f000-2afae872d000 rw-p 00000000 00:00 0 
+2afae872d000-2afae8730000 ---p 00000000 00:00 0 
+2afae8730000-2afae882e000 rw-p 00000000 00:00 0 
+2afae882e000-2afae8831000 ---p 00000000 00:00 0 
+2afae8831000-2afae892f000 rw-p 00000000 00:00 0 
+2afae892f000-2afae8932000 ---p 00000000 00:00 0 
+2afae8932000-2afae8a30000 rw-p 00000000 00:00 0 
+2afae8a30000-2afae8a33000 ---p 00000000 00:00 0 
+2afae8a33000-2afae8b31000 rw-p 00000000 00:00 0 
+2afae8b31000-2afae8b34000 ---p 00000000 00:00 0 
+2afae8b34000-2afae8c32000 rw-p 00000000 00:00 0 
+2afae8c32000-2afae8c35000 ---p 00000000 00:00 0 
+2afae8c35000-2afae8d33000 rw-p 00000000 00:00 0 
+2afaec000000-2afaec021000 rw-p 00000000 00:00 0 
+2afaec021000-2afaf0000000 ---p 00000000 00:00 0 
+2afaf0000000-2afaf003a000 rw-p 00000000 00:00 0 
+2afaf003a000-2afaf4000000 ---p 00000000 00:00 0 
+2afaf4000000-2afaf46d5000 rw-p 00000000 00:00 0 
+2afaf46d5000-2afaf8000000 ---p 00000000 00:00 0 
+2afaf8000000-2afaf8021000 rw-p 00000000 00:00 0 
+2afaf8021000-2afafc000000 ---p 00000000 00:00 0 
+2afafc000000-2afafc021000 rw-p 00000000 00:00 0 
+2afafc021000-2afb00000000 ---p 00000000 00:00 0 
+2afb00000000-2afb00021000 rw-p 00000000 00:00 0 
+2afb00021000-2afb04000000 ---p 00000000 00:00 0 
+2afb04000000-2afb04021000 rw-p 00000000 00:00 0 
+2afb04021000-2afb08000000 ---p 00000000 00:00 0 
+2afb08000000-2afb0835e000 rw-p 00000000 00:00 0 
+2afb0835e000-2afb0c000000 ---p 00000000 00:00 0 
+2afb0c000000-2afb0c11e000 rw-p 00000000 00:00 0 
+2afb0c11e000-2afb10000000 ---p 00000000 00:00 0 
+2afb10000000-2afb100b1000 rw-p 00000000 00:00 0 
+2afb100b1000-2afb14000000 ---p 00000000 00:00 0 
+2afb14000000-2afb15462000 rw-p 00000000 00:00 0 
+2afb15462000-2afb18000000 ---p 00000000 00:00 0 
+2afb18000000-2afb18021000 rw-p 00000000 00:00 0 
+2afb18021000-2afb1c000000 ---p 00000000 00:00 0 
+2afb1c000000-2afb1c021000 rw-p 00000000 00:00 0 
+2afb1c021000-2afb20000000 ---p 00000000 00:00 0 
+2afb20000000-2afb20021000 rw-p 00000000 00:00 0 
+2afb20021000-2afb24000000 ---p 00000000 00:00 0 
+2afb24000000-2afb241b0000 rw-p 00000000 00:00 0 
+2afb241b0000-2afb28000000 ---p 00000000 00:00 0 
+2afb28000000-2afb28021000 rw-p 00000000 00:00 0 
+2afb28021000-2afb2c000000 ---p 00000000 00:00 0 
+2afb2c000000-2afb2c064000 rw-p 00000000 00:00 0 
+2afb2c064000-2afb30000000 ---p 00000000 00:00 0 
+2afb30000000-2afb30021000 rw-p 00000000 00:00 0 
+2afb30021000-2afb34000000 ---p 00000000 00:00 0 
+2afb34000000-2afb34021000 rw-p 00000000 00:00 0 
+2afb34021000-2afb38000000 ---p 00000000 00:00 0 
+2afb38000000-2afb38021000 rw-p 00000000 00:00 0 
+2afb38021000-2afb3c000000 ---p 00000000 00:00 0 
+2afb3c000000-2afb3cc96000 rw-p 00000000 00:00 0 
+2afb3cc96000-2afb40000000 ---p 00000000 00:00 0 
+2afb40000000-2afb40021000 rw-p 00000000 00:00 0 
+2afb40021000-2afb44000000 ---p 00000000 00:00 0 
+2afb44000000-2afb44038000 r-xp 00000000 fd:00 1179707                    /opt/nice/dcv/lib64/codecs/libdcv_lzorle.so
+2afb44038000-2afb44237000 ---p 00038000 fd:00 1179707                    /opt/nice/dcv/lib64/codecs/libdcv_lzorle.so
+2afb44237000-2afb4423a000 rw-p 00037000 fd:00 1179707                    /opt/nice/dcv/lib64/codecs/libdcv_lzorle.so
+2afb4423a000-2afb4424c000 rw-p 00000000 00:00 0 
+2afb4424c000-2afb44262000 r-xp 00000000 fd:00 1179708                    /opt/nice/dcv/lib64/codecs/libdcv_rle.so
+2afb44262000-2afb44462000 ---p 00016000 fd:00 1179708                    /opt/nice/dcv/lib64/codecs/libdcv_rle.so
+2afb44462000-2afb44464000 rw-p 00016000 fd:00 1179708                    /opt/nice/dcv/lib64/codecs/libdcv_rle.so
+2afb44464000-2afb44476000 rw-p 00000000 00:00 0 
+2afb44476000-2afb44575000 r-xp 00000000 fd:00 1179709                    /opt/nice/dcv/lib64/codecs/libdcv_tiles.so
+2afb44575000-2afb44775000 ---p 000ff000 fd:00 1179709                    /opt/nice/dcv/lib64/codecs/libdcv_tiles.so
+2afb44775000-2afb4477f000 rw-p 000ff000 fd:00 1179709                    /opt/nice/dcv/lib64/codecs/libdcv_tiles.so
+2afb4477f000-2afb47791000 rw-p 00000000 00:00 0 
+2afb47791000-2afb477c0000 r-xp 00000000 fd:00 1179705                    /opt/nice/dcv/lib64/codecs/libdcv_h264.so
+2afb477c0000-2afb479c0000 ---p 0002f000 fd:00 1179705                    /opt/nice/dcv/lib64/codecs/libdcv_h264.so
+2afb479c0000-2afb479c3000 rw-p 0002f000 fd:00 1179705                    /opt/nice/dcv/lib64/codecs/libdcv_h264.so
+2afb479c3000-2afb479d5000 rw-p 00000000 00:00 0 
+2afb48000000-2afb48039000 r-xp 00000000 fd:00 1179710                    /opt/nice/dcv/lib64/codecs/libdcv_zrle.so
+2afb48039000-2afb48239000 ---p 00039000 fd:00 1179710                    /opt/nice/dcv/lib64/codecs/libdcv_zrle.so
+2afb48239000-2afb4823c000 rw-p 00039000 fd:00 1179710                    /opt/nice/dcv/lib64/codecs/libdcv_zrle.so
+2afb4823c000-2afb4824e000 rw-p 00000000 00:00 0 
+2afb4824e000-2afb4834d000 r-xp 00000000 fd:00 1179706                    /opt/nice/dcv/lib64/codecs/libdcv_jpeg.so
+2afb4834d000-2afb4854d000 ---p 000ff000 fd:00 1179706                    /opt/nice/dcv/lib64/codecs/libdcv_jpeg.so
+2afb4854d000-2afb48557000 rw-p 000ff000 fd:00 1179706                    /opt/nice/dcv/lib64/codecs/libdcv_jpeg.so
+2afb48557000-2afb4b569000 rw-p 00000000 00:00 0 
+2afb4b569000-2afb4b59b000 r-xp 00000000 fd:00 1179725                    /opt/nice/dcv/lib64/libdcv_encryptor.so
+2afb4b59b000-2afb4b79b000 ---p 00032000 fd:00 1179725                    /opt/nice/dcv/lib64/libdcv_encryptor.so
+2afb4b79b000-2afb4b79c000 rw-p 00032000 fd:00 1179725                    /opt/nice/dcv/lib64/libdcv_encryptor.so
+2afb4b79c000-2afb4b79d000 ---p 00000000 00:00 0 
+2afb4b79d000-2afb4b99d000 rw-p 00000000 00:00 0 
+2afb4b99d000-2afb4ba61000 rw-s 404c905000 00:05 9641                     /dev/nvidiactl
+2afb4c000000-2afb4c022000 rw-p 00000000 00:00 0 
+2afb4c022000-2afb50000000 ---p 00000000 00:00 0 
+7fff4dd57000-7fff4dd6e000 rw-p 00000000 00:00 0                          [stack]
+7fff4ddff000-7fff4de00000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+
+VM Arguments:
+jvm_args: -Djdk.home=/misc/local/jdk1.7.0_67 -Dnetbeans.running.environment=gnome -Dnetbeans.dirs=/home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/build/cluster:/home/fosterl/tools/netbeans-7.4/extide:/home/fosterl/tools/netbeans-7.4/harness:/home/fosterl/tools/netbeans-7.4/ide:/home/fosterl/tools/netbeans-7.4/java:/home/fosterl/tools/netbeans-7.4/platform -Dnetbeans.home=/home/fosterl/tools/netbeans-7.4/platform -Dnetbeans.logger.console=true -ea -Dapple.awt.brushMetalLook=false -XX:PermSize=192m -XX:MaxPermSize=2048m -Xms1024m -Xmx32000m -Dnb.forceui=de.javasoft.synthetica.netbeans.SyntheticaLFCustoms -Dplugin.manager.check.interval=EVERY_DAY -Dplugin.manager.check.new.plugins=true -Dsun.java2d.noddraw=true -Djavax.xml.bind.JAXBContext=com.sun.xml.internal.bind.v2.ContextFactory -agentpath:/home/fosterl/tools/netbeans-7.4/profiler/lib/deployed/jdk16/linux-amd64/libprofilerinterface.so=/home/fosterl/tools/netbeans-7.4/profiler/lib,5140,10 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/LargeVolumeViewerModule/nbproject/private/profiler -XX:+HeapDumpOnOutOfMemoryError 
+java_command: org.netbeans.Main --cachedir /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/LargeVolumeViewerModule/../build/testuserdir/var/cache --userdir /home/fosterl/gitfiles/CACHE_3D_LLF/janelia-workstation/ConsoleApplication/LargeVolumeViewerModule/../build/testuserdir --branding janeliaws
+Launcher Type: SUN_STANDARD
+
+Environment Variables:
+JAVA_HOME=/usr/java/jdk1.7.0_45
+PATH=/opt/puppet/bin:/tmp/1534.1.vnc13.q:/enginframe/uge/bin/lx-amd64:/enginframe/uge/bin/lx-amd64:/bin:/usr/bin:/usr/sbin:/usr/local/python-2.7.6/bin:/home/fosterl/tools/apache-ant-1.9.3/bin:/enginframe/uge/bin/lx-amd64:/usr/lib64/qt-3.3/bin:/opt/puppet/bin:/usr/kerberos/sbin:/usr/kerberos/bin:/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/home/fosterl/bin
+LD_LIBRARY_PATH=/misc/local/jdk1.7.0_67/jre/lib/amd64:/misc/local/jdk1.7.0_67/jre/lib/i386:/misc/local/jdk1.7.0_67//jre/lib/amd64:/misc/local/jdk1.7.0_67//jre/lib/i386:
+SHELL=/bin/bash
+DISPLAY=f13u09.int.janelia.org:5.0
+ARCH=lx-amd64
+
+Signal Handlers:
+SIGSEGV: [libjvm.so+0x99f4a0], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGBUS: [libjvm.so+0x99f4a0], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGFPE: [libjvm.so+0x81a860], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGPIPE: SIG_IGN, sa_mask[0]=0x00001000, sa_flags=0x10000000
+SIGXFSZ: [libjvm.so+0x81a860], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGILL: [libjvm.so+0x81a860], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGUSR1: SIG_DFL, sa_mask[0]=0x00000000, sa_flags=0x00000000
+SIGUSR2: [libjvm.so+0x81c060], sa_mask[0]=0x00000004, sa_flags=0x10000004
+SIGHUP: [libjvm.so+0x81d160], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGINT: SIG_IGN, sa_mask[0]=0x00000000, sa_flags=0x00000000
+SIGTERM: [libjvm.so+0x81d160], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGQUIT: [libjvm.so+0x81d160], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+
+
+---------------  S Y S T E M  ---------------
+
+OS:Scientific Linux release 6.4 (Carbon)
+
+uname:Linux 2.6.32-431.5.1.el6.x86_64 #1 SMP Tue Feb 11 13:30:01 CST 2014 x86_64
+libc:glibc 2.12 NPTL 2.12 
+rlimit: STACK infinity, CORE infinity, NPROC 65536, NOFILE 4096, AS infinity
+load average:1.26 1.48 1.52
+
+/proc/meminfo:
+MemTotal:       264569312 kB
+MemFree:        32167100 kB
+Buffers:          182776 kB
+Cached:         214274868 kB
+SwapCached:         5320 kB
+Active:         145899636 kB
+Inactive:       79116140 kB
+Active(anon):    7539680 kB
+Inactive(anon):  3029384 kB
+Active(file):   138359956 kB
+Inactive(file): 76086756 kB
+Unevictable:     4198036 kB
+Mlocked:            8192 kB
+SwapTotal:       4194296 kB
+SwapFree:        4128576 kB
+Dirty:              2644 kB
+Writeback:             0 kB
+AnonPages:      14750744 kB
+Mapped:           334884 kB
+Shmem:              7180 kB
+Slab:            1137872 kB
+SReclaimable:     951028 kB
+SUnreclaim:       186844 kB
+KernelStack:       14376 kB
+PageTables:       218696 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    136478952 kB
+Committed_AS:   20894932 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:      908328 kB
+VmallocChunk:   34221306364 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:  13400064 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+DirectMap4k:     1249280 kB
+DirectMap2M:    115134464 kB
+DirectMap1G:    152043520 kB
+
+
+CPU:total 24 (12 cores per cpu, 2 threads per core) family 6 model 62 stepping 4, cmov, cx8, fxsr, mmx, sse, sse2, sse3, ssse3, sse4.1, sse4.2, popcnt, avx, aes, erms, ht, tsc, tscinvbit
+
+/proc/cpuinfo:
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 0
+siblings	: 12
+core id		: 0
+cpu cores	: 12
+apicid		: 0
+initial apicid	: 0
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.90
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 1
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 0
+siblings	: 12
+core id		: 1
+cpu cores	: 12
+apicid		: 2
+initial apicid	: 2
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.90
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 2
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 0
+siblings	: 12
+core id		: 2
+cpu cores	: 12
+apicid		: 4
+initial apicid	: 4
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.90
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 3
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 0
+siblings	: 12
+core id		: 3
+cpu cores	: 12
+apicid		: 6
+initial apicid	: 6
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.90
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 4
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 0
+siblings	: 12
+core id		: 4
+cpu cores	: 12
+apicid		: 8
+initial apicid	: 8
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.90
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 5
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 0
+siblings	: 12
+core id		: 5
+cpu cores	: 12
+apicid		: 10
+initial apicid	: 10
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.90
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 6
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 0
+siblings	: 12
+core id		: 8
+cpu cores	: 12
+apicid		: 16
+initial apicid	: 16
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.90
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 7
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 0
+siblings	: 12
+core id		: 9
+cpu cores	: 12
+apicid		: 18
+initial apicid	: 18
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.90
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 8
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 0
+siblings	: 12
+core id		: 10
+cpu cores	: 12
+apicid		: 20
+initial apicid	: 20
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.90
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 9
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 0
+siblings	: 12
+core id		: 11
+cpu cores	: 12
+apicid		: 22
+initial apicid	: 22
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.90
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 10
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 0
+siblings	: 12
+core id		: 12
+cpu cores	: 12
+apicid		: 24
+initial apicid	: 24
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.90
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 11
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 0
+siblings	: 12
+core id		: 13
+cpu cores	: 12
+apicid		: 26
+initial apicid	: 26
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.90
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 12
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 1
+siblings	: 12
+core id		: 0
+cpu cores	: 12
+apicid		: 32
+initial apicid	: 32
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 13
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 1
+siblings	: 12
+core id		: 1
+cpu cores	: 12
+apicid		: 34
+initial apicid	: 34
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 14
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 1
+siblings	: 12
+core id		: 2
+cpu cores	: 12
+apicid		: 36
+initial apicid	: 36
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 15
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 1
+siblings	: 12
+core id		: 3
+cpu cores	: 12
+apicid		: 38
+initial apicid	: 38
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 16
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 1
+siblings	: 12
+core id		: 4
+cpu cores	: 12
+apicid		: 40
+initial apicid	: 40
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 17
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 1
+siblings	: 12
+core id		: 5
+cpu cores	: 12
+apicid		: 42
+initial apicid	: 42
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 18
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 1
+siblings	: 12
+core id		: 8
+cpu cores	: 12
+apicid		: 48
+initial apicid	: 48
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 19
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 1
+siblings	: 12
+core id		: 9
+cpu cores	: 12
+apicid		: 50
+initial apicid	: 50
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 20
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 1
+siblings	: 12
+core id		: 10
+cpu cores	: 12
+apicid		: 52
+initial apicid	: 52
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 21
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 1
+siblings	: 12
+core id		: 11
+cpu cores	: 12
+apicid		: 54
+initial apicid	: 54
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 22
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 1
+siblings	: 12
+core id		: 12
+cpu cores	: 12
+apicid		: 56
+initial apicid	: 56
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 23
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 62
+model name	: Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz
+stepping	: 4
+cpu MHz		: 2699.951
+cache size	: 30720 KB
+physical id	: 1
+siblings	: 12
+core id		: 13
+cpu cores	: 12
+apicid		: 58
+initial apicid	: 58
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm ida arat epb xsaveopt pln pts dts tpr_shadow vnmi flexpriority ept vpid fsgsbase smep erms
+bogomips	: 5399.24
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+
+
+Memory: 4k page, physical 264569312k(32167100k free), swap 4194296k(4128576k free)
+
+vm_info: Java HotSpot(TM) 64-Bit Server VM (24.65-b04) for linux-amd64 JRE (1.7.0_67-b01), built on Jul 25 2014 09:20:21 by "java_re" with gcc 4.3.0 20080428 (Red Hat 4.3.0-8)
+
+time: Thu Sep 10 00:16:09 2015
+elapsed time: 20 seconds
+

@@ -27,13 +27,14 @@ import org.slf4j.LoggerFactory;
  */
 public class CachePopulator {
     private static final int THREAD_COUNT = 12;
+    private static final String THREAD_PREFIX = "CachePopulatorThread";
     private final ExecutorService executor;
 //    private GeometricNeighborhood neighborhood;
     private int standardFileSize = 0;
     private Logger log = LoggerFactory.getLogger(CachePopulator.class);
     
     public CachePopulator() {
-        this.executor = Executors.newFixedThreadPool(THREAD_COUNT, new CustomNamedThreadFactory());
+        this.executor = Executors.newFixedThreadPool(THREAD_COUNT, new CustomNamedThreadFactory(THREAD_PREFIX));
     }
     
     public void setStandadFileSize(int size) {
@@ -122,16 +123,4 @@ public class CachePopulator {
         return executor.submit(new CachePopulatorWorker(file, storage));
     }
     
-    private static class CustomNamedThreadFactory implements ThreadFactory {
-
-        private static int _threadNum = 1;
-        
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r);
-            t.setName("CachePopulatorThread_" + _threadNum++);
-            return t;
-        }
-        
-    }
 }
