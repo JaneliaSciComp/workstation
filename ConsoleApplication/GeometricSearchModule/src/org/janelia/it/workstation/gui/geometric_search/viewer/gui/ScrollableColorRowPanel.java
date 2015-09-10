@@ -22,7 +22,7 @@ public abstract class ScrollableColorRowPanel extends JPanel {
 
     public static final String COLOR_CALLBACK = "COLOR_CALLBACK";
 
-    public static int DEFAULT_WIDTH = 320;
+    public static int DEFAULT_WIDTH = 410;
     public static int DEFAULT_HEIGHT = 800;
 
     protected JPanel rowPanel = new JPanel();
