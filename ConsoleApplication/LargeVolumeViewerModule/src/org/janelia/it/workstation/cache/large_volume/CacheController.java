@@ -7,6 +7,7 @@ package org.janelia.it.workstation.cache.large_volume;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class CacheController {
+    private AtomicBoolean inWaiting = new AtomicBoolean(false);
     private CacheFacade manager;
     private CacheCameraListener cameraListener;
     private static ExecutorService executor;
@@ -76,6 +78,7 @@ public class CacheController {
         private CacheFacade manager;
         private SharedVolumeImage sharedVolumeImage;
         private ObservableCamera3d camera;
+        private AtomicBoolean inWaiting;
         
         public CacheCameraListener( CacheFacade manager ) {
             this.manager = manager;
@@ -94,10 +97,11 @@ public class CacheController {
             
         }
 
+        /** Current iteration is not using any zoom except 1. */
         @Override
         public void zoomChanged(Double zoom) {
-            Runnable r = new ZoomChanger(manager, camera, sharedVolumeImage);
-            executor.submit(r);
+//            Runnable r = new ZoomChanger(manager, camera, sharedVolumeImage);
+//            executor.submit(r);
         }
 
         @Override
@@ -143,22 +147,22 @@ public class CacheController {
         }
     }
     
-    private static class ZoomChanger implements Runnable {
-        private CacheFacade manager;
-        private SharedVolumeImage sharedVolumeImage;
-        private ObservableCamera3d camera;
-        public ZoomChanger(CacheFacade manager, ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage) {
-            this.manager = manager;
-            this.camera = camera;
-        }
-        
-        @Override
-        public void run() {
-            TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
-            Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
-            manager.setPixelsPerSceneUnit(1.0);//camera.getPixelsPerSceneUnit());
-            manager.setCameraZoom(zoom);
-        }
-        
-    }
+//    private static class ZoomChanger implements Runnable {
+//        private CacheFacade manager;
+//        private SharedVolumeImage sharedVolumeImage;
+//        private ObservableCamera3d camera;
+//        public ZoomChanger(CacheFacade manager, ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage) {
+//            this.manager = manager;
+//            this.camera = camera;
+//        }
+//        
+//        @Override
+//        public void run() {
+//            TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
+//            Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
+//            manager.setPixelsPerSceneUnit(1.0);//camera.getPixelsPerSceneUnit());
+//            manager.setCameraZoom(zoom);
+//        }
+//        
+//    }
 }
