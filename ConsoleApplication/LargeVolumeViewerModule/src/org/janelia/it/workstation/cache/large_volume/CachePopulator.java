@@ -5,8 +5,10 @@
  */
 package org.janelia.it.workstation.cache.large_volume;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import java.io.File;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -25,45 +27,35 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class CachePopulator {
-    private static final int THREAD_COUNT = 12;
-    private static final String THREAD_PREFIX = "CachePopulatorThread";
-    private final ExecutorService executor;
+    private static final int FILE_READ_THREAD_COUNT = 12;
+    private static final int MEM_ALLOC_THREAD_COUNT = 3;
+    private static final String FILE_READ_THREAD_PREFIX = "CacheFileReaderThread";
+    private static final String MEM_ALLOC_THREAD_PREFIX = "CacheByteAllocThread";
+    private final ExecutorService fileLoadExecutor;
+    private final ExecutorService memAllocExecutor;
 //    private GeometricNeighborhood neighborhood;
     private int standardFileSize = 0;
     private Logger log = LoggerFactory.getLogger(CachePopulator.class);
     
     public CachePopulator() {
-        this.executor = Executors.newFixedThreadPool(THREAD_COUNT, new CustomNamedThreadFactory(THREAD_PREFIX));
+        this.fileLoadExecutor = Executors.newFixedThreadPool(FILE_READ_THREAD_COUNT, new CustomNamedThreadFactory(FILE_READ_THREAD_PREFIX));
+        this.memAllocExecutor = Executors.newFixedThreadPool(MEM_ALLOC_THREAD_COUNT, new CustomNamedThreadFactory(MEM_ALLOC_THREAD_PREFIX));
     }
     
     public void setStandadFileSize(int size) {
         standardFileSize = size;
     }
     
-    public Collection<String> retargetCache(GeometricNeighborhood neighborhood, Cache cache) {
-        Set<String> populatedList = new HashSet<>();
-        // Avoid re-launching on non-significant movement.
-//        if (! neighborhood.equals(this.neighborhood)) {
-//            this.neighborhood = neighborhood;
+    public Collection<String> retargetCache(GeometricNeighborhood neighborhood, final Cache cache) {
+        final Set<String> populatedList = new HashSet<>();
         // Now, repopulate the running queue with the new neighborhood.
-        // Any co-inciding un-processed items will simply be re-prioritized
-        // according to the new focus' relative position.
-        for (File file : neighborhood.getFiles()) {
-            final String key = file.getAbsolutePath();
-            if (cache.get(key) == null && (!populatedList.contains(key))) {
-                if (standardFileSize > 0) {
-                    byte[] bytes = new byte[standardFileSize];
-                    Future<byte[]> future = cache(file, bytes);
-                    CacheFacade.CachableWrapper wrapper = new CacheFacade.CachableWrapper(future, bytes);
-
-                    populateElement(file.getAbsolutePath(), wrapper, cache);
-                    populatedList.add(key);
-                } else {
-                    throw new IllegalArgumentException("Pre-sized byte array required.");
+        for (final File file : neighborhood.getFiles()) {
+            Runnable r = new Runnable() {
+                public void run() {
+                    allocateAndLaunch(file, cache, populatedList);
                 }
-            } else {
-                log.debug("In cache as {}.  Not populating {}.", cache.get(key).getObjectValue().getClass().getSimpleName(), trimToOctreePath(key));
-            }
+            };
+            memAllocExecutor.submit(r);
         }
         if (neighborhood.getFiles().isEmpty()) {
             double[] focus = neighborhood.getFocus();
@@ -71,12 +63,31 @@ public class CachePopulator {
                 "Neighborhood of size 0, at zoom {}.  Focus {},{},{}.", neighborhood.getZoom(), focus[0], focus[1], focus[2]
             );
         }
-//        }
-//        else {
-//            log.info("No retarget: identical neighborhood.");
-//        }
         return populatedList;
 
+    }
+    
+    public void close() {
+        fileLoadExecutor.shutdown();
+        memAllocExecutor.shutdown();
+    }
+
+    private void allocateAndLaunch(File file, Cache cache, Set<String> populatedList) {
+        final String key = file.getAbsolutePath();
+        if (cache.get(key) == null && (!populatedList.contains(key))) {
+            if (standardFileSize > 0) {
+                byte[] bytes = new byte[standardFileSize];
+                Future<byte[]> future = cache(file, bytes);
+                CacheFacade.CachableWrapper wrapper = new CacheFacade.CachableWrapper(future, bytes);
+                
+                populateElement(file.getAbsolutePath(), wrapper, cache);
+                populatedList.add(key);
+            } else {
+                throw new IllegalArgumentException("Pre-sized byte array required.");
+            }
+        } else {
+            log.debug("In cache as {}.  Not populating {}.", cache.get(key).getObjectValue().getClass().getSimpleName(), trimToOctreePath(key));
+        }
     }
 
     private void populateElement(String id, CacheFacade.CachableWrapper wrapper, Cache cache) throws IllegalStateException, CacheException, IllegalArgumentException {
@@ -91,7 +102,7 @@ public class CachePopulator {
      * @return 'future' version.
      */
     public Future<byte[]> cache(File file) {
-        return executor.submit(new CachePopulatorWorker(file));
+        return fileLoadExecutor.submit(new CachePopulatorWorker(file));
     }
 
     String trimToOctreePath(String id) {
@@ -119,7 +130,7 @@ public class CachePopulator {
      * @return 'future' version.
      */
     public Future<byte[]> cache(File file, byte[] storage) {
-        return executor.submit(new CachePopulatorWorker(file, storage));
+        return fileLoadExecutor.submit(new CachePopulatorWorker(file, storage));
     }
     
 }

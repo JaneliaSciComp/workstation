@@ -15,6 +15,7 @@ public class TexturePreFetcher
 {
 	// private static final Logger log = LoggerFactory.getLogger(TexturePreFetcher.class);
 
+    private static final String TEX_FETCH_THREADNAME_PREFIX = "TexturePreFetch";
 	private TextureCache textureCache; // holds texture
 	private AbstractTextureLoadAdapter loadAdapter; // knows how to load textures
 	private ThreadPoolExecutor textureLoadExecutor;
@@ -27,7 +28,9 @@ public class TexturePreFetcher
 				threadPoolSize,
 				threadPoolSize,
 				0, TimeUnit.SECONDS,
-				new LinkedBlockingQueue<Runnable>());
+				new LinkedBlockingQueue<Runnable>(),
+                new CustomNamedThreadFactory(TEX_FETCH_THREADNAME_PREFIX)
+        );
 		// Remember recently requested textures, to avoid requesting them again right away
 		/*
 		recentRequests = new LinkedHashMap<TileIndex, TileIndex>(100, 0.75f, true) {

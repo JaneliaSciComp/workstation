@@ -11,9 +11,11 @@ import java.io.File;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import javax.swing.Timer;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -91,6 +93,10 @@ public class CacheFacade {
 
     public CacheFacade(int standardFileSize) throws Exception {
         this(CACHE_NAME, standardFileSize);
+    }
+    
+    public void close() {
+        cachePopulator.close();
     }
 
     /**
@@ -269,12 +275,16 @@ public class CacheFacade {
     }
 
     private boolean calculateRegion() {
+        Date start = new Date();
         boolean rtnVal = false;
         GeometricNeighborhood calculatedNeighborhood = neighborhoodBuilder.buildNeighborhood(this.cameraFocus, cameraZoom, pixelsPerSceneUnit);
         if (!(calculatedNeighborhood.getFiles().isEmpty()  ||  calculatedNeighborhood.equals(this.neighborhood))) {
             this.neighborhood = calculatedNeighborhood;
             rtnVal = true;
         }
+        Date end = new Date();
+        long elapsed = (end.getTime() - start.getTime());
+        log.info("In calculate region for: {}ms.", elapsed);
         return rtnVal;
     }
 
@@ -284,6 +294,7 @@ public class CacheFacade {
     }
     
     private void populateRegion(GeometricNeighborhood neighborhood) {
+        Date start = new Date();
         log.info("Retargeting cache at zoom {}.", cameraZoom);
         Cache cache = manager.getCache(cacheName);
         Collection<String> futureArrays = cachePopulator.retargetCache(neighborhood, cache);
@@ -291,6 +302,8 @@ public class CacheFacade {
             log.debug("Populating {} to cache at zoom {}.", cachePopulator.trimToOctreePath(id), cameraZoom);
         }
         reportCacheOccupancy();
+        Date end = new Date();
+        log.info("In populateRegion for: {}ms.", end.getTime() - start.getTime());
         //dumpKeys();
     }
 

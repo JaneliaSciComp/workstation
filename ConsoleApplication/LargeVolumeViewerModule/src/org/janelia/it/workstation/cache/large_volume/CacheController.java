@@ -5,6 +5,7 @@
  */
 package org.janelia.it.workstation.cache.large_volume;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -52,6 +53,12 @@ public class CacheController {
     public void setManager(CacheFacade manager) {
         this.manager = manager;
         this.cameraListener = new CacheCameraListener(manager);
+    }
+    
+    public void close() {
+        if (manager != null) {
+            manager.close();
+        }
     }
 
     /**
