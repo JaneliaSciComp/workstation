@@ -7,7 +7,7 @@ package org.janelia.it.workstation.cache.large_volume;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class CacheController {
-    private AtomicBoolean inWaiting = new AtomicBoolean(false);
     private CacheFacade manager;
     private CacheCameraListener cameraListener;
     private static ExecutorService executor;
@@ -75,10 +74,10 @@ public class CacheController {
 
     private static class CacheCameraListener implements CameraListener {
 
-        private CacheFacade manager;
+        private final CacheFacade manager;
         private SharedVolumeImage sharedVolumeImage;
         private ObservableCamera3d camera;
-        private AtomicBoolean inWaiting;
+        private final AtomicReference<Vec3> inWaiting = new AtomicReference<>();
         
         public CacheCameraListener( CacheFacade manager ) {
             this.manager = manager;
@@ -105,11 +104,17 @@ public class CacheController {
         }
 
         @Override
-        public void focusChanged(Vec3 focus) {
-            // Create a new change-of-focus runnable, and
-            // run it in a thread, serialized behind all others before it.
-            Runnable r = new FocusChanger(camera, sharedVolumeImage, manager, focus);
-            executor.submit(r);
+        public void focusChanged( Vec3 focus ) {
+            // Make sure that any thread, which is waiting to set the
+            // focus, uses this new focus.
+            Vec3 oldFocus = inWaiting.getAndSet(focus);
+            if (oldFocus == null) {
+                // No thread waiting: create a new change-of-focus runnable, and
+                // run it in a thread, behind any currently-running thread.
+                // Ensure some thread is waiting in the queue for this.
+                Runnable r = new FocusChanger(camera, sharedVolumeImage, manager, inWaiting);
+                executor.submit(r);
+            }
         }
         
     }
@@ -122,9 +127,9 @@ public class CacheController {
         private ObservableCamera3d camera;
         private SharedVolumeImage sharedVolumeImage;
         private CacheFacade manager;
-        private Vec3 focus;
+        private AtomicReference<Vec3> focus;
         
-        public FocusChanger(ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage, CacheFacade manager, Vec3 focus) {
+        public FocusChanger(ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage, CacheFacade manager, AtomicReference<Vec3> focus) {
             this.camera = camera;
             this.sharedVolumeImage = sharedVolumeImage;
             this.manager = manager;
@@ -139,11 +144,13 @@ public class CacheController {
             }
 
             double[] focusArr = new double[3];
+            Vec3 referencedFocus = focus.get();
+            focus.set(null);
             for (int i = 0; i < focusArr.length; i++) {
-                focusArr[i] = focus.elementAt(i);
+                focusArr[i] = referencedFocus.elementAt(i);
             }
             manager.setPixelsPerSceneUnit(1.0); //camera.getPixelsPerSceneUnit());
-            manager.setFocus(focusArr);
+            manager.setFocus(focusArr);            
         }
     }
     

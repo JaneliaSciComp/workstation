@@ -221,7 +221,7 @@ public class CacheFacade {
      * pulled downstream.
      */
     public void setCameraZoomValue(Double zoom) {
-        log.info("Setting zoom {}....", zoom);
+        log.debug("Setting zoom {}....", zoom);
         this.cameraZoom = zoom;
     }
     
