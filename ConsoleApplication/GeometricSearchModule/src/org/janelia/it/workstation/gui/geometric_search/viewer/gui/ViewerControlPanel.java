@@ -16,7 +16,7 @@ public class ViewerControlPanel extends JPanel {
 
     ColorSelectionPanel colorSelectionPanel=new ColorSelectionPanel();
     Knob brightnessKnob;
-    Color lastSelectedColor=new Color(0,0,0);
+    Color lastSelectedColor=new Color(255,255,255);
 
     public ViewerControlPanel() {
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));

@@ -4,10 +4,7 @@ import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerEventListener;
-import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerGLPanel;
-import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerModel;
-import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerProperties;
+import org.janelia.it.workstation.gui.geometric_search.viewer.*;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.Actor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.DenseVolumeActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.MeshActor;
@@ -22,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.GL4;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by murphys on 8/21/2015.
@@ -35,6 +34,15 @@ public class GLModel implements VoxelViewerEventListener {
     private VoxelViewerModel model;
     VoxelViewerProperties properties;
     VoxelViewerGLPanel viewer;
+
+    public static class MVPPrecompute {
+        int timestamp;
+        public Matrix4 modelView;
+        public Matrix4 modelViewProjection;
+        public Matrix4 normalMatrix;
+    }
+
+    public static Map<Integer, MVPPrecompute> mvpPrecomputeMap = new HashMap<>();
 
     public int maxActorIndex=0;
 
@@ -250,19 +258,20 @@ public class GLModel implements VoxelViewerEventListener {
 
                 ActorAddedEvent actorAddedEvent = (ActorAddedEvent) event;
                 final Actor actor = actorAddedEvent.getActor();
-                final GL4SimpleActor gl4SimpleActor = actor.createAndSetGLActor();
-
+                GL4SimpleActor gl4SimpleActor = actor.getGlActor();
                 if (gl4SimpleActor==null) {
+                    gl4SimpleActor=actor.createAndSetGLActor();
+                }
+                final GL4SimpleActor gl4SimpleActor_f=gl4SimpleActor;
+
+                if (gl4SimpleActor_f==null) {
                     throw new Exception("gl4SimpleActor is unexpectedly null from actor.createAndSetGLActor()");
                 }
 
-                if (gl4SimpleActor instanceof ArrayCubeGLActor) {
+                if (gl4SimpleActor_f instanceof ArrayCubeGLActor) {
 
                     final DenseVolumeActor denseVolumeActor=(DenseVolumeActor)actor;
-
-                    logger.info("adding instance of ArrayCubeGLActor");
-
-                    final ArrayCubeGLActor arrayCubeGLActor = (ArrayCubeGLActor) gl4SimpleActor;
+                    final ArrayCubeGLActor arrayCubeGLActor = (ArrayCubeGLActor) gl4SimpleActor_f;
                     final ArrayCubeShader cubeShader = (ArrayCubeShader) denseVolumeShaderActionSequence.getShader();
 
                     Matrix4 gal4Rotation = new Matrix4();
@@ -276,13 +285,9 @@ public class GLModel implements VoxelViewerEventListener {
 
                     arrayCubeGLActor.setModel(gal4Rotation);
 
-                    logger.info("setting callback for arrayCubeGLActor");
-
                     arrayCubeGLActor.setUpdateCallback(new GLDisplayUpdateCallback() {
                         @Override
                         public void update(GL4 gl) {
-
-                            logger.info("update() called for arrayCubeGLActor");
 
                             Matrix4 view = viewer.getRenderer().getViewMatrix();
                             Matrix4 proj = viewer.getRenderer().getProjectionMatrix();
@@ -319,35 +324,63 @@ public class GLModel implements VoxelViewerEventListener {
                             cubeShader.setBrightness(gl, brightness);
                         }
                     });
-                } else if (gl4SimpleActor instanceof ArrayMeshGLActor) {
-
-                    logger.info("adding instance of ArrayMeshGLActor");
+                } else if (gl4SimpleActor_f instanceof ArrayMeshGLActor) {
 
                     final MeshActor meshActor=(MeshActor)actor;
-                    final ArrayMeshGLActor arrayMeshGLActor = (ArrayMeshGLActor) gl4SimpleActor;
+                    final ArrayMeshGLActor arrayMeshGLActor = (ArrayMeshGLActor) gl4SimpleActor_f;
                     final ArrayMeshShader meshShader = (ArrayMeshShader) meshShaderActionSequence.getShader();
-
-                    logger.info("setting callback for arrayCubeGLActor");
 
                     arrayMeshGLActor.setUpdateCallback(new GLDisplayUpdateCallback() {
                         @Override
                         public void update(GL4 gl) {
 
-                            logger.info("update() called for arrayMeshGLActor");
+                            Matrix4 MV;
+                            Matrix4 NM;
 
-                            Matrix4 view = viewer.getRenderer().getViewMatrix();
+                            int mvpGroup=arrayMeshGLActor.getMvpPrecomputeGroup();
+
+                            if (mvpGroup>0) {
+                                MVPPrecompute mvpPrecompute=mvpPrecomputeMap.get(mvpGroup);
+                                if (mvpPrecompute==null)  {
+                                    mvpPrecompute=new MVPPrecompute();
+                                    mvpPrecomputeMap.put(mvpGroup, mvpPrecompute);
+                                }
+                                if (mvpPrecompute.timestamp < VoxelViewerRenderer.displayTimestep) {
+
+                                    Matrix4 view = viewer.getRenderer().getViewMatrix();
+                                    Matrix4 model = arrayMeshGLActor.getModel();
+                                    Matrix4 viewCopy = new Matrix4(view);
+                                    Matrix4 modelCopy = new Matrix4(model);
+
+                                    MV = viewCopy.multiply(modelCopy);
+                                    NM = MV.inverse().transpose();
+
+                                    mvpPrecompute.modelView=MV;
+                                    mvpPrecompute.normalMatrix=NM;
+
+                                    mvpPrecompute.timestamp=VoxelViewerRenderer.displayTimestep;
+                                } else {
+
+                                    MV = mvpPrecompute.modelView;
+                                    NM = mvpPrecompute.normalMatrix;
+                                }
+                            } else {
+
+                                Matrix4 view = viewer.getRenderer().getViewMatrix();
+                                Matrix4 model = arrayMeshGLActor.getModel();
+                                Matrix4 viewCopy = new Matrix4(view);
+                                Matrix4 modelCopy = new Matrix4(model);
+
+                                MV = viewCopy.multiply(modelCopy);
+                                NM = MV.inverse().transpose();
+
+                            }
+
                             Matrix4 proj = viewer.getRenderer().getProjectionMatrix();
-                            Matrix4 model = arrayMeshGLActor.getModel();
-
-                            Matrix4 viewCopy = new Matrix4(view);
                             Matrix4 projCopy = new Matrix4(proj);
-                            Matrix4 modelCopy = new Matrix4(model);
 
                             meshShader.setProjection(gl, projCopy);
-                            Matrix4 MV = viewCopy.multiply(modelCopy);
                             meshShader.setMV(gl, MV);
-
-                            Matrix4 NM = MV.inverse().transpose();
                             meshShader.setNM(gl, NM);
 
                             meshShader.setWidth(gl, viewer.getWidth());
@@ -374,13 +407,11 @@ public class GLModel implements VoxelViewerEventListener {
                             meshShader.setIntensity(gl, intensity);
                             meshShader.setAmbience(gl, ambience);
 
-                            //float brightness=actor.getBrightness();
-                            //meshShader.setBrightness(gl, brightness);
                         }
                     });
                 }
 
-                initQueue.add(gl4SimpleActor);
+                initQueue.add(gl4SimpleActor_f);
 
             } else if (event instanceof ActorRemovedEvent) {
                 ActorRemovedEvent removedEvent = (ActorRemovedEvent) event;

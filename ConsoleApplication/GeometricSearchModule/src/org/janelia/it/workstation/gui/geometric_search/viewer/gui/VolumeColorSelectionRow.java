@@ -52,8 +52,14 @@ public class VolumeColorSelectionRow extends ColorSelectionRow {
 
     }
 
-    public void setBrightnessCallback(SyncedCallback callback) { this.brightnessCallback=callback; }
+    public void setBrightnessCallback(SyncedCallback callback) {
+        this.brightnessCallback=callback;
+        if (brightnessCallback!=null) brightnessCallback.performAction(new Float(brightnessKnob.getValue()));
+    }
 
-    public void setTransparencyCallback(SyncedCallback callback) { this.transparencyCallback=callback; }
+    public void setTransparencyCallback(SyncedCallback callback) {
+        this.transparencyCallback=callback;
+        if (transparencyCallback!=null) transparencyCallback.performAction(new Float(transparencyKnob.getValue()));
+    }
 
 }

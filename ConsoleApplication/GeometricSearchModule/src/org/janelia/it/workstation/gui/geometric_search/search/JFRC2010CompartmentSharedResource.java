@@ -5,6 +5,7 @@ import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerObjData;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.ActorSharedResource;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.MeshActor;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4SimpleActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GLDisplayUpdateCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,8 @@ public class JFRC2010CompartmentSharedResource extends ActorSharedResource {
                 0.0f,   0.0f,  -1.0f,   0.625f,
                 0.0f,   0.0f,   0.0f,   1.0f);
 
+        int mvpPrecomputeGroup= GL4SimpleActor.getNextMvpPrecomputeGroup();
+
         for (File meshFile : meshFiles) {
             if (meshFile.getName().endsWith(".obj")) {
                 try {
@@ -50,6 +53,8 @@ public class JFRC2010CompartmentSharedResource extends ActorSharedResource {
                     VoxelViewerObjData objData = VoxelViewerObjData.createObjDataFromFile(meshFile);
                     MeshActor ma=new MeshActor(meshFile.getName().substring(0,meshFile.getName().length()-4),objData, vertexRotation);
                     ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.5f));
+                    ma.createAndSetGLActor();
+                    ma.getGlActor().setMvpPrecomputeGroup(mvpPrecomputeGroup);
                     getSharedActorList().add(ma);
                 } catch (Exception ex) {
                     ex.printStackTrace();

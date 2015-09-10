@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.geometric_search.viewer;
 
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.BackgroundColorChangeEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gui.*;
 import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.Renderable;
@@ -124,6 +125,7 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     protected void setupViewerControlPanel() {
         EventManager.addListener(viewerControlPanel, model.getGLModel());
         EventManager.addListener(viewerControlPanel, viewer.getRenderer());
+        EventManager.sendEvent(viewerControlPanel, new BackgroundColorChangeEvent(new Color(255, 255, 255)));
     }
 
     protected void setupDatasetPanel() {

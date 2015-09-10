@@ -19,7 +19,7 @@ public class MeshColorSelectionRow extends ColorSelectionRow {
     public MeshColorSelectionRow(String name) {
         super(name);
 
-        edgefalloffKnob=new Knob("E", 0.0, 10.0, 1.0, true);
+        edgefalloffKnob=new Knob("E", 0.0, 10.0, 2.0, true);
         edgefalloffKnob.addMouseMotionListener(new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
@@ -34,7 +34,7 @@ public class MeshColorSelectionRow extends ColorSelectionRow {
             }
         });
 
-        intensityKnob=new Knob("I", 0.0, 1.0, 0.2, true);
+        intensityKnob=new Knob("I", 0.0, 1.0, 0.5, true);
         intensityKnob.addMouseMotionListener(new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
@@ -49,7 +49,7 @@ public class MeshColorSelectionRow extends ColorSelectionRow {
             }
         });
 
-        ambientKnob=new Knob("A", 0.0, 1.0, 0.05, true);
+        ambientKnob=new Knob("A", 0.0, 1.0, 0.1, true);
         ambientKnob.addMouseMotionListener(new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
@@ -70,10 +70,19 @@ public class MeshColorSelectionRow extends ColorSelectionRow {
 
     }
 
-    public void setEdgefalloffCallback(SyncedCallback callback) { this.edgefalloffCallback=callback; }
+    public void setEdgefalloffCallback(SyncedCallback callback) {
+        this.edgefalloffCallback=callback;
+        if (edgefalloffCallback!=null) edgefalloffCallback.performAction(new Float(edgefalloffKnob.getValue()));
+    }
 
-    public void setIntensityCallback(SyncedCallback callback) { this.intensityCallback=callback; }
+    public void setIntensityCallback(SyncedCallback callback) {
+        this.intensityCallback=callback;
+        if (intensityCallback!=null) intensityCallback.performAction(new Float(intensityKnob.getValue()));
+    }
 
-    public void setAmbientCallback(SyncedCallback callback) { this.ambientCallback=callback; }
+    public void setAmbientCallback(SyncedCallback callback) {
+        this.ambientCallback=callback;
+        if (ambientCallback!=null) ambientCallback.performAction(new Float(ambientKnob.getValue()));
+    }
 
 }
