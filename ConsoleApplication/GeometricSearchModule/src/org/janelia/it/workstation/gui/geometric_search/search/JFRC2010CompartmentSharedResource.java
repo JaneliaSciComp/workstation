@@ -39,10 +39,10 @@ public class JFRC2010CompartmentSharedResource extends ActorSharedResource {
         Matrix4 vertexRotation=new Matrix4();
 
         // Empirically derived - compatible with results of MeshLab import/export from normalized compartment coordinates
-        vertexRotation.setTranspose(-1.0f,   0.0f,   0.0f,   0.5f,
-                0.0f,  -1.0f,   0.0f,   0.25f,
-                0.0f,   0.0f,  -1.0f,   0.625f,
-                0.0f,   0.0f,   0.0f,   1.0f);
+        vertexRotation.setTranspose( 1.0f,   0.0f,   0.0f,  -0.5f,
+                                     0.0f,  -1.0f,   0.0f,   0.25f,
+                                     0.0f,   0.0f,  -1.0f,   0.625f,
+                                     0.0f,   0.0f,   0.0f,   1.0f);
 
         int mvpPrecomputeGroup= GL4SimpleActor.getNextMvpPrecomputeGroup();
 
