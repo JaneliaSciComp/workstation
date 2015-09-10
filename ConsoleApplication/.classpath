@@ -19,5 +19,6 @@
 	<classpathentry kind="lib" path="ConsoleModule/release/modules/ext/jbossall-client.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/MongoDB"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Apache Commons"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JAX-RS"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>
