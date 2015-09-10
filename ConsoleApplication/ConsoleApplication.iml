@@ -32,7 +32,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="core" level="project" />
     <orderEntry type="library" name="Common External Libraries" level="project" />
-    <orderEntry type="module" module-name="Compute" />
     <orderEntry type="module" module-name="Model" />
     <orderEntry type="module" module-name="Shared" />
     <orderEntry type="module" module-name="Jacs" />

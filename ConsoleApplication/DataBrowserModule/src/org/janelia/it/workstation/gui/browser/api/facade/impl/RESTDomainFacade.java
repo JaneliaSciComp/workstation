@@ -1,8 +1,10 @@
 package org.janelia.it.workstation.gui.browser.api.facade.impl;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.AbstractDomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.sample.*;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
@@ -56,10 +58,13 @@ public class RESTDomainFacade implements DomainFacade {
 
     // general CRUD for all domain object hierarchies
     public DomainObject getDomainObject(Class<? extends DomainObject> domainClass, Long id) {
-        Reference domainRef = new Reference();
-        domainRef.setTargetId(id);
-        domainRef.setTargetType(domainClass.getSimpleName());
-        return getDomainObject(domainRef);
+        Collection<Long> ids = new ArrayList<Long>();
+        ids.add(id);
+        List<DomainObject> objList = getDomainObjects(domainClass.getSimpleName(), ids);
+        if (objList!=null && objList.size()>0) {
+            return objList.get(0);
+        }
+        return null;
     }
 
     public DomainObject getDomainObject(Reference reference) {
@@ -74,29 +79,68 @@ public class RESTDomainFacade implements DomainFacade {
 
     public List<DomainObject> getDomainObjects(List<Reference> refList) {
         DomainQuery query = new DomainQuery();
-        query.setSubjectKey(SessionMgr.getSubjectKey());
+        //query.setSubjectKey(SessionMgr.getSubjectKey());
+        query.setSubjectKey("group:leetlab");
         query.setReferences(refList);
         Response response = serviceEndpoints.get("domainobject")
                 .path("details")
                 .request("application/json")
                 .post(Entity.json(query));
-        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>(){});
+        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {
+        });
         int responseStatus = response.getStatus();
         return domainObjs;
     }
 
     public List<DomainObject> getDomainObjects(String type, Collection<Long> ids) {
         DomainQuery query = new DomainQuery();
-        query.setSubjectKey(SessionMgr.getSubjectKey());
+        //query.setSubjectKey(SessionMgr.getSubjectKey());
+        query.setSubjectKey("group:leetlab");
         query.setObjectType(type);
         query.setObjectIds(new ArrayList<Long>(ids));
+
         Response response = serviceEndpoints.get("domainobject")
                 .path("details")
                 .request("application/json")
                 .post(Entity.json(query));
-        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>(){});
+        // until we resolve adding domain object specific methods or class info into mongo collections, multi if statement
+        List<?> domainObjs = null;
+        if (type.endsWith("DataSet")) {
+            domainObjs = response.readEntity(new GenericType<List<DataSet>>(){});
+        } else if (type.endsWith("Image")) {
+            domainObjs = response.readEntity(new GenericType<List<Image>>(){});
+        } else if (type.endsWith("LSMImage")) {
+            domainObjs = response.readEntity(new GenericType<List<LSMImage>>(){});
+        } else if (type.endsWith("NeuronFragment")) {
+            domainObjs = response.readEntity(new GenericType<List<NeuronFragment>>(){});
+        } else if (type.endsWith("NeuronSeparation")) {
+            domainObjs = response.readEntity(new GenericType<List<NeuronSeparation>>(){});
+        } else if (type.endsWith("ObjectiveSample")) {
+            domainObjs = response.readEntity(new GenericType<List<ObjectiveSample>>(){});
+        } else if (type.endsWith("PipelineError")) {
+            domainObjs = response.readEntity(new GenericType<List<PipelineError>>(){});
+        } else if (type.endsWith("PipelineResult")) {
+            domainObjs = response.readEntity(new GenericType<List<PipelineResult>>(){});
+        } else if (type.endsWith("Sample")) {
+            domainObjs = response.readEntity(new GenericType<List<Sample>>(){});
+        } else if (type.endsWith("SampleAlignmentResult")) {
+            domainObjs = response.readEntity(new GenericType<List<SampleAlignmentResult>>(){});
+        } else if (type.endsWith("SampleCellCountingResult")) {
+            domainObjs = response.readEntity(new GenericType<List<SampleCellCountingResult>>(){});
+        } else if (type.endsWith("SamplePipelineRun")) {
+            domainObjs = response.readEntity(new GenericType<List<SamplePipelineRun>>(){});
+        } else if (type.endsWith("SampleProcessingResult")) {
+            domainObjs = response.readEntity(new GenericType<List<SampleProcessingResult>>(){});
+        } else if (type.endsWith("SampleTile")) {
+            domainObjs = response.readEntity(new GenericType<List<SampleTile>>(){});
+        }
+
+        List<DomainObject> resultList = new ArrayList<DomainObject>();
+        for (int i=0; i<domainObjs.size(); i++) {
+            resultList.add((DomainObject)domainObjs.get(i));
+        }
         int responseStatus = response.getStatus();
-        return domainObjs;
+        return resultList;
     }
 
     public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) {
@@ -325,8 +369,8 @@ public class RESTDomainFacade implements DomainFacade {
     public static void main(String[] args) throws Exception {
         String REST_SERVER_URL = "http://schauderd-ws1.janelia.priv:8080/compute/";
         RESTDomainFacade testclient = new RESTDomainFacade(REST_SERVER_URL);
-        DomainObject test = testclient.getDomainObject(org.janelia.it.jacs.model.domain.sample.Sample.class, new Long("1980402565539430407"));
-        System.out.println (test.getName());
+        Sample test = (Sample)testclient.getDomainObject(org.janelia.it.jacs.model.domain.sample.Sample.class, new Long("1980402565539430407"));
+        System.out.println (test.getLine());
 
     }
 }
