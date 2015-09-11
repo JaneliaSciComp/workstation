@@ -138,7 +138,8 @@ public class CacheFacade {
      * @return result, after awaiting the future, or null on exception.
      */
     public SeekableStream get(final String id) {
-        log.debug("Getting {}", id);
+        String keyOnly = cachePopulator.trimToOctreePath(id);
+        log.info("Getting {}", keyOnly);
         totalGets ++;
         SeekableStream rtnVal = null;
         try {
@@ -152,15 +153,17 @@ public class CacheFacade {
                     final byte[] bytes = new byte[ standardFileSize ];
                     futureBytes = cachePopulator.cache(new File(id), bytes);
                     final NonNeighborhoodCachableWrapper wrapper = new NonNeighborhoodCachableWrapper(futureBytes, bytes);
-                    log.debug("Adding {} to cache.", cachePopulator.trimToOctreePath(id));
+                    log.debug("Adding {} to cache.", keyOnly);
                     cache.put(new Element(id, wrapper));
                     rtnVal = new ByteArraySeekableStream(wrapper.getBytes());
+                    log.debug("Returning {}: injected into cache.", keyOnly);
                     //reportCacheOccupancy();
                     //dumpKeys();
                 }
                 else {
                     CachableWrapper wrapper = (CachableWrapper) cache.get(id).getObjectValue();
                     rtnVal = new ByteArraySeekableStream(wrapper.getBytes());
+                    log.debug("Returning {}: found in cache.", keyOnly);
                 }
             }
 

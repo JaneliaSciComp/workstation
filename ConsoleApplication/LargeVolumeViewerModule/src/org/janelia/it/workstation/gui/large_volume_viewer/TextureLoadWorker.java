@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import java.util.Date;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +34,6 @@ public class TextureLoadWorker implements Runnable
 	@Override
 	public void run() 
 	{
-        Date start = new Date();
 		TileIndex index = texture.getIndex();
 		
 		// log.info("Loading texture "+index+"...");
@@ -64,8 +62,6 @@ public class TextureLoadWorker implements Runnable
 			textureCache.add(texture);
             tileServer.textureLoaded(texture.getIndex());
 			// log.info("Loaded texture "+texture.getIndex());
-            Date end = new Date();
-            log.info("Elapsed time in loadImageToRam {}ms.", end.getTime() - start.getTime());
 		}
 		else {
 			log.warn("Failed to load texture " + texture.getIndex());

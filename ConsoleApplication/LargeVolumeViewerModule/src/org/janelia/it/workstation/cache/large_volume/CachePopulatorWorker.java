@@ -7,6 +7,8 @@ package org.janelia.it.workstation.cache.large_volume;
 
 import java.io.File;
 import org.janelia.it.workstation.gui.large_volume_viewer.compression.CompressedFileResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Pull one file's data in, to be cached.
@@ -18,6 +20,7 @@ public class CachePopulatorWorker implements java.util.concurrent.Callable {
     private File infile;
     
     private byte[] storage;
+    private Logger log = LoggerFactory.getLogger(CachePopulatorWorker.class);
     
     public CachePopulatorWorker(File infile) {
         this.infile = infile;
@@ -35,7 +38,10 @@ public class CachePopulatorWorker implements java.util.concurrent.Callable {
             return resolver.uncompress(infile);
         }
         else {
-            return resolver.uncompress(infile, storage);
+            log.info("Grabbing {}.", infile);
+            Object rtnVal = resolver.uncompress(infile, storage);
+            log.info("Returning {}.", infile);
+            return rtnVal;
         }
     }
 
