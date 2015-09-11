@@ -189,9 +189,7 @@ extends AbstractTextureLoadAdapter
 		
         // Calling this with "true" means I, the caller, accept that the array
         // returned may have one or more nulls in it.
-        Date startCID = new Date();
 		ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis(), true);
-        log.info("In CID {}.", new Date().getTime() - startCID.getTime());
 		
 		// log.info(tileIndex + "" + folder + " : " + relativeSlice);
 		TextureData2dGL result = loadSlice(relativeSlice, decoders);
@@ -213,7 +211,6 @@ extends AbstractTextureLoadAdapter
                 emptyChannel = true;
         }
         if (emptyChannel) {
-            log.info("Empty channel at {}, returning null.", relativeZ);
             return null;
         }
         else {
@@ -231,13 +228,11 @@ extends AbstractTextureLoadAdapter
             RenderedImage composite = channels[0];
             if (sc > 1) {
                 try {
-                Date startPBJ = new Date();
                 ParameterBlockJAI pb = new ParameterBlockJAI("bandmerge");
                 for (int c = 0; c < sc; ++c) {
                     pb.addSource(channels[c]);
                 }
                 composite = JAI.create("bandmerge", pb);
-                log.info("Time spent on PBJ is {}.", new Date().getTime() - startPBJ.getTime());
                 } catch (NoClassDefFoundError exc) {
                     exc.printStackTrace();
                     return null;
