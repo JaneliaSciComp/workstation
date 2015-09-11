@@ -477,6 +477,9 @@ extends AbstractTextureLoadAdapter
                     decoder.decodeAsRenderedImage(0));
             int sx = ria.getWidth();
             int sy = ria.getHeight();
+            
+            log.info("SX={}, SY={}, SZ={}.", sx, sy, sz);
+            
             // Full volume could be much larger than this downsampled tile
             int[] tileSize = new int[3];
             tileSize[2] = sz;
