@@ -34,19 +34,16 @@ public class ArrayMeshShader extends ArrayDrawShader {
     }
 
     public void setEdgefalloff(GL4 gl, float edgefalloff) {
-        logger.info("setEdgefalloff()="+edgefalloff);
         setUniform(gl, "edgefalloff", edgefalloff);
         checkGlError(gl, "ArrayMeshShader setEdgefalloff() error");
     }
 
     public void setIntensity(GL4 gl, float intensity) {
-        logger.info("setIntensity()="+intensity);
         setUniform(gl, "intensity", intensity);
         checkGlError(gl, "ArrayMeshShader setIntensity() error");
     }
 
     public void setAmbience(GL4 gl, float ambience) {
-        logger.info("setAmbience()="+ambience);
         setUniform(gl, "ambience", ambience);
         checkGlError(gl, "ArrayMeshShader setAmbience() error");
     }

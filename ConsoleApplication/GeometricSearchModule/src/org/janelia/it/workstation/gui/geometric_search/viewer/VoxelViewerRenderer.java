@@ -125,8 +125,11 @@ public class VoxelViewerRenderer implements GLEventListener, VoxelViewerEventLis
     }
 
     @Override
-    public void init(GLAutoDrawable glDrawable)
-    {
+    public void init(GLAutoDrawable glDrawable) {
+        initSync(glDrawable);
+    }
+
+    private synchronized void initSync(GLAutoDrawable glDrawable) {
         final GL4 gl = glDrawable.getGL().getGL4();
         
         try {
@@ -188,12 +191,15 @@ public class VoxelViewerRenderer implements GLEventListener, VoxelViewerEventLis
 
     @Override
     public void display(GLAutoDrawable glDrawable) {
+        displaySync(glDrawable);
+    }
+
+    private synchronized void displaySync(GLAutoDrawable glDrawable) {
 
         displayTimestep++;
 
         final GL4 gl = glDrawable.getGL().getGL4();
 
-        // First, handle messages
         Deque<String> msgQueue=model.getGLModel().getMessageQueue();
         while (msgQueue.size()>0) {
             String msg=msgQueue.pop();
@@ -202,7 +208,12 @@ public class VoxelViewerRenderer implements GLEventListener, VoxelViewerEventLis
             }
         }
 
-        // Next, handle any inits
+        Deque<Integer> removalQueue=model.getGLModel().getDisposeQueue();
+        while (removalQueue.size()>0) {
+            Integer actorIdToRemove=removalQueue.pop();
+            model.getGLModel().removeActor(actorIdToRemove, gl);
+        }
+
         Deque<GL4SimpleActor> initQueue=model.getGLModel().getInitQueue();
         while (initQueue.size()>0) {
             GL4SimpleActor actor = initQueue.pop();
@@ -212,13 +223,6 @@ public class VoxelViewerRenderer implements GLEventListener, VoxelViewerEventLis
             } else if (actor instanceof ArrayMeshGLActor) {
                 model.getGLModel().getMeshShaderActionSequence().getActorSequence().add(actor);
             }
-        }
-
-        // Last, handle any removals
-        Deque<Integer> removalQueue=model.getGLModel().getDisposeQueue();
-        while (removalQueue.size()>0) {
-            Integer actorIdToRemove=removalQueue.pop();
-            model.getGLModel().removeActor(actorIdToRemove, gl);
         }
 
         // NOTE: THIS STUFF SHOULD BE HANDLED IN THE SHADERS
