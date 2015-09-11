@@ -59,29 +59,31 @@ public class DatasetModel implements VoxelViewerEventListener {
 
     Map<String, Integer> createSharedResourceDependencyCount() {
         Map<String, Integer> resourceCountMap=new HashMap<>();
+        if (selectedDataset==null) return resourceCountMap;
+
         for (Dataset dataset : datasetList) {
             List<ActorSharedResource> neededResources=dataset.getNeededActorSharedResources();
             for (ActorSharedResource sharedResource : neededResources) {
                 Integer count=resourceCountMap.get(sharedResource.getName());
-                    if (count==null || count==0) {
-                        resourceCountMap.put(sharedResource.getName(), 1);
-                    } else {
-                        resourceCountMap.put(sharedResource.getName(), count + 1);
-                    }
+                if (count==null || count==0) {
+                    resourceCountMap.put(sharedResource.getName(), 1);
+                } else {
+                    resourceCountMap.put(sharedResource.getName(), count + 1);
                 }
             }
+        }
         return resourceCountMap;
     }
 
     private void addSharedResourcesForDatasetIfNeeded(Dataset dataset) {
-        Map<String, Integer> resourceCountMap=createSharedResourceDependencyCount();
+        //Map<String, Integer> resourceCountMap=createSharedResourceDependencyCount();
         List<ActorSharedResource> neededResources=dataset.getNeededActorSharedResources();
         if (neededResources!=null && neededResources.size()>0) {
             for (ActorSharedResource sharedResource : neededResources) {
-                Integer currentCount=resourceCountMap.get(sharedResource.getName());
-                if (currentCount==null || currentCount==0) {
+                //Integer currentCount=resourceCountMap.get(sharedResource.getName());
+                //if (currentCount==null || currentCount==0) {
                     EventManager.sendEvent(this, new SharedResourceNeededEvent(sharedResource));
-                }
+                //}
             }
         }
     }

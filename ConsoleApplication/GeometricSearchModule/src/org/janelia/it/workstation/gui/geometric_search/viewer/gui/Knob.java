@@ -26,8 +26,8 @@ public class Knob extends JPanel implements MouseListener, MouseMotionListener
 {
     private final Logger logger = LoggerFactory.getLogger(Knob.class);
 
-    private static final int PREF_WIDTH=50;
-    private static final int PREF_HEIGHT=50;
+    private static final int PREF_WIDTH=40;
+    private static final int PREF_HEIGHT=40;
 
     private Image  background2_;
     private Image  pointer_;

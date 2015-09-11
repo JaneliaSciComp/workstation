@@ -31,6 +31,8 @@ public class VoxelViewerRenderer implements GLEventListener, VoxelViewerEventLis
 {
     private Logger logger = LoggerFactory.getLogger(VoxelViewerRenderer.class);
 
+    public static int displayTimestep=0;
+
     protected GLU glu = new GLU();
 
     private VoxelViewerModel model;
@@ -186,6 +188,8 @@ public class VoxelViewerRenderer implements GLEventListener, VoxelViewerEventLis
 
     @Override
     public void display(GLAutoDrawable glDrawable) {
+
+        displayTimestep++;
 
         final GL4 gl = glDrawable.getGL().getGL4();
 
