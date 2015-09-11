@@ -36,7 +36,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.compression.Compressed
  * @author fosterl
  */
 public class CacheFacade {
-    private static final String CACHE_NAME = "CompressedTiffCache";
+    public static final String CACHE_NAME = "CompressedTiffCache";
     public static final int GIGA = 1024*1024*1024;
     // TODO use more dynamic means of determining how many of the slabs
     // to put into memory at one time.

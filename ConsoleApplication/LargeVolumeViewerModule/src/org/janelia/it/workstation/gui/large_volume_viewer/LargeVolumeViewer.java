@@ -128,6 +128,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     public void initCache(URL topFolderURL) {
         try {
             CacheController.getInstance().close();
+            tileServer.setPrefetch(false);
             
             final int standardFileLength = CacheFacade.getStandardFileLength(topFolderURL);
             CacheFacade cacheManager = new CacheFacade(standardFileLength);

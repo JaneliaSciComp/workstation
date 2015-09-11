@@ -38,7 +38,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 		PREFETCH_COMPLETE, // Best textures shown, plus precache is full
 	};
 	
-	private boolean doPrefetch = false;
+	private boolean doPrefetch = true;
 	private LoadStatus loadStatus = LoadStatus.UNINITIALIZED;
 	
 	// One thread pool to load minimal representation of volume
@@ -72,6 +72,10 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
         };
         getTextureCache().setQueueDrainedListener(queueDrainedListener);
 	}
+    
+    public void setPrefetch(boolean doPrefetch) {
+        this.doPrefetch = doPrefetch;
+    }
 
     public void textureLoaded(TileIndex tileIndex) {
         for (ViewTileManager vtm: viewTileManagers) {
