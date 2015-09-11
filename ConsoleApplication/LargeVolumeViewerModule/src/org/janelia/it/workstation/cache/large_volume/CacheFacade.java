@@ -301,8 +301,10 @@ public class CacheFacade {
         log.info("Retargeting cache at zoom {}.", cameraZoom);
         Cache cache = manager.getCache(cacheName);
         Collection<String> futureArrays = cachePopulator.retargetCache(neighborhood, cache);
-        for (String id: futureArrays) {
-            log.debug("Populating {} to cache at zoom {}.", cachePopulator.trimToOctreePath(id), cameraZoom);
+        if (log.isDebugEnabled()) {
+            for (String id : futureArrays) {
+                log.debug("Populating {} to cache at zoom {}.", cachePopulator.trimToOctreePath(id), cameraZoom);
+            }
         }
         reportCacheOccupancy();
         Date end = new Date();

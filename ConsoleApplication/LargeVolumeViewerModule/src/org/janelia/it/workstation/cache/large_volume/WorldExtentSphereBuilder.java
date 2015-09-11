@@ -151,7 +151,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                 }
             }
         //}
-        log.debug("Building neighborhood at zoom {}, focus {},{},{}", zoom, focus[0], focus[1], focus[2] );
+        log.info("Building neighborhood at zoom {}, focus {},{},{}", zoom, focus[0], focus[1], focus[2] );
         WorldExtentSphere neighborhood = new WorldExtentSphere();
         neighborhood.setFocus(focus);
         neighborhood.setZoom(zoom);
