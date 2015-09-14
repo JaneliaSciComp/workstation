@@ -16,7 +16,7 @@ public class InterestingAnnotation {
     private AnnotationGeometry geometry;
     private Date creationDate;
 
-    private final static String TIME_DATE_FORMAT = "H:mm";
+    private final static String TIME_DATE_FORMAT = "HH:mm";
     private final static String DAY_DATE_FORMAT = "MM/dd";
     private final static String YEAR_DATE_FORMAT = "yyyy";
 
