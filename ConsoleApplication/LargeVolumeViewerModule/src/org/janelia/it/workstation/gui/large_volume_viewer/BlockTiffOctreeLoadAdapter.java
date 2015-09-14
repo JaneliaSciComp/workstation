@@ -294,8 +294,14 @@ extends AbstractTextureLoadAdapter
                         SeekableStream s = null;
                         if (cacheManager != null) {
                             Date startCachMgrFetch = new Date();
-                            s = cacheManager.get(tiff);
-                            log.info("Time in cache-mgr-fetch is {}.", new Date().getTime() - startCachMgrFetch.getTime());
+                            if (cacheManager.isReady(tiff)) {
+                                s = cacheManager.get(tiff);
+                                log.info("Time in cache-mgr-fetch is {}.", new Date().getTime() - startCachMgrFetch.getTime());
+                            }
+                            else {                                
+                                s = new FileSeekableStream(tiff);
+                                log.info("Bypassing cache for {}. Time {}.", tiff, new Date().getTime() - startCachMgrFetch.getTime());
+                            }
                         }
                         else {
                             s = new FileSeekableStream(tiff);

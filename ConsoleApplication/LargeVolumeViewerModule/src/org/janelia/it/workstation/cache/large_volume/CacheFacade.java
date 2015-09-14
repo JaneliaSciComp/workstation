@@ -46,7 +46,8 @@ public class CacheFacade {
     private CachePopulator cachePopulator;
     //private CacheAccess jcs;
     private CacheManager manager;
-    private CompressedFileResolver resolver = new CompressedFileResolver();
+    private final CompressedFileResolver resolver = new CompressedFileResolver();
+    private CompressedFileResolver.CompressedFileNamer compressNamer;
     private Double cameraZoom;
     private double[] cameraFocus;
     private double pixelsPerSceneUnit;
@@ -205,10 +206,34 @@ public class CacheFacade {
      */
     public SeekableStream get(File file) {
         // The key stored in the cache is the compressed file name.
-        File compressedFile = resolver.compressAs(file);        
+        File compressedFile = compressNamer.getCompressedName(file);        
         return get(compressedFile.getAbsolutePath());
+    }    
+
+    /**
+     * Tell if this file is not only in cache, but will have no Future.get
+     * wait time.
+     *
+     * @param file decompressed file's name.
+     * @return true -> no waiting for cache.
+     */
+    public boolean isReady(File file) {
+        boolean rtnVal = false;
+        // The key stored in the cache is the compressed file name.
+        if (compressNamer == null) {
+            compressNamer = resolver.getNamer(file);
+        }
+        File compressedFile = compressNamer.getCompressedName(file);
+        Cache cache = manager.getCache(cacheName);
+        final String id = compressedFile.getAbsolutePath();
+        if (isInCache(id)) {
+            CachableWrapper wrapper = (CachableWrapper) cache.get(id).getObjectValue();            
+            Future wrappedObject = wrapper.getWrappedObject();
+            rtnVal = wrappedObject == null  ||  wrappedObject.isDone();
+        }
+        
+        return rtnVal;
     }
-    
 
     /**
      * When focus is set/changed, the neighborhood builder goes to work,

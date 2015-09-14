@@ -78,13 +78,22 @@ public class CacheController {
             log.warn("Attempt to register a camera for events, before the cache manager has been set.");
         }
     }
+    
+    public void zoomChanged(Double zoom) {
+        cameraListener.zoomChanged(zoom);
+    }
+    
+    public void focusChanged(Vec3 focus) {
+        cameraListener.focusChanged(focus);
+    }
 
     private static class CacheCameraListener implements CameraListener {
 
         private final CacheFacade manager;
         private SharedVolumeImage sharedVolumeImage;
         private ObservableCamera3d camera;
-        private final AtomicReference<Vec3> inWaiting = new AtomicReference<>();
+        private final AtomicReference<Vec3> focusInWaiting = new AtomicReference<>();
+        private final AtomicReference<Double> zoomInWaiting = new AtomicReference<>();
         
         public CacheCameraListener( CacheFacade manager ) {
             this.manager = manager;
@@ -99,27 +108,29 @@ public class CacheController {
         }
         
         @Override
-        public void viewChanged() {
-            
+        public void viewChanged() {            
         }
 
         /** Current iteration is not using any zoom except 1. */
         @Override
         public void zoomChanged(Double zoom) {
-//            Runnable r = new ZoomChanger(manager, camera, sharedVolumeImage);
-//            executor.submit(r);
+            Double oldZoom = zoomInWaiting.getAndSet(zoom);
+            if (oldZoom == null) {
+                Runnable r = new ZoomChanger(manager, camera, sharedVolumeImage, zoomInWaiting);
+                executor.submit(r);
+            }
         }
 
         @Override
         public void focusChanged( Vec3 focus ) {
             // Make sure that any thread, which is waiting to set the
             // focus, uses this new focus.
-            Vec3 oldFocus = inWaiting.getAndSet(focus);
+            Vec3 oldFocus = focusInWaiting.getAndSet(focus);
             if (oldFocus == null) {
                 // No thread waiting: create a new change-of-focus runnable, and
                 // run it in a thread, behind any currently-running thread.
                 // Ensure some thread is waiting in the queue for this.
-                Runnable r = new FocusChanger(camera, sharedVolumeImage, manager, inWaiting);
+                Runnable r = new FocusChanger(camera, sharedVolumeImage, manager, focusInWaiting);
                 executor.submit(r);
             }
         }
@@ -161,22 +172,27 @@ public class CacheController {
         }
     }
     
-//    private static class ZoomChanger implements Runnable {
-//        private CacheFacade manager;
-//        private SharedVolumeImage sharedVolumeImage;
-//        private ObservableCamera3d camera;
-//        public ZoomChanger(CacheFacade manager, ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage) {
-//            this.manager = manager;
-//            this.camera = camera;
-//        }
-//        
-//        @Override
-//        public void run() {
-//            TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
-//            Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
-//            manager.setPixelsPerSceneUnit(1.0);//camera.getPixelsPerSceneUnit());
-//            manager.setCameraZoom(zoom);
-//        }
-//        
-//    }
+    private static class ZoomChanger implements Runnable {
+        private CacheFacade manager;
+        private SharedVolumeImage sharedVolumeImage;
+        private ObservableCamera3d camera;
+        private AtomicReference<Double> zoom;
+        
+        public ZoomChanger(CacheFacade manager, ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage, AtomicReference<Double> zoom) {
+            this.manager = manager;
+            this.camera = camera;
+            this.zoom = zoom;
+        }
+        
+        @Override
+        public void run() {
+            Double referencedZoom = zoom.get();
+            zoom.set(null);
+            TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
+            Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
+            manager.setPixelsPerSceneUnit(1.0);//camera.getPixelsPerSceneUnit());
+            manager.setCameraZoom(referencedZoom);
+        }
+        
+    }
 }

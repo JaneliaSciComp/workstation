@@ -67,6 +67,27 @@ public class CachePopulator {
 
     }
     
+    /**
+     * Push one file to cache.
+     *
+     * @param file which file.
+     * @return 'future' version.
+     */
+    public Future<byte[]> cache(File file, byte[] storage) {
+        log.info("Making a cache populator worker for {}.", trimToOctreePath(file.getAbsolutePath()));
+        return fileLoadExecutor.submit(new CachePopulatorWorker(file, storage));
+    }
+
+    /**
+     * Push one file to cache.
+     *
+     * @param file which file.
+     * @return 'future' version.
+     */
+    public Future<byte[]> cache(File file) {
+        return fileLoadExecutor.submit(new CachePopulatorWorker(file));
+    }
+
     public void close() {
         fileLoadExecutor.shutdown();
         memAllocExecutor.shutdown();
@@ -95,16 +116,6 @@ public class CachePopulator {
         cache.put(element);
     }        
     
-    /**
-     * Push one file to cache.
-     * 
-     * @param file which file.
-     * @return 'future' version.
-     */
-    public Future<byte[]> cache(File file) {
-        return fileLoadExecutor.submit(new CachePopulatorWorker(file));
-    }
-
     String trimToOctreePath(String id) {
         if (id.endsWith(".tif")) {
             int endPoint = id.lastIndexOf("/");
@@ -121,17 +132,6 @@ public class CachePopulator {
             return id.substring(startPoint);
         }
         return id;
-    }
-    
-    /**
-     * Push one file to cache.
-     *
-     * @param file which file.
-     * @return 'future' version.
-     */
-    public Future<byte[]> cache(File file, byte[] storage) {
-        log.info("Making a cache populator worker for {}.", trimToOctreePath(file.getAbsolutePath()));
-        return fileLoadExecutor.submit(new CachePopulatorWorker(file, storage));
     }
     
 }
