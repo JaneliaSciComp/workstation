@@ -104,4 +104,16 @@ public class BasicSwcVertex implements SwcVertex
         this.typeIndex = typeIndex;
     }
 
+    @Override
+    public SwcVertex getParent()
+    {
+        return parent;
+    }
+
+    @Override
+    public void setParent(SwcVertex parent)
+    {
+        this.parent = parent;
+    }
+
 }

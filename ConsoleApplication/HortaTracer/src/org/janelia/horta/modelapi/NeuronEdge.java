@@ -31,7 +31,7 @@
 package org.janelia.horta.modelapi;
 
 /**
- *
+ * Exposes two vertices, representing a neuron reconstruction edge.
  * @author Christopher Bruns
  */
 public interface NeuronEdge extends Iterable<NeuronVertex>

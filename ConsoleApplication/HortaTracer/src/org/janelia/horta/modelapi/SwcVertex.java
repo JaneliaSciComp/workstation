@@ -41,4 +41,7 @@ public interface SwcVertex extends NeuronVertex
 
     int getTypeIndex();
     void setTypeIndex(int index);
+    
+    SwcVertex getParent();
+    void setParent(SwcVertex parent);
 }
