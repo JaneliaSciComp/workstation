@@ -47,4 +47,5 @@ public interface NeuronReconstruction extends ObservableInterface, Hideable
     void setColor(Color color);
     
     Collection<NeuronVertex> getVertexes();
+    Collection<NeuronEdge> getEdges();
 }

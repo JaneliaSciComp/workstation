@@ -30,6 +30,7 @@
 
 package org.janelia.horta.actors;
 
+import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 import javax.media.opengl.GL3;
@@ -41,6 +42,7 @@ import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.WireframeMaterial;
+import org.janelia.horta.modelapi.NeuronEdge;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.janelia.horta.modelapi.NeuronVertex;
 import org.slf4j.Logger;
@@ -89,15 +91,17 @@ public class NeuriteLineActor extends BasicGL3Actor
     private void buildMesh(NeuronReconstruction neuron) {
         logger.info("Neuron actor rebuild mesh");
         meshGeometry.clear();
-        for (NeuronVertex neuronVertex : neuron.getVertexes()) {
-            NeuronVertex parent = neuronVertex.getParentVertex();
+        for (NeuronEdge neuronEdge : neuron.getEdges()) {
+            Iterator<NeuronVertex> i = neuronEdge.iterator();
+            NeuronVertex parent = i.next();
+            NeuronVertex neuronVertex = i.next();
             if (parent == null)
                 continue;
             Vector3 pt1 = neuronVertex.getLocation();
             Vector3 pt2 = parent.getLocation();
             Vertex meshVertex1 = meshGeometry.addVertex(pt1);
             Vertex meshVertex2 = meshGeometry.addVertex(pt2);
-            // Add first point again, to reuse already written riangle code...
+            // Add first point again, to reuse already written triangle code...
             meshGeometry.addVertex(pt1);
         }
     }

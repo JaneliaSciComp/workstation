@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.Observer;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.ComposableObservable;
+import org.janelia.horta.modelapi.NeuronEdge;
 import org.janelia.horta.modelapi.SwcVertex;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.janelia.horta.modelapi.NeuronVertex;
@@ -58,6 +59,7 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
 {
     private String name = "(unnamed neuron)";
     private List<NeuronVertex> nodes = new ArrayList<>();
+    private List<NeuronEdge> edges = new ArrayList<>();
     private final ComposableObservable changeObservable = new ComposableObservable();
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private boolean visible = true;
@@ -67,9 +69,9 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
     {
     }
 
-    public BasicNeuronReconstruction(File file) throws FileNotFoundException, IOException
+    public BasicNeuronReconstruction(File swcFile) throws FileNotFoundException, IOException
     {
-        BufferedReader br = new BufferedReader(new FileReader(file));
+        BufferedReader br = new BufferedReader(new FileReader(swcFile));
         String line;
         // Store parent relationships for resolution after reading
         Map<Integer, Integer> childParentMap = new HashMap<>();
@@ -109,11 +111,12 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
                 continue;
             SwcVertex childVertex = vertexMap.get(childLabel); 
             assert(childVertex != null);
-            childVertex.setParentVertex(parentVertex);
+            assert(childVertex != parentVertex);
+            edges.add(new BasicNeuronEdge(parentVertex, childVertex));
         }
         // Take name from file
         if (nodes.size() > 0) {
-            this.name = FilenameUtils.getBaseName(file.getName());
+            this.name = FilenameUtils.getBaseName(swcFile.getName());
         }
     }
 
@@ -195,6 +198,12 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
     public void deleteObservers()
     {
         changeObservable.deleteObservers();
+    }
+
+    @Override
+    public Collection<NeuronEdge> getEdges()
+    {
+        return edges;
     }
     
 }

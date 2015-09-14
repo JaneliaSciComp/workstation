@@ -30,78 +30,55 @@
 
 package org.janelia.horta.nodes;
 
-import org.janelia.geometry3d.Vector3;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.Set;
+import org.janelia.horta.modelapi.NeuronEdge;
 import org.janelia.horta.modelapi.NeuronVertex;
-import org.janelia.horta.modelapi.SwcVertex;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class BasicSwcVertex implements SwcVertex
+public class BasicNeuronEdge implements NeuronEdge
 {
-    private final Vector3 location = new Vector3(0,0,0);
-    private double radius = 0.0; // micrometers
-    private int label = 1;
-    private int typeIndex = 0;
-    private SwcVertex parent = null;
+    private final Set<NeuronVertex> vertices = new HashSet<>();
 
-    BasicSwcVertex(float x, float y, float z)
+    public BasicNeuronEdge(NeuronVertex v1, NeuronVertex v2)
     {
-        location.set(x, y, z);
+        vertices.add(v1);
+        vertices.add(v2);
     }
 
     @Override
-    public Vector3 getLocation()
+    public Iterator<NeuronVertex> iterator()
     {
-        return location;
-    }
-
-    public void setLocation(Vector3 location)
-    {
-        this.location.copy(location);
+        return vertices.iterator();
     }
 
     @Override
-    public void setLocation(float x, float y, float z)
+    public int hashCode()
     {
-        location.set(x, y, z);
+        int hash = 5;
+        hash = 17 * hash + Objects.hashCode(this.vertices);
+        return hash;
     }
 
     @Override
-    public double getRadius()
+    public boolean equals(Object obj)
     {
-        return radius;
-    }
-
-    @Override
-    public void setRadius(double radius)
-    {
-        this.radius = radius;
-    }
-
-    @Override
-    public int getLabel()
-    {
-        return label;
-    }
-
-    @Override
-    public void setLabel(int label)
-    {
-        this.label = label;
-    }
-
-    @Override
-    public int getTypeIndex()
-    {
-        return typeIndex;
-    }
-
-    @Override
-    public void setTypeIndex(int typeIndex)
-    {
-        this.typeIndex = typeIndex;
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final BasicNeuronEdge other = (BasicNeuronEdge) obj;
+        if (!Objects.equals(this.vertices, other.vertices)) {
+            return false;
+        }
+        return true;
     }
 
 }

@@ -31,6 +31,7 @@
 package org.janelia.horta.actors;
 
 import java.awt.Color;
+import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 import javax.media.opengl.GL3;
@@ -41,6 +42,7 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
+import org.janelia.horta.modelapi.NeuronEdge;
 import org.janelia.horta.modelapi.NeuronReconstruction;
 import org.janelia.horta.modelapi.NeuronVertex;
 import org.slf4j.Logger;
@@ -75,8 +77,12 @@ public class ConesActor extends BasicGL3Actor
                 // TODO: more careful updating of nodes
                 meshGeometry.clear();
                 int vertexIndex = 0;
-                for (NeuronVertex neuronVertex : neuron.getVertexes()) {
-                    NeuronVertex parent = neuronVertex.getParentVertex();
+                for (NeuronEdge neuronEdge : neuron.getEdges()) {
+                    Iterator<NeuronVertex> i = neuronEdge.iterator();
+                    NeuronVertex parent = i.next();
+                    NeuronVertex neuronVertex = i.next();
+                // for (NeuronVertex neuronVertex : neuron.getVertexes()) {
+                    // NeuronVertex parent = neuronVertex.getParentVertex();
                     if (parent == null) 
                         continue; // need an edge, to draw a cone
                     

@@ -41,8 +41,8 @@ public interface NeuronVertex
     Vector3 getLocation();
     void setLocation(float x, float y, float z);
     
-    NeuronVertex getParentVertex(); // can be null
-    void setParentVertex(NeuronVertex parent);
+    // NeuronVertex getParentVertex(); // can be null
+    // void setParentVertex(NeuronVertex parent);
     
     double getRadius();
     void setRadius(double radius);

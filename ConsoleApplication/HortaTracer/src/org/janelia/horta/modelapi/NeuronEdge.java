@@ -28,80 +28,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.nodes;
-
-import org.janelia.geometry3d.Vector3;
-import org.janelia.horta.modelapi.NeuronVertex;
-import org.janelia.horta.modelapi.SwcVertex;
+package org.janelia.horta.modelapi;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class BasicSwcVertex implements SwcVertex
+public interface NeuronEdge extends Iterable<NeuronVertex>
 {
-    private final Vector3 location = new Vector3(0,0,0);
-    private double radius = 0.0; // micrometers
-    private int label = 1;
-    private int typeIndex = 0;
-    private SwcVertex parent = null;
-
-    BasicSwcVertex(float x, float y, float z)
-    {
-        location.set(x, y, z);
-    }
-
-    @Override
-    public Vector3 getLocation()
-    {
-        return location;
-    }
-
-    public void setLocation(Vector3 location)
-    {
-        this.location.copy(location);
-    }
-
-    @Override
-    public void setLocation(float x, float y, float z)
-    {
-        location.set(x, y, z);
-    }
-
-    @Override
-    public double getRadius()
-    {
-        return radius;
-    }
-
-    @Override
-    public void setRadius(double radius)
-    {
-        this.radius = radius;
-    }
-
-    @Override
-    public int getLabel()
-    {
-        return label;
-    }
-
-    @Override
-    public void setLabel(int label)
-    {
-        this.label = label;
-    }
-
-    @Override
-    public int getTypeIndex()
-    {
-        return typeIndex;
-    }
-
-    @Override
-    public void setTypeIndex(int typeIndex)
-    {
-        this.typeIndex = typeIndex;
-    }
-
 }
