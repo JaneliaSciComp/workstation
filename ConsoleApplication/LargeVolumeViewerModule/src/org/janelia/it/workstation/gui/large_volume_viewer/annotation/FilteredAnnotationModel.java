@@ -43,7 +43,7 @@ public class FilteredAnnotationModel extends AbstractTableModel {
     public Object getValueAt(int row, int column) {
         switch (column) {
             case 0:
-                return annotations.get(row).getCreationDateText();
+                return annotations.get(row).getCreationDate();
             case 1:
                 return annotations.get(row).getGeometryText();
             case 2:
