@@ -14,10 +14,21 @@ public abstract class GL4SimpleActor {
 
     protected static GLU glu = new GLU();
     private static Logger logger = LoggerFactory.getLogger(GL4SimpleActor.class);
+    
+    private static int mvpPrecomputeGroupCount=0;
+
+    public static synchronized int getNextMvpPrecomputeGroup() {
+        mvpPrecomputeGroupCount++;
+        return mvpPrecomputeGroupCount;
+    }
+
+    int mvpPrecomputeGroup=0;
 
     protected GLDisplayUpdateCallback updateCallback;
 
     protected Matrix4 model=new Matrix4();
+
+    protected boolean isVisible=true;
 
     protected int actorId=0;
 
@@ -58,4 +69,19 @@ public abstract class GL4SimpleActor {
         logger.error( "OpenGL Error " + errorNumber + ": " + errorStr + ": " + message );
     }
 
+    public boolean isVisible() {
+        return isVisible;
+    }
+
+    public void setIsVisible(boolean isVisible) {
+        this.isVisible = isVisible;
+    }
+
+    public int getMvpPrecomputeGroup() {
+        return mvpPrecomputeGroup;
+    }
+
+    public void setMvpPrecomputeGroup(int mvpPrecomputeGroup) {
+        this.mvpPrecomputeGroup = mvpPrecomputeGroup;
+    }
 }

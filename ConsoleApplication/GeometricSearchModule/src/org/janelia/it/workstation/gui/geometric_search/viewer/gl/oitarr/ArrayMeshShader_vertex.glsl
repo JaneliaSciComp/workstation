@@ -1,8 +1,8 @@
 #version 430
 
 uniform mat4 proj;
-uniform mat4 view;
-uniform mat4 model;
+uniform mat4 mv;
+uniform mat4 nm;
 
 uniform vec4 dcolor;
 
@@ -19,10 +19,9 @@ void main()
 {
     Cs = vec4(dcolor.x, dcolor.y, dcolor.z, 1.0);
     vec4 centeredIv = vec4( iv.x, iv.y, iv.z, 1.0);
-    mat4 mview = view * model;
-    vec4 P = mview * centeredIv;
+    vec4 P = mv * centeredIv;
     I  = P.xyz - vec3 (0);
-    mat3 normalMatrix = mat3(transpose(inverse(mview)));
+    mat3 normalMatrix = mat3(nm);
     N  = normalMatrix * norm;
     gl_Position = proj * P;
     vz = gl_Position.z;

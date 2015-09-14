@@ -12,13 +12,16 @@ import java.util.List;
 public class DenseVolumeActor extends Actor {
 
     List<Vector4> voxels;
-    int xSize;
-    int ySize;
-    int zSize;
+    float xSize;
+    float ySize;
+    float zSize;
     float voxelUnitSize;
     ArrayCubeGLActor arrayCubeGLActor;
 
-    public DenseVolumeActor(String name, List<Vector4> voxels, int xSize, int ySize, int zSize, float voxelUnitSize) {
+    float brightness=1.0f;
+    float transparency=1.0f;
+
+    public DenseVolumeActor(String name, List<Vector4> voxels, float xSize, float ySize, float zSize, float voxelUnitSize) {
         this.name=name;
         this.voxels=voxels;
         this.xSize=xSize;
@@ -29,8 +32,24 @@ public class DenseVolumeActor extends Actor {
 
     public GL4SimpleActor createAndSetGLActor() {
         arrayCubeGLActor=new ArrayCubeGLActor(voxels, xSize, ySize, zSize, voxelUnitSize);
+        this.glActor=arrayCubeGLActor;
         return arrayCubeGLActor;
     }
 
+    public float getBrightness() {
+        return brightness;
+    }
+
+    public void setBrightness(float brightness) {
+        this.brightness = brightness;
+    }
+
+    public float getTransparency() {
+        return transparency;
+    }
+
+    public void setTransparency(float transparency) {
+        this.transparency = transparency;
+    }
 
 }

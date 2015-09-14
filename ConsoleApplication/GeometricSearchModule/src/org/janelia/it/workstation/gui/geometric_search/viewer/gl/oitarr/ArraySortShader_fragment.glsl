@@ -15,6 +15,8 @@ uniform int hpi_width;
 uniform int hpi_height;
 uniform int hpi_depth;
 
+uniform vec4 background_color;
+
 layout (binding = 0, rgba32ui) uniform coherent uimage1D fragment_buffer;
 
 layout (std430, binding = 0) buffer FragmentArrays0 {
@@ -86,35 +88,28 @@ void sort_fragment_list(int frag_count)
 }
 
 vec4 blend(vec4 current_color, vec4 new_color) {
-
-    float cIntensity=current_color.x*current_color.x+
-                     current_color.y*current_color.y+
-                     current_color.z*current_color.z;
-
-    float nIntensity=new_color.x*new_color.x+
-                      new_color.y*new_color.y+
-                      new_color.z*new_color.z;
-
-
-    if (nIntensity>cIntensity) {
-        return new_color;
-    } else {
-        return current_color;
-    }
-    //return mix(current_color, new_color, new_color.a);
+    return mix(current_color, new_color, new_color.a);
 }
 
 vec4 calculate_final_color(int frag_count) {
     int i;
-    vec4 final_color = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 final_color = background_color;
     for (i=0; i < frag_count; i++) {
        vec4 color = unpackUnorm4x8(frags[i].colorUPack);
-       float f=final_color.x+final_color.y+final_color.z;
-       float c=color.x+color.y+color.z;
-       if (c>f) {
-            final_color=color;
-       }
+
+       // MIP
+       //float f=final_color.x+final_color.y+final_color.z;
+       //float c=color.x+color.y+color.z;
+       //if (c>f) {
+       //     final_color=color;
+       //     f=c;
+       //}
+
+       //if (f>650) break;
+
+       // Transparency
        //final_color = blend(final_color, color);
+       final_color = mix(final_color, color, color.a);
     }
     return final_color;
 }
@@ -123,13 +118,13 @@ void main(void) {
     int frag_count=0;
     frag_count = build_local_fragment_list();
     sort_fragment_list(frag_count);
-    //output_color = calculate_final_color(frag_count);
+    output_color = calculate_final_color(frag_count);
 
-    if (frag_count>0) {
-        output_color = vec4(0.0, 0.0, 1.0, 1.0);
-     } else {
-        output_color = vec4(1.0, 0.0, 0.0, 1.0);
-     }
+//    if (frag_count>0) {
+//        output_color = vec4(0.0, 0.0, 1.0, 1.0);
+//     } else {
+//        output_color = vec4(1.0, 0.0, 0.0, 1.0);
+//     }
 
     //if (frag_count>=MAX_DEPTH) {
     //    output_color = vec4(0.0, 0.0, 1.0, 1.0);

@@ -2,12 +2,10 @@ package org.janelia.it.workstation.gui.geometric_search.viewer;
 
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.BackgroundColorChangeEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gui.ActorPanel;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gui.DatasetPanel;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gui.RenderablePanel;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gui.*;
 import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.Renderable;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gui.ScrollableRowPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +32,9 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     JPanel actorManagermentPanel = new JPanel();
     ActorPanel actorPanel;
 
+    JPanel viewerGLWrapperPanel = new JPanel();
+    ViewerControlPanel viewerControlPanel = new ViewerControlPanel();
+
 
     public VoxelViewerMainPanel() {
 
@@ -43,7 +44,6 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
         // Actor Panel
         actorManagermentPanel.setLayout(new BoxLayout(actorManagermentPanel, BoxLayout.X_AXIS));
-        add(actorManagermentPanel, BorderLayout.EAST);
 
         controller = new VoxelViewerBasicController();
     }
@@ -80,6 +80,8 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         }
         model=new VoxelViewerModel(properties);
         viewer = new VoxelViewerGLPanel(width, height, model);
+        EventManager.setViewer(viewer);
+
         viewer.setProperties(properties);
         viewer.setVisible(true);
         viewer.setResetFirstRedraw(true);
@@ -102,22 +104,34 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
 
         //===========================================
 
-        add(viewer, BorderLayout.CENTER);
+        viewerGLWrapperPanel.setLayout(new BoxLayout(viewerGLWrapperPanel, BoxLayout.Y_AXIS));
+        viewerGLWrapperPanel.add(viewer);
+        viewerGLWrapperPanel.add(viewerControlPanel);
+        add(viewerGLWrapperPanel, BorderLayout.CENTER);
+
         add(actorManagermentPanel, BorderLayout.EAST);
 
         setupDatasetPanel();
         setupRenderablePanel();
         setupActorPanel();
+        setupViewerControlPanel();
 
         datasetManagementPanel.add(datasetPanel);
         datasetManagementPanel.add(renderablePanel);
-
         actorManagermentPanel.add(actorPanel);
+
+    }
+
+    protected void setupViewerControlPanel() {
+        EventManager.addListener(viewerControlPanel, model.getGLModel());
+        EventManager.addListener(viewerControlPanel, viewer.getRenderer());
+        EventManager.sendEvent(viewerControlPanel, new BackgroundColorChangeEvent(new Color(255, 255, 255)));
     }
 
     protected void setupDatasetPanel() {
         datasetPanel = new DatasetPanel();
         EventManager.addListener(model.getDatasetModel(), datasetPanel);
+        EventManager.addListener(datasetPanel, model.getDatasetModel());
     }
 
     public void setupRenderablePanel() {
@@ -128,6 +142,10 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
     public void setupActorPanel() {
         actorPanel = new ActorPanel();
         EventManager.addListener(model.getActorModel(), actorPanel);
+        EventManager.addListener(actorPanel, model.getActorModel());
+        EventManager.addListener(actorPanel.getVolumeRowPanel(), model.getActorModel());
+        EventManager.addListener(actorPanel.getMeshRowPanel(), model.getActorModel());
+        EventManager.addListener(actorPanel.getElementRowPanel(), model.getActorModel());
     }
 
     public void displayReady() {

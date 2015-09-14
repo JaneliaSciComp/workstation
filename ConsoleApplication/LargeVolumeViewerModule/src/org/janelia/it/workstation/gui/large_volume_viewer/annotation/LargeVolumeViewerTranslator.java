@@ -137,7 +137,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
         // if first annotation in delete list has a parent, select it
         //  (usually if you delete a point, you want to continue working there)
-        if (!annotationList.get(0).isRoot()) {
+        if (annotationList.size() > 0 && !annotationList.get(0).isRoot()) {
             annotationSelected(annotationList.get(0).getParentId());
         }
     }

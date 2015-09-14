@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.geometric_search.viewer;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.ActorSharedResource;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GLDisplayUpdateCallback;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.ArrayCubeGLActor;
@@ -50,16 +51,27 @@ public class VoxelViewerBasicController implements VoxelViewerController {
             @Override
             public void run() {
                 dataset.createRenderables();
+                List<ActorSharedResource> neededActorSharedResources=dataset.getNeededActorSharedResources();
+                if (neededActorSharedResources!=null) {
+                    for (ActorSharedResource actorSharedResource : neededActorSharedResources) {
+                        if (!model.actorSharedResourceMap.containsKey(actorSharedResource.getName())) {
+                            actorSharedResource.load();
+                            model.actorSharedResourceMap.put(actorSharedResource.getName(), actorSharedResource);
+                        }
+                    }
+                }
                 model.getDatasetModel().addDataset(dataset);
+                logger.info("calling viewer.refresh()");
+                viewer.refresh();
             }
         };
         return runnable;
     }
 
-    public void selectDataset(Dataset dataset) {
-        model.getDatasetModel().addDataset(dataset);
-        viewer.resetView();
-    }
+//    public void selectDataset(Dataset dataset) {
+//        model.getDatasetModel().addDataset(dataset);
+//        viewer.resetView();
+//    }
 
 //    public List<ArrayCubeGLActor> createCubeGLActorsFromStack(File stackFile, int maxVoxels, List<Vector4> preferredColorList, Matrix4 rotation) {
 //        final ArrayCubeShader cubeShader=(ArrayCubeShader)model.getDenseVolumeShaderActionSequence().getShader();

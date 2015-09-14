@@ -134,24 +134,24 @@ public class ArrayCubeExperiment implements GL4Experiment {
                 0.0f,   0.0f,  -1.0f,   0.625f,
                 0.0f,   0.0f,   0.0f,   1.0f);
 
-        for (File meshFile : meshFiles) {
-            if (meshFile.getName().endsWith(".obj")) {
-                final ArrayMeshGLActor ma = new ArrayMeshGLActor(meshFile);
-                ma.setVertexRotation(vertexRotation);
-                ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.2f));
-                ma.setUpdateCallback(new GLDisplayUpdateCallback() {
-                    @Override
-                    public void update(GL4 gl) {
-                        Matrix4 actorModel = ma.getModel();
-                        meshShader.setModel(gl, actorModel);
-                        meshShader.setDrawColor(gl, ma.getColor());
-                    }
-                });
-                logger.info("Adding actor to meshSequence for file="+meshFile.getName());
-                meshSequence.getActorSequence().add(ma);
-            }
-        }
-        meshSequence.setShader(meshShader);
+//        for (File meshFile : meshFiles) {
+//            if (meshFile.getName().endsWith(".obj")) {
+//                final ArrayMeshGLActor ma = new ArrayMeshGLActor(meshFile);
+//                ma.setVertexRotation(vertexRotation);
+//                ma.setColor(new Vector4(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), 0.2f));
+//                ma.setUpdateCallback(new GLDisplayUpdateCallback() {
+//                    @Override
+//                    public void update(GL4 gl) {
+//                        Matrix4 actorModel = ma.getModel();
+//                        meshShader.setModel(gl, actorModel);
+//                        meshShader.setDrawColor(gl, ma.getColor());
+//                    }
+//                });
+//                logger.info("Adding actor to meshSequence for file="+meshFile.getName());
+//                meshSequence.getActorSequence().add(ma);
+//            }
+//        }
+//        meshSequence.setShader(meshShader);
 
         /////////////////////////////////////////////////////////////////////////
 

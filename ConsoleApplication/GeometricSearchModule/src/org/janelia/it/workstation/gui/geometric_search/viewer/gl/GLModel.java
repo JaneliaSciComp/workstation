@@ -4,13 +4,13 @@ import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerEventListener;
-import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerGLPanel;
-import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerModel;
-import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerProperties;
+import org.janelia.it.workstation.gui.geometric_search.viewer.*;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.Actor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.DenseVolumeActor;
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.MeshActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorAddedEvent;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorRemovedEvent;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorsClearAllEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.VoxelViewerEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.*;
 import org.slf4j.Logger;
@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.GL4;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by murphys on 8/21/2015.
@@ -33,6 +35,15 @@ public class GLModel implements VoxelViewerEventListener {
     VoxelViewerProperties properties;
     VoxelViewerGLPanel viewer;
 
+    public static class MVPPrecompute {
+        int timestamp;
+        public Matrix4 modelView;
+        public Matrix4 modelViewProjection;
+        public Matrix4 normalMatrix;
+    }
+
+    public static Map<Integer, MVPPrecompute> mvpPrecomputeMap = new HashMap<>();
+
     public int maxActorIndex=0;
 
     protected GL4ShaderActionSequence denseVolumeShaderActionSequence = new GL4ShaderActionSequence("Dense Volumes");
@@ -41,6 +52,13 @@ public class GLModel implements VoxelViewerEventListener {
     protected Deque<GL4SimpleActor> initQueue = new ArrayDeque<>();
     protected Deque<Integer> disposeQueue = new ArrayDeque<>();
     protected Deque<String> messageQueue = new ArrayDeque<>();
+
+    public boolean hasPendingEvents() {
+        if (initQueue.size()>0 || disposeQueue.size()>0 || messageQueue.size()>0) {
+            return true;
+        }
+        return false;
+    }
 
     public VoxelViewerModel getModel() {
         return model;
@@ -233,58 +251,184 @@ public class GLModel implements VoxelViewerEventListener {
 
     @Override
     public void processEvent(VoxelViewerEvent event) {
-        if (event instanceof ActorAddedEvent) {
-            ActorAddedEvent actorAddedEvent=(ActorAddedEvent)event;
-            final Actor actor=actorAddedEvent.getActor();
-            final GL4SimpleActor gl4SimpleActor = actor.createAndSetGLActor();
 
-            if (gl4SimpleActor instanceof ArrayCubeGLActor) {
-                final ArrayCubeGLActor arrayCubeGLActor=(ArrayCubeGLActor)gl4SimpleActor;
-                final ArrayCubeShader cubeShader = (ArrayCubeShader) denseVolumeShaderActionSequence.getShader();
+        try {
 
-                Matrix4 gal4Rotation=new Matrix4();
+            if (event instanceof ActorAddedEvent) {
 
-                // Empirically derived - for GAL4 samples
-                gal4Rotation.setTranspose(-1.0f, 0.0f, 0.0f, 0.5f,
-                    0.0f, -1.0f, 0.0f, 0.25f,
-                    0.0f, 0.0f, -1.0f, 0.625f,
-                    0.0f, 0.0f, 0.0f, 1.0f);
+                ActorAddedEvent actorAddedEvent = (ActorAddedEvent) event;
+                final Actor actor = actorAddedEvent.getActor();
+                GL4SimpleActor gl4SimpleActor = actor.getGlActor();
+                if (gl4SimpleActor==null) {
+                    gl4SimpleActor=actor.createAndSetGLActor();
+                }
+                final GL4SimpleActor gl4SimpleActor_f=gl4SimpleActor;
 
-                arrayCubeGLActor.setModel(gal4Rotation);
+                if (gl4SimpleActor_f==null) {
+                    throw new Exception("gl4SimpleActor is unexpectedly null from actor.createAndSetGLActor()");
+                }
 
-                logger.info("setting callback for arrayCubeGLActor");
+                if (gl4SimpleActor_f instanceof ArrayCubeGLActor) {
 
-                arrayCubeGLActor.setUpdateCallback(new GLDisplayUpdateCallback() {
-                    @Override
-                    public void update(GL4 gl) {
+                    final DenseVolumeActor denseVolumeActor=(DenseVolumeActor)actor;
+                    final ArrayCubeGLActor arrayCubeGLActor = (ArrayCubeGLActor) gl4SimpleActor_f;
+                    final ArrayCubeShader cubeShader = (ArrayCubeShader) denseVolumeShaderActionSequence.getShader();
 
-                        logger.info("update() called for arrayCubeGLActor");
+                    Matrix4 gal4Rotation = new Matrix4();
 
-                        Matrix4 view = viewer.getRenderer().getViewMatrix();
-                        Matrix4 proj = viewer.getRenderer().getProjectionMatrix();
-                        Matrix4 model = arrayCubeGLActor.getModel();
+                    // Empirically derived - for GAL4 samples
+                    // todo - move to ScreenDataset
+                    gal4Rotation.setTranspose(-1.0f, 0.0f, 0.0f, 0.5f,
+                            0.0f, -1.0f, 0.0f, 0.25f,
+                            0.0f, 0.0f, -1.0f, 0.625f,
+                            0.0f, 0.0f, 0.0f, 1.0f);
 
-                        Matrix4 viewCopy = new Matrix4(view);
-                        Matrix4 projCopy = new Matrix4(proj);
-                        Matrix4 modelCopy = new Matrix4(model);
+                    arrayCubeGLActor.setModel(gal4Rotation);
 
-                        Matrix4 vp = viewCopy.multiply(projCopy);
-                        Matrix4 mvp = modelCopy.multiply(vp);
+                    arrayCubeGLActor.setUpdateCallback(new GLDisplayUpdateCallback() {
+                        @Override
+                        public void update(GL4 gl) {
 
-                        cubeShader.setMVP(gl, mvp);
-                        cubeShader.setProjection(gl, projCopy);
-                        cubeShader.setWidth(gl, viewer.getWidth());
-                        cubeShader.setHeight(gl, viewer.getHeight());
+                            Matrix4 view = viewer.getRenderer().getViewMatrix();
+                            Matrix4 proj = viewer.getRenderer().getProjectionMatrix();
+                            Matrix4 model = arrayCubeGLActor.getModel();
 
-                        float voxelUnitSize = arrayCubeGLActor.getVoxelUnitSize();
-                        cubeShader.setVoxelUnitSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
-                        cubeShader.setDrawColor(gl, actor.getColor());
-                    }
-                });
+                            Matrix4 viewCopy = new Matrix4(view);
+                            Matrix4 projCopy = new Matrix4(proj);
+                            Matrix4 modelCopy = new Matrix4(model);
+
+                            Matrix4 vp = viewCopy.multiply(projCopy);
+                            Matrix4 mvp = modelCopy.multiply(vp);
+
+                            cubeShader.setMVP(gl, mvp);
+                            cubeShader.setProjection(gl, projCopy);
+                            cubeShader.setWidth(gl, viewer.getWidth());
+                            cubeShader.setHeight(gl, viewer.getHeight());
+
+                            float voxelUnitSize = arrayCubeGLActor.getVoxelUnitSize();
+                            cubeShader.setVoxelUnitSize(gl, new Vector3(voxelUnitSize, voxelUnitSize, voxelUnitSize));
+                            Vector4 actorColor = denseVolumeActor.getColor();
+                            float transparency = denseVolumeActor.getTransparency();
+                            float[] data = actorColor.toArray();
+                            Vector4 actualColor = new Vector4(data[0], data[1], data[2], transparency);
+                            float[] actualData = actualColor.toArray();
+                            for (int i = 0; i < 4; i++) {
+                                if (actualData[i] < 0f) {
+                                    actualData[i] = 0.0f;
+                                } else if (actualData[i] > 1.0f) {
+                                    actualData[i] = 1.0f;
+                                }
+                            }
+                            cubeShader.setDrawColor(gl, actualColor);
+                            float brightness = denseVolumeActor.getBrightness();
+                            cubeShader.setBrightness(gl, brightness);
+                        }
+                    });
+                } else if (gl4SimpleActor_f instanceof ArrayMeshGLActor) {
+
+                    final MeshActor meshActor=(MeshActor)actor;
+                    final ArrayMeshGLActor arrayMeshGLActor = (ArrayMeshGLActor) gl4SimpleActor_f;
+                    final ArrayMeshShader meshShader = (ArrayMeshShader) meshShaderActionSequence.getShader();
+
+                    arrayMeshGLActor.setUpdateCallback(new GLDisplayUpdateCallback() {
+                        @Override
+                        public void update(GL4 gl) {
+
+                            Matrix4 MV;
+                            Matrix4 NM;
+
+                            int mvpGroup=arrayMeshGLActor.getMvpPrecomputeGroup();
+
+                            if (mvpGroup>0) {
+                                MVPPrecompute mvpPrecompute=mvpPrecomputeMap.get(mvpGroup);
+                                if (mvpPrecompute==null)  {
+                                    mvpPrecompute=new MVPPrecompute();
+                                    mvpPrecomputeMap.put(mvpGroup, mvpPrecompute);
+                                }
+                                if (mvpPrecompute.timestamp < VoxelViewerRenderer.displayTimestep) {
+
+                                    Matrix4 view = viewer.getRenderer().getViewMatrix();
+                                    Matrix4 model = arrayMeshGLActor.getModel();
+                                    Matrix4 viewCopy = new Matrix4(view);
+                                    Matrix4 modelCopy = new Matrix4(model);
+
+                                    MV = viewCopy.multiply(modelCopy);
+                                    NM = MV.inverse().transpose();
+
+                                    mvpPrecompute.modelView=MV;
+                                    mvpPrecompute.normalMatrix=NM;
+
+                                    mvpPrecompute.timestamp=VoxelViewerRenderer.displayTimestep;
+                                } else {
+
+                                    MV = mvpPrecompute.modelView;
+                                    NM = mvpPrecompute.normalMatrix;
+                                }
+                            } else {
+
+                                Matrix4 view = viewer.getRenderer().getViewMatrix();
+                                Matrix4 model = arrayMeshGLActor.getModel();
+                                Matrix4 viewCopy = new Matrix4(view);
+                                Matrix4 modelCopy = new Matrix4(model);
+
+                                MV = viewCopy.multiply(modelCopy);
+                                NM = MV.inverse().transpose();
+
+                            }
+
+                            Matrix4 proj = viewer.getRenderer().getProjectionMatrix();
+                            Matrix4 projCopy = new Matrix4(proj);
+
+                            meshShader.setProjection(gl, projCopy);
+                            meshShader.setMV(gl, MV);
+                            meshShader.setNM(gl, NM);
+
+                            meshShader.setWidth(gl, viewer.getWidth());
+                            meshShader.setHeight(gl, viewer.getHeight());
+
+                            Vector4 actorColor = meshActor.getColor();
+
+                            float edgeFalloff = meshActor.getEdgeFalloff();
+                            float intensity = meshActor.getIntensity();
+                            float ambience = meshActor.getAmbience();
+
+                            float[] data = actorColor.toArray();
+                            Vector4 actualColor = new Vector4(data[0], data[1], data[2], 1.0f);
+                            float[] actualData = actualColor.toArray();
+                            for (int i = 0; i < 4; i++) {
+                                if (actualData[i] < 0f) {
+                                    actualData[i] = 0.0f;
+                                } else if (actualData[i] > 1.0f) {
+                                    actualData[i] = 1.0f;
+                                }
+                            }
+                            meshShader.setDrawColor(gl, actualColor);
+                            meshShader.setEdgefalloff(gl, edgeFalloff);
+                            meshShader.setIntensity(gl, intensity);
+                            meshShader.setAmbience(gl, ambience);
+
+                        }
+                    });
+                }
+
+                initQueue.add(gl4SimpleActor_f);
+
+            } else if (event instanceof ActorRemovedEvent) {
+                ActorRemovedEvent removedEvent = (ActorRemovedEvent) event;
+                Actor actorToBeRemoved = removedEvent.getActor();
+                GL4SimpleActor gl4SimpleActor = actorToBeRemoved.getGlActor();
+                if (gl4SimpleActor != null) {
+                    removeActorToDisposeQueue(gl4SimpleActor.getActorId());
+                }
+            } else if (event instanceof ActorsClearAllEvent) {
+                setDisposeAndClearAllActorsMsg();
             }
 
-            initQueue.add(gl4SimpleActor);
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            logger.error(ex.toString());
         }
+
     }
 
 

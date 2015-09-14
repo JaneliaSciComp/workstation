@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.gui;
 
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerEventListener;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.RenderablesClearAllEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.RenderableAddedEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.VoxelViewerEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.Renderable;
@@ -16,6 +17,8 @@ public class RenderablePanel extends ScrollableRowPanel implements VoxelViewerEv
             RenderableAddedEvent renderableAddedEvent=(RenderableAddedEvent)event;
             Renderable renderable=renderableAddedEvent.getRenderable();
             addEntry(renderable.getName());
+        } else if (event instanceof RenderablesClearAllEvent) {
+            clear();
         }
     }
 }

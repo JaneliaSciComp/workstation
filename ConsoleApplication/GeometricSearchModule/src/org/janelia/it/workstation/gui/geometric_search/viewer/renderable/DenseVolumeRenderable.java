@@ -198,12 +198,18 @@ public class DenseVolumeRenderable extends Renderable {
         return voxelSize * downsampleLevel;
     }
 
+    public float getXSize() { return (float)((xSize*1.0) / (downsampleLevel*1.0)); }
+
+    public float getYSize() { return (float)((ySize*1.0) / (downsampleLevel*1.0)); }
+
+    public float getZSize() { return (float)((zSize*1.0) / (downsampleLevel*1.0)); }
+
     @Override
     public Actor createAndSetActor() {
         if (actor!=null) {
             disposeActor();
         }
-        actor = new DenseVolumeActor(this.name, sampledVoxels, xSize, ySize, zSize, voxelSize);
+        actor = new DenseVolumeActor(this.name, sampledVoxels, getXSize(), getYSize(), getZSize(), getVoxelSize());
         actor.setColor(preferredColor);
         return actor;
     }
