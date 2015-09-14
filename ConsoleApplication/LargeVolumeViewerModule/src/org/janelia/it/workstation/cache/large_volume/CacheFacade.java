@@ -278,14 +278,14 @@ public class CacheFacade {
     private boolean calculateRegion() {
         Date start = new Date();
         boolean rtnVal = false;
-        GeometricNeighborhood calculatedNeighborhood = neighborhoodBuilder.buildNeighborhood(this.cameraFocus, cameraZoom, pixelsPerSceneUnit);
-        if (!(calculatedNeighborhood.getFiles().isEmpty()  ||  calculatedNeighborhood.equals(this.neighborhood))) {
+        GeometricNeighborhood calculatedNeighborhood = neighborhoodBuilder.buildNeighborhood(cameraFocus, cameraZoom, pixelsPerSceneUnit);
+        if (!(calculatedNeighborhood.getFiles().isEmpty()  ||  calculatedNeighborhood.equals(neighborhood))) {
             this.neighborhood = calculatedNeighborhood;
             rtnVal = true;
         }
         Date end = new Date();
         long elapsed = (end.getTime() - start.getTime());
-        log.info("In calculate region for: {}ms.", elapsed);
+        log.info("In calculate region for: {}ms in thread {}.", elapsed, Thread.currentThread().getName());
         return rtnVal;
     }
 

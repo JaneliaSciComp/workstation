@@ -156,6 +156,26 @@ public class CompressedFileResolver {
     }
     
     /**
+     * Given an example file name, return an object which can pick the name
+     * for anything 'like it'.  The similarity will (at t-o-w) be 'resides
+     * in same directory structure'.
+     * 
+     * @param decompressedFile example file
+     * @return something which can apply names to all like it.
+     */
+    public CompressedFileNamer getNamer(File decompressedFile) {        
+        CompressedFileNamer rtnVal = null;
+        for (CompressionAlgorithm algorithm : chain) {
+            File algorithmCompressedVersion = algorithm.compressedVersion(decompressedFile);
+            if (algorithmCompressedVersion.canRead()) {
+                rtnVal = new CompressedFileNamer(algorithm);
+                break;
+            }
+        }
+        return rtnVal;
+    }
+    
+    /**
      * Given some compressed file, this method tells its name after uncompression.
      * @param compressedFile what it looks like before uncompress
      * @return what it looks like after uncompress
@@ -171,5 +191,15 @@ public class CompressedFileResolver {
             }
         }
         return decompressedFile;
+    }
+    
+    public static class CompressedFileNamer {
+        private CompressionAlgorithm compressionAlgorithm;
+        public CompressedFileNamer(CompressionAlgorithm algorithm) {
+            this.compressionAlgorithm = algorithm;
+        }
+        public File getCompressedName(File decompressedFile) {
+            return compressionAlgorithm.compressedVersion(decompressedFile);
+        }
     }
 }
