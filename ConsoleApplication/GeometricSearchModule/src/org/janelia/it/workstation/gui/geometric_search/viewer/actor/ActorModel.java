@@ -56,11 +56,28 @@ public class ActorModel implements VoxelViewerEventListener {
                 }
             }
         } else if (event instanceof SharedResourceNeededEvent) {
-            SharedResourceNeededEvent sharedResourceNeededEvent=(SharedResourceNeededEvent)event;
-            ActorSharedResource sharedResource=sharedResourceNeededEvent.getActorSharedResource();
-            attachedSharedResources.add(sharedResource);
-            for (Actor actor : sharedResource.getSharedActorList()) {
-                EventManager.sendEvent(this, new ActorAddedEvent(actor));
+            try {
+                logger.info("Check 9.0");
+                SharedResourceNeededEvent sharedResourceNeededEvent = (SharedResourceNeededEvent) event;
+                logger.info("Check 9.1");
+                ActorSharedResource sharedResource = sharedResourceNeededEvent.getActorSharedResource();
+                logger.info("Check 9.2");
+                if (sharedResource == null) {
+                    logger.info("Check 9.2 - sharedResource is null!");
+                } else {
+                    logger.info("Check 9.2 - sharedResource is not null");
+                }
+                attachedSharedResources.add(sharedResource);
+                logger.info("Check 9.3");
+                for (Actor actor : sharedResource.getSharedActorList()) {
+                    logger.info("Check 9.4");
+                    logger.info("Actor name=" + actor.getName());
+                    EventManager.sendEvent(this, new ActorAddedEvent(actor));
+                    logger.info("Check 9.5");
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                logger.error(ex.toString());
             }
         }
         else if (event instanceof SharedResourceNotNeededEvent) {

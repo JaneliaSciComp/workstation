@@ -21,8 +21,17 @@ public class JFRC2010CompartmentSharedResource extends ActorSharedResource {
 
     private static final Logger logger = LoggerFactory.getLogger(JFRC2010CompartmentSharedResource.class);
 
-    public JFRC2010CompartmentSharedResource() {
+    private static JFRC2010CompartmentSharedResource singletonInstance;
+
+    private JFRC2010CompartmentSharedResource() {
         super("JFRC2010Compartment");
+    }
+
+    public static JFRC2010CompartmentSharedResource getInstance() {
+        if (singletonInstance==null) {
+            singletonInstance=new JFRC2010CompartmentSharedResource();
+        }
+        return singletonInstance;
     }
 
     @Override
@@ -64,5 +73,6 @@ public class JFRC2010CompartmentSharedResource extends ActorSharedResource {
             }
         }
 
+        isLoaded=true;
     }
 }
