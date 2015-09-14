@@ -22,10 +22,12 @@ public class LargeVolumeCacheListener implements CacheEventListener {
 
 	@Override
 	public void notifyElementPut(Ehcache ehch, Element elmnt) throws CacheException {
+		log.info("Element {} put.", elmnt.getKey());
 	}
 
 	@Override
 	public void notifyElementUpdated(Ehcache ehch, Element elmnt) throws CacheException {
+		log.info("Element {} updated.", elmnt.getKey());
 	}
 
 	@Override
@@ -34,6 +36,7 @@ public class LargeVolumeCacheListener implements CacheEventListener {
 
 	@Override
 	public void notifyElementEvicted(Ehcache ehch, Element elmnt) {
+		log.info("Element {} evixted.", elmnt.getKey());
 	}
 
 	@Override
@@ -45,7 +48,7 @@ public class LargeVolumeCacheListener implements CacheEventListener {
 	}
 	
 	public Object clone() throws CloneNotSupportedException {
-		return super.clone();
+		return new LargeVolumeCacheListener();
 	}
 	
 }

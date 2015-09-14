@@ -145,12 +145,17 @@ public class CacheFacade {
         try {
             Future<byte[]> futureBytes = null;
             Cache cache = manager.getCache(cacheName);
-            synchronized (this) {                
-                if (! isInCache(id)) {
-                    noFutureGets ++;
-                    log.debug("No Future found for {}. Pushing data into cache.  Thread: {}.", cachePopulator.trimToOctreePath(id), Thread.currentThread().getName());
+            if (isInCache(id)) {
+                CachableWrapper wrapper = (CachableWrapper) cache.get(id).getObjectValue();
+                rtnVal = new ByteArraySeekableStream(wrapper.getBytes());
+                log.info("Returning {}: found in cache.", keyOnly);
+            }
+            else {
+                synchronized (this) {
+                    noFutureGets++;
+                    log.info("No Future found for {}. Pushing data into cache.  Thread: {}.", cachePopulator.trimToOctreePath(id), Thread.currentThread().getName());
                     // Ensure we get this exact, required file.
-                    final byte[] bytes = new byte[ standardFileSize ];
+                    final byte[] bytes = new byte[standardFileSize];
                     futureBytes = cachePopulator.cache(new File(id), bytes);
                     final NonNeighborhoodCachableWrapper wrapper = new NonNeighborhoodCachableWrapper(futureBytes, bytes);
                     log.debug("Adding {} to cache.", keyOnly);
@@ -158,12 +163,6 @@ public class CacheFacade {
                     rtnVal = new ByteArraySeekableStream(wrapper.getBytes());
                     log.debug("Returning {}: injected into cache.", keyOnly);
                     //reportCacheOccupancy();
-                    //dumpKeys();
-                }
-                else {
-                    CachableWrapper wrapper = (CachableWrapper) cache.get(id).getObjectValue();
-                    rtnVal = new ByteArraySeekableStream(wrapper.getBytes());
-                    log.debug("Returning {}: found in cache.", keyOnly);
                 }
             }
 

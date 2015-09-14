@@ -4,6 +4,7 @@
     monitoring="off" 
     dynamicConfig="false">
     <!-- maxBytesLocalDisk="0g"    -->
+    <cacheManagerEventListenerFactory class="" properties=""/>
     <transactionManagerLookup class="net.sf.ehcache.transaction.manager.DefaultTransactionManagerLookup" properties="jndiName=java:/TransactionManager" propertySeparator=";"/>
     <defaultCache maxEntriesLocalHeap="0" eternal="false" timeToIdleSeconds="0" timeToLiveSeconds="0">
     </defaultCache>
@@ -14,9 +15,9 @@
            memoryStoreEvictionPolicy="LRU"
            eternal="true"
            overflowToOffHeap="false"
-           maxBytesLocalHeap="6G"
+           maxBytesLocalHeap="20G"
     >
-	    <cacheManagerEventListenerFactory class="org.janelia.it.workstation.cache.large_volume.listener.LargeVolumeCacheListenerFactory" properties=""/>
+        <cacheEventListenerFactory class="org.janelia.it.workstation.cache.large_volume.listener.LargeVolumeCacheListenerFactory" properties="" listenFor="all"/>
         <!--transactionalMode="off"-->
         <!-- maxEntriesLocalHeap="0"
              maxEntriesLocalDisk="0" 
