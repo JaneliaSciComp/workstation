@@ -52,6 +52,8 @@ public class CacheFacade {
     private double pixelsPerSceneUnit;
     private int standardFileSize;
     private String cacheName;
+    private int totalGets;
+    private int noFutureGets;
     
     private Logger log = LoggerFactory.getLogger(CacheFacade.class);
     
@@ -125,9 +127,6 @@ public class CacheFacade {
         return (cachedElement != null);
     }
 
-    private int totalGets;
-    private int noFutureGets;
-    
     /**
      * Blocking getters. Let the cache manager worry about the threading.
      * Most likely ID is an absolute path.  Also, packages a decompressed
