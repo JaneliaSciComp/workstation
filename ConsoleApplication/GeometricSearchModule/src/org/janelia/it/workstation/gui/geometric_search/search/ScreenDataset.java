@@ -27,6 +27,10 @@ public class ScreenDataset extends Dataset {
 
     File alignedStack;
 
+    public ScreenDataset() {
+        getNeededActorSharedResources().add(new JFRC2010CompartmentSharedResource());
+    }
+
     public void setAlignedStack(File alignedStack) {
         this.alignedStack=alignedStack;
     }
@@ -36,9 +40,9 @@ public class ScreenDataset extends Dataset {
         Matrix4 gal4Rotation=new Matrix4();
 
         gal4Rotation.setTranspose(1.0f, 0.0f, 0.0f, -0.5f,
-                0.0f, -1.0f, 0.0f, 0.25f,
-                0.0f, 0.0f, -1.0f, 0.625f,
-                0.0f, 0.0f, 0.0f, 1.0f);
+                                  0.0f, -1.0f, 0.0f, 0.25f,
+                                  0.0f, 0.0f, -1.0f, 0.625f,
+                                  0.0f, 0.0f, 0.0f, 1.0f);
 
         return gal4Rotation;
     }

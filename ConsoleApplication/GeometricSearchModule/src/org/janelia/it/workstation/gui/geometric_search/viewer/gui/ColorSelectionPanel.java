@@ -9,8 +9,15 @@ import java.awt.image.BufferedImage;
  */
 public class ColorSelectionPanel extends JPanel {
 
+    private static final int DEFAULT_WIDTH=90;
+    private static final int DEFAULT_HEIGHT=30;
+
     private BufferedImage img;
     boolean initialized=false;
+
+    public ColorSelectionPanel() {
+        this(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    }
 
     public ColorSelectionPanel(int width, int height) {
         img=new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -63,24 +70,26 @@ public class ColorSelectionPanel extends JPanel {
                 float yf=y*1.0f;
                 float xn=(xf/XMAX)*3.0f;
                 float yn=yf/YMAX;
-                int red=0;
-                int green=0;
-                int blue=0;
 
-                if (xn <= 1.0f) {               // RED...green(X) blue (Y)
+                int red;
+                int green;
+                int blue;
+
+                if (xn <= 1.0f) {
+                    red=(int)(255f*xn);
+                    green=(int)(255f*(1.0f-yn));
+                    blue=255;
+                } else if (xn <= 2.0f) {
+                    xn -= 1.0f;
                     red=255;
                     green=(int)(255f*xn);
                     blue=(int)(255f*yn);
-                } else if (xn <= 2.0f) {        // GREEN...red(X) blue (Y)
-                    xn -= 1.0f;
-                    red=(int)(255f*xn);
+                } else {
+                    xn -= 2.0f;
+                    red=(int)(255f*(1.0f-xn));
                     green=255;
                     blue=(int)(255f*yn);
-                } else {                        // BLUE...red (X) green (Y)
-                    xn -= 2.0f;
-                    red=(int)(255f*xn);
-                    green=(int)(255f*yn);
-                    blue=255;
+
                 }
 
                 g.setPaint(new Color(red, green, blue));

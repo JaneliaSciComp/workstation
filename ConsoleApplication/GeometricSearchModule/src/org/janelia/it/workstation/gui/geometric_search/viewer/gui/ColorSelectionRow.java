@@ -17,31 +17,31 @@ public class ColorSelectionRow extends JPanel {
 
     private static final Logger logger = LoggerFactory.getLogger(ColorSelectionRow.class);
 
-    private static final int COLOR_STATUS_WIDTH=15;
-    private static final int COLOR_STATUS_HEIGHT=15;
+    private static final int COLOR_STATUS_WIDTH=20;
+    private static final int COLOR_STATUS_HEIGHT=20;
+    private static final int MAX_NAME_CHARS=10;
+    private static final int ROW_WIDTH=385;
+    private static final int ROW_HEIGHT=45;
 
     JCheckBox visibleCheckBox;
     JLabel nameLabel;
     ColorPanel colorStatusPanel;
     ColorSelectionPanel colorSelectionPanel;
-    Knob brightnessKnob;
-    Knob transparencyKnob;
-
     SyncedCallback colorSelectionCallback;
-    SyncedCallback brightnessCallback;
-    SyncedCallback transparencyCallback;
+
 
     public ColorSelectionRow(String name) {
         setName(name);
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        setPreferredSize(new Dimension(320, 55));
-        setMaximumSize(new Dimension(320, 55));
+        setPreferredSize(new Dimension(ROW_WIDTH, ROW_HEIGHT));
+        setMaximumSize(new Dimension(ROW_WIDTH, ROW_HEIGHT));
         visibleCheckBox=new JCheckBox();
         visibleCheckBox.setSelected(true);
-        nameLabel=new JLabel(name);
+        String normalizedName=getNormalizedName(name);
+        nameLabel=new JLabel(normalizedName);
         colorStatusPanel=new ColorPanel(COLOR_STATUS_WIDTH, COLOR_STATUS_HEIGHT, new Color(0, 0, 0));
 
-        colorSelectionPanel=new ColorSelectionPanel(COLOR_STATUS_WIDTH*5, COLOR_STATUS_HEIGHT+10);
+        colorSelectionPanel=new ColorSelectionPanel();
         colorSelectionPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -54,42 +54,11 @@ public class ColorSelectionRow extends JPanel {
             }
         });
 
-        brightnessKnob=new Knob("B", 0.0, 3.0, 1.0, true);
-        brightnessKnob.addMouseMotionListener(new MouseMotionListener() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (brightnessCallback!=null) {
-                    brightnessCallback.performAction(new Float(brightnessKnob.getValue()));
-                }
-            }
-
-            @Override
-            public void mouseMoved(MouseEvent e) {
-
-            }
-        });
-
-        transparencyKnob=new Knob("T", 0.0, 1.0, 1.0, true);
-        transparencyKnob.addMouseMotionListener(new MouseMotionListener() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (transparencyCallback!=null) {
-                    transparencyCallback.performAction(new Float(transparencyKnob.getValue()));
-                }
-            }
-
-            @Override
-            public void mouseMoved(MouseEvent e) {
-
-            }
-        });
-
         add(visibleCheckBox);
         add(colorStatusPanel);
         add(nameLabel);
         add(colorSelectionPanel);
-        add(brightnessKnob);
-        add(transparencyKnob);
+
     }
 
     public JCheckBox getVisibleCheckBox() {
@@ -108,8 +77,18 @@ public class ColorSelectionRow extends JPanel {
         this.colorSelectionCallback=callback;
     }
 
-    public void setBrightnessCallback(SyncedCallback callback) { this.brightnessCallback=callback; }
-
-    public void setTransparencyCallback(SyncedCallback callback) { this.transparencyCallback=callback; }
+    public String getNormalizedName(String name) {
+        int initialLength=name.length();
+        if (initialLength>MAX_NAME_CHARS) {
+            return name.substring(0, MAX_NAME_CHARS);
+        } else if (initialLength<MAX_NAME_CHARS) {
+            String pad="";
+            for (int i=0;i<(MAX_NAME_CHARS-initialLength);i++){
+                pad += " ";
+            }
+            return name + pad;
+        }
+        return name;
+    }
 
 }

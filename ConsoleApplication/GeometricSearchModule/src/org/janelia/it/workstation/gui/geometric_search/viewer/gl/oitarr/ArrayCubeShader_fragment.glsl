@@ -16,6 +16,8 @@ uniform int hpi_width;
 uniform int hpi_height;
 uniform int hpi_depth;
 
+uniform float brightness;
+
 layout (binding = 1, r32ui) uniform uimage2D head_pointer_image;
 
 layout (std430, binding = 0) buffer FragmentArrays0 {
@@ -43,28 +45,37 @@ void main()
     float dz = 1.0 - vz;
 
     float dopac = dcolor.w;
-    vec4 color = dcolor * intensityF;
+    float ib=intensityF;
+    if (brightness>1.0) {
+        ib = ib + (brightness-1.0);
+    }
+    vec4 color = dcolor * ib * brightness;
     color.w = dopac;
+    float totalIntensity=color.x+color.y+color.z;
 
-    ivec2 fl = ivec2(gl_FragCoord.xy);
-    uint oldPosition = imageAtomicAdd(head_pointer_image, fl, 1);
-    int iPosition = int(oldPosition);
-    int zSize=hpi_width * hpi_height;
-    int xyOffset = (fl.y * hpi_width + fl.x);
+    if (totalIntensity>0.03) {
 
-    if (iPosition > -1 && iPosition < BUFFER_DEPTH) {
-        nodes0[xyOffset + zSize*iPosition].colorUPack = packUnorm4x8(color);
-        nodes0[xyOffset + zSize*iPosition].depth = dz;
-    } else if (iPosition < BUFFER_DEPTH*2) {
-        nodes1[xyOffset + zSize*(iPosition-BUFFER_DEPTH)].colorUPack = packUnorm4x8(color);
-        nodes1[xyOffset + zSize*(iPosition-BUFFER_DEPTH)].depth = dz;
-    } else if (iPosition < BUFFER_DEPTH*3) {
-        nodes2[xyOffset + zSize*(iPosition-BUFFER_DEPTH*2)].colorUPack = packUnorm4x8(color);
-        nodes2[xyOffset + zSize*(iPosition-BUFFER_DEPTH*2)].depth = dz;
-    } else if (iPosition < BUFFER_DEPTH*4) {
-        nodes3[xyOffset + zSize*(iPosition-BUFFER_DEPTH*3)].colorUPack = packUnorm4x8(color);
-        nodes3[xyOffset + zSize*(iPosition-BUFFER_DEPTH*3)].depth = dz;
-    } 
+        ivec2 fl = ivec2(gl_FragCoord.xy);
+        uint oldPosition = imageAtomicAdd(head_pointer_image, fl, 1);
+        int iPosition = int(oldPosition);
+        int zSize=hpi_width * hpi_height;
+        int xyOffset = (fl.y * hpi_width + fl.x);
+
+        if (iPosition > -1 && iPosition < BUFFER_DEPTH) {
+            nodes0[xyOffset + zSize*iPosition].colorUPack = packUnorm4x8(color);
+            nodes0[xyOffset + zSize*iPosition].depth = dz;
+        } else if (iPosition < BUFFER_DEPTH*2) {
+            nodes1[xyOffset + zSize*(iPosition-BUFFER_DEPTH)].colorUPack = packUnorm4x8(color);
+            nodes1[xyOffset + zSize*(iPosition-BUFFER_DEPTH)].depth = dz;
+        } else if (iPosition < BUFFER_DEPTH*3) {
+            nodes2[xyOffset + zSize*(iPosition-BUFFER_DEPTH*2)].colorUPack = packUnorm4x8(color);
+            nodes2[xyOffset + zSize*(iPosition-BUFFER_DEPTH*2)].depth = dz;
+        } else if (iPosition < BUFFER_DEPTH*4) {
+            nodes3[xyOffset + zSize*(iPosition-BUFFER_DEPTH*3)].colorUPack = packUnorm4x8(color);
+            nodes3[xyOffset + zSize*(iPosition-BUFFER_DEPTH*3)].depth = dz;
+        }
+
+    }
 
     blankOut = vec4(0.0, 0.0, 0.0, 0.0);
 

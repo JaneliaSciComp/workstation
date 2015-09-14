@@ -14,6 +14,15 @@ public abstract class GL4SimpleActor {
 
     protected static GLU glu = new GLU();
     private static Logger logger = LoggerFactory.getLogger(GL4SimpleActor.class);
+    
+    private static int mvpPrecomputeGroupCount=0;
+
+    public static synchronized int getNextMvpPrecomputeGroup() {
+        mvpPrecomputeGroupCount++;
+        return mvpPrecomputeGroupCount;
+    }
+
+    int mvpPrecomputeGroup=0;
 
     protected GLDisplayUpdateCallback updateCallback;
 
@@ -66,5 +75,13 @@ public abstract class GL4SimpleActor {
 
     public void setIsVisible(boolean isVisible) {
         this.isVisible = isVisible;
+    }
+
+    public int getMvpPrecomputeGroup() {
+        return mvpPrecomputeGroup;
+    }
+
+    public void setMvpPrecomputeGroup(int mvpPrecomputeGroup) {
+        this.mvpPrecomputeGroup = mvpPrecomputeGroup;
     }
 }

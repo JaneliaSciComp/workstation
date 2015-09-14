@@ -6,6 +6,7 @@ import org.janelia.it.workstation.gui.camera.BasicCamera3d;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.ActorModel;
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.ActorSharedResource;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.DatasetModel;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
@@ -46,6 +47,8 @@ public class VoxelViewerModel {
     ActorModel actorModel=new ActorModel();
     GLModel glModel=new GLModel();
 
+    Map<String, ActorSharedResource> actorSharedResourceMap=new HashMap<>();
+
     public static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 2.0;
 
     public VoxelViewerModel(VoxelViewerProperties properties) {
@@ -58,6 +61,7 @@ public class VoxelViewerModel {
 
     public void setupModelEvents() {
         EventManager.addListener(datasetModel, renderableModel);
+        EventManager.addListener(datasetModel, actorModel);
         EventManager.addListener(renderableModel, actorModel);
         EventManager.addListener(actorModel, glModel);
     }
