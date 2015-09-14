@@ -12,12 +12,14 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteReq
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 
@@ -181,6 +183,7 @@ public class FilteredAnnotationList extends JPanel {
                     InterestingAnnotation maybeInteresting =
                         new InterestingAnnotation(ann.getId(),
                             neuron.getId(),
+                            ann.getCreationDate(),
                             getAnnotationGeometry(ann),
                             note);
                     if (filter.isInteresting(maybeInteresting)) {
@@ -258,8 +261,8 @@ public class FilteredAnnotationList extends JPanel {
                     int realRowIndex = convertRowIndexToModel(rowIndex);
 
                     if (realColumnIndex == 0) {
-                        // show full ID
-                        tip = model.getAnnotationAtRow(realRowIndex).getAnnotationID().toString();
+                        // show creation date
+                        tip = model.getAnnotationAtRow(realRowIndex).getCreationDate().toString();
                     } else if (realColumnIndex == 1) {
                         // no tip here
                         tip = null;
@@ -279,11 +282,13 @@ public class FilteredAnnotationList extends JPanel {
         // we respond to clicks, but we're not really selecting rows
         filteredTable.setRowSelectionAllowed(false);
 
+        // custom renderer for date column:
+        filteredTable.getColumnModel().getColumn(0).setCellRenderer(new ShortDateRenderer());
 
         // inelegant, but hand-tune column widths (finally seems to work):
-        filteredTable.getColumnModel().getColumn(0).setPreferredWidth(60);
+        filteredTable.getColumnModel().getColumn(0).setPreferredWidth(70);
         filteredTable.getColumnModel().getColumn(1).setPreferredWidth(50);
-        filteredTable.getColumnModel().getColumn(2).setPreferredWidth(115);
+        filteredTable.getColumnModel().getColumn(2).setPreferredWidth(105);
         filteredTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
         JScrollPane scrollPane = new JScrollPane(filteredTable);
@@ -296,7 +301,6 @@ public class FilteredAnnotationList extends JPanel {
         c2.anchor = GridBagConstraints.PAGE_START;
         c2.fill = GridBagConstraints.BOTH;
         add(scrollPane, c2);
-
 
 
         // combo box to change filters
@@ -529,6 +533,51 @@ public class FilteredAnnotationList extends JPanel {
 }
 
 /**
+ * this renderer displays a short form of the time stamp:
+ *
+ *   hour:minute if less than a day old
+ *   day/month if less than a year old
+ *   year if more than a year old
+ *
+ */
+class ShortDateRenderer extends DefaultTableCellRenderer {
+    private final static String TIME_DATE_FORMAT = "HH:mm";
+    private final static String DAY_DATE_FORMAT = "MM/dd";
+    private final static String YEAR_DATE_FORMAT = "yyyy";
+
+    public ShortDateRenderer() { super(); }
+
+    public void setValue(Object value) {
+        if (value != null) {
+            Calendar oneDayAgo = Calendar.getInstance();
+            oneDayAgo.setTime(new Date());
+            oneDayAgo.add(Calendar.DATE, -1);
+
+            Calendar oneYearAgo = Calendar.getInstance();
+            oneYearAgo.setTime(new Date());
+            oneYearAgo.add(Calendar.YEAR, -1);
+
+            Calendar creation = Calendar.getInstance();
+            creation.setTime((Date) value);
+
+            String dateFormat;
+            if (oneDayAgo.compareTo(creation) < 0) {
+                // hour:minute if recent (24h clock)
+                dateFormat = TIME_DATE_FORMAT;
+            } else if (oneYearAgo.compareTo(creation) < 0) {
+                // month/day if older than 1 day
+                dateFormat = DAY_DATE_FORMAT;
+            } else {
+                // if older than 1 year, just year
+                dateFormat = YEAR_DATE_FORMAT;
+            }
+            setText(new SimpleDateFormat(dateFormat).format((Date) value));
+        }
+    }
+}
+
+
+/**
  * a system of configurable filters that will be generated
  * from the UI that will determine whether an annotation
  * is interesting or not
@@ -657,3 +706,4 @@ class NeuronFilter implements AnnotationFilter {
         return ann.getNeuronID().equals(neuronID);
     }
 }
+
