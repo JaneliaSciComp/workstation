@@ -13,9 +13,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
-import net.sf.ehcache.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,26 +29,28 @@ public class CachePopulator {
     private static final String MEM_ALLOC_THREAD_PREFIX = "CacheByteAllocThread";
     private final ExecutorService fileLoadExecutor;
     private final ExecutorService memAllocExecutor;
+    private final CacheAcceptor acceptor;
 //    private GeometricNeighborhood neighborhood;
     private int standardFileSize = 0;
     private Logger log = LoggerFactory.getLogger(CachePopulator.class);
         
-    public CachePopulator() {
+    public CachePopulator(CacheAcceptor acceptor) {
         this.fileLoadExecutor = Executors.newFixedThreadPool(FILE_READ_THREAD_COUNT, new CustomNamedThreadFactory(FILE_READ_THREAD_PREFIX));
         this.memAllocExecutor = Executors.newFixedThreadPool(MEM_ALLOC_THREAD_COUNT, new CustomNamedThreadFactory(MEM_ALLOC_THREAD_PREFIX));
+        this.acceptor = acceptor;
     }
     
     public void setStandadFileSize(int size) {
         standardFileSize = size;
     }
     
-    public Collection<String> retargetCache(GeometricNeighborhood neighborhood, final Cache cache) {
+    public Collection<String> retargetCache(GeometricNeighborhood neighborhood) {
         final Set<String> populatedList = new HashSet<>();
         // Now, repopulate the running queue with the new neighborhood.
         for (final File file : neighborhood.getFiles()) {
             Runnable r = new Runnable() {
                 public void run() {
-                    allocateAndLaunch(file, cache, populatedList);
+                    allocateAndLaunch(file, populatedList);
                 }
             };
             memAllocExecutor.submit(r);
@@ -82,28 +81,27 @@ public class CachePopulator {
         memAllocExecutor.shutdown();
     }
 
-    private void allocateAndLaunch(File file, Cache cache, Set<String> populatedList) {
+    private void allocateAndLaunch(File file, Set<String> populatedList) {
         final String key = file.getAbsolutePath();
-        if (cache.get(key) == null && (!populatedList.contains(key))) {
+        if (! acceptor.hasKey(key) && (!populatedList.contains(key))) {
             if (standardFileSize > 0) {
                 byte[] bytes = new byte[standardFileSize];
                 Future<byte[]> future = cache(file, bytes);
-                CacheFacade.CachableWrapper wrapper = new CacheFacade.CachableWrapper(future, bytes);
+                CachableWrapper wrapper = new CachableWrapper(future, bytes);
                 
-                populateElement(file.getAbsolutePath(), wrapper, cache);
+                populateElement(file.getAbsolutePath(), wrapper);
                 populatedList.add(key);
             } else {
                 throw new IllegalArgumentException("Pre-sized byte array required.");
             }
         } else {
-            log.debug("In cache as {}.  Not populating {}.", cache.get(key).getObjectValue().getClass().getSimpleName(), trimToOctreePath(key));
+            log.debug("In cache {}.", trimToOctreePath(key));
         }
     }
-
-    private void populateElement(String id, CacheFacade.CachableWrapper wrapper, Cache cache) throws IllegalStateException, CacheException, IllegalArgumentException {
-        final Element element = new Element(id, wrapper);
-        cache.put(element);
-    }        
+    
+    private void populateElement(String id, CachableWrapper wrapper) {
+        acceptor.put(id, wrapper);        
+    }
     
     String trimToOctreePath(String id) {
         if (id.endsWith(".tif")) {
@@ -121,6 +119,11 @@ public class CachePopulator {
             return id.substring(startPoint);
         }
         return id;
+    }
+    
+    public static interface CacheAcceptor {
+        void put(String id, CachableWrapper wrapper);
+        boolean hasKey(String id);
     }
     
 }

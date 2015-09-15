@@ -8,18 +8,18 @@ package org.janelia.it.workstation.cache.large_volume;
 import com.sun.media.jai.codec.ByteArraySeekableStream;
 import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
-import java.io.Serializable;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
 
 import org.slf4j.Logger;
@@ -34,8 +34,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.compression.Compressed
  * 
  * @author fosterl
  */
-public class CacheFacade {
-    public static final String CACHE_NAME = "CompressedTiffCache";
+public class MapCacheFacade {
     public static final int GIGA = 1024*1024*1024;
     // TODO use more dynamic means of determining how many of the slabs
     // to put into memory at one time.
@@ -44,17 +43,17 @@ public class CacheFacade {
     private GeometricNeighborhood neighborhood;
     private CachePopulator cachePopulator;
     //private CacheAccess jcs;
-    private CacheManager manager;
     private final CompressedFileResolver resolver = new CompressedFileResolver();
     private CompressedFileResolver.CompressedFileNamer compressNamer;
     private Double cameraZoom;
     private double[] cameraFocus;
     private double pixelsPerSceneUnit;
-    private String cacheName;
     private int totalGets;
     private int noFutureGets;
     
-    private Logger log = LoggerFactory.getLogger(CacheFacade.class);
+    private Map<String,CachableWrapper> cacheMap = new HashMap<>();
+    
+    private Logger log = LoggerFactory.getLogger(MapCacheFacade.class);
     
     /**
      * Possibly temporary: using this class to wrap use of BTOLA, and hide
@@ -71,41 +70,6 @@ public class CacheFacade {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-    }
-    
-    /**
-     * This is the guardian around the cache implementation.  Note that
-     * neither Future nor SeekableStream are serializable, so any notion of
-     * using a non-memory cache is impossible without some redesign.
-     * 
-     * @param region unique key for cache namespace.
-     * @throws Exception from called methods.
-     */
-    public CacheFacade(String region, int standardFileSize) throws Exception {
-        // Establishing in-memory cache, declaratively.
-        log.info("Creating a cache {}.", region);
-        cacheName = region;
-        URL url = getClass().getResource("/ehcacheCompressedTiff.xml");
-        manager = CacheManager.create(url);
-        CachePopulator.CacheAcceptor acceptor = new CachePopulator.CacheAcceptor() {            
-            @Override
-            public void put(String id, CachableWrapper wrapper) {
-                final Element element = new Element(id, wrapper);
-                Cache cache = manager.getCache(cacheName);
-                cache.put(element);
-            }
-            @Override
-            public boolean hasKey(String id) {
-                Cache cache = manager.getCache(cacheName);
-                return cache.get(id) != null;
-            }
-        };
-        cachePopulator = new CachePopulator(acceptor);
-        cachePopulator.setStandadFileSize(standardFileSize);
-    }
-
-    public CacheFacade(int standardFileSize) throws Exception {
-        this(CACHE_NAME, standardFileSize);
     }
     
     public void close() {
@@ -145,10 +109,9 @@ public class CacheFacade {
             compressNamer = resolver.getNamer(file);
         }
         File compressedFile = compressNamer.getCompressedName(file);
-        Cache cache = manager.getCache(cacheName);
         final String id = compressedFile.getAbsolutePath();
         if (isInCache(id)) {
-            CachableWrapper wrapper = (CachableWrapper) cache.get(id).getObjectValue();            
+            CachableWrapper wrapper = (CachableWrapper) cacheMap.get(id);            
             Future wrappedObject = wrapper.getWrappedObject();
             rtnVal = wrappedObject == null  ||  wrappedObject.isDone();
         }
@@ -222,18 +185,14 @@ public class CacheFacade {
      * For testing purposes.
      */
     public void dumpKeys() {
-        Cache cache = manager.getCache(cacheName);
-        List keys = cache.getKeys();
-        System.out.println("All Keys:=-----------------------------------: " + keys.size());
-        for (Object key : keys) {
+        System.out.println("All Keys:=-----------------------------------: " + cacheMap.size());
+        for (String key: cacheMap.keySet()) {
             System.out.println("KEY:" + key);
         }
     }
 
     private boolean isInCache(String id) {
-        Cache cache = manager.getCache(cacheName);
-        Element cachedElement = cache.get(id);
-        return (cachedElement != null);
+        return cacheMap.containsKey(id);
     }
 
     private void updateRegion() {
@@ -257,8 +216,7 @@ public class CacheFacade {
         totalGets++;
         SeekableStream rtnVal = null;
         try {
-            Cache cache = manager.getCache(cacheName);
-            CachableWrapper wrapper = (CachableWrapper) cache.get(id).getObjectValue();
+            CachableWrapper wrapper = (CachableWrapper) cacheMap.get(id);
             rtnVal = new ByteArraySeekableStream(wrapper.getBytes());
             log.info("Returning {}: found in cache.", keyOnly);
         } catch (InterruptedException | ExecutionException ie) {
@@ -299,7 +257,6 @@ public class CacheFacade {
     private void populateRegion(GeometricNeighborhood neighborhood) {
         Date start = new Date();
         log.info("Retargeting cache at zoom {}.", cameraZoom);
-        Cache cache = manager.getCache(cacheName);
         Collection<String> futureArrays = cachePopulator.retargetCache(neighborhood);
         if (log.isDebugEnabled()) {
             for (String id : futureArrays) {
@@ -308,12 +265,6 @@ public class CacheFacade {
         }
         Date end = new Date();
         log.info("In populateRegion for: {}ms.", end.getTime() - start.getTime());
-    }
-
-    public static class NonNeighborhoodCachableWrapper extends CachableWrapper {
-        public NonNeighborhoodCachableWrapper(Future<byte[]> object, byte[] bytes) {
-            super(object, bytes);
-        }
     }
 
 }
