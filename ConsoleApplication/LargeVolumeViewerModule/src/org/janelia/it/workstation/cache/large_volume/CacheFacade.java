@@ -15,7 +15,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import javax.swing.Timer;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -231,7 +230,10 @@ public class CacheFacade {
             Future wrappedObject = wrapper.getWrappedObject();
             rtnVal = wrappedObject == null  ||  wrappedObject.isDone();
         }
-        
+        if (! rtnVal) {
+            noFutureGets ++;
+            totalGets ++;
+        }
         return rtnVal;
     }
 
