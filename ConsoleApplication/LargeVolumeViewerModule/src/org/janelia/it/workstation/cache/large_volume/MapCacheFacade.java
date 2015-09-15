@@ -72,6 +72,27 @@ public class MapCacheFacade {
         }
     }
     
+    public MapCacheFacade(int standardFileSize) {
+        CachePopulator.CacheToolkit acceptor = new CachePopulator.CacheToolkit() {
+            @Override
+            public void put(String id, CachableWrapper wrapper) {
+                cacheMap.put(id, wrapper);
+            }
+
+            @Override
+            public boolean hasKey(String id) {
+                return cacheMap.containsKey(id);
+            }
+            
+            @Override
+            public byte[] getStorage(String id) {
+                return null;
+            }
+        };
+        cachePopulator = new CachePopulator(acceptor);
+        cachePopulator.setStandadFileSize(standardFileSize);
+    }
+    
     public void close() {
         cachePopulator.close();
     }

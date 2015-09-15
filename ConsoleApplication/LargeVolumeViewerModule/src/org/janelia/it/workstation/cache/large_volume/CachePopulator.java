@@ -29,12 +29,11 @@ public class CachePopulator {
     private static final String MEM_ALLOC_THREAD_PREFIX = "CacheByteAllocThread";
     private final ExecutorService fileLoadExecutor;
     private final ExecutorService memAllocExecutor;
-    private final CacheAcceptor acceptor;
-//    private GeometricNeighborhood neighborhood;
+    private final CacheToolkit acceptor;
     private int standardFileSize = 0;
     private Logger log = LoggerFactory.getLogger(CachePopulator.class);
         
-    public CachePopulator(CacheAcceptor acceptor) {
+    public CachePopulator(CacheToolkit acceptor) {
         this.fileLoadExecutor = Executors.newFixedThreadPool(FILE_READ_THREAD_COUNT, new CustomNamedThreadFactory(FILE_READ_THREAD_PREFIX));
         this.memAllocExecutor = Executors.newFixedThreadPool(MEM_ALLOC_THREAD_COUNT, new CustomNamedThreadFactory(MEM_ALLOC_THREAD_PREFIX));
         this.acceptor = acceptor;
@@ -85,8 +84,8 @@ public class CachePopulator {
         final String key = file.getAbsolutePath();
         if (! acceptor.hasKey(key) && (!populatedList.contains(key))) {
             if (standardFileSize > 0) {
-                byte[] bytes = new byte[standardFileSize];
-                Future<byte[]> future = cache(file, bytes);
+                byte[] bytes = acceptor.getStorage(key);
+                Future<byte[]> future = cache(file, bytes);                
                 CachableWrapper wrapper = new CachableWrapper(future, bytes);
                 
                 populateElement(file.getAbsolutePath(), wrapper);
@@ -121,9 +120,10 @@ public class CachePopulator {
         return id;
     }
     
-    public static interface CacheAcceptor {
+    public static interface CacheToolkit {
         void put(String id, CachableWrapper wrapper);
         boolean hasKey(String id);
+        byte[] getStorage(String id);
     }
     
 }

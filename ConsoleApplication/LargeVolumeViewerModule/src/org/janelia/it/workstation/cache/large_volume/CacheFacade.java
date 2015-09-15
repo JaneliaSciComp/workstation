@@ -81,13 +81,13 @@ public class CacheFacade {
      * @param region unique key for cache namespace.
      * @throws Exception from called methods.
      */
-    public CacheFacade(String region, int standardFileSize) throws Exception {
+    public CacheFacade(String region, final int standardFileSize) throws Exception {
         // Establishing in-memory cache, declaratively.
         log.info("Creating a cache {}.", region);
         cacheName = region;
         URL url = getClass().getResource("/ehcacheCompressedTiff.xml");
         manager = CacheManager.create(url);
-        CachePopulator.CacheAcceptor acceptor = new CachePopulator.CacheAcceptor() {            
+        CachePopulator.CacheToolkit toolkit = new CachePopulator.CacheToolkit() {            
             @Override
             public void put(String id, CachableWrapper wrapper) {
                 final Element element = new Element(id, wrapper);
@@ -99,8 +99,12 @@ public class CacheFacade {
                 Cache cache = manager.getCache(cacheName);
                 return cache.get(id) != null;
             }
+            @Override
+            public byte[] getStorage(String id) {
+                return new byte[standardFileSize];
+            }
         };
-        cachePopulator = new CachePopulator(acceptor);
+        cachePopulator = new CachePopulator(toolkit);
         cachePopulator.setStandadFileSize(standardFileSize);
     }
 
