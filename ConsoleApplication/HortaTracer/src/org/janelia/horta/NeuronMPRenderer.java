@@ -36,6 +36,7 @@ import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.gltools.BasicScreenBlitActor;
 import org.janelia.gltools.ColorBackgroundActor;
 import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.GL3Actor;
@@ -152,6 +153,13 @@ extends MultipassRenderer
 
         add(hdrPass);
         
+        // 2.5 blit opaque geometry to screen
+        add(new RenderPass(null) {
+            { // constructor
+                addActor(new BasicScreenBlitActor(opaqueRenderPass.getColorTarget()));
+            }
+        });
+        
         // 3) Colormap volume onto screen
         add(new RenderPass(null) { // render to screen
             private GL3Actor lightingActor = new LightingBlitActor(hdrTarget); // for isosurface
@@ -163,6 +171,13 @@ extends MultipassRenderer
                 // lightingActor.setVisible(false);
                 // colorMapActor.setVisible(true);
                 // addActor(new BasicScreenBlitActor(hdrTarget));
+            }
+            
+            @Override
+            protected void renderScene(GL3 gl, AbstractCamera camera) {
+                gl.glEnable(GL3.GL_BLEND);
+                gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
+                super.renderScene(gl, camera);
             }
         });
         

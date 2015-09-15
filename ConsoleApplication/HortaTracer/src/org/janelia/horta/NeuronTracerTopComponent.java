@@ -379,28 +379,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         renderers.clear();
         renderers.add(neuronMPRenderer0);
                 
-        // 2.5) Other neurite model Aug 2015 CMB
-        sceneWindow.getRenderer().addActor(new BasicGL3Actor(null) {
-            @Override
-            public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
-                super.display(gl, camera, parentModelViewMatrix);
-                gl.glEnable(GL3.GL_DEPTH_TEST);
-                // gl.glDepthFunc(GL3.GL_LESS);
-                // gl.glDepthMask(true);
-                gl.glClear(GL3.GL_DEPTH_BUFFER_BIT);
-                for (GL3Actor actor : currentNeuronActors.values()) {
-                    actor.display(gl, camera, parentModelViewMatrix);
-                }
-            }
-            @Override
-            public void dispose(GL3 gl) {
-                for (GL3Actor actor : currentNeuronActors.values()) {
-                    actor.dispose(gl);
-                }                
-                super.dispose(gl);
-            }
-        });
-        
         // 3) Neurite model
         for (NeuriteActor tracingActor : tracingInteractor.createActors()) {
             sceneWindow.getRenderer().addActor(tracingActor);

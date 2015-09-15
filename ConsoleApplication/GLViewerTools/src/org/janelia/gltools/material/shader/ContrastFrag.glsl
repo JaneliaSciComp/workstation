@@ -64,7 +64,8 @@ void main() {
     intensity *= 1.0/(opacityFunction.y - opacityFunction.x);
     intensity = pow(intensity, opacityFunction.z);
 
-    float opacity = intensity * opacityIn;
+    // float opacity = intensity * opacityIn;
+    float opacity = opacityIn;
 
     // HSL approach
     if (false) {

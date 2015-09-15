@@ -36,6 +36,7 @@ import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
+import org.janelia.gltools.texture.Texture2d;
 
 /**
  *
@@ -106,6 +107,11 @@ public class OpaqueRenderPass extends RenderPass
             rt.setDirty(false);
         }
         gl.glDrawBuffers(1, targetAttachments, 0);
+    }
+
+    public Texture2d getColorTarget()
+    {
+        return normalMaterialTarget;
     }
 
 }
