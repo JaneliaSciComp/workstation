@@ -57,47 +57,30 @@ public class ActorModel implements VoxelViewerEventListener {
             }
         } else if (event instanceof SharedResourceNeededEvent) {
             try {
-                logger.info("Check 9.0");
                 SharedResourceNeededEvent sharedResourceNeededEvent = (SharedResourceNeededEvent) event;
-                logger.info("Check 9.1");
                 ActorSharedResource sharedResource = sharedResourceNeededEvent.getActorSharedResource();
-                logger.info("Check 9.2");
-                if (sharedResource == null) {
-                    logger.info("Check 9.2 - sharedResource is null!");
-                } else {
-                    logger.info("Check 9.2 - sharedResource is not null");
-                }
                 attachedSharedResources.add(sharedResource);
-                logger.info("Check 9.3");
+                EventManager.setDisallowViewerRefresh(true);
                 for (Actor actor : sharedResource.getSharedActorList()) {
-                    logger.info("Check 9.4");
-                    logger.info("Actor name=" + actor.getName());
                     EventManager.sendEvent(this, new ActorAddedEvent(actor));
-                    logger.info("Check 9.5");
                 }
+                EventManager.setDisallowViewerRefresh(false);
             } catch (Exception ex) {
                 ex.printStackTrace();
                 logger.error(ex.toString());
             }
         }
         else if (event instanceof SharedResourceNotNeededEvent) {
-            logger.info("Check 10.0");
             try {
                 SharedResourceNotNeededEvent notNeededEvent = (SharedResourceNotNeededEvent) event;
                 String notNeededName = notNeededEvent.getResourceName();
                 Set<ActorSharedResource> removeSet=new HashSet<>();
                 for (ActorSharedResource sharedResource : attachedSharedResources) {
                     if (sharedResource.getName().equals(notNeededName)) {
-                        logger.info("Check 10.1");
                         for (Actor actor : sharedResource.getSharedActorList()) {
-                            logger.info("Check 10.2");
-                            logger.info("Check 10.3 - actor name=" + actor.getName());
                             EventManager.sendEvent(this, new ActorRemovedEvent(actor));
-                            logger.info("Check 10.4");
                         }
-                        logger.info("Check 10.5");
                         removeSet.add(sharedResource);
-                        logger.info("Check 10.6");
                     }
                 }
                 for (ActorSharedResource sharedResource : removeSet) {
@@ -107,7 +90,6 @@ public class ActorModel implements VoxelViewerEventListener {
                 ex.printStackTrace();
                 logger.error(ex.toString());
             }
-            logger.info("Check 10.7");
         }
     }
 
