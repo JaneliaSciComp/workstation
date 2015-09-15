@@ -99,12 +99,6 @@ public class CacheFacade {
         cachePopulator.close();
     }
 
-    public boolean isInCache(String id) {
-        Cache cache = manager.getCache(cacheName);
-        Element cachedElement = cache.get(id);
-        return (cachedElement != null);
-    }
-
     //public void reportCacheOccupancy() {
     //    Cache cache = manager.getCache(cacheName);
     //    List keys = cache.getKeys();
@@ -221,6 +215,12 @@ public class CacheFacade {
         for (Object key : keys) {
             System.out.println("KEY:" + key);
         }
+    }
+
+    private boolean isInCache(String id) {
+        Cache cache = manager.getCache(cacheName);
+        Element cachedElement = cache.get(id);
+        return (cachedElement != null);
     }
 
     private void updateRegion() {
