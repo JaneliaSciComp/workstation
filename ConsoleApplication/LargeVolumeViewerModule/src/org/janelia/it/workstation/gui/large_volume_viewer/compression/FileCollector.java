@@ -10,6 +10,7 @@ import java.io.FileInputStream;
  * @author fosterl
  */
 public class FileCollector {
+    private static final int READ_CHUNK_SIZE = 10240;
     private byte[] data;
     private int readCount = 0;
     
@@ -44,12 +45,33 @@ public class FileCollector {
      */
     public void collectFile(File infile, byte[] b) throws Exception {
         final int fileLen = (int) infile.length();
-        final FileInputStream fis = new FileInputStream(infile);
-        readCount = fis.read(b);
-        fis.close();
-        if (readCount != fileLen) {
-            throw new Exception("Failed to fully read infile " + infile);
+        try (FileInputStream fis = new FileInputStream(infile)) {
+            readCount = 0;
+            int readSize = READ_CHUNK_SIZE;
+            int amountRead = 0;
+            // Reading in chunks.
+            boolean breakTime = false;
+            final int iterCount = new Double(Math.ceil((double)fileLen / (double)readSize)).intValue();
+            for (int i = 0; i < iterCount; i++) {
+                if (readCount + readSize > fileLen) {
+                    readSize = fileLen - readCount;
+                    breakTime = true;
+                }
+                amountRead = fis.read(b, readCount, readSize);
+                if (amountRead > -1) {
+                    readCount += amountRead;
+                }
+                if (breakTime  ||  amountRead == -1) {
+                    break;
+                }
+            }
+            if (readCount != fileLen) {
+                throw new Exception("Failed to fully read infile " + infile);
+            }
+            data = b;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw ex;
         }
-        data = b;
     }
 }

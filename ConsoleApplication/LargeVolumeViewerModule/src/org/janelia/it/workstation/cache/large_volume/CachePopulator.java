@@ -8,7 +8,6 @@ package org.janelia.it.workstation.cache.large_volume;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import java.io.File;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -27,8 +26,8 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class CachePopulator {
-    private static final int FILE_READ_THREAD_COUNT = 4;
-    private static final int MEM_ALLOC_THREAD_COUNT = 4;
+    private static final int FILE_READ_THREAD_COUNT = 1;
+    private static final int MEM_ALLOC_THREAD_COUNT = 1;
     private static final String FILE_READ_THREAD_PREFIX = "CacheFileReaderThread";
     private static final String MEM_ALLOC_THREAD_PREFIX = "CacheByteAllocThread";
     private final ExecutorService fileLoadExecutor;
@@ -36,7 +35,7 @@ public class CachePopulator {
 //    private GeometricNeighborhood neighborhood;
     private int standardFileSize = 0;
     private Logger log = LoggerFactory.getLogger(CachePopulator.class);
-    
+        
     public CachePopulator() {
         this.fileLoadExecutor = Executors.newFixedThreadPool(FILE_READ_THREAD_COUNT, new CustomNamedThreadFactory(FILE_READ_THREAD_PREFIX));
         this.memAllocExecutor = Executors.newFixedThreadPool(MEM_ALLOC_THREAD_COUNT, new CustomNamedThreadFactory(MEM_ALLOC_THREAD_PREFIX));
@@ -76,16 +75,6 @@ public class CachePopulator {
     public Future<byte[]> cache(File file, byte[] storage) {
         log.info("Making a cache populator worker for {}.", trimToOctreePath(file.getAbsolutePath()));
         return fileLoadExecutor.submit(new CachePopulatorWorker(file, storage));
-    }
-
-    /**
-     * Push one file to cache.
-     *
-     * @param file which file.
-     * @return 'future' version.
-     */
-    public Future<byte[]> cache(File file) {
-        return fileLoadExecutor.submit(new CachePopulatorWorker(file));
     }
 
     public void close() {

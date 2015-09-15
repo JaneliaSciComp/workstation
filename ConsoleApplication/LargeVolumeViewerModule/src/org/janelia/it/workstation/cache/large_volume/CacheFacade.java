@@ -50,7 +50,6 @@ public class CacheFacade {
     private Double cameraZoom;
     private double[] cameraFocus;
     private double pixelsPerSceneUnit;
-    private int standardFileSize;
     private String cacheName;
     private int totalGets;
     private int noFutureGets;
@@ -87,7 +86,6 @@ public class CacheFacade {
         log.info("Creating a cache {}.", region);
         cacheName = region;
         URL url = getClass().getResource("/ehcacheCompressedTiff.xml");
-        this.standardFileSize = standardFileSize;
         manager = CacheManager.create(url);
         cachePopulator = new CachePopulator();
         cachePopulator.setStandadFileSize(standardFileSize);
@@ -101,101 +99,18 @@ public class CacheFacade {
         cachePopulator.close();
     }
 
-    /**
-     * Getters with a future. Makes the caller await completion of the
-     * task that is supplying the compressed byte array.
-     * 
-     * @param id what to dig up.
-     * @return result: a compressed stream of bytes.
-     */
-	public Future<byte[]> getFuture(String id) {
-        Future<byte[]> rtnVal = null;
-        Cache cache = manager.getCache(cacheName);
-        Element cachedElement = cache.get(id);
-        if (cachedElement != null) {
-            CachableWrapper wrapper = (CachableWrapper) cachedElement.getValue();
-            if (wrapper != null) {
-                rtnVal = wrapper.getWrappedObject();
-            }
-        }
-		return rtnVal;
-	}
-    
     public boolean isInCache(String id) {
         Cache cache = manager.getCache(cacheName);
         Element cachedElement = cache.get(id);
         return (cachedElement != null);
     }
 
-    /**
-     * Blocking getters. Let the cache manager worry about the threading.
-     * Most likely ID is an absolute path.  Also, packages a decompressed
-     * version of the cached data, into a seekable stream.
-     * 
-     * @see CacheManager#get(java.io.File) calls this.
-     * @param id what to dig up.
-     * @return result, after awaiting the future, or null on exception.
-     */
-    public SeekableStream get(final String id) {
-        String keyOnly = cachePopulator.trimToOctreePath(id);
-        log.info("Getting {}", keyOnly);
-        totalGets ++;
-        SeekableStream rtnVal = null;
-        try {
-            Future<byte[]> futureBytes = null;
-            Cache cache = manager.getCache(cacheName);
-            if (isInCache(id)) {
-                CachableWrapper wrapper = (CachableWrapper) cache.get(id).getObjectValue();
-                rtnVal = new ByteArraySeekableStream(wrapper.getBytes());
-                log.info("Returning {}: found in cache.", keyOnly);
-            }
-            else {
-                synchronized (this) {
-                    noFutureGets++;
-                    log.info("No Future found for {}. Pushing data into cache.  Thread: {}.", cachePopulator.trimToOctreePath(id), Thread.currentThread().getName());
-                    // Ensure we get this exact, required file.
-                    final byte[] bytes = new byte[standardFileSize];
-                    futureBytes = cachePopulator.cache(new File(id), bytes);
-                    final NonNeighborhoodCachableWrapper wrapper = new NonNeighborhoodCachableWrapper(futureBytes, bytes);
-                    log.debug("Adding {} to cache.", keyOnly);
-                    cache.put(new Element(id, wrapper));
-                    rtnVal = new ByteArraySeekableStream(wrapper.getBytes());
-                    log.debug("Returning {}: injected into cache.", keyOnly);
-                    //reportCacheOccupancy();
-                }
-            }
-
-        } catch (InterruptedException | ExecutionException ie) {
-            log.warn("Interrupted thread, while returning {}.", id);
-        } catch (Exception ex) {
-            log.error("Failure to resolve cached version of {}", id);
-            ex.printStackTrace();
-        }
-        if (rtnVal == null) {
-            log.warn("Ultimately returning a null value for {}.", id);
-        }
-        
-        if (totalGets % 50 == 0) {
-            log.info("No-future get ratio: {}/{} = {}.", noFutureGets, totalGets, ((double)noFutureGets/(double)totalGets));
-        }
-        return rtnVal;
-    }
-
-    public void dumpKeys() {
-        Cache cache = manager.getCache(cacheName);
-        List keys = cache.getKeys();
-        System.out.println("All Keys:=-----------------------------------: " + keys.size());
-        for (Object key: keys) {
-            System.out.println("KEY:" + key);
-        }
-    }
-    
-    public void reportCacheOccupancy() {
-        Cache cache = manager.getCache(cacheName);
-        List keys = cache.getKeys();
-        int requiredGb = (int)(((long)standardFileSize * (long)keys.size()) / (GIGA));
-        log.info("--- Cache has {} keys.  {}gb required.", keys.size(), requiredGb);
-    }
+    //public void reportCacheOccupancy() {
+    //    Cache cache = manager.getCache(cacheName);
+    //    List keys = cache.getKeys();
+    //    int requiredGb = (int)(((long)standardFileSize * (long)keys.size()) / (GIGA));
+    //    log.info("--- Cache has {} keys.  {}gb required.", keys.size(), requiredGb);
+    //}
 
     /**
      * This getter takes the name of the decompressed version of the input file.
@@ -296,10 +211,57 @@ public class CacheFacade {
         
     }
 
+    /**
+     * For testing purposes.
+     */
+    public void dumpKeys() {
+        Cache cache = manager.getCache(cacheName);
+        List keys = cache.getKeys();
+        System.out.println("All Keys:=-----------------------------------: " + keys.size());
+        for (Object key : keys) {
+            System.out.println("KEY:" + key);
+        }
+    }
+
     private void updateRegion() {
         if (calculateRegion()) {
             populateRegion();
         }
+    }
+
+    /**
+     * Blocking getters. Let the cache manager worry about the threading. Most
+     * likely ID is an absolute path. Also, packages a decompressed version of
+     * the cached data, into a seekable stream.
+     *
+     * @see CacheManager#get(java.io.File) calls this.
+     * @param id what to dig up.
+     * @return result, after awaiting the future, or null on exception.
+     */
+    private SeekableStream get(final String id) {
+        String keyOnly = cachePopulator.trimToOctreePath(id);
+        log.info("Getting {}", keyOnly);
+        totalGets++;
+        SeekableStream rtnVal = null;
+        try {
+            Cache cache = manager.getCache(cacheName);
+            CachableWrapper wrapper = (CachableWrapper) cache.get(id).getObjectValue();
+            rtnVal = new ByteArraySeekableStream(wrapper.getBytes());
+            log.info("Returning {}: found in cache.", keyOnly);
+        } catch (InterruptedException | ExecutionException ie) {
+            log.warn("Interrupted thread, while returning {}.", id);
+        } catch (Exception ex) {
+            log.error("Failure to resolve cached version of {}", id);
+            ex.printStackTrace();
+        }
+        if (rtnVal == null) {
+            log.warn("Ultimately returning a null value for {}.", id);
+        }
+
+        if (totalGets % 50 == 0) {
+            log.info("No-future get ratio: {}/{} = {}.", noFutureGets, totalGets, ((double) noFutureGets / (double) totalGets));
+        }
+        return rtnVal;
     }
 
     private boolean calculateRegion() {
@@ -331,10 +293,8 @@ public class CacheFacade {
                 log.debug("Populating {} to cache at zoom {}.", cachePopulator.trimToOctreePath(id), cameraZoom);
             }
         }
-        reportCacheOccupancy();
         Date end = new Date();
         log.info("In populateRegion for: {}ms.", end.getTime() - start.getTime());
-        //dumpKeys();
     }
 
     /**

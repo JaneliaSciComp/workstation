@@ -15,7 +15,7 @@
            memoryStoreEvictionPolicy="LRU"
            eternal="true"
            overflowToOffHeap="false"
-           maxBytesLocalHeap="20G"
+           maxBytesLocalHeap="16G"
     >
         <cacheEventListenerFactory class="org.janelia.it.workstation.cache.large_volume.listener.LargeVolumeCacheListenerFactory" properties="" listenFor="all"/>
         <!--transactionalMode="off"-->
