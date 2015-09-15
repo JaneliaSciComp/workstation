@@ -99,7 +99,8 @@ public class Framebuffer implements GL3Resource, GLEventListener {
             for (RenderTarget rt : renderTargets) {
                 rt.reshape(gl, width, height);
                 rt.bind(gl);
-                gl.glFramebufferTexture(readWrite, rt.getAttachment(), 
+                gl.glFramebufferTexture2D(readWrite, rt.getAttachment(),
+                        rt.getTextureTarget(),
                         rt.getHandle(), 0);
                 rt.unbind(gl);
             }
@@ -155,7 +156,8 @@ public class Framebuffer implements GL3Resource, GLEventListener {
             rt.init(gl);
             rt.bind(gl);
             rt.clear(gl);
-            gl.glFramebufferTexture(GL3.GL_FRAMEBUFFER, rt.getAttachment(), 
+            gl.glFramebufferTexture2D(GL3.GL_FRAMEBUFFER, rt.getAttachment(), 
+                    rt.getTextureTarget(),
                     rt.getHandle(), 0);
         }
         // TODO - parameterize draw attachments
@@ -213,7 +215,8 @@ public class Framebuffer implements GL3Resource, GLEventListener {
             rt.reshape(gl, w, h);
             rt.bind(gl);
             rt.clear(gl);
-            gl.glFramebufferTexture(GL3.GL_FRAMEBUFFER, rt.getAttachment(), 
+            gl.glFramebufferTexture2D(GL3.GL_FRAMEBUFFER, rt.getAttachment(), 
+                    rt.getTextureTarget(),
                     rt.getHandle(), 0);
             rt.unbind(gl);
         }
@@ -238,7 +241,7 @@ public class Framebuffer implements GL3Resource, GLEventListener {
                     num_samples,
                     internalFormat, 
                     width, height,
-                    true);
+                    false);
         }
 
     }

@@ -61,9 +61,8 @@ public class OpaqueRenderPass extends RenderPass
         super(new Framebuffer(drawable));
         
         // Create render targets
-        // TODO MSAA
         if (useMsaa) {
-            int num_samples = 4;
+            int num_samples = 8;
             normalMaterialTarget = framebuffer.addMsaaRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0, num_samples);
             depthTarget = framebuffer.addMsaaRenderTarget(GL3.GL_DEPTH_COMPONENT24, GL3.GL_DEPTH_ATTACHMENT, num_samples);
             pickTarget = framebuffer.addMsaaRenderTarget(GL3.GL_R16UI, GL3.GL_COLOR_ATTACHMENT1, num_samples);
@@ -110,8 +109,10 @@ public class OpaqueRenderPass extends RenderPass
     @Override
     protected void renderScene(GL3 gl, AbstractCamera camera)
     {
-        if (useMsaa)
+        if (useMsaa) {
             gl.glEnable(GL3.GL_MULTISAMPLE);
+            gl.glEnable(GL3.GL_BLEND);
+        }
         gl.glEnable(GL3.GL_DEPTH_TEST);
         // 
         gl.glDrawBuffers(targetAttachments.length, targetAttachments, 0);
@@ -135,7 +136,10 @@ public class OpaqueRenderPass extends RenderPass
         
         if (useMsaa) {
             blittedFrameBuffer.bind(gl, GL3.GL_DRAW_FRAMEBUFFER);
+            // gl.glBindFramebuffer(GL3.GL_DRAW_FRAMEBUFFER, 0);   // Make sure no FBO is set as the draw framebuffer
+            // blittedFrameBuffer.bind(gl, GL3.GL_DRAW_FRAMEBUFFER);
             framebuffer.bind(gl, GL3.GL_READ_FRAMEBUFFER);
+            gl.glReadBuffer(GL3.GL_COLOR_ATTACHMENT0);
             int width = framebuffer.getWidth();
             int height = framebuffer.getHeight();
             gl.glBlitFramebuffer(

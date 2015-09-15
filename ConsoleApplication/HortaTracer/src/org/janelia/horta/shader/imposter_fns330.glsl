@@ -40,7 +40,7 @@
  */
 
 // TODO - parameterize these lighting parameters
-const float specularCoefficient = 0.3; // range 0-1
+const float specularCoefficient = 0.1; // range 0-1
 const float diffuseCoefficient = 1.0 - specularCoefficient; // range 0-1
 const float metallicCoefficient = 0.5; // range 0-1
 const float roughnessCoefficient = 0.5; // range 0-1, currently unused TODO
