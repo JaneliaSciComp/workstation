@@ -149,6 +149,11 @@ implements GL3Resource
         actors.add(actor);
     }
     
+    public void removeActor(GL3Actor actor) {
+        if (actors.remove(actor))
+            obsoleteResources.add(actor);
+    }
+    
     public void clearActors() {
         // Save a list of old actors, so their resources can be reclaimed
         for (GL3Resource oldActor : actors) {

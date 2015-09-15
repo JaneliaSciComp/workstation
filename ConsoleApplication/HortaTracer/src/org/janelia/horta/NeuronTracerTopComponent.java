@@ -72,7 +72,6 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
 import javax.imageio.ImageIO;
-import javax.media.opengl.GL;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
@@ -109,10 +108,7 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
-import org.janelia.geometry3d.Object3d;
 import org.janelia.gltools.BasicGL3Actor;
-import org.janelia.horta.actors.NeuriteLineActor;
-import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.SwcActor;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.horta.modelapi.NeuronReconstruction;
@@ -127,9 +123,6 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.MouseUtils;
 import org.openide.awt.StatusDisplayer;
 import org.openide.util.Exceptions;
-import org.openide.util.Lookup;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.Utilities;
@@ -321,7 +314,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // 2 - remove obsolete neurons
                 for (NeuronReconstruction neuron : currentNeuronActors.keySet()) {
                     if (! latestNeurons.contains(neuron)) {
+                        GL3Actor actor = currentNeuronActors.get(neuron);
                         currentNeuronActors.remove(neuron);
+                        neuronMPRenderer.removeOpaqueActor(actor);
                     }
                 }
                 // 3 - add new neurons
@@ -331,6 +326,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         // na.setColor(Color.PINK);
                         na.setVisible(true);
                         currentNeuronActors.put(neuron, na);
+                        neuronMPRenderer.addOpaqueActor(na);
                     }
                 }
                 

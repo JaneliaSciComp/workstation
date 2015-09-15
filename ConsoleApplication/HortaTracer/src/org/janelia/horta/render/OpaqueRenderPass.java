@@ -30,11 +30,82 @@
 
 package org.janelia.horta.render;
 
+import javax.media.opengl.GL3;
+import javax.media.opengl.GLAutoDrawable;
+import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.gltools.Framebuffer;
+import org.janelia.gltools.RenderPass;
+import org.janelia.gltools.RenderTarget;
+
 /**
  *
  * @author Christopher Bruns
  */
-public class OpaqueRenderPass
+public class OpaqueRenderPass extends RenderPass
 {
+    private final RenderTarget normalMaterialTarget; // normal in RGB, material in A
+    private final RenderTarget depthTarget;
+    private final RenderTarget pickTarget;
+    private final int targetAttachments[];
+    // Clear masks for render targets
+    private final float[] clearColor4 = new float[] {0,0,0,0};
+    private final int[] clearColor4i = new int[] {0,0,0,0};
+    private final float[] depthOne = new float[] {1};
+
+    public OpaqueRenderPass(GLAutoDrawable drawable)
+    {
+        super(new Framebuffer(drawable));
+        
+        // Create render targets
+        normalMaterialTarget = framebuffer.addRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0);
+        depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, GL3.GL_DEPTH_ATTACHMENT);
+        pickTarget = framebuffer.addRenderTarget(GL3.GL_R16UI, GL3.GL_COLOR_ATTACHMENT1);
+
+        // Attach render targets to renderer
+        addRenderTarget(normalMaterialTarget);
+        addRenderTarget(pickTarget);
+        targetAttachments = new int[renderTargets.size()];
+        for (int rt = 0; rt < renderTargets.size(); ++rt) {
+            targetAttachments[rt] = renderTargets.get(rt).getAttachment();
+        }
+          
+    }
     
+    @Override
+    public void dispose(GL3 gl) {
+        super.dispose(gl);
+        framebuffer.dispose(gl);
+    }
+    
+    @Override
+    public void init(GL3 gl) {
+        framebuffer.init(gl);
+        super.init(gl);
+    }
+    
+    @Override
+    protected void renderScene(GL3 gl, AbstractCamera camera)
+    {
+        gl.glEnable(GL3.GL_DEPTH_TEST);
+        // 
+        gl.glDrawBuffers(targetAttachments.length, targetAttachments, 0);
+
+        gl.glClearBufferfv(GL3.GL_COLOR, 0, clearColor4, 0);
+        gl.glClearBufferfv(GL3.GL_DEPTH, 0, depthOne, 0);
+        gl.glClearBufferuiv(GL3.GL_COLOR, 1, clearColor4i, 0); // pick buffer...
+
+        // Blend intensity channel, but not pick channel
+        gl.glDisablei(GL3.GL_BLEND, 0); // TODO
+        gl.glDisablei(GL3.GL_BLEND, 1); // TODO - how to write pick for BRIGHTER image?
+
+        super.renderScene(gl, camera);
+
+        for (RenderTarget rt : new RenderTarget[] {normalMaterialTarget, pickTarget}) 
+        {
+            rt.setHostBufferNeedsUpdate(true);
+            rt.setDirty(false);
+        }
+        gl.glDrawBuffers(1, targetAttachments, 0);
+    }
+
 }

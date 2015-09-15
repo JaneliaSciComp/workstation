@@ -44,6 +44,8 @@ import org.janelia.gltools.MultipassRenderer;
 import org.janelia.gltools.RemapColorActor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
+import org.janelia.horta.actors.SwcActor;
+import org.janelia.horta.render.OpaqueRenderPass;
 
 /**
  *
@@ -62,6 +64,7 @@ extends MultipassRenderer
     private final float[] depthOne = new float[] {1};
     private final GLAutoDrawable drawable;
     private final ColorBackgroundActor backgroundActor;
+    private final OpaqueRenderPass opaqueRenderPass;
     
     public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel) 
     {
@@ -79,6 +82,10 @@ extends MultipassRenderer
                         addActor(backgroundActor);
                     }
         });
+        
+        // CMB September 2015 begin work on opaque render pass
+        opaqueRenderPass = new OpaqueRenderPass(drawable);
+        add(opaqueRenderPass);
         
         // Create G-Buffer for deferred rendering
         final int hdrAttachment = GL3.GL_COLOR_ATTACHMENT0;
@@ -250,6 +257,16 @@ extends MultipassRenderer
     
     public void setBackgroundColor(Color topColor, Color bottomColor) {
         backgroundActor.setColor(topColor, bottomColor);
+    }
+
+    void removeOpaqueActor(GL3Actor actor)
+    {
+        opaqueRenderPass.removeActor(actor);
+    }
+
+    void addOpaqueActor(SwcActor na)
+    {
+        opaqueRenderPass.addActor(na);
     }
 
 }
