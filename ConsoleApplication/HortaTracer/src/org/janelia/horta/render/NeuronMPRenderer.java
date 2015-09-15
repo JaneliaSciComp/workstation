@@ -37,7 +37,6 @@ import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.BrightnessModel;
 import org.janelia.gltools.BasicScreenBlitActor;
-import org.janelia.gltools.ColorBackgroundActor;
 import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.LightingBlitActor;
@@ -46,8 +45,6 @@ import org.janelia.gltools.RemapColorActor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
 import org.janelia.horta.actors.SwcActor;
-import org.janelia.horta.render.BackgroundRenderPass;
-import org.janelia.horta.render.OpaqueRenderPass;
 
 /**
  *
@@ -73,20 +70,6 @@ extends MultipassRenderer
     {
         this.drawable = drawable;
         
-        /*
-        Color topColor = new Color(0.02f, 0.01f, 0.00f, 0.0f);
-        Color bottomColor = new Color(0.10f, 0.06f, 0.00f, 0.0f);
-        backgroundActor = new ColorBackgroundActor(
-                topColor, 
-                bottomColor);
-        
-        // 1) First pass: paint background
-        add(new RenderPass(null) { // render to screen
-                    {
-                        addActor(backgroundActor);
-                    }
-        });
-                */
         backgroundRenderPass = new BackgroundRenderPass();
         add(backgroundRenderPass);
         

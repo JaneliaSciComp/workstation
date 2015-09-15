@@ -52,15 +52,27 @@ public class OpaqueRenderPass extends RenderPass
     private final float[] clearColor4 = new float[] {0,0,0,0};
     private final int[] clearColor4i = new int[] {0,0,0,0};
     private final float[] depthOne = new float[] {1};
+    private RenderTarget blittedTarget = null;
+    private Framebuffer blittedFrameBuffer = null;
+    private boolean useMsaa = true;
 
     public OpaqueRenderPass(GLAutoDrawable drawable)
     {
         super(new Framebuffer(drawable));
         
         // Create render targets
-        normalMaterialTarget = framebuffer.addRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0);
-        depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, GL3.GL_DEPTH_ATTACHMENT);
-        pickTarget = framebuffer.addRenderTarget(GL3.GL_R16UI, GL3.GL_COLOR_ATTACHMENT1);
+        // TODO MSAA
+        if (useMsaa) {
+            int num_samples = 8;
+            normalMaterialTarget = framebuffer.addMsaaRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0, num_samples);
+            depthTarget = framebuffer.addMsaaRenderTarget(GL3.GL_DEPTH_COMPONENT24, GL3.GL_DEPTH_ATTACHMENT, num_samples);
+            pickTarget = framebuffer.addMsaaRenderTarget(GL3.GL_R16UI, GL3.GL_COLOR_ATTACHMENT1, num_samples);
+        } else {
+            normalMaterialTarget = framebuffer.addRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0);
+            depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, GL3.GL_DEPTH_ATTACHMENT);
+            pickTarget = framebuffer.addRenderTarget(GL3.GL_R16UI, GL3.GL_COLOR_ATTACHMENT1);
+        }
+        
 
         // Attach render targets to renderer
         addRenderTarget(normalMaterialTarget);
@@ -69,6 +81,11 @@ public class OpaqueRenderPass extends RenderPass
         for (int rt = 0; rt < renderTargets.size(); ++rt) {
             targetAttachments[rt] = renderTargets.get(rt).getAttachment();
         }
+        
+        if (useMsaa) {
+            blittedFrameBuffer = new Framebuffer(drawable);
+            blittedTarget = blittedFrameBuffer.addRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0);
+        }
           
     }
     
@@ -76,11 +93,17 @@ public class OpaqueRenderPass extends RenderPass
     public void dispose(GL3 gl) {
         super.dispose(gl);
         framebuffer.dispose(gl);
+        if (useMsaa)
+            blittedFrameBuffer.dispose(gl);
     }
     
     @Override
     public void init(GL3 gl) {
+        if (useMsaa)
+            gl.glEnable(GL3.GL_MULTISAMPLE);
         framebuffer.init(gl);
+        if (useMsaa)
+            blittedFrameBuffer.init(gl);
         super.init(gl);
     }
     
@@ -91,9 +114,9 @@ public class OpaqueRenderPass extends RenderPass
         // 
         gl.glDrawBuffers(targetAttachments.length, targetAttachments, 0);
 
-        gl.glClearBufferfv(GL3.GL_COLOR, 0, clearColor4, 0);
         gl.glClearBufferfv(GL3.GL_DEPTH, 0, depthOne, 0);
         gl.glClearBufferuiv(GL3.GL_COLOR, 1, clearColor4i, 0); // pick buffer...
+        gl.glClearBufferfv(GL3.GL_COLOR, 0, clearColor4, 0);
 
         // Blend intensity channel, but not pick channel
         gl.glDisablei(GL3.GL_BLEND, 0); // TODO
@@ -107,16 +130,32 @@ public class OpaqueRenderPass extends RenderPass
             rt.setDirty(false);
         }
         gl.glDrawBuffers(1, targetAttachments, 0);
+        
+        if (useMsaa) {
+            blittedFrameBuffer.bind(gl, GL3.GL_DRAW_FRAMEBUFFER);
+            framebuffer.bind(gl, GL3.GL_READ_FRAMEBUFFER);
+            int width = framebuffer.getWidth();
+            int height = framebuffer.getHeight();
+            gl.glBlitFramebuffer(
+                    0, 0, 
+                    width, height, 
+                    0, 0, 
+                    width, height, 
+                    GL3.GL_COLOR_BUFFER_BIT, GL3.GL_NEAREST);
+        }
     }
 
     public Texture2d getColorTarget()
     {
-        return normalMaterialTarget;
+        if (useMsaa)
+            return blittedTarget;
+        else
+            return normalMaterialTarget;
     }
     
     public Texture2d getDepthTarget()
     {
         return depthTarget;
     }
-
+    
 }
