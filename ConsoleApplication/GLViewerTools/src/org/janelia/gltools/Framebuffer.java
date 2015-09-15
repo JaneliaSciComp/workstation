@@ -238,7 +238,7 @@ public class Framebuffer implements GL3Resource, GLEventListener {
                     num_samples,
                     internalFormat, 
                     width, height,
-                    false);
+                    true);
         }
 
     }

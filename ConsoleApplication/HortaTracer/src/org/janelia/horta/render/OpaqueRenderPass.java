@@ -63,7 +63,7 @@ public class OpaqueRenderPass extends RenderPass
         // Create render targets
         // TODO MSAA
         if (useMsaa) {
-            int num_samples = 8;
+            int num_samples = 4;
             normalMaterialTarget = framebuffer.addMsaaRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0, num_samples);
             depthTarget = framebuffer.addMsaaRenderTarget(GL3.GL_DEPTH_COMPONENT24, GL3.GL_DEPTH_ATTACHMENT, num_samples);
             pickTarget = framebuffer.addMsaaRenderTarget(GL3.GL_R16UI, GL3.GL_COLOR_ATTACHMENT1, num_samples);
@@ -110,6 +110,8 @@ public class OpaqueRenderPass extends RenderPass
     @Override
     protected void renderScene(GL3 gl, AbstractCamera camera)
     {
+        if (useMsaa)
+            gl.glEnable(GL3.GL_MULTISAMPLE);
         gl.glEnable(GL3.GL_DEPTH_TEST);
         // 
         gl.glDrawBuffers(targetAttachments.length, targetAttachments, 0);
