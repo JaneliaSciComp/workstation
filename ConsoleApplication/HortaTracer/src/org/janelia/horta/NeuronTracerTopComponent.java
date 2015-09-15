@@ -29,6 +29,7 @@
  */
 package org.janelia.horta;
 
+import org.janelia.horta.render.NeuronMPRenderer;
 import org.janelia.horta.actors.ScaleBar;
 import org.janelia.horta.actors.NeuriteActor;
 import org.janelia.horta.actors.CenterCrossHairActor;

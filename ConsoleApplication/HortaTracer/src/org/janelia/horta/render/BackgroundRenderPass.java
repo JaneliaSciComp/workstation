@@ -54,4 +54,9 @@ public class BackgroundRenderPass extends RenderPass
         addActor(backgroundActor);
         setCacheResults(false);
     }
+    
+    public void setColor(Color topColor, Color bottomColor) {
+        backgroundActor.setColor(topColor, bottomColor);
+    }
+
 }

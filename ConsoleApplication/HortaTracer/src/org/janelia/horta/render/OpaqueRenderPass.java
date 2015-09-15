@@ -113,5 +113,10 @@ public class OpaqueRenderPass extends RenderPass
     {
         return normalMaterialTarget;
     }
+    
+    public Texture2d getDepthTarget()
+    {
+        return depthTarget;
+    }
 
 }

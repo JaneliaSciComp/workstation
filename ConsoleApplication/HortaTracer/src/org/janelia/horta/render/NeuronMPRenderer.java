@@ -28,7 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta;
+package org.janelia.horta.render;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
@@ -46,6 +46,7 @@ import org.janelia.gltools.RemapColorActor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
 import org.janelia.horta.actors.SwcActor;
+import org.janelia.horta.render.BackgroundRenderPass;
 import org.janelia.horta.render.OpaqueRenderPass;
 
 /**
@@ -64,13 +65,15 @@ extends MultipassRenderer
     private final int[] clearColor4i = new int[] {0,0,0,0};
     private final float[] depthOne = new float[] {1};
     private final GLAutoDrawable drawable;
-    private final ColorBackgroundActor backgroundActor;
+    // private final ColorBackgroundActor backgroundActor;
+    private final BackgroundRenderPass backgroundRenderPass;
     private final OpaqueRenderPass opaqueRenderPass;
     
     public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel) 
     {
         this.drawable = drawable;
         
+        /*
         Color topColor = new Color(0.02f, 0.01f, 0.00f, 0.0f);
         Color bottomColor = new Color(0.10f, 0.06f, 0.00f, 0.0f);
         backgroundActor = new ColorBackgroundActor(
@@ -83,6 +86,9 @@ extends MultipassRenderer
                         addActor(backgroundActor);
                     }
         });
+                */
+        backgroundRenderPass = new BackgroundRenderPass();
+        add(backgroundRenderPass);
         
         // CMB September 2015 begin work on opaque render pass
         opaqueRenderPass = new OpaqueRenderPass(drawable);
@@ -265,21 +271,21 @@ extends MultipassRenderer
             rt.setDirty(true);
     }
 
-    Iterable<GL3Actor> getVolumeActors()
+    public Iterable<GL3Actor> getVolumeActors()
     {
         return hdrPass.getActors();
     }
     
     public void setBackgroundColor(Color topColor, Color bottomColor) {
-        backgroundActor.setColor(topColor, bottomColor);
+        backgroundRenderPass.setColor(topColor, bottomColor);
     }
 
-    void removeOpaqueActor(GL3Actor actor)
+    public void removeOpaqueActor(GL3Actor actor)
     {
         opaqueRenderPass.removeActor(actor);
     }
 
-    void addOpaqueActor(SwcActor na)
+    public void addOpaqueActor(SwcActor na)
     {
         opaqueRenderPass.addActor(na);
     }
