@@ -9,17 +9,17 @@ import com.sun.media.jai.codec.ByteArraySeekableStream;
 import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
 
 import org.slf4j.Logger;
@@ -34,7 +34,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.compression.Compressed
  * 
  * @author fosterl
  */
-public class MapCacheFacade {
+public class MapCacheFacade implements CacheFacadeI {
     public static final int GIGA = 1024*1024*1024;
     // TODO use more dynamic means of determining how many of the slabs
     // to put into memory at one time.
@@ -51,7 +51,10 @@ public class MapCacheFacade {
     private int totalGets;
     private int noFutureGets;
     
+    private int standardFileSize;
+    
     private Map<String,CachableWrapper> cacheMap = new HashMap<>();
+    private List<byte[]> allocatedBuffers = new ArrayList<>();
     
     private Logger log = LoggerFactory.getLogger(MapCacheFacade.class);
     
@@ -86,9 +89,11 @@ public class MapCacheFacade {
             
             @Override
             public byte[] getStorage(String id) {
-                return null;
+                return allocatedBuffers.remove(0);
             }
         };
+        this.standardFileSize = standardFileSize;
+//        allocateInitialBuffers(standardFileSize);
         cachePopulator = new CachePopulator(acceptor);
         cachePopulator.setStandadFileSize(standardFileSize);
     }
@@ -97,12 +102,11 @@ public class MapCacheFacade {
         cachePopulator.close();
     }
 
-    //public void reportCacheOccupancy() {
-    //    Cache cache = manager.getCache(cacheName);
-    //    List keys = cache.getKeys();
-    //    int requiredGb = (int)(((long)standardFileSize * (long)keys.size()) / (GIGA));
-    //    log.info("--- Cache has {} keys.  {}gb required.", keys.size(), requiredGb);
-    //}
+    public void reportCacheOccupancy() {
+        Set<String> keys = cacheMap.keySet();
+        int requiredGb = (int)(((long)standardFileSize * (long)keys.size()) / (GIGA));
+        log.info("--- Cache has {} keys.  {}gb required.", keys.size(), requiredGb);
+    }
 
     /**
      * This getter takes the name of the decompressed version of the input file.
@@ -207,7 +211,8 @@ public class MapCacheFacade {
      */
     public void dumpKeys() {
         System.out.println("All Keys:=-----------------------------------: " + cacheMap.size());
-        for (String key: cacheMap.keySet()) {
+        Set<String> safeKeySet = new HashSet<>(cacheMap.keySet());
+        for (String key: safeKeySet) {
             System.out.println("KEY:" + key);
         }
     }
@@ -221,10 +226,9 @@ public class MapCacheFacade {
             populateRegion();
         }
     }
-
+    
     /**
-     * Blocking getters. Let the cache manager worry about the threading. Most
-     * likely ID is an absolute path. Also, packages a decompressed version of
+     * ID is an absolute path. Also, packages a decompressed version of
      * the cached data, into a seekable stream.
      *
      * @see CacheManager#get(java.io.File) calls this.
@@ -260,8 +264,9 @@ public class MapCacheFacade {
         Date start = new Date();
         boolean rtnVal = false;
         GeometricNeighborhood calculatedNeighborhood = neighborhoodBuilder.buildNeighborhood(cameraFocus, cameraZoom, pixelsPerSceneUnit);
-        if (!(calculatedNeighborhood.getFiles().isEmpty()  ||  calculatedNeighborhood.equals(neighborhood))) {
-            this.neighborhood = calculatedNeighborhood;
+        if (!(calculatedNeighborhood.getFiles().isEmpty()  ||  calculatedNeighborhood.equals(neighborhood))) {            
+//            ensureStorage(calculatedNeighborhood);
+            this.neighborhood = mergeNewWithOld(calculatedNeighborhood, this.neighborhood);            
             rtnVal = true;
         }
         Date end = new Date();
@@ -274,7 +279,7 @@ public class MapCacheFacade {
         log.info("Repopulating on focus.  Zoom={}", cameraZoom);
         populateRegion(neighborhood);
     }
-    
+
     private void populateRegion(GeometricNeighborhood neighborhood) {
         Date start = new Date();
         log.info("Retargeting cache at zoom {}.", cameraZoom);
@@ -288,4 +293,99 @@ public class MapCacheFacade {
         log.info("In populateRegion for: {}ms.", end.getTime() - start.getTime());
     }
 
+    private GeometricNeighborhood mergeNewWithOld(GeometricNeighborhood newNh, GeometricNeighborhood oldNh) {
+        if (oldNh == null) {
+            return newNh;
+        }
+        Set<File> files = new HashSet<>();
+        MergedNeighborhood rtnVal = new MergedNeighborhood(files, newNh.getZoom(), newNh.getFocus());
+
+        files.addAll(newNh.getFiles());
+
+        for (File oldFile : oldNh.getFiles()) {
+            if (!newNh.getFiles().contains(oldFile)) {
+                final String oldKey = oldFile.getAbsolutePath();
+                CachableWrapper oldWrapper = cacheMap.remove(oldKey);
+                try { 
+                    if (oldWrapper != null) {
+                        log.info("Removing the old wrapped object, and freeing its buffer.");
+                        final Future<byte[]> wrappedObject = oldWrapper.getWrappedObject();
+                        // Kill any previous fill operation.
+                        if (wrappedObject != null) {
+                            wrappedObject.cancel(true);
+                        }
+                        allocatedBuffers.add(oldWrapper.getBytes());
+                    }
+                    else {
+                        log.info("No wrapped object");
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+
+        // The allocated buffers are the set which are now freed up,
+        // from not having been included in the new neighborhood.
+        int availableBuffers = allocatedBuffers.size();
+        log.info("Previous allocation = {}.  Padding up to {}.", availableBuffers, newNh.getFiles().size());
+        
+        // Now wish to come up with enough buffers, that the entire new
+        // neighborhood is complete.
+        for (int i = allocatedBuffers.size(); i < newNh.getFiles().size(); i++ ) {
+            byte[] newAllocation = new byte[standardFileSize];
+            allocatedBuffers.add(newAllocation);
+        }
+        log.info("Final allocation = {}.", availableBuffers);
+//
+//        for (int i = availableBuffers; i < 0; i++) {
+//            byte[] newAllocation = new byte[standardFileSize];
+//            allocatedBuffers.add(newAllocation);
+//        }
+
+        return rtnVal;
+    }
+
+    /** Starting with a small collection.  Add more if needed. */
+//    private void allocateInitialBuffers(int filesize) {
+//        for (int i = 0; i < 10; i++) {
+//            allocatedBuffers.add( new byte[filesize] );
+//        }
+//    }
+    
+    /** Call this with each neighborhood produced.  It will make sure the right number of byte arrays are available. */
+//    private synchronized void ensureStorage(GeometricNeighborhood neighborhood) {
+//        for (int i = allocatedBuffers.size(); i < neighborhood.getFiles().size(); i++ ) {
+//            allocatedBuffers.add( new byte[standardFileSize] );
+//        }
+//    }
+    
+    public static class MergedNeighborhood implements GeometricNeighborhood {
+        
+        private Set<File> files;
+        private Double zoom;
+        private double[] focus;
+        
+        public MergedNeighborhood(Set<File> files, Double zoom, double[] focus) {
+            this.files = files;
+            this.zoom = zoom;
+            this.focus = focus;
+        }
+
+        @Override
+        public Set<File> getFiles() {
+            return files;
+        }
+
+        @Override
+        public Double getZoom() {
+            return zoom;
+        }
+
+        @Override
+        public double[] getFocus() {
+            return focus;
+        }
+        
+    }
 }

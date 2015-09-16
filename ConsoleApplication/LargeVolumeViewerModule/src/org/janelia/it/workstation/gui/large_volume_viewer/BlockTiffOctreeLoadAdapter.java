@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.cache.large_volume.CacheController;
-import org.janelia.it.workstation.cache.large_volume.CacheFacade;
+import org.janelia.it.workstation.cache.large_volume.CacheFacadeI;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
@@ -264,7 +264,7 @@ extends AbstractTextureLoadAdapter
 		ImageDecoder decoders[] = new ImageDecoder[sc];
         StringBuilder missingTiffs = new StringBuilder();
         StringBuilder requestedTiffs = new StringBuilder();
-        CacheFacade cacheManager = CacheController.getInstance().getManager();
+        CacheFacadeI cacheManager = CacheController.getInstance().getManager();
 		for (int c = 0; c < sc; ++c) {
 			File tiff = new File(folder, getFilenameForChannel(tiffBase, c));
             if ( requestedTiffs.length() > 0 ) {

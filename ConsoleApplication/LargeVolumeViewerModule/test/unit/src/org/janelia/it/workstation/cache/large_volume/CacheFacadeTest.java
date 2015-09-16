@@ -38,14 +38,37 @@ public class CacheFacadeTest {
         2.0, 1.0, 0.0
     };
 
-    private CacheFacade cf;
+    private CacheFacadeI cf;
     
+    /*
+        public void initCache(URL topFolderURL) {
+        try {
+            CacheController.getInstance().close();
+            tileServer.setPrefetch(false);
+            
+            final int standardFileLength = CacheFacade.getStandardFileLength(topFolderURL);
+            CacheFacade cacheManager = new CacheFacade(standardFileLength);
+            log.info("Top Folder URL for Cache is {}, and standard file size is {}.", topFolderURL.getFile(), standardFileLength);
+            cacheManager.setNeighborhoodBuilder(
+                    new WorldExtentSphereBuilder(sharedVolumeImage, topFolderURL, 500)
+            );
+            CacheController controller = CacheController.getInstance();
+            controller.setManager(cacheManager);
+            controller.registerForEvents(camera, sharedVolumeImage);
+        } catch (Exception ex) {
+            log.error("Failed to open the cache manager.");
+            ex.printStackTrace();
+        }
+    }
+    */
     @Before
     public void setup() throws Exception {
-        cf = new CacheFacade(STD_FILE_SIZE);
+        cf = new MapCacheFacade(STD_FILE_SIZE);
         TileFormat tf = mockTileFormat();
         File topFolder = new File(VOLUME_LOCATION);
         cf.setNeighborhoodBuilder(new WorldExtentSphereBuilder(tf, topFolder, 2000));
+        CacheController controller = CacheController.getInstance();
+        controller.setManager(cf);
     }
     
     @Test
@@ -55,7 +78,6 @@ public class CacheFacadeTest {
         for ( int i = 0; i < FOCI.length; i++) {
             cf.setCameraZoom(ZOOMLEVELS[i]);
             cf.setFocus(FOCI[i]);
-            cf.dumpKeys();
         }
         cf.dumpKeys();
     }

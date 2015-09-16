@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class CacheController {
-    private CacheFacade manager;
+    private CacheFacadeI manager;
     private CacheCameraListener cameraListener;
     private static ExecutorService executor;
     
@@ -43,14 +43,14 @@ public class CacheController {
     /**
      * @return the manager
      */
-    public CacheFacade getManager() {
+    public CacheFacadeI getManager() {
         return manager;
     }
 
     /**
      * @param manager the manager to set
      */
-    public void setManager(CacheFacade manager) {
+    public void setManager(CacheFacadeI manager) {
         this.manager = manager;
         this.cameraListener = new CacheCameraListener(manager);
     }
@@ -89,13 +89,13 @@ public class CacheController {
 
     private static class CacheCameraListener implements CameraListener {
 
-        private final CacheFacade manager;
+        private final CacheFacadeI manager;
         private SharedVolumeImage sharedVolumeImage;
         private ObservableCamera3d camera;
         private final AtomicReference<Vec3> focusInWaiting = new AtomicReference<>();
         private final AtomicReference<Double> zoomInWaiting = new AtomicReference<>();
         
-        public CacheCameraListener( CacheFacade manager ) {
+        public CacheCameraListener( CacheFacadeI manager ) {
             this.manager = manager;
         }
         
@@ -144,10 +144,10 @@ public class CacheController {
     private static class FocusChanger implements Runnable {
         private ObservableCamera3d camera;
         private SharedVolumeImage sharedVolumeImage;
-        private CacheFacade manager;
+        private CacheFacadeI manager;
         private AtomicReference<Vec3> focus;
         
-        public FocusChanger(ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage, CacheFacade manager, AtomicReference<Vec3> focus) {
+        public FocusChanger(ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage, CacheFacadeI manager, AtomicReference<Vec3> focus) {
             this.camera = camera;
             this.sharedVolumeImage = sharedVolumeImage;
             this.manager = manager;
@@ -173,12 +173,12 @@ public class CacheController {
     }
     
     private static class ZoomChanger implements Runnable {
-        private CacheFacade manager;
+        private CacheFacadeI manager;
         private SharedVolumeImage sharedVolumeImage;
         private ObservableCamera3d camera;
         private AtomicReference<Double> zoom;
         
-        public ZoomChanger(CacheFacade manager, ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage, AtomicReference<Double> zoom) {
+        public ZoomChanger(CacheFacadeI manager, ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage, AtomicReference<Double> zoom) {
             this.manager = manager;
             this.camera = camera;
             this.zoom = zoom;

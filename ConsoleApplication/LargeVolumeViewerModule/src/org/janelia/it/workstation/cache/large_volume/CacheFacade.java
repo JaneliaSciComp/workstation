@@ -8,7 +8,6 @@ package org.janelia.it.workstation.cache.large_volume;
 import com.sun.media.jai.codec.ByteArraySeekableStream;
 import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
-import java.io.Serializable;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
@@ -19,7 +18,6 @@ import java.util.concurrent.Future;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
 import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
 
 import org.slf4j.Logger;
@@ -34,7 +32,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.compression.Compressed
  * 
  * @author fosterl
  */
-public class CacheFacade {
+public class CacheFacade implements CacheFacadeI {
     public static final String CACHE_NAME = "CompressedTiffCache";
     public static final int GIGA = 1024*1024*1024;
     // TODO use more dynamic means of determining how many of the slabs
@@ -112,6 +110,7 @@ public class CacheFacade {
         this(CACHE_NAME, standardFileSize);
     }
     
+    @Override
     public void close() {
         cachePopulator.close();
     }
@@ -129,6 +128,7 @@ public class CacheFacade {
      * @param file decompressed file's name.
      * @return stream of data, fully decompressed.
      */
+    @Override
     public SeekableStream get(File file) {
         // The key stored in the cache is the compressed file name.
         File compressedFile = compressNamer.getCompressedName(file);        
@@ -142,6 +142,7 @@ public class CacheFacade {
      * @param file decompressed file's name.
      * @return true -> no waiting for cache.
      */
+    @Override
     public boolean isReady(File file) {
         boolean rtnVal = false;
         // The key stored in the cache is the compressed file name.
@@ -170,6 +171,7 @@ public class CacheFacade {
      * @todo get the zoom level as number or object, into this calculation.
      * @param focus neighborhood is around this point.
      */
+    @Override
 	public synchronized void setFocus(double[] focus) {
         log.info("Setting focus...");
         cameraFocus = focus;
@@ -180,11 +182,13 @@ public class CacheFacade {
      * Set the zoom, but do not trigger any changes.  Allow trigger to be
      * pulled downstream.
      */
+    @Override
     public void setCameraZoomValue(Double zoom) {
         log.debug("Setting zoom {}....", zoom);
         this.cameraZoom = zoom;
     }
     
+    @Override
     public void setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
         if (pixelsPerSceneUnit < 1.0) {
             pixelsPerSceneUnit = 1.0;
@@ -195,6 +199,7 @@ public class CacheFacade {
     /**
      * Change camera zoom, and trigger any cascading updates.
      */
+    @Override
     public void setCameraZoom(Double zoom) {
         setCameraZoomValue(zoom);
         // Force a recalculation, based on both focus and zoom.
@@ -206,6 +211,7 @@ public class CacheFacade {
     /**
      * @return the neighborhoodBuilder
      */
+    @Override
     public GeometricNeighborhoodBuilder getNeighborhoodBuilder() {
         return neighborhoodBuilder;
     }
@@ -217,6 +223,7 @@ public class CacheFacade {
      * 
      * @param neighborhoodBuilder the neighborhoodBuilder to set
      */
+    @Override
     public void setNeighborhoodBuilder(GeometricNeighborhoodBuilder neighborhoodBuilder) {
         this.neighborhoodBuilder = neighborhoodBuilder;
         
@@ -225,6 +232,7 @@ public class CacheFacade {
     /**
      * For testing purposes.
      */
+    @Override
     public void dumpKeys() {
         Cache cache = manager.getCache(cacheName);
         List keys = cache.getKeys();

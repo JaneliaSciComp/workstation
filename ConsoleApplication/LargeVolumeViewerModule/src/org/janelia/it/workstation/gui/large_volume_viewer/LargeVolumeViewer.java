@@ -45,6 +45,8 @@ import java.util.List;
 import org.apache.commons.lang.SystemUtils;
 import org.janelia.it.workstation.cache.large_volume.CacheController;
 import org.janelia.it.workstation.cache.large_volume.CacheFacade;
+import org.janelia.it.workstation.cache.large_volume.CacheFacadeI;
+import org.janelia.it.workstation.cache.large_volume.MapCacheFacade;
 import org.janelia.it.workstation.cache.large_volume.WorldExtentSphereBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,7 +133,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
             tileServer.setPrefetch(false);
             
             final int standardFileLength = CacheFacade.getStandardFileLength(topFolderURL);
-            CacheFacade cacheManager = new CacheFacade(standardFileLength);
+            CacheFacadeI cacheManager = new CacheFacade(standardFileLength);
             log.info("Top Folder URL for Cache is {}, and standard file size is {}.", topFolderURL.getFile(), standardFileLength);
             cacheManager.setNeighborhoodBuilder(
                     new WorldExtentSphereBuilder(sharedVolumeImage, topFolderURL, 500)
