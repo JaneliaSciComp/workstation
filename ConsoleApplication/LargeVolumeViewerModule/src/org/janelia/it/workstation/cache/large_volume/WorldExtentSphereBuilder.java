@@ -15,6 +15,7 @@ import java.util.TreeSet;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.OctreeMetadataSniffer;
 import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileBoundingBox;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
@@ -181,10 +182,10 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
 
         // Establish a collection with required order and guaranteed uniqueness.
         FocusProximityComparator comparator = new FocusProximityComparator();
-        String tiffBase = BlockTiffOctreeLoadAdapter.getTiffBase(CoordinateAxis.Z);
+        String tiffBase = OctreeMetadataSniffer.getTiffBase(CoordinateAxis.Z);
         Set<String> tileFilePaths = new HashSet<>();
         for (TileIndex tileIndex: getCenteredTileSet(tileFormat, center, pixelsPerSceneUnit, dimensions, zoom)) {
-            File tilePath = BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat, true);  
+            File tilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, true);  
             if (tilePath == null) {
                 log.warn("Null octree file path for {}.", tileIndex);
             }
@@ -198,7 +199,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                 }
                 double distanceFromFocus = Math.sqrt(sigmaSquare);
                 for (int channel = 0; channel < tileFormat.getChannelCount(); channel++) {
-                    String fileName = BlockTiffOctreeLoadAdapter.getFilenameForChannel(tiffBase, channel);
+                    String fileName = OctreeMetadataSniffer.getFilenameForChannel(tiffBase, channel);
                     File tileFile = new File(tilePath, fileName);
                     // Work out what needs to be uncompressed, here.
                     if (namer == null) {

@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.OctreeMetadataSniffer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,7 @@ public class MapCacheFacade implements CacheFacadeI {
     public static int getStandardFileLength(URL folderUrl) {
         try {
             File folder = new File(folderUrl.toURI());
-            return BlockTiffOctreeLoadAdapter.getStandardTiffFileSize(folder);
+            return OctreeMetadataSniffer.getStandardTiffFileSize(folder);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

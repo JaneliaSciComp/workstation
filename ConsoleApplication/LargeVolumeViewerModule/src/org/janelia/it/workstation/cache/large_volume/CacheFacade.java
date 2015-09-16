@@ -19,6 +19,7 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.OctreeMetadataSniffer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +66,7 @@ public class CacheFacade implements CacheFacadeI {
     public static int getStandardFileLength(URL folderUrl) {
         try {
             File folder = new File(folderUrl.toURI());
-            return BlockTiffOctreeLoadAdapter.getStandardTiffFileSize(folder);
+            return OctreeMetadataSniffer.getStandardTiffFileSize(folder);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

@@ -10,13 +10,13 @@ import org.slf4j.LoggerFactory;
  * 
  * @author fosterl
  */
-public class Cache3DLoadAdapter extends AbstractTextureLoadAdapter {
+public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
 
-    private static final Logger log = LoggerFactory.getLogger(Cache3DLoadAdapter.class);
-    public static final String CHANNEL_0_STD_TIFF_NAME = "default.0.tif";
+    private static final Logger log = LoggerFactory.getLogger(Cache3DOctreeLoadAdapter.class);
 
     // Metadata: file location required for local system as mount point.
     private File topFolder;
+    private String remoteBasePath;
     
     @Override
     public TextureData2dGL loadToRam(TileIndex tileIndex) throws TileLoadError, MissingTileException {
@@ -30,10 +30,17 @@ public class Cache3DLoadAdapter extends AbstractTextureLoadAdapter {
     public File getTopFolder() {
         return topFolder;
     }
+    
+    /** Order dependency: call this before setTopFolder. */
+    public void setRemoteBasePath( String remoteBasePath ) {
+        this.remoteBasePath = remoteBasePath;
+    }    
 
     public void setTopFolder(File topFolder) throws DataSourceInitializeException {
         this.topFolder = topFolder;
-        new OctreeMetadataSniffer(topFolder, new TileFormat()).sniffMetadata(topFolder);
+        final OctreeMetadataSniffer octreeMetadataSniffer = new OctreeMetadataSniffer(topFolder, new TileFormat());
+        octreeMetadataSniffer.setRemoteBasePath(remoteBasePath);
+        octreeMetadataSniffer.sniffMetadata(topFolder);
 		// Don't launch pre-fetch yet.
         // That must occur AFTER volume initialized signal is sent.
     }
@@ -103,11 +110,11 @@ public class Cache3DLoadAdapter extends AbstractTextureLoadAdapter {
     }
 
     public static int getStandardTiffFileSize(File topFolderParam) {
-        File file = new File(topFolderParam, CHANNEL_0_STD_TIFF_NAME);
+        File file = new File(topFolderParam, OctreeMetadataSniffer.CHANNEL_0_STD_TIFF_NAME);
         if (file.exists()) {
             return (int) file.length();
         } else {
-            throw new IllegalArgumentException("Invalid root directory.  No " + CHANNEL_0_STD_TIFF_NAME);
+            throw new IllegalArgumentException("Invalid root directory.  No " + OctreeMetadataSniffer.CHANNEL_0_STD_TIFF_NAME);
         }
     }
 

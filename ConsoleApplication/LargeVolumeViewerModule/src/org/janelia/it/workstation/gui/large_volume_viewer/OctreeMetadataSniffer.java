@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import javax.media.jai.RenderedImageAdapter;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import static org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter.CHANNEL_0_STD_TIFF_NAME;
+import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,8 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class OctreeMetadataSniffer {
-    private final Logger log = LoggerFactory.getLogger(OctreeMetadataSniffer.class);
+    private final static Logger log = LoggerFactory.getLogger(OctreeMetadataSniffer.class);
+    public static final String CHANNEL_0_STD_TIFF_NAME = "default.0.tif";
     
     private final File topFolder;
     private String remoteBasePath;
@@ -224,6 +225,93 @@ public class OctreeMetadataSniffer {
 
     public static int computeDepth(int octreeDepth, TileIndex tileIndex) {
         return octreeDepth - tileIndex.getZoom();
+    }
+
+    /*
+     * Return path to tiff file containing a particular slice
+     */
+    public static File getOctreeFilePath(TileIndex tileIndex, TileFormat tileFormat, boolean zOriginNegativeShift) {
+        int axIx = tileIndex.getSliceAxis().index();
+
+        File path = new File("");
+        int octreeDepth = tileFormat.getZoomLevelCount();
+        int depth = OctreeMetadataSniffer.computeDepth(octreeDepth, tileIndex);
+        if (depth < 0 || depth > octreeDepth) {
+            // This situation can happen in production, owing to missing tiles.
+            return null;
+        }
+        int[] xyz = null;
+        xyz = new int[]{tileIndex.getX(), tileIndex.getY(), tileIndex.getZ()};
+
+        // ***NOTE Raveler Z is slice count, not tile count***
+        // so divide by tile Z dimension, to make z act like x and y
+        xyz[axIx] = xyz[axIx] / tileFormat.getTileSize()[axIx];
+        // and divide by zoom scale
+        xyz[axIx] = xyz[axIx] / (int) Math.pow(2, tileIndex.getZoom());
+
+        // start at lowest zoom to build up octree coordinates
+        for (int d = 0; d < (depth - 1); ++d) {
+            // How many Raveler tiles per octant at this zoom?
+            int scale = (int) (Math.pow(2, depth - 2 - d) + 0.1);
+            int ds[] = {
+                xyz[0] / scale,
+                xyz[1] / scale,
+                xyz[2] / scale};
+
+            // Each dimension makes a binary contribution to the 
+            // octree index.
+            // Watch for illegal values
+            // int ds[] = {dx, dy, dz};
+            boolean indexOk = true;
+            for (int index : ds) {
+                if (index < 0) {
+                    indexOk = false;
+                }
+                if (index > 1) {
+                    indexOk = false;
+                }
+            }
+            if (!indexOk) {
+                log.error("Bad tile index " + tileIndex);
+                return null;
+            }
+            // offset x/y/z for next deepest level
+            for (int i = 0; i < 3; ++i) {
+                xyz[i] = xyz[i] % scale;
+            }
+
+            // Octree coordinates are in z-order
+            int octreeCoord = 1 + ds[0]
+                    // TODO - investigate possible ragged edge problems
+                    + 2 * (1 - ds[1]) // Raveler Y is at bottom; octree Y is at top
+                    + 4 * ds[2];
+
+            path = new File(path, "" + octreeCoord);
+        }
+        return path;
+    }
+
+    public static int getStandardTiffFileSize(File topFolderParam) {
+        File file = new File(topFolderParam, CHANNEL_0_STD_TIFF_NAME);
+        if (file.exists()) {
+            return (int) file.length();
+        } else {
+            throw new IllegalArgumentException("Invalid root directory.  No " + CHANNEL_0_STD_TIFF_NAME);
+        }
+    }
+
+    public static String getFilenameForChannel(String tiffBase, int c) {
+        return tiffBase + "." + c + ".tif";
+    }
+
+    public static String getTiffBase(CoordinateAxis axis) {
+        String tiffBase = "default"; // Z-view; XY plane
+        if (axis == CoordinateAxis.Y) {
+            tiffBase = "ZX";
+        } else if (axis == CoordinateAxis.X) {
+            tiffBase = "YZ";
+        }
+        return tiffBase;
     }
 
 }
