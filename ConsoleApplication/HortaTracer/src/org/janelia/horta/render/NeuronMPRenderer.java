@@ -37,7 +37,6 @@ import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.BrightnessModel;
 import org.janelia.gltools.BasicScreenBlitActor;
-import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.LightingBlitActor;
 import org.janelia.gltools.MultipassRenderer;
@@ -53,18 +52,12 @@ import org.janelia.horta.actors.SwcActor;
 public class NeuronMPRenderer
 extends MultipassRenderer
 {
-    private final Framebuffer gBuffer;
-    private final RenderPass hdrPass;
-    private final RenderTarget hdrTarget;
-    private final RenderTarget pickBuffer;
-    private final RenderTarget depthTarget;
-    private final float[] clearColor4 = new float[] {0,0,0,0};
-    private final int[] clearColor4i = new int[] {0,0,0,0};
-    private final float[] depthOne = new float[] {1};
     private final GLAutoDrawable drawable;
     // private final ColorBackgroundActor backgroundActor;
+    
     private final BackgroundRenderPass backgroundRenderPass;
     private final OpaqueRenderPass opaqueRenderPass;
+    private final VolumeRenderPass volumeRenderPass;
     
     public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel) 
     {
@@ -77,70 +70,8 @@ extends MultipassRenderer
         opaqueRenderPass = new OpaqueRenderPass(drawable);
         add(opaqueRenderPass);
         
-        // Create G-Buffer for deferred rendering
-        final int hdrAttachment = GL3.GL_COLOR_ATTACHMENT0;
-        final int depthAttachment = GL3.GL_DEPTH_ATTACHMENT;
-        final int pickAttachment = GL3.GL_COLOR_ATTACHMENT1;
-        
-        gBuffer = new Framebuffer(drawable);
-        hdrTarget = gBuffer.addRenderTarget(
-                GL3.GL_RGBA16,
-                hdrAttachment
-        );
-        pickBuffer = gBuffer.addRenderTarget(
-                GL3.GL_RG16UI,
-                pickAttachment
-        );
-        depthTarget = gBuffer.addRenderTarget(
-                // warning: using naked "GL_DEPTH_COMPONENT" without a size result in GL_INVALID_ENUM error, after glTexStorage2D(...)
-                // warning: using naked "GL_DEPTH_COMPONENT16" results in an error at glClear...
-                GL3.GL_DEPTH_COMPONENT24, // 16? 24? 32? // 16 does not work; unspecified does not work
-                depthAttachment);
-        
-        // TODO - Opaque pass
-        
-        // 2) Second pass: volume intensities to hdr buffer
-        hdrPass = new RenderPass(gBuffer) 
-        {
-            private int targetAttachments[];
-            
-            {
-                addRenderTarget(hdrTarget);
-                addRenderTarget(pickBuffer);
-                targetAttachments = new int[renderTargets.size()];
-                for (int rt = 0; rt < renderTargets.size(); ++rt)
-                    targetAttachments[rt] = renderTargets.get(rt).getAttachment();
-            }
-            
-            @Override
-            protected void renderScene(GL3 gl, AbstractCamera camera)
-            {
-                // if (true) return; // TODO
-                if (! hdrTarget.isDirty())
-                    return;
-                
-                gl.glDrawBuffers(targetAttachments.length, targetAttachments, 0);
-
-                gl.glClearBufferfv(GL3.GL_COLOR, 0, clearColor4, 0);
-                gl.glClearBufferfv(GL3.GL_DEPTH, 0, depthOne, 0);
-                gl.glClearBufferuiv(GL3.GL_COLOR, 1, clearColor4i, 0); // pick buffer...
-
-                // Blend intensity channel, but not pick channel
-                gl.glDisablei(GL3.GL_BLEND, 0); // TODO
-                gl.glDisablei(GL3.GL_BLEND, 1); // TODO - how to write pick for BRIGHTER image?
-                
-                super.renderScene(gl, camera);
-                
-                for (RenderTarget rt : new RenderTarget[] {hdrTarget, pickBuffer}) 
-                {
-                    rt.setHostBufferNeedsUpdate(true);
-                    rt.setDirty(false);
-                }
-                gl.glDrawBuffers(1, targetAttachments, 0);
-            }
-        };
-
-        add(hdrPass);
+        volumeRenderPass = new VolumeRenderPass(drawable);
+        add(volumeRenderPass);
         
         // 2.5 blit opaque geometry to screen
         add(new RenderPass(null) {
@@ -151,15 +82,17 @@ extends MultipassRenderer
         
         // 3) Colormap volume onto screen
         add(new RenderPass(null) { // render to screen
-            private GL3Actor lightingActor = new LightingBlitActor(hdrTarget); // for isosurface
-            private final GL3Actor colorMapActor = new RemapColorActor(hdrTarget, brightnessModel); // for MIP, occluding
+            private GL3Actor lightingActor = new LightingBlitActor(
+                    volumeRenderPass.getIntensityTexture()); // for isosurface
+            private final GL3Actor colorMapActor = new RemapColorActor(
+                    volumeRenderPass.getIntensityTexture(), brightnessModel); // for MIP, occluding
 
             {
                 // addActor(lightingActor); // TODO - use for isosurface
                 addActor(colorMapActor); // Use for MIP and occluding
                 // lightingActor.setVisible(false);
                 // colorMapActor.setVisible(true);
-                // addActor(new BasicScreenBlitActor(hdrTarget));
+                // addActor(new BasicScreenBlitActor(volumeRenderPass.getIntensityTexture()));
             }
             
             @Override
@@ -173,35 +106,31 @@ extends MultipassRenderer
     }
     
     public void addVolumeActor(GL3Actor boxMesh) {
-        hdrPass.addActor(boxMesh);
+        volumeRenderPass.addActor(boxMesh);
         setIntensityBufferDirty();
     }
     
     public void clearVolumeActors() {
-        hdrPass.clearActors();
+        volumeRenderPass.clearActors();
         setIntensityBufferDirty();
     }
     
     @Override
     public void init(GL3 gl) {
         super.init(gl);
-        gBuffer.init(gl);
-        hdrPass.init(gl);
     }
     
     @Override
     public void dispose(GL3 gl) {
-        hdrPass.dispose(gl);
-        gBuffer.dispose(gl);
         super.dispose(gl);
     }
     
     public int pickIdForScreenXy(Point2D xy) {
-        return valueForScreenXy(xy, pickBuffer.getAttachment(), 0);
+        return valueForScreenXy(xy, volumeRenderPass.getPickTexture().getAttachment(), 0);
     }
 
     public int intensityForScreenXy(Point2D xy) {
-        int result = valueForScreenXy(xy, hdrTarget.getAttachment(), 0);
+        int result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 0);
         if (result <= 0) {
             return -1;
         }
@@ -214,10 +143,10 @@ extends MultipassRenderer
         if (intensity == -1) {
             return result;
         }
-        if (gBuffer == null) {
+        if (volumeRenderPass.getFramebuffer() == null) {
             return result;
         }
-        RenderTarget intensityDepthTarget = pickBuffer;
+        RenderTarget intensityDepthTarget = volumeRenderPass.getPickTexture();
         if (intensityDepthTarget == null) {
             return result;
         }
@@ -233,10 +162,10 @@ extends MultipassRenderer
 
     private int valueForScreenXy(Point2D xy, int glAttachment, int channel) {
         int result = -1;
-        if (gBuffer == null) {
+        if (volumeRenderPass.getFramebuffer() == null) {
             return result;
         }
-        RenderTarget target = gBuffer.getRenderTarget(glAttachment);
+        RenderTarget target = volumeRenderPass.getFramebuffer().getRenderTarget(glAttachment);
         if (target == null) {
             return result;
         }
@@ -250,13 +179,15 @@ extends MultipassRenderer
     }
     
     public void setIntensityBufferDirty() {
-        for (RenderTarget rt : new RenderTarget[] {hdrTarget, pickBuffer}) 
+        for (RenderTarget rt : new RenderTarget[] {
+            volumeRenderPass.getIntensityTexture(), 
+            volumeRenderPass.getPickTexture()}) 
             rt.setDirty(true);
     }
 
     public Iterable<GL3Actor> getVolumeActors()
     {
-        return hdrPass.getActors();
+        return volumeRenderPass.getActors();
     }
     
     public void setBackgroundColor(Color topColor, Color bottomColor) {

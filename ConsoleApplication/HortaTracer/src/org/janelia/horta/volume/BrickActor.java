@@ -35,6 +35,7 @@ import org.janelia.geometry3d.BrightnessModel;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
+import org.janelia.gltools.texture.Texture2d;
 import org.janelia.horta.BrainTileInfo;
 import org.janelia.horta.actors.BrainTileMesh;
 
@@ -45,6 +46,7 @@ import org.janelia.horta.actors.BrainTileMesh;
 public class BrickActor extends MeshActor
 {
     private final BrainTileInfo brainTile;
+    private final BrickMaterial brickMaterial;
     
     public BrickActor(BrainTileInfo brainTile, 
             BrightnessModel brightnessModel, 
@@ -56,6 +58,11 @@ public class BrickActor extends MeshActor
                 new BrickMaterial(brainTile, brightnessModel, volumeState, colorChannel),
                 null);
         this.brainTile = brainTile;
+        this.brickMaterial = (BrickMaterial)getMaterial();
+    }
+    
+    public void setOpaqueDepthTexture(Texture2d depthTexture) {
+        brickMaterial.setOpaqueDepthTexture(depthTexture);
     }
 
     public BrainTileInfo getBrainTile()
