@@ -44,6 +44,7 @@ import org.janelia.gltools.texture.Texture2d;
  */
 public class OpaqueRenderPass extends RenderPass
 {
+    // TODO - eventually use deferred shading; for now we render the whole color there...
     private final RenderTarget normalMaterialTarget; // normal in RGB, material in A
     private final RenderTarget depthTarget;
     private final RenderTarget pickTarget;
@@ -52,8 +53,9 @@ public class OpaqueRenderPass extends RenderPass
     private final float[] clearColor4 = new float[] {0,0,0,0};
     private final int[] clearColor4i = new int[] {0,0,0,0};
     private final float[] depthOne = new float[] {1};
-    private RenderTarget blittedTarget = null;
-    private Framebuffer blittedFrameBuffer = null;
+    private Framebuffer resolvedFrameBuffer = null;
+    private RenderTarget resolvedColorTarget = null;
+    private RenderTarget resolvedDepthTarget = null;
     private boolean useMsaa = true;
 
     public OpaqueRenderPass(GLAutoDrawable drawable)
@@ -82,8 +84,9 @@ public class OpaqueRenderPass extends RenderPass
         }
         
         if (useMsaa) {
-            blittedFrameBuffer = new Framebuffer(drawable);
-            blittedTarget = blittedFrameBuffer.addRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0);
+            resolvedFrameBuffer = new Framebuffer(drawable);
+            resolvedColorTarget = resolvedFrameBuffer.addRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0);
+            resolvedDepthTarget = resolvedFrameBuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, GL3.GL_DEPTH_ATTACHMENT);
         }
           
     }
@@ -93,7 +96,7 @@ public class OpaqueRenderPass extends RenderPass
         super.dispose(gl);
         framebuffer.dispose(gl);
         if (useMsaa)
-            blittedFrameBuffer.dispose(gl);
+            resolvedFrameBuffer.dispose(gl);
     }
     
     @Override
@@ -102,7 +105,7 @@ public class OpaqueRenderPass extends RenderPass
             gl.glEnable(GL3.GL_MULTISAMPLE);
         framebuffer.init(gl);
         if (useMsaa)
-            blittedFrameBuffer.init(gl);
+            resolvedFrameBuffer.init(gl);
         super.init(gl);
     }
     
@@ -135,11 +138,9 @@ public class OpaqueRenderPass extends RenderPass
         gl.glDrawBuffers(1, targetAttachments, 0);
         
         if (useMsaa) {
-            blittedFrameBuffer.bind(gl, GL3.GL_DRAW_FRAMEBUFFER);
-            // gl.glBindFramebuffer(GL3.GL_DRAW_FRAMEBUFFER, 0);   // Make sure no FBO is set as the draw framebuffer
-            // blittedFrameBuffer.bind(gl, GL3.GL_DRAW_FRAMEBUFFER);
+            // Resolve multisampled buffers into ordinary single-sample textures
+            resolvedFrameBuffer.bind(gl, GL3.GL_DRAW_FRAMEBUFFER);
             framebuffer.bind(gl, GL3.GL_READ_FRAMEBUFFER);
-            gl.glReadBuffer(GL3.GL_COLOR_ATTACHMENT0);
             int width = framebuffer.getWidth();
             int height = framebuffer.getHeight();
             gl.glBlitFramebuffer(
@@ -148,20 +149,29 @@ public class OpaqueRenderPass extends RenderPass
                     0, 0, 
                     width, height, 
                     GL3.GL_COLOR_BUFFER_BIT, GL3.GL_NEAREST);
+            gl.glBlitFramebuffer(
+                    0, 0, 
+                    width, height, 
+                    0, 0, 
+                    width, height, 
+                    GL3.GL_DEPTH_BUFFER_BIT, GL3.GL_NEAREST);
         }
     }
 
     public Texture2d getColorTarget()
     {
         if (useMsaa)
-            return blittedTarget;
+            return resolvedColorTarget;
         else
             return normalMaterialTarget;
     }
     
     public Texture2d getDepthTarget()
     {
-        return depthTarget;
+        if (useMsaa)
+            return resolvedDepthTarget;
+        else
+            return depthTarget;
     }
     
 }

@@ -43,6 +43,7 @@ import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.ShaderStep;
+import org.janelia.gltools.texture.Texture2d;
 import org.janelia.gltools.texture.Texture3d;
 import org.openide.util.Exceptions;
 
@@ -53,7 +54,9 @@ import org.openide.util.Exceptions;
 public class VolumeMipMaterial extends BasicMaterial 
 {
     private final Texture3d volumeTexture;
+    private Texture2d opaqueDepthTexture = null;
     private int volumeTextureIndex = -1;
+    private int opaqueDepthTextureIndex = -1;
     private int cameraPositionInTextureCoordinatesIndex = -1;
     private int levelOfDetailIndex = -1;
     private int nearSlabPlaneIndex = -1;
@@ -62,6 +65,7 @@ public class VolumeMipMaterial extends BasicMaterial
     private int opacityFunctionMaxIndex = -1;
     private int volumeMicrometersIndex = -1;
     private int tcToCameraIndex = -1;
+    private int viewportSizeIndex = -1;
     
     private final BrightnessModel colorMap;
     
@@ -232,7 +236,14 @@ public class VolumeMipMaterial extends BasicMaterial
             
             // for isosurface, we need to convert normals from texCoords to camera
             gl.glUniformMatrix4fv(tcToCameraIndex, 1, false, camera_X_tc.inverse().asArray(), 0);
+
+            // viewport size, to help resolve depth values
+            float viewportSize[] = {
+                camera.getViewport().getWidthPixels(),
+                camera.getViewport().getHeightPixels()};
+            gl.glUniform2fv(viewportSizeIndex, 1, viewportSize, 0);
         }
+       
         super.displayMesh(gl, mesh, camera, modelViewMatrix);
     }
     
@@ -268,15 +279,25 @@ public class VolumeMipMaterial extends BasicMaterial
         gl.glUniform1i(filteringOrderIndex, volumeState.filteringOrder);
         // gl.glUniform1i(projectionModeIndex, projectionMode);
 
-        int textureUnit = 0;
-        volumeTexture.bind(gl, textureUnit);
-        gl.glUniform1i(volumeTextureIndex, textureUnit); // TODO - sometimes triggers GL error
-    }
+        // 3D volume texture
+        int volumeTextureUnit = 0;
+        volumeTexture.bind(gl, volumeTextureUnit);
+        gl.glUniform1i(volumeTextureIndex, volumeTextureUnit); // TODO - sometimes triggers GL error
+        
+        // 2D depth texture -- Z-buffer from opaque rendering pass
+        if (opaqueDepthTexture != null) {
+            int depthTextureUnit = 1;
+            opaqueDepthTexture.bind(gl, depthTextureUnit);
+            gl.glUniform1i(opaqueDepthTextureIndex, depthTextureUnit);
+        }
+     }
     
     @Override
     public void unload(GL3 gl) {
         super.unload(gl);
         volumeTexture.unbind(gl); // restore depth buffer writes
+        if (opaqueDepthTexture != null)
+            opaqueDepthTexture.unbind(gl);
     }
     
     @Override
@@ -298,6 +319,7 @@ public class VolumeMipMaterial extends BasicMaterial
         cameraPositionInTextureCoordinatesIndex = gl.glGetUniformLocation(s,
             "camPosInTc");
         volumeTextureIndex = gl.glGetUniformLocation(s, "volumeTexture");
+        opaqueDepthTextureIndex = gl.glGetUniformLocation(s, "opaqueDepthTexture");
         levelOfDetailIndex = gl.glGetUniformLocation(s, "levelOfDetail");
         nearSlabPlaneIndex = gl.glGetUniformLocation(s, "nearSlabPlane");
         farSlabPlaneIndex = gl.glGetUniformLocation(s, "farSlabPlane");
@@ -308,8 +330,14 @@ public class VolumeMipMaterial extends BasicMaterial
         modelViewIndex = gl.glGetUniformLocation(s, "modelViewMatrix"); // -1 means no such item
         projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
         tcToCameraIndex = gl.glGetUniformLocation(s, "tcToCamera");
+        viewportSizeIndex = gl.glGetUniformLocation(s, "viewportSize");
         
         uniformIndicesAreDirty = false;
+    }
+
+    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture)
+    {
+        this.opaqueDepthTexture = opaqueDepthTexture;
     }
     
     private static class VolumeMipShader extends BasicShaderProgram {

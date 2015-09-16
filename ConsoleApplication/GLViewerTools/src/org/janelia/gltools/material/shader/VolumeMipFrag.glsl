@@ -17,7 +17,14 @@
 //        2) relative depth of brightest voxel in green channel
 layout(location = 0) out vec4 colorOut; 
 
+// put surface normals in eye space for isosurface projection
 uniform mat4 tcToCamera = mat4(1);
+
+// clip using depth buffer from opaque pass TODO:
+uniform sampler2D opaqueDepthTexture;
+uniform vec2 opaqueZNearFar = vec2(1e-2, 1e4);
+// uniform mat4 tcFromCameraPlane = mat4(1); // NO, just use transpose(tcToCamera)
+uniform vec2 viewportSize = vec2(640, 480); // for computing texture coordinates from gl_FragCoord
 
 // additional render target for picking
 layout(location = 1) out ivec2 pickId;
@@ -232,6 +239,18 @@ void main() {
     tMinMax.x = max(tMinSlab, tMinMax.x);
     float tMaxSlab = -dot(farSlabPlane, vec4(x0,1)) / dot(farSlabPlane, vec4(x1,0));
     tMinMax.y = min(tMaxSlab, tMinMax.y);
+
+    // TODO - clip by depth buffer from opaque render pass
+    // http://web.archive.org/web/20130416194336/http://olivers.posterous.com/linear-depth-in-glsl-for-real
+    vec2 depthTc = gl_FragCoord.xy / viewportSize; // compute texture coordinate for depth lookup
+    float z_buf = texture(opaqueDepthTexture, depthTc).x; // raw depth value from z-buffer
+    float zNear = opaqueZNearFar.x;
+    float zFar = opaqueZNearFar.y;
+    float z_eye = 2*zFar*zNear / (zFar + zNear - (zFar - zNear)*(2*z_buf - 1));
+    vec4 depth_plane_eye = vec4(0, 0, 1, z_eye);
+    vec4 depth_plane_tc = transpose(tcToCamera)*depth_plane_eye; // it's complicated...
+    float tDepth = -dot(depth_plane_tc, vec4(x0,1)) / dot(depth_plane_tc, vec4(x1,0));
+    // TODO: ...
 
     // color by level-of-detail (for debugging only)
     vec3 color = vec3(1,1,1); // default color is white
