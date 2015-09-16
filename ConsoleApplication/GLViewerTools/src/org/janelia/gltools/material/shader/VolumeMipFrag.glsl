@@ -240,7 +240,7 @@ void main() {
     float tMaxSlab = -dot(farSlabPlane, vec4(x0,1)) / dot(farSlabPlane, vec4(x1,0));
     tMinMax.y = min(tMaxSlab, tMinMax.y);
 
-    // TODO - clip by depth buffer from opaque render pass
+    // Clip by depth buffer from opaque render pass
     // http://web.archive.org/web/20130416194336/http://olivers.posterous.com/linear-depth-in-glsl-for-real
     vec2 depthTc = gl_FragCoord.xy / viewportSize; // compute texture coordinate for depth lookup
     float z_buf = texture(opaqueDepthTexture, depthTc).x; // raw depth value from z-buffer
@@ -250,7 +250,12 @@ void main() {
     vec4 depth_plane_eye = vec4(0, 0, 1, z_eye);
     vec4 depth_plane_tc = transpose(tcToCamera)*depth_plane_eye; // it's complicated...
     float tDepth = -dot(depth_plane_tc, vec4(x0,1)) / dot(depth_plane_tc, vec4(x1,0));
-    // TODO: ...
+    // z_buf tends to be zero when depth texture is uninitialized
+    // I hope valid zero values are uncommon...
+    // z_buf should be 1.0 where there was no opaque geometry, so skip those too.
+    if ((z_buf != 0) && (z_buf < 0.9999)) {
+        tMinMax.y = min(tDepth, tMinMax.y);
+    }
 
     // color by level-of-detail (for debugging only)
     vec3 color = vec3(1,1,1); // default color is white

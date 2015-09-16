@@ -71,6 +71,20 @@ extends MultipassRenderer
         add(opaqueRenderPass);
         
         volumeRenderPass = new VolumeRenderPass(drawable);
+
+        // pass depth texture from opaque render pass as input to volume render pass
+        // using trivial intermediate render pass
+        add(new RenderPass(null) {
+            @Override
+            public void display(GL3 gl, AbstractCamera camera) {
+                volumeRenderPass.setOpaqueDepthTexture(
+                        opaqueRenderPass.getDepthTarget(),
+                        opaqueRenderPass.getZNear(),
+                        opaqueRenderPass.getZFar());
+                super.display(gl, camera);
+            }
+        });
+        
         add(volumeRenderPass);
         
         // 2.5 blit opaque geometry to screen

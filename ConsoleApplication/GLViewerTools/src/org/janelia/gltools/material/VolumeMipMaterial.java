@@ -66,6 +66,9 @@ public class VolumeMipMaterial extends BasicMaterial
     private int volumeMicrometersIndex = -1;
     private int tcToCameraIndex = -1;
     private int viewportSizeIndex = -1;
+    private int opaqueZNearFarIndex = -1;
+    
+    private float[] opaqueZNearFar = {1e-2f, 1e4f};
     
     private final BrightnessModel colorMap;
     
@@ -242,6 +245,7 @@ public class VolumeMipMaterial extends BasicMaterial
                 camera.getViewport().getWidthPixels(),
                 camera.getViewport().getHeightPixels()};
             gl.glUniform2fv(viewportSizeIndex, 1, viewportSize, 0);
+            gl.glUniform2fv(opaqueZNearFarIndex, 1, opaqueZNearFar, 0);
         }
        
         super.displayMesh(gl, mesh, camera, modelViewMatrix);
@@ -331,13 +335,16 @@ public class VolumeMipMaterial extends BasicMaterial
         projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
         tcToCameraIndex = gl.glGetUniformLocation(s, "tcToCamera");
         viewportSizeIndex = gl.glGetUniformLocation(s, "viewportSize");
+        opaqueZNearFarIndex = gl.glGetUniformLocation(s, "opaqueZNearFar");
         
         uniformIndicesAreDirty = false;
     }
 
-    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture)
+    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture, float zNear, float zFar)
     {
         this.opaqueDepthTexture = opaqueDepthTexture;
+        opaqueZNearFar[0] = zNear;
+        opaqueZNearFar[1] = zFar;
     }
     
     private static class VolumeMipShader extends BasicShaderProgram {

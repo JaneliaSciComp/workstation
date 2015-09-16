@@ -61,8 +61,8 @@ public class BrickActor extends MeshActor
         this.brickMaterial = (BrickMaterial)getMaterial();
     }
     
-    public void setOpaqueDepthTexture(Texture2d depthTexture) {
-        brickMaterial.setOpaqueDepthTexture(depthTexture);
+    public void setOpaqueDepthTexture(Texture2d depthTexture, float zNear, float zFar) {
+        brickMaterial.setOpaqueDepthTexture(depthTexture, zNear, zFar);
     }
 
     public BrainTileInfo getBrainTile()

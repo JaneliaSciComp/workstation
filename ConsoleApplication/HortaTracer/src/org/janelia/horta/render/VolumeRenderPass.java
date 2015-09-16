@@ -34,9 +34,11 @@ import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.gltools.Framebuffer;
+import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
 import org.janelia.gltools.texture.Texture2d;
+import org.janelia.horta.volume.BrickActor;
 
 /**
  *
@@ -51,6 +53,9 @@ public class VolumeRenderPass extends RenderPass
     private final int[] clearColor4i = new int[] {0,0,0,0};
     private final float[] depthOne = new float[] {1};
     private final int targetAttachments[];
+    private Texture2d cachedDepthTexture = null;
+    private float cachedOpaqueZNear = 1e-2f;
+    private float cachedOpaqueZFar = 1e4f;
 
     public VolumeRenderPass(GLAutoDrawable drawable)
     {
@@ -126,6 +131,30 @@ public class VolumeRenderPass extends RenderPass
     
     public Framebuffer getFramebuffer() {
         return framebuffer;
+    }
+    
+    public void setOpaqueDepthTexture(Texture2d depthTexture, float zNear, float zFar) {
+        if ((cachedDepthTexture == depthTexture) && (zNear == cachedOpaqueZNear) && (zFar == cachedOpaqueZFar))
+            return;
+        cachedDepthTexture = depthTexture;
+        cachedOpaqueZNear = zNear;
+        cachedOpaqueZFar = zFar;
+        for (GL3Actor actor : getActors()) {
+            if (! (actor instanceof BrickActor)) 
+                continue;
+            BrickActor ba = (BrickActor) actor;
+            ba.setOpaqueDepthTexture(depthTexture, zNear, zFar);
+        }
+    }
+    
+    @Override
+    public void addActor(GL3Actor actor)
+    {
+        super.addActor(actor);
+        if (! (actor instanceof BrickActor)) 
+            return;
+        BrickActor ba = (BrickActor) actor;
+        ba.setOpaqueDepthTexture(cachedDepthTexture, cachedOpaqueZNear, cachedOpaqueZFar);
     }
 
 }

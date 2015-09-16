@@ -33,6 +33,7 @@ package org.janelia.horta.render;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
@@ -57,6 +58,8 @@ public class OpaqueRenderPass extends RenderPass
     private RenderTarget resolvedColorTarget = null;
     private RenderTarget resolvedDepthTarget = null;
     private boolean useMsaa = true;
+    private float cachedZNear = 1e-2f;
+    private float cachedZFar = 1e4f;
 
     public OpaqueRenderPass(GLAutoDrawable drawable)
     {
@@ -112,6 +115,11 @@ public class OpaqueRenderPass extends RenderPass
     @Override
     protected void renderScene(GL3 gl, AbstractCamera camera)
     {
+        // Store camera parameters for use by volume rendering pass
+        float focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
+        cachedZNear = camera.getViewport().getzNearRelative() * focusDistance;
+        cachedZFar = camera.getViewport().getzFarRelative() * focusDistance;
+        
         if (useMsaa) {
             gl.glEnable(GL3.GL_MULTISAMPLE);
             gl.glEnable(GL3.GL_BLEND);
@@ -174,4 +182,11 @@ public class OpaqueRenderPass extends RenderPass
             return depthTarget;
     }
     
+    public float getZNear() {
+        return cachedZNear;
+    }
+    
+    public float getZFar() {
+        return cachedZFar;
+    }
 }
