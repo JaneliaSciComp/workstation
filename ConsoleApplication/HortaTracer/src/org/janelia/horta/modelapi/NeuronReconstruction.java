@@ -38,14 +38,18 @@ import org.janelia.console.viewerapi.ObservableInterface;
  *
  * @author Christopher Bruns
  */
-public interface NeuronReconstruction extends ObservableInterface, Hideable
+public interface NeuronReconstruction extends Hideable
 {
     String getName();
     void setName(String name);
     
     Color getColor();
     void setColor(Color color);
+    ObservableInterface getColorChangeObservable();
     
     Collection<NeuronVertex> getVertexes();
     Collection<NeuronEdge> getEdges();
+    ObservableInterface getGeometryChangeObservable();
+    
+    ObservableInterface getVisibilityChangeObservable();
 }

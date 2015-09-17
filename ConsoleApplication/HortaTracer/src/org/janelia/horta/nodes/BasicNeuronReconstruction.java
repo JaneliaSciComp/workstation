@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.Observer;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.ComposableObservable;
+import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.horta.modelapi.NeuronEdge;
 import org.janelia.horta.modelapi.SwcVertex;
 import org.janelia.horta.modelapi.NeuronReconstruction;
@@ -60,13 +61,16 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
     private String name = "(unnamed neuron)";
     private List<NeuronVertex> nodes = new ArrayList<>();
     private List<NeuronEdge> edges = new ArrayList<>();
-    private final ComposableObservable changeObservable = new ComposableObservable();
+    private final ComposableObservable colorChangeObservable = new ComposableObservable();
+    private final ComposableObservable geometryChangeObservable = new ComposableObservable();
+    private final ComposableObservable visibilityChangeObservable = new ComposableObservable();
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private boolean visible = true;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public BasicNeuronReconstruction()
     {
+        // getColorChangeObservable().setChanged();
     }
 
     public BasicNeuronReconstruction(File swcFile) throws FileNotFoundException, IOException
@@ -150,7 +154,7 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
         if (color.equals(this.color))
             return;
         this.color = color;
-        setChanged();
+        getColorChangeObservable().setChanged();
         // notifyObservers(); // commented, so delegate to a higher authority...
     }
 
@@ -166,44 +170,32 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
         if (visible == this.visible)
             return;
         this.visible = visible;
-        setChanged();
+        getVisibilityChangeObservable().setChanged();
         // notifyObservers(); // delegate to a higher authority...
-    }
-    
-    @Override
-    public void setChanged()
-    {
-        changeObservable.setChanged();
-    }
-
-    @Override
-    public void notifyObservers()
-    {
-        changeObservable.notifyObservers();
-    }
-
-    @Override
-    public void addObserver(Observer observer)
-    {
-        changeObservable.addObserver(observer);
-    }
-
-    @Override
-    public void deleteObserver(Observer observer)
-    {
-        changeObservable.deleteObserver(observer);
-    }
-
-    @Override
-    public void deleteObservers()
-    {
-        changeObservable.deleteObservers();
     }
 
     @Override
     public Collection<NeuronEdge> getEdges()
     {
         return edges;
+    }
+
+    @Override
+    public ObservableInterface getColorChangeObservable()
+    {
+        return colorChangeObservable;
+    }
+
+    @Override
+    public ObservableInterface getGeometryChangeObservable()
+    {
+        return geometryChangeObservable;
+    }
+
+    @Override
+    public ObservableInterface getVisibilityChangeObservable()
+    {
+        return visibilityChangeObservable;
     }
     
 }

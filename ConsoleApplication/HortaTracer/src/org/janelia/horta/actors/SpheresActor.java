@@ -64,13 +64,26 @@ public class SpheresActor extends BasicGL3Actor
         meshActor = new MeshActor(meshGeometry, material, this);
         this.addChild(meshActor);
         this.neuron = neuron;
+        setColor(neuron.getColor());
         
-        neuron.addObserver(new Observer() {
+        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                setVisible(neuron.isVisible());
+            }
+        });
+        neuron.getColorChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
             {
                 setColor(neuron.getColor());
-                setVisible(neuron.isVisible());
+            }
+        });
+        neuron.getGeometryChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
                 // TODO: more careful updating of nodes
                 meshGeometry.clear();
                 for (NeuronVertex neuronVertex : neuron.getVertexes()) {
@@ -85,9 +98,14 @@ public class SpheresActor extends BasicGL3Actor
     @Override
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
         // Propagate any pending structure changes...
-        if (neuron != null)
-            neuron.notifyObservers();
+        if (neuron != null) {
+            neuron.getVisibilityChangeObservable().notifyObservers();
+        }
         if (! isVisible()) return;
+        if (neuron != null) {
+            neuron.getColorChangeObservable().notifyObservers();
+            neuron.getGeometryChangeObservable().notifyObservers();
+        }
         // if (meshGeometry.size() < 1) return;
         // gl.glDisable(GL3.GL_DEPTH_TEST);
         super.display(gl, camera, parentModelViewMatrix);       

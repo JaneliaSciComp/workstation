@@ -68,7 +68,15 @@ public class NeuriteLineActor extends BasicGL3Actor
         this.addChild(meshActor);
         buildMesh(neuron);
         meshGeometry.notifyObservers();
-        neuron.addObserver(new Observer() {
+        
+        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                setVisible(neuron.isVisible());
+            }
+        });
+        neuron.getGeometryChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
             {
@@ -77,6 +85,7 @@ public class NeuriteLineActor extends BasicGL3Actor
                 meshGeometry.notifyObservers();
             }
         });
+        
         this.neuron = neuron;
     }
     
@@ -84,7 +93,14 @@ public class NeuriteLineActor extends BasicGL3Actor
     public void display(GL3 gl, AbstractCamera camera, Matrix4 modelViewMatrix) {
         // First accomodate any unrealized changes to neuron model
         logger.info("Neuron actor display");
-        neuron.notifyObservers();
+        if (neuron != null) {
+            neuron.getVisibilityChangeObservable().notifyObservers();
+        }
+        if (! isVisible()) return;
+        if (neuron != null) {
+            neuron.getColorChangeObservable().notifyObservers();
+            neuron.getGeometryChangeObservable().notifyObservers();
+        }
         super.display(gl, camera, modelViewMatrix);
     }
     

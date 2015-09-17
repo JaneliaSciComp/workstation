@@ -143,42 +143,37 @@ public class NeuriteActor extends BasicGL3Actor {
         this.addChild(meshActor);
 
         this.neuriteModel = null;
-        neuron.addObserver(new Observer() {
+        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
             @Override
-            public void update(Observable o, Object arg) {
-                // logger.info("Neuron actor responds to NeuronReconstruction change");
-                boolean geometryChanged = false;
-
-                // Did the neuron just become invisible?
-                if (isVisible() != neuron.isVisible()) {
-                    meshGeometry.setChanged();
-                    geometryChanged = true;
-                }
+            public void update(Observable o, Object arg)
+            {
                 setVisible(neuron.isVisible());
-                
-                // color
-                if (! neuron.getColor().equals(material.getColor())) {
-                    setColor(neuron.getColor());
-                    meshGeometry.setChanged();
-                    geometryChanged = true;
-                }
-                
+            }
+        });
+        neuron.getColorChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                setColor(neuron.getColor());
+            }
+        });
+        neuron.getGeometryChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
                 // System.out.println("Neurite actor update");
                 if (! meshGeometry.isEmpty()) {
                     meshGeometry.clear();
-                    geometryChanged = true;
                 }
                 
                 if (! neuron.getVertexes().isEmpty()) {
                     for (NeuronVertex neuronVertex : neuron.getVertexes()) {
                         Vertex vertex = meshGeometry.addVertex(neuronVertex.getLocation());
                         vertex.setAttribute("radius", 10.0f);
-                        geometryChanged = true;
                         // System.out.println("Neurite actor anchor location "+anchor.getLocationUm()+"; radius = "+anchor.getRadiusUm()); // works
                     }
                 }
-                if (geometryChanged)
-                    meshGeometry.notifyObservers();
+                meshGeometry.notifyObservers();
             }
         });
     }
@@ -187,8 +182,14 @@ public class NeuriteActor extends BasicGL3Actor {
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
         // logger.info("display neuron anchor");
         // Propagate any pending structure changes...
-        if (neuron != null)
-            neuron.notifyObservers();
+        if (neuron != null) {
+            neuron.getVisibilityChangeObservable().notifyObservers();
+        }
+        if (! isVisible()) return;
+        if (neuron != null) {
+            neuron.getColorChangeObservable().notifyObservers();
+            neuron.getGeometryChangeObservable().notifyObservers();
+        }
         // if (meshGeometry.size() < 1) return;
         // System.out.println("Displaying anchors, geometry size = "+meshGeometry.size()); // works
         gl.glDisable(GL3.GL_DEPTH_TEST);
