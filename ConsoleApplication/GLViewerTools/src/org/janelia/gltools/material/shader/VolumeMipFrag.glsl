@@ -383,6 +383,9 @@ void main() {
         // Next line should be unneccessary, but prevents (sporadic?) driver crash
         nextEdge = max(nextEdge, previousEdge + minStep);
 
+        // At the end of the ray, sample the very end, for best depth clipping
+        if ((nextEdge > tMinMax.y) && (previousEdge < tMinMax.y))
+            nextEdge = tMinMax.y - minStep/10;
 
         // Average between previousEdge and nextEdge only for NEAREST filtering...
         // Sample ray at voxel center (midpoint between voxel edge intersections)
