@@ -144,6 +144,14 @@ called from a  SimpleWorker thread.
         }
     }
 
+    private void updateCurrentWorkspaceAndNeuron() {
+        updateCurrentWorkspace();
+        // we can refresh the neuron object from the workspace:
+        if (getCurrentNeuron() != null) {
+            currentNeuron = getNeuronFromNeuronID(getCurrentNeuron().getId());
+        }
+    }
+
     public void loadWorkspace(TmWorkspace workspace) {
         if (workspace != null) {
             currentWorkspace = workspace;
@@ -254,6 +262,17 @@ called from a  SimpleWorker thread.
         TmNeuron foundNeuron = null;
         for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
             if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
+                foundNeuron = neuron;
+                break;
+            }
+        }
+        return foundNeuron;
+    }
+
+    public TmNeuron getNeuronFromNeuronID(Long neuronID) {
+        TmNeuron foundNeuron = null;
+        for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
+            if (neuron.getId().equals(neuronID)) {
                 foundNeuron = neuron;
                 break;
             }
