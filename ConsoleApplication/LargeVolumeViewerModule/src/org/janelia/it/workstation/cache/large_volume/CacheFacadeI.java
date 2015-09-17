@@ -29,6 +29,13 @@ public interface CacheFacadeI {
      * @return stream of data, fully decompressed.
      */
     SeekableStream get(File file);
+    
+    /**
+     * Takes name of decompressed version of input file. Returns wad of bytes.
+     * @param file key for lookup
+     * @return byte arr of post-decompress/post-extract.
+     */
+    byte[] getBytes(File file);
 
     /**
      * @return the neighborhoodBuilder

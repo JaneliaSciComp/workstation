@@ -33,4 +33,9 @@ public class TifTextureBuilder extends TextureDataBuilder implements VolumeFileL
     public void loadVolumeFile( String fileName ) throws Exception {
         getVolumeFileLoader().loadVolumeFile(fileName);
     }
+
+    @Override
+    public void loadVolumeInFormat(byte[] rawBytes) throws Exception {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

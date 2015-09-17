@@ -132,7 +132,12 @@ implements MouseModalWidget, TileConsumer, RepaintListener
             CacheController.getInstance().close();
             tileServer.setPrefetch(false);
             
-            final int standardFileLength = CacheFacade.getStandardFileLength(topFolderURL);
+            AbstractTextureLoadAdapter loadAdapter = tileServer.getLoadAdapter();
+            int standardFileLength = -1;
+            if (loadAdapter instanceof Cache3DOctreeLoadAdapter) {
+                Cache3DOctreeLoadAdapter cacheLoadAdapter = (Cache3DOctreeLoadAdapter)loadAdapter;
+                standardFileLength = cacheLoadAdapter.getStandardFileSize();
+            }
             CacheFacadeI cacheManager = new MapCacheFacade(standardFileLength);
             log.info("Top Folder URL for Cache is {}, and standard file size is {}.", topFolderURL.getFile(), standardFileLength);
             cacheManager.setNeighborhoodBuilder(

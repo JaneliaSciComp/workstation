@@ -30,7 +30,7 @@ public class OctreeMetadataSniffer {
     private final File topFolder;
     private String remoteBasePath;
     private final TileFormat tileFormat;
-    
+        
     public OctreeMetadataSniffer(File topFolder, TileFormat tileFormat) {
         this.topFolder = topFolder;
         this.tileFormat = tileFormat;
@@ -221,6 +221,10 @@ public class OctreeMetadataSniffer {
                     "Failed to find metadata", ex
             );
         }
+    }
+    
+    public int getStandardVolumeSize() {
+        return tileFormat.getTileBytes();
     }
 
     public static int computeDepth(int octreeDepth, TileIndex tileIndex) {

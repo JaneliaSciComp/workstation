@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -29,14 +30,16 @@ public class CachePopulator {
     private static final String MEM_ALLOC_THREAD_PREFIX = "CacheByteAllocThread";
     private final ExecutorService fileLoadExecutor;
     private final ExecutorService memAllocExecutor;
-    private final CacheToolkit acceptor;
+    private final CacheCollection cacheCollection;
     private int standardFileSize = 0;
+    private boolean extractFromContainerFormat = false;
+    
     private Logger log = LoggerFactory.getLogger(CachePopulator.class);
         
-    public CachePopulator(CacheToolkit acceptor) {
+    public CachePopulator(CacheCollection cacheCollection) {
         this.fileLoadExecutor = Executors.newFixedThreadPool(FILE_READ_THREAD_COUNT, new CustomNamedThreadFactory(FILE_READ_THREAD_PREFIX));
         this.memAllocExecutor = Executors.newFixedThreadPool(MEM_ALLOC_THREAD_COUNT, new CustomNamedThreadFactory(MEM_ALLOC_THREAD_PREFIX));
-        this.acceptor = acceptor;
+        this.cacheCollection = cacheCollection;
     }
     
     public void setStandadFileSize(int size) {
@@ -72,7 +75,28 @@ public class CachePopulator {
      */
     public Future<byte[]> cache(File file, byte[] storage) {
         log.info("Making a cache populator worker for {}.", trimToOctreePath(file.getAbsolutePath()));
-        return fileLoadExecutor.submit(new CachePopulatorWorker(file, storage));
+        Callable cachePopulatorWorker = null;
+        if (isExtractFromContainerFormat()) {
+            cachePopulatorWorker = new ExtractedCachePopulatorWorker(file, storage);
+        }
+        else {
+            cachePopulatorWorker = new CachePopulatorWorker(file, storage);
+        }
+        return fileLoadExecutor.submit(cachePopulatorWorker);
+    }
+
+    /**
+     * @return the extractFromContainerFormat
+     */
+    public boolean isExtractFromContainerFormat() {
+        return extractFromContainerFormat;
+    }
+
+    /**
+     * @param extractFromContainerFormat the extractFromContainerFormat to set
+     */
+    public void setExtractFromContainerFormat(boolean extractFromContainerFormat) {
+        this.extractFromContainerFormat = extractFromContainerFormat;
     }
 
     public void close() {
@@ -82,9 +106,9 @@ public class CachePopulator {
 
     private void allocateAndLaunch(File file, Set<String> populatedList) {
         final String key = file.getAbsolutePath();
-        if (! acceptor.hasKey(key) && (!populatedList.contains(key))) {
+        if (! cacheCollection.hasKey(key) && (!populatedList.contains(key))) {
             if (standardFileSize > 0) {
-                byte[] bytes = acceptor.getStorage(key);
+                byte[] bytes = cacheCollection.getStorage(key);
                 Future<byte[]> future = cache(file, bytes);                
                 CachableWrapper wrapper = new CachableWrapper(future, bytes);
                 
@@ -99,7 +123,7 @@ public class CachePopulator {
     }
     
     private void populateElement(String id, CachableWrapper wrapper) {
-        acceptor.put(id, wrapper);        
+        cacheCollection.put(id, wrapper);        
     }
     
     String trimToOctreePath(String id) {
@@ -119,11 +143,5 @@ public class CachePopulator {
         }
         return id;
     }
-    
-    public static interface CacheToolkit {
-        void put(String id, CachableWrapper wrapper);
-        boolean hasKey(String id);
-        byte[] getStorage(String id);
-    }
-    
+
 }

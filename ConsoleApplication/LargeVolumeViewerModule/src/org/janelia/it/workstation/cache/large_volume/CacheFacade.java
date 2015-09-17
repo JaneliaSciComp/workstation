@@ -18,7 +18,6 @@ import java.util.concurrent.Future;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.OctreeMetadataSniffer;
 
 import org.slf4j.Logger;
@@ -86,7 +85,7 @@ public class CacheFacade implements CacheFacadeI {
         cacheName = region;
         URL url = getClass().getResource("/ehcacheCompressedTiff.xml");
         manager = CacheManager.create(url);
-        CachePopulator.CacheToolkit toolkit = new CachePopulator.CacheToolkit() {            
+        CacheCollection toolkit = new CacheCollection() {            
             @Override
             public void put(String id, CachableWrapper wrapper) {
                 final Element element = new Element(id, wrapper);
@@ -135,6 +134,11 @@ public class CacheFacade implements CacheFacadeI {
         File compressedFile = compressNamer.getCompressedName(file);        
         return get(compressedFile.getAbsolutePath());
     }    
+    
+    @Override
+    public byte[] getBytes(File file) {
+        return getBytes(file.getAbsolutePath());
+    }
 
     /**
      * Tell if this file is not only in cache, but will have no Future.get
@@ -265,14 +269,27 @@ public class CacheFacade implements CacheFacadeI {
      * @return result, after awaiting the future, or null on exception.
      */
     private SeekableStream get(final String id) {
+        SeekableStream rtnVal = null;
+        try {
+            final byte[] bytes = getBytes(id);            
+            if (bytes != null) {
+                rtnVal = new ByteArraySeekableStream(bytes);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return rtnVal;
+    }
+
+    private byte[] getBytes(final String id) {
         String keyOnly = cachePopulator.trimToOctreePath(id);
         log.info("Getting {}", keyOnly);
         totalGets++;
-        SeekableStream rtnVal = null;
+        byte[] rtnVal = null;
         try {
             Cache cache = manager.getCache(cacheName);
             CachableWrapper wrapper = (CachableWrapper) cache.get(id).getObjectValue();
-            rtnVal = new ByteArraySeekableStream(wrapper.getBytes());
+            rtnVal = wrapper.getBytes();
             log.info("Returning {}: found in cache.", keyOnly);
         } catch (InterruptedException | ExecutionException ie) {
             log.warn("Interrupted thread, while returning {}.", id);

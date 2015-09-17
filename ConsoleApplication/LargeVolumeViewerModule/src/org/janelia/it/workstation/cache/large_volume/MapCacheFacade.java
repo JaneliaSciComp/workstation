@@ -8,7 +8,6 @@ package org.janelia.it.workstation.cache.large_volume;
 import com.sun.media.jai.codec.ByteArraySeekableStream;
 import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -19,9 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
-import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
-import org.janelia.it.workstation.gui.large_volume_viewer.OctreeMetadataSniffer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +38,7 @@ public class MapCacheFacade implements CacheFacadeI {
     
     private GeometricNeighborhoodBuilder neighborhoodBuilder;
     private GeometricNeighborhood neighborhood;
-    private CachePopulator cachePopulator;
+    private final CachePopulator cachePopulator;
     //private CacheAccess jcs;
     private final CompressedFileResolver resolver = new CompressedFileResolver();
     private CompressedFileResolver.CompressedFileNamer compressNamer;
@@ -52,32 +48,16 @@ public class MapCacheFacade implements CacheFacadeI {
     private int totalGets;
     private int noFutureGets;
     
-    private int standardFileSize;
+    private int standardFileSize = -1;
     
     private Map<String,CachableWrapper> cacheMap = new HashMap<>();
     private List<byte[]> allocatedBuffers = new ArrayList<>();
     
     private Logger log = LoggerFactory.getLogger(MapCacheFacade.class);
     
-    /**
-     * Possibly temporary: using this class to wrap use of BTOLA, and hide
-     * the dependency.  If another way can be found to find the standard
-     * TIFF file size, this method need not be used.
-     * 
-     * @param folderUrl base folder containing TIFF files.
-     * @return size of a known one, as returned by BTOLA
-     */
-    public static int getStandardFileLength(URL folderUrl) {
-        try {
-            File folder = new File(folderUrl.toURI());
-            return OctreeMetadataSniffer.getStandardTiffFileSize(folder);
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-    
     public MapCacheFacade(int standardFileSize) {
-        CachePopulator.CacheToolkit acceptor = new CachePopulator.CacheToolkit() {
+        this.standardFileSize = standardFileSize;
+        CacheCollection collection = new CacheCollection() {
             @Override
             public void put(String id, CachableWrapper wrapper) {
                 cacheMap.put(id, wrapper);
@@ -93,12 +73,12 @@ public class MapCacheFacade implements CacheFacadeI {
                 return allocatedBuffers.remove(0);
             }
         };
-        this.standardFileSize = standardFileSize;
-//        allocateInitialBuffers(standardFileSize);
-        cachePopulator = new CachePopulator(acceptor);
+        cachePopulator = new CachePopulator(collection);
         cachePopulator.setStandadFileSize(standardFileSize);
+        cachePopulator.setExtractFromContainerFormat(true);
     }
     
+    @Override
     public void close() {
         cachePopulator.close();
     }
@@ -121,6 +101,11 @@ public class MapCacheFacade implements CacheFacadeI {
         return get(compressedFile.getAbsolutePath());
     }    
 
+    @Override
+    public byte[] getBytes(File file) {
+        return getBytes(file.getAbsolutePath());
+    }
+
     /**
      * Tell if this file is not only in cache, but will have no Future.get
      * wait time.
@@ -128,6 +113,7 @@ public class MapCacheFacade implements CacheFacadeI {
      * @param file decompressed file's name.
      * @return true -> no waiting for cache.
      */
+    @Override
     public boolean isReady(File file) {
         boolean rtnVal = false;
         // The key stored in the cache is the compressed file name.
@@ -155,6 +141,7 @@ public class MapCacheFacade implements CacheFacadeI {
      * @todo get the zoom level as number or object, into this calculation.
      * @param focus neighborhood is around this point.
      */
+    @Override
 	public synchronized void setFocus(double[] focus) {
         log.info("Setting focus...");
         cameraFocus = focus;
@@ -165,11 +152,13 @@ public class MapCacheFacade implements CacheFacadeI {
      * Set the zoom, but do not trigger any changes.  Allow trigger to be
      * pulled downstream.
      */
+    @Override
     public void setCameraZoomValue(Double zoom) {
         log.debug("Setting zoom {}....", zoom);
         this.cameraZoom = zoom;
     }
     
+    @Override
     public void setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
         if (pixelsPerSceneUnit < 1.0) {
             pixelsPerSceneUnit = 1.0;
@@ -180,6 +169,7 @@ public class MapCacheFacade implements CacheFacadeI {
     /**
      * Change camera zoom, and trigger any cascading updates.
      */
+    @Override
     public void setCameraZoom(Double zoom) {
         setCameraZoomValue(zoom);
         // Force a recalculation, based on both focus and zoom.
@@ -191,6 +181,7 @@ public class MapCacheFacade implements CacheFacadeI {
     /**
      * @return the neighborhoodBuilder
      */
+    @Override
     public GeometricNeighborhoodBuilder getNeighborhoodBuilder() {
         return neighborhoodBuilder;
     }
@@ -202,6 +193,7 @@ public class MapCacheFacade implements CacheFacadeI {
      * 
      * @param neighborhoodBuilder the neighborhoodBuilder to set
      */
+    @Override
     public void setNeighborhoodBuilder(GeometricNeighborhoodBuilder neighborhoodBuilder) {
         this.neighborhoodBuilder = neighborhoodBuilder;
         
@@ -210,6 +202,7 @@ public class MapCacheFacade implements CacheFacadeI {
     /**
      * For testing purposes.
      */
+    @Override
     public void dumpKeys() {
         System.out.println("All Keys:=-----------------------------------: " + cacheMap.size());
         Set<String> safeKeySet = new HashSet<>(cacheMap.keySet());
@@ -237,13 +230,35 @@ public class MapCacheFacade implements CacheFacadeI {
      * @return result, after awaiting the future, or null on exception.
      */
     private SeekableStream get(final String id) {
+        SeekableStream rtnVal = null;
+        try {
+            final byte[] bytes = getBytes(id);
+            if (bytes != null) {
+                rtnVal = new ByteArraySeekableStream(bytes);
+            }
+        } catch (Exception ex) {
+            log.warn("Ultimately returning null for {}.", id);
+            ex.printStackTrace();
+        }
+        return rtnVal;
+    }
+
+    /**
+     * ID is an absolute path. Also, packages a decompressed version of the
+     * cached data, into a seekable stream.
+     *
+     * @see CacheManager#get(java.io.File) calls this.
+     * @param id what to dig up.
+     * @return result, after awaiting the future, or null on exception.
+     */
+    private byte[] getBytes(final String id) {
         String keyOnly = cachePopulator.trimToOctreePath(id);
         log.info("Getting {}", keyOnly);
         totalGets++;
-        SeekableStream rtnVal = null;
+        byte[] rtnVal = null;
         try {
             CachableWrapper wrapper = (CachableWrapper) cacheMap.get(id);
-            rtnVal = new ByteArraySeekableStream(wrapper.getBytes());
+            rtnVal = wrapper.getBytes();
             log.info("Returning {}: found in cache.", keyOnly);
         } catch (InterruptedException | ExecutionException ie) {
             log.warn("Interrupted thread, while returning {}.", id);
@@ -338,29 +353,9 @@ public class MapCacheFacade implements CacheFacadeI {
             allocatedBuffers.add(newAllocation);
         }
         log.info("Final allocation = {}.", availableBuffers);
-//
-//        for (int i = availableBuffers; i < 0; i++) {
-//            byte[] newAllocation = new byte[standardFileSize];
-//            allocatedBuffers.add(newAllocation);
-//        }
-
         return rtnVal;
     }
 
-    /** Starting with a small collection.  Add more if needed. */
-//    private void allocateInitialBuffers(int filesize) {
-//        for (int i = 0; i < 10; i++) {
-//            allocatedBuffers.add( new byte[filesize] );
-//        }
-//    }
-    
-    /** Call this with each neighborhood produced.  It will make sure the right number of byte arrays are available. */
-//    private synchronized void ensureStorage(GeometricNeighborhood neighborhood) {
-//        for (int i = allocatedBuffers.size(); i < neighborhood.getFiles().size(); i++ ) {
-//            allocatedBuffers.add( new byte[standardFileSize] );
-//        }
-//    }
-    
     public static class MergedNeighborhood implements GeometricNeighborhood {
         
         private Set<File> files;
