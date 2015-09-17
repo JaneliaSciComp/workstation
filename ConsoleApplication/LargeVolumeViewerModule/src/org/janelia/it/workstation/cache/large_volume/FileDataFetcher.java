@@ -7,9 +7,7 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 
 /**
- * This implementation of a cache toolkit, will break out the contents of 
- * a TIF file, into something more handy to deal with.  The 'TIF' question
- * is settled early on.
+ * Fetching data from any decoded file format, into a byte array in memory.
  * 
  * @author fosterl
  */
