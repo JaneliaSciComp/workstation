@@ -297,9 +297,11 @@ public class RESTDomainFacade implements DomainFacade {
         }
         Response response = serviceEndpoints.get("treenode")
                 .path("children")
-                .queryParam("subjectKey", SessionMgr.getSubjectKey())
+                .queryParam("subjectKey", SessionMgr.getSubjectKey()),
+                .queryParam("treeNodeId", treeNode.getId())
+                .queryParam("children", references)
                 .request("application/json")
-                .post(Entity.json(treeNode));
+                .post();
         TreeNode updatedTreeNode = response.readEntity(TreeNode.class);
         int responseStatus = response.getStatus();
 
