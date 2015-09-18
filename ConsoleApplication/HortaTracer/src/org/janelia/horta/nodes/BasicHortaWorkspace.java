@@ -49,7 +49,7 @@ public class BasicHortaWorkspace implements HortaWorkspace
     private final List<NeuronReconstruction> neurons = new ArrayList<>();
     private final Vantage vantage;
     private final ComposableObservable changeObservable = new ComposableObservable();
-    private Color backgroundColor = Color.BLUE;
+    private Color backgroundColor = new Color(0.1f, 0.1f, 0.1f, 1f);
 
     public BasicHortaWorkspace(Vantage vantage) {
         this.vantage = vantage;

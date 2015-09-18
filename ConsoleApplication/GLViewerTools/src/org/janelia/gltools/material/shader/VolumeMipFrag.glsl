@@ -23,8 +23,6 @@ uniform mat4 tcToCamera = mat4(1);
 // clip using depth buffer from opaque pass TODO:
 uniform sampler2D opaqueDepthTexture;
 uniform vec2 opaqueZNearFar = vec2(1e-2, 1e4);
-// uniform mat4 tcFromCameraPlane = mat4(1); // NO, just use transpose(tcToCamera)
-uniform vec2 viewportSize = vec2(640, 480); // for computing texture coordinates from gl_FragCoord
 
 // additional render target for picking
 layout(location = 1) out ivec2 pickId;
@@ -112,28 +110,39 @@ vec4 filterFastCubic3D(sampler3D texture, vec3 texcoord, vec3 texscale, int lod)
 
     // This is 3D version of original 2D code sample
     vec3 c0 = texcoord - vec3(0.5, 0.5, 0.5);
-    vec3 c1 = texcoord + vec3(1.5, 1.5, 1.5);
     vec3 s0 = vec3(xcubic.x + xcubic.y, ycubic.x + ycubic.y, zcubic.x + zcubic.y);
-    vec3 s1 = vec3(xcubic.z + xcubic.w, ycubic.z + ycubic.w, zcubic.z + zcubic.w);
     vec3 offset0 = c0 + vec3(xcubic.y, ycubic.y, zcubic.y) / s0;
-    vec3 offset1 = c1 + vec3(xcubic.w, ycubic.w, zcubic.w) / s1;
 
-    float sx = s0.x / (s0.x + s1.x);
-    float sy = s0.y / (s0.y + s1.y);
-    float sz = s0.z / (s0.z + s1.z);
-
+    // For performance, interleave texture fetches with arithmetic
+    // fetch...
     vec4 sample000 = textureLod(texture, vec3(offset0.x, offset0.y, offset0.z) * texscale, lod);
+    // compute...
+    vec3 c1 = texcoord + vec3(1.5, 1.5, 1.5);
+    vec3 s1 = vec3(xcubic.z + xcubic.w, ycubic.z + ycubic.w, zcubic.z + zcubic.w);
+    vec3 offset1 = c1 + vec3(xcubic.w, ycubic.w, zcubic.w) / s1;
+    // fetch...
     vec4 sample100 = textureLod(texture, vec3(offset1.x, offset0.y, offset0.z) * texscale, lod);
+    // compute...
+    float sx = s0.x / (s0.x + s1.x);
     vec4 sampleX00 = mix(sample100, sample000, sx);
+    // fetch...
     vec4 sample010 = textureLod(texture, vec3(offset0.x, offset1.y, offset0.z) * texscale, lod);
     vec4 sample110 = textureLod(texture, vec3(offset1.x, offset1.y, offset0.z) * texscale, lod);
+    // compute...
+    float sy = s0.y / (s0.y + s1.y);
     vec4 sampleX10 = mix(sample110, sample010, sx);
     vec4 sampleXY0 = mix(sampleX10, sampleX00, sy);
+    // fetch...
     vec4 sample001 = textureLod(texture, vec3(offset0.x, offset0.y, offset1.z) * texscale, lod);
     vec4 sample101 = textureLod(texture, vec3(offset1.x, offset0.y, offset1.z) * texscale, lod);
+    // compute...
     vec4 sampleX01 = mix(sample101, sample001, sx);
+    float sz = s0.z / (s0.z + s1.z);
+    // final fetch.
     vec4 sample011 = textureLod(texture, vec3(offset0.x, offset1.y, offset1.z) * texscale, lod);
     vec4 sample111 = textureLod(texture, vec3(offset1.x, offset1.y, offset1.z) * texscale, lod);
+
+    // compute.
     vec4 sampleX11 = mix(sample111, sample011, sx);
     vec4 sampleXY1 = mix(sampleX11, sampleX01, sy);
 
@@ -257,7 +266,8 @@ void main() {
 
     // Clip by depth buffer from opaque render pass
     // http://web.archive.org/web/20130416194336/http://olivers.posterous.com/linear-depth-in-glsl-for-real
-    vec2 depthTc = gl_FragCoord.xy / viewportSize; // compute texture coordinate for depth lookup
+    // next line assumes that opaqueDepthTexture is the same size as the current viewport
+    vec2 depthTc = gl_FragCoord.xy / textureSize(opaqueDepthTexture, 0); // compute texture coordinate for depth lookup
     float z_buf = texture(opaqueDepthTexture, depthTc).x; // raw depth value from z-buffer
     float zNear = opaqueZNearFar.x;
     float zFar = opaqueZNearFar.y;
@@ -326,7 +336,7 @@ void main() {
         float previousT = previousEdge;
     #endif
 
-    // Store results of ray casting at multiple positions:
+    // TODO: store results of ray casting at multiple positions:
     float tMaxAbs = previousEdge; // ray point where intensity is at local maximum after tThreshold
     // TODO - implement these other values, if needed
     // float tThreshold = -1; // ray point where intensity first exceeds opacityFunctionMax
