@@ -35,6 +35,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
     private String remoteBasePath;
     private int standardFileSize;
     private boolean acceptNullDecoders = true;
+    private int sliceSize = -1;
     
     @Override
     public TextureData2dGL loadToRam(TileIndex tileIndex) throws TileLoadError, MissingTileException {
@@ -84,6 +85,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         octreeMetadataSniffer.setRemoteBasePath(remoteBasePath);
         octreeMetadataSniffer.sniffMetadata(topFolder);
         standardFileSize = octreeMetadataSniffer.getStandardVolumeSize();
+        sliceSize = tileFormat.getTileSize()[0] * tileFormat.getTileSize()[1] * (tileFormat.getBitDepth()/8);
 		// Don't launch pre-fetch yet.
         // That must occur AFTER volume initialized signal is sent.
     }
@@ -124,9 +126,10 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                 byte[] tiffBytes = cacheManager.getBytes(tiff);
                 if ( tiffBytes != null ) {
                     // Must carve out just the right portion.
-                    //todo
                     try {
-                        channels[sc] = createRenderedImage(tiffBytes, tileIndex);
+                        byte[] slice = new byte[sliceSize];
+                        System.arraycopy(tiffBytes, sliceSize * relativeZ, slice, 0, sliceSize);
+                        channels[sc] = createRenderedImage(slice, tileIndex);
                     } catch ( IOException ioe ) {
                         log.error("IO during read of bytes");
                         ioe.printStackTrace();
@@ -163,7 +166,8 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
     
     private RenderedImage createRenderedImage(byte[] tiffBytes, TileIndex tileIndex) throws IOException {
         // Need to check the params.
-        BufferedImage rimage = new BufferedImage(tileIndex.getX(), tileIndex.getY(), BufferedImage.TYPE_INT_RGB); 
+        //   todo figure out appropriate types.
+        BufferedImage rimage = new BufferedImage(tileFormat.getTileSize()[0], tileFormat.getTileSize()[1], BufferedImage.TYPE_INT_RGB); 
         Iterator<?> readers = ImageIO.getImageReadersByFormatName("tiff");
         ImageReader reader = (ImageReader) readers.next();
         ByteArrayInputStream bis = new ByteArrayInputStream(tiffBytes);
