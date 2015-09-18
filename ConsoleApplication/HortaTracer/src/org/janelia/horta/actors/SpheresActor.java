@@ -111,7 +111,7 @@ public class SpheresActor extends BasicGL3Actor
         super.display(gl, camera, parentModelViewMatrix);       
     }
 
-    public void setColor(Color color) {
+    public final void setColor(Color color) {
         material.setColor(color);
     }
 }

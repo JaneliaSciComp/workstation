@@ -42,9 +42,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Observer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.modelapi.NeuronEdge;
 import org.janelia.horta.modelapi.SwcVertex;
 import org.janelia.horta.modelapi.NeuronReconstruction;
@@ -68,30 +71,68 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
     private boolean visible = true;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public BasicNeuronReconstruction()
-    {
-        // getColorChangeObservable().setChanged();
-    }
-
     public BasicNeuronReconstruction(File swcFile) throws FileNotFoundException, IOException
     {
         BufferedReader br = new BufferedReader(new FileReader(swcFile));
         String line;
+        
+        // Parse origin offset from header
+        // # OFFSET 77277.017247 44351.723117 24137.592725
+        Vector3 originOffset = new Vector3(0, 0, 0);
+        String sepRx = "[ ,]+";
+        String floatRx = "(-?[0-9\\.]+)";
+        Pattern offsetPattern = Pattern.compile("^\\s*#\\s*OFFSET\\s+"
+                +floatRx // x
+                +sepRx
+                +floatRx // y
+                +sepRx
+                +floatRx // z
+                +"\\s*$");
+        
+        // Parse neuron color from header
+        // # COLOR 0.000000,1.000000,0.000000
+        Pattern colorPattern = Pattern.compile("^\\s*#\\s*COLOR\\s+"
+                +floatRx // red
+                +sepRx
+                +floatRx // green
+                +sepRx
+                +floatRx // blue
+                +"\\s*$");
+        
         // Store parent relationships for resolution after reading
         Map<Integer, Integer> childParentMap = new HashMap<>();
         Map<Integer, SwcVertex> vertexMap = new HashMap<>();
         while ((line = br.readLine()) != null) {
-            if (line.startsWith("#")) // skip comments
-                continue;
+            if (line.startsWith("#")) { 
+                // Parse origin offset
+                Matcher m = offsetPattern.matcher(line);
+                if (m.matches()) {
+                    float ox = Float.parseFloat(m.group(1));
+                    float oy = Float.parseFloat(m.group(2));
+                    float oz = Float.parseFloat(m.group(3));
+                    originOffset.setX(ox);
+                    originOffset.setY(oy);
+                    originOffset.setZ(oz);
+                }
+                // Parse color
+                m = colorPattern.matcher(line);
+                if (m.matches()) {
+                    float cr = Float.parseFloat(m.group(1));
+                    float cg = Float.parseFloat(m.group(2));
+                    float cb = Float.parseFloat(m.group(3));
+                    color = new Color(cr, cg, cb);
+                }
+                continue; // skip comments
+            }
             // 1 2 77299.3 56354.5 22206.5 1.00 -1
             String[] fields = line.split("\\s+");
             if (fields.length < 7)
                 continue; // blank line?
             int label = Integer.parseInt(fields[0]);
             int type = Integer.parseInt(fields[1]);
-            float x = Float.parseFloat(fields[2]);
-            float y = Float.parseFloat(fields[3]);
-            float z = Float.parseFloat(fields[4]);
+            float x = Float.parseFloat(fields[2]) + originOffset.getX();
+            float y = Float.parseFloat(fields[3]) + originOffset.getY();
+            float z = Float.parseFloat(fields[4]) + originOffset.getZ();
             float radius = Float.parseFloat(fields[5]);
             int parentLabel = Integer.parseInt(fields[6]);
             SwcVertex node = new BasicSwcVertex(x, y, z);

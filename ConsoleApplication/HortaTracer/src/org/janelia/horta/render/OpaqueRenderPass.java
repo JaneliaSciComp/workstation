@@ -35,6 +35,7 @@ import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.Framebuffer;
+import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
 import org.janelia.gltools.texture.Texture2d;
@@ -189,4 +190,5 @@ public class OpaqueRenderPass extends RenderPass
     public float getZFar() {
         return cachedZFar;
     }
+
 }
