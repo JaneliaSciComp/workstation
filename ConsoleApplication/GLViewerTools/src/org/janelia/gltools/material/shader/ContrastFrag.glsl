@@ -70,7 +70,7 @@ void main() {
 	// TODO: allow inversion of lightness spectrum
     // HSL approach
     if (true) {
-        const float rampOffset = 1.5; // Enhance low-end of lightness spectrum
+        const float rampOffset = 1.6; // Enhance low-end of lightness spectrum; larger value => blacker color
         vec3 hsl = vec3( hue.x, saturation.x, pow(intensity, rampOffset) );
         vec3 rgb = hslToRgb(hsl);
         fragColor = vec4(rgb, opacity);
