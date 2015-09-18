@@ -7,6 +7,9 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReadParam;
@@ -67,7 +70,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             relativeSlice = tileDepth - relativeSlice - 1;
         }
 
-        return null;
+        return loadSlice(relativeSlice, tileIndex, folder, tileIndex.getSliceAxis());
     }
 
     public File getTopFolder() {
@@ -85,7 +88,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         octreeMetadataSniffer.setRemoteBasePath(remoteBasePath);
         octreeMetadataSniffer.sniffMetadata(topFolder);
         standardFileSize = octreeMetadataSniffer.getStandardVolumeSize();
-        sliceSize = tileFormat.getTileSize()[0] * tileFormat.getTileSize()[1] * (tileFormat.getBitDepth()/8);
+        sliceSize = octreeMetadataSniffer.getSliceSize(); //tileFormat.getTileSize()[0] * tileFormat.getTileSize()[1] * (tileFormat.getBitDepth()/8);
 		// Don't launch pre-fetch yet.
         // That must occur AFTER volume initialized signal is sent.
     }
@@ -98,7 +101,8 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         
         TextureData2dGL tex = new TextureData2dGL();
         final int sc = tileFormat.getChannelCount();
-        RenderedImage[] channels = new RenderedImage[sc];
+        Collection<byte[]> byteArrays = new ArrayList<>();
+        
         String tiffBase = OctreeMetadataSniffer.getTiffBase(axis);
         StringBuilder missingTiffs = new StringBuilder();
         StringBuilder requestedTiffs = new StringBuilder();
@@ -107,6 +111,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             return null;
         }
 
+        int totalBufferSize = 0;
         for (int c = 0; c < sc; ++c) {
             // Need to establish the channels, out of data extracted from cache.
             File tiff = new File(folder, OctreeMetadataSniffer.getFilenameForChannel(tiffBase, c));
@@ -125,15 +130,24 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             else {
                 byte[] tiffBytes = cacheManager.getBytes(tiff);
                 if ( tiffBytes != null ) {
+                    org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(tiffBytes, "Cache3DOctreeLoadAdapter.loadSlice()", folder.toString());
                     // Must carve out just the right portion.
                     try {
                         byte[] slice = new byte[sliceSize];
                         System.arraycopy(tiffBytes, sliceSize * relativeZ, slice, 0, sliceSize);
-                        channels[sc] = createRenderedImage(slice, tileIndex);
-                    } catch ( IOException ioe ) {
-                        log.error("IO during read of bytes");
-                        ioe.printStackTrace();
+                        totalBufferSize += sliceSize;
+                        byteArrays.add(slice);
+                        //channels[sc] = createRenderedImage(slice, tileIndex);                     
+//                    } catch ( IOException ioe ) {
+//                        log.error("IO during read of bytes");
+//                        ioe.printStackTrace();
+                    } catch ( RuntimeException rte ) {
+                        log.error("System exception during read of bytes");
+                        rte.printStackTrace();
                     }
+                }
+                else {
+                    log.error("Tiff bytes are null.");
                 }
 //                if (cacheManager.isReady(tiff)) {
 //                    tiffBytes = cacheManager.getBytes(tiff);
@@ -145,38 +159,39 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         }
         
         // Combine channels into one image
-        RenderedImage composite = channels[0];
-        if (sc > 1) {
-            try {
-                ParameterBlockJAI pb = new ParameterBlockJAI("bandmerge");
-                for (int c = 0; c < sc; ++c) {
-                    pb.addSource(channels[c]);
-                }
-                composite = JAI.create("bandmerge", pb);
-            } catch (NoClassDefFoundError exc) {
-                exc.printStackTrace();
-                return null;
-            }
-            // localLoadTimer.mark("merged channels");
-        }
+//        RenderedImage composite = channels[0];
+//        if (sc > 1) {
+//            try {
+//                ParameterBlockJAI pb = new ParameterBlockJAI("bandmerge");
+//                for (int c = 0; c < sc; ++c) {
+//                    pb.addSource(channels[c]);
+//                }
+//                composite = JAI.create("bandmerge", pb);
+//            } catch (NoClassDefFoundError exc) {
+//                exc.printStackTrace();
+//                return null;
+//            }
+//            // localLoadTimer.mark("merged channels");
+//        }
 
-        tex.loadRenderedImage(composite);
+        ByteBuffer pixels = ByteBuffer.allocate(totalBufferSize);
+        for (byte[] bytes: byteArrays) {
+            pixels.put(bytes);
+        }
+        tex.setPixels(pixels);
+        //tex.loadRenderedImage(composite);
         return tex;
     }
     
-    private RenderedImage createRenderedImage(byte[] tiffBytes, TileIndex tileIndex) throws IOException {
-        // Need to check the params.
-        //   todo figure out appropriate types.
-        BufferedImage rimage = new BufferedImage(tileFormat.getTileSize()[0], tileFormat.getTileSize()[1], BufferedImage.TYPE_INT_RGB); 
-        Iterator<?> readers = ImageIO.getImageReadersByFormatName("tiff");
-        ImageReader reader = (ImageReader) readers.next();
-        ByteArrayInputStream bis = new ByteArrayInputStream(tiffBytes);
-        ImageInputStream iis = ImageIO.createImageInputStream(bis);
-        ImageReadParam param = reader.getDefaultReadParam();
-        Image image = reader.read(0, param);
-        Graphics2D g2 = rimage.createGraphics();
-        g2.drawImage(image, null, null);
-        return rimage;
-    }
+//    private RenderedImage createRenderedImage(byte[] tiffBytes, TileIndex tileIndex) throws IOException {
+//        // Need to check the params.
+//        //   todo figure out appropriate types.
+//        BufferedImage rimage = new BufferedImage(tileFormat.getTileSize()[0], tileFormat.getTileSize()[1], BufferedImage.TYPE_USHORT_GRAY); 
+//        ByteArrayInputStream bis = new ByteArrayInputStream(tiffBytes);
+//        ImageInputStream iis = ImageIO.createImageInputStream(bis);
+//        Graphics2D g2 = rimage.createGraphics();
+//        g2.drawImage(image, null, null);
+//        return rimage;
+//    }
 
 }

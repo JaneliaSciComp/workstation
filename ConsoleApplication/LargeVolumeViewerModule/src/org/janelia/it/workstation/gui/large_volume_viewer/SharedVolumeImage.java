@@ -146,7 +146,7 @@ implements VolumeImage3d
 				testUrl = new URL(folderUrl, "default.0.tif");
 				testUrl.openStream();
 				File fileFolder = new File(folderUrl.toURI());
-				BlockTiffOctreeLoadAdapter btola = new BlockTiffOctreeLoadAdapter();
+				Cache3DOctreeLoadAdapter btola = new Cache3DOctreeLoadAdapter();
                 //ORDER DEPENDENCY: set this before top folder.
                 if (remoteBasePath != null) {
                     btola.setRemoteBasePath(remoteBasePath);

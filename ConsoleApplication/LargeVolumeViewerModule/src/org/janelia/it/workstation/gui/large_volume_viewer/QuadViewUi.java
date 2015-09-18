@@ -1259,15 +1259,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public boolean loadURL(URL url) {  
         boolean rtnVal = false;
 
-        // Initialize the cache for this new input source.
-        if (usingCache()) {
-            log.info("Using full-tiff cache.");
-            largeVolumeViewer.initCache(url);
-        }
-        else {
-            log.info("No full-tiff cache.");
-        }
-
         // Check if url exists first...
     	try {
             if (url == null) {
@@ -1282,6 +1273,15 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     "Error opening folder " + url
                     +" \nIs the file share mounted?");
     	}
+
+        // Initialize the cache for this new input source.
+        if (usingCache()) {
+            log.info("Using full-tiff cache.");
+            largeVolumeViewer.initCache(url);
+        } else {
+            log.info("No full-tiff cache.");
+        }
+
         return rtnVal;
     }
     

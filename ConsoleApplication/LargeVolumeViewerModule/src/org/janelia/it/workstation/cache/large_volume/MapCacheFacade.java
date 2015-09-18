@@ -258,8 +258,17 @@ public class MapCacheFacade implements CacheFacadeI {
         byte[] rtnVal = null;
         try {
             CachableWrapper wrapper = (CachableWrapper) cacheMap.get(id);
-            rtnVal = wrapper.getBytes();
-            log.info("Returning {}: found in cache.", keyOnly);
+            if (wrapper != null) {
+                rtnVal = wrapper.getBytes();
+                log.info("Returning {}: found in cache.", keyOnly);
+            }
+            else {
+                log.info("Pushing {} into cache.", id);
+                byte[] storage = allocateBuffer();
+                wrapper = cachePopulator.pushLaunch(id, storage);
+                rtnVal = wrapper.getBytes();
+                log.info("Returning {}: pushed to cache.", keyOnly);
+            }
         } catch (InterruptedException | ExecutionException ie) {
             log.warn("Interrupted thread, while returning {}.", id);
         } catch (Exception ex) {
@@ -310,50 +319,57 @@ public class MapCacheFacade implements CacheFacadeI {
     }
 
     private GeometricNeighborhood mergeNewWithOld(GeometricNeighborhood newNh, GeometricNeighborhood oldNh) {
-        if (oldNh == null) {
-            return newNh;
-        }
-        Set<File> files = new HashSet<>();
-        MergedNeighborhood rtnVal = new MergedNeighborhood(files, newNh.getZoom(), newNh.getFocus());
+        GeometricNeighborhood rtnVal = null;
+        if (oldNh != null) {
+            Set<File> files = new HashSet<>();
+            rtnVal = new MergedNeighborhood(files, newNh.getZoom(), newNh.getFocus());
 
-        files.addAll(newNh.getFiles());
+            files.addAll(newNh.getFiles());
 
-        for (File oldFile : oldNh.getFiles()) {
-            if (!newNh.getFiles().contains(oldFile)) {
-                final String oldKey = oldFile.getAbsolutePath();
-                CachableWrapper oldWrapper = cacheMap.remove(oldKey);
-                try { 
-                    if (oldWrapper != null) {
-                        log.info("Removing the old wrapped object, and freeing its buffer.");
-                        final Future<byte[]> wrappedObject = oldWrapper.getWrappedObject();
-                        // Kill any previous fill operation.
-                        if (wrappedObject != null) {
-                            wrappedObject.cancel(true);
+            for (File oldFile : oldNh.getFiles()) {
+                if (!newNh.getFiles().contains(oldFile)) {
+                    final String oldKey = oldFile.getAbsolutePath();
+                    CachableWrapper oldWrapper = cacheMap.remove(oldKey);
+                    try {
+                        if (oldWrapper != null) {
+                            log.info("Removing the old wrapped object, and freeing its buffer.");
+                            final Future<byte[]> wrappedObject = oldWrapper.getWrappedObject();
+                            // Kill any previous fill operation.
+                            if (wrappedObject != null) {
+                                wrappedObject.cancel(true);
+                            }
+                            allocatedBuffers.add(oldWrapper.getBytes());
+                        } else {
+                            log.info("No wrapped object");
                         }
-                        allocatedBuffers.add(oldWrapper.getBytes());
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
                     }
-                    else {
-                        log.info("No wrapped object");
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
                 }
             }
-        }
 
-        // The allocated buffers are the set which are now freed up,
-        // from not having been included in the new neighborhood.
-        int availableBuffers = allocatedBuffers.size();
-        log.info("Previous allocation = {}.  Padding up to {}.", availableBuffers, newNh.getFiles().size());
+            // The allocated buffers are the set which are now freed up,
+            // from not having been included in the new neighborhood.
+            int availableBuffers = allocatedBuffers.size();
+            log.info("Previous allocation = {}.  Padding up to {}.", availableBuffers, newNh.getFiles().size());
+        }
+        else {
+            rtnVal = newNh;
+        }
         
         // Now wish to come up with enough buffers, that the entire new
         // neighborhood is complete.
         for (int i = allocatedBuffers.size(); i < newNh.getFiles().size(); i++ ) {
-            byte[] newAllocation = new byte[standardFileSize];
-            allocatedBuffers.add(newAllocation);
+            allocateBuffer();
         }
-        log.info("Final allocation = {}.", availableBuffers);
+        log.info("Final allocation = {}.", allocatedBuffers.size());
         return rtnVal;
+    }
+
+    private byte[] allocateBuffer() {
+        byte[] newAllocation = new byte[standardFileSize];
+        allocatedBuffers.add(newAllocation);
+        return newAllocation;
     }
 
     public static class MergedNeighborhood implements GeometricNeighborhood {

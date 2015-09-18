@@ -104,6 +104,7 @@ public class CacheFacade implements CacheFacadeI {
         };
         cachePopulator = new CachePopulator(toolkit);
         cachePopulator.setStandadFileSize(standardFileSize);
+        cachePopulator.setExtractFromContainerFormat(true);
     }
 
     public CacheFacade(int standardFileSize) throws Exception {
@@ -287,10 +288,21 @@ public class CacheFacade implements CacheFacadeI {
         totalGets++;
         byte[] rtnVal = null;
         try {
+            CachableWrapper wrapper = null;
             Cache cache = manager.getCache(cacheName);
-            CachableWrapper wrapper = (CachableWrapper) cache.get(id).getObjectValue();
+            if (cache.get(id) != null) {                
+                wrapper = (CachableWrapper) cache.get(id).getObjectValue();
+                log.info("Returning {}: found in cache.", keyOnly);
+            } else {
+                log.info("Pushing {} into cache.", id);
+                byte[] storage = new byte[cachePopulator.getStandardFileSize()];
+                wrapper = cachePopulator.pushLaunch(id, storage);
+                log.info("Returning {}: pushed to cache.", keyOnly);
+            }
+            log.info("Getting {} from cache wrapper.", keyOnly);
             rtnVal = wrapper.getBytes();
-            log.info("Returning {}: found in cache.", keyOnly);
+            Utilities.zeroScan(rtnVal, "CacheFacade.getBytes()", keyOnly);
+            log.info("Returning from cache wrapper: {}.", keyOnly);
         } catch (InterruptedException | ExecutionException ie) {
             log.warn("Interrupted thread, while returning {}.", id);
         } catch (Exception ex) {

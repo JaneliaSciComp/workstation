@@ -224,6 +224,10 @@ public class OctreeMetadataSniffer {
     }
     
     public int getStandardVolumeSize() {
+        return tileFormat.getTileBytes() * tileFormat.getTileSize()[2];
+    }
+    
+    public int getSliceSize() {
         return tileFormat.getTileBytes();
     }
 

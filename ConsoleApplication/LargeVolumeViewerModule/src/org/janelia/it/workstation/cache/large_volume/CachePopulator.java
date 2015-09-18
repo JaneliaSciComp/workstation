@@ -7,6 +7,7 @@ package org.janelia.it.workstation.cache.large_volume;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,8 +25,8 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class CachePopulator {
-    private static final int FILE_READ_THREAD_COUNT = 1;
-    private static final int MEM_ALLOC_THREAD_COUNT = 1;
+    private static final int FILE_READ_THREAD_COUNT = 4;
+    private static final int MEM_ALLOC_THREAD_COUNT = 4;
     private static final String FILE_READ_THREAD_PREFIX = "CacheFileReaderThread";
     private static final String MEM_ALLOC_THREAD_PREFIX = "CacheByteAllocThread";
     private final ExecutorService fileLoadExecutor;
@@ -46,16 +47,26 @@ public class CachePopulator {
         standardFileSize = size;
     }
     
+    public int getStandardFileSize() {
+        return standardFileSize;
+    }
+    
     public Collection<String> retargetCache(GeometricNeighborhood neighborhood) {
         final Set<String> populatedList = new HashSet<>();
         // Now, repopulate the running queue with the new neighborhood.
         for (final File file : neighborhood.getFiles()) {
-            Runnable r = new Runnable() {
-                public void run() {
-                    allocateAndLaunch(file, populatedList);
+            Callable<Void> callable = new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    try {
+                        allocateAndLaunch(file, populatedList);
+                    } catch (Exception ex) {
+                        log.error("Failed to allocate-and-launch {}, reason {}.", file, ex.getMessage());
+                    }                            
+                    return null;
                 }
             };
-            memAllocExecutor.submit(r);
+            memAllocExecutor.submit(callable);
         }
         if (neighborhood.getFiles().isEmpty()) {
             double[] focus = neighborhood.getFocus();
@@ -98,6 +109,13 @@ public class CachePopulator {
     public void setExtractFromContainerFormat(boolean extractFromContainerFormat) {
         this.extractFromContainerFormat = extractFromContainerFormat;
     }
+    
+    public CachableWrapper pushLaunch(String id, byte[] storage) {
+        CachableWrapper wrapper = createWrapper(new File(id), storage);
+        populateElement(id, wrapper);
+        
+        return wrapper;
+    }
 
     public void close() {
         fileLoadExecutor.shutdown();
@@ -109,8 +127,7 @@ public class CachePopulator {
         if (! cacheCollection.hasKey(key) && (!populatedList.contains(key))) {
             if (standardFileSize > 0) {
                 byte[] bytes = cacheCollection.getStorage(key);
-                Future<byte[]> future = cache(file, bytes);                
-                CachableWrapper wrapper = new CachableWrapper(future, bytes);
+                CachableWrapper wrapper = createWrapper(file, bytes);
                 
                 populateElement(file.getAbsolutePath(), wrapper);
                 populatedList.add(key);
@@ -120,6 +137,12 @@ public class CachePopulator {
         } else {
             log.debug("In cache {}.", trimToOctreePath(key));
         }
+    }
+
+    private CachableWrapper createWrapper(File file, byte[] bytes) {
+        Future<byte[]> future = cache(file, bytes);
+        CachableWrapper wrapper = new CachableWrapper(future, bytes);
+        return wrapper;
     }
     
     private void populateElement(String id, CachableWrapper wrapper) {
