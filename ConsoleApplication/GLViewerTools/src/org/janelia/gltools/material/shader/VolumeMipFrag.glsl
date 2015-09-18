@@ -60,7 +60,8 @@ in vec3 fragTexCoord; // texture coordinate at mesh surface of volume
 
 // Helper method for tricubic filtering
 // From http://stackoverflow.com/questions/13501081/efficient-bicubic-filtering-code-in-glsl
-vec4 cubic(float x)
+// B-spline cubic smooths out actual values...
+vec4 cubic_bspline(float x)
 {
     float x2 = x * x;
     float x3 = x2 * x;
@@ -70,6 +71,20 @@ vec4 cubic(float x)
     w.z = -3*x3 + 3*x2 + 3*x + 1;
     w.w =  x3;
     return w / 6.f;
+}
+
+// Catmull-Rom spline actually passes through control points
+vec4 cubic(float x) // cubic_catmullrom(float x)
+{
+    const float s = 0.5; // potentially adjustable parameter
+    float x2 = x * x;
+    float x3 = x2 * x;
+    vec4 w;
+    w.x =    -s*x3 +     2*s*x2 - s*x + 0;
+    w.y = (2-s)*x3 +   (s-3)*x2       + 1;
+    w.z = (s-2)*x3 + (3-2*s)*x2 + s*x + 0;
+    w.w =     s*x3 -       s*x2       + 0;
+    return w;
 }
 
 // Fast cubic interpolation using a source that is already linearly interpolated.
