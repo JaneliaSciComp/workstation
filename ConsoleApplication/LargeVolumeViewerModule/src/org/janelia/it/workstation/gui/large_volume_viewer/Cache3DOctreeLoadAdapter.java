@@ -130,17 +130,14 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             else {
                 byte[] tiffBytes = cacheManager.getBytes(tiff);
                 if ( tiffBytes != null ) {
-                    org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(tiffBytes, "Cache3DOctreeLoadAdapter.loadSlice()", folder.toString());
                     // Must carve out just the right portion.
                     try {
                         byte[] slice = new byte[sliceSize];
                         System.arraycopy(tiffBytes, sliceSize * relativeZ, slice, 0, sliceSize);
+                        org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(tiffBytes, "Cache3DOctreeLoadAdapter.loadSlice()::basetiff", folder.toString());
+                        org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(slice, "Cache3DOctreeLoadAdapter.loadSlice()::slicecopy", folder.toString());
                         totalBufferSize += sliceSize;
                         byteArrays.add(slice);
-                        //channels[sc] = createRenderedImage(slice, tileIndex);                     
-//                    } catch ( IOException ioe ) {
-//                        log.error("IO during read of bytes");
-//                        ioe.printStackTrace();
                     } catch ( RuntimeException rte ) {
                         log.error("System exception during read of bytes");
                         rte.printStackTrace();
@@ -149,12 +146,6 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                 else {
                     log.error("Tiff bytes are null.");
                 }
-//                if (cacheManager.isReady(tiff)) {
-//                    tiffBytes = cacheManager.getBytes(tiff);
-//                } else {
-//                    // Direct/bypass cache.
-//                }
-                
             }
         }
         
@@ -176,6 +167,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
 
         ByteBuffer pixels = ByteBuffer.allocate(totalBufferSize);
         for (byte[] bytes: byteArrays) {
+            org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(bytes, "Cache3DOctreeLoadAdapter.loadSlice()::bufferbuild", folder.toString());
             pixels.put(bytes);
         }
         tex.setPixels(pixels);
@@ -183,15 +175,4 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         return tex;
     }
     
-//    private RenderedImage createRenderedImage(byte[] tiffBytes, TileIndex tileIndex) throws IOException {
-//        // Need to check the params.
-//        //   todo figure out appropriate types.
-//        BufferedImage rimage = new BufferedImage(tileFormat.getTileSize()[0], tileFormat.getTileSize()[1], BufferedImage.TYPE_USHORT_GRAY); 
-//        ByteArrayInputStream bis = new ByteArrayInputStream(tiffBytes);
-//        ImageInputStream iis = ImageIO.createImageInputStream(bis);
-//        Graphics2D g2 = rimage.createGraphics();
-//        g2.drawImage(image, null, null);
-//        return rimage;
-//    }
-
 }
