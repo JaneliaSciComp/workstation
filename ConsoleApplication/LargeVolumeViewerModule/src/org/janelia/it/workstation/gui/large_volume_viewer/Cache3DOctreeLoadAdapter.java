@@ -1,22 +1,9 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReadParam;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-import javax.media.jai.JAI;
-import javax.media.jai.ParameterBlockJAI;
 import org.janelia.it.workstation.cache.large_volume.CacheController;
 import org.janelia.it.workstation.cache.large_volume.CacheFacadeI;
 import org.janelia.it.workstation.geom.CoordinateAxis;
@@ -136,6 +123,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                         System.arraycopy(tiffBytes, sliceSize * relativeZ, slice, 0, sliceSize);
                         //    final int sliceSize = loader.getSx() * loader.getSy() * 2;
                         //    System.arraycopy( finalTiffBytes, sliceSize * i, slice, 0, sliceSize );                        
+                        /*
                         org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(tiffBytes, "Cache3DOctreeLoadAdapter.loadSlice()::basetiff", folder.toString());
                         if (!org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(slice, "Cache3DOctreeLoadAdapter.loadSlice()::slicecopy", folder.toString())) {
                             log.info("Slice size = {}", sliceSize);
@@ -145,6 +133,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                                 org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(slice, "Cache3DOctreeLoadAdapter.loadSlice()::slicecopy", folder+" slice #" + i);
                             }
                         }
+                        */
                         totalBufferSize += sliceSize;
                         byteArrays.add(slice);
                     } catch ( RuntimeException rte ) {
@@ -158,27 +147,18 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             }
         }
         
-        // Combine channels into one image
-//        RenderedImage composite = channels[0];
-//        if (sc > 1) {
-//            try {
-//                ParameterBlockJAI pb = new ParameterBlockJAI("bandmerge");
-//                for (int c = 0; c < sc; ++c) {
-//                    pb.addSource(channels[c]);
-//                }
-//                composite = JAI.create("bandmerge", pb);
-//            } catch (NoClassDefFoundError exc) {
-//                exc.printStackTrace();
-//                return null;
-//            }
-//            // localLoadTimer.mark("merged channels");
-//        }
-
+        // Combine into a single buffer.
         ByteBuffer pixels = ByteBuffer.allocate(totalBufferSize);
-        for (byte[] bytes: byteArrays) {
-            org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(bytes, "Cache3DOctreeLoadAdapter.loadSlice()::bufferbuild", folder.toString());
-            pixels.put(bytes);
+        pixels.rewind();
+        int bytesPerVoxel = tileFormat.getBitDepth() / 8;
+                
+        byte[][] allByteArrays = byteArrays.toArray(new byte[0][0]);
+        for (int i = 0; i < sliceSize; i+= bytesPerVoxel) {
+            for ( int channel = 0; channel < sc; channel ++ ) {
+                pixels.put( allByteArrays[channel], i * bytesPerVoxel, bytesPerVoxel );
+            }
         }
+
         tex.setPixels(pixels);
         //tex.loadRenderedImage(composite);
         return tex;
