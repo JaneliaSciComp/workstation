@@ -228,7 +228,7 @@ public class OctreeMetadataSniffer {
     }
     
     public int getSliceSize() {
-        return tileFormat.getTileBytes();
+        return tileFormat.getTileBytes() / tileFormat.getChannelCount();
     }
 
     public static int computeDepth(int octreeDepth, TileIndex tileIndex) {

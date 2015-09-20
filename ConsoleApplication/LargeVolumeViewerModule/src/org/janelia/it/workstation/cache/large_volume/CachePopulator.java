@@ -7,7 +7,6 @@ package org.janelia.it.workstation.cache.large_volume;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -79,24 +78,6 @@ public class CachePopulator {
     }
     
     /**
-     * Push one file to cache.
-     *
-     * @param file which file.
-     * @return 'future' version.
-     */
-    public Future<byte[]> cache(File file, byte[] storage) {
-        log.info("Making a cache populator worker for {}.", trimToOctreePath(file.getAbsolutePath()));
-        Callable cachePopulatorWorker = null;
-        if (isExtractFromContainerFormat()) {
-            cachePopulatorWorker = new ExtractedCachePopulatorWorker(file, storage);
-        }
-        else {
-            cachePopulatorWorker = new CachePopulatorWorker(file, storage);
-        }
-        return fileLoadExecutor.submit(cachePopulatorWorker);
-    }
-
-    /**
      * @return the extractFromContainerFormat
      */
     public boolean isExtractFromContainerFormat() {
@@ -111,8 +92,8 @@ public class CachePopulator {
     }
     
     public CachableWrapper pushLaunch(String id, byte[] storage) {
-        CachableWrapper wrapper = createWrapper(new File(id), storage);
-        populateElement(id, wrapper);
+        CachableWrapper wrapper = wrapDataAndFetch(new File(id), storage);
+        cacheCollection.put(id, wrapper);
         
         return wrapper;
     }
@@ -127,9 +108,8 @@ public class CachePopulator {
         if (! cacheCollection.hasKey(key) && (!populatedList.contains(key))) {
             if (standardFileSize > 0) {
                 byte[] bytes = cacheCollection.getStorage(key);
-                CachableWrapper wrapper = createWrapper(file, bytes);
-                
-                populateElement(file.getAbsolutePath(), wrapper);
+                CachableWrapper wrapper = wrapDataAndFetch(file, bytes);                
+                cacheCollection.put(file.getAbsolutePath(), wrapper);
                 populatedList.add(key);
             } else {
                 throw new IllegalArgumentException("Pre-sized byte array required.");
@@ -139,14 +119,27 @@ public class CachePopulator {
         }
     }
 
-    private CachableWrapper createWrapper(File file, byte[] bytes) {
-        Future<byte[]> future = cache(file, bytes);
+    /**
+     * Pull one file's data into the given storage.
+     *
+     * @param file which file.
+     * @return 'future' version.
+     */
+    private Future<byte[]> launchDataFetch(File file, byte[] storage) {
+        log.info("Making a cache populator worker for {}.", trimToOctreePath(file.getAbsolutePath()));
+        Callable cachePopulatorWorker = null;
+        if (isExtractFromContainerFormat()) {
+            cachePopulatorWorker = new ExtractedCachePopulatorWorker(file, storage);
+        } else {
+            cachePopulatorWorker = new CachePopulatorWorker(file, storage);
+        }
+        return fileLoadExecutor.submit(cachePopulatorWorker);
+    }
+
+    private CachableWrapper wrapDataAndFetch(File file, byte[] bytes) {
+        Future<byte[]> future = launchDataFetch(file, bytes);
         CachableWrapper wrapper = new CachableWrapper(future, bytes);
         return wrapper;
-    }
-    
-    private void populateElement(String id, CachableWrapper wrapper) {
-        cacheCollection.put(id, wrapper);        
     }
     
     String trimToOctreePath(String id) {

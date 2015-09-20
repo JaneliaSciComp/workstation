@@ -134,8 +134,17 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                     try {
                         byte[] slice = new byte[sliceSize];
                         System.arraycopy(tiffBytes, sliceSize * relativeZ, slice, 0, sliceSize);
+                        //    final int sliceSize = loader.getSx() * loader.getSy() * 2;
+                        //    System.arraycopy( finalTiffBytes, sliceSize * i, slice, 0, sliceSize );                        
                         org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(tiffBytes, "Cache3DOctreeLoadAdapter.loadSlice()::basetiff", folder.toString());
-                        org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(slice, "Cache3DOctreeLoadAdapter.loadSlice()::slicecopy", folder.toString());
+                        if (!org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(slice, "Cache3DOctreeLoadAdapter.loadSlice()::slicecopy", folder.toString())) {
+                            log.info("Slice size = {}", sliceSize);
+                            for (int i = 0; i < 200; i++) {
+                                slice = new byte[sliceSize];
+                                System.arraycopy(tiffBytes, sliceSize * i, slice, 0, sliceSize);
+                                org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(slice, "Cache3DOctreeLoadAdapter.loadSlice()::slicecopy", folder+" slice #" + i);
+                            }
+                        }
                         totalBufferSize += sliceSize;
                         byteArrays.add(slice);
                     } catch ( RuntimeException rte ) {

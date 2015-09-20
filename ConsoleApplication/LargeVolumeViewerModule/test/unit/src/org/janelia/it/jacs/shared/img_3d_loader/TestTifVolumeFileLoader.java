@@ -17,7 +17,10 @@ import org.junit.Test;
  * @author fosterl
  */
 public class TestTifVolumeFileLoader {
-    private static final String TEST_INPUT = "/tier2/mousebrainmicro-nb/fromnobackup/2014-06-24-Descriptor-stitch1/3/default.0.tif";
+    //private static final String TEST_INPUT = "/tier2/mousebrainmicro-nb/fromnobackup/2014-06-24-Descriptor-stitch1/3/default.0.tif";
+    //private static final String TEST_INPUT = "/tier2/mousebrainmicro-nb/fromnobackup/2014-06-24-Descriptor-stitch1/3/8/4/1/8/8/default.0.tif";
+    //private static final String TEST_INPUT = "/tier2/mousebrainmicro-nb/fromnobackup/2014-06-24-Descriptor-stitch1/3/8/4/2/7/5/default.1.tif";
+    private static final String TEST_INPUT = "/tier2/mousebrainmicro-nb/fromnobackup/2014-06-24-Descriptor-stitch1/3/8/4/2/7/5/default.0.tif";
     private static final int TEST_INPUT_SIZE = 93734408;
     public static final int KNOWN_PIXELBYTES = 2;
     public static final int KNOWN_SLICECOUNT = 200;
@@ -46,6 +49,7 @@ public class TestTifVolumeFileLoader {
         Assert.assertEquals("Whole buffer is all zero", true, zeroScan);
 
         final int sliceSize = loader.getSx() * loader.getSy() * 2;
+        System.out.println("Slice size=" + sliceSize);
         Assert.assertEquals("Unexpected slice size", sliceSize, KNOWN_WIDTH * KNOWN_HEIGHT * KNOWN_PIXELBYTES);
 
         for (int i = 0; i < 200; i++) {
