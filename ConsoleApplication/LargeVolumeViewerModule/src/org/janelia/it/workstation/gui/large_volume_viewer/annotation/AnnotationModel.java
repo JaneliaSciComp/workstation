@@ -46,7 +46,7 @@ they should all be called from worker threads.  the others, typically getters of
 various info, do not.  private methods don't necessarily follow that pattern.
 
 a note on entities: in general, we want to only work with the domain objects in 
-this class.  use "updateCurrentWorkspace/Neuron" to keep the local copies of
+this class.  use "updateCurrentWorkspace(AndNeuron)" to keep the local copies of
 those objects in sync with the back end.  other components will limit themselves
 to accessing those two objects in general.
 
@@ -209,9 +209,13 @@ called from a  SimpleWorker thread.
 
     // this method sets the current neuron but does not
     //  fire an event to update the UI
-    public void setCurrentNeuron(TmNeuron neuron) {
-            currentNeuron = neuron;
-            updateCurrentNeuron();
+    private void setCurrentNeuron(TmNeuron neuron) {
+        // be sure we're using the neuron object from the current workspace
+        if (neuron != null) {
+            currentNeuron = getNeuronFromNeuronID(neuron.getId());
+        } else {
+            currentNeuron = null;
+        }
     }
 
     // this method sets the current neuron *and*
@@ -222,16 +226,6 @@ called from a  SimpleWorker thread.
         }
         setCurrentNeuron(neuron);
         fireNeuronSelected(neuron);
-    }
-
-    private void updateCurrentNeuron() {
-        if (currentNeuron != null) {
-            try {
-                currentNeuron = modelMgr.loadNeuron(currentNeuron.getId());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     // convenience methods
@@ -377,11 +371,9 @@ called from a  SimpleWorker thread.
         modelMgr.renameEntity(neuronEntity, name);
 
         // update & notify
-        updateCurrentWorkspace();
+        updateCurrentWorkspaceAndNeuron();
         final TmWorkspace workspace = getCurrentWorkspace();
-
-        final TmNeuron neuron = modelMgr.loadNeuron(currentNeuronID);
-        setCurrentNeuron(neuron);
+        final TmNeuron neuron = getCurrentNeuron();
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -460,10 +452,7 @@ called from a  SimpleWorker thread.
         final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 null, 0, xyz.x(), xyz.y(), xyz.z(), "");
 
-        updateCurrentWorkspace();
-        if (neuron.getId().equals(getCurrentNeuron().getId())) {
-            updateCurrentNeuron();
-        }
+        updateCurrentWorkspaceAndNeuron();
 
         final TmNeuron currNeuron = getCurrentNeuron();
         SwingUtilities.invokeLater(new Runnable() {
@@ -497,11 +486,18 @@ called from a  SimpleWorker thread.
                 parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
         System.out.println("updating workspace: " + stopwatch);
-        updateCurrentWorkspace();
-        if (neuron.getId().equals(getCurrentNeuron().getId())) {
-            System.out.println("updating neuron: " + stopwatch);
-            updateCurrentNeuron();
-        }
+
+
+        // hold off on this until we finish the updateCurrentWorkspaceAndNeuron fix:
+        // can we update workspace and neuron by hand, no update from db?
+        // TmGeoAnnotation parent = getGeoAnnotationFromID(annotation.getParentId());
+        // parent.addChild(annotation);
+        // neuron.getGeoAnnotationMap().put(annotation.getId(), annotation);
+
+
+        // don't need to update neuron from db after workspace:
+        updateCurrentWorkspaceAndNeuron();
+
 
         // the parent may lose some predefined notes (finished end, possible branch)
         // note 1: probably really ought to have some kind of "annotation connectivity
@@ -573,8 +569,7 @@ called from a  SimpleWorker thread.
             removeAnchoredPath(annotation, neighbor);
         }
 
-        updateCurrentWorkspace();
-        updateCurrentNeuron();
+        updateCurrentWorkspaceAndNeuron();
         final TmWorkspace workspace = getCurrentWorkspace();
 
         if (automatedTracingEnabled()) {
@@ -720,12 +715,8 @@ called from a  SimpleWorker thread.
         modelMgr.moveNeurite(annotation, neuron);
 
         // updates
-        updateCurrentWorkspace();
+        updateCurrentWorkspaceAndNeuron();
         final TmWorkspace workspace = getCurrentWorkspace();
-
-        if (getCurrentNeuron() != null && getCurrentNeuron().getId().equals(neuron.getId())) {
-            updateCurrentNeuron();
-        }
         final TmNeuron currentNeuron = getCurrentNeuron();
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -793,9 +784,8 @@ called from a  SimpleWorker thread.
         // if segment to parent had a trace, remove it
         removeAnchoredPath(link, parent);
 
-        updateCurrentWorkspace();
+        updateCurrentWorkspaceAndNeuron();
         final TmWorkspace workspace = getCurrentWorkspace();
-        updateCurrentNeuron();
 
         final TmGeoAnnotation updateChild;
         if (child != null) {
@@ -874,8 +864,7 @@ called from a  SimpleWorker thread.
         }
 
 
-        updateCurrentWorkspace();
-        updateCurrentNeuron();
+        updateCurrentWorkspaceAndNeuron();
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron updateNeuron = getCurrentNeuron();
 
@@ -958,10 +947,7 @@ called from a  SimpleWorker thread.
         removeAnchoredPath(annotation1, annotation2);
 
         // updates:
-        updateCurrentWorkspace();
-        if (getCurrentNeuron() != null && neuron.getId().equals(getCurrentNeuron().getId())){
-            updateCurrentNeuron();
-        }
+        updateCurrentWorkspaceAndNeuron();
 
         // retrace
         if (automatedTracingEnabled()) {
@@ -995,14 +981,13 @@ called from a  SimpleWorker thread.
         modelMgr.rerootNeurite(neuron, newRoot);
 
         // notify, etc.; don't need to redraw anything, but the neurite list etc. need to be reloaded
-        updateCurrentWorkspace();
+        updateCurrentWorkspaceAndNeuron();
 
         // see notes in addChildAnnotation re: the predef notes
         // in this case, the new root is the only annotation we need to check
         stripPredefNotes(getNeuronFromAnnotationID(newRootID), newRootID);
 
         if (neuron.getId().equals(getCurrentNeuron().getId())){
-            updateCurrentNeuron();
             final TmNeuron updateNeuron = getCurrentNeuron();
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
@@ -1028,8 +1013,7 @@ called from a  SimpleWorker thread.
         modelMgr.splitNeurite(neuron, newRoot);
 
         // update and notify
-        updateCurrentWorkspace();
-        updateCurrentNeuron();
+        updateCurrentWorkspaceAndNeuron();
         final TmNeuron updateNeuron = getNeuronFromAnnotationID(newRootID);
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -1083,12 +1067,7 @@ called from a  SimpleWorker thread.
 
 
         // updates
-        updateCurrentWorkspace();
-        // Guard against null neuron, here.  Can happen as signals are passed
-        // around and things are termporarily cleared. LLF
-        if (currentNeuron != null  &&  neuron1.getId().equals(currentNeuron.getId())) {
-            updateCurrentNeuron();
-        }
+        updateCurrentWorkspaceAndNeuron();
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
