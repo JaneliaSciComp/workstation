@@ -89,7 +89,6 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         
         TextureData2dGL tex = new TextureData2dGL();
         final int sc = tileFormat.getChannelCount();
-        Collection<byte[]> byteArrays = new ArrayList<>();
         
         String tiffBase = OctreeMetadataSniffer.getTiffBase(axis);
         StringBuilder missingTiffs = new StringBuilder();
@@ -99,8 +98,11 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             return null;
         }
 
-        int totalBufferSize = 0;
+        byte[][] allBuffers = new byte[sc][];
+        
+        int totalBufferSize = sc * sliceSize;
         for (int c = 0; c < sc; ++c) {
+            allBuffers[c] = new byte[sliceSize];
             // Need to establish the channels, out of data extracted from cache.
             File tiff = new File(folder, OctreeMetadataSniffer.getFilenameForChannel(tiffBase, c));
             if (requestedTiffs.length() > 0) {
@@ -120,8 +122,8 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                 if ( tiffBytes != null ) {
                     // Must carve out just the right portion.
                     try {
-                        byte[] slice = new byte[sliceSize];
-                        System.arraycopy(tiffBytes, sliceSize * relativeZ, slice, 0, sliceSize);
+                        // Copy into the buffer collection.
+                        System.arraycopy(tiffBytes, sliceSize * relativeZ, allBuffers[c], 0, sliceSize);
                         //    final int sliceSize = loader.getSx() * loader.getSy() * 2;
                         //    System.arraycopy( finalTiffBytes, sliceSize * i, slice, 0, sliceSize );                        
                         /*
@@ -135,8 +137,6 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                             }
                         }
                         */
-                        totalBufferSize += sliceSize;
-                        byteArrays.add(slice);
                     } catch ( RuntimeException rte ) {
                         log.error("System exception during read of bytes");
                         rte.printStackTrace();
@@ -148,18 +148,17 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             }
         }
         
-        // Combine into a single buffer.
+        // Interleave the buffers.
         ByteBuffer pixels = ByteBuffer.allocate(totalBufferSize);
         pixels.rewind();
         int bytesPerVoxel = tileFormat.getBitDepth() / 8;
-                
-        byte[][] allByteArrays = byteArrays.toArray(new byte[0][0]);
-        for (int i = 0; i < sliceSize; i+= bytesPerVoxel) {
-            for ( int channel = 0; channel < sc; channel ++ ) {
-                pixels.put( allByteArrays[channel], i * bytesPerVoxel, bytesPerVoxel );
+        for ( int i = 0; i < sliceSize; i += bytesPerVoxel ) {
+            for (int c = 0; c < sc; ++c) {
+                pixels.put( allBuffers[c], i * bytesPerVoxel, bytesPerVoxel );
             }
         }
 
+        // Push into the final image.
         tex.setPixels(pixels);
         //tex.loadRenderedImage(composite);
         return tex;
