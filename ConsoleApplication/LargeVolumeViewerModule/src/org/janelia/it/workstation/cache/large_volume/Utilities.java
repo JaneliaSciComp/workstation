@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.cache.large_volume;
 
+import java.io.File;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,5 +36,27 @@ public class Utilities {
             log.error("{} [{}] contains all zeros.", label, id);
         }
         return foundNonZero;
+    }
+
+    public static String trimToOctreePath(File id) {
+        return trimToOctreePath(id.getAbsolutePath());
+    }
+    
+    public static String trimToOctreePath(String id) {
+        if (id.endsWith(".tif")) {
+            int endPoint = id.lastIndexOf("/");
+            int startPoint = 0;
+            boolean foundAlpha = false;
+            while (!foundAlpha) {
+                endPoint--;
+                if (Character.isAlphabetic(id.charAt(endPoint))) {
+                    foundAlpha = true;
+                    startPoint = endPoint;
+                    startPoint = id.indexOf("/", startPoint);
+                }
+            }
+            return id.substring(startPoint);
+        }
+        return id;
     }
 }

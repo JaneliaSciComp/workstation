@@ -55,8 +55,8 @@ public class ExtractedCachePopulatorWorker implements java.util.concurrent.Calla
         byte[] uncompressedRawFile = resolver.uncompress(infile);
         loader.loadVolumeInFormat(uncompressedRawFile);
         log.info("Returning {}.", infile);
-        Utilities.zeroScan(loader.getTextureByteArray(), infile.toString(), "ExtractedCachePopulatorWorker.call()::texBytes::" + loader.getTextureByteArray().hashCode());
-        Utilities.zeroScan(storage, infile.toString(), "ExtractedCachePopulatorWorker.call()::designated storage::" + storage.hashCode());
+        //Utilities.zeroScan(loader.getTextureByteArray(), infile.toString(), "ExtractedCachePopulatorWorker.call()::texBytes::" + loader.getTextureByteArray().hashCode());
+        //Utilities.zeroScan(storage, infile.toString(), "ExtractedCachePopulatorWorker.call()::designated storage::" + storage.hashCode());
         return loader.getTextureByteArray();
     }
 

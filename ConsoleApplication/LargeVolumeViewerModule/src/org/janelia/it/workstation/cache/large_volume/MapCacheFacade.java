@@ -252,7 +252,7 @@ public class MapCacheFacade implements CacheFacadeI {
      * @return result, after awaiting the future, or null on exception.
      */
     private byte[] getBytes(final String id) {
-        String keyOnly = cachePopulator.trimToOctreePath(id);
+        String keyOnly = Utilities.trimToOctreePath(id);
         log.info("Getting {}", keyOnly);
         totalGets++;
         byte[] rtnVal = null;
@@ -311,7 +311,7 @@ public class MapCacheFacade implements CacheFacadeI {
         Collection<String> futureArrays = cachePopulator.retargetCache(neighborhood);
         if (log.isDebugEnabled()) {
             for (String id : futureArrays) {
-                log.debug("Populating {} to cache at zoom {}.", cachePopulator.trimToOctreePath(id), cameraZoom);
+                log.debug("Populating {} to cache at zoom {}.", Utilities.trimToOctreePath(id), cameraZoom);
             }
         }
         Date end = new Date();

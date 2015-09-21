@@ -283,7 +283,7 @@ public class CacheFacade implements CacheFacadeI {
     }
 
     private byte[] getBytes(final String id) {
-        String keyOnly = cachePopulator.trimToOctreePath(id);
+        String keyOnly = Utilities.trimToOctreePath(id);
         log.info("Getting {}", keyOnly);
         totalGets++;
         byte[] rtnVal = null;
@@ -301,10 +301,11 @@ public class CacheFacade implements CacheFacadeI {
             }
             log.info("Getting {} from cache wrapper.", keyOnly);
             rtnVal = wrapper.getBytes();
-            Utilities.zeroScan(rtnVal, "CacheFacade.getBytes()", keyOnly);
+            //Utilities.zeroScan(rtnVal, "CacheFacade.getBytes()", keyOnly);
             log.info("Returning from cache wrapper: {}.", keyOnly);
         } catch (InterruptedException | ExecutionException ie) {
-            log.warn("Interrupted thread, while returning {}.", id);
+            log.warn("Interrupted thread, while returning {}.  Message: {}", id, ie.getMessage());
+            ie.printStackTrace();
         } catch (Exception ex) {
             log.error("Failure to resolve cached version of {}", id);
             ex.printStackTrace();
@@ -345,7 +346,7 @@ public class CacheFacade implements CacheFacadeI {
         Collection<String> futureArrays = cachePopulator.retargetCache(neighborhood);
         if (log.isDebugEnabled()) {
             for (String id : futureArrays) {
-                log.debug("Populating {} to cache at zoom {}.", cachePopulator.trimToOctreePath(id), cameraZoom);
+                log.debug("Populating {} to cache at zoom {}.", Utilities.trimToOctreePath(id), cameraZoom);
             }
         }
         Date end = new Date();

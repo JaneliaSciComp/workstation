@@ -2,11 +2,10 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
 import org.janelia.it.workstation.cache.large_volume.CacheController;
 import org.janelia.it.workstation.cache.large_volume.CacheFacadeI;
 import org.janelia.it.workstation.cache.large_volume.ExtractedCachePopulatorWorker;
+import org.janelia.it.workstation.cache.large_volume.Utilities;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
 import org.slf4j.Logger;
@@ -120,23 +119,9 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             else {
                 byte[] tiffBytes = getBytes(tiff, cacheManager);
                 if ( tiffBytes != null ) {
-                    // Must carve out just the right portion.
                     try {
-                        // Copy into the buffer collection.
-                        System.arraycopy(tiffBytes, sliceSize * relativeZ, allBuffers[c], 0, sliceSize);
-                        //    final int sliceSize = loader.getSx() * loader.getSy() * 2;
-                        //    System.arraycopy( finalTiffBytes, sliceSize * i, slice, 0, sliceSize );                        
-                        /*
-                        org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(tiffBytes, "Cache3DOctreeLoadAdapter.loadSlice()::basetiff", folder.toString());
-                        if (!org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(slice, "Cache3DOctreeLoadAdapter.loadSlice()::slicecopy", folder.toString())) {
-                            log.info("Slice size = {}", sliceSize);
-                            for (int i = 0; i < 200; i++) {
-                                slice = new byte[sliceSize];
-                                System.arraycopy(tiffBytes, sliceSize * i, slice, 0, sliceSize);
-                                org.janelia.it.workstation.cache.large_volume.Utilities.zeroScan(slice, "Cache3DOctreeLoadAdapter.loadSlice()::slicecopy", folder+" slice #" + i);
-                            }
-                        }
-                        */
+                        // Save to buffer collection
+                        allBuffers[c] = tiffBytes;
                     } catch ( RuntimeException rte ) {
                         log.error("System exception during read of bytes");
                         rte.printStackTrace();
@@ -148,16 +133,26 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             }
         }
         
-        // Interleave the buffers.
+        // Interleave into a buffer.
         ByteBuffer pixels = ByteBuffer.allocate(totalBufferSize);
         pixels.rewind();
         int bytesPerVoxel = tileFormat.getBitDepth() / 8;
+        int sliceOffset = sliceSize * relativeZ;
         for ( int i = 0; i < sliceSize; i += bytesPerVoxel ) {
             for (int c = 0; c < sc; ++c) {
-                pixels.put( allBuffers[c], i * bytesPerVoxel, bytesPerVoxel );
+                final int byteRunStart = sliceOffset + i * bytesPerVoxel;
+                // *** TEMP *** Checking for non-zeros.
+                //for ( int vb = 0; vb < bytesPerVoxel; vb++) {
+                //    if ( allBuffers[c][byteRunStart + vb] != 0 ) {
+                //        nonZeroCount[c] ++;
+                //    }
+                //}
+                pixels.put( allBuffers[c], byteRunStart, bytesPerVoxel );
             }
         }
-
+        
+        pixels.rewind();
+        
         // Push into the final image.
         tex.setPixels(pixels);
         //tex.loadRenderedImage(composite);
@@ -182,6 +177,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             tiffBytes = cacheManager.getBytes(tiff);           
         }
         else {
+            log.info("Bypassing cache for {}.", Utilities.trimToOctreePath(tiff));
             tiffBytes = new byte[standardVolumeSize];
             try {
                 ExtractedCachePopulatorWorker populatorWorker = new ExtractedCachePopulatorWorker(tiff, tiffBytes);

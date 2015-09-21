@@ -115,7 +115,7 @@ public class CachePopulator {
                 throw new IllegalArgumentException("Pre-sized byte array required.");
             }
         } else {
-            log.debug("In cache {}.", trimToOctreePath(key));
+            log.debug("In cache {}.", Utilities.trimToOctreePath(key));
         }
     }
 
@@ -126,7 +126,7 @@ public class CachePopulator {
      * @return 'future' version.
      */
     private Future<byte[]> launchDataFetch(File file, byte[] storage) {
-        log.info("Making a cache populator worker for {}.", trimToOctreePath(file.getAbsolutePath()));
+        log.info("Making a cache populator worker for {}.", Utilities.trimToOctreePath(file.getAbsolutePath()));
         Callable cachePopulatorWorker = null;
         if (isExtractFromContainerFormat()) {
             cachePopulatorWorker = new ExtractedCachePopulatorWorker(file, storage);
@@ -140,24 +140,6 @@ public class CachePopulator {
         Future<byte[]> future = launchDataFetch(file, bytes);
         CachableWrapper wrapper = new CachableWrapper(future, bytes);
         return wrapper;
-    }
-    
-    String trimToOctreePath(String id) {
-        if (id.endsWith(".tif")) {
-            int endPoint = id.lastIndexOf("/");
-            int startPoint = 0;
-            boolean foundAlpha = false;
-            while (! foundAlpha) {
-                endPoint --;
-                if (Character.isAlphabetic(id.charAt(endPoint))) {
-                    foundAlpha = true;
-                    startPoint = endPoint;
-                    startPoint = id.indexOf("/", startPoint);
-                }
-            }
-            return id.substring(startPoint);
-        }
-        return id;
     }
 
 }
