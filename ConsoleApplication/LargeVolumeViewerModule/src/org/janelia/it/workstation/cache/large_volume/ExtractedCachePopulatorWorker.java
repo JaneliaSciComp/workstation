@@ -36,24 +36,28 @@ public class ExtractedCachePopulatorWorker implements java.util.concurrent.Calla
     @Override
     public Object call() throws Exception {
         try {
-            log.info("Grabbing {}.", infile);
-            CompressedFileResolver resolver = new CompressedFileResolver();
-            TifVolumeFileLoader loader = new TifVolumeFileLoader();
-            // If this storage was null, then new storage will be allocated
-            // within the loader.
-            loader.setTextureByteArray(storage);
-            loader.setPixelBytes(2);
-            byte[] uncompressedRawFile = resolver.uncompress(infile);
-            loader.loadVolumeInFormat(uncompressedRawFile);
-            log.info("Returning {}.", infile);
-            Utilities.zeroScan(loader.getTextureByteArray(), infile.toString(), "ExtractedCachePopulatorWorker.call()::texBytes::" + loader.getTextureByteArray().hashCode());
-            Utilities.zeroScan(storage, infile.toString(), "ExtractedCachePopulatorWorker.call()::designated storage::" + storage.hashCode());
-            return loader.getTextureByteArray();
+            return readBytes();
         } catch (Exception ex) {
             log.error("Failure during extraction of TIFF data.");
             ex.printStackTrace();
             throw ex;
         }
+    }
+
+    public byte[] readBytes() throws Exception {
+        log.info("Grabbing {}.", infile);
+        CompressedFileResolver resolver = new CompressedFileResolver();
+        TifVolumeFileLoader loader = new TifVolumeFileLoader();
+        // If this storage was null, then new storage will be allocated
+        // within the loader.
+        loader.setTextureByteArray(storage);
+        loader.setPixelBytes(2);
+        byte[] uncompressedRawFile = resolver.uncompress(infile);
+        loader.loadVolumeInFormat(uncompressedRawFile);
+        log.info("Returning {}.", infile);
+        Utilities.zeroScan(loader.getTextureByteArray(), infile.toString(), "ExtractedCachePopulatorWorker.call()::texBytes::" + loader.getTextureByteArray().hashCode());
+        Utilities.zeroScan(storage, infile.toString(), "ExtractedCachePopulatorWorker.call()::designated storage::" + storage.hashCode());
+        return loader.getTextureByteArray();
     }
 
 }

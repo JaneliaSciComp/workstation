@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import org.janelia.it.workstation.cache.large_volume.CacheController;
 import org.janelia.it.workstation.cache.large_volume.CacheFacadeI;
+import org.janelia.it.workstation.cache.large_volume.ExtractedCachePopulatorWorker;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
 import org.slf4j.Logger;
@@ -115,7 +116,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                 }
             }
             else {
-                byte[] tiffBytes = cacheManager.getBytes(tiff);
+                byte[] tiffBytes = getBytes(tiff, cacheManager);
                 if ( tiffBytes != null ) {
                     // Must carve out just the right portion.
                     try {
@@ -162,6 +163,37 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         tex.setPixels(pixels);
         //tex.loadRenderedImage(composite);
         return tex;
+    }
+    
+    /**
+     * Obtain bytes.  Will either pull the tiff's data through the cache
+     * mechanism, if it is already prepared, or directly from the disk,
+     * if not.  Doing direct-fetch will avoid problems with cache blocking,
+     * during new-focus changes.  Although redundant, this will allow the
+     * process to move forward.  This mechanism is wasteful compared to the
+     * older slice-from-TIFF mechanism, and might need improvement. LLF
+     * 
+     * @param tiff file to fetch
+     * @param cacheManager check this first
+     * @return bytes obtained.
+     */
+    private byte[] getBytes(File tiff, CacheFacadeI cacheManager) {
+        byte[] tiffBytes;
+        if (cacheManager.isReady(tiff)) {
+            tiffBytes = cacheManager.getBytes(tiff);           
+        }
+        else {
+            tiffBytes = new byte[sliceSize];
+            try {
+                ExtractedCachePopulatorWorker populatorWorker = new ExtractedCachePopulatorWorker(tiff, tiffBytes);
+                populatorWorker.readBytes();
+            } catch (Exception ex) {
+                log.error("Failure during cache bypass. {}", ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
+        
+        return tiffBytes;
     }
     
 }

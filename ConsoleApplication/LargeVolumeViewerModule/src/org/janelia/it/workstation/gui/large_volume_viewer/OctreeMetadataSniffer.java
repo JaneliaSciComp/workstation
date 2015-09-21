@@ -228,7 +228,9 @@ public class OctreeMetadataSniffer {
     }
     
     public int getSliceSize() {
-        return tileFormat.getTileBytes() / tileFormat.getChannelCount();
+        // Usually, bit-depth (in bits, like 16 for two bytes) is divided
+        // by the 8 first.  Here, I am trying to keep numbers small.
+        return tileFormat.getTileSize()[0] * tileFormat.getTileSize()[1] / 8 * tileFormat.getBitDepth();
     }
 
     public static int computeDepth(int octreeDepth, TileIndex tileIndex) {
