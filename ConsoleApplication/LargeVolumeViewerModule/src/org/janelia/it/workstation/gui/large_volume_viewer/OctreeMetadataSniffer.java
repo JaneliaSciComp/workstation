@@ -223,14 +223,19 @@ public class OctreeMetadataSniffer {
         }
     }
     
+    /**
+     * Volume size is enough to hold the extracted volume of one of the
+     * files.  It will not hold multiple channels.  It is "post digestion"
+     * of some format like TIF.
+     * 
+     * @return size in bytes.
+     */
     public int getStandardVolumeSize() {
-        return tileFormat.getTileBytes() * tileFormat.getTileSize()[2];
+        return getSliceSize() * tileFormat.getTileSize()[2];
     }
     
     public int getSliceSize() {
-        // Usually, bit-depth (in bits, like 16 for two bytes) is divided
-        // by the 8 first.  Here, I am trying to keep numbers small.
-        return tileFormat.getTileSize()[0] * tileFormat.getTileSize()[1] / 8 * tileFormat.getBitDepth();
+        return tileFormat.getTileSize()[0] * tileFormat.getTileSize()[1] * tileFormat.getBitDepth() / 8;
     }
 
     public static int computeDepth(int octreeDepth, TileIndex tileIndex) {

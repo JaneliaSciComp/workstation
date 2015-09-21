@@ -24,7 +24,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
     // Metadata: file location required for local system as mount point.
     private File topFolder;
     private String remoteBasePath;
-    private int standardFileSize;
+    private int standardVolumeSize;
     private boolean acceptNullDecoders = true;
     private int sliceSize = -1;
     
@@ -75,14 +75,14 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         final OctreeMetadataSniffer octreeMetadataSniffer = new OctreeMetadataSniffer(topFolder, tileFormat);
         octreeMetadataSniffer.setRemoteBasePath(remoteBasePath);
         octreeMetadataSniffer.sniffMetadata(topFolder);
-        standardFileSize = octreeMetadataSniffer.getStandardVolumeSize();
-        sliceSize = octreeMetadataSniffer.getSliceSize(); //tileFormat.getTileSize()[0] * tileFormat.getTileSize()[1] * (tileFormat.getBitDepth()/8);
+        standardVolumeSize = octreeMetadataSniffer.getStandardVolumeSize();
+        sliceSize = octreeMetadataSniffer.getSliceSize();
 		// Don't launch pre-fetch yet.
         // That must occur AFTER volume initialized signal is sent.
     }
     
     public int getStandardFileSize() {
-        return standardFileSize;
+        return standardVolumeSize;
     }
     
     private TextureData2dGL loadSlice(int relativeZ, TileIndex tileIndex, File folder, CoordinateAxis axis) {
@@ -183,7 +183,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             tiffBytes = cacheManager.getBytes(tiff);           
         }
         else {
-            tiffBytes = new byte[sliceSize];
+            tiffBytes = new byte[standardVolumeSize];
             try {
                 ExtractedCachePopulatorWorker populatorWorker = new ExtractedCachePopulatorWorker(tiff, tiffBytes);
                 populatorWorker.readBytes();
