@@ -24,15 +24,14 @@ public class DatasetModel implements VoxelViewerEventListener {
     Dataset selectedDataset=null;
 
     public void addDataset(Dataset dataset) {
+        datasetList.add(dataset);
         EventManager.sendEvent(this, new DatasetAddedEvent(dataset));
         setSelectedDataset(dataset);
-        addSharedResourcesForDatasetIfNeeded(dataset);
-        datasetList.add(dataset); // order is important here
     }
 
     public void removeDataset(Dataset dataset) {
         datasetList.remove(dataset); // order is important here
-        removeSharedResourcesForDatasetIfNotNeeded(dataset);
+        removeSharedResourcesForDataset(dataset);
         EventManager.sendEvent(this, new DatasetRemovedEvent(dataset));
     }
 
@@ -40,9 +39,11 @@ public class DatasetModel implements VoxelViewerEventListener {
         return selectedDataset;
     }
 
-    public void setSelectedDataset(Dataset selectedDataset) {
-        this.selectedDataset = selectedDataset;
+    public void setSelectedDataset(Dataset dataset) {
+        if (selectedDataset!=null) removeSharedResourcesForDataset(selectedDataset);
+        this.selectedDataset = dataset;
         EventManager.sendEvent(this, new DatasetSelectedEvent(selectedDataset));
+        addSharedResourcesForDataset(selectedDataset);
     }
 
     public void processEvent(VoxelViewerEvent event) {
@@ -57,49 +58,40 @@ public class DatasetModel implements VoxelViewerEventListener {
         }
     }
 
-    Map<String, Integer> createSharedResourceDependencyCount() {
-        Map<String, Integer> resourceCountMap=new HashMap<>();
-        if (selectedDataset==null) return resourceCountMap;
+//    Map<String, Integer> createSharedResourceDependencyCount() {
+//        Map<String, Integer> resourceCountMap=new HashMap<>();
+//        if (selectedDataset==null) return resourceCountMap;
+//
+//        for (Dataset dataset : datasetList) {
+//            List<ActorSharedResource> neededResources=dataset.getNeededActorSharedResources();
+//            for (ActorSharedResource sharedResource : neededResources) {
+//                Integer count=resourceCountMap.get(sharedResource.getName());
+//                if (count==null || count==0) {
+//                    resourceCountMap.put(sharedResource.getName(), 1);
+//                } else {
+//                    resourceCountMap.put(sharedResource.getName(), count + 1);
+//                }
+//            }
+//        }
+//        return resourceCountMap;
+//    }
 
-        for (Dataset dataset : datasetList) {
-            List<ActorSharedResource> neededResources=dataset.getNeededActorSharedResources();
-            for (ActorSharedResource sharedResource : neededResources) {
-                Integer count=resourceCountMap.get(sharedResource.getName());
-                if (count==null || count==0) {
-                    resourceCountMap.put(sharedResource.getName(), 1);
-                } else {
-                    resourceCountMap.put(sharedResource.getName(), count + 1);
-                }
-            }
-        }
-        return resourceCountMap;
-    }
-
-    private void addSharedResourcesForDatasetIfNeeded(Dataset dataset) {
-        //Map<String, Integer> resourceCountMap=createSharedResourceDependencyCount();
+    private void addSharedResourcesForDataset(Dataset dataset) {
         List<ActorSharedResource> neededResources=dataset.getNeededActorSharedResources();
         if (neededResources!=null && neededResources.size()>0) {
             for (ActorSharedResource sharedResource : neededResources) {
-                //Integer currentCount=resourceCountMap.get(sharedResource.getName());
-                //if (currentCount==null || currentCount==0) {
-                    EventManager.sendEvent(this, new SharedResourceNeededEvent(sharedResource));
-                //}
+                EventManager.sendEvent(this, new SharedResourceNeededEvent(sharedResource));
             }
         }
     }
 
-    private void removeSharedResourcesForDatasetIfNotNeeded(Dataset dataset) {
-        Map<String, Integer> resourceCountMap=createSharedResourceDependencyCount();
+    private void removeSharedResourcesForDataset(Dataset dataset) {
         List<ActorSharedResource> neededResources=dataset.getNeededActorSharedResources();
         if (neededResources!=null && neededResources.size()>0) {
             for (ActorSharedResource sharedResource : neededResources) {
-                Integer currentCount=resourceCountMap.get(sharedResource.getName());
-                if (currentCount==null || currentCount==0) {
-                    EventManager.sendEvent(this, new SharedResourceNotNeededEvent(sharedResource.getName()));
-                }
+                EventManager.sendEvent(this, new SharedResourceNotNeededEvent(sharedResource.getName()));
             }
         }
     }
-
 
 }

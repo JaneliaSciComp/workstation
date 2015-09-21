@@ -10,6 +10,7 @@ public abstract class ActorSharedResource {
 
     String name;
     List<Actor> sharedActorList=new ArrayList<>();
+    protected boolean isLoaded=false;
 
     protected ActorSharedResource(String name) {
         this.name=name;
@@ -33,4 +34,7 @@ public abstract class ActorSharedResource {
 
     public abstract void load();
 
+    public boolean isLoaded() {
+        return isLoaded;
+    }
 }

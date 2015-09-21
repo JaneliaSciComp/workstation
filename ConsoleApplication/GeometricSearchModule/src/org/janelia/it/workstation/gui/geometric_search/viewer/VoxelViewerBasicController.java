@@ -55,7 +55,7 @@ public class VoxelViewerBasicController implements VoxelViewerController {
                 if (neededActorSharedResources!=null) {
                     for (ActorSharedResource actorSharedResource : neededActorSharedResources) {
                         if (!model.actorSharedResourceMap.containsKey(actorSharedResource.getName())) {
-                            actorSharedResource.load();
+                            if (!actorSharedResource.isLoaded()) actorSharedResource.load();
                             model.actorSharedResourceMap.put(actorSharedResource.getName(), actorSharedResource);
                         }
                     }

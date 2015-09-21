@@ -6,7 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by murphys on 8/7/2015.
@@ -54,30 +56,39 @@ public class ActorModel implements VoxelViewerEventListener {
                 }
             }
         } else if (event instanceof SharedResourceNeededEvent) {
-            SharedResourceNeededEvent sharedResourceNeededEvent=(SharedResourceNeededEvent)event;
-            ActorSharedResource sharedResource=sharedResourceNeededEvent.getActorSharedResource();
-            boolean alreadyShared=false;
-            for (ActorSharedResource s2 : attachedSharedResources) {
-                if (s2.getName().equals(sharedResource.getName())) {
-                    alreadyShared=true;
-                }
-            }
-            if (!alreadyShared) {
+            try {
+                SharedResourceNeededEvent sharedResourceNeededEvent = (SharedResourceNeededEvent) event;
+                ActorSharedResource sharedResource = sharedResourceNeededEvent.getActorSharedResource();
                 attachedSharedResources.add(sharedResource);
+                EventManager.setDisallowViewerRefresh(true);
                 for (Actor actor : sharedResource.getSharedActorList()) {
                     EventManager.sendEvent(this, new ActorAddedEvent(actor));
                 }
+                EventManager.setDisallowViewerRefresh(false);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                logger.error(ex.toString());
             }
-        } else if (event instanceof SharedResourceNotNeededEvent) {
-            SharedResourceNotNeededEvent notNeededEvent=(SharedResourceNotNeededEvent)event;
-            String notNeededName=notNeededEvent.getResourceName();
-            for (ActorSharedResource sharedResource : attachedSharedResources) {
-                if (sharedResource.getName().equals(notNeededName)) {
-                    for (Actor actor : sharedResource.getSharedActorList()) {
-                        EventManager.sendEvent(this, new ActorRemovedEvent(actor));
+        }
+        else if (event instanceof SharedResourceNotNeededEvent) {
+            try {
+                SharedResourceNotNeededEvent notNeededEvent = (SharedResourceNotNeededEvent) event;
+                String notNeededName = notNeededEvent.getResourceName();
+                Set<ActorSharedResource> removeSet=new HashSet<>();
+                for (ActorSharedResource sharedResource : attachedSharedResources) {
+                    if (sharedResource.getName().equals(notNeededName)) {
+                        for (Actor actor : sharedResource.getSharedActorList()) {
+                            EventManager.sendEvent(this, new ActorRemovedEvent(actor));
+                        }
+                        removeSet.add(sharedResource);
                     }
+                }
+                for (ActorSharedResource sharedResource : removeSet) {
                     attachedSharedResources.remove(sharedResource);
                 }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                logger.error(ex.toString());
             }
         }
     }
