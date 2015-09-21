@@ -45,7 +45,7 @@ public class ExtractedCachePopulatorWorker implements java.util.concurrent.Calla
     }
 
     public byte[] readBytes() throws Exception {
-        log.info("Grabbing {}.", infile);
+        log.info("Grabbing {}.", Utilities.trimToOctreePath(infile));
         CompressedFileResolver resolver = new CompressedFileResolver();
         TifVolumeFileLoader loader = new TifVolumeFileLoader();
         // If this storage was null, then new storage will be allocated
@@ -54,7 +54,7 @@ public class ExtractedCachePopulatorWorker implements java.util.concurrent.Calla
         loader.setPixelBytes(2);
         byte[] uncompressedRawFile = resolver.uncompress(infile);
         loader.loadVolumeInFormat(uncompressedRawFile);
-        log.info("Returning {}.", infile);
+        log.info("Returning {}.", Utilities.trimToOctreePath(infile));
         //Utilities.zeroScan(loader.getTextureByteArray(), infile.toString(), "ExtractedCachePopulatorWorker.call()::texBytes::" + loader.getTextureByteArray().hashCode());
         //Utilities.zeroScan(storage, infile.toString(), "ExtractedCachePopulatorWorker.call()::designated storage::" + storage.hashCode());
         return loader.getTextureByteArray();

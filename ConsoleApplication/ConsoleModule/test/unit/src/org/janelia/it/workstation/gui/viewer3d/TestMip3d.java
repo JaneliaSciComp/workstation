@@ -70,6 +70,8 @@ public class TestMip3d {
                     //String fn = "/Users/fosterl/Whitebackground_color.tif";
                     // Checked 11/7/2014.
                     //String fn = "/Users/fosterl/Erasmus_Color.tiff";
+                    // White, ragged box as of 9/21/2015.
+                    //String fn = "/Volumes/mousebrainmicro-nb/fromnobackup/2014-06-24-Descriptor-stitch1/default.1.tif";
                     // Checked 11/7/2014.
                     //String fn = "/Users/fosterl/Regression_12032013a_color_blocks.tiff";
                     // Checked 11/7/2014.

@@ -154,7 +154,14 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         pixels.rewind();
         
         // Push into the final image.
+        tex.setWidth(tileFormat.getTileSize()[0]);
+        tex.setHeight(tileFormat.getTileSize()[1]);
+        tex.setChannelCount(sc);
+        tex.setUsedWidth(tex.getWidth());
+        tex.setSwapBytes(false);
         tex.setPixels(pixels);
+        tex.setBitDepth(tileFormat.getBitDepth());
+        tex.updateTexImageParams();
         //tex.loadRenderedImage(composite);
         return tex;
     }
