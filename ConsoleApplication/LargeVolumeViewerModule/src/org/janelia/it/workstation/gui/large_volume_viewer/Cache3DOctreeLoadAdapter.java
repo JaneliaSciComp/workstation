@@ -26,6 +26,20 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
     private int standardVolumeSize;
     private boolean acceptNullDecoders = true;
     private int sliceSize = -1;
+    public LoadTimer loadTimer = new LoadTimer();
+    
+    public Cache3DOctreeLoadAdapter() {
+        super();
+        tileFormat.setIndexStyle(TileIndex.IndexStyle.OCTREE);
+        // Report performance statistics when program closes
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                loadTimer.report();
+            }
+        });
+        
+    }
     
     @Override
     public TextureData2dGL loadToRam(TileIndex tileIndex) throws TileLoadError, MissingTileException {
@@ -33,13 +47,14 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
     }
     
     public TextureData2dGL loadToRam(TileIndex tileIndex, boolean zOriginNegativeShift) throws TileLoadError, MissingTileException {
+        LoadTimer localLoadTimer = new LoadTimer();
+        localLoadTimer.mark("starting slice load");
         // Create a local load timer to measure timings just in this thread
         final File octreeFilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, zOriginNegativeShift);
         if (octreeFilePath == null) {
             return null;
         }
-		// TODO - generalize to URL, if possible
-        // (though TIFF requires seek, right?)
+
         // Compute octree path from Raveler-style tile indices
         File folder = new File(topFolder, octreeFilePath.toString());
 
@@ -55,7 +70,11 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             relativeSlice = tileDepth - relativeSlice - 1;
         }
 
-        return loadSlice(relativeSlice, folder, tileIndex.getSliceAxis());
+        TextureData2dGL result = loadSlice(relativeSlice, folder, tileIndex.getSliceAxis());
+        localLoadTimer.mark("finished slice load");
+
+        loadTimer.putAll(localLoadTimer);
+        return result;
     }
 
     public File getTopFolder() {
@@ -116,13 +135,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                 } else {
                     byte[] tiffBytes = getBytes(tiff, cacheManager);
                     if (tiffBytes != null) {
-                        try {
-                            // Save to buffer collection
-                            allBuffers[c] = tiffBytes;
-                        } catch (RuntimeException rte) {
-                            log.error("System exception during read of bytes");
-                            rte.printStackTrace();
-                        }
+                        allBuffers[c] = tiffBytes;
                     } else {
                         log.error("Tiff bytes are null.");
                     }
@@ -132,7 +145,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             // Interleave into a buffer.
             int bytesPerVoxel = tileFormat.getBitDepth() / 8;
 
-            // Multile-of-8 width.
+            // Multiple-of-8 width.
             final int tileW = tileFormat.getTileSize()[0];
             final int widthExtraVoxels = 8 - (tileW % 8);
             final int widthExtraBytes = widthExtraVoxels * sc * bytesPerVoxel;
@@ -160,16 +173,13 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                 pixels.put(stuffer);
             }
             pixels.rewind();
-            //byte[] allPixels = new byte[paddedBufferSize];
-            //pixels.get(allPixels);
-            //pixels.rewind();
 
             // Push into the final image.
             tex.setChannelCount(sc);
             tex.setUsedWidth(tileW);
             tex.setWidth(tileW + widthExtraVoxels);
             tex.setHeight(tileH);
-            log.info("Setting width={}, usedWidth={}, height={}.", tex.getWidth(), tex.getUsedWidth(), tex.getHeight() );
+            log.info("Setting width={}, usedWidth={}, height={}.", tex.getWidth(), tex.getUsedWidth(), tex.getHeight());
             tex.setSwapBytes(false);
             tex.setPixels(pixels);
             tex.setBitDepth(tileFormat.getBitDepth());
