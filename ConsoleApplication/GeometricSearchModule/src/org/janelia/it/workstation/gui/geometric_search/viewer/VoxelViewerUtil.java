@@ -65,6 +65,8 @@ public class VoxelViewerUtil {
         long ydim=readLong(dataStream, longBuffer);
         long zdim=readLong(dataStream, longBuffer);
 
+        float voxelUnitSize=1.0f/xdim;
+
         float xmicrons=readFloat(dataStream, floatBuffer);
         float ymicrons=readFloat(dataStream, floatBuffer);
         float zmicrons=readFloat(dataStream, floatBuffer);
@@ -95,19 +97,19 @@ public class VoxelViewerUtil {
                     long y = planePosition / zdim;
                     long z = planePosition - (zdim * y);
                     for (long x = start; x < end; x++) {
-                        points.add(new Vector4(x * 1.0f, y * 1.0f, z * 1.0f, 1.0f));
+                        points.add(new Vector4(x * voxelUnitSize, y * voxelUnitSize, z * voxelUnitSize, 1.0f));
                     }
                 } else if (axis==1) { // xz(y)
                     long x = planePosition / zdim;
                     long z = planePosition - (zdim * x);
                     for (long y = start; y < end; y++) {
-                        points.add(new Vector4(x * 1.0f, y * 1.0f, z * 1.0f, 1.0f));
+                        points.add(new Vector4(x * voxelUnitSize, y * voxelUnitSize, z * voxelUnitSize, 1.0f));
                     }
                 } else if (axis==2) { // xy(z)
                     long x = planePosition / ydim;
                     long y = planePosition - (ydim * x);
                     for (long z = start; z < end; z++) {
-                        points.add(new Vector4(x * 1.0f, y * 1.0f, z * 1.0f, 1.0f));
+                        points.add(new Vector4(x * voxelUnitSize, y * voxelUnitSize, z * voxelUnitSize, 1.0f));
                     }
                 }
                 readVoxels+=(end-start);

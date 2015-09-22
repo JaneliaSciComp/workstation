@@ -270,6 +270,8 @@ public class GLModel implements VoxelViewerEventListener {
 
                 if (gl4SimpleActor_f instanceof ArrayCubeGLActor) {
 
+                    logger.info("setting up actor name="+actor.getName());
+
                     final DenseVolumeActor denseVolumeActor=(DenseVolumeActor)actor;
                     final ArrayCubeGLActor arrayCubeGLActor = (ArrayCubeGLActor) gl4SimpleActor_f;
                     final ArrayCubeShader cubeShader = (ArrayCubeShader) denseVolumeShaderActionSequence.getShader();
@@ -284,6 +286,8 @@ public class GLModel implements VoxelViewerEventListener {
                             0.0f, 0.0f, 0.0f, 1.0f);
 
                     arrayCubeGLActor.setModel(gal4Rotation);
+
+                    logger.info("calling arrayCubeGLActor.setUpdateCallback()");
 
                     arrayCubeGLActor.setUpdateCallback(new GLDisplayUpdateCallback() {
                         @Override
@@ -324,6 +328,9 @@ public class GLModel implements VoxelViewerEventListener {
                             cubeShader.setBrightness(gl, brightness);
                         }
                     });
+
+                    logger.info("Done setting up callback for actor="+actor.getName());
+
                 } else if (gl4SimpleActor_f instanceof ArrayMeshGLActor) {
 
                     final MeshActor meshActor=(MeshActor)actor;
