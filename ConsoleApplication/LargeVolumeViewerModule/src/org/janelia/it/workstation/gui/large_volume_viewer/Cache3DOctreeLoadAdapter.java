@@ -34,8 +34,6 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
     
     public TextureData2dGL loadToRam(TileIndex tileIndex, boolean zOriginNegativeShift) throws TileLoadError, MissingTileException {
         // Create a local load timer to measure timings just in this thread
-        LoadTimer localLoadTimer = new LoadTimer();
-        localLoadTimer.mark("starting slice load");
         final File octreeFilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, zOriginNegativeShift);
         if (octreeFilePath == null) {
             return null;
@@ -57,7 +55,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             relativeSlice = tileDepth - relativeSlice - 1;
         }
 
-        return loadSlice(relativeSlice, tileIndex, folder, tileIndex.getSliceAxis());
+        return loadSlice(relativeSlice, folder, tileIndex.getSliceAxis());
     }
 
     public File getTopFolder() {
@@ -84,86 +82,129 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         return standardVolumeSize;
     }
     
-    private TextureData2dGL loadSlice(int relativeZ, TileIndex tileIndex, File folder, CoordinateAxis axis) {
-        
-        TextureData2dGL tex = new TextureData2dGL();
-        final int sc = tileFormat.getChannelCount();
-        
-        String tiffBase = OctreeMetadataSniffer.getTiffBase(axis);
-        StringBuilder missingTiffs = new StringBuilder();
-        StringBuilder requestedTiffs = new StringBuilder();
-        CacheFacadeI cacheManager = CacheController.getInstance().getManager();
-        if (cacheManager == null) {
+    private TextureData2dGL loadSlice(int relativeZ, File folder, CoordinateAxis axis) {
+        try {
+            TextureData2dGL tex = new TextureData2dGL();
+            final int sc = tileFormat.getChannelCount();
+
+            String tiffBase = OctreeMetadataSniffer.getTiffBase(axis);
+            StringBuilder missingTiffs = new StringBuilder();
+            StringBuilder requestedTiffs = new StringBuilder();
+            CacheFacadeI cacheManager = CacheController.getInstance().getManager();
+            if (cacheManager == null) {
+                return null;
+            }
+
+            byte[][] allBuffers = new byte[sc][];
+
+            int totalBufferSize = sc * sliceSize;
+            for (int c = 0; c < sc; ++c) {
+                allBuffers[c] = new byte[sliceSize];
+                // Need to establish the channels, out of data extracted from cache.
+                File tiff = new File(folder, OctreeMetadataSniffer.getFilenameForChannel(tiffBase, c));
+                if (requestedTiffs.length() > 0) {
+                    requestedTiffs.append("; ");
+                }
+                requestedTiffs.append(tiff);
+                if (!tiff.exists()) {
+                    if (acceptNullDecoders) {
+                        if (missingTiffs.length() > 0) {
+                            missingTiffs.append(", ");
+                        }
+                        missingTiffs.append(tiff);
+                    }
+                } else {
+                    byte[] tiffBytes = getBytes(tiff, cacheManager);
+                    if (tiffBytes != null) {
+                        try {
+                            // Save to buffer collection
+                            allBuffers[c] = tiffBytes;
+                        } catch (RuntimeException rte) {
+                            log.error("System exception during read of bytes");
+                            rte.printStackTrace();
+                        }
+                    } else {
+                        log.error("Tiff bytes are null.");
+                    }
+                }
+            }
+
+            // Interleave into a buffer.
+            int bytesPerVoxel = tileFormat.getBitDepth() / 8;
+
+            // Multile-of-8 width.
+            final int tileW = tileFormat.getTileSize()[0];
+            final int widthExtraVoxels = 8 - (tileW % 8);
+//            final int paddedWidth = tileW + widthExtraVoxels;
+            final int widthExtraBytes = widthExtraVoxels * sc * bytesPerVoxel;
+            final int tileH = tileFormat.getTileSize()[1];
+            final int paddedBufferSize = totalBufferSize + tileH * widthExtraBytes;
+
+            ByteBuffer pixels = ByteBuffer.allocate(paddedBufferSize);
+            final int widthExtraPerChannel = widthExtraVoxels * bytesPerVoxel;
+            byte[] stuffer = new byte[widthExtraBytes];
+            pixels.rewind();
+            int sliceOffset = sliceSize * relativeZ;
+            int i = 0;
+            for (int h = 0; h < tileH; h++) {
+                for (int w = 0; w < tileW; w++) {
+                    for (int c = 0; c < sc; c++) {
+                        final int byteRunStart = sliceOffset + i * bytesPerVoxel;
+                        //for ( int vb = 0; vb < bytesPerVoxel; vb++) {
+                        //    if ( allBuffers[c][byteRunStart + vb] != 0 ) {
+                        //        nonZeroCount[c] ++;
+                        //    }
+                        //}
+                        pixels.put(allBuffers[c], byteRunStart, bytesPerVoxel);
+                    }
+                    i++;
+                }
+                pixels.put(stuffer);
+            }
+//            int outputOffset = 0;
+//            for (int i = 0; i < sliceSize; i += bytesPerVoxel) {
+//                for (int c = 0; c < sc; ++c) {
+//                    if (outputOffset > 0 && outputOffset % paddedWidth == 0) {
+//                        pixels.put(stuffer);
+//                        if (c == sc - 1) {
+//                            outputOffset += paddedWidth;
+//                        }
+//                    }
+//                    final int byteRunStart = sliceOffset + i * bytesPerVoxel;
+//                    // *** TEMP *** Checking for non-zeros.
+//                    //for ( int vb = 0; vb < bytesPerVoxel; vb++) {
+//                    //    if ( allBuffers[c][byteRunStart + vb] != 0 ) {
+//                    //        nonZeroCount[c] ++;
+//                    //    }
+//                    //}
+//                    pixels.put(allBuffers[c], byteRunStart, bytesPerVoxel);
+//                }
+//                outputOffset++;
+//            }
+
+            pixels.rewind();
+            //byte[] allPixels = new byte[paddedBufferSize];
+            //pixels.get(allPixels);
+            //pixels.rewind();
+
+            // Push into the final image.
+            tex.setChannelCount(sc);
+            tex.setWidth(tileW + widthExtraVoxels);
+            tex.setUsedWidth(tileW);
+            tex.setHeight(tileFormat.getTileSize()[1]);
+            log.info("Setting width={}, usedWidth={}, height={}.", tex.getWidth(), tex.getHeight(), tex.getUsedWidth());
+            tex.setSwapBytes(false);
+            tex.setPixels(pixels);
+            tex.setBitDepth(tileFormat.getBitDepth());
+            tex.updateTexImageParams();
+
+            //tex.loadRenderedImage(composite);
+            return tex;
+        } catch (Exception ex) {
+            log.error("Error in loading slice: {}", ex.getMessage());
+            ex.printStackTrace();
             return null;
         }
-
-        byte[][] allBuffers = new byte[sc][];
-        
-        int totalBufferSize = sc * sliceSize;
-        for (int c = 0; c < sc; ++c) {
-            allBuffers[c] = new byte[sliceSize];
-            // Need to establish the channels, out of data extracted from cache.
-            File tiff = new File(folder, OctreeMetadataSniffer.getFilenameForChannel(tiffBase, c));
-            if (requestedTiffs.length() > 0) {
-                requestedTiffs.append("; ");
-            }
-            requestedTiffs.append(tiff);
-            if (!tiff.exists()) {
-                if (acceptNullDecoders) {
-                    if (missingTiffs.length() > 0) {
-                        missingTiffs.append(", ");
-                    }
-                    missingTiffs.append(tiff);
-                }
-            }
-            else {
-                byte[] tiffBytes = getBytes(tiff, cacheManager);
-                if ( tiffBytes != null ) {
-                    try {
-                        // Save to buffer collection
-                        allBuffers[c] = tiffBytes;
-                    } catch ( RuntimeException rte ) {
-                        log.error("System exception during read of bytes");
-                        rte.printStackTrace();
-                    }
-                }
-                else {
-                    log.error("Tiff bytes are null.");
-                }
-            }
-        }
-        
-        // Interleave into a buffer.
-        ByteBuffer pixels = ByteBuffer.allocate(totalBufferSize);
-        pixels.rewind();
-        int bytesPerVoxel = tileFormat.getBitDepth() / 8;
-        int sliceOffset = sliceSize * relativeZ;
-        for ( int i = 0; i < sliceSize; i += bytesPerVoxel ) {
-            for (int c = 0; c < sc; ++c) {
-                final int byteRunStart = sliceOffset + i * bytesPerVoxel;
-                // *** TEMP *** Checking for non-zeros.
-                //for ( int vb = 0; vb < bytesPerVoxel; vb++) {
-                //    if ( allBuffers[c][byteRunStart + vb] != 0 ) {
-                //        nonZeroCount[c] ++;
-                //    }
-                //}
-                pixels.put( allBuffers[c], byteRunStart, bytesPerVoxel );
-            }
-        }
-        
-        pixels.rewind();
-        
-        // Push into the final image.
-        tex.setWidth(tileFormat.getTileSize()[0]);
-        tex.setHeight(tileFormat.getTileSize()[1]);
-        tex.setChannelCount(sc);
-        tex.setUsedWidth(tex.getWidth());
-        tex.setSwapBytes(false);
-        tex.setPixels(pixels);
-        tex.setBitDepth(tileFormat.getBitDepth());
-        tex.updateTexImageParams();
-        //tex.loadRenderedImage(composite);
-        return tex;
     }
     
     /**

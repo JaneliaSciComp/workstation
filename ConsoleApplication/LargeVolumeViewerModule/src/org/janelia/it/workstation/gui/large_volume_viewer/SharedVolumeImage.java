@@ -147,6 +147,7 @@ implements VolumeImage3d
 				testUrl.openStream();
 				File fileFolder = new File(folderUrl.toURI());
 				Cache3DOctreeLoadAdapter btola = new Cache3DOctreeLoadAdapter();
+                //BlockTiffOctreeLoadAdapter btola = new BlockTiffOctreeLoadAdapter();
                 //ORDER DEPENDENCY: set this before top folder.
                 if (remoteBasePath != null) {
                     btola.setRemoteBasePath(remoteBasePath);
