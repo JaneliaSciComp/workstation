@@ -135,13 +135,11 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             // Multile-of-8 width.
             final int tileW = tileFormat.getTileSize()[0];
             final int widthExtraVoxels = 8 - (tileW % 8);
-//            final int paddedWidth = tileW + widthExtraVoxels;
             final int widthExtraBytes = widthExtraVoxels * sc * bytesPerVoxel;
             final int tileH = tileFormat.getTileSize()[1];
             final int paddedBufferSize = totalBufferSize + tileH * widthExtraBytes;
 
             ByteBuffer pixels = ByteBuffer.allocate(paddedBufferSize);
-            final int widthExtraPerChannel = widthExtraVoxels * bytesPerVoxel;
             byte[] stuffer = new byte[widthExtraBytes];
             pixels.rewind();
             int sliceOffset = sliceSize * relativeZ;
@@ -161,27 +159,6 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                 }
                 pixels.put(stuffer);
             }
-//            int outputOffset = 0;
-//            for (int i = 0; i < sliceSize; i += bytesPerVoxel) {
-//                for (int c = 0; c < sc; ++c) {
-//                    if (outputOffset > 0 && outputOffset % paddedWidth == 0) {
-//                        pixels.put(stuffer);
-//                        if (c == sc - 1) {
-//                            outputOffset += paddedWidth;
-//                        }
-//                    }
-//                    final int byteRunStart = sliceOffset + i * bytesPerVoxel;
-//                    // *** TEMP *** Checking for non-zeros.
-//                    //for ( int vb = 0; vb < bytesPerVoxel; vb++) {
-//                    //    if ( allBuffers[c][byteRunStart + vb] != 0 ) {
-//                    //        nonZeroCount[c] ++;
-//                    //    }
-//                    //}
-//                    pixels.put(allBuffers[c], byteRunStart, bytesPerVoxel);
-//                }
-//                outputOffset++;
-//            }
-
             pixels.rewind();
             //byte[] allPixels = new byte[paddedBufferSize];
             //pixels.get(allPixels);
@@ -189,10 +166,10 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
 
             // Push into the final image.
             tex.setChannelCount(sc);
-            tex.setWidth(tileW + widthExtraVoxels);
             tex.setUsedWidth(tileW);
-            tex.setHeight(tileFormat.getTileSize()[1]);
-            log.info("Setting width={}, usedWidth={}, height={}.", tex.getWidth(), tex.getHeight(), tex.getUsedWidth());
+            tex.setWidth(tileW + widthExtraVoxels);
+            tex.setHeight(tileH);
+            log.info("Setting width={}, usedWidth={}, height={}.", tex.getWidth(), tex.getUsedWidth(), tex.getHeight() );
             tex.setSwapBytes(false);
             tex.setPixels(pixels);
             tex.setBitDepth(tileFormat.getBitDepth());

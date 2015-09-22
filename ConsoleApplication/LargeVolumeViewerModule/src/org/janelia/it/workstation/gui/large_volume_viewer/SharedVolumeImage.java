@@ -132,9 +132,9 @@ implements VolumeImage3d
 				// diagnostic mp4 file
 				testUrl = new URL(folderUrl, "default.0.mp4");
 				testUrl.openStream();
-				Mp4OctreeLoadAdapter btola = new Mp4OctreeLoadAdapter();
-				btola.setTopFolder(folderUrl);
-				testLoadAdapter = btola;
+				Mp4OctreeLoadAdapter octreeLoadAdapter = new Mp4OctreeLoadAdapter();
+				octreeLoadAdapter.setTopFolder(folderUrl);
+				testLoadAdapter = octreeLoadAdapter;
 			} catch (MalformedURLException e1) {} 
 			catch (IOException e) {} 
 		}
@@ -146,14 +146,14 @@ implements VolumeImage3d
 				testUrl = new URL(folderUrl, "default.0.tif");
 				testUrl.openStream();
 				File fileFolder = new File(folderUrl.toURI());
-				Cache3DOctreeLoadAdapter btola = new Cache3DOctreeLoadAdapter();
-                //BlockTiffOctreeLoadAdapter btola = new BlockTiffOctreeLoadAdapter();
+				Cache3DOctreeLoadAdapter octreeLoadAdapter = new Cache3DOctreeLoadAdapter();
+                //BlockTiffOctreeLoadAdapter octreeLoadAdapter = new BlockTiffOctreeLoadAdapter();
                 //ORDER DEPENDENCY: set this before top folder.
                 if (remoteBasePath != null) {
-                    btola.setRemoteBasePath(remoteBasePath);
+                    octreeLoadAdapter.setRemoteBasePath(remoteBasePath);
                 }
-				btola.setTopFolder(fileFolder);
-				testLoadAdapter = btola;
+				octreeLoadAdapter.setTopFolder(fileFolder);
+				testLoadAdapter = octreeLoadAdapter;
             } catch (IOException | URISyntaxException | DataSourceInitializeException ex) {
                 ex.printStackTrace();
                 ModelMgr.getModelMgr().handleException(ex);

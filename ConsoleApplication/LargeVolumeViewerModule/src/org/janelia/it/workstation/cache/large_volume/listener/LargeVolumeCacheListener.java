@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Log event passages.
  *
  * @author Leslie L Foster
  */
@@ -36,7 +37,7 @@ public class LargeVolumeCacheListener implements CacheEventListener {
 
 	@Override
 	public void notifyElementEvicted(Ehcache ehch, Element elmnt) {
-		log.info("Element {} evixted.", elmnt.getKey());
+		log.info("Element {} evicted.", elmnt.getKey());
 	}
 
 	@Override
@@ -52,6 +53,4 @@ public class LargeVolumeCacheListener implements CacheEventListener {
 	}
 	
 }
-/*
-CacheEventListener 
-*/
+
