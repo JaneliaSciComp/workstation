@@ -1,16 +1,19 @@
 package org.janelia.it.workstation.gui.geometric_search.search;
 
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.outline.TransferableEntityList;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewer4DImage;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerUtil;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
 import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.DenseVolumeRenderable;
+import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.SparseVolumeRenderable;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +23,7 @@ import java.awt.datatransfer.Transferable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 /**
@@ -113,6 +117,14 @@ public class MCFODataset extends Dataset {
 
                     if (entity!=null) {
 
+                        Entity sampleEntity = getSampleFromNeuronSeparationPipelineEntity(re);
+
+                        if (sampleEntity==null) {
+                            logger.info("sampleEntity is null");
+                        } else {
+                            logger.info("Sample name="+sampleEntity.getName());
+                        }
+
                         Set<Entity> entitySet = entity.getChildren();
 
                         if (entitySet == null) {
@@ -120,6 +132,11 @@ public class MCFODataset extends Dataset {
                         } else {
                             if (neuronFragmentList != null) {
                                 MCFODataset mcfoDataset = new MCFODataset();
+                                if (sampleEntity!=null) {
+                                    mcfoDataset.setName(sampleEntity.getName());
+                                } else {
+                                    mcfoDataset.setName("unknown sample");
+                                }
                                 int numFragments = entitySet.size();
                                 logger.info("Found " + numFragments + " expected neuron fragments based on entity graph");
                                 for (int i = 0; i < numFragments; i++) {
@@ -163,55 +180,39 @@ public class MCFODataset extends Dataset {
         logger.info("createRenderables() start");
 
         try {
-
-
-
-
+            Random random=new Random();
+            for (File maskFile : maskFiles) {
+                logger.info("Creating renderable for maskFile="+maskFile.getAbsolutePath());
+                SparseVolumeRenderable sparseVolumeRenderable=new SparseVolumeRenderable();
+                VoxelViewerUtil.initRenderableFromMaskFile(sparseVolumeRenderable, maskFile);
+                logger.info("Found " + sparseVolumeRenderable.getVoxels().size() + " points in mask file="+maskFile.getAbsolutePath());
+                setSparseVolumeRenderableName(sparseVolumeRenderable, maskFile);
+                sparseVolumeRenderable.setPreferredColor(new Vector4(random.nextFloat(), random.nextFloat(), random.nextFloat(), 0.3f));
+                renderables.add(sparseVolumeRenderable);
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
             return false;
         }
-
-//        try {
-//            VoxelViewer4DImage image = VoxelViewerUtil.createVoxelImageFromStack(alignedStack);
-//            float voxelSize = (float)(1.0 / (1.0 * image.getXSize()));
-//
-//            DenseVolumeRenderable c0r=new DenseVolumeRenderable();
-//            if (image.getVoxelByteCount()==1) {
-//                c0r.init(image.getXSize(), image.getYSize(), image.getZSize(), voxelSize, image.getData8ForChannel(0));
-//            } else {
-//                c0r.init(image.getXSize(), image.getYSize(), image.getZSize(), voxelSize, image.getData16ForChannel(0));
-//            }
-//            setDenseVolumeRenderableName(c0r, 0);
-//            c0r.setPreferredColor(new Vector4(1.0f, 0.0f, 0.0f, 0.01f));
-//            renderables.add(c0r);
-//
-//            DenseVolumeRenderable c1r=new DenseVolumeRenderable();
-//            c1r.setIntensityThreshold(0.30f);
-//            c1r.setMaxVoxels(3000000);
-//            if (image.getVoxelByteCount()==1) {
-//                c1r.init(image.getXSize(), image.getYSize(), image.getZSize(), voxelSize, image.getData8ForChannel(1));
-//            } else {
-//                c1r.init(image.getXSize(), image.getYSize(), image.getZSize(), voxelSize, image.getData16ForChannel(1));
-//            }
-//            c1r.setPreferredColor(new Vector4(0.0f, 1.0f, 0.0f, 0.01f));
-//            setDenseVolumeRenderableName(c1r, 1);
-//            renderables.add(c1r);
-//
-//            logger.info("createRenderables() done creating VoxelViewer4DImage");
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//            return false;
-//        }
-
         logger.info("createRenderables() end");
         return true;
     }
 
-    protected void setDenseVolumeRenderableName(DenseVolumeRenderable renderable, int channel) {
-        Double voxelPerc = (renderable.getSampledVoxelCount() *1.0) / (renderable.getTotalVoxelCount() * 1.0) * 100.0;
-        String dString = voxelPerc.toString().substring(0, voxelPerc.toString().indexOf("."));
-        renderable.setName("Channel "+channel+" "+dString+"%");
+    protected void setSparseVolumeRenderableName(SparseVolumeRenderable renderable, File maskFile) {
+        renderable.setName(maskFile.getName());
     }
+
+    private static Entity getSampleFromNeuronSeparationPipelineEntity(RootedEntity re) {
+        Entity neuronSepPipelineEntity = re.getEntity();
+        try {
+            Entity sampleEntity=ModelMgr.getModelMgr().getAncestorWithType(neuronSepPipelineEntity, EntityConstants.TYPE_SAMPLE);
+            return sampleEntity;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            logger.error(ex.toString());
+            return null;
+        }
+    }
+
 
 }
