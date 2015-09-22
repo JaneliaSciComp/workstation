@@ -52,6 +52,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         // Create a local load timer to measure timings just in this thread
         final File octreeFilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, zOriginNegativeShift);
         if (octreeFilePath == null) {
+            log.warn("Returning null: octree file path null.");
             return null;
         }
 
@@ -101,7 +102,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         return standardVolumeSize;
     }
     
-    private TextureData2dGL loadSlice(int relativeZ, File folder, CoordinateAxis axis) {
+    private synchronized TextureData2dGL loadSlice(int relativeZ, File folder, CoordinateAxis axis) {
         try {
             TextureData2dGL tex = new TextureData2dGL();
             final int sc = tileFormat.getChannelCount();
@@ -110,15 +111,12 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             StringBuilder missingTiffs = new StringBuilder();
             StringBuilder requestedTiffs = new StringBuilder();
             CacheFacadeI cacheManager = CacheController.getInstance().getManager();
-            if (cacheManager == null) {
-                return null;
-            }
 
             byte[][] allBuffers = new byte[sc][];
 
             int totalBufferSize = sc * sliceSize;
             for (int c = 0; c < sc; ++c) {
-                allBuffers[c] = new byte[sliceSize];
+                allBuffers[c] = null;
                 // Need to establish the channels, out of data extracted from cache.
                 File tiff = new File(folder, OctreeMetadataSniffer.getFilenameForChannel(tiffBase, c));
                 if (requestedTiffs.length() > 0) {
@@ -153,6 +151,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             final int paddedBufferSize = totalBufferSize + tileH * widthExtraBytes;
 
             ByteBuffer pixels = ByteBuffer.allocate(paddedBufferSize);
+            byte[] dummyPixels = new byte[bytesPerVoxel];
             byte[] stuffer = new byte[widthExtraBytes];
             pixels.rewind();
             int sliceOffset = sliceSize * relativeZ;
@@ -160,13 +159,18 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             for (int h = 0; h < tileH; h++) {
                 for (int w = 0; w < tileW; w++) {
                     for (int c = 0; c < sc; c++) {
-                        final int byteRunStart = sliceOffset + i * bytesPerVoxel;
-                        //for ( int vb = 0; vb < bytesPerVoxel; vb++) {
-                        //    if ( allBuffers[c][byteRunStart + vb] != 0 ) {
-                        //        nonZeroCount[c] ++;
-                        //    }
-                        //}
-                        pixels.put(allBuffers[c], byteRunStart, bytesPerVoxel);
+                        if (allBuffers[c] == null) {
+                            pixels.put(dummyPixels);
+                        }
+                        else {
+                            final int byteRunStart = sliceOffset + i * bytesPerVoxel;
+                            //for ( int vb = 0; vb < bytesPerVoxel; vb++) {
+                            //    if ( allBuffers[c][byteRunStart + vb] != 0 ) {
+                            //        nonZeroCount[c] ++;
+                            //    }
+                            //}
+                            pixels.put(allBuffers[c], byteRunStart, bytesPerVoxel);
+                        }
                     }
                     i++;
                 }
@@ -193,7 +197,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             return null;
         }
     }
-    
+
     /**
      * Obtain bytes.  Will either pull the tiff's data through the cache
      * mechanism, if it is already prepared, or directly from the disk,
@@ -209,6 +213,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
     private byte[] getBytes(File tiff, CacheFacadeI cacheManager) {
         byte[] tiffBytes;
         if (cacheManager.isReady(tiff)) {
+            log.info("Cache has {} at the ready.", Utilities.trimToOctreePath(tiff));
             tiffBytes = cacheManager.getBytes(tiff);           
         }
         else {

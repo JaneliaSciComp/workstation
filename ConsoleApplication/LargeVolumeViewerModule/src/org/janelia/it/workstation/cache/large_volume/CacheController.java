@@ -22,12 +22,15 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class CacheController {
+    public static final int CACHE_MGR_SLEEP_TIME = 100;
+
     private CacheFacadeI manager;
     private CacheCameraListener cameraListener;
     private static ExecutorService executor;
     
     private static final CacheController instance = new CacheController();
-    
+    private static Logger log = LoggerFactory.getLogger(CacheController.class);
+
     public static CacheController getInstance() {
         return instance;
     }
@@ -44,6 +47,7 @@ public class CacheController {
      * @return the manager
      */
     public CacheFacadeI getManager() {
+        awaitCacheManager();
         return manager;
     }
 
@@ -74,7 +78,6 @@ public class CacheController {
             cameraListener.setSharedVolumeImage(sharedVolumeImage);
         }
         else {
-            Logger log = LoggerFactory.getLogger(CacheController.class);
             log.warn("Attempt to register a camera for events, before the cache manager has been set.");
         }
     }
@@ -85,6 +88,32 @@ public class CacheController {
     
     public void focusChanged(Vec3 focus) {
         cameraListener.focusChanged(focus);
+    }
+
+    /** Ensure that this thing gets set.  */
+    private CacheFacadeI awaitCacheManager() {
+        log.info("Awaiting cache manager.");
+        boolean found = false;
+        int maxRetryTime = 1000 * 60;
+        while (!found) {
+            try {
+                Thread.sleep(CACHE_MGR_SLEEP_TIME);                
+                if (manager != null) {
+                    found = true;
+                }            
+                else {
+                    maxRetryTime -= CACHE_MGR_SLEEP_TIME;
+                    if (maxRetryTime < 0) {
+                        log.error("Time out awaiting cache mananger.");
+                        return null;
+                    }
+                }
+            } catch (Exception ex) {
+                log.info("Exception while awaiting cache mgr. {}",
+                        ex.getMessage());
+            }
+        }
+        return manager;
     }
 
     private static class CacheCameraListener implements CameraListener {
