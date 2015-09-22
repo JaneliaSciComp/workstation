@@ -43,20 +43,17 @@ public class Utilities {
     }
     
     public static String trimToOctreePath(String id) {
-        if (id.endsWith(".tif")) {
-            int endPoint = id.lastIndexOf("/");
-            int startPoint = 0;
-            boolean foundAlpha = false;
-            while (!foundAlpha) {
-                endPoint--;
-                if (Character.isAlphabetic(id.charAt(endPoint))) {
-                    foundAlpha = true;
-                    startPoint = endPoint;
-                    startPoint = id.indexOf("/", startPoint);
-                }
+        int endPoint = id.lastIndexOf("/");
+        int startPoint = 0;
+        boolean foundAlpha = false;
+        while (!foundAlpha) {
+            endPoint--;
+            if (Character.isAlphabetic(id.charAt(endPoint))) {
+                foundAlpha = true;
+                startPoint = endPoint;
+                startPoint = id.indexOf("/", startPoint);
             }
-            return id.substring(startPoint);
         }
-        return id;
+        return id.substring(startPoint);
     }
 }

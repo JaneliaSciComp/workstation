@@ -104,6 +104,7 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
     
     private synchronized TextureData2dGL loadSlice(int relativeZ, File folder, CoordinateAxis axis) {
         try {
+            log.info("Loading tile {}, for Z-plane {}.", Utilities.trimToOctreePath(folder), relativeZ);
             TextureData2dGL tex = new TextureData2dGL();
             final int sc = tileFormat.getChannelCount();
 
