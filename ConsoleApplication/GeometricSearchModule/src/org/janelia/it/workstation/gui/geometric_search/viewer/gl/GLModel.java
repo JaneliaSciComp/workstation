@@ -8,6 +8,7 @@ import org.janelia.it.workstation.gui.geometric_search.viewer.*;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.Actor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.DenseVolumeActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.MeshActor;
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.SparseVolumeActor;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorAddedEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorRemovedEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorsClearAllEvent;
@@ -273,17 +274,34 @@ public class GLModel implements VoxelViewerEventListener {
                     logger.info("setting up actor name="+actor.getName());
 
                     final DenseVolumeActor denseVolumeActor=(DenseVolumeActor)actor;
+
+                    boolean sparseFlag=false;
+
+                    if (actor instanceof SparseVolumeActor) {
+                        sparseFlag=true;
+                    }
+
                     final ArrayCubeGLActor arrayCubeGLActor = (ArrayCubeGLActor) gl4SimpleActor_f;
                     final ArrayCubeShader cubeShader = (ArrayCubeShader) denseVolumeShaderActionSequence.getShader();
 
                     Matrix4 gal4Rotation = new Matrix4();
 
                     // Empirically derived - for GAL4 samples
-                    // todo - move to ScreenDataset
-                    gal4Rotation.setTranspose(-1.0f, 0.0f, 0.0f, 0.5f,
-                            0.0f, -1.0f, 0.0f, 0.25f,
-                            0.0f, 0.0f, -1.0f, 0.625f,
-                            0.0f, 0.0f, 0.0f, 1.0f);
+                    // todo - move to ScreenDataset and MCFODataset
+
+                    if (sparseFlag) {
+                        gal4Rotation.setTranspose(
+                                1.0f, 0.0f, 0.0f, -0.5f,
+                                0.0f,  1.0f, 0.0f, -0.25f,
+                                0.0f, 0.0f, -1.0f, 0.625f,
+                                0.0f, 0.0f, 0.0f, 1.0f);
+                    } else {
+                        gal4Rotation.setTranspose(
+                                -1.0f, 0.0f, 0.0f, 0.5f,
+                                0.0f, -1.0f, 0.0f, 0.25f,
+                                0.0f, 0.0f, -1.0f, 0.625f,
+                                0.0f, 0.0f, 0.0f, 1.0f);
+                    }
 
                     arrayCubeGLActor.setModel(gal4Rotation);
 
@@ -329,7 +347,7 @@ public class GLModel implements VoxelViewerEventListener {
                         }
                     });
 
-                    logger.info("Done setting up callback for actor="+actor.getName());
+                    logger.info("Done setting up callback for actor=" + actor.getName());
 
                 } else if (gl4SimpleActor_f instanceof ArrayMeshGLActor) {
 
