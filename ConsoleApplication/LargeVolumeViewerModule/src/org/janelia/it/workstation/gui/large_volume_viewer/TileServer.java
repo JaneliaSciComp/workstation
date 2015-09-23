@@ -459,7 +459,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
         minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
         futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
         clearCache();
-        setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
+        setCacheSizesAsFractionOfMaxHeap(0.05, 0.05); // 0.15, 0.35
         refreshCurrentTileSet();
     }
 	

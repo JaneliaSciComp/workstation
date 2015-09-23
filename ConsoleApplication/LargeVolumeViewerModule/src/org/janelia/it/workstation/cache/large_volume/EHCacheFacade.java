@@ -32,7 +32,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.compression.Compressed
  * 
  * @author fosterl
  */
-public class CacheFacade implements CacheFacadeI {
+public class EHCacheFacade implements CacheFacadeI {
     public static final String CACHE_NAME = "CompressedTiffCache";
     public static final int GIGA = 1024*1024*1024;
     // TODO use more dynamic means of determining how many of the slabs
@@ -52,7 +52,7 @@ public class CacheFacade implements CacheFacadeI {
     private int totalGets;
     private int noFutureGets;
     
-    private Logger log = LoggerFactory.getLogger(CacheFacade.class);
+    private Logger log = LoggerFactory.getLogger(EHCacheFacade.class);
     
     /**
      * Possibly temporary: using this class to wrap use of BTOLA, and hide
@@ -79,7 +79,7 @@ public class CacheFacade implements CacheFacadeI {
      * @param region unique key for cache namespace.
      * @throws Exception from called methods.
      */
-    public CacheFacade(String region, final int standardFileSize) throws Exception {
+    public EHCacheFacade(String region, final int standardFileSize) throws Exception {
         // Establishing in-memory cache, declaratively.
         log.info("Creating a cache {}.", region);
         cacheName = region;
@@ -107,7 +107,7 @@ public class CacheFacade implements CacheFacadeI {
         cachePopulator.setExtractFromContainerFormat(true);
     }
 
-    public CacheFacade(int standardFileSize) throws Exception {
+    public EHCacheFacade(int standardFileSize) throws Exception {
         this(CACHE_NAME, standardFileSize);
     }
     
@@ -292,17 +292,18 @@ public class CacheFacade implements CacheFacadeI {
             Cache cache = manager.getCache(cacheName);
             if (cache.get(id) != null) {                
                 wrapper = (CachableWrapper) cache.get(id).getObjectValue();
-                log.info("Returning {}: found in cache.", keyOnly);
+                log.debug("Returning {}: found in cache.", keyOnly);
             } else {
-                log.info("Pushing {} into cache.", id);
+                log.debug("Pushing {} into cache.", id);
                 byte[] storage = new byte[cachePopulator.getStandardFileSize()];
                 wrapper = cachePopulator.pushLaunch(id, storage);
-                log.info("Returning {}: pushed to cache.", keyOnly);
+                log.info("Returning {}: pushed to cache. Zoom={}.", keyOnly, cameraZoom);
             }
-            log.info("Getting {} from cache wrapper.", keyOnly);
+            log.debug("Getting {} from cache wrapper.", keyOnly);
+            dumpCacheMemoryUse(cache);
             rtnVal = wrapper.getBytes();
             //Utilities.zeroScan(rtnVal, "CacheFacade.getBytes()", keyOnly);
-            log.info("Returning from cache wrapper: {}.", keyOnly);
+            log.debug("Returning from cache wrapper: {}.", keyOnly);
         } catch (InterruptedException | ExecutionException ie) {
             log.warn("Interrupted thread, while returning {}.  Message: {}", id, ie.getMessage());
             ie.printStackTrace();
@@ -315,9 +316,15 @@ public class CacheFacade implements CacheFacadeI {
         }
 
         if (totalGets % 50 == 0) {
-            log.info("No-future get ratio: {}/{} = {}.", noFutureGets, totalGets, ((double) noFutureGets / (double) totalGets));
+            log.debug("No-future get ratio: {}/{} = {}.", noFutureGets, totalGets, ((double) noFutureGets / (double) totalGets));
         }
         return rtnVal;
+    }
+    
+    private void dumpCacheMemoryUse(Cache cache) {
+        List<String> keys = cache.getKeys();
+        final double required = (double)((long)keys.size() * (long)cachePopulator.getStandardFileSize()) / (double)GIGA;
+        log.info("======> Required memory is {}", required);
     }
 
     private boolean calculateRegion() {

@@ -168,6 +168,7 @@ implements TextureDataI
 	
 	public void releaseMemory() {
 		width = height = usedWidth = 0;
+        pixels.clear();
 		pixels = null;
 	}
 	

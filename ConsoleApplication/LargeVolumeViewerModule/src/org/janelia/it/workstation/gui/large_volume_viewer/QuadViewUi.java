@@ -56,7 +56,7 @@ import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.it.workstation.cache.large_volume.CacheController;
-import org.janelia.it.workstation.cache.large_volume.CacheFacade;
+import org.janelia.it.workstation.cache.large_volume.EHCacheFacade;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
@@ -1394,7 +1394,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
     
     private boolean usingCache() {
-        return ( System.getProperty( CacheFacade.CACHE_NAME, "f" ).toLowerCase().startsWith("t") );
+        return ( System.getProperty( EHCacheFacade.CACHE_NAME, "f" ).toLowerCase().startsWith("t") );
     }
 
     static class LoadStatusLabel extends JLabel {
