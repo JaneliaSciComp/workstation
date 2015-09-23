@@ -442,16 +442,21 @@ public class EntityDetailsPanel extends JPanel implements Refreshable {
 
                 if (doc != null) {
                     List<SearchAttribute> attrs = searchConfig.getAttributeGroups().get(AttrGroup.SAGE);
-                    for (SearchAttribute attr : attrs) {
-                        String value = searchConfig.getValue(doc, attr.getName());
-                        if (value != null) {
-                            String attrName = attr.getLabel();
-                            if (!attrNames.contains(attrName)) {
-                                attrNames.add(attrName);
-                                AttributeValue attrValue = new AttributeValue(attrName, value);
-                                attributesTable.addRow(attrValue);
+                    if (attrs!=null) {
+                        for (SearchAttribute attr : attrs) {
+                            String value = searchConfig.getValue(doc, attr.getName());
+                            if (value != null) {
+                                String attrName = attr.getLabel();
+                                if (!attrNames.contains(attrName)) {
+                                    attrNames.add(attrName);
+                                    AttributeValue attrValue = new AttributeValue(attrName, value);
+                                    attributesTable.addRow(attrValue);
+                                }
                             }
                         }
+                    }
+                    else {
+                        log.warn("No SAGE attributes found in search configuration!");
                     }
                 }
 
