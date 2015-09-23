@@ -253,21 +253,27 @@ public class MapCacheFacade implements CacheFacadeI {
      */
     private byte[] getBytes(final String id) {
         String keyOnly = Utilities.trimToOctreePath(id);
-        log.info("Getting {}", keyOnly);
+        log.debug("Getting {}", keyOnly);
         totalGets++;
         byte[] rtnVal = null;
         try {
             CachableWrapper wrapper = (CachableWrapper) cacheMap.get(id);
             if (wrapper != null) {
                 rtnVal = wrapper.getBytes();
-                log.info("Returning {}: found in cache.", keyOnly);
+                log.debug("Returning {}: found in cache.", keyOnly);
             }
             else {
                 log.info("Pushing {} into cache.", id);
                 byte[] storage = allocateBuffer();
                 wrapper = cachePopulator.pushLaunch(id, storage);
                 rtnVal = wrapper.getBytes();
-                log.info("Returning {}: pushed to cache.", keyOnly);
+                // Add to 'hood, so it can be expelled when not in use.
+                neighborhood.getFiles().add(new File(id));
+                log.info(
+                    "Returning {}: pushed to cache. CameraZoom={}.  Focus={},{},{}.", 
+                    keyOnly, cameraZoom, cameraFocus[0], cameraFocus[1], cameraFocus[2]
+                );
+                //new Exception("DIAGNOSE CACHE-PUSH").printStackTrace();
             }
         } catch (InterruptedException | ExecutionException ie) {
             log.warn("Interrupted thread, while returning {}.", id);

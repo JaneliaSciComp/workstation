@@ -8,6 +8,7 @@ package org.janelia.it.workstation.cache.large_volume;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -219,7 +220,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         for ( String tileFilePath: tileFilePaths) {
             tileFiles.add(new File(tileFilePath));
         }
-        neighborhood.setFiles(tileFiles);
+        neighborhood.setFiles(Collections.synchronizedSet(tileFiles));
         log.debug("Neighborhood contains {} files.", tileFiles.size());
         return neighborhood;
     }
