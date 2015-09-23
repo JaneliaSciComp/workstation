@@ -34,6 +34,7 @@ public class MCFODataset extends Dataset {
     private static final Logger logger = LoggerFactory.getLogger(MCFODataset.class);
 
     List<File> maskFiles=new ArrayList<>();
+    List<File> chanFiles=new ArrayList<>();
 
     public MCFODataset() {
         getNeededActorSharedResources().add(JFRC2010CompartmentSharedResource.getInstance());
@@ -54,6 +55,8 @@ public class MCFODataset extends Dataset {
     public List<File> getMaskFiles() {
         return maskFiles;
     }
+
+    public List<File> getChanFiles() { return chanFiles; }
 
     public static boolean canImport(Transferable transferable) {
         try {
@@ -140,11 +143,15 @@ public class MCFODataset extends Dataset {
                                 int numFragments = entitySet.size();
                                 logger.info("Found " + numFragments + " expected neuron fragments based on entity graph");
                                 for (int i = 0; i < numFragments; i++) {
-                                    String fragmentMaskPath = separationDirPath + "/" + "archive" + "/" + "maskChan" + "/" + "neuron_" + i + ".mask";
+                                    String fragmentBasePath = separationDirPath + "/" + "archive" + "/" + "maskChan" + "/" + "neuron_" + i;
+                                    String fragmentMaskPath = fragmentBasePath + ".mask";
+                                    String fragmentChanPath = fragmentBasePath + ".chan";
                                     logger.info("Looking for file=" + fragmentMaskPath);
                                     File localFile = SessionMgr.getCachedFile(fragmentMaskPath, false);
                                     if (localFile != null) {
                                         mcfoDataset.getMaskFiles().add(localFile);
+                                        File localChanFile = SessionMgr.getCachedFile(fragmentChanPath, false);
+                                        mcfoDataset.getChanFiles().add(localChanFile); // OK that may be null
                                     } else {
                                         logger.info("SessionMgr.getCachedFile() returned null for file=" + fragmentMaskPath);
                                     }
@@ -181,14 +188,16 @@ public class MCFODataset extends Dataset {
 
         try {
             Random random=new Random();
+            int i=0;
             for (File maskFile : maskFiles) {
                 logger.info("Creating renderable for maskFile="+maskFile.getAbsolutePath());
                 SparseVolumeRenderable sparseVolumeRenderable=new SparseVolumeRenderable();
-                VoxelViewerUtil.initRenderableFromMaskFile(sparseVolumeRenderable, maskFile);
+                VoxelViewerUtil.initRenderableFromMaskFile(sparseVolumeRenderable, maskFile, chanFiles.get(i));
                 logger.info("Found " + sparseVolumeRenderable.getVoxels().size() + " points in mask file="+maskFile.getAbsolutePath());
                 setSparseVolumeRenderableName(sparseVolumeRenderable, maskFile);
                 sparseVolumeRenderable.setPreferredColor(new Vector4(random.nextFloat(), random.nextFloat(), random.nextFloat(), 0.3f));
                 renderables.add(sparseVolumeRenderable);
+                i++;
             }
         } catch (Exception ex) {
             ex.printStackTrace();

@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,11 +47,12 @@ public class VoxelViewerUtil {
         return image;
     }
 
-    public static void initRenderableFromMaskFile(SparseVolumeRenderable sparseVolumeRenderable, File maskFile) throws Exception {
+    public static void initRenderableFromMaskFile(SparseVolumeRenderable sparseVolumeRenderable, File maskFile, File chanFile) throws Exception {
 
         // The input data is known to be little-endian or LSB.
         byte[] longArray = new byte[ 8 ];
         byte[] floatArray = new byte[ 4 ];
+        byte[] shortArray = new byte[ 2 ];
 
         ByteBuffer longBuffer = ByteBuffer.wrap( longArray );
         longBuffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -58,58 +60,151 @@ public class VoxelViewerUtil {
         ByteBuffer floatBuffer = ByteBuffer.wrap( floatArray );
         floatBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
-        List<Vector4> points=new ArrayList<>();
-        InputStream dataStream=new FileInputStream(maskFile);
+        ByteBuffer shortBuffer = ByteBuffer.wrap( shortArray );
+        floatBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
-        long xdim=readLong(dataStream, longBuffer);
-        long ydim=readLong(dataStream, longBuffer);
-        long zdim=readLong(dataStream, longBuffer);
+        short[] data8Arr=null;
+        int[] data16Arr=null;
+
+        int cdim=0;
+        int chanVoxels=0;
+        byte chanBytesPerChannel=0;
+
+        List<Vector4> points=new ArrayList<>();
+        InputStream maskStream=new FileInputStream(maskFile);
+        if (chanFile!=null) {
+            InputStream chanStream=new FileInputStream(chanFile);
+            chanVoxels=(int)readLong(chanStream, longBuffer);
+            cdim=readByte(chanStream);
+            byte chanRecRed=readByte(chanStream);
+            byte chanRecGreen=readByte(chanStream);
+            byte chanRecBlue=readByte(chanStream);
+            chanBytesPerChannel=readByte(chanStream);
+            int chanTotalDataBytes=chanBytesPerChannel * chanVoxels * cdim;
+            byte[] chanData = new byte[(int)chanTotalDataBytes];
+            chanStream.read(chanData);
+            if (chanBytesPerChannel==1) {
+                ByteBuffer data8=ByteBuffer.wrap(chanData);
+                data8Arr=new short[chanTotalDataBytes];
+                for (int i=0;i<chanTotalDataBytes;i++) {
+                    short s=data8.get(i);
+                    if (s<0) s=(short)(256 + s);
+                    data8Arr[i]=s;
+                }
+            } else if (chanBytesPerChannel==2) {
+                ByteBuffer data16=ByteBuffer.wrap(chanData);
+                data16Arr=new int[chanVoxels*cdim];
+                for (int i=0;i<data16Arr.length;i++) {
+                    int si=data16.getShort(i*2);
+                    if (si<0) si=65536+si;
+                    data16Arr[i]=si;
+                }
+            }
+            chanStream.close();
+        }
+
+        long xdim=readLong(maskStream, longBuffer);
+        long ydim=readLong(maskStream, longBuffer);
+        long zdim=readLong(maskStream, longBuffer);
 
         float voxelUnitSize=1.0f/xdim;
 
-        float xmicrons=readFloat(dataStream, floatBuffer);
-        float ymicrons=readFloat(dataStream, floatBuffer);
-        float zmicrons=readFloat(dataStream, floatBuffer);
+        float xmicrons=readFloat(maskStream, floatBuffer);
+        float ymicrons=readFloat(maskStream, floatBuffer);
+        float zmicrons=readFloat(maskStream, floatBuffer);
 
         // Bounding box
-        long x0 = readLong(dataStream, longBuffer);
-        long x1 = readLong(dataStream, longBuffer);
-        long y0 = readLong(dataStream, longBuffer);
-        long y1 = readLong(dataStream, longBuffer);
-        long z0 = readLong(dataStream, longBuffer);
-        long z1 = readLong(dataStream, longBuffer);
+        long x0 = readLong(maskStream, longBuffer);
+        long x1 = readLong(maskStream, longBuffer);
+        long y0 = readLong(maskStream, longBuffer);
+        long y1 = readLong(maskStream, longBuffer);
+        long z0 = readLong(maskStream, longBuffer);
+        long z1 = readLong(maskStream, longBuffer);
 
-        long totalVoxels = readLong(dataStream, longBuffer);
+        long totalVoxels = readLong(maskStream, longBuffer);
 
-        byte axis=readByte(dataStream);
+        byte axis=readByte(maskStream);
 
         long planePosition=0L;
         long readVoxels=0L;
 
+        float cdimf=1.0f*cdim;
+
         while(readVoxels<totalVoxels) {
-            long skip = readLong(dataStream, longBuffer);
+            long skip = readLong(maskStream, longBuffer);
             planePosition+=skip;
-            long pairs = readLong(dataStream, longBuffer);
+            long pairs = readLong(maskStream, longBuffer);
             for (long p=0;p<pairs;p++) {
-                long start = readLong(dataStream, longBuffer);
-                long end = readLong(dataStream, longBuffer);
+                long start = readLong(maskStream, longBuffer);
+                long end = readLong(maskStream, longBuffer);
                 if (axis==0) { // yz(x)
                     long y = planePosition / zdim;
                     long z = planePosition - (zdim * y);
                     for (long x = start; x < end; x++) {
-                        points.add(new Vector4(x * voxelUnitSize, y * voxelUnitSize, z * voxelUnitSize, 1.0f));
+
+                        float iv=1.0f;
+                        if (data8Arr!=null) {
+                            int iTotal=0;
+                            for (int c=0;c<cdim;c++) {
+                                iTotal += data8Arr[(int) (readVoxels + (x - start) + c * chanVoxels)];
+                            }
+                            iv=iTotal*1.0f/(cdimf*255.0f);
+                        } else if (data16Arr!=null) {
+                            int iTotal=0;
+                            for (int c=0;c<cdim;c++) {
+                                iTotal += data16Arr[(int) (readVoxels + (x - start) + c * chanVoxels)];
+                            }
+                            iv=iTotal*1.0f/(cdimf*4096.0f);
+                        }
+
+                        points.add(new Vector4(x * voxelUnitSize, y * voxelUnitSize, z * voxelUnitSize, iv));
+
                     }
                 } else if (axis==1) { // xz(y)
                     long x = planePosition / zdim;
                     long z = planePosition - (zdim * x);
                     for (long y = start; y < end; y++) {
-                        points.add(new Vector4(x * voxelUnitSize, y * voxelUnitSize, z * voxelUnitSize, 1.0f));
+
+                        float iv=1.0f;
+                        if (data8Arr!=null) {
+                            int iTotal=0;
+                            for (int c=0;c<cdim;c++) {
+                                iTotal += data8Arr[(int) (readVoxels + (y - start) + c * chanVoxels)];
+                            }
+                            iv=iTotal*1.0f/(cdimf*255.0f);
+                        } else if (data16Arr!=null) {
+                            int iTotal=0;
+                            for (int c=0;c<cdim;c++) {
+                                iTotal += data16Arr[(int) (readVoxels + (y - start) + c * chanVoxels)];
+                            }
+                            iv=iTotal*1.0f/(cdimf*4096.0f);
+                        }
+
+                        points.add(new Vector4(x * voxelUnitSize, y * voxelUnitSize, z * voxelUnitSize, iv));
+
                     }
                 } else if (axis==2) { // xy(z)
                     long x = planePosition / ydim;
                     long y = planePosition - (ydim * x);
                     for (long z = start; z < end; z++) {
-                        points.add(new Vector4(x * voxelUnitSize, y * voxelUnitSize, z * voxelUnitSize, 1.0f));
+
+                        float iv=1.0f;
+                        if (data8Arr!=null) {
+                            int iTotal=0;
+                            for (int c=0;c<cdim;c++) {
+                                iTotal += data8Arr[(int) (readVoxels + (z - start) + c * chanVoxels)];
+                            }
+                            iv=iTotal*1.0f/(cdimf*255.0f);
+                        } else if (data16Arr!=null) {
+                            int iTotal=0;
+                            for (int c=0;c<cdim;c++) {
+                                iTotal += data16Arr[(int) (readVoxels + (z - start) + c * chanVoxels)];
+                            }
+                            iv=iTotal*1.0f/(cdimf*4096.0f);
+                        }
+
+                        points.add(new Vector4(x * voxelUnitSize, y * voxelUnitSize, z * voxelUnitSize, iv));
+
                     }
                 }
                 readVoxels+=(end-start);
@@ -117,7 +212,7 @@ public class VoxelViewerUtil {
             planePosition++;
         }
 
-        dataStream.close();
+        maskStream.close();
 
         sparseVolumeRenderable.init( (int)xdim, (int)ydim, (int)zdim, ((float)(1.0/(1.0*xdim))), points);
 
