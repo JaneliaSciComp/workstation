@@ -13,7 +13,7 @@
            timeToIdleSeconds="0" 
            timeToLiveSeconds="0" 
            memoryStoreEvictionPolicy="LRU"
-           eternal="true"
+           eternal="false"
            overflowToOffHeap="false"
            maxBytesLocalHeap="16G"
     >
