@@ -60,6 +60,11 @@ public class ArraySortShader extends GL4Shader {
         checkGlError(gl, "ArraySortShader setBackgroundColor() error");
     }
 
+    public void setBlendMethod(GL4 gl, int blend_method) {
+        setUniform(gl, "blend_method", blend_method);
+        checkGlError(gl, "ArraySortShader setBlendMethod() error");
+    }
+
     @Override
     public void display(GL4 gl) {
 

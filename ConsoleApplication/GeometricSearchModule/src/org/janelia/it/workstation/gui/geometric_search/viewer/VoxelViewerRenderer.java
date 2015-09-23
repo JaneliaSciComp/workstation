@@ -8,6 +8,7 @@ import org.janelia.it.workstation.geom.UnitVec3;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.BackgroundColorChangeEvent;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.BlendMethodChangeEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.VoxelViewerEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderActionSequence;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4SimpleActor;
@@ -45,6 +46,11 @@ public class VoxelViewerRenderer implements GLEventListener, VoxelViewerEventLis
     protected GL4ShaderActionSequence assActionSequence = new GL4ShaderActionSequence("Sort Shader");
 
     Vector4 backgroundColor=new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    int blend_method=0; // 0=transparency, 1=mip
+
+    public static final int BLEND_METHOD_MIX=0;
+    public static final int BLEND_METHOD_MIP=1;
 
     public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2000;
     private static final double MAX_CAMERA_FOCUS_DISTANCE = 1000000.0;
@@ -157,6 +163,8 @@ public class VoxelViewerRenderer implements GLEventListener, VoxelViewerEventLis
                     ass.setHeight(gl, viewer.getHeight());
                     ass.setDepth(gl, transparencyQuarterDepth);
                     ass.setBackgroundColor(gl, backgroundColor.toArray());
+                    logger.info("blend_method="+blend_method);
+                    ass.setBlendMethod(gl, blend_method);
                 }
             });
             assActionSequence.setShader(ass);
@@ -457,6 +465,9 @@ public class VoxelViewerRenderer implements GLEventListener, VoxelViewerEventLis
             BackgroundColorChangeEvent backgroundColorChangeEvent=(BackgroundColorChangeEvent)event;
             Color eventBackgroundColor = (Color)backgroundColorChangeEvent.getBackgroundColor();
             eventBackgroundColor.getRGBColorComponents(backgroundColor.toArray());
+        } else if (event instanceof BlendMethodChangeEvent) {
+            BlendMethodChangeEvent blendMethodChangeEvent=(BlendMethodChangeEvent)event;
+            blend_method=blendMethodChangeEvent.getBlendMethod();
         }
     }
 }
