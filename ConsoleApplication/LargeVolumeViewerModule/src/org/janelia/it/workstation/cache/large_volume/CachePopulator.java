@@ -53,6 +53,7 @@ public class CachePopulator {
     public Collection<String> retargetCache(GeometricNeighborhood neighborhood) {
         final Set<String> populatedList = new HashSet<>();
         // Now, repopulate the running queue with the new neighborhood.
+        log.info("Neighborhood size is {}.  Expected memory demand is {}.", neighborhood.getFiles().size(), neighborhood.getFiles().size() * standardFileSize);
         for (final File file : neighborhood.getFiles()) {
             Callable<Void> callable = new Callable<Void>() {
                 @Override
@@ -78,6 +79,7 @@ public class CachePopulator {
     }
     
     /**
+     * @see #setExtractFromContainerFormat(boolean) 
      * @return the extractFromContainerFormat
      */
     public boolean isExtractFromContainerFormat() {
@@ -85,7 +87,8 @@ public class CachePopulator {
     }
 
     /**
-     * @param extractFromContainerFormat the extractFromContainerFormat to set
+     * Should the data be extracted from its container format prior to 
+     * caching it?
      */
     public void setExtractFromContainerFormat(boolean extractFromContainerFormat) {
         this.extractFromContainerFormat = extractFromContainerFormat;
@@ -108,8 +111,10 @@ public class CachePopulator {
         if (! cacheCollection.hasKey(key) && (!populatedList.contains(key))) {
             if (standardFileSize > 0) {
                 byte[] bytes = cacheCollection.getStorage(key);
-                CachableWrapper wrapper = wrapDataAndFetch(file, bytes);                
-                cacheCollection.put(file.getAbsolutePath(), wrapper);
+                cacheCollection.put(
+                    file.getAbsolutePath(),
+                    new CachableWrapper(launchDataFetch(file, bytes), bytes)
+                );
                 populatedList.add(key);
             } else {
                 throw new IllegalArgumentException("Pre-sized byte array required.");
@@ -141,5 +146,4 @@ public class CachePopulator {
         CachableWrapper wrapper = new CachableWrapper(future, bytes);
         return wrapper;
     }
-
 }
