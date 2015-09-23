@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class CachePopulator {
-    private static final int FILE_READ_THREAD_COUNT = 1;
+    private static final int FILE_READ_THREAD_COUNT = 4;
     private static final int MEM_ALLOC_THREAD_COUNT = 1;
     private static final String FILE_READ_THREAD_PREFIX = "CacheFileReaderThread";
     private static final String MEM_ALLOC_THREAD_PREFIX = "CacheByteAllocThread";
