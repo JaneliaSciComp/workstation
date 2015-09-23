@@ -73,7 +73,7 @@ public class CacheController {
      */
     public void registerForEvents(ObservableCamera3d camera, SharedVolumeImage sharedVolumeImage) {
         if (cameraListener != null) {
-            camera.addCameraListener(cameraListener);
+            // No longer direct listening.  camera.addCameraListener(cameraListener);
             cameraListener.setCamera(camera);
             cameraListener.setSharedVolumeImage(sharedVolumeImage);
         }
@@ -83,15 +83,24 @@ public class CacheController {
     }
     
     public void zoomChanged(Double zoom) {
+        if (cameraListener == null) {
+            return;
+        }
         cameraListener.zoomChanged(zoom);
     }
     
     public void focusChanged(Vec3 focus) {
+        if (cameraListener == null) {
+            return;
+        }
         cameraListener.focusChanged(focus);
     }
-
+    
     /** Ensure that this thing gets set.  */
     private CacheFacadeI awaitCacheManager() {
+        if (manager != null) {
+            return manager;
+        }
         log.info("Awaiting cache manager.");
         boolean found = false;
         int maxRetryTime = 1000 * 60;

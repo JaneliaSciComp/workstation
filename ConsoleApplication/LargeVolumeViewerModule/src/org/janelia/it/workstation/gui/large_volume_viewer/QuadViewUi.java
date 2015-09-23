@@ -55,6 +55,7 @@ import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
+import org.janelia.it.workstation.cache.large_volume.CacheController;
 import org.janelia.it.workstation.cache.large_volume.CacheFacade;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
@@ -282,6 +283,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         camera.addCameraListener(new CameraListener() {
             @Override
             public void zoomChanged(Double zoom) {
+                // Re-position the 3D cache.
+                CacheController cacheController = CacheController.getInstance();
+                cacheController.zoomChanged(zoom);
                 QuadViewUi.this.zoomChanged(zoom);
             }
 
@@ -292,6 +296,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
             @Override
             public void viewChanged() {
+                // Re-position the 3D cache.
+                CacheController cacheController = CacheController.getInstance();
+                cacheController.focusChanged(camera.getFocus());
                 tileServer.refreshCurrentTileSet();
             }            
         });

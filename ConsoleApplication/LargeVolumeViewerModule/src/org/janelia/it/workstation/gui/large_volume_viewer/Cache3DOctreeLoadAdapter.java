@@ -212,24 +212,25 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
      * @return bytes obtained.
      */
     private byte[] getBytes(File tiff, CacheFacadeI cacheManager) {
-        byte[] tiffBytes;
-        if (cacheManager.isReady(tiff)) {
-            log.info("Cache has {} at the ready.", Utilities.trimToOctreePath(tiff));
-            tiffBytes = cacheManager.getBytes(tiff);           
-        }
-        else {
-            log.info("Bypassing cache for {}.", Utilities.trimToOctreePath(tiff));
-            tiffBytes = new byte[standardVolumeSize];
-            try {
-                ExtractedCachePopulatorWorker populatorWorker = new ExtractedCachePopulatorWorker(tiff, tiffBytes);
-                populatorWorker.readBytes();
-            } catch (Exception ex) {
-                log.error("Failure during cache bypass. {}", ex.getMessage());
-                ex.printStackTrace();
-            }
-        }
-        
-        return tiffBytes;
+        return cacheManager.getBytes(tiff);
+//        byte[] tiffBytes;
+//        if (cacheManager.isReady(tiff)) {
+//            log.info("Cache has {} at the ready.", Utilities.trimToOctreePath(tiff));
+//            tiffBytes = cacheManager.getBytes(tiff);           
+//        }
+//        else {
+//            log.info("Bypassing cache for {}.", Utilities.trimToOctreePath(tiff));
+//            tiffBytes = new byte[standardVolumeSize];
+//            try {
+//                ExtractedCachePopulatorWorker populatorWorker = new ExtractedCachePopulatorWorker(tiff, tiffBytes);
+//                populatorWorker.readBytes();
+//            } catch (Exception ex) {
+//                log.error("Failure during cache bypass. {}", ex.getMessage());
+//                ex.printStackTrace();
+//            }
+//        }
+//        
+//        return tiffBytes;
     }
     
 }
