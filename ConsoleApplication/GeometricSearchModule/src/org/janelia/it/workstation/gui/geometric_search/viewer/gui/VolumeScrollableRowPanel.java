@@ -20,7 +20,7 @@ public class VolumeScrollableRowPanel extends ScrollableColorRowPanel {
     public static final String BRIGHTNESS_CALLBACK = "BRIGHTNESS_CALLBACK";
     public static final String TRANSPARENCY_CALLBACK = "TRANSPARENCY_CALLBACK";
 
-    public void addEntry(final String name, Map<String,SyncedCallback> callbackMap) throws Exception {
+    public void addEntry(final String name, boolean isInitiallyVisible, Map<String,SyncedCallback> callbackMap) throws Exception {
 
         SyncedCallback colorCallback = getCallback(COLOR_CALLBACK, callbackMap);
         SyncedCallback brightnessCallback = getCallback(BRIGHTNESS_CALLBACK, callbackMap);
@@ -34,6 +34,7 @@ public class VolumeScrollableRowPanel extends ScrollableColorRowPanel {
         l.setName(name);
         l.putClientProperty("Synthetica.opaque", Boolean.FALSE);
         l.setBorder(BorderFactory.createBevelBorder(1));
+        l.getVisibleCheckBox().setSelected(isInitiallyVisible);
         final ScrollableColorRowPanel actionSource=this;
 
         l.getVisibleCheckBox().addActionListener(new ActionListener() {

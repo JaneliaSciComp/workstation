@@ -36,7 +36,7 @@ public abstract class ScrollableColorRowPanel extends JPanel {
         add(scrollPane);
     }
 
-    public abstract void addEntry(final String name, Map<String,SyncedCallback> callbackMap) throws Exception;
+    public abstract void addEntry(final String name, boolean isInitiallyVisible, Map<String,SyncedCallback> callbackMap) throws Exception;
 
     public void setSelectedRowByName(String name) {
         for (Component component : components) {

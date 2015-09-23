@@ -67,7 +67,7 @@ public class ActorPanel extends JTabbedPane implements VoxelViewerEventListener 
         callbackMap.put(VolumeScrollableRowPanel.TRANSPARENCY_CALLBACK, transparencyCallback);
 
         try {
-            rowPanel.addEntry(actor.getName(), callbackMap);
+            rowPanel.addEntry(actor.getName(), actor.isVisible(), callbackMap);
             Vector4 actorColor = actor.getColor();
             if (actorColor != null) {
                 float[] colorData = actorColor.toArray();
@@ -97,7 +97,7 @@ public class ActorPanel extends JTabbedPane implements VoxelViewerEventListener 
         callbackMap.put(MeshScrollableRowPanel.AMBIENT_CALLBACK, ambientCallback);
 
         try {
-            rowPanel.addEntry(actor.getName(), callbackMap);
+            rowPanel.addEntry(actor.getName(), actor.isVisible(), callbackMap);
             Vector4 actorColor = actor.getColor();
             if (actorColor != null) {
                 float[] colorData = actorColor.toArray();

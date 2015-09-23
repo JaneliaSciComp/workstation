@@ -23,7 +23,7 @@ public class DenseVolumeRenderable extends Renderable {
     public static final float INTENSITY_THRESHOLD_FLOAT_DEFAULT=0.2f;
 
     public static final String MAX_VOXELS_INT="Max Voxels";
-    public static final int MAX_VOXELS_INT_DEFAULT=1000000;
+    public static final int MAX_VOXELS_INT_DEFAULT=5000000;
 
     private long totalVoxelCount;
     private int thresholdVoxelCount;
