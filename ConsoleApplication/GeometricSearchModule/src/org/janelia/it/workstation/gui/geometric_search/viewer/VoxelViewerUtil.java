@@ -148,15 +148,17 @@ public class VoxelViewerUtil {
                             for (int c=0;c<cdim;c++) {
                                 iTotal += data8Arr[(int) (readVoxels + (x - start) + c * chanVoxels)];
                             }
+                            //logger.info("data8 iTtotal="+iTotal);
                             iv=iTotal*1.0f/(cdimf*255.0f);
                         } else if (data16Arr!=null) {
                             int iTotal=0;
                             for (int c=0;c<cdim;c++) {
                                 iTotal += data16Arr[(int) (readVoxels + (x - start) + c * chanVoxels)];
                             }
+                            //logger.info("data16 iTotal="+iTotal);
                             iv=iTotal*1.0f/(cdimf*4096.0f);
                         }
-
+                        //logger.info("iv="+iv);
                         points.add(new Vector4(x * voxelUnitSize, y * voxelUnitSize, z * voxelUnitSize, iv));
 
                     }
@@ -171,15 +173,17 @@ public class VoxelViewerUtil {
                             for (int c=0;c<cdim;c++) {
                                 iTotal += data8Arr[(int) (readVoxels + (y - start) + c * chanVoxels)];
                             }
+                            //logger.info("data8 iTtotal="+iTotal);
                             iv=iTotal*1.0f/(cdimf*255.0f);
                         } else if (data16Arr!=null) {
                             int iTotal=0;
                             for (int c=0;c<cdim;c++) {
                                 iTotal += data16Arr[(int) (readVoxels + (y - start) + c * chanVoxels)];
                             }
+                            //logger.info("data16 iTotal="+iTotal);
                             iv=iTotal*1.0f/(cdimf*4096.0f);
                         }
-
+                        //logger.info("iv="+iv);
                         points.add(new Vector4(x * voxelUnitSize, y * voxelUnitSize, z * voxelUnitSize, iv));
 
                     }
@@ -194,15 +198,17 @@ public class VoxelViewerUtil {
                             for (int c=0;c<cdim;c++) {
                                 iTotal += data8Arr[(int) (readVoxels + (z - start) + c * chanVoxels)];
                             }
+                            //logger.info("data8 iTtotal="+iTotal);
                             iv=iTotal*1.0f/(cdimf*255.0f);
                         } else if (data16Arr!=null) {
                             int iTotal=0;
                             for (int c=0;c<cdim;c++) {
                                 iTotal += data16Arr[(int) (readVoxels + (z - start) + c * chanVoxels)];
                             }
+                            //logger.info("data16 iTotal="+iTotal);
                             iv=iTotal*1.0f/(cdimf*4096.0f);
                         }
-
+                        //logger.info("iv="+iv);
                         points.add(new Vector4(x * voxelUnitSize, y * voxelUnitSize, z * voxelUnitSize, iv));
 
                     }

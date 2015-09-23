@@ -38,7 +38,7 @@ public class JFRC2010CompartmentSharedResource extends ActorSharedResource {
     public void load() {
 
         File localJaneliaMeshDir = new File("U:\\meshes\\arnim_1024x512x218_20x");
-        File homeMeshDir = new File("C:\\cygwin64\\home\\murphys\\meshes");
+        File homeMeshDir = new File("C:\\cygwin64\\home\\murphys\\meshes\\arnim_1024x512x218_20x");
         File meshDir=localJaneliaMeshDir;
         if (!meshDir.exists()) {
             meshDir=homeMeshDir;
