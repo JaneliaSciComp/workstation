@@ -211,7 +211,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                     if (!tileFilePaths.contains(fullTilePath)) {
                         comparator.addFile(tileFile, distanceFromFocus);
                         tileFilePaths.add(fullTilePath);
-                        log.debug("Adding file {} to neighborhood.", fullTilePath);
+                        log.info("Adding file {} to neighborhood.", fullTilePath);
                     }
                 }
             }
@@ -266,7 +266,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                 dimensions[0], dimensions[1], center, pixelsPerSceneUnit, xyzFromWhd
         );
         TileBoundingBox tileBoundingBox = tileFormat.viewBoundsToTileBounds(xyzFromWhd, voxelBounds, zoom.intValue());
-
+        
         // Now I have the tile outline.  Can just iterate over that, and for all
         // required depth.
         TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
@@ -280,6 +280,11 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             minDepth = 0;
         }
         
+        // NEED: to figure out why neighborhood is so huge.
+        System.out.println("Tile BoundingBox span. Width: " + tileBoundingBox.getwMin() + ":" 
+                           + tileBoundingBox.getwMax() + " Height: " + tileBoundingBox.gethMin()
+                           + ":" + tileBoundingBox.gethMax() + " Depth:" + minDepth + ":" + maxDepth);
+
         log.info("Voxel volume in cache extends from\n\t{},{},{}\nto\t\n\t{},{},{}\nin voxels.\nDifference of {},{},{}.",
             voxelBounds.getwFMin(), voxelBounds.gethFMin(), minDepth, voxelBounds.getwFMax(), voxelBounds.gethFMax(), maxDepth,
             voxelBounds.getwFMax()-voxelBounds.getwFMin(), voxelBounds.gethFMax()-voxelBounds.gethFMin(), maxDepth-minDepth
@@ -336,6 +341,8 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                 }
             }
         }
+        // NEED: to figure out why neighborhood is so huge.
+        System.out.println("Needed Tiles number " + neededTiles.size());
         return neededTiles;
     }
 

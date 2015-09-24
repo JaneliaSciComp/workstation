@@ -13,5 +13,6 @@ public interface GeometricNeighborhood {
 	Set<File> getFiles();
     Double getZoom();
     double[] getFocus();
+    int getId();
 
 }

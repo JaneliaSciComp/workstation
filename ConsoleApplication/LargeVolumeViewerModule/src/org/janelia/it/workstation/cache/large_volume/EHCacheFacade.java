@@ -180,8 +180,13 @@ public class EHCacheFacade implements CacheFacadeI {
     @Override
 	public synchronized void setFocus(double[] focus) {
         log.info("Setting focus...");
-        cameraFocus = focus;
-        updateRegion();
+        try {
+            cameraFocus = focus;
+            updateRegion();
+        } catch (Exception ex) {
+            log.error("Exception at set-camera-zoom.");
+            ex.printStackTrace();
+        }
 	}
 
     /**
@@ -207,10 +212,15 @@ public class EHCacheFacade implements CacheFacadeI {
      */
     @Override
     public void setCameraZoom(Double zoom) {
-        setCameraZoomValue(zoom);
-        // Force a recalculation, based on both focus and zoom.
-        if (this.cameraFocus != null) {
-            updateRegion();
+        try {
+            setCameraZoomValue(zoom);
+            // Force a recalculation, based on both focus and zoom.
+            if (this.cameraFocus != null) {
+                updateRegion();
+            }
+        } catch ( Exception ex ) {
+            log.error("Exception at set-camera-zoom.");
+            ex.printStackTrace();
         }
     }
 
@@ -256,6 +266,7 @@ public class EHCacheFacade implements CacheFacadeI {
 
     private void updateRegion() {
         if (calculateRegion()) {
+            log.info("Populating a new region.  At least some files differed.");
             populateRegion();
         }
     }
@@ -294,8 +305,8 @@ public class EHCacheFacade implements CacheFacadeI {
                 wrapper = (CachableWrapper) cache.get(id).getObjectValue();
                 log.debug("Returning {}: found in cache.", keyOnly);
             } else {
-                log.debug("Pushing {} into cache.", id);
-                byte[] storage = new byte[cachePopulator.getStandardFileSize()];
+                log.info("Missing {} from cache.", keyOnly);
+                byte[] storage = new byte[cachePopulator.getStandardFileSize()];                
                 wrapper = cachePopulator.pushLaunch(id, storage);
                 log.info("Returning {}: pushed to cache. Zoom={}.", keyOnly, cameraZoom);
             }
@@ -331,7 +342,7 @@ public class EHCacheFacade implements CacheFacadeI {
         Date start = new Date();
         boolean rtnVal = false;
         GeometricNeighborhood calculatedNeighborhood = neighborhoodBuilder.buildNeighborhood(cameraFocus, cameraZoom, pixelsPerSceneUnit);
-        if (!(calculatedNeighborhood.getFiles().isEmpty()  ||  calculatedNeighborhood.equals(neighborhood))) {
+        if (isUpdatedNeighborhood(calculatedNeighborhood)) {
             this.neighborhood = calculatedNeighborhood;
             rtnVal = true;
         }
@@ -339,6 +350,13 @@ public class EHCacheFacade implements CacheFacadeI {
         long elapsed = (end.getTime() - start.getTime());
         log.info("In calculate region for: {}ms in thread {}.", elapsed, Thread.currentThread().getName());
         return rtnVal;
+    }
+
+    private boolean isUpdatedNeighborhood(GeometricNeighborhood calculatedNeighborhood) {
+        if (calculatedNeighborhood == null) {
+            log.warn("Null neighborhood after calculation.");
+        }
+        return calculatedNeighborhood != null  &&  (!(calculatedNeighborhood.getFiles().isEmpty()  ||  calculatedNeighborhood.equals(neighborhood)));
     }
 
     private void populateRegion() {

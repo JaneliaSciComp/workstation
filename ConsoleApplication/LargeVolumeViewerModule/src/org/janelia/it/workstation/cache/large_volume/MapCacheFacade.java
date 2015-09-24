@@ -405,5 +405,11 @@ public class MapCacheFacade implements CacheFacadeI {
             return focus;
         }
         
+        /** Identifiers from this neighborhood should be spottable based on on id size. */
+        @Override
+        public int getId() {
+            return 9000 + (int)(new Date().getTime() % 1000);
+        }
+        
     }
 }

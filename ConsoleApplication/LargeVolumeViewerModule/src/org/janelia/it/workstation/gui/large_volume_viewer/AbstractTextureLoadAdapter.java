@@ -14,7 +14,7 @@ public abstract class AbstractTextureLoadAdapter
             super(ex);
         }
 	};
-	
+    
 	public static class TileLoadError extends Exception {
 		private static final long serialVersionUID = 1L;
 		public TileLoadError(Throwable e) {
