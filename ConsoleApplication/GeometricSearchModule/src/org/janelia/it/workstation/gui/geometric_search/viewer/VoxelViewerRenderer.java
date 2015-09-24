@@ -163,7 +163,6 @@ public class VoxelViewerRenderer implements GLEventListener, VoxelViewerEventLis
                     ass.setHeight(gl, viewer.getHeight());
                     ass.setDepth(gl, transparencyQuarterDepth);
                     ass.setBackgroundColor(gl, backgroundColor.toArray());
-                    logger.info("blend_method="+blend_method);
                     ass.setBlendMethod(gl, blend_method);
                 }
             });

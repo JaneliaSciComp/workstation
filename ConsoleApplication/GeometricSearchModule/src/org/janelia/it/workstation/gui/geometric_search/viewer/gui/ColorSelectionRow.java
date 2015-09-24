@@ -24,40 +24,72 @@ public class ColorSelectionRow extends JPanel {
     private static final int ROW_HEIGHT=45;
 
     JCheckBox visibleCheckBox;
+    JPanel groupManagementPanel;
+    JPanel groupSelectionPanel;
     JLabel nameLabel;
+    JButton allButton;
+    JButton noneButton;
+    JButton soloButton;
     ColorPanel colorStatusPanel;
     ColorSelectionPanel colorSelectionPanel;
     SyncedCallback colorSelectionCallback;
 
 
     public ColorSelectionRow(String name) {
-        setName(name);
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        setPreferredSize(new Dimension(ROW_WIDTH, ROW_HEIGHT));
-        setMaximumSize(new Dimension(ROW_WIDTH, ROW_HEIGHT));
-        visibleCheckBox=new JCheckBox();
-        visibleCheckBox.setSelected(true);
-        String normalizedName=getNormalizedName(name);
-        nameLabel=new JLabel(normalizedName);
-        colorStatusPanel=new ColorPanel(COLOR_STATUS_WIDTH, COLOR_STATUS_HEIGHT, new Color(0, 0, 0));
 
-        colorSelectionPanel=new ColorSelectionPanel();
-        colorSelectionPanel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                Point panelPoint = e.getPoint();
-                Point imgPoint = colorSelectionPanel.toImageContext(panelPoint);
-                Color selectedColor=colorSelectionPanel.getColorFromClickCoordinate(imgPoint);
-                if (colorSelectionCallback!=null) {
-                    colorSelectionCallback.performAction(selectedColor);
+        try {
+
+            setName(name);
+            setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+            setPreferredSize(new Dimension(ROW_WIDTH, ROW_HEIGHT));
+            setMaximumSize(new Dimension(ROW_WIDTH, ROW_HEIGHT));
+
+            visibleCheckBox = new JCheckBox();
+            visibleCheckBox.setSelected(true);
+
+            groupManagementPanel = new JPanel();
+            groupManagementPanel.setLayout(new BoxLayout(groupManagementPanel, BoxLayout.Y_AXIS));
+
+            groupSelectionPanel = new JPanel();
+            groupSelectionPanel.setLayout(new BoxLayout(groupSelectionPanel, BoxLayout.X_AXIS));
+
+            String normalizedName = getNormalizedName(name);
+            nameLabel = new JLabel(normalizedName);
+
+            allButton = new JButton("A");
+            noneButton = new JButton("-");
+            soloButton = new JButton("S");
+
+            groupSelectionPanel.add(allButton);
+            groupSelectionPanel.add(noneButton);
+            groupSelectionPanel.add(soloButton);
+
+            groupManagementPanel.add(nameLabel);
+            groupManagementPanel.add(groupSelectionPanel);
+
+            colorStatusPanel = new ColorPanel(COLOR_STATUS_WIDTH, COLOR_STATUS_HEIGHT, new Color(0, 0, 0));
+            colorSelectionPanel = new ColorSelectionPanel();
+            colorSelectionPanel.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    Point panelPoint = e.getPoint();
+                    Point imgPoint = colorSelectionPanel.toImageContext(panelPoint);
+                    Color selectedColor = colorSelectionPanel.getColorFromClickCoordinate(imgPoint);
+                    if (colorSelectionCallback != null) {
+                        colorSelectionCallback.performAction(selectedColor);
+                    }
                 }
-            }
-        });
+            });
 
-        add(visibleCheckBox);
-        add(colorStatusPanel);
-        add(nameLabel);
-        add(colorSelectionPanel);
+            add(visibleCheckBox);
+            add(colorStatusPanel);
+            add(groupManagementPanel);
+            add(colorSelectionPanel);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            logger.error(ex.toString());
+        }
 
     }
 
