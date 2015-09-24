@@ -50,6 +50,10 @@ this class.  use "updateCurrentWorkspace(AndNeuron)" to keep the local copies of
 those objects in sync with the back end.  other components will limit themselves
 to accessing those two objects in general.
 
+it turns out that it's expensive to update the domain objects from the db when
+there's a lot of data, so we started updating the objects locally instead;
+after more complicated operations (typically rarer), we'll still update from db
+
 this class does not interact directly with the UI.  it observes 
 UI elements that select, and its events are connected with a variety of UI
 elements that need to respond to changing data.  this sometimes makes it hard 
