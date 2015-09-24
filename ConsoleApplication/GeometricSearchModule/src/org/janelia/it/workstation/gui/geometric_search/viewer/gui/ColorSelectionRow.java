@@ -27,12 +27,20 @@ public class ColorSelectionRow extends JPanel {
     JPanel groupManagementPanel;
     JPanel groupSelectionPanel;
     JLabel nameLabel;
-    JButton allButton;
-    JButton noneButton;
-    JButton soloButton;
+    GroupSelectionButton allButton;
+    GroupSelectionButton noneButton;
+    GroupSelectionButton soloButton;
     ColorPanel colorStatusPanel;
     ColorSelectionPanel colorSelectionPanel;
     SyncedCallback colorSelectionCallback;
+
+    private static class GroupSelectionButton extends JButton {
+
+        public GroupSelectionButton(String name) {
+            super(name);
+            this.setFont(new Font("Arial", Font.BOLD, 9));
+        }
+    }
 
 
     public ColorSelectionRow(String name) {
@@ -54,17 +62,21 @@ public class ColorSelectionRow extends JPanel {
             groupSelectionPanel.setLayout(new BoxLayout(groupSelectionPanel, BoxLayout.X_AXIS));
 
             String normalizedName = getNormalizedName(name);
-            nameLabel = new JLabel(normalizedName);
+            nameLabel = new JLabel(normalizedName, JLabel.LEFT);
+            nameLabel.setFont(new Font("Arial", Font.BOLD, 10));
+            JPanel nameBox=new JPanel();
+            nameBox.setLayout(new BoxLayout(nameBox, BoxLayout.X_AXIS));
+            nameBox.add(nameLabel);
 
-            allButton = new JButton("A");
-            noneButton = new JButton("-");
-            soloButton = new JButton("S");
+            allButton = new GroupSelectionButton("A");
+            noneButton = new GroupSelectionButton("-");
+            soloButton = new GroupSelectionButton("S");
 
             groupSelectionPanel.add(allButton);
             groupSelectionPanel.add(noneButton);
             groupSelectionPanel.add(soloButton);
 
-            groupManagementPanel.add(nameLabel);
+            groupManagementPanel.add(nameBox);
             groupManagementPanel.add(groupSelectionPanel);
 
             colorStatusPanel = new ColorPanel(COLOR_STATUS_WIDTH, COLOR_STATUS_HEIGHT, new Color(0, 0, 0));
