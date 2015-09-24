@@ -450,19 +450,20 @@ called from a  SimpleWorker thread.
      * @param xyz = x, y, z location of new annotation
      * @throws Exception
      */
-    public void addRootAnnotation(TmNeuron neuron, Vec3 xyz) throws Exception {
+    public void addRootAnnotation(final TmNeuron neuron, Vec3 xyz) throws Exception {
         // the null  in this call means "this is a root annotation" (would otherwise
         //  be the parent)
         final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 null, 0, xyz.x(), xyz.y(), xyz.z(), "");
 
-        updateCurrentWorkspaceAndNeuron();
+        // update neuron locally instead of getting from db again
+        neuron.getRootAnnotations().add(annotation);
+        neuron.getGeoAnnotationMap().put(annotation.getId(), annotation);
 
-        final TmNeuron currNeuron = getCurrentNeuron();
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireNeuronSelected(currNeuron);
+                fireNeuronSelected(neuron);
                 fireAnnotationAdded(annotation);
             }
         });
@@ -491,25 +492,13 @@ called from a  SimpleWorker thread.
 
         System.out.println("updating workspace: " + stopwatch);
 
-
-        // hold off on this until we finish the updateCurrentWorkspaceAndNeuron fix:
-        // can we update workspace and neuron by hand, no update from db?
+        // update the neuron locally so we don't have to update from db
         TmGeoAnnotation parent = getGeoAnnotationFromID(annotation.getParentId());
         parent.addChild(annotation);
         neuron.getGeoAnnotationMap().put(annotation.getId(), annotation);
 
 
-        // don't need to update neuron from db after workspace:
-        // updateCurrentWorkspaceAndNeuron();
-
-
         // the parent may lose some predefined notes (finished end, possible branch)
-        // note 1: probably really ought to have some kind of "annotation connectivity
-        //  changed" listener so we don't need to remember to call this routine
-        //  when appropriate
-
-        // note2 : need to get updated copy of neuron:
-
         System.out.println("stripping predef notes: " + stopwatch);
         stripPredefNotes(getNeuronFromAnnotationID(parentAnn.getId()), parentAnn.getId());
 
@@ -562,18 +551,26 @@ called from a  SimpleWorker thread.
         }
 
         // find each connecting annotation; if there's a traced path to it,
-        //  remove it (refresh annotation!):
+        //  remove it (refresh annotation!)
+        // at the same time, delete the paths out of the local neuron object, too
         final TmNeuron neuron = getNeuronFromAnnotationID(annotationID);
 
         TmGeoAnnotation parent = neuron.getParentOf(annotation);
         if (parent != null) {
             removeAnchoredPath(annotation, parent);
+            neuron.getAnchoredPathMap().remove(new TmAnchoredPathEndpoints(annotation.getId(), parent.getId()));
         }
         for (TmGeoAnnotation neighbor: neuron.getChildrenOf(annotation)) {
             removeAnchoredPath(annotation, neighbor);
+            neuron.getAnchoredPathMap().remove(new TmAnchoredPathEndpoints(annotation.getId(), neighbor.getId()));
         }
 
-        updateCurrentWorkspaceAndNeuron();
+        // update local annotation object
+        annotation.setX(location.getX());
+        annotation.setY(location.getY());
+        annotation.setZ(location.getZ());
+
+
         final TmWorkspace workspace = getCurrentWorkspace();
 
         if (automatedTracingEnabled()) {
@@ -1047,7 +1044,7 @@ called from a  SimpleWorker thread.
         //  was being drawn (ie, make sure user didn't move the endpoints in the meantime)
         // check that the first and last points in the list match the current locations of the
         //  annotations, in some order (despite stated convention, I have not found the point
-        //  list to be in consistant order vis a vis the ordering of the annotation IDs)
+        //  list to be in consistent order vis a vis the ordering of the annotation IDs)
 
         TmGeoAnnotation ann1 = neuron1.getGeoAnnotationMap().get(endpoints.getAnnotationID1());
         TmGeoAnnotation ann2 = neuron2.getGeoAnnotationMap().get(endpoints.getAnnotationID2());
@@ -1069,9 +1066,9 @@ called from a  SimpleWorker thread.
         final TmAnchoredPath path = modelMgr.addAnchoredPath(neuron1.getId(), endpoints.getAnnotationID1(),
                 endpoints.getAnnotationID2(), points);
 
-
-        // updates
-        updateCurrentWorkspaceAndNeuron();
+        // update local domain object
+        TmNeuron neuron = getNeuronFromAnnotationID(ann1.getId());
+        neuron.getAnchoredPathMap().put(endpoints, path);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -1182,16 +1179,30 @@ called from a  SimpleWorker thread.
                 ObjectNode rootNode = mapper.createObjectNode();
                 rootNode.put("note", noteString);
 
-                modelMgr.addStructuredTextAnnotation(neuron.getId(), geoAnnotation.getId(),
+                textAnnotation = modelMgr.addStructuredTextAnnotation(neuron.getId(), geoAnnotation.getId(),
                         TmStructuredTextAnnotation.GEOMETRIC_ANNOTATION, TmStructuredTextAnnotation.FORMAT_VERSION,
                         mapper.writeValueAsString(rootNode));
             }
         }
 
-        // updates
-        updateCurrentWorkspace();
-        final TmWorkspace workspace = getCurrentWorkspace();
+        // update domain object; similar logic to above
+        // if it's empty string, delete note object from neuron
+        if (noteString.length() == 0) {
+            if (neuron.getStructuredTextAnnotationMap().containsKey(geoAnnotation.getId())) {
+                neuron.getStructuredTextAnnotationMap().remove(geoAnnotation.getId());
+            }
+        } else {
+            // if it's not empty and in neuron, update string in note object
+            // if it's not empty and not in neuron, add new note object to neuron
+            if (neuron.getStructuredTextAnnotationMap().containsKey(geoAnnotation.getId())) {
+                neuron.getStructuredTextAnnotationMap().get(geoAnnotation.getId()).setDataString(noteString);
+            } else {
+                neuron.getStructuredTextAnnotationMap().put(geoAnnotation.getId(), textAnnotation);
+            }
+        }
 
+
+        final TmWorkspace workspace = getCurrentWorkspace();
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
