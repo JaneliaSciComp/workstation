@@ -490,13 +490,13 @@ called from a  SimpleWorker thread.
 
         // hold off on this until we finish the updateCurrentWorkspaceAndNeuron fix:
         // can we update workspace and neuron by hand, no update from db?
-        // TmGeoAnnotation parent = getGeoAnnotationFromID(annotation.getParentId());
-        // parent.addChild(annotation);
-        // neuron.getGeoAnnotationMap().put(annotation.getId(), annotation);
+        TmGeoAnnotation parent = getGeoAnnotationFromID(annotation.getParentId());
+        parent.addChild(annotation);
+        neuron.getGeoAnnotationMap().put(annotation.getId(), annotation);
 
 
         // don't need to update neuron from db after workspace:
-        updateCurrentWorkspaceAndNeuron();
+        // updateCurrentWorkspaceAndNeuron();
 
 
         // the parent may lose some predefined notes (finished end, possible branch)
