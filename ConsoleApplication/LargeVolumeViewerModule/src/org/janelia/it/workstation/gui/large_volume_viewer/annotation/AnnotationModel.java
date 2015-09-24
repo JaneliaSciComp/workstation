@@ -375,10 +375,10 @@ called from a  SimpleWorker thread.
         modelMgr.renameEntity(neuronEntity, name);
 
         // update & notify
-        updateCurrentWorkspaceAndNeuron();
-        final TmWorkspace workspace = getCurrentWorkspace();
-        final TmNeuron neuron = getCurrentNeuron();
+        final TmNeuron neuron = getNeuronFromNeuronID(currentNeuronID);
+        neuron.setName(name);
 
+        final TmWorkspace workspace = getCurrentWorkspace();
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -400,12 +400,12 @@ called from a  SimpleWorker thread.
         // delete
         modelMgr.deleteEntityTree(deletedNeuron.getId());
 
-        // things to update:
-        updateCurrentWorkspace();
+        // updates
         final TmWorkspace workspace = getCurrentWorkspace();
+        workspace.getNeuronList().remove(deletedNeuron);
+
         final ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<>(deletedNeuron.getGeoAnnotationMap().values());
         final ArrayList<TmAnchoredPath> tempPathList = new ArrayList<>(deletedNeuron.getAnchoredPathMap().values());
-
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -1216,8 +1216,9 @@ called from a  SimpleWorker thread.
         modelMgr.deleteStructuredTextAnnotation(textAnnotation.getId());
 
         // updates
-        updateCurrentWorkspace();
         final TmWorkspace workspace = getCurrentWorkspace();
+        TmNeuron neuron = getNeuronFromAnnotationID(textAnnotation.getParentId());
+        neuron.getStructuredTextAnnotationMap().remove(textAnnotation.getParentId());
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
