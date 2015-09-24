@@ -16,8 +16,8 @@ public class MeshColorSelectionRow extends ColorSelectionRow {
     SyncedCallback intensityCallback;
     SyncedCallback ambientCallback;
 
-    public MeshColorSelectionRow(String name) {
-        super(name);
+    public MeshColorSelectionRow(String name, ScrollableColorRowPanel parentRowPanel) {
+        super(name, parentRowPanel);
 
         edgefalloffKnob=new Knob("E", 0.0, 10.0, 2.0, true);
         edgefalloffKnob.addMouseMotionListener(new MouseMotionListener() {

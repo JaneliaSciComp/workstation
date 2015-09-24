@@ -1,13 +1,13 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.gui;
 
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
+import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 
 /**
@@ -17,11 +17,11 @@ public class ColorSelectionRow extends JPanel {
 
     private static final Logger logger = LoggerFactory.getLogger(ColorSelectionRow.class);
 
-    private static final int COLOR_STATUS_WIDTH=20;
-    private static final int COLOR_STATUS_HEIGHT=20;
-    private static final int MAX_NAME_CHARS=10;
-    private static final int ROW_WIDTH=385;
-    private static final int ROW_HEIGHT=45;
+    private static final int COLOR_STATUS_WIDTH = 20;
+    private static final int COLOR_STATUS_HEIGHT = 20;
+    private static final int MAX_NAME_CHARS = 10;
+    private static final int ROW_WIDTH = 385;
+    private static final int ROW_HEIGHT = 45;
 
     JCheckBox visibleCheckBox;
     JPanel groupManagementPanel;
@@ -33,6 +33,8 @@ public class ColorSelectionRow extends JPanel {
     ColorPanel colorStatusPanel;
     ColorSelectionPanel colorSelectionPanel;
     SyncedCallback colorSelectionCallback;
+    ColorSelectionRow thisColorSelectionRow;
+    ScrollableColorRowPanel parentRowPanel;
 
     private static class GroupSelectionButton extends JButton {
 
@@ -43,7 +45,9 @@ public class ColorSelectionRow extends JPanel {
     }
 
 
-    public ColorSelectionRow(String name) {
+    public ColorSelectionRow(String name, ScrollableColorRowPanel parentRowPanel) {
+        thisColorSelectionRow=this;
+        this.parentRowPanel=parentRowPanel;
 
         try {
 
@@ -54,6 +58,7 @@ public class ColorSelectionRow extends JPanel {
 
             visibleCheckBox = new JCheckBox();
             visibleCheckBox.setSelected(true);
+            visibleCheckBox.addMouseListener(getRightClickListener());
 
             groupManagementPanel = new JPanel();
             groupManagementPanel.setLayout(new BoxLayout(groupManagementPanel, BoxLayout.Y_AXIS));
@@ -64,7 +69,7 @@ public class ColorSelectionRow extends JPanel {
             String normalizedName = getNormalizedName(name);
             nameLabel = new JLabel(normalizedName, JLabel.LEFT);
             nameLabel.setFont(new Font("Arial", Font.BOLD, 10));
-            JPanel nameBox=new JPanel();
+            JPanel nameBox = new JPanel();
             nameBox.setLayout(new BoxLayout(nameBox, BoxLayout.X_AXIS));
             nameBox.add(nameLabel);
 
@@ -98,7 +103,8 @@ public class ColorSelectionRow extends JPanel {
             add(groupManagementPanel);
             add(colorSelectionPanel);
 
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             ex.printStackTrace();
             logger.error(ex.toString());
         }
@@ -118,21 +124,64 @@ public class ColorSelectionRow extends JPanel {
     }
 
     public void setColorSelectionCallback(SyncedCallback callback) {
-        this.colorSelectionCallback=callback;
+        this.colorSelectionCallback = callback;
     }
 
     public String getNormalizedName(String name) {
-        int initialLength=name.length();
-        if (initialLength>MAX_NAME_CHARS) {
+        int initialLength = name.length();
+        if (initialLength > MAX_NAME_CHARS) {
             return name.substring(0, MAX_NAME_CHARS);
-        } else if (initialLength<MAX_NAME_CHARS) {
-            String pad="";
-            for (int i=0;i<(MAX_NAME_CHARS-initialLength);i++){
+        } else if (initialLength < MAX_NAME_CHARS) {
+            String pad = "";
+            for (int i = 0; i < (MAX_NAME_CHARS - initialLength); i++) {
                 pad += " ";
             }
             return name + pad;
         }
         return name;
+    }
+
+    private MouseListener getRightClickListener() {
+        MouseListener rightClickMouseListener = new MouseHandler() {
+
+            @Override
+            protected void popupTriggered(MouseEvent e) {
+                if (e.isConsumed()) {
+                    return;
+                }
+                getRightClickPopupMenu().show(e.getComponent(), e.getX(), e.getY());
+                e.consume();
+            }
+
+        };
+        return rightClickMouseListener;
+    }
+
+    private JPopupMenu getRightClickPopupMenu() {
+
+        JPopupMenu rightClickPopupMenu = new JPopupMenu();
+
+        JMenuItem selectAllItem = new JMenuItem("Select All");
+        JMenuItem selectNoneItem = new JMenuItem("Select None");
+
+        selectAllItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                parentRowPanel.selectAllRows();
+            }
+        });
+
+        selectNoneItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                parentRowPanel.deselectAllRows();
+            }
+        });
+
+        rightClickPopupMenu.add(selectAllItem);
+        rightClickPopupMenu.add(selectNoneItem);
+
+        return rightClickPopupMenu;
     }
 
 }

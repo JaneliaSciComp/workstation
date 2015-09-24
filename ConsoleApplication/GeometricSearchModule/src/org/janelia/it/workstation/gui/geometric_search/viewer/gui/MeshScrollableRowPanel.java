@@ -29,7 +29,7 @@ public class MeshScrollableRowPanel extends ScrollableColorRowPanel {
         SyncedCallback ambientCallback = getCallback(AMBIENT_CALLBACK, callbackMap);
 
         logger.info("Adding row for name="+name);
-        final MeshColorSelectionRow l = new MeshColorSelectionRow(name);
+        final MeshColorSelectionRow l = new MeshColorSelectionRow(name, this);
         l.setColorSelectionCallback(colorCallback);
         l.setEdgefalloffCallback(edgefalloffCallback);
         l.setIntensityCallback(intensityCallback);

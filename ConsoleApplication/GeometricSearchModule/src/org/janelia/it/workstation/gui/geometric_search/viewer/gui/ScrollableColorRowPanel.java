@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.gui;
 
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorModifiedEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorSetVisibleEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.RowSelectedEvent;
@@ -87,6 +88,46 @@ public abstract class ScrollableColorRowPanel extends JPanel {
             throw new Exception("Could not find SyncedCallback entry for key="+key);
         }
         return syncedCallback;
+    }
+
+    public void selectAllRows() {
+        boolean changed=false;
+        EventManager.setDisallowViewerRefresh(true);
+        for (Component component : components) {
+            if (component instanceof ColorSelectionRow) {
+                ColorSelectionRow row = (ColorSelectionRow)component;
+                JCheckBox visibleCheckBox = row.getVisibleCheckBox();
+                if (!visibleCheckBox.isSelected()) {
+                    visibleCheckBox.setSelected(true);
+                    visibleCheckBox.getActionListeners()[0].actionPerformed(null);
+                    changed=true;
+                }
+            }
+        }
+        EventManager.setDisallowViewerRefresh(false);
+        if (changed) {
+            EventManager.sendEvent(this, new ActorModifiedEvent());
+        }
+    }
+
+    public void deselectAllRows() {
+        boolean changed=false;
+        EventManager.setDisallowViewerRefresh(true);
+        for (Component component : components) {
+            if (component instanceof ColorSelectionRow) {
+                ColorSelectionRow row = (ColorSelectionRow)component;
+                JCheckBox visibleCheckBox = row.getVisibleCheckBox();
+                if (visibleCheckBox.isSelected()) {
+                    visibleCheckBox.setSelected(false);
+                    visibleCheckBox.getActionListeners()[0].actionPerformed(null);
+                    changed=true;
+                }
+            }
+        }
+        EventManager.setDisallowViewerRefresh(false);
+        if (changed) {
+            EventManager.sendEvent(this, new ActorModifiedEvent());
+        }
     }
 
 }

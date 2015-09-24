@@ -14,8 +14,8 @@ public class VolumeColorSelectionRow extends ColorSelectionRow {
     SyncedCallback brightnessCallback;
     SyncedCallback transparencyCallback;
 
-    public VolumeColorSelectionRow(String name) {
-        super(name);
+    public VolumeColorSelectionRow(String name, ScrollableColorRowPanel parentRowPanel) {
+        super(name, parentRowPanel);
 
         brightnessKnob=new Knob("B", 0.0, 3.0, 1.0, true);
         brightnessKnob.addMouseMotionListener(new MouseMotionListener() {

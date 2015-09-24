@@ -27,7 +27,7 @@ public class VolumeScrollableRowPanel extends ScrollableColorRowPanel {
         SyncedCallback transparencyCallback = getCallback(TRANSPARENCY_CALLBACK, callbackMap);
 
         logger.info("Adding row for name="+name);
-        final VolumeColorSelectionRow l = new VolumeColorSelectionRow(name);
+        final VolumeColorSelectionRow l = new VolumeColorSelectionRow(name, this);
         l.setColorSelectionCallback(colorCallback);
         l.setBrightnessCallback(brightnessCallback);
         l.setTransparencyCallback(transparencyCallback);
