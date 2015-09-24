@@ -211,7 +211,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                     if (!tileFilePaths.contains(fullTilePath)) {
                         comparator.addFile(tileFile, distanceFromFocus);
                         tileFilePaths.add(fullTilePath);
-                        log.info("Adding file {} to neighborhood.", fullTilePath);
+                        log.info("Adding file {} to neighborhood {}.", fullTilePath, neighborhood.getId());
                     }
                 }
             }
@@ -221,7 +221,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             tileFiles.add(new File(tileFilePath));
         }
         neighborhood.setFiles(Collections.synchronizedSet(tileFiles));
-        log.debug("Neighborhood contains {} files.", tileFiles.size());
+        log.info("Neighborhood contains {} files.", tileFiles.size());
         return neighborhood;
     }
     

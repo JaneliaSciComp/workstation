@@ -14,6 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,13 +54,15 @@ public class CachePopulator {
     public Collection<String> retargetCache(final GeometricNeighborhood neighborhood) {
         final Set<String> populatedList = new HashSet<>();
         // Now, repopulate the running queue with the new neighborhood.
-        log.info("Neighborhood size is {}.  Expected memory demand is {}.", neighborhood.getFiles().size(), neighborhood.getFiles().size() * standardFileSize);
+        log.info("Neighborhood size is {}.  Expected memory demand is {}Gb.", neighborhood.getFiles().size(), ((long)neighborhood.getFiles().size() * (long)standardFileSize)/1024/1024/1024);
         for (final File file : neighborhood.getFiles()) {
             Callable<Void> callable = new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     try {
-                        allocateAndLaunch(file, populatedList, neighborhood);
+                        if (!allocateAndLaunch(file, populatedList, neighborhood)) {
+                            log.info("Did not launch {}.  Neighborhood {}.  Total {}.", Utilities.trimToOctreePath(file), neighborhood.getId(), neighborhood.getFiles().size());
+                        }                                
                     } catch (Exception ex) {
                         log.error("Failed to allocate-and-launch {}, reason {}.", file, ex.getMessage());
                     }                            
@@ -106,7 +109,8 @@ public class CachePopulator {
         memAllocExecutor.shutdown();
     }
 
-    private void allocateAndLaunch(File file, Set<String> populatedList, GeometricNeighborhood neighborhood) {
+    private boolean allocateAndLaunch(File file, Set<String> populatedList, GeometricNeighborhood neighborhood) {
+        boolean rtnVal = false;
         final String key = file.getAbsolutePath();
         if (! cacheCollection.hasKey(key) && (!populatedList.contains(key))) {
             if (standardFileSize > 0) {
@@ -117,12 +121,12 @@ public class CachePopulator {
                     new CachableWrapper(launchDataFetch(file, bytes), bytes)
                 );
                 populatedList.add(key);
+                rtnVal = true;
             } else {
                 throw new IllegalArgumentException("Pre-sized byte array required.");
             }
-        } else {
-            log.debug("In cache {}.", Utilities.trimToOctreePath(key));
         }
+        return rtnVal;
     }
 
     /**

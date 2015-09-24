@@ -184,7 +184,7 @@ public class EHCacheFacade implements CacheFacadeI {
             cameraFocus = focus;
             updateRegion();
         } catch (Exception ex) {
-            log.error("Exception at set-camera-zoom.");
+            log.error("Exception at set-camera-focus.");
             ex.printStackTrace();
         }
 	}
@@ -303,12 +303,11 @@ public class EHCacheFacade implements CacheFacadeI {
             Cache cache = manager.getCache(cacheName);
             if (cache.get(id) != null) {                
                 wrapper = (CachableWrapper) cache.get(id).getObjectValue();
-                log.debug("Returning {}: found in cache.", keyOnly);
+                log.info("Returning {}: found in cache.", keyOnly);
             } else {
-                log.info("Missing {} from cache.", keyOnly);
                 byte[] storage = new byte[cachePopulator.getStandardFileSize()];                
                 wrapper = cachePopulator.pushLaunch(id, storage);
-                log.info("Returning {}: pushed to cache. Zoom={}.", keyOnly, cameraZoom);
+                log.info("Missing.  Returning {}: pushed to cache. Zoom={}.", keyOnly, cameraZoom);
             }
             log.debug("Getting {} from cache wrapper.", keyOnly);
             dumpCacheMemoryUse(cache);
@@ -339,16 +338,12 @@ public class EHCacheFacade implements CacheFacadeI {
     }
 
     private boolean calculateRegion() {
-        Date start = new Date();
         boolean rtnVal = false;
         GeometricNeighborhood calculatedNeighborhood = neighborhoodBuilder.buildNeighborhood(cameraFocus, cameraZoom, pixelsPerSceneUnit);
         if (isUpdatedNeighborhood(calculatedNeighborhood)) {
             this.neighborhood = calculatedNeighborhood;
             rtnVal = true;
         }
-        Date end = new Date();
-        long elapsed = (end.getTime() - start.getTime());
-        log.info("In calculate region for: {}ms in thread {}.", elapsed, Thread.currentThread().getName());
         return rtnVal;
     }
 
@@ -360,22 +355,17 @@ public class EHCacheFacade implements CacheFacadeI {
     }
 
     private void populateRegion() {
-        log.info("Repopulating on focus.  Zoom={}", cameraZoom);
         populateRegion(neighborhood);
     }
     
     private void populateRegion(GeometricNeighborhood neighborhood) {
-        Date start = new Date();
         log.info("Retargeting cache at zoom {}.", cameraZoom);
-        Cache cache = manager.getCache(cacheName);
         Collection<String> futureArrays = cachePopulator.retargetCache(neighborhood);
         if (log.isDebugEnabled()) {
             for (String id : futureArrays) {
                 log.debug("Populating {} to cache at zoom {}.", Utilities.trimToOctreePath(id), cameraZoom);
             }
         }
-        Date end = new Date();
-        log.info("In populateRegion for: {}ms.", end.getTime() - start.getTime());
     }
 
     public static class NonNeighborhoodCachableWrapper extends CachableWrapper {
