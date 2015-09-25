@@ -155,8 +155,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getDeleteItem());
         add(getDeleteInBackgroundItem());
         add(getMarkForReprocessingItem());
-        // TODO: reenable this item once we have Visually Lossless samples
-        //add(getSampleCompressionTypeItem());
+        add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getVerificationMovieItem());
         
@@ -932,9 +931,7 @@ public class EntityContextMenu extends JPopupMenu {
                 if (result != 0) return;
 
                 SimpleWorker worker = new SimpleWorker() {
-                    
-                    StringBuilder sampleIdBuf = new StringBuilder();
-                        
+                                            
                     @Override
                     protected void doStuff() throws Exception {
                         for(final Entity sample : samples) {
