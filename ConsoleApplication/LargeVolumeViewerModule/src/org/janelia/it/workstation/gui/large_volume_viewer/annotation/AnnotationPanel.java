@@ -20,6 +20,7 @@ import java.io.File;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.Cache3DSettings;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 
@@ -219,6 +220,13 @@ public class AnnotationPanel extends JPanel
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 annotationMgr.saveColorModel();
+            }
+        }));
+        
+        workspaceToolMenu.add(new JMenuItem(new AbstractAction("Change 3D Cache Size") {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                new Cache3DSettings().prompt();
             }
         }));
 

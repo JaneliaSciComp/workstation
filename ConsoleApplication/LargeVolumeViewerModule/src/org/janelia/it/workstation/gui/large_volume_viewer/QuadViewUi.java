@@ -58,6 +58,7 @@ import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.it.workstation.cache.large_volume.CacheController;
 import org.janelia.it.workstation.cache.large_volume.EHCacheFacade;
 import org.janelia.it.workstation.gui.dialogs.MemoryCheckDialog;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
@@ -1407,7 +1408,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
      */
     private int cache3DSize() {
         int settingInt = 0;
-        String setting = System.getProperty( EHCacheFacade.CACHE_NAME, "0" );
+        //String setting = System.getProperty( EHCacheFacade.CACHE_NAME, "0" );
+        String setting = (String)SessionMgr.getSessionMgr().getModelProperty( EHCacheFacade.CACHE_NAME );
+        if (setting == null) {
+            setting = "0";
+        }
         try {
             settingInt = Integer.parseInt(setting);
         } catch (NumberFormatException nfe) {
