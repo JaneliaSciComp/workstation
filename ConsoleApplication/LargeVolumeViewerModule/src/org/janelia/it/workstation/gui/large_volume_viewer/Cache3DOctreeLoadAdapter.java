@@ -124,20 +124,23 @@ public class Cache3DOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                     requestedTiffs.append("; ");
                 }
                 requestedTiffs.append(tiff);
-                if (!tiff.exists()) {
-                    if (acceptNullDecoders) {
-                        if (missingTiffs.length() > 0) {
-                            missingTiffs.append(", ");
-                        }
-                        missingTiffs.append(tiff);
-                    }
-                } else {
+                try {
                     byte[] tiffBytes = getBytes(tiff, cacheManager);
                     if (tiffBytes != null) {
                         allBuffers[c] = tiffBytes;
                     } else {
                         log.error("Tiff bytes are null.");
                     }
+                } catch (Exception tiffEx) {
+                    if (!tiff.exists()) {
+                        if (acceptNullDecoders) {
+                            if (missingTiffs.length() > 0) {
+                                missingTiffs.append(", ");
+                            }
+                            missingTiffs.append(tiff);
+                        }
+                    } 
+                    log.warn("Exception {} on attempted tiff load.", tiffEx.getMessage());
                 }
             }
 

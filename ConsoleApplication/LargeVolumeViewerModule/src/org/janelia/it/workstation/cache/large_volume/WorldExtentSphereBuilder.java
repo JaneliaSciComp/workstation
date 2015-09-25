@@ -211,7 +211,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                     if (!tileFilePaths.contains(fullTilePath)) {
                         comparator.addFile(tileFile, distanceFromFocus);
                         tileFilePaths.add(fullTilePath);
-                        log.info("Adding file {} to neighborhood {}.", fullTilePath, neighborhood.getId());
+                        log.debug("Adding file {} to neighborhood {}.", fullTilePath, neighborhood.getId());
                     }
                 }
             }

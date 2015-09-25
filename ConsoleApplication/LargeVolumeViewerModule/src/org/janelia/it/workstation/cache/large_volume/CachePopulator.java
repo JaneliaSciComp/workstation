@@ -61,7 +61,7 @@ public class CachePopulator {
                 public Void call() throws Exception {
                     try {
                         if (!allocateAndLaunch(file, populatedList, neighborhood)) {
-                            log.info("Did not launch {}.  Neighborhood {}.  Total {}.", Utilities.trimToOctreePath(file), neighborhood.getId(), neighborhood.getFiles().size());
+                            log.debug("Did not launch {}.  Neighborhood {}.  Total {}.", Utilities.trimToOctreePath(file), neighborhood.getId(), neighborhood.getFiles().size());
                         }                                
                     } catch (Exception ex) {
                         log.error("Failed to allocate-and-launch {}, reason {}.", file, ex.getMessage());
