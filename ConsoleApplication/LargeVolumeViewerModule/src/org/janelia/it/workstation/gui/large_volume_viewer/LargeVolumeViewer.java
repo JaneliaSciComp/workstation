@@ -127,7 +127,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         this.messageListener = messageListener;
     }
 
-    public void initCache(URL topFolderURL) {
+    public void initCache(URL topFolderURL, int neighborhoodSize) {
         try {
             CacheController.getInstance().close();
             tileServer.setPrefetch(false);
@@ -136,7 +136,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
             CacheFacadeI cacheManager = new EHCacheFacade(standardFileLength);
             log.info("Top Folder URL for Cache is {}, and standard file size is {}.", topFolderURL.getFile(), standardFileLength);
             cacheManager.setNeighborhoodBuilder(
-                    new WorldExtentSphereBuilder(sharedVolumeImage, topFolderURL, 400)
+                    new WorldExtentSphereBuilder(sharedVolumeImage, topFolderURL, neighborhoodSize)
             );
             CacheController controller = CacheController.getInstance();
             controller.setManager(cacheManager);

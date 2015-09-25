@@ -57,6 +57,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListe
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.it.workstation.cache.large_volume.CacheController;
 import org.janelia.it.workstation.cache.large_volume.EHCacheFacade;
+import org.janelia.it.workstation.gui.dialogs.MemoryCheckDialog;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
@@ -67,6 +68,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVol
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.SWCDataConverter;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 
 /** 
  * Main window for QuadView application.
@@ -90,6 +92,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
 	private boolean bAllowOrthoView = true; // false until ready for release
+    
+    private final int MAX_3D_CACHE_SIZE = 500;
 	
 	// One shared camera for all viewers.
 	// (there's only one viewer now actually, but you know...)
@@ -279,6 +283,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		largeVolumeViewer.setImageColorModel(imageColorModel);
         largeVolumeViewer.setNeuronStyleModel(neuronStyleModel);
 		sliderPanel.setVisible(false);
+        
+        // Warn user if they do not have the muscle to make LVV hustle.
+        MemoryCheckDialog mcd = new MemoryCheckDialog();
+        mcd.warnOfInsufficientMemory("Large Volume Viewer", 8, this);
         
         camera.addCameraListener(new CameraListener() {
             @Override
@@ -1282,9 +1290,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     	}
 
         // Initialize the cache for this new input source.
-        if (usingCache()) {
+        int cache3DN = cache3DSize();
+        if (cache3DN > 0) {
             log.info("Using full-tiff cache.");
-            largeVolumeViewer.initCache(url);
+            largeVolumeViewer.initCache(url, cache3DN);
         } else {
             log.info("No full-tiff cache.");
         }
@@ -1393,8 +1402,32 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         this.loadedUrl = loadedUrl;
     }
     
-    private boolean usingCache() {
-        return ( System.getProperty( EHCacheFacade.CACHE_NAME, "f" ).toLowerCase().startsWith("t") );
+    /** 
+     * Pull in the cache size setting.  0/unset-> no 3D cache should be used.
+     */
+    private int cache3DSize() {
+        int settingInt = 0;
+        String setting = System.getProperty( EHCacheFacade.CACHE_NAME, "0" );
+        try {
+            settingInt = Integer.parseInt(setting);
+        } catch (NumberFormatException nfe) {
+            log.error("Failed to parse 3D cache-size setting of {}.", setting);
+            nfe.printStackTrace();
+        }
+        if (settingInt > MAX_3D_CACHE_SIZE) {
+            String message = String.format("The 3D cache size setting %d is too large.  Running with %d.", settingInt, MAX_3D_CACHE_SIZE);
+            log.warn(message);
+            JOptionPane.showMessageDialog(this, message);
+            settingInt = MAX_3D_CACHE_SIZE;
+        }
+        if (settingInt > 0) {
+            // Must warn about memory use.
+            MemoryCheckDialog memoryChecker = new MemoryCheckDialog();
+            if (! memoryChecker.unusedIfInsufficientMemory("3D Cache", 30, this)) {
+                settingInt = 0;
+            }                    
+        }
+        return settingInt;
     }
 
     static class LoadStatusLabel extends JLabel {
