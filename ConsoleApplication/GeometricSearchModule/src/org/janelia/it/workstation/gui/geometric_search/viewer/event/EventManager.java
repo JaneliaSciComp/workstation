@@ -60,7 +60,7 @@ public class EventManager {
             }
             if (!disallowViewerRefresh) {
                 boolean alreadyRefreshed = viewer.refreshIfPending();
-                if (event instanceof BackgroundColorChangeEvent && !alreadyRefreshed) {
+                if ( (event instanceof BackgroundColorChangeEvent || event instanceof BlendMethodChangeEvent) && !alreadyRefreshed) {
                     refreshViewer();
                 }
             }

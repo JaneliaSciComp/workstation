@@ -133,8 +133,8 @@ public class ScreenDataset extends Dataset {
             renderables.add(c0r);
 
             DenseVolumeRenderable c1r=new DenseVolumeRenderable();
-            c1r.setIntensityThreshold(0.30f);
-            c1r.setMaxVoxels(3000000);
+            c1r.setIntensityThreshold(0.10f);
+            c1r.setMaxVoxels(15000000);
             if (image.getVoxelByteCount()==1) {
                 c1r.init(image.getXSize(), image.getYSize(), image.getZSize(), voxelSize, image.getData8ForChannel(1));
             } else {

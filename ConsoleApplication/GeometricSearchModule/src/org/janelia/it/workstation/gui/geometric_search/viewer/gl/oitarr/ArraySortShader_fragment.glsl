@@ -17,6 +17,11 @@ uniform int hpi_depth;
 
 uniform vec4 background_color;
 
+
+// blend_method 0=mix
+// blend_method 1=mip
+uniform int blend_method;
+
 layout (binding = 0, rgba32ui) uniform coherent uimage1D fragment_buffer;
 
 layout (std430, binding = 0) buffer FragmentArrays0 {
@@ -94,22 +99,24 @@ vec4 blend(vec4 current_color, vec4 new_color) {
 vec4 calculate_final_color(int frag_count) {
     int i;
     vec4 final_color = background_color;
-    for (i=0; i < frag_count; i++) {
-       vec4 color = unpackUnorm4x8(frags[i].colorUPack);
 
-       // MIP
-       //float f=final_color.x+final_color.y+final_color.z;
-       //float c=color.x+color.y+color.z;
-       //if (c>f) {
-       //     final_color=color;
-       //     f=c;
-       //}
-
-       //if (f>650) break;
-
-       // Transparency
-       //final_color = blend(final_color, color);
-       final_color = mix(final_color, color, color.a);
+    if (blend_method==0) {
+        // Mix
+       for (i=0;i<frag_count;i++) {
+             vec4 color = unpackUnorm4x8(frags[i].colorUPack);
+             final_color = mix(final_color, color, color.a);
+       }
+    } else if (blend_method==1) {
+        // MIP
+        for (i=0;i<frag_count;i++) {
+           vec4 color = unpackUnorm4x8(frags[i].colorUPack);
+           float f=final_color.x+final_color.y+final_color.z;
+           float c=color.x+color.y+color.z;
+           if (c>f) {
+                final_color=color;
+                f=c;
+           }
+        }
     }
     return final_color;
 }
