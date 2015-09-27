@@ -116,11 +116,21 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     public Entity createDataSet(String dataSetName) throws Exception {
         return EJBFactory.getRemoteAnnotationBean().createDataSet(SessionMgr.getSubjectKey(), dataSetName);
     }
+    
+    @Override
+    public Entity createFlyLineRelease(String releaseName) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().createFlyLineRelease(SessionMgr.getSubjectKey(), releaseName);
+    }
 
     @Override
     public List<Entity> getDataSets() throws Exception {
     	return EJBFactory.getRemoteAnnotationBean().getUserDataSets(Arrays.asList(SessionMgr.getSubjectKey()));
 	}
+
+    @Override
+    public List<Entity> getFlyLineReleases() throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().getUserFlyLineReleases(Arrays.asList(SessionMgr.getSubjectKey()));
+    }
     
     @Override
     public Entity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
