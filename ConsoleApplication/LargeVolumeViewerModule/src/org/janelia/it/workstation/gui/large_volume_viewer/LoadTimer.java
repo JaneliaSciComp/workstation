@@ -41,7 +41,6 @@ public class LoadTimer {
 			Vector<Double> values = data.get(interval);
 			if (values.size() < 1)
 				continue; // no data for this interval
-			System.out.println(interval + ": ");
 			double max = values.get(0);
 			double min = values.get(0);
 			double sum = 0.0;
@@ -66,11 +65,22 @@ public class LoadTimer {
 			}
 			double standardDeviation = Math.sqrt(variance);
 
-			System.out.println("  mean = "+mean+" ms");
-			System.out.println("  stdDev = "+standardDeviation+" ms");
-			System.out.println("  n = "+values.size());
-			System.out.println("  min = "+min+" ms");
-			System.out.println("  max = "+max+" ms");
+			// this report is generated in a thread, and we want all
+            //  lines to appear together:
+			// System.out.println("  mean = "+mean+" ms");
+			// System.out.println("  stdDev = "+standardDeviation+" ms");
+			// System.out.println("  n = "+values.size());
+			// System.out.println("  min = "+min+" ms");
+			// System.out.println("  max = "+max+" ms");
+
+
+			System.out.println(
+                interval + ": \n" +
+                "  mean = "+mean+" ms\n" +
+                "  stdDev = "+standardDeviation+" ms\n" +
+                "  n = "+values.size() + "\n" +
+                "  min = "+min+" ms\n" +
+                "  max = "+max+" ms");
 		}
 	}
 }
