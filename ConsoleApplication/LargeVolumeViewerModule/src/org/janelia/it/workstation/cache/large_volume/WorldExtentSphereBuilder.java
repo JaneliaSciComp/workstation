@@ -9,8 +9,10 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import org.janelia.it.workstation.geom.CoordinateAxis;
@@ -173,6 +175,8 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                  center.getX() - radiusInMicrons, center.getY() - radiusInMicrons, center.getZ() - radiusInMicrons,
                  center.getX() + radiusInMicrons, center.getY() + radiusInMicrons, center.getZ() + radiusInMicrons
         );
+                
+        Map<String,double[]> fileToCenter = new HashMap<>();
 
         // Establish a collection with required order and guaranteed uniqueness.
         FocusProximityComparator comparator = new FocusProximityComparator();
@@ -186,6 +190,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             else {
                 tilePath = new File(topFolder, tilePath.toString());
                 double[] tileCenter = findTileCenterInMicrons(tileFormat, tileIndex);
+                fileToCenter.put(tilePath.toString(), tileCenter);
                 double sigmaSquare = 0.0;
                 for (int i = 0; i < 3; i++) {
                     double absDist = Math.abs(tileCenter[i] - focus[i]);
@@ -216,6 +221,56 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         }
         neighborhood.setFiles(Collections.synchronizedSet(tileFiles));
         log.debug("Neighborhood contains {} files.", tileFiles.size());
+
+        double minX = Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        double minZ = Double.MAX_VALUE;
+        double maxX = Double.MIN_VALUE;
+        double maxY = Double.MIN_VALUE;
+        double maxZ = Double.MIN_VALUE;
+        for (String tilePath: fileToCenter.keySet()) {
+            double[] tileCenter = fileToCenter.get(tilePath);
+            if (tileCenter[0] < minX) {
+                minX = tileCenter[0];
+            }
+            if (tileCenter[0] > maxX) {
+                maxX = tileCenter[0];
+            }
+            if (tileCenter[1] < minY) {
+                minY = tileCenter[1];
+            }
+            if (tileCenter[1] > maxY) {
+                maxY = tileCenter[1];
+            }
+            if (tileCenter[2] < minZ) {
+                minZ = tileCenter[2];
+            }
+            if (tileCenter[2] > maxZ) {
+                maxZ = tileCenter[2];
+            }
+        }
+        
+        double widthScreen = 1.0;
+        double heightScreen = 1.0;
+        double depthScreen = 1.0;
+        
+        double xTrans = widthScreen / (maxX - minX);
+        double yTrans = heightScreen / (maxY - minY);
+        double zTrans = depthScreen / (maxZ - minZ);
+        
+        for (String tilePath: fileToCenter.keySet()) {
+            double[] tileCenter = fileToCenter.get(tilePath);
+            double screenX = xTrans * (tileCenter[0] - minX);
+            double screenY = yTrans * (tileCenter[1] - minY);
+            double screenZ = zTrans * (tileCenter[2] - minZ);
+            
+            System.out.println(
+                    String.format("Convert %6.2f,%6.2f,%6.2f => %6.2f,%6.2f,%6.2f  for %s",
+                    tileCenter[0], tileCenter[1], tileCenter[2],
+                    screenX, screenY, screenZ, Utilities.trimToOctreePath(tilePath))
+            );
+        }
+        
         return neighborhood;
     }
     
