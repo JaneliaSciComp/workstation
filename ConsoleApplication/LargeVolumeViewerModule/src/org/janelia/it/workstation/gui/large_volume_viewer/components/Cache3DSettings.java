@@ -9,6 +9,7 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
 import org.janelia.it.workstation.cache.large_volume.EHCacheFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
@@ -19,13 +20,28 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 public class Cache3DSettings {
     public void prompt() {
         final JDialog popup = new JDialog(); // Get parent;
-        popup.setSize( 400, 500 );
+        popup.setSize( 200, 300 );
         centerOnScreen( popup, true );
 
         final JTextField neighborhoodSize = new JTextField(10);
+        TitledBorder border = new TitledBorder("3D Cache Size");
+        neighborhoodSize.setBorder(border);
+        neighborhoodSize.setToolTipText("Values must be in the range 200 to 500.");
+        
+        //NOTE: these limits are empirical values.  Later, more memory might
+        // be dedicated to the cache (through its config file), and larger
+        // neighborhoods might be possible.
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setToolTipText("<html>Enter a value > 0 to utilized 3D cache in Large Volume Viewer.<br/>"
+                                 + "Values should not be larger than 500 (voxels represented), or less than 200.<br/>"
+                                 + "A value of no more than 400 is recommended.</html>");
         buttonPanel.setLayout(new BorderLayout());
         JButton okButton = new JButton("OK");
+        String oldValue = (String)SessionMgr.getSessionMgr().getModelProperty(EHCacheFacade.CACHE_NAME);
+        if (oldValue != null) {
+            neighborhoodSize.setText(oldValue);
+        }
+        
         okButton.addActionListener( new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
@@ -33,10 +49,12 @@ public class Cache3DSettings {
                 while (! valueChosen) {
                     try {
                         Integer size = Integer.parseInt(neighborhoodSize.getText().trim());
-                        SessionMgr.getSessionMgr().setModelProperty(EHCacheFacade.CACHE_NAME, size);
-                        popup.setVisible(false);
-                        
-                        valueChosen = true;
+                        if (size <= 500  &&  size <= 200) {
+                            SessionMgr.getSessionMgr().setModelProperty(EHCacheFacade.CACHE_NAME, size);
+                            popup.setVisible(false);
+                            valueChosen = true;
+                        }
+                                                
                     } catch (NumberFormatException nfe) {
                         neighborhoodSize.setText("");
                     }
@@ -56,7 +74,7 @@ public class Cache3DSettings {
         
         popup.setLayout( new BorderLayout() );
         popup.add( buttonPanel, BorderLayout.SOUTH );
-        popup.add( neighborhoodSize, BorderLayout.CENTER );
+        popup.add( neighborhoodSize, BorderLayout.NORTH );
         
         popup.setVisible(true);
     }
