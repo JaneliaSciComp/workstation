@@ -15,28 +15,28 @@ import org.openide.util.actions.Presenter;
 
 @ActionID(
         category = "Services",
-        id = "DataSetsMenuAction"
+        id = "FlyLineReleasesMenuAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_DataSetsMenuAction",
+        displayName = "#CTL_FlyLineReleasesMenuAction",
         lazy = false
 )
-@ActionReference(path = "Menu/Services", position = 100)
-@Messages("CTL_DataSetsMenuAction=Data Sets")
-public final class DataSetsMenuAction extends AbstractAction implements Presenter.Menu {
+@ActionReference(path = "Menu/Services", position = 200)
+@Messages("CTL_FlyLineReleasesMenuAction=Fly Line Releases")
+public final class FlyLineReleasesMenuAction extends AbstractAction implements Presenter.Menu {
     
-    public static final String DATA_SETS_ITEM = "Data Sets";
-    
+    public static final String RELEASES_ITEM = "Fly Line Releases";
+
     @Override
     public void actionPerformed(ActionEvent e) {
     }
 
     @Override
     public JMenuItem getMenuPresenter() {
-        JMenuItem menuItem = new JMenuItem(DATA_SETS_ITEM);
+        JMenuItem menuItem = new JMenuItem(RELEASES_ITEM);
         menuItem.addActionListener(new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
-                SessionMgr.getBrowser().getDataSetListDialog().showDialog();
+                SessionMgr.getBrowser().getFlyLineReleaseListDialog().showDialog();
             }
         });
         return menuItem;
