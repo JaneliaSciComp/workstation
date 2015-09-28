@@ -8,9 +8,8 @@ package org.janelia.it.workstation.gui.dialogs;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import org.janelia.it.workstation.shared.util.SystemInfo;
 
 /**
  * This dialog maker, informs the user when they do not have enough memory
@@ -22,15 +21,15 @@ public class MemoryCheckDialog {
     private static final long GIGA = 1024*1024*1024;
     private static final String MEM_ALLOC_CHECK_ERR = "Failed to obtain memory allocation.";
 
-    public boolean unusedIfInsufficientMemory(String facility, int requiredSize, JComponent parent) {
+    public boolean unusedIfInsufficientMemory(String facility, int requiredSize, JFrame parent) {
         return checkMemory( facility, requiredSize, "Not using", parent);
     }
     
-    public boolean warnOfInsufficientMemory(String facility, int requiredSize, JComponent parent) {
+    public boolean warnOfInsufficientMemory(String facility, int requiredSize, JFrame parent) {
         return checkMemory( facility, requiredSize, "You could see problems with ", parent );
     }
     
-    public boolean checkMemory( String facility, int requiredSize, String bailMessage, JComponent parent ) {
+    public boolean checkMemory( String facility, int requiredSize, String bailMessage, JFrame parent ) {
         boolean sufficient = true;
         // Must warn about memory use.
         try {

@@ -15,6 +15,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import org.janelia.it.workstation.cache.large_volume.EHCacheFacade;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 public class SharedVolumeImage 
 implements VolumeImage3d
@@ -144,16 +146,27 @@ implements VolumeImage3d
 			try {
 				// Look for diagnostic block tiff file
 				testUrl = new URL(folderUrl, "default.0.tif");
-				testUrl.openStream();
+				testUrl.openStream();                
 				File fileFolder = new File(folderUrl.toURI());
-				Cache3DOctreeLoadAdapter octreeLoadAdapter = new Cache3DOctreeLoadAdapter();
-                //BlockTiffOctreeLoadAdapter octreeLoadAdapter = new BlockTiffOctreeLoadAdapter();
-                //ORDER DEPENDENCY: set this before top folder.
-                if (remoteBasePath != null) {
-                    octreeLoadAdapter.setRemoteBasePath(remoteBasePath);
+                int cacheNeighborhoodSize = EHCacheFacade.checkNeigborhoodSize(EHCacheFacade.getNeighborhoodSize());
+                if (cacheNeighborhoodSize > 0) {
+                    Cache3DOctreeLoadAdapter octreeLoadAdapter = new Cache3DOctreeLoadAdapter();
+                    //ORDER DEPENDENCY: set this before top folder.
+                    if (remoteBasePath != null) {
+                        octreeLoadAdapter.setRemoteBasePath(remoteBasePath);
+                    }
+                    octreeLoadAdapter.setTopFolder(fileFolder);
+                    testLoadAdapter = octreeLoadAdapter;
                 }
-				octreeLoadAdapter.setTopFolder(fileFolder);
-				testLoadAdapter = octreeLoadAdapter;
+                else {
+                    BlockTiffOctreeLoadAdapter octreeLoadAdapter = new BlockTiffOctreeLoadAdapter();
+                    //ORDER DEPENDENCY: set this before top folder.
+                    if (remoteBasePath != null) {
+                        octreeLoadAdapter.setRemoteBasePath(remoteBasePath);
+                    }
+                    octreeLoadAdapter.setTopFolder(fileFolder);
+                    testLoadAdapter = octreeLoadAdapter;                    
+                }
             } catch (IOException | URISyntaxException | DataSourceInitializeException ex) {
                 ex.printStackTrace();
                 ModelMgr.getModelMgr().handleException(ex);

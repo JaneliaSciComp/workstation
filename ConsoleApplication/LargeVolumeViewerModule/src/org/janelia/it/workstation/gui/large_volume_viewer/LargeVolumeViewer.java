@@ -128,22 +128,28 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     }
 
     public void initCache(URL topFolderURL, int neighborhoodSize) {
-        try {
-            CacheController.getInstance().close();
-            tileServer.setPrefetch(false);
-            int standardFileLength = getFileLength();
-            //CacheFacadeI cacheManager = new MapCacheFacade(standardFileLength);
-            CacheFacadeI cacheManager = new EHCacheFacade(standardFileLength);
-            log.info("Top Folder URL for Cache is {}, and standard file size is {}.", topFolderURL.getFile(), standardFileLength);
-            cacheManager.setNeighborhoodBuilder(
-                    new WorldExtentSphereBuilder(sharedVolumeImage, topFolderURL, neighborhoodSize)
-            );
+        if (neighborhoodSize == 0) {
             CacheController controller = CacheController.getInstance();
-            controller.setManager(cacheManager);
-            controller.registerForEvents(camera, sharedVolumeImage);
-        } catch (Exception ex) {
-            log.error("Failed to open the cache manager.");
-            ex.printStackTrace();
+            controller.setInUse(false);
+        }
+        else {
+            try {
+                CacheController.getInstance().close();
+                tileServer.setPrefetch(false);
+                int standardFileLength = getFileLength();
+                //CacheFacadeI cacheManager = new MapCacheFacade(standardFileLength);
+                CacheFacadeI cacheManager = new EHCacheFacade(standardFileLength);
+                log.info("Top Folder URL for Cache is {}, and standard file size is {}.", topFolderURL.getFile(), standardFileLength);
+                cacheManager.setNeighborhoodBuilder(
+                        new WorldExtentSphereBuilder(sharedVolumeImage, topFolderURL, neighborhoodSize)
+                );
+                CacheController controller = CacheController.getInstance();
+                controller.setManager(cacheManager);
+                controller.registerForEvents(camera, sharedVolumeImage);
+            } catch (Exception ex) {
+                log.error("Failed to open the cache manager.");
+                ex.printStackTrace();
+            }
         }
     }
 

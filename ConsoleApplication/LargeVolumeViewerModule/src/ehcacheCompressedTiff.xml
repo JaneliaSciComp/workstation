@@ -2,7 +2,7 @@
     xsi:noNamespaceSchemaLocation="ehcache.xsd"
     updateCheck="false"
     monitoring="off" 
-    dynamicConfig="false">
+    dynamicConfig="true">
     <!-- maxBytesLocalDisk="0g"    -->
     <cacheManagerEventListenerFactory class="" properties=""/>
     <transactionManagerLookup class="net.sf.ehcache.transaction.manager.DefaultTransactionManagerLookup" properties="jndiName=java:/TransactionManager" propertySeparator=";"/>

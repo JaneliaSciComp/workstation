@@ -28,6 +28,8 @@ public class CacheController {
     private CacheCameraListener cameraListener;
     private static ExecutorService executor;
     
+    private boolean inUse = true;
+    
     private static final CacheController instance = new CacheController();
     private static Logger log = LoggerFactory.getLogger(CacheController.class);
 
@@ -57,6 +59,10 @@ public class CacheController {
     public void setManager(CacheFacadeI manager) {
         this.manager = manager;
         this.cameraListener = new CacheCameraListener(manager);
+    }
+    
+    public void setInUse( boolean flag ) {
+        this.inUse = flag;
     }
     
     public void close() {
@@ -101,13 +107,18 @@ public class CacheController {
         if (manager != null) {
             return manager;
         }
-        log.info("Awaiting cache manager.");
+        else if (! inUse) {
+            return null;
+        }
+        log.debug("Awaiting cache manager.");
         boolean found = false;
         int maxRetryTime = 1000 * 60;
         while (!found) {
             try {
                 Thread.sleep(CACHE_MGR_SLEEP_TIME);                
-                if (manager != null) {
+                // This loop will break in response to a manager being set,
+                // or to a flag of "in-use" being set false.
+                if (manager != null  ||  (!inUse)) {
                     found = true;
                 }            
                 else {
@@ -122,6 +133,7 @@ public class CacheController {
                         ex.getMessage());
             }
         }
+        log.debug("Cache manager wait is over.");
         return manager;
     }
 
