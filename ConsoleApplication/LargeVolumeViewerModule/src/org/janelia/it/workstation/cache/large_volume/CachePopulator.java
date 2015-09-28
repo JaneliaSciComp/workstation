@@ -54,14 +54,14 @@ public class CachePopulator {
     public Collection<String> retargetCache(final GeometricNeighborhood neighborhood) {
         final Set<String> populatedList = new HashSet<>();
         // Now, repopulate the running queue with the new neighborhood.
-        log.info("Neighborhood size is {}.  Expected memory demand is {}Gb.", neighborhood.getFiles().size(), ((long)neighborhood.getFiles().size() * (long)standardFileSize)/1024/1024/1024);
+        log.debug("Neighborhood size is {}.  Expected memory demand is {}Gb.", neighborhood.getFiles().size(), ((long)neighborhood.getFiles().size() * (long)standardFileSize)/1024/1024/1024);
         for (final File file : neighborhood.getFiles()) {
             Callable<Void> callable = new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     try {
                         if (!allocateAndLaunch(file, populatedList, neighborhood)) {
-                            log.debug("Did not launch {}.  Neighborhood {}.  Total {}.", Utilities.trimToOctreePath(file), neighborhood.getId(), neighborhood.getFiles().size());
+                            log.trace("Did not launch {}.  Neighborhood {}.  Total {}.", Utilities.trimToOctreePath(file), neighborhood.getId(), neighborhood.getFiles().size());
                         }                                
                     } catch (Exception ex) {
                         log.error("Failed to allocate-and-launch {}, reason {}.", file, ex.getMessage());
@@ -114,7 +114,7 @@ public class CachePopulator {
         final String key = file.getAbsolutePath();
         if (! cacheCollection.hasKey(key) && (!populatedList.contains(key))) {
             if (standardFileSize > 0) {
-                log.info("Allocating to launch and place into cache {}, from neighborhood {}.", key, neighborhood.getId());
+                log.debug("Allocating to launch and place into cache {}, from neighborhood {}.", key, neighborhood.getId());
                 byte[] bytes = cacheCollection.getStorage(key);
                 cacheCollection.put(
                     file.getAbsolutePath(),
@@ -136,7 +136,7 @@ public class CachePopulator {
      * @return 'future' version.
      */
     private Future<byte[]> launchDataFetch(File file, byte[] storage) {
-        log.debug("Making a cache populator worker for {}.", Utilities.trimToOctreePath(file.getAbsolutePath()));
+        log.trace("Making a cache populator worker for {}.", Utilities.trimToOctreePath(file.getAbsolutePath()));
         Callable cachePopulatorWorker = null;
         if (isExtractFromContainerFormat()) {
             cachePopulatorWorker = new ExtractedCachePopulatorWorker(file, storage);

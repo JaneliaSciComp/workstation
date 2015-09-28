@@ -38,9 +38,9 @@ public class CachePopulatorWorker implements java.util.concurrent.Callable {
             return resolver.uncompress(infile);
         }
         else {
-            log.info("Grabbing {}.", infile);
+            log.debug("Grabbing {}.", infile);
             Object rtnVal = resolver.uncompress(infile, storage);
-            log.info("Returning {}.", infile);
+            log.debug("Returning {}.", infile);
             return rtnVal;
         }
     }

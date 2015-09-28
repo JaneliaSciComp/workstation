@@ -119,7 +119,7 @@ public class EHCacheFacade implements CacheFacadeI {
      */
     public EHCacheFacade(String region, final int standardFileSize) throws Exception {
         // Establishing in-memory cache, declaratively.
-        log.info("Creating a cache {}.", region);
+        log.debug("Creating a cache {}.", region);
         cacheName = region;
         URL url = getClass().getResource("/ehcacheCompressedTiff.xml");
         manager = CacheManager.create(url);
@@ -145,11 +145,11 @@ public class EHCacheFacade implements CacheFacadeI {
         /*
         if (! config.isFrozen()) {
             long maxEntries = (long)(0.75 * (double)(config.getMaxBytesLocalHeap() / standardFileSize));
-            log.info("Setting max entries value to {} for heap storage {}.", maxEntries, config.getMaxBytesLocalHeap());
+            log.debug("Setting max entries value to {} for heap storage {}.", maxEntries, config.getMaxBytesLocalHeap());
             config.setMaxEntriesLocalHeap(maxEntries);
         }
         else {
-            log.info("Configuration frozen: cannot adjust load factor.");
+            log.debug("Configuration frozen: cannot adjust load factor.");
         }
         */
         
@@ -171,7 +171,7 @@ public class EHCacheFacade implements CacheFacadeI {
     //    Cache cache = manager.getCache(cacheName);
     //    List keys = cache.getKeys();
     //    int requiredGb = (int)(((long)standardFileSize * (long)keys.size()) / (GIGA));
-    //    log.info("--- Cache has {} keys.  {}gb required.", keys.size(), requiredGb);
+    //    log.debug("--- Cache has {} keys.  {}gb required.", keys.size(), requiredGb);
     //}
 
     /**
@@ -230,7 +230,7 @@ public class EHCacheFacade implements CacheFacadeI {
      */
     @Override
 	public synchronized void setFocus(double[] focus) {
-        log.info("Setting focus...");
+        log.debug("Setting focus...");
         try {
             cameraFocus = focus;
             updateRegion();
@@ -246,7 +246,7 @@ public class EHCacheFacade implements CacheFacadeI {
      */
     @Override
     public void setCameraZoomValue(Double zoom) {
-        log.debug("Setting zoom {}....", zoom);
+        log.trace("Setting zoom {}....", zoom);
         this.cameraZoom = zoom;
     }
     
@@ -317,7 +317,7 @@ public class EHCacheFacade implements CacheFacadeI {
 
     private void updateRegion() {
         if (calculateRegion()) {
-            log.info("Populating a new region.  At least some files differed.");
+            log.debug("Populating a new region.  At least some files differed.");
             populateRegion();
         }
     }
@@ -346,7 +346,7 @@ public class EHCacheFacade implements CacheFacadeI {
 
     private byte[] getBytes(final String id) {
         String keyOnly = Utilities.trimToOctreePath(id);
-        log.info("Getting {}", keyOnly);
+        log.debug("Getting {}", keyOnly);
         totalGets++;
         byte[] rtnVal = null;
         try {
@@ -354,17 +354,17 @@ public class EHCacheFacade implements CacheFacadeI {
             Cache cache = manager.getCache(cacheName);
             if (cache.get(id) != null) {                
                 wrapper = (CachableWrapper) cache.get(id).getObjectValue();
-                log.info("Returning {}: found in cache.", keyOnly);
+                log.debug("Returning {}: found in cache.", keyOnly);
             } else {
                 byte[] storage = new byte[cachePopulator.getStandardFileSize()];                
                 wrapper = cachePopulator.pushLaunch(id, storage);
-                log.info("Missing.  Returning {}: pushed to cache. Zoom={}.", keyOnly, cameraZoom);
+                log.debug("Missing.  Returning {}: pushed to cache. Zoom={}.", keyOnly, cameraZoom);
             }
-            log.debug("Getting {} from cache wrapper.", keyOnly);
+            log.trace("Getting {} from cache wrapper.", keyOnly);
             dumpCacheMemoryUse(cache);
             rtnVal = wrapper.getBytes();
             //Utilities.zeroScan(rtnVal, "CacheFacade.getBytes()", keyOnly);
-            log.debug("Returning from cache wrapper: {}.", keyOnly);
+            log.trace("Returning from cache wrapper: {}.", keyOnly);
         } catch (InterruptedException | ExecutionException ie) {
             log.warn("Interrupted thread, while returning {}.  Message: {}", id, ie.getMessage());
             ie.printStackTrace();
@@ -377,7 +377,7 @@ public class EHCacheFacade implements CacheFacadeI {
         }
 
         if (totalGets % 50 == 0) {
-            log.debug("No-future get ratio: {}/{} = {}.", noFutureGets, totalGets, ((double) noFutureGets / (double) totalGets));
+            log.trace("No-future get ratio: {}/{} = {}.", noFutureGets, totalGets, ((double) noFutureGets / (double) totalGets));
         }
         return rtnVal;
     }
@@ -385,7 +385,7 @@ public class EHCacheFacade implements CacheFacadeI {
     private void dumpCacheMemoryUse(Cache cache) {
         List<String> keys = cache.getKeys();
         final double required = (double)((long)keys.size() * (long)cachePopulator.getStandardFileSize()) / (double)GIGA;
-        log.info("======> Required memory is {}", required);
+        log.debug("======> Required memory is {}", required);
     }
 
     private boolean calculateRegion() {
@@ -410,11 +410,11 @@ public class EHCacheFacade implements CacheFacadeI {
     }
     
     private void populateRegion(GeometricNeighborhood neighborhood) {
-        log.info("Retargeting cache at zoom {}.", cameraZoom);
+        log.debug("Retargeting cache at zoom {}.", cameraZoom);
         Collection<String> futureArrays = cachePopulator.retargetCache(neighborhood);
         if (log.isDebugEnabled()) {
             for (String id : futureArrays) {
-                log.debug("Populating {} to cache at zoom {}.", Utilities.trimToOctreePath(id), cameraZoom);
+                log.trace("Populating {} to cache at zoom {}.", Utilities.trimToOctreePath(id), cameraZoom);
             }
         }
     }

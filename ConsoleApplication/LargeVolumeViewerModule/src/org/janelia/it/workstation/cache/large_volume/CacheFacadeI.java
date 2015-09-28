@@ -20,7 +20,7 @@ public interface CacheFacadeI {
     //    Cache cache = manager.getCache(cacheName);
     //    List keys = cache.getKeys();
     //    int requiredGb = (int)(((long)standardFileSize * (long)keys.size()) / (GIGA));
-    //    log.info("--- Cache has {} keys.  {}gb required.", keys.size(), requiredGb);
+    //    log.debug("--- Cache has {} keys.  {}gb required.", keys.size(), requiredGb);
     //}
     /**
      * This getter takes the name of the decompressed version of the input file.

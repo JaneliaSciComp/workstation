@@ -110,7 +110,7 @@ public class CacheController {
         else if (! inUse) {
             return null;
         }
-        log.debug("Awaiting cache manager.");
+        log.trace("Awaiting cache manager.");
         boolean found = false;
         int maxRetryTime = 1000 * 60;
         while (!found) {
@@ -129,11 +129,11 @@ public class CacheController {
                     }
                 }
             } catch (Exception ex) {
-                log.info("Exception while awaiting cache mgr. {}",
+                log.debug("Exception while awaiting cache mgr. {}",
                         ex.getMessage());
             }
         }
-        log.debug("Cache manager wait is over.");
+        log.trace("Cache manager wait is over.");
         return manager;
     }
 

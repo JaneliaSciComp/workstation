@@ -21,14 +21,14 @@ public class Utilities {
      */
     public static boolean zeroScan(byte[] buffer, String id, String label) {
         if (buffer == null) {
-            log.info("{} [{}] null storage to check.", label, id);
+            log.debug("{} [{}] null storage to check.", label, id);
             return false;
         }
         boolean foundNonZero = false;
         for (int i = 0; i < buffer.length; i++) {
             if (buffer[i] != 0) {
                 foundNonZero = true;
-                log.info("{} [{}] contains at least one non-zero byte.", label, id);
+                log.debug("{} [{}] contains at least one non-zero byte.", label, id);
                 break;
             }
         }

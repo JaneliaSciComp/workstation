@@ -64,9 +64,9 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         final int minTileZ = tileZ - (tileZ % tileFormat.getTileSize()[2]);
         final TileFormat.TileXyz tileXyz = new TileFormat.TileXyz(tileIndex.getX(), tileIndex.getY(), minTileZ);
         final ZoomedVoxelIndex zvi = tileFormat.zoomedVoxelIndexForTileXyz(tileXyz, zoomLevel, sliceAxis);
-        log.debug("Found zoomed voxel index of {},{},{}.", zvi.getX(), zvi.getY(), zvi.getZ());
+        log.trace("Found zoomed voxel index of {},{},{}.", zvi.getX(), zvi.getY(), zvi.getZ());
         final TileFormat.VoxelXyz voxXyz = tileFormat.voxelXyzForZoomedVoxelIndex(zvi, sliceAxis);
-        log.debug("Found voxXYZ of {},{},{}.", voxXyz.getX(), voxXyz.getY(), voxXyz.getZ());
+        log.trace("Found voxXYZ of {},{},{}.", voxXyz.getX(), voxXyz.getY(), voxXyz.getZ());
         
         final TileFormat.MicrometerXyz mxyz = tileFormat.micrometerXyzForVoxelXyz(voxXyz, sliceAxis);
         //TileFormat.MicrometerXyz mxyz = tileFormat.micrometerXyzForZoomedVoxelIndex(zvi, CoordinateAxis.Z);
@@ -144,14 +144,14 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                 }
             }
             if (sameAsBefore) {
-                log.debug("Bailing...same as before.");
+                log.trace("Bailing...same as before.");
                 return null;
             } else {
                 focusPlusZoom = newFnZ;
             }
         }
 
-        log.info("Building neighborhood at zoom {}, focus {},{},{}", zoom, focus[0], focus[1], focus[2] );
+        log.debug("Building neighborhood at zoom {}, focus {},{},{}", zoom, focus[0], focus[1], focus[2] );
         WorldExtentSphere neighborhood = new WorldExtentSphere();
         neighborhood.setFocus(focus);
         neighborhood.setZoom(zoom);
@@ -166,10 +166,10 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         // calculated, so that ordering / priority is given to near tiles.        
         Vec3 center = new Vec3(focus[0], focus[1], focus[2]);
         dimensions = new int[]{(int)radiusInMicrons,(int)radiusInMicrons,(int)radiusInMicrons};
-        log.info("Dimensions in voxels are: {},{},{}.", dimensions[0], dimensions[1], dimensions[2]);
+        log.debug("Dimensions in voxels are: {},{},{}.", dimensions[0], dimensions[1], dimensions[2]);
         // NOTE: when dumped, this looks like voxels, even though all the
         // classes/members in play are stated as microns.
-        log.info("Voxel volume in cache extends from\n  {},{},{}\n  to\n    {},{},{}\nin voxels.",
+        log.debug("Voxel volume in cache extends from\n  {},{},{}\n  to\n    {},{},{}\nin voxels.",
                  center.getX() - radiusInMicrons, center.getY() - radiusInMicrons, center.getZ() - radiusInMicrons,
                  center.getX() + radiusInMicrons, center.getY() + radiusInMicrons, center.getZ() + radiusInMicrons
         );
@@ -205,7 +205,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                     if (!tileFilePaths.contains(fullTilePath)) {
                         comparator.addFile(tileFile, distanceFromFocus);
                         tileFilePaths.add(fullTilePath);
-                        log.debug("Adding file {} to neighborhood {}.", fullTilePath, neighborhood.getId());
+                        log.trace("Adding file {} to neighborhood {}.", fullTilePath, neighborhood.getId());
                     }
                 }
             }
@@ -215,13 +215,13 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             tileFiles.add(new File(tileFilePath));
         }
         neighborhood.setFiles(Collections.synchronizedSet(tileFiles));
-        log.info("Neighborhood contains {} files.", tileFiles.size());
+        log.debug("Neighborhood contains {} files.", tileFiles.size());
         return neighborhood;
     }
     
     private static double[] getTileHalfSize(TileFormat tileFormat) {
         int[] tileSize = tileFormat.getTileSize();
-        log.debug("Tile Size is : {},{},{}.", tileSize[0], tileSize[1], tileSize[2]);
+        log.trace("Tile Size is : {},{},{}.", tileSize[0], tileSize[1], tileSize[2]);
         return new double[] {
             tileSize[0] / 2.0,
             tileSize[1] / 2.0,
@@ -251,7 +251,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             pixelsPerSceneUnit = 1.0;
         }
         else {
-            log.info("PixelsPerSceneUnit={}.", pixelsPerSceneUnit);
+            log.debug("PixelsPerSceneUnit={}.", pixelsPerSceneUnit);
         }
         
         int[] xyzFromWhd = new int[]{0, 1, 2};
@@ -277,12 +277,12 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         }
         
         // NEED: to figure out why neighborhood is so huge.
-        log.info("Tile BoundingBox span. Width: " + tileBoundingBox.getwMin() + ":" 
+        log.debug("Tile BoundingBox span. Width: " + tileBoundingBox.getwMin() + ":" 
                            + tileBoundingBox.getwMax() + " Height: " + tileBoundingBox.gethMin()
                            + ":" + tileBoundingBox.gethMax() + " Depth:" + minDepth + ":" + maxDepth);
         // NOTE: at dump time, these look like microns, even though the classes
         // holding them say "voxel".
-        log.info("Micron volume in cache extends from\n\t{},{},{}\nto\t\n\t{},{},{}\nin voxels.\nDifference of {},{},{}.",
+        log.debug("Micron volume in cache extends from\n\t{},{},{}\nto\t\n\t{},{},{}\nin voxels.\nDifference of {},{},{}.",
             voxelBounds.getwFMin(), voxelBounds.gethFMin(), minDepth, voxelBounds.getwFMax(), voxelBounds.gethFMax(), maxDepth,
             voxelBounds.getwFMax()-voxelBounds.getwFMin(), voxelBounds.gethFMax()-voxelBounds.gethFMin(), maxDepth-minDepth
         );

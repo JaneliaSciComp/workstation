@@ -86,7 +86,7 @@ public class MapCacheFacade implements CacheFacadeI {
     public void reportCacheOccupancy() {
         Set<String> keys = cacheMap.keySet();
         int requiredGb = (int)(((long)standardFileSize * (long)keys.size()) / (GIGA));
-        log.info("--- Cache has {} keys.  {}gb required.", keys.size(), requiredGb);
+        log.debug("--- Cache has {} keys.  {}gb required.", keys.size(), requiredGb);
     }
 
     /**
@@ -143,7 +143,7 @@ public class MapCacheFacade implements CacheFacadeI {
      */
     @Override
 	public synchronized void setFocus(double[] focus) {
-        log.info("Setting focus...");
+        log.debug("Setting focus...");
         cameraFocus = focus;
         updateRegion();
 	}
@@ -154,7 +154,7 @@ public class MapCacheFacade implements CacheFacadeI {
      */
     @Override
     public void setCameraZoomValue(Double zoom) {
-        log.debug("Setting zoom {}....", zoom);
+        log.trace("Setting zoom {}....", zoom);
         this.cameraZoom = zoom;
     }
     
@@ -253,23 +253,23 @@ public class MapCacheFacade implements CacheFacadeI {
      */
     private byte[] getBytes(final String id) {
         String keyOnly = Utilities.trimToOctreePath(id);
-        log.debug("Getting {}", keyOnly);
+        log.trace("Getting {}", keyOnly);
         totalGets++;
         byte[] rtnVal = null;
         try {
             CachableWrapper wrapper = (CachableWrapper) cacheMap.get(id);
             if (wrapper != null) {
                 rtnVal = wrapper.getBytes();
-                log.debug("Returning {}: found in cache.", keyOnly);
+                log.trace("Returning {}: found in cache.", keyOnly);
             }
             else {
-                log.info("Pushing {} into cache.", id);
+                log.debug("Pushing {} into cache.", id);
                 byte[] storage = allocateBuffer();
                 wrapper = cachePopulator.pushLaunch(id, storage);
                 rtnVal = wrapper.getBytes();
                 // Add to 'hood, so it can be expelled when not in use.
                 neighborhood.getFiles().add(new File(id));
-                log.info(
+                log.debug(
                     "Returning {}: pushed to cache. CameraZoom={}.  Focus={},{},{}.", 
                     keyOnly, cameraZoom, cameraFocus[0], cameraFocus[1], cameraFocus[2]
                 );
@@ -286,7 +286,7 @@ public class MapCacheFacade implements CacheFacadeI {
         }
 
         if (totalGets % 50 == 0) {
-            log.info("No-future get ratio: {}/{} = {}.", noFutureGets, totalGets, ((double) noFutureGets / (double) totalGets));
+            log.debug("No-future get ratio: {}/{} = {}.", noFutureGets, totalGets, ((double) noFutureGets / (double) totalGets));
         }
         return rtnVal;
     }
@@ -302,26 +302,26 @@ public class MapCacheFacade implements CacheFacadeI {
         }
         Date end = new Date();
         long elapsed = (end.getTime() - start.getTime());
-        log.info("In calculate region for: {}ms in thread {}.", elapsed, Thread.currentThread().getName());
+        log.debug("In calculate region for: {}ms in thread {}.", elapsed, Thread.currentThread().getName());
         return rtnVal;
     }
 
     private void populateRegion() {
-        log.info("Repopulating on focus.  Zoom={}", cameraZoom);
+        log.debug("Repopulating on focus.  Zoom={}", cameraZoom);
         populateRegion(neighborhood);
     }
 
     private void populateRegion(GeometricNeighborhood neighborhood) {
         Date start = new Date();
-        log.info("Retargeting cache at zoom {}.", cameraZoom);
+        log.debug("Retargeting cache at zoom {}.", cameraZoom);
         Collection<String> futureArrays = cachePopulator.retargetCache(neighborhood);
         if (log.isDebugEnabled()) {
             for (String id : futureArrays) {
-                log.debug("Populating {} to cache at zoom {}.", Utilities.trimToOctreePath(id), cameraZoom);
+                log.trace("Populating {} to cache at zoom {}.", Utilities.trimToOctreePath(id), cameraZoom);
             }
         }
         Date end = new Date();
-        log.info("In populateRegion for: {}ms.", end.getTime() - start.getTime());
+        log.debug("In populateRegion for: {}ms.", end.getTime() - start.getTime());
     }
 
     private GeometricNeighborhood mergeNewWithOld(GeometricNeighborhood newNh, GeometricNeighborhood oldNh) {
@@ -338,7 +338,7 @@ public class MapCacheFacade implements CacheFacadeI {
                     CachableWrapper oldWrapper = cacheMap.remove(oldKey);
                     try {
                         if (oldWrapper != null) {
-                            log.info("Removing the old wrapped object, and freeing its buffer.");
+                            log.debug("Removing the old wrapped object, and freeing its buffer.");
                             final Future<byte[]> wrappedObject = oldWrapper.getWrappedObject();
                             // Kill any previous fill operation.
                             if (wrappedObject != null) {
@@ -346,7 +346,7 @@ public class MapCacheFacade implements CacheFacadeI {
                             }
                             allocatedBuffers.add(oldWrapper.getBytes());
                         } else {
-                            log.info("No wrapped object");
+                            log.debug("No wrapped object");
                         }
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -357,7 +357,7 @@ public class MapCacheFacade implements CacheFacadeI {
             // The allocated buffers are the set which are now freed up,
             // from not having been included in the new neighborhood.
             int availableBuffers = allocatedBuffers.size();
-            log.info("Previous allocation = {}.  Padding up to {}.", availableBuffers, newNh.getFiles().size());
+            log.debug("Previous allocation = {}.  Padding up to {}.", availableBuffers, newNh.getFiles().size());
         }
         else {
             rtnVal = newNh;
@@ -368,7 +368,7 @@ public class MapCacheFacade implements CacheFacadeI {
         for (int i = allocatedBuffers.size(); i < newNh.getFiles().size(); i++ ) {
             allocateBuffer();
         }
-        log.info("Final allocation = {}.", allocatedBuffers.size());
+        log.debug("Final allocation = {}.", allocatedBuffers.size());
         return rtnVal;
     }
 
