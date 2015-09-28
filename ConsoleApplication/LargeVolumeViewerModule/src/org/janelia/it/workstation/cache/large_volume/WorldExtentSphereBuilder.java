@@ -165,17 +165,11 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         // Will wish to ensure that a proper distance-from-focus has been
         // calculated, so that ordering / priority is given to near tiles.        
         Vec3 center = new Vec3(focus[0], focus[1], focus[2]);
-//        if (dimensions == null) {
         dimensions = new int[]{(int)radiusInMicrons,(int)radiusInMicrons,(int)radiusInMicrons};
-//        dimensions = new int[]{
-//            (int) (radiusInMicrons / tileFormat.getVoxelMicrometers()[0]),
-//            (int) (radiusInMicrons / tileFormat.getVoxelMicrometers()[1]),
-//            (int) (radiusInMicrons / tileFormat.getVoxelMicrometers()[2]), //4000,4000,4000
-//        };
-//        }
         log.info("Dimensions in voxels are: {},{},{}.", dimensions[0], dimensions[1], dimensions[2]);
-        
-        log.info("Micron volume in cache extends from\n    {},{},{}\n  to\n    {},{},{}\nin um.",
+        // NOTE: when dumped, this looks like voxels, even though all the
+        // classes/members in play are stated as microns.
+        log.info("Voxel volume in cache extends from\n  {},{},{}\n  to\n    {},{},{}\nin voxels.",
                  center.getX() - radiusInMicrons, center.getY() - radiusInMicrons, center.getZ() - radiusInMicrons,
                  center.getX() + radiusInMicrons, center.getY() + radiusInMicrons, center.getZ() + radiusInMicrons
         );
@@ -263,7 +257,9 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         int[] xyzFromWhd = new int[]{0, 1, 2};
         CoordinateAxis sliceAxis = CoordinateAxis.Z;
         ViewBoundingBox voxelBounds = tileFormat.findViewBounds(
-                dimensions[0], dimensions[1], center, pixelsPerSceneUnit, xyzFromWhd
+                (int)(dimensions[0] * 2.0 * tileFormat.getVoxelMicrometers()[0]),
+                (int)(dimensions[1] * 2.0 * tileFormat.getVoxelMicrometers()[1]),
+                center, pixelsPerSceneUnit, xyzFromWhd
         );
         TileBoundingBox tileBoundingBox = tileFormat.viewBoundsToTileBounds(xyzFromWhd, voxelBounds, zoom.intValue());
         
@@ -272,20 +268,21 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
         int zoomMax = tileFormat.getZoomLevelCount() - 1;
 
-        double halfDepth = dimensions[2] / 2.0;
+        double depth = dimensions[2];
         BoundingBox3d bb = tileFormat.calcBoundingBox();
-        int maxDepth = this.calcZCoord(bb, xyzFromWhd, tileFormat, (int) (center.getZ() + halfDepth));
-        int minDepth = maxDepth - dimensions[xyzFromWhd[2]];
+        int maxDepth = this.calcZCoord(bb, xyzFromWhd, tileFormat, (int) (center.getZ() + depth));
+        int minDepth = this.calcZCoord(bb, xyzFromWhd, tileFormat, (int) (center.getZ() - depth));
         if (minDepth < 0){
             minDepth = 0;
         }
         
         // NEED: to figure out why neighborhood is so huge.
-        System.out.println("Tile BoundingBox span. Width: " + tileBoundingBox.getwMin() + ":" 
+        log.info("Tile BoundingBox span. Width: " + tileBoundingBox.getwMin() + ":" 
                            + tileBoundingBox.getwMax() + " Height: " + tileBoundingBox.gethMin()
                            + ":" + tileBoundingBox.gethMax() + " Depth:" + minDepth + ":" + maxDepth);
-
-        log.info("Voxel volume in cache extends from\n\t{},{},{}\nto\t\n\t{},{},{}\nin voxels.\nDifference of {},{},{}.",
+        // NOTE: at dump time, these look like microns, even though the classes
+        // holding them say "voxel".
+        log.info("Micron volume in cache extends from\n\t{},{},{}\nto\t\n\t{},{},{}\nin voxels.\nDifference of {},{},{}.",
             voxelBounds.getwFMin(), voxelBounds.gethFMin(), minDepth, voxelBounds.getwFMax(), voxelBounds.gethFMax(), maxDepth,
             voxelBounds.getwFMax()-voxelBounds.getwFMin(), voxelBounds.gethFMax()-voxelBounds.gethFMin(), maxDepth-minDepth
         );
