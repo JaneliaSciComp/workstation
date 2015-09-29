@@ -17,6 +17,7 @@ public class WorldExtentSphere implements GeometricNeighborhood {
     private Set<File> files;
     private Double zoom;
     private double[] focus;
+    private int[] tileExtents;
     private Map<String, PositionalStatusModel> models;
     
     // Keep an id based on instances constructed.
@@ -81,5 +82,17 @@ public class WorldExtentSphere implements GeometricNeighborhood {
     @Override
     public Map<String, PositionalStatusModel> getPositionalModels() {
         return models;
+    }
+    
+    public void setTileExtents(int[] minTiles, int[] maxTiles) {
+        this.tileExtents = new int[ minTiles.length ];
+        for (int i = 0; i < tileExtents.length; i++) {
+            tileExtents[i] = maxTiles[i] - minTiles[i];
+        }
+    }
+    
+    @Override
+    public int[] getTileExtents() {
+        return tileExtents;
     }
 }

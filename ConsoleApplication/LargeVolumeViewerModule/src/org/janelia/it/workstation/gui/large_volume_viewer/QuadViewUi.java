@@ -786,9 +786,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         buttonsPanel.add(gotoLocationButton);
         
         if (cache3DSize() > 0) {
-            PositionalStatusPanel posStatePanel = new PositionalStatusPanel();
-            CacheController.getInstance().registerForEvents(posStatePanel);
-            buttonsPanel.add(posStatePanel);
+            positionalStatusPanel = new PositionalStatusPanel();
+            CacheController.getInstance().registerForEvents(positionalStatusPanel);
+            buttonsPanel.add(positionalStatusPanel);
         }
 
 		Component verticalGlue = Box.createVerticalGlue();
@@ -1300,7 +1300,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         if (cache3DN > 0) {
             log.info("Using full-tiff cache.");
             largeVolumeViewer.initCache(url, cache3DN);
-            CacheController.getInstance().registerForEvents(positionalStatusPanel);
+//            CacheController.getInstance().registerForEvents(positionalStatusPanel);
         } else {
             log.info("No full-tiff cache.");
             largeVolumeViewer.initCache(url, 0);

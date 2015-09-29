@@ -6,5 +6,5 @@ package org.janelia.it.workstation.cache.large_volume;
  * @author fosterl
  */
 public interface GeometricNeighborhoodListener {
-    void created( GeometricNeighborhood neighborhood );
+    void created( GeometricNeighborhood neighborhood );    
 }

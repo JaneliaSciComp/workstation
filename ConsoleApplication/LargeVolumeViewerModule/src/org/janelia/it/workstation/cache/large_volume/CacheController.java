@@ -5,6 +5,7 @@
  */
 package org.janelia.it.workstation.cache.large_volume;
 
+import java.io.File;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -99,13 +100,25 @@ public class CacheController {
         this.neighborhoodBuilder = neighborhoodBuilder;
         establishGeoNeighborhoodListener();
     }
+    
+    public void loadInProgress(File infile) {
+        if (posStatPanel != null)
+            posStatPanel.setLoadInProgress(infile);
+        else
+            log.warn("No positional status panel");
+    }
+    
+    public void loadComplete(File infile) {
+        if (posStatPanel != null)
+            posStatPanel.setLoadComplete(infile);
+    }
 
     /**
      * Makes sure messages can be routed through to anno-panel and beyond.
      * @param annotationPanel 
      */
-    public void registerForEvents(PositionalStatusPanel quadView) {
-        this.posStatPanel = quadView;
+    public void registerForEvents(PositionalStatusPanel panel) {
+        this.posStatPanel = panel;
         establishGeoNeighborhoodListener();
     }
     
@@ -284,6 +297,6 @@ public class CacheController {
         public void created(GeometricNeighborhood neighborhood) {
             panel.set3DCacheNeighborhood(neighborhood);
         }
-        
+
     }
 }

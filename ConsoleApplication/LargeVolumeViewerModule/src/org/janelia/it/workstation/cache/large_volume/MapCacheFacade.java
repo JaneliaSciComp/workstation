@@ -329,7 +329,7 @@ public class MapCacheFacade implements CacheFacadeI {
         GeometricNeighborhood rtnVal = null;
         if (oldNh != null) {
             Set<File> files = new HashSet<>();
-            rtnVal = new MergedNeighborhood(files, newNh.getZoom(), newNh.getFocus(), newNh.getPositionalModels());
+            rtnVal = new MergedNeighborhood(files, newNh.getZoom(), newNh.getFocus(), newNh.getPositionalModels(), newNh.getTileExtents());
 
             files.addAll(newNh.getFiles());
 
@@ -384,13 +384,15 @@ public class MapCacheFacade implements CacheFacadeI {
         private Set<File> files;
         private Double zoom;
         private double[] focus;
-        Map<String, PositionalStatusModel> positionalModels;
+        private Map<String, PositionalStatusModel> positionalModels;
+        private int[] tileExtents;
         
-        public MergedNeighborhood(Set<File> files, Double zoom, double[] focus, Map<String, PositionalStatusModel> positionalModels) {
+        public MergedNeighborhood(Set<File> files, Double zoom, double[] focus, Map<String, PositionalStatusModel> positionalModels, int[] tileExtents) {
             this.files = files;
             this.zoom = zoom;
             this.focus = focus;
             this.positionalModels = positionalModels;
+            this.tileExtents = tileExtents;
         }
 
         @Override
@@ -417,6 +419,11 @@ public class MapCacheFacade implements CacheFacadeI {
         @Override
         public Map<String, PositionalStatusModel> getPositionalModels() {
             return positionalModels;
+        }
+        
+        @Override
+        public int[] getTileExtents() {
+            return tileExtents;
         }
         
     }

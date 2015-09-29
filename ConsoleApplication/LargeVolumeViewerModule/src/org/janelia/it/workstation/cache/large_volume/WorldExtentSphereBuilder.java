@@ -235,8 +235,19 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         neighborhood.setFiles(Collections.synchronizedSet(tileFiles));
         log.debug("Neighborhood contains {} files.", tileFiles.size());
 
-        Map<String,PositionalStatusModel> models = buildPositionalModels(fileToCenter, fileToTileXyz);
+        int[] minTiles = new int[]{
+            Integer.MAX_VALUE,
+            Integer.MAX_VALUE,
+            Integer.MAX_VALUE
+        };
+        int[] maxTiles = new int[]{
+            Integer.MIN_VALUE,
+            Integer.MIN_VALUE,
+            Integer.MIN_VALUE,};
+
+        Map<String,PositionalStatusModel> models = buildPositionalModels(fileToCenter, fileToTileXyz, minTiles, maxTiles);
         neighborhood.setPositionalModels(models);
+        neighborhood.setTileExtents(minTiles, maxTiles);
         
         if (listener != null) {
             listener.created(neighborhood);
@@ -244,8 +255,18 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         return neighborhood;
     }
 
+    /**
+     * Build up the positional models to be carried along with paths.
+     * 
+     * @param fileToCenter
+     * @param fileToTileXyz
+     * @param minTiles SIDE EFFECT: these are changed by this method.
+     * @param maxTiles SIDE EFFECT: these are changed by this method.
+     * @return map relating paths to models of their positions and their states.
+     */
     private Map<String,PositionalStatusModel> buildPositionalModels(
-            Map<String, double[]> fileToCenter, Map<String, int[]> fileToTileXyz
+            Map<String, double[]> fileToCenter, Map<String, int[]> fileToTileXyz,
+            int[] minTiles, int[] maxTiles
     ) {
         double[] minCoords = new double[] {
             Double.MAX_VALUE,
@@ -258,16 +279,9 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             Double.MIN_VALUE
         };
 
-        int[] minTiles = new int[] {
-            Integer.MAX_VALUE,
-            Integer.MAX_VALUE,
-            Integer.MAX_VALUE
-        };
-        int[] maxTiles = new int[] {
-            Integer.MIN_VALUE,
-            Integer.MIN_VALUE,
-            Integer.MIN_VALUE,
-        };
+        // The Z-tile numbers do not fall in neat sequence.  Instead,
+        // we must get the unique list, and map them to ordinal positions.
+        Set<Integer> uniqueZTilePos = new TreeSet<>();
         
         for (String tilePath: fileToCenter.keySet()) {
             double[] tileCenter = fileToCenter.get(tilePath);
@@ -284,8 +298,15 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                 }
                 if (tileXyz[i] > maxTiles[i]) {
                     maxTiles[i] = tileXyz[i];
-                }
+                }                
+                uniqueZTilePos.add(tileXyz[2]);
             }            
+        }
+        
+        Map<Integer,Integer> zTilePosOrdinal = new HashMap<>();
+        int offset = 0;
+        for ( Integer tilePos: uniqueZTilePos ) {
+            zTilePosOrdinal.put(tilePos, offset++);
         }
         
         double widthScreen = 1.0;
@@ -314,18 +335,20 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             );
             
             PositionalStatusModelBean model = new PositionalStatusModelBean( tileCenter );
-            model.setTileXyz(justifyTileCoords( minTiles, tileXyz ));
+            model.setTileXyz(justifyTileCoords( minTiles, tileXyz, zTilePosOrdinal ));
             models.put( tilePath, model );
             
         }
         return models;
     }
     
-    private int[] justifyTileCoords( int[] minTiles, int[] tileXyz ) {
-        int[] rtnVal = new int[3];
+    /** Constrict tile range to 0-based, and interval=1 */
+    private int[] justifyTileCoords( int[] minTiles, int[] tileXyz, Map<Integer,Integer> zTilePosOrdinal ) {
+        int[] rtnVal = new int[minTiles.length];
         for (int i = 0; i < rtnVal.length; i++) {
             rtnVal[i] = tileXyz[i] - minTiles[i];
         }
+        rtnVal[2] = zTilePosOrdinal.get( tileXyz[2] );
         return rtnVal;
     }
     

@@ -17,4 +17,5 @@ public interface GeometricNeighborhood {
     double[] getFocus();
     int getId();
     Map<String,PositionalStatusModel> getPositionalModels();
+    int[] getTileExtents();
 }
