@@ -38,7 +38,6 @@ public class VolumeScrollableRowPanel extends ScrollableColorRowPanel {
 
         setupActorStateCallbacks(name, l);
 
-        components.add(l);
         rowPanel.add(l);
     }
 

@@ -40,7 +40,6 @@ public class MeshScrollableRowPanel extends ScrollableColorRowPanel {
         l.getVisibleCheckBox().setSelected(isInitiallyVisible);
         setupActorStateCallbacks(name, l);
 
-        components.add(l);
         rowPanel.add(l);
     }
 

@@ -95,6 +95,7 @@ public class ActorModel implements VoxelViewerEventListener {
         else if (event instanceof ActorAOSEvent) {
             ActorAOSEvent actorAOSEvent=(ActorAOSEvent)event;
             logger.info("Received AOS event, name="+actorAOSEvent.getActorName()+" type="+actorAOSEvent.getAosType());
+
             if (actorAOSEvent.getAosType().equals(ActorAOSEvent.ALL_TYPE)) {
                 Actor allActor = getActorByName(actorAOSEvent.getActorName());
                 if (allActor==null) {
@@ -116,6 +117,25 @@ public class ActorModel implements VoxelViewerEventListener {
                     EventManager.sendEvent(this, new ActorModifiedEvent());
                 }
             }
+
+            if (actorAOSEvent.getAosType().equals(ActorAOSEvent.OFF_TYPE)) {
+                Actor noneActor = getActorByName(actorAOSEvent.getActorName());
+                if (actorAOSEvent.isSelected()) {
+                    // Turn back on
+                    for (Actor actor : getAllActorsByType(noneActor.getClass())) {
+                        actor.setMasked(false);
+                    }
+                } else {
+                    // Turn off with mask
+                    for (Actor actor : getAllActorsByType(noneActor.getClass())) {
+                        if (!actor.getName().equals(actorAOSEvent.getActorName())) {
+                            actor.setMasked(true);
+                        }
+                    }
+                }
+                EventManager.sendEvent(this, new ActorModifiedEvent());
+            }
+
         }
     }
 
