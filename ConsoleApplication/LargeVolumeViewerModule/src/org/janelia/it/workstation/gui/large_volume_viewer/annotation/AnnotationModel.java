@@ -494,16 +494,13 @@ called from a  SimpleWorker thread.
         }
 
         addTimer.mark("start addChildAnn");
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.start();
-        System.out.println("entering addChildAnnotation: " + stopwatch);
+        // Stopwatch stopwatch = new Stopwatch();
+        // stopwatch.start();
+        // System.out.println("entering addChildAnnotation: " + stopwatch);
 
         final TmNeuron neuron = getNeuronFromAnnotationID(parentAnn.getId());
-        System.out.println("adding annotation (calling modelMgr): " + stopwatch);
         final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
-
-        System.out.println("updating workspace: " + stopwatch);
 
         // update the neuron locally so we don't have to update from db
         TmGeoAnnotation parent = getGeoAnnotationFromID(annotation.getParentId());
@@ -512,16 +509,13 @@ called from a  SimpleWorker thread.
 
 
         // the parent may lose some predefined notes (finished end, possible branch)
-        System.out.println("stripping predef notes: " + stopwatch);
         stripPredefNotes(getNeuronFromAnnotationID(parentAnn.getId()), parentAnn.getId());
 
         if (automatedTracingEnabled()) {
-            System.out.println("updating traced path: " + stopwatch);
             if (viewStateListener != null)
                 viewStateListener.pathTraceRequested(annotation.getId());
         }
 
-        System.out.println("dispatching update events: " + stopwatch);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -530,8 +524,8 @@ called from a  SimpleWorker thread.
             }
         });
 
-        System.out.println("leaving addChildAnnotation: " + stopwatch);
-        stopwatch.stop();
+        // System.out.println("leaving addChildAnnotation: " + stopwatch);
+        // stopwatch.stop();
         addTimer.mark("end addChildAnn");
         // reset timer state; we don't care about end > start
         addTimer.clearPreviousStepName();
