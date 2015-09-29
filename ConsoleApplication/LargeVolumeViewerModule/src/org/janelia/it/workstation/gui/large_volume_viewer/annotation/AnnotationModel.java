@@ -11,6 +11,7 @@ import com.google.common.base.Stopwatch;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.shared.util.SWCDataConverter;
 import org.janelia.it.workstation.shared.util.SWCNode;
@@ -84,7 +85,9 @@ called from a  SimpleWorker thread.
     private Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
     private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
     private Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
-    
+
+    private LoadTimer addTimer = new LoadTimer();
+
     // ----- constants
     // name of entity that holds our workspaces
     public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
@@ -97,6 +100,15 @@ called from a  SimpleWorker thread.
         modelMgr = ModelMgr.getModelMgr();
         sessionMgr = SessionMgr.getSessionMgr();
         filteredAnnotationModel = new FilteredAnnotationModel();
+
+        // Report performance statistics when program closes
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                addTimer.report();
+            }
+        });
+
     }
     
     public FilteredAnnotationModel getFilteredAnnotationModel() {
@@ -481,6 +493,7 @@ called from a  SimpleWorker thread.
             return;
         }
 
+        addTimer.mark("start addChildAnn");
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
         System.out.println("entering addChildAnnotation: " + stopwatch);
@@ -519,6 +532,7 @@ called from a  SimpleWorker thread.
 
         System.out.println("leaving addChildAnnotation: " + stopwatch);
         stopwatch.stop();
+        addTimer.mark("end addChildAnn");
     }
 
     /**
@@ -616,7 +630,8 @@ called from a  SimpleWorker thread.
             removeAnchoredPath(child, sourceAnnotation);
         }
 
-        // if source neurite not in same neuron as dest neruite: move it
+        // if source neurite not in same neuron as dest neurite: move it; don't
+        //  use annModel.moveNeurite() because we don't want those updates & signals yet
         TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
             modelMgr.moveNeurite(sourceAnnotation, targetNeuron);
