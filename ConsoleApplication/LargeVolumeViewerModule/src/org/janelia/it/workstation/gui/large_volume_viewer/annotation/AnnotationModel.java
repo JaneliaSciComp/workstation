@@ -534,7 +534,7 @@ called from a  SimpleWorker thread.
         stopwatch.stop();
         addTimer.mark("end addChildAnn");
         // reset timer state; we don't care about end > start
-        addTimer.setPreviousStepName("start addChildAnn");
+        addTimer.clearPreviousStepName();
     }
 
     /**

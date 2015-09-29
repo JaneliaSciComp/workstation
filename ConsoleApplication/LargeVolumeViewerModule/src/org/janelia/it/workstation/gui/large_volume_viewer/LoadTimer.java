@@ -97,4 +97,8 @@ public class LoadTimer {
         this.previousStepName = previousStepName;
     }
 
+	public void clearPreviousStepName() {
+        previousStepName = null;
+    }
+
 }
