@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Vector;
 
 public class LoadTimer {
-	private String previousStepName = null;
+    private String previousStepName = null;
 	private long previousTime = 0;
 	private HashMap<String, Vector<Double>> data = new HashMap<String, Vector<Double>>();
 
@@ -88,5 +88,13 @@ public class LoadTimer {
 		}
         return results;
 	}
+
+    public String getPreviousStepName() {
+        return previousStepName;
+    }
+
+    public void setPreviousStepName(String previousStepName) {
+        this.previousStepName = previousStepName;
+    }
 
 }

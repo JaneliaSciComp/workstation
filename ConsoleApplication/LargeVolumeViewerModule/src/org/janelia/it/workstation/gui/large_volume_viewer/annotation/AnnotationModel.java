@@ -533,6 +533,8 @@ called from a  SimpleWorker thread.
         System.out.println("leaving addChildAnnotation: " + stopwatch);
         stopwatch.stop();
         addTimer.mark("end addChildAnn");
+        // reset timer state; we don't care about end > start
+        addTimer.setPreviousStepName("start addChildAnn");
     }
 
     /**
