@@ -36,11 +36,37 @@ public class ColorSelectionRow extends JPanel {
     ColorSelectionRow thisColorSelectionRow;
     ScrollableColorRowPanel parentRowPanel;
 
-    private static class GroupSelectionButton extends JButton {
+    public static class GroupSelectionButton extends JButton {
+
+        boolean isSelected=false;
+
+        @Override
+        public boolean isSelected() {
+            return isSelected;
+        }
+
+        @Override
+        public void setSelected(boolean isSelected) {
+            if (isSelected) {
+                setForeground(new Color(255, 255, 0));
+            } else {
+                setForeground(new Color(100, 100, 100));
+            }
+            this.isSelected = isSelected;
+        }
 
         public GroupSelectionButton(String name) {
             super(name);
             this.setFont(new Font("Arial", Font.BOLD, 9));
+        }
+
+        @Override
+        public Color getForeground() {
+            if (isSelected()) {
+                return new Color(255, 255, 0);
+            } else {
+                return new Color(100, 100, 100);
+            }
         }
     }
 
@@ -115,10 +141,6 @@ public class ColorSelectionRow extends JPanel {
         return visibleCheckBox;
     }
 
-    public void setVisibleCheckBox(JCheckBox visibleCheckBox) {
-        this.visibleCheckBox = visibleCheckBox;
-    }
-
     public void setColorStatus(final Color color) {
         colorStatusPanel.setColor(color);
     }
@@ -184,4 +206,15 @@ public class ColorSelectionRow extends JPanel {
         return rightClickPopupMenu;
     }
 
+    public GroupSelectionButton getAllButton() {
+        return allButton;
+    }
+
+    public GroupSelectionButton getNoneButton() {
+        return noneButton;
+    }
+
+    public GroupSelectionButton getSoloButton() {
+        return soloButton;
+    }
 }

@@ -37,6 +37,9 @@ public class DenseVolumeActor extends Actor {
     }
 
     public float getBrightness() {
+        if (proxyActor!=null) {
+            return ((DenseVolumeActor)proxyActor).getBrightness();
+        }
         return brightness;
     }
 
@@ -45,6 +48,9 @@ public class DenseVolumeActor extends Actor {
     }
 
     public float getTransparency() {
+        if (proxyActor!=null) {
+            return ((DenseVolumeActor)proxyActor).getTransparency();
+        }
         return transparency;
     }
 

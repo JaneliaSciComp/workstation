@@ -33,23 +33,24 @@ public class ActorModel implements VoxelViewerEventListener {
             EventManager.sendEvent(this, new ActorsClearAllEvent());
         } else if (event instanceof ActorSetVisibleEvent) {
             ActorSetVisibleEvent actorSetVisibleEvent=(ActorSetVisibleEvent)event;
-            for (Actor actor : actors) {
+            Actor actor=getActorByName(actorSetVisibleEvent.getName());
+            if (actor!=null) {
                 if (actor.getName().equals(actorSetVisibleEvent.getName())) {
-                    boolean isVisible=actorSetVisibleEvent.isVisible();
-                    boolean alreadyVisible=actor.isVisible();
-                    if (isVisible!=alreadyVisible) {
+                    boolean isVisible = actorSetVisibleEvent.isVisible();
+                    boolean alreadyVisible = actor.isVisible();
+                    if (isVisible != alreadyVisible) {
                         actor.setIsVisible(isVisible);
                         EventManager.sendEvent(this, new ActorModifiedEvent());
                     }
                 }
             }
             for (ActorSharedResource sharedResource : attachedSharedResources) {
-                for (Actor actor : sharedResource.getSharedActorList()) {
-                    if (actor.getName().equals(actorSetVisibleEvent.getName())) {
+                for (Actor resourceActor : sharedResource.getSharedActorList()) {
+                    if (resourceActor.getName().equals(actorSetVisibleEvent.getName())) {
                         boolean isVisible = actorSetVisibleEvent.isVisible();
-                        boolean alreadyVisible = actor.isVisible();
+                        boolean alreadyVisible = resourceActor.isVisible();
                         if (isVisible != alreadyVisible) {
-                            actor.setIsVisible(isVisible);
+                            resourceActor.setIsVisible(isVisible);
                             EventManager.sendEvent(this, new ActorModifiedEvent());
                         }
                     }
@@ -91,11 +92,28 @@ public class ActorModel implements VoxelViewerEventListener {
                 logger.error(ex.toString());
             }
         }
+        else if (event instanceof ActorAOSEvent) {
+            ActorAOSEvent actorAOSEvent=(ActorAOSEvent)event;
+            logger.info("Received AOS event, name="+actorAOSEvent.getActorName()+" type="+actorAOSEvent.getAosType());
+        }
     }
 
     private void addActor(Actor actor) {
-        actors.add(actor);
-        EventManager.sendEvent(this, new ActorAddedEvent(actor));
+        if (getActorByName(actor.getName()) == null) {
+            actors.add(actor);
+            EventManager.sendEvent(this, new ActorAddedEvent(actor));
+        } else {
+            logger.error("Actor with duplicate name not permitted in ActorModel");
+        }
+    }
+
+    private Actor getActorByName(String name) {
+        for (Actor actor : actors) {
+            if (actor.getName().equals(name)) {
+                return actor;
+            }
+        }
+        return null;
     }
 
 }

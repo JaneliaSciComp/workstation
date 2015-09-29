@@ -38,15 +38,7 @@ public class MeshScrollableRowPanel extends ScrollableColorRowPanel {
         l.putClientProperty("Synthetica.opaque", Boolean.FALSE);
         l.setBorder(BorderFactory.createBevelBorder(1));
         l.getVisibleCheckBox().setSelected(isInitiallyVisible);
-        final ScrollableColorRowPanel actionSource=this;
-
-        l.getVisibleCheckBox().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                logger.info("checkbox set to="+l.getVisibleCheckBox().isSelected());
-                EventManager.sendEvent(actionSource, new ActorSetVisibleEvent(name, l.getVisibleCheckBox().isSelected()));
-            }
-        });
+        setupActorStateCallbacks(name, l);
 
         components.add(l);
         rowPanel.add(l);

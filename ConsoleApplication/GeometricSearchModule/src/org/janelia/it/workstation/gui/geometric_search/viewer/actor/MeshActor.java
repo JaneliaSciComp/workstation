@@ -34,6 +34,9 @@ public class MeshActor extends Actor {
     }
 
     public float getEdgeFalloff() {
+        if (proxyActor!=null) {
+            return ((MeshActor)proxyActor).getEdgeFalloff();
+        }
         return edgeFalloff;
     }
 
@@ -42,6 +45,9 @@ public class MeshActor extends Actor {
     }
 
     public float getIntensity() {
+        if (proxyActor!=null) {
+            return ((MeshActor)proxyActor).getIntensity();
+        }
         return intensity;
     }
 
@@ -50,6 +56,9 @@ public class MeshActor extends Actor {
     }
 
     public float getAmbience() {
+        if (proxyActor!=null) {
+            return ((MeshActor)proxyActor).getAmbience();
+        }
         return ambience;
     }
 
