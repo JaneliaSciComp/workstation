@@ -42,7 +42,7 @@ uniform int levelOfDetail = 0; // volume texture LOD
 // Use actual voxelSize, as uniform, for more accurate occlusion
 uniform vec3 volumeMicrometers = vec3(256, 256, 200);
 // TODO - expose occluding path length to user
-uniform float canonicalOccludingPathLengthUm = 2.0; // micrometers
+uniform float canonicalOccludingPathLengthUm = 1.0; // micrometers
 
 // Homogeneous clip plane equations, in texture coordinates
 uniform vec4 nearSlabPlane; // for limiting view to a screen-parallel slab
@@ -310,7 +310,10 @@ void main() {
     // Use absolute scale for occluding length parameter
     // TODO - express length parameter in micrometers...
     ivec3 finestVolumeSize = textureSize(volumeTexture, 0);
-    float micrometersPerRay = dot(volumeMicrometers, abs(x1));
+    // Precompute conversion from ray segment length to transparency exponent
+    float segmentLengthFactor = dot(volumeMicrometers, abs(x1));
+    segmentLengthFactor /= pow(2, levelOfDetail); // Try to reduce LOD popping
+    segmentLengthFactor /= canonicalOccludingPathLengthUm;
 
     // How small a corner are we willing to precisely sample?
     // smaller value => sharper corners/slower progress
@@ -466,11 +469,11 @@ void main() {
 
         // for occluding projection, incorporation path length into opacity exponent
         #if PROJECTION_MODE == PROJECTION_OCCLUDING
-            // Convert segmentLength to micrometers
-            // segmentLength = micrometersPerRay * segmentLength;
-            // float opacityExponent = canonicalOccludingPathLengthUm / segmentLength;
-            // opacityExponent = 2.0;
-            // localOpacity = pow(localOpacity, 2.0); // TODO - is this exponential slow?
+            // Convert segmentLength to micrometers, from ray parameter coordinates
+            float transparencyExponent = segmentLength * segmentLengthFactor;
+            float localTransparency = 1.0 - localOpacity;
+            localTransparency = pow(localTransparency, transparencyExponent); // TODO - is this exponential slow?
+            localOpacity = 1.0 - localTransparency;
         #endif
 
         // Compute change in intensity
