@@ -48,6 +48,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
     private File topFolder;
     private TileFormatSource tileFormatSource;
     private double[] focusPlusZoom = null;
+    private CacheFacadeI cacheManager;
     private GeometricNeighborhoodListener listener;
     private static Logger log = LoggerFactory.getLogger(WorldExtentSphereBuilder.class);
 
@@ -96,12 +97,14 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
      * @param tileFormat used to calculate the extents in all directions.
      * @param topFolderURL base point for all files in repo.
      * @param radius lower-bound micrometers to extend.
+     * @param cacheManager for lookups of pre-existing data.
      */
-    public WorldExtentSphereBuilder(SharedVolumeImage sharedVolumeImage, URL topFolderURL, double radius) throws URISyntaxException {
+    public WorldExtentSphereBuilder(SharedVolumeImage sharedVolumeImage, URL topFolderURL, double radius, CacheFacadeI cacheManager) throws URISyntaxException {
         setTileFormatSource( new SVITileFormatSource(sharedVolumeImage));
         
         this.radiusInMicrons = radius;
         this.topFolder = new File(topFolderURL.toURI());
+        this.cacheManager = cacheManager;
     }
     
     /**
@@ -318,7 +321,6 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         double zTrans = depthScreen / (maxCoords[2] - minCoords[2]);
         int chCount = tileFormatSource.getTileFormat().getChannelCount();
         final String tiffBase = OctreeMetadataSniffer.getTiffBase(CoordinateAxis.Z);
-        
         Map<String,PositionalStatusModel> models = new HashMap<>();
         for (String tilePath: fileToCenter.keySet()) {
             double[] tileCenter = fileToCenter.get(tilePath);
@@ -339,9 +341,12 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             for ( int i = 0; i < chCount; i++ ) {
                 //todo possible problem with Windows: could fail to update
                 // from all-red swatch.
-                String fullTifPath = tilePath + "/" + OctreeMetadataSniffer.getFilenameForChannel(tiffBase, i);
+                String fullTifPath = tilePath + "/" + OctreeMetadataSniffer.getFilenameForChannel(tiffBase, i);                
                 PositionalStatusModelBean model = new PositionalStatusModelBean(tileCenter);
                 model.setTileXyz(justifyTileCoords(minTiles, tileXyz, zTilePosOrdinal));
+                if (cacheManager.isReady(new File(fullTifPath))) {
+                    model.setStatus(PositionalStatusModel.Status.Filled);
+                }
                 models.put(fullTifPath, model);
             }
             

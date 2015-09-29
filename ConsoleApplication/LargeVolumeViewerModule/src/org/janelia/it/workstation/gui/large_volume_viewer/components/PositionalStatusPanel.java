@@ -90,7 +90,7 @@ public class PositionalStatusPanel extends JPanel {
 
             int[] tileExtents = neighborhood.getTileExtents();
 
-            if (tileExtents[0] == 0) {
+            if (tileExtents[0] == 0  ||  tileExtents[1] == 0) {
                 return;
             }
 
