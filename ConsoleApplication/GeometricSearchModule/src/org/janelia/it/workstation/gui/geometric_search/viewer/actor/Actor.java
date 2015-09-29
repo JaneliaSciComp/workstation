@@ -12,6 +12,7 @@ public abstract class Actor {
     Vector4 color;
     Actor proxyActor;
     boolean masked=false;
+    boolean visible=true;
 
     public Actor getProxyActor() {
         return proxyActor;
@@ -26,6 +27,11 @@ public abstract class Actor {
     }
 
     public void setMasked(boolean masked) {
+        if (masked) {
+            glActor.setIsVisible(false);
+        } else {
+            glActor.setIsVisible(this.visible);
+        }
         this.masked = masked;
     }
 
@@ -53,14 +59,14 @@ public abstract class Actor {
     public void dispose() {}
 
     public boolean isVisible() {
-        if (masked) {
-            return false;
-        }
-        return glActor.isVisible();
+        return visible;
     }
 
     public void setIsVisible(boolean isVisible) {
-        glActor.setIsVisible(isVisible);
+        this.visible=isVisible;
+        if (!masked) {
+            glActor.setIsVisible(isVisible);
+        }
     }
 
     public GL4SimpleActor getGlActor() { return glActor; }

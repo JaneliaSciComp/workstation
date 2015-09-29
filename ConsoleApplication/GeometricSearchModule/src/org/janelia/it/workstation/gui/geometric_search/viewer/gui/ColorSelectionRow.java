@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.gui;
 
-import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 
 /**
  * Created by murphys on 8/28/2015.
@@ -35,40 +33,6 @@ public class ColorSelectionRow extends JPanel {
     SyncedCallback colorSelectionCallback;
     ColorSelectionRow thisColorSelectionRow;
     ScrollableColorRowPanel parentRowPanel;
-
-    public static class GroupSelectionButton extends JButton {
-
-        boolean isSelected=false;
-
-        @Override
-        public boolean isSelected() {
-            return isSelected;
-        }
-
-        @Override
-        public void setSelected(boolean isSelected) {
-            if (isSelected) {
-                setForeground(new Color(255, 255, 0));
-            } else {
-                setForeground(new Color(100, 100, 100));
-            }
-            this.isSelected = isSelected;
-        }
-
-        public GroupSelectionButton(String name) {
-            super(name);
-            this.setFont(new Font("Arial", Font.BOLD, 9));
-        }
-
-        @Override
-        public Color getForeground() {
-            if (isSelected()) {
-                return new Color(255, 255, 0);
-            } else {
-                return new Color(100, 100, 100);
-            }
-        }
-    }
 
 
     public ColorSelectionRow(String name, ScrollableColorRowPanel parentRowPanel) {
@@ -99,9 +63,9 @@ public class ColorSelectionRow extends JPanel {
             nameBox.setLayout(new BoxLayout(nameBox, BoxLayout.X_AXIS));
             nameBox.add(nameLabel);
 
-            allButton = new GroupSelectionButton("A");
-            noneButton = new GroupSelectionButton("-");
-            soloButton = new GroupSelectionButton("S");
+            allButton = new GroupSelectionButton(GroupSelectionButton.A_TYPE);
+            noneButton = new GroupSelectionButton(GroupSelectionButton.N_TYPE);
+            soloButton = new GroupSelectionButton(GroupSelectionButton.S_TYPE);
 
             groupSelectionPanel.add(allButton);
             groupSelectionPanel.add(noneButton);
