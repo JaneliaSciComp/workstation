@@ -59,6 +59,7 @@ import org.janelia.it.workstation.cache.large_volume.CacheController;
 import org.janelia.it.workstation.cache.large_volume.EHCacheFacade;
 import org.janelia.it.workstation.gui.dialogs.MemoryCheckDialog;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.PositionalStatusPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
@@ -132,6 +133,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	private JSpinner zScanSpinner = new JSpinner();
     private SpinnerCalculationValue spinnerValue = new SpinnerCalculationValue(zScanSpinner);
 	private JSlider zoomSlider = new JSlider(SwingConstants.VERTICAL, 0, 1000, 500);
+    
+    private PositionalStatusPanel positionalStatusPanel;
 	
 	//private JPanel colorPanel = new JPanel();
     private JMenuBar menuBar = new JMenuBar();
@@ -781,6 +784,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         JButton gotoLocationButton = new JButton("New button");
         gotoLocationButton.setAction(goToLocationAction);
         buttonsPanel.add(gotoLocationButton);
+        
+        if (cache3DSize() > 0) {
+            PositionalStatusPanel posStatePanel = new PositionalStatusPanel();
+            CacheController.getInstance().registerForEvents(posStatePanel);
+            buttonsPanel.add(posStatePanel);
+        }
 
 		Component verticalGlue = Box.createVerticalGlue();
 		buttonsPanel.add(verticalGlue);
@@ -1291,6 +1300,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         if (cache3DN > 0) {
             log.info("Using full-tiff cache.");
             largeVolumeViewer.initCache(url, cache3DN);
+            CacheController.getInstance().registerForEvents(positionalStatusPanel);
         } else {
             log.info("No full-tiff cache.");
             largeVolumeViewer.initCache(url, 0);

@@ -6,7 +6,9 @@
 package org.janelia.it.workstation.cache.large_volume;
 
 import java.io.File;
+import java.util.Map;
 import java.util.Set;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.model.PositionalStatusModel;
 
 public interface GeometricNeighborhood {
 
@@ -14,5 +16,5 @@ public interface GeometricNeighborhood {
     Double getZoom();
     double[] getFocus();
     int getId();
-
+    Map<String,PositionalStatusModel> getPositionalModels();
 }

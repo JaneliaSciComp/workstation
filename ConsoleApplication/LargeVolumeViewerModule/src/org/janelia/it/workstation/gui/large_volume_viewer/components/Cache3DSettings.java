@@ -17,6 +17,7 @@ import org.janelia.it.workstation.cache.large_volume.EHCacheFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
+ * Any settings required for the 3D cache, which are user-selectable.
  *
  * @author fosterl
  */

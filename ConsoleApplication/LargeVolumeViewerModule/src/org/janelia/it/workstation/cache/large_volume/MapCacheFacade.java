@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.model.PositionalStatusModel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -328,7 +329,7 @@ public class MapCacheFacade implements CacheFacadeI {
         GeometricNeighborhood rtnVal = null;
         if (oldNh != null) {
             Set<File> files = new HashSet<>();
-            rtnVal = new MergedNeighborhood(files, newNh.getZoom(), newNh.getFocus());
+            rtnVal = new MergedNeighborhood(files, newNh.getZoom(), newNh.getFocus(), newNh.getPositionalModels());
 
             files.addAll(newNh.getFiles());
 
@@ -350,7 +351,7 @@ public class MapCacheFacade implements CacheFacadeI {
                         }
                     } catch (Exception ex) {
                         ex.printStackTrace();
-                    }
+                    }                                       
                 }
             }
 
@@ -383,11 +384,13 @@ public class MapCacheFacade implements CacheFacadeI {
         private Set<File> files;
         private Double zoom;
         private double[] focus;
+        Map<String, PositionalStatusModel> positionalModels;
         
-        public MergedNeighborhood(Set<File> files, Double zoom, double[] focus) {
+        public MergedNeighborhood(Set<File> files, Double zoom, double[] focus, Map<String, PositionalStatusModel> positionalModels) {
             this.files = files;
             this.zoom = zoom;
             this.focus = focus;
+            this.positionalModels = positionalModels;
         }
 
         @Override
@@ -409,6 +412,11 @@ public class MapCacheFacade implements CacheFacadeI {
         @Override
         public int getId() {
             return 9000 + (int)(new Date().getTime() % 1000);
+        }                
+
+        @Override
+        public Map<String, PositionalStatusModel> getPositionalModels() {
+            return positionalModels;
         }
         
     }

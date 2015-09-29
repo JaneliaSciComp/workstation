@@ -7,6 +7,7 @@ package org.janelia.it.workstation.cache.large_volume;
 
 public interface GeometricNeighborhoodBuilder {
 
-	public GeometricNeighborhood buildNeighborhood(double[] focus, Double zoom, double pixelsPerSceneUnit);
+	GeometricNeighborhood buildNeighborhood(double[] focus, Double zoom, double pixelsPerSceneUnit);
+    void setListener(GeometricNeighborhoodListener listener);
 
 }

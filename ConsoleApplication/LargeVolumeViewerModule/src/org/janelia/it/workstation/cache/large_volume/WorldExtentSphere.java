@@ -6,8 +6,10 @@
 package org.janelia.it.workstation.cache.large_volume;
 
 import java.io.File;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.model.PositionalStatusModel;
 
 public class WorldExtentSphere implements GeometricNeighborhood {
 
@@ -15,6 +17,7 @@ public class WorldExtentSphere implements GeometricNeighborhood {
     private Set<File> files;
     private Double zoom;
     private double[] focus;
+    private Map<String, PositionalStatusModel> models;
     
     // Keep an id based on instances constructed.
     private int instanceId = _s_instanceCounter.addAndGet(1);
@@ -69,5 +72,14 @@ public class WorldExtentSphere implements GeometricNeighborhood {
     @Override
     public int getId() {
         return instanceId;
+    }
+
+    public void setPositionalModels( Map<String, PositionalStatusModel> models ) {
+        this.models = models;
+    }
+    
+    @Override
+    public Map<String, PositionalStatusModel> getPositionalModels() {
+        return models;
     }
 }

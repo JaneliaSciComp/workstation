@@ -13,6 +13,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.PositionalStatusPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,8 @@ public class CacheController {
 
     private CacheFacadeI manager;
     private CacheCameraListener cameraListener;
+    private GeometricNeighborhoodBuilder neighborhoodBuilder;
+    private PositionalStatusPanel posStatPanel;
     private static ExecutorService executor;
     
     private boolean inUse = true;
@@ -87,6 +90,24 @@ public class CacheController {
             log.warn("Attempt to register a camera for events, before the cache manager has been set.");
         }
     }
+
+    /**
+     * Makes neighborhood's events available to everything around this controller.
+     * @param neighborhoodBuilder 
+     */
+    public void registerForEvents(GeometricNeighborhoodBuilder neighborhoodBuilder) {
+        this.neighborhoodBuilder = neighborhoodBuilder;
+        establishGeoNeighborhoodListener();
+    }
+
+    /**
+     * Makes sure messages can be routed through to anno-panel and beyond.
+     * @param annotationPanel 
+     */
+    public void registerForEvents(PositionalStatusPanel quadView) {
+        this.posStatPanel = quadView;
+        establishGeoNeighborhoodListener();
+    }
     
     public void zoomChanged(Double zoom) {
         if (cameraListener == null) {
@@ -102,6 +123,12 @@ public class CacheController {
         cameraListener.focusChanged(focus);
     }
     
+    private void establishGeoNeighborhoodListener() {
+        if (posStatPanel != null  &&  neighborhoodBuilder != null) {
+            neighborhoodBuilder.setListener(new NeighborhoodUpdater(posStatPanel));
+        }
+    }
+
     /** Ensure that this thing gets set.  */
     private CacheFacadeI awaitCacheManager() {
         if (manager != null) {
@@ -242,6 +269,20 @@ public class CacheController {
             Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
             manager.setPixelsPerSceneUnit(1.0);//camera.getPixelsPerSceneUnit());
             manager.setCameraZoom(referencedZoom);
+        }
+        
+    }
+    
+    private static class NeighborhoodUpdater implements GeometricNeighborhoodListener {
+
+        private PositionalStatusPanel panel;
+        public NeighborhoodUpdater(PositionalStatusPanel panel) {
+            this.panel = panel;
+        }
+        
+        @Override
+        public void created(GeometricNeighborhood neighborhood) {
+            panel.set3DCacheNeighborhood(neighborhood);
         }
         
     }

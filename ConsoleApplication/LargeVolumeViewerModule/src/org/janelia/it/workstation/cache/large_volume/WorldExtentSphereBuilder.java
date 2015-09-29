@@ -23,6 +23,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileBoundingBox;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
 import org.janelia.it.workstation.gui.large_volume_viewer.ViewBoundingBox;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.model.PositionalStatusModelBean;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.model.PositionalStatusModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.compression.CompressedFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.octree.ZoomLevel;
@@ -46,6 +48,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
     private File topFolder;
     private TileFormatSource tileFormatSource;
     private double[] focusPlusZoom = null;
+    private GeometricNeighborhoodListener listener;
     private static Logger log = LoggerFactory.getLogger(WorldExtentSphereBuilder.class);
 
     /**
@@ -123,6 +126,11 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         this.tileFormatSource = tfs;
     }
     
+    @Override
+    public void setListener(GeometricNeighborhoodListener listener) {
+        this.listener = listener;
+    }
+
 	/**
      * Wish to produce the list of all files needed to fill in the
      * spherical neighborhood centered at the focus.
@@ -177,6 +185,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         );
                 
         Map<String,double[]> fileToCenter = new HashMap<>();
+        Map<String,int[]> fileToTileXyz = new HashMap<>();
 
         // Establish a collection with required order and guaranteed uniqueness.
         FocusProximityComparator comparator = new FocusProximityComparator();
@@ -191,6 +200,10 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                 tilePath = new File(topFolder, tilePath.toString());
                 double[] tileCenter = findTileCenterInMicrons(tileFormat, tileIndex);
                 fileToCenter.put(tilePath.toString(), tileCenter);
+                fileToTileXyz.put(
+                        tilePath.toString(),
+                        new int[] {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ()}
+                );
                 double sigmaSquare = 0.0;
                 for (int i = 0; i < 3; i++) {
                     double absDist = Math.abs(tileCenter[i] - focus[i]);
@@ -222,56 +235,98 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         neighborhood.setFiles(Collections.synchronizedSet(tileFiles));
         log.debug("Neighborhood contains {} files.", tileFiles.size());
 
-        double minX = Double.MAX_VALUE;
-        double minY = Double.MAX_VALUE;
-        double minZ = Double.MAX_VALUE;
-        double maxX = Double.MIN_VALUE;
-        double maxY = Double.MIN_VALUE;
-        double maxZ = Double.MIN_VALUE;
+        Map<String,PositionalStatusModel> models = buildPositionalModels(fileToCenter, fileToTileXyz);
+        neighborhood.setPositionalModels(models);
+        
+        if (listener != null) {
+            listener.created(neighborhood);
+        }
+        return neighborhood;
+    }
+
+    private Map<String,PositionalStatusModel> buildPositionalModels(
+            Map<String, double[]> fileToCenter, Map<String, int[]> fileToTileXyz
+    ) {
+        double[] minCoords = new double[] {
+            Double.MAX_VALUE,
+            Double.MAX_VALUE,
+            Double.MAX_VALUE
+        };
+        double[] maxCoords = new double[] {
+            Double.MIN_VALUE,
+            Double.MIN_VALUE,
+            Double.MIN_VALUE
+        };
+
+        int[] minTiles = new int[] {
+            Integer.MAX_VALUE,
+            Integer.MAX_VALUE,
+            Integer.MAX_VALUE
+        };
+        int[] maxTiles = new int[] {
+            Integer.MIN_VALUE,
+            Integer.MIN_VALUE,
+            Integer.MIN_VALUE,
+        };
+        
         for (String tilePath: fileToCenter.keySet()) {
             double[] tileCenter = fileToCenter.get(tilePath);
-            if (tileCenter[0] < minX) {
-                minX = tileCenter[0];
-            }
-            if (tileCenter[0] > maxX) {
-                maxX = tileCenter[0];
-            }
-            if (tileCenter[1] < minY) {
-                minY = tileCenter[1];
-            }
-            if (tileCenter[1] > maxY) {
-                maxY = tileCenter[1];
-            }
-            if (tileCenter[2] < minZ) {
-                minZ = tileCenter[2];
-            }
-            if (tileCenter[2] > maxZ) {
-                maxZ = tileCenter[2];
-            }
+            int[] tileXyz = fileToTileXyz.get(tilePath);
+            for (int i = 0; i < 3; i++) {
+                if (tileCenter[i] < minCoords[i]) {
+                    minCoords[i] = tileCenter[i];
+                }
+                if (tileCenter[i] > maxCoords[i]) {
+                    maxCoords[i] = tileCenter[i];
+                }
+                if (tileXyz[i] < minTiles[i]) {
+                    minTiles[i] = tileXyz[i];
+                }
+                if (tileXyz[i] > maxTiles[i]) {
+                    maxTiles[i] = tileXyz[i];
+                }
+            }            
         }
         
         double widthScreen = 1.0;
         double heightScreen = 1.0;
         double depthScreen = 1.0;
         
-        double xTrans = widthScreen / (maxX - minX);
-        double yTrans = heightScreen / (maxY - minY);
-        double zTrans = depthScreen / (maxZ - minZ);
+        double xTrans = widthScreen / (maxCoords[0] - minCoords[0]);
+        double yTrans = heightScreen / (maxCoords[1] - minCoords[1]);
+        double zTrans = depthScreen / (maxCoords[2] - minCoords[2]);
         
+        Map<String,PositionalStatusModel> models = new HashMap<>();
         for (String tilePath: fileToCenter.keySet()) {
             double[] tileCenter = fileToCenter.get(tilePath);
-            double screenX = xTrans * (tileCenter[0] - minX);
-            double screenY = yTrans * (tileCenter[1] - minY);
-            double screenZ = zTrans * (tileCenter[2] - minZ);
+            double screenX = xTrans * (tileCenter[0] - minCoords[0]);
+            double screenY = yTrans * (tileCenter[1] - minCoords[1]);
+            double screenZ = zTrans * (tileCenter[2] - minCoords[2]);
             
-            System.out.println(
+            log.debug(
                     String.format("Convert %6.2f,%6.2f,%6.2f => %6.2f,%6.2f,%6.2f  for %s",
-                    tileCenter[0], tileCenter[1], tileCenter[2],
-                    screenX, screenY, screenZ, Utilities.trimToOctreePath(tilePath))
+                            tileCenter[0], tileCenter[1], tileCenter[2],
+                            screenX, screenY, screenZ, Utilities.trimToOctreePath(tilePath))
             );
+            final int[] tileXyz = fileToTileXyz.get(tilePath);
+            log.debug(
+                    String.format("At Tile Location: %d,%d,%d", tileXyz[0], tileXyz[1], tileXyz[2])
+            );
+            
+            PositionalStatusModelBean model = new PositionalStatusModelBean( tileCenter );
+            model.setTileXyz(justifyTileCoords( minTiles, tileXyz ));
+            models.put( tilePath, model );
+            
         }
-        
-        return neighborhood;
+        return models;
+    }
+    
+    private int[] justifyTileCoords( int[] minTiles, int[] tileXyz ) {
+        int[] rtnVal = new int[3];
+        for (int i = 0; i < rtnVal.length; i++) {
+            rtnVal[i] = tileXyz[i] - minTiles[i];
+        }
+        return rtnVal;
     }
     
     private static double[] getTileHalfSize(TileFormat tileFormat) {

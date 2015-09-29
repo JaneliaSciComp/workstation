@@ -140,12 +140,13 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                 //CacheFacadeI cacheManager = new MapCacheFacade(standardFileLength);
                 CacheFacadeI cacheManager = new EHCacheFacade(standardFileLength);
                 log.info("Top Folder URL for Cache is {}, and standard file size is {}.", topFolderURL.getFile(), standardFileLength);
+                final WorldExtentSphereBuilder worldExtentSphereBuilder = new WorldExtentSphereBuilder(sharedVolumeImage, topFolderURL, neighborhoodSize);
                 cacheManager.setNeighborhoodBuilder(
-                        new WorldExtentSphereBuilder(sharedVolumeImage, topFolderURL, neighborhoodSize)
-                );
+                        worldExtentSphereBuilder);
                 CacheController controller = CacheController.getInstance();
                 controller.setManager(cacheManager);
                 controller.registerForEvents(camera, sharedVolumeImage);
+                controller.registerForEvents(worldExtentSphereBuilder);
             } catch (Exception ex) {
                 log.error("Failed to open the cache manager.");
                 ex.printStackTrace();

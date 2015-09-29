@@ -131,7 +131,7 @@ public class AnnotationPanel extends JPanel
     public Dimension getPreferredSize() {
         return new Dimension(width, 0);
     }
-
+    
     private void setupSignals() {
         // outgoing from the model:
         PanelController panelController = new PanelController(this,
