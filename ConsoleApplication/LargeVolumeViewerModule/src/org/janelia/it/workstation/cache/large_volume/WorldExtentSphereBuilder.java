@@ -316,6 +316,8 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         double xTrans = widthScreen / (maxCoords[0] - minCoords[0]);
         double yTrans = heightScreen / (maxCoords[1] - minCoords[1]);
         double zTrans = depthScreen / (maxCoords[2] - minCoords[2]);
+        int chCount = tileFormatSource.getTileFormat().getChannelCount();
+        final String tiffBase = OctreeMetadataSniffer.getTiffBase(CoordinateAxis.Z);
         
         Map<String,PositionalStatusModel> models = new HashMap<>();
         for (String tilePath: fileToCenter.keySet()) {
@@ -334,9 +336,14 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
                     String.format("At Tile Location: %d,%d,%d", tileXyz[0], tileXyz[1], tileXyz[2])
             );
             
-            PositionalStatusModelBean model = new PositionalStatusModelBean( tileCenter );
-            model.setTileXyz(justifyTileCoords( minTiles, tileXyz, zTilePosOrdinal ));
-            models.put( tilePath, model );
+            for ( int i = 0; i < chCount; i++ ) {
+                //todo possible problem with Windows: could fail to update
+                // from all-red swatch.
+                String fullTifPath = tilePath + "/" + OctreeMetadataSniffer.getFilenameForChannel(tiffBase, i);
+                PositionalStatusModelBean model = new PositionalStatusModelBean(tileCenter);
+                model.setTileXyz(justifyTileCoords(minTiles, tileXyz, zTilePosOrdinal));
+                models.put(fullTifPath, model);
+            }
             
         }
         return models;

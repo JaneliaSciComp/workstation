@@ -10,10 +10,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.io.File;
-//import java.util.ArrayList;
-//import java.util.Collection;
-//import java.util.HashMap;
-//import java.util.Map;
 import javax.swing.JPanel;
 import org.janelia.it.workstation.cache.large_volume.GeometricNeighborhood;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.model.PositionalStatusModel;
@@ -54,26 +50,28 @@ public class PositionalStatusPanel extends JPanel {
     }
     
     public synchronized void set3DCacheNeighborhood(GeometricNeighborhood neighborhood) {
-        log.info("New neighborhood established.");
+        log.debug("New neighborhood established.");
         this.neighborhood = neighborhood;
         repaint();
     }
     
     public synchronized void setLoadInProgress( File infile ) {
-        if (neighborhood.getFiles().contains(infile)) {
+        if (hasFile(infile)) {
             PositionalStatusModelBean bean = getModelBean(infile.getAbsolutePath());
             if (bean != null) {
                 bean.setStatus(PositionalStatusModel.Status.InProgress);
+                log.debug("In progress {}.  {},{},{}", infile, bean.getTileXyz()[0], bean.getTileXyz()[1], bean.getTileXyz()[2]);
                 repaint();
             }
         }
     }
 
     public synchronized void setLoadComplete( File infile ) {
-        if (neighborhood.getFiles().contains(infile)) {
+        if (hasFile(infile)) {
             PositionalStatusModelBean bean = getModelBean(infile.getAbsolutePath());
             if (bean != null) {
                 bean.setStatus(PositionalStatusModel.Status.Filled);
+                log.debug("Filled {}.  {},{},{}", infile, bean.getTileXyz()[0], bean.getTileXyz()[1], bean.getTileXyz()[2]);
                 repaint();
             }
         }
@@ -81,52 +79,40 @@ public class PositionalStatusPanel extends JPanel {
     
     @Override
     public void paint(Graphics graphics) {
-        Graphics2D g2d = (Graphics2D) graphics;
-        g2d.setBackground(CLEAR_COLOR);
-        g2d.clearRect(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
-        
-        if (neighborhood == null) {
-            return;
-        }
-        
-        if (neighborhood.getTileExtents()[0] == 0) {
-            return;
-        }
+        synchronized (this) {
+            Graphics2D g2d = (Graphics2D) graphics;
+            g2d.setBackground(CLEAR_COLOR);
+            g2d.clearRect(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
 
-        int[] tileExtents = neighborhood.getTileExtents();  
-                
-        int zPanelWidth = PANEL_WIDTH / tileExtents[0];
-        Dimension markerDims = new Dimension(
-                zPanelWidth / tileExtents[0],
-                PANEL_HEIGHT / tileExtents[1]
-        );
-        
-        for (PositionalStatusModel model: neighborhood.getPositionalModels().values()) {            
-            int[] xyz = model.getTileXyz();
-            g2d.setColor(decodeColor(model));
-            g2d.fillRect(xyz[2] * zPanelWidth + xyz[0] * markerDims.width, xyz[1] * markerDims.height,
-                         markerDims.width, markerDims.height);
+            if (neighborhood == null) {
+                return;
+            }
+
+            int[] tileExtents = neighborhood.getTileExtents();
+
+            if (tileExtents[0] == 0) {
+                return;
+            }
+
+            int zPanelWidth = PANEL_WIDTH / tileExtents[0];
+            Dimension markerDims = new Dimension(
+                    zPanelWidth / tileExtents[0],
+                    PANEL_HEIGHT / tileExtents[1]
+            );
+
+            for (PositionalStatusModel model : neighborhood.getPositionalModels().values()) {
+                int[] xyz = model.getTileXyz();
+                g2d.setColor(decodeColor(model));
+                g2d.fillRect(xyz[2] * zPanelWidth + xyz[0] * markerDims.width, xyz[1] * markerDims.height,
+                        markerDims.width, markerDims.height);
+            }
+
         }
-        
-//        Map<Integer,Collection<PositionalStatusModel>> binnedModels =
-//                binModels( neighborhood.getPositionalModels().values(), 2);
     }
     
-//    private Map<Integer,Collection<PositionalStatusModel>> binModels(Collection<PositionalStatusModel> rawCollection, int dimension) {
-//        Map<Integer,Collection<PositionalStatusModel>> rtnVal = new HashMap<>();
-//        int[] tileExtents = neighborhood.getTileExtents();
-//        for (int index = 0; index < tileExtents[dimension]; index++) {
-//            for (PositionalStatusModel model: rawCollection) {
-//                Collection<PositionalStatusModel> collection = rtnVal.get(model.getTileXyz()[dimension]);
-//                if (collection == null) {
-//                    collection = new ArrayList<>();
-//                    rtnVal.put( model.getTileXyz()[dimension], collection);
-//                }
-//                collection.add( model );
-//            }
-//        }
-//        return rtnVal;
-//    }
+    private boolean hasFile(File infile) {
+        return neighborhood != null  &&  neighborhood.getFiles() != null  &&  neighborhood.getFiles().contains(infile);
+    }
     
     private PositionalStatusModelBean getModelBean(String infile) {
         PositionalStatusModel model = neighborhood.getPositionalModels().get(infile);
