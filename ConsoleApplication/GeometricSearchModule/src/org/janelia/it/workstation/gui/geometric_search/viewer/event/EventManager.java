@@ -29,6 +29,12 @@ public class EventManager {
         EventManager.viewer = viewer;
     }
 
+    private static boolean disallowViewerRefresh=false;
+
+    public static synchronized void setDisallowViewerRefresh(boolean disallowViewerRefreshValue) {
+        disallowViewerRefresh=disallowViewerRefreshValue;
+    }
+
     public static synchronized void addListener(Object object, VoxelViewerEventListener listener) {
         List<VoxelViewerEventListener> listeners=listenerMap.get(object);
         if (listeners==null) {
@@ -41,7 +47,7 @@ public class EventManager {
     public static void sendEvent(Object object, VoxelViewerEvent event) {
         logger.info("*** sending event from "+object.getClass().getName()+" of type="+event.getClass().getName());
         if (event instanceof ActorModifiedEvent) {
-            viewer.refresh();
+            refreshViewer();
         } else {
             List<VoxelViewerEventListener> listeners = listenerMap.get(object);
             if (listeners != null) {
@@ -52,10 +58,18 @@ public class EventManager {
             } else {
                 logger.error("Could not find listenerMap for object type=" + object.getClass().getName());
             }
-            boolean alreadyRefreshed=viewer.refreshIfPending();
-            if (event instanceof BackgroundColorChangeEvent && !alreadyRefreshed) {
-                viewer.refresh();
+            if (!disallowViewerRefresh) {
+                boolean alreadyRefreshed = viewer.refreshIfPending();
+                if ( (event instanceof BackgroundColorChangeEvent || event instanceof BlendMethodChangeEvent) && !alreadyRefreshed) {
+                    refreshViewer();
+                }
             }
+        }
+    }
+
+    private static void refreshViewer() {
+        if (!disallowViewerRefresh) {
+            viewer.refresh();
         }
     }
 

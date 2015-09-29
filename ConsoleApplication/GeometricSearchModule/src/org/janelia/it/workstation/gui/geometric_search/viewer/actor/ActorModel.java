@@ -17,7 +17,7 @@ public class ActorModel implements VoxelViewerEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ActorModel.class);
 
-    List<Actor> actors=new ArrayList<>();
+    List<Actor> nonresourceActors=new ArrayList<>();
     List<ActorSharedResource> attachedSharedResources=new ArrayList<>();
 
     @Override
@@ -28,59 +28,60 @@ public class ActorModel implements VoxelViewerEventListener {
             Actor actor=renderableAddedEvent.getRenderable().createAndSetActor();
             addActor(actor);
         } else if (event instanceof RenderablesClearAllEvent) {
-            actors.clear();
+            nonresourceActors.clear();
             attachedSharedResources.clear();
             EventManager.sendEvent(this, new ActorsClearAllEvent());
         } else if (event instanceof ActorSetVisibleEvent) {
             ActorSetVisibleEvent actorSetVisibleEvent=(ActorSetVisibleEvent)event;
-            for (Actor actor : actors) {
+            Actor actor=getActorByName(actorSetVisibleEvent.getName());
+            if (actor!=null) {
                 if (actor.getName().equals(actorSetVisibleEvent.getName())) {
-                    boolean isVisible=actorSetVisibleEvent.isVisible();
-                    boolean alreadyVisible=actor.isVisible();
-                    if (isVisible!=alreadyVisible) {
+                    boolean isVisible = actorSetVisibleEvent.isVisible();
+                    boolean alreadyVisible = actor.isVisible();
+                    if (isVisible != alreadyVisible) {
                         actor.setIsVisible(isVisible);
                         EventManager.sendEvent(this, new ActorModifiedEvent());
                     }
                 }
             }
             for (ActorSharedResource sharedResource : attachedSharedResources) {
-                for (Actor actor : sharedResource.getSharedActorList()) {
-                    if (actor.getName().equals(actorSetVisibleEvent.getName())) {
+                for (Actor resourceActor : sharedResource.getSharedActorList()) {
+                    if (resourceActor.getName().equals(actorSetVisibleEvent.getName())) {
                         boolean isVisible = actorSetVisibleEvent.isVisible();
-                        boolean alreadyVisible = actor.isVisible();
+                        boolean alreadyVisible = resourceActor.isVisible();
                         if (isVisible != alreadyVisible) {
-                            actor.setIsVisible(isVisible);
+                            resourceActor.setIsVisible(isVisible);
                             EventManager.sendEvent(this, new ActorModifiedEvent());
                         }
                     }
                 }
             }
         } else if (event instanceof SharedResourceNeededEvent) {
-            SharedResourceNeededEvent sharedResourceNeededEvent=(SharedResourceNeededEvent)event;
-            ActorSharedResource sharedResource=sharedResourceNeededEvent.getActorSharedResource();
-            attachedSharedResources.add(sharedResource);
-            for (Actor actor : sharedResource.getSharedActorList()) {
-                EventManager.sendEvent(this, new ActorAddedEvent(actor));
+            try {
+                SharedResourceNeededEvent sharedResourceNeededEvent = (SharedResourceNeededEvent) event;
+                ActorSharedResource sharedResource = sharedResourceNeededEvent.getActorSharedResource();
+                attachedSharedResources.add(sharedResource);
+                EventManager.setDisallowViewerRefresh(true);
+                for (Actor actor : sharedResource.getSharedActorList()) {
+                    EventManager.sendEvent(this, new ActorAddedEvent(actor));
+                }
+                EventManager.setDisallowViewerRefresh(false);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                logger.error(ex.toString());
             }
         }
         else if (event instanceof SharedResourceNotNeededEvent) {
-            logger.info("Check 10.0");
             try {
                 SharedResourceNotNeededEvent notNeededEvent = (SharedResourceNotNeededEvent) event;
                 String notNeededName = notNeededEvent.getResourceName();
                 Set<ActorSharedResource> removeSet=new HashSet<>();
                 for (ActorSharedResource sharedResource : attachedSharedResources) {
                     if (sharedResource.getName().equals(notNeededName)) {
-                        logger.info("Check 10.1");
                         for (Actor actor : sharedResource.getSharedActorList()) {
-                            logger.info("Check 10.2");
-                            logger.info("Check 10.3 - actor name=" + actor.getName());
                             EventManager.sendEvent(this, new ActorRemovedEvent(actor));
-                            logger.info("Check 10.4");
                         }
-                        logger.info("Check 10.5");
                         removeSet.add(sharedResource);
-                        logger.info("Check 10.6");
                     }
                 }
                 for (ActorSharedResource sharedResource : removeSet) {
@@ -90,13 +91,81 @@ public class ActorModel implements VoxelViewerEventListener {
                 ex.printStackTrace();
                 logger.error(ex.toString());
             }
-            logger.info("Check 10.7");
+        }
+        else if (event instanceof ActorAOSEvent) {
+            ActorAOSEvent actorAOSEvent=(ActorAOSEvent)event;
+            logger.info("Received AOS event, name="+actorAOSEvent.getActorName()+" type="+actorAOSEvent.getAosType());
+            if (actorAOSEvent.getAosType().equals(ActorAOSEvent.ALL_TYPE)) {
+                Actor allActor = getActorByName(actorAOSEvent.getActorName());
+                if (allActor==null) {
+                    logger.error("Unexpectedly the allActor is null, when looking up by name="+actorAOSEvent.getActorName());
+                } else {
+                    if (actorAOSEvent.isSelected()) {
+                        for (Actor actor : getAllActorsByType(allActor.getClass())) {
+                            if (actor.getName().equals(actorAOSEvent.getActorName())) {
+                                actor.setProxyActor(null);
+                            } else {
+                                actor.setProxyActor(allActor);
+                            }
+                        }
+                    } else {
+                        for (Actor actor : getAllActorsByType(allActor.getClass())) {
+                            actor.setProxyActor(null);
+                        }
+                    }
+                    EventManager.sendEvent(this, new ActorModifiedEvent());
+                }
+            }
         }
     }
 
     private void addActor(Actor actor) {
-        actors.add(actor);
-        EventManager.sendEvent(this, new ActorAddedEvent(actor));
+        if (getActorByName(actor.getName()) == null) {
+            nonresourceActors.add(actor);
+            EventManager.sendEvent(this, new ActorAddedEvent(actor));
+        } else {
+            logger.error("Actor with duplicate name not permitted in ActorModel");
+        }
+    }
+
+    private Actor getActorByName(String name) {
+        for (Actor actor : nonresourceActors) {
+            if (actor.getName().equals(name)) {
+                return actor;
+            }
+        }
+        for (ActorSharedResource actorSharedResource : attachedSharedResources) {
+            for (Actor actor : actorSharedResource.getSharedActorList()) {
+                if (actor.getName().equals(name)) {
+                    return actor;
+                }
+            }
+        }
+        return null;
+    }
+
+    List<Actor> getAllActors() {
+        List<Actor> allActorsList = new ArrayList<>();
+        for (Actor actor : nonresourceActors) {
+            allActorsList.add(actor);
+        }
+        for (ActorSharedResource actorSharedResource : attachedSharedResources) {
+            for (Actor actor : actorSharedResource.getSharedActorList()) {
+                allActorsList.add(actor);
+            }
+        }
+        return allActorsList;
+    }
+
+    List<Actor> getAllActorsByType(Class classType) {
+        List<Actor> allActorsList = getAllActors();
+        List<Actor> typeList=new ArrayList<>();
+        for (Actor actor : allActorsList) {
+            if (actor.getClass().equals(classType)) {
+                typeList.add(actor);
+            }
+        }
+        return typeList;
     }
 
 }

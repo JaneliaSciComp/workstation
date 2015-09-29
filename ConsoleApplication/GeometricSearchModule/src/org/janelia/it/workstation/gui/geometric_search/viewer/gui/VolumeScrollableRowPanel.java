@@ -20,29 +20,23 @@ public class VolumeScrollableRowPanel extends ScrollableColorRowPanel {
     public static final String BRIGHTNESS_CALLBACK = "BRIGHTNESS_CALLBACK";
     public static final String TRANSPARENCY_CALLBACK = "TRANSPARENCY_CALLBACK";
 
-    public void addEntry(final String name, Map<String,SyncedCallback> callbackMap) throws Exception {
+    public void addEntry(final String name, boolean isInitiallyVisible, Map<String,SyncedCallback> callbackMap) throws Exception {
 
         SyncedCallback colorCallback = getCallback(COLOR_CALLBACK, callbackMap);
         SyncedCallback brightnessCallback = getCallback(BRIGHTNESS_CALLBACK, callbackMap);
         SyncedCallback transparencyCallback = getCallback(TRANSPARENCY_CALLBACK, callbackMap);
 
         logger.info("Adding row for name="+name);
-        final VolumeColorSelectionRow l = new VolumeColorSelectionRow(name);
+        final VolumeColorSelectionRow l = new VolumeColorSelectionRow(name, this);
         l.setColorSelectionCallback(colorCallback);
         l.setBrightnessCallback(brightnessCallback);
         l.setTransparencyCallback(transparencyCallback);
         l.setName(name);
         l.putClientProperty("Synthetica.opaque", Boolean.FALSE);
         l.setBorder(BorderFactory.createBevelBorder(1));
-        final ScrollableColorRowPanel actionSource=this;
+        l.getVisibleCheckBox().setSelected(isInitiallyVisible);
 
-        l.getVisibleCheckBox().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                logger.info("checkbox set to="+l.getVisibleCheckBox().isSelected());
-                EventManager.sendEvent(actionSource, new ActorSetVisibleEvent(name, l.getVisibleCheckBox().isSelected()));
-            }
-        });
+        setupActorStateCallbacks(name, l);
 
         components.add(l);
         rowPanel.add(l);

@@ -54,8 +54,12 @@ public interface AnnotationFacade {
     public FilterResult patternSearchGetFilteredResults(String type, Map<String, Set<DataFilter>> filterMap) throws Exception;
 
     public Entity createDataSet(String dataSetName) throws Exception;
+    
+    public Entity createFlyLineRelease(String releaseName) throws Exception;
 
     public List<Entity> getDataSets() throws Exception;
+    
+    public List<Entity> getFlyLineReleases() throws Exception;
 
     public Entity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception;
 

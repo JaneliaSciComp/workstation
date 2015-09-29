@@ -21,7 +21,7 @@ public class MeshScrollableRowPanel extends ScrollableColorRowPanel {
     public static final String INTENSITY_CALLBACK = "INTENSITY_CALLBACK";
     public static final String AMBIENT_CALLBACK = "AMBIENT_CALLBACK";
 
-    public void addEntry(final String name, Map<String,SyncedCallback> callbackMap) throws Exception {
+    public void addEntry(final String name, boolean isInitiallyVisible, Map<String,SyncedCallback> callbackMap) throws Exception {
 
         SyncedCallback colorCallback = getCallback(COLOR_CALLBACK, callbackMap);
         SyncedCallback edgefalloffCallback = getCallback(EDGEFALLOFF_CALLBACK, callbackMap);
@@ -29,7 +29,7 @@ public class MeshScrollableRowPanel extends ScrollableColorRowPanel {
         SyncedCallback ambientCallback = getCallback(AMBIENT_CALLBACK, callbackMap);
 
         logger.info("Adding row for name="+name);
-        final MeshColorSelectionRow l = new MeshColorSelectionRow(name);
+        final MeshColorSelectionRow l = new MeshColorSelectionRow(name, this);
         l.setColorSelectionCallback(colorCallback);
         l.setEdgefalloffCallback(edgefalloffCallback);
         l.setIntensityCallback(intensityCallback);
@@ -37,15 +37,8 @@ public class MeshScrollableRowPanel extends ScrollableColorRowPanel {
         l.setName(name);
         l.putClientProperty("Synthetica.opaque", Boolean.FALSE);
         l.setBorder(BorderFactory.createBevelBorder(1));
-        final ScrollableColorRowPanel actionSource=this;
-
-        l.getVisibleCheckBox().addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                logger.info("checkbox set to="+l.getVisibleCheckBox().isSelected());
-                EventManager.sendEvent(actionSource, new ActorSetVisibleEvent(name, l.getVisibleCheckBox().isSelected()));
-            }
-        });
+        l.getVisibleCheckBox().setSelected(isInitiallyVisible);
+        setupActorStateCallbacks(name, l);
 
         components.add(l);
         rowPanel.add(l);

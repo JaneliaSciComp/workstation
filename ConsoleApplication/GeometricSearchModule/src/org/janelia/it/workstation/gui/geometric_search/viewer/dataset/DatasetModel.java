@@ -40,15 +40,10 @@ public class DatasetModel implements VoxelViewerEventListener {
     }
 
     public void setSelectedDataset(Dataset dataset) {
-        logger.info("Check 1");
         if (selectedDataset!=null) removeSharedResourcesForDataset(selectedDataset);
-        logger.info("Check 2");
         this.selectedDataset = dataset;
-        logger.info("Check 3");
         EventManager.sendEvent(this, new DatasetSelectedEvent(selectedDataset));
-        logger.info("Check 4");
         addSharedResourcesForDataset(selectedDataset);
-        logger.info("Check 5");
     }
 
     public void processEvent(VoxelViewerEvent event) {
@@ -91,20 +86,12 @@ public class DatasetModel implements VoxelViewerEventListener {
     }
 
     private void removeSharedResourcesForDataset(Dataset dataset) {
-        logger.info("Check 1.1");
         List<ActorSharedResource> neededResources=dataset.getNeededActorSharedResources();
-        logger.info("Check 1.2");
         if (neededResources!=null && neededResources.size()>0) {
-            logger.info("Check 1.3");
             for (ActorSharedResource sharedResource : neededResources) {
-                logger.info("Check 1.4");
-                logger.info("Check 1.4 name="+sharedResource.getName());
                 EventManager.sendEvent(this, new SharedResourceNotNeededEvent(sharedResource.getName()));
-                logger.info("Check 1.4.1");
             }
-            logger.info("Check 1.5");
         }
-        logger.info("Check 1.6");
     }
 
 }
