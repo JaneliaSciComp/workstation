@@ -17,7 +17,7 @@ public class ActorModel implements VoxelViewerEventListener {
 
     private static final Logger logger = LoggerFactory.getLogger(ActorModel.class);
 
-    List<Actor> actors=new ArrayList<>();
+    List<Actor> nonresourceActors=new ArrayList<>();
     List<ActorSharedResource> attachedSharedResources=new ArrayList<>();
 
     @Override
@@ -28,7 +28,7 @@ public class ActorModel implements VoxelViewerEventListener {
             Actor actor=renderableAddedEvent.getRenderable().createAndSetActor();
             addActor(actor);
         } else if (event instanceof RenderablesClearAllEvent) {
-            actors.clear();
+            nonresourceActors.clear();
             attachedSharedResources.clear();
             EventManager.sendEvent(this, new ActorsClearAllEvent());
         } else if (event instanceof ActorSetVisibleEvent) {
@@ -95,12 +95,33 @@ public class ActorModel implements VoxelViewerEventListener {
         else if (event instanceof ActorAOSEvent) {
             ActorAOSEvent actorAOSEvent=(ActorAOSEvent)event;
             logger.info("Received AOS event, name="+actorAOSEvent.getActorName()+" type="+actorAOSEvent.getAosType());
+            if (actorAOSEvent.getAosType().equals(ActorAOSEvent.ALL_TYPE)) {
+                Actor allActor = getActorByName(actorAOSEvent.getActorName());
+                if (allActor==null) {
+                    logger.error("Unexpectedly the allActor is null, when looking up by name="+actorAOSEvent.getActorName());
+                } else {
+                    if (actorAOSEvent.isSelected()) {
+                        for (Actor actor : getAllActorsByType(allActor.getClass())) {
+                            if (actor.getName().equals(actorAOSEvent.getActorName())) {
+                                actor.setProxyActor(null);
+                            } else {
+                                actor.setProxyActor(allActor);
+                            }
+                        }
+                    } else {
+                        for (Actor actor : getAllActorsByType(allActor.getClass())) {
+                            actor.setProxyActor(null);
+                        }
+                    }
+                    EventManager.sendEvent(this, new ActorModifiedEvent());
+                }
+            }
         }
     }
 
     private void addActor(Actor actor) {
         if (getActorByName(actor.getName()) == null) {
-            actors.add(actor);
+            nonresourceActors.add(actor);
             EventManager.sendEvent(this, new ActorAddedEvent(actor));
         } else {
             logger.error("Actor with duplicate name not permitted in ActorModel");
@@ -108,12 +129,43 @@ public class ActorModel implements VoxelViewerEventListener {
     }
 
     private Actor getActorByName(String name) {
-        for (Actor actor : actors) {
+        for (Actor actor : nonresourceActors) {
             if (actor.getName().equals(name)) {
                 return actor;
             }
         }
+        for (ActorSharedResource actorSharedResource : attachedSharedResources) {
+            for (Actor actor : actorSharedResource.getSharedActorList()) {
+                if (actor.getName().equals(name)) {
+                    return actor;
+                }
+            }
+        }
         return null;
+    }
+
+    List<Actor> getAllActors() {
+        List<Actor> allActorsList = new ArrayList<>();
+        for (Actor actor : nonresourceActors) {
+            allActorsList.add(actor);
+        }
+        for (ActorSharedResource actorSharedResource : attachedSharedResources) {
+            for (Actor actor : actorSharedResource.getSharedActorList()) {
+                allActorsList.add(actor);
+            }
+        }
+        return allActorsList;
+    }
+
+    List<Actor> getAllActorsByType(Class classType) {
+        List<Actor> allActorsList = getAllActors();
+        List<Actor> typeList=new ArrayList<>();
+        for (Actor actor : allActorsList) {
+            if (actor.getClass().equals(classType)) {
+                typeList.add(actor);
+            }
+        }
+        return typeList;
     }
 
 }
