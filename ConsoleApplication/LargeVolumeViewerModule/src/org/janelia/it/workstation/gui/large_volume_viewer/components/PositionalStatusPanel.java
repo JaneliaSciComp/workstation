@@ -10,9 +10,12 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import javax.swing.JPanel;
 import org.janelia.it.workstation.cache.large_volume.GeometricNeighborhood;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.model.PositionalStatusModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.model.PositionalStatusModel.Status;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.model.PositionalStatusModelBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +51,12 @@ public class PositionalStatusPanel extends JPanel {
     @Override
     public Dimension getMaximumSize() {
         return getPreferredSize();
-    }
+    }    
+
+    @Override
+    public Dimension getMinimumSize() {
+        return new Dimension(PANEL_WIDTH * 2 / 3, PANEL_HEIGHT);
+    }    
 
     public synchronized void set3DCacheNeighborhood(GeometricNeighborhood neighborhood) {
         log.debug("New neighborhood established.");
@@ -57,70 +65,76 @@ public class PositionalStatusPanel extends JPanel {
     }
 
     public void setLoadInProgress(File infile) {
-        synchronized (this) {
-            if (hasFile(infile)) {
-                PositionalStatusModelBean bean = getModelBean(infile.getAbsolutePath());
-                if (bean != null) {
-                    bean.setStatus(PositionalStatusModel.Status.InProgress);
-                    log.debug("In progress {}.  {},{},{}", infile, bean.getTileXyz()[0], bean.getTileXyz()[1], bean.getTileXyz()[2]);
-                }
-            }
-        }
-        repaint();
+        setLoadStatus(infile, Status.InProgress);
     }
 
     public void setLoadComplete(File infile) {
-        synchronized(this) {
-            if (hasFile(infile)) {
-                PositionalStatusModelBean bean = getModelBean(infile.getAbsolutePath());
-                if (bean != null) {
-                    bean.setStatus(PositionalStatusModel.Status.Filled);
-                    log.debug("Filled {}.  {},{},{}", infile, bean.getTileXyz()[0], bean.getTileXyz()[1], bean.getTileXyz()[2]);
-                }
-            }
-        }
-        repaint();
+        setLoadStatus(infile, Status.Filled);
     }
 
     @Override
     public void paint(Graphics graphics) {
         log.info("Size is: " + getSize().width + ":" + getSize().height);
-        synchronized (this) {
-            Graphics2D g2d = (Graphics2D) graphics;
-            g2d.setBackground(CLEAR_COLOR);
-            g2d.clearRect(0, 0, getSize().width, getSize().height);
+        Graphics2D g2d = (Graphics2D) graphics;
+        g2d.setBackground(CLEAR_COLOR);
+        g2d.clearRect(0, 0, getSize().width, getSize().height);
 
+        int[] tileExtents = new int[3];
+        Collection<PositionalStatusModel> posModels = new ArrayList<>();
+        synchronized (this) {
             if (neighborhood == null) {
                 return;
             }
 
-            int[] tileExtents = neighborhood.getTileExtents();
-
-            if (tileExtents[0] == 0 || tileExtents[1] == 0) {
-                return;
+            int[] tempTileExtents = neighborhood.getTileExtents();
+            for (int i = 0; i < tileExtents.length; i++) {
+                tileExtents[i] = tempTileExtents[i];
             }
 
-            int zPanelWidth = getSize().width / tileExtents[2];
-            Dimension markerDims = new Dimension(
-                zPanelWidth / tileExtents[0],
-                getSize().height / tileExtents[1]
-            );
-
-            for (PositionalStatusModel model : neighborhood.getPositionalModels().values()) {
-                int[] xyz = model.getTileXyz();
-                g2d.setColor(decodeColor(model));
-                g2d.fillRect(xyz[2] * zPanelWidth + xyz[0] * markerDims.width, xyz[1] * markerDims.height,
-                    markerDims.width - 1, markerDims.height - 1);
-            }
-
+            posModels.addAll(neighborhood.getPositionalModels().values());
         }
+
+        if (tileExtents[0] == 0 || tileExtents[1] == 0) {
+            return;
+        }
+            
+        /* Not working.
+         int zPanelWidth = getSize().width / tileExtents[2];
+         Dimension markerDims = new Dimension(
+         zPanelWidth / tileExtents[0],
+         getSize().height / tileExtents[1]
+         );
+         */
+        Dimension markerDims = new Dimension();
+        markerDims.width = 4;
+        markerDims.height = 6;
+
+        int zPanelWidth = markerDims.width * tileExtents[2];
+
+        int allMarkersHeight = markerDims.height * tileExtents[2];
+        for (PositionalStatusModel model : posModels) {
+            int[] xyz = model.getTileXyz();
+            g2d.setColor(decodeColor(model));
+            g2d.fillRect(xyz[2] * zPanelWidth + xyz[0] * markerDims.width, allMarkersHeight - (xyz[1] * markerDims.height),
+                markerDims.width - 1, markerDims.height - 1);
+        }
+
     }
 
-    private boolean hasFile(File infile) {
-        return neighborhood != null && neighborhood.getFiles() != null && neighborhood.getFiles().contains(infile);
+    private void setLoadStatus(File infile, Status status) {
+        PositionalStatusModelBean bean = null;
+        bean = getModelBean( infile.getAbsolutePath() );
+        if (bean != null) {
+            bean.setStatus(status);
+            log.debug("{} {}.  {},{},{}", status, infile, bean.getTileXyz()[0], bean.getTileXyz()[1], bean.getTileXyz()[2]);
+        }
+        repaint();
     }
 
-    private PositionalStatusModelBean getModelBean(String infile) {
+    private synchronized PositionalStatusModelBean getModelBean(String infile) {
+        if (neighborhood == null  ||  neighborhood.getFiles() == null) {
+            return null;
+        }
         PositionalStatusModel model = neighborhood.getPositionalModels().get(infile);
         if (model != null && model instanceof PositionalStatusModelBean) {
             return (PositionalStatusModelBean) model;

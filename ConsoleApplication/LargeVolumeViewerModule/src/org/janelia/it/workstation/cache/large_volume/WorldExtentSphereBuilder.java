@@ -311,6 +311,8 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         for ( Integer tilePos: uniqueZTilePos ) {
             zTilePosOrdinal.put(tilePos, offset++);
         }
+        minTiles[2] = 0;
+        maxTiles[2] = zTilePosOrdinal.size() - 1;
         
         double widthScreen = 1.0;
         double heightScreen = 1.0;
