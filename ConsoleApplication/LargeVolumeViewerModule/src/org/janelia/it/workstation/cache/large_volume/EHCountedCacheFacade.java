@@ -10,14 +10,18 @@ import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashMap;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import net.sf.ehcache.config.CacheConfiguration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +35,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.compression.Compressed
  * 
  * @author fosterl
  */
-public class EHCacheFacade extends AbstractCacheFacade implements CacheFacadeI {
-    public static final int GIGA = 1024*1024*1024;
-
+public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFacadeI {
     // TODO use more dynamic means of determining how many of the slabs
     // to put into memory at one time.
     
@@ -50,8 +52,12 @@ public class EHCacheFacade extends AbstractCacheFacade implements CacheFacadeI {
     private String cacheName;
     private int totalGets;
     private int noFutureGets;
+    private int standardFileSize;
     
-    private static Logger log = LoggerFactory.getLogger(EHCacheFacade.class);
+    private int cacheCount = 0;
+    private Map<String,AllocationUnit> inUseStorage = new HashMap<>();
+    
+    private static Logger log = LoggerFactory.getLogger(EHCountedCacheFacade.class);
     
     /**
      * This is the guardian around the cache implementation.  Note that
@@ -61,12 +67,17 @@ public class EHCacheFacade extends AbstractCacheFacade implements CacheFacadeI {
      * @param region unique key for cache namespace.
      * @throws Exception from called methods.
      */
-    public EHCacheFacade(String region, final int standardFileSize) throws Exception {
+    public EHCountedCacheFacade(String region, final int standardFileSize) throws Exception {
         // Establishing in-memory cache, declaratively.
+        this.standardFileSize = standardFileSize;
         log.debug("Creating a cache {}.", region);
         cacheName = region;
-        URL url = getClass().getResource("/ehcacheCompressedTiff.xml");
-        manager = CacheManager.create(url);
+        URL url = getClass().getResource("/ehcacheCountedTiff.xml");
+        manager = CacheManager.create(url);                
+        
+        cacheCount = (int)((16L * (long)GIGA)/standardFileSize);
+        allocateStorage();
+        
         CacheCollection toolkit = new CacheCollection() {            
             @Override
             public void put(String id, CachableWrapper wrapper) {
@@ -81,28 +92,26 @@ public class EHCacheFacade extends AbstractCacheFacade implements CacheFacadeI {
             }
             @Override
             public byte[] getStorage(String id) {
-                return new byte[standardFileSize];
+                return reuseStorage(id);
             }
         };
-        /*
         Cache cache = manager.getCache(cacheName);
         CacheConfiguration config = cache.getCacheConfiguration();
         if (! config.isFrozen()) {
-            long maxEntries = (long)(0.75 * (double)(config.getMaxBytesLocalHeap() / standardFileSize));
+            long maxEntries = cacheCount;//(long)(0.75 * (double)(config.getMaxBytesLocalHeap() / standardFileSize));
             log.debug("Setting max entries value to {} for heap storage {}.", maxEntries, config.getMaxBytesLocalHeap());
             config.setMaxEntriesLocalHeap(maxEntries);
         }
         else {
             log.debug("Configuration frozen: cannot adjust load factor.");
         }
-        */
         
         cachePopulator = new CachePopulator(toolkit);
         cachePopulator.setStandadFileSize(standardFileSize);
         cachePopulator.setExtractFromContainerFormat(true);
     }
 
-    public EHCacheFacade(int standardFileSize) throws Exception {
+    public EHCountedCacheFacade(int standardFileSize) throws Exception {
         this(CACHE_NAME, standardFileSize);
     }
     
@@ -110,13 +119,6 @@ public class EHCacheFacade extends AbstractCacheFacade implements CacheFacadeI {
     public void close() {
         cachePopulator.close();
     }
-
-    //public void reportCacheOccupancy() {
-    //    Cache cache = manager.getCache(cacheName);
-    //    List keys = cache.getKeys();
-    //    int requiredGb = (int)(((long)standardFileSize * (long)keys.size()) / (GIGA));
-    //    log.debug("--- Cache has {} keys.  {}gb required.", keys.size(), requiredGb);
-    //}
 
     /**
      * This getter takes the name of the decompressed version of the input file.
@@ -255,6 +257,10 @@ public class EHCacheFacade extends AbstractCacheFacade implements CacheFacadeI {
 
     private boolean isInCache(String id) {
         Cache cache = manager.getCache(cacheName);
+        return isInCache(cache, id);
+    }
+
+    private boolean isInCache(Cache cache, String id) throws CacheException, IllegalStateException {
         Element cachedElement = cache.get(id);
         return (cachedElement != null);
     }
@@ -266,6 +272,59 @@ public class EHCacheFacade extends AbstractCacheFacade implements CacheFacadeI {
         }
     }
 
+    /** Make all the storage that will ever be used in our cache. */
+    private synchronized void allocateStorage() {
+        try {
+            for (int i = 0; i < this.cacheCount; i++) {
+                AllocationUnit au = new AllocationUnit();
+                au.setStorageBinNumber(i);
+                inUseStorage.put("Unused Storage " + i, au);
+            }
+        } catch (Exception ex) {
+            log.error("Failed to allocate required storage {}.", ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+    
+    private synchronized byte[] reuseStorage(String targetId) {
+        Cache cache = manager.getCache(cacheName);
+        byte[] rtnVal = null;
+        AllocationUnit oldUnit = null;
+        String oldKey = null;
+        for (String key: inUseStorage.keySet()) {
+            if (! isInCache(cache, key)) {
+                // Has been evicted since having been allocated.
+                oldUnit = inUseStorage.get( key );
+                oldKey = key;
+                break;
+            }
+        }
+        
+        if (oldUnit != null) {
+            inUseStorage.remove( oldKey );
+            // Found one we can reuse.
+            AllocationUnit au = new AllocationUnit();
+            if (oldUnit.getStorage() == null) {
+                // Allocate as needed.
+                final byte[] storage = new byte[standardFileSize];
+                au.setStorage(storage);
+            }
+            else {
+                au.setStorage(oldUnit.getStorage());
+            }
+            au.setStorageBinNumber(oldUnit.getStorageBinNumber());            
+            rtnVal = au.getStorage();
+            inUseStorage.put( targetId, au );
+        }
+        else {
+            // Got a problem.
+            log.error("No reusable storage available.");
+            throw new IllegalStateException("Insufficient storage available.");
+        }
+        
+        return rtnVal;
+    }
+    
     /**
      * Blocking getters. Let the cache manager worry about the threading. Most
      * likely ID is an absolute path. Also, packages a decompressed version of
@@ -300,7 +359,7 @@ public class EHCacheFacade extends AbstractCacheFacade implements CacheFacadeI {
                 wrapper = (CachableWrapper) cache.get(id).getObjectValue();
                 log.debug("Returning {}: found in cache.", keyOnly);
             } else {
-                byte[] storage = new byte[cachePopulator.getStandardFileSize()];                
+                byte[] storage = reuseStorage( id );
                 wrapper = cachePopulator.pushLaunch(id, storage);
                 log.debug("Missing.  Returning {}: pushed to cache. Zoom={}.", keyOnly, cameraZoom);
             }
@@ -369,4 +428,37 @@ public class EHCacheFacade extends AbstractCacheFacade implements CacheFacadeI {
         }
     }
 
+    /** Bean to keep track of who owns what. */
+    private static class AllocationUnit {
+        private byte[] storage;
+        private int storageBinNumber;
+
+        /**
+         * @return the storage
+         */
+        public byte[] getStorage() {
+            return storage;
+        }
+
+        /**
+         * @param storage the storage to set
+         */
+        public void setStorage(byte[] storage) {
+            this.storage = storage;
+        }
+
+        /**
+         * @return the storageBinNumber
+         */
+        public int getStorageBinNumber() {
+            return storageBinNumber;
+        }
+
+        /**
+         * @param storageBinNumber the storageBinNumber to set
+         */
+        public void setStorageBinNumber(int storageBinNumber) {
+            this.storageBinNumber = storageBinNumber;
+        }
+    }
 }

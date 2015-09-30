@@ -5,10 +5,7 @@
  */
 package org.janelia.it.workstation.cache.large_volume;
 
-import com.sun.media.jai.codec.SeekableStream;
-import java.io.File;
 import javax.swing.JOptionPane;
-import static org.janelia.it.workstation.cache.large_volume.EHCacheFacade.MAX_3D_CACHE_SIZE;
 import org.janelia.it.workstation.gui.dialogs.MemoryCheckDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
@@ -23,6 +20,7 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public abstract class AbstractCacheFacade implements CacheFacadeI {
+    public static final int GIGA = 1024 * 1024 * 1024;
 
     public static final String CACHE_NAME = "CompressedTiffCache";
     public static final int MAX_3D_CACHE_SIZE = 500;

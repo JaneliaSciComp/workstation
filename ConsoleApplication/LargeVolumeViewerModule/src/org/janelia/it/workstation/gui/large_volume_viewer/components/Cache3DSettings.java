@@ -22,7 +22,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
  * @author fosterl
  */
 public class Cache3DSettings {
-    public static final String SIZE_WARNING = "Please enter a number between " + AbstractCacheFacade.MIN_3D_CACHE_SIZE + " and " + AbstractCacheFacade.MAX_3D_CACHE_SIZE + ".";
+    public static final String SIZE_WARNING = "Please enter 0 or a number between " + AbstractCacheFacade.MIN_3D_CACHE_SIZE + " and " + AbstractCacheFacade.MAX_3D_CACHE_SIZE + ".";
     public static final String INVALID_NUM_WARNING = "Not a number. " + SIZE_WARNING;
     
     public void prompt() {
@@ -56,7 +56,7 @@ public class Cache3DSettings {
             public void actionPerformed(ActionEvent ae) {
                 try {
                     Integer size = Integer.parseInt(neighborhoodSize.getText().trim());
-                    if (size <= AbstractCacheFacade.MAX_3D_CACHE_SIZE && size >= AbstractCacheFacade.MIN_3D_CACHE_SIZE) {
+                    if (size == 0 || (size <= AbstractCacheFacade.MAX_3D_CACHE_SIZE && size >= AbstractCacheFacade.MIN_3D_CACHE_SIZE)) {
                         SessionMgr.getSessionMgr().setModelProperty(AbstractCacheFacade.CACHE_NAME, size);
                         popup.setVisible(false);
                         popup.dispose();
