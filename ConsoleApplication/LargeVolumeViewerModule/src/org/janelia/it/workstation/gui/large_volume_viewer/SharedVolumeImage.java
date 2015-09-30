@@ -15,8 +15,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import org.janelia.it.workstation.cache.large_volume.EHCacheFacade;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.cache.large_volume.AbstractCacheFacade;
 
 public class SharedVolumeImage 
 implements VolumeImage3d
@@ -148,7 +147,7 @@ implements VolumeImage3d
 				testUrl = new URL(folderUrl, "default.0.tif");
 				testUrl.openStream();                
 				File fileFolder = new File(folderUrl.toURI());
-                int cacheNeighborhoodSize = EHCacheFacade.checkNeigborhoodSize(EHCacheFacade.getNeighborhoodSize());
+                int cacheNeighborhoodSize = AbstractCacheFacade.checkNeigborhoodSize(AbstractCacheFacade.getNeighborhoodSize());
                 if (cacheNeighborhoodSize > 0) {
                     Cache3DOctreeLoadAdapter octreeLoadAdapter = new Cache3DOctreeLoadAdapter();
                     //ORDER DEPENDENCY: set this before top folder.

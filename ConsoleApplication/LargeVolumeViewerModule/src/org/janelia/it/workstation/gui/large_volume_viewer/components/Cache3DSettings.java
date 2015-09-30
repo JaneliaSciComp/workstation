@@ -13,7 +13,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
-import org.janelia.it.workstation.cache.large_volume.EHCacheFacade;
+import org.janelia.it.workstation.cache.large_volume.AbstractCacheFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
@@ -22,7 +22,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
  * @author fosterl
  */
 public class Cache3DSettings {
-    public static final String SIZE_WARNING = "Please enter a number between " + EHCacheFacade.MIN_3D_CACHE_SIZE + " and " + EHCacheFacade.MAX_3D_CACHE_SIZE + ".";
+    public static final String SIZE_WARNING = "Please enter a number between " + AbstractCacheFacade.MIN_3D_CACHE_SIZE + " and " + AbstractCacheFacade.MAX_3D_CACHE_SIZE + ".";
     public static final String INVALID_NUM_WARNING = "Not a number. " + SIZE_WARNING;
     
     public void prompt() {
@@ -48,7 +48,7 @@ public class Cache3DSettings {
                                  + "A value of no more than 400 is recommended.</html>");
         buttonPanel.setLayout(new BorderLayout());
         JButton okButton = new JButton("OK");
-        int neighborhoodSizeInt = EHCacheFacade.getNeighborhoodSize();
+        int neighborhoodSizeInt = AbstractCacheFacade.getNeighborhoodSize();
         neighborhoodSize.setText(neighborhoodSizeInt + "");
         
         okButton.addActionListener( new ActionListener() {
@@ -56,8 +56,8 @@ public class Cache3DSettings {
             public void actionPerformed(ActionEvent ae) {
                 try {
                     Integer size = Integer.parseInt(neighborhoodSize.getText().trim());
-                    if (size <= EHCacheFacade.MAX_3D_CACHE_SIZE && size >= EHCacheFacade.MIN_3D_CACHE_SIZE) {
-                        SessionMgr.getSessionMgr().setModelProperty(EHCacheFacade.CACHE_NAME, size);
+                    if (size <= AbstractCacheFacade.MAX_3D_CACHE_SIZE && size >= AbstractCacheFacade.MIN_3D_CACHE_SIZE) {
+                        SessionMgr.getSessionMgr().setModelProperty(AbstractCacheFacade.CACHE_NAME, size);
                         popup.setVisible(false);
                         popup.dispose();
                     } else {

@@ -14,22 +14,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import javax.swing.JOptionPane;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.Element;
-import org.janelia.it.workstation.gui.dialogs.MemoryCheckDialog;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.OctreeMetadataSniffer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.compression.CompressedFileResolver;
-import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.shared.util.SystemInfo;
 
 /**
  * This class will take a neighborhood builder, and will use that to populate
@@ -38,11 +32,8 @@ import org.janelia.it.workstation.shared.util.SystemInfo;
  * 
  * @author fosterl
  */
-public class EHCacheFacade implements CacheFacadeI {
-    public static final String CACHE_NAME = "CompressedTiffCache";
+public class EHCacheFacade extends AbstractCacheFacade implements CacheFacadeI {
     public static final int GIGA = 1024*1024*1024;
-    public static final int MAX_3D_CACHE_SIZE = 500;
-    public static final int MIN_3D_CACHE_SIZE = 200;
 
     // TODO use more dynamic means of determining how many of the slabs
     // to put into memory at one time.
@@ -78,40 +69,6 @@ public class EHCacheFacade implements CacheFacadeI {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-    }
-    
-    public static boolean usingEhCache() {
-        return getNeighborhoodSize() > 0;
-    }
-    
-    public static int getNeighborhoodSize() {
-        int rtnVal = 0;
-        Integer cache3Dsize = (Integer) SessionMgr.getSessionMgr().getModelProperty(EHCacheFacade.CACHE_NAME);
-        if (cache3Dsize != null) {
-            rtnVal = cache3Dsize;
-        }
-        return rtnVal;
-    }
-    
-    public static int checkNeigborhoodSize(int settingInt ) {
-        if (settingInt > MAX_3D_CACHE_SIZE) {
-            String message = String.format("The 3D cache size setting %d is too large.  Running with %d.", settingInt, MAX_3D_CACHE_SIZE);
-            log.warn(message);
-            JOptionPane.showMessageDialog(WindowLocator.getMainFrame(), message);
-            settingInt = MAX_3D_CACHE_SIZE;
-        }
-        if (settingInt > 0) {
-            // Must warn about memory use.
-            MemoryCheckDialog memoryChecker = new MemoryCheckDialog();
-            int minMem = 30;
-            if (SystemInfo.isLinux) {
-                minMem = 24;
-            }
-            if (! memoryChecker.unusedIfInsufficientMemory("3D Cache", minMem, WindowLocator.getMainFrame())) {
-                settingInt = 0;
-            }                    
-        }
-        return settingInt;
     }
     
     /**

@@ -55,8 +55,8 @@ import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
+import org.janelia.it.workstation.cache.large_volume.AbstractCacheFacade;
 import org.janelia.it.workstation.cache.large_volume.CacheController;
-import org.janelia.it.workstation.cache.large_volume.EHCacheFacade;
 import org.janelia.it.workstation.gui.dialogs.MemoryCheckDialog;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.PositionalStatusPanel;
@@ -1414,8 +1414,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
      * Pull in the cache size setting.  0/unset-> no 3D cache should be used.
      */
     private int cache3DSize() {
-        return EHCacheFacade.checkNeigborhoodSize(
-                EHCacheFacade.getNeighborhoodSize()
+        return AbstractCacheFacade.checkNeigborhoodSize(
+                AbstractCacheFacade.getNeighborhoodSize()
         );
     }
 
