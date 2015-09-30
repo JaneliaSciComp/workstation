@@ -1,0 +1,124 @@
+<html>
+
+<!--
+  Copyright (c) 2010-2011, J. Craig Venter Institute, Inc.
+
+  This file is part of JCVI VICS.
+
+  JCVI VICS is free software; you can redistribute it and/or modify it 
+  under the terms and conditions of the Artistic License 2.0.  For 
+  details, see the full text of the license in the file LICENSE.txt.  
+  No other rights are granted.  Any and all third party software rights 
+  to remain with the original developer.
+
+  JCVI VICS is distributed in the hope that it will be useful in 
+  bioinformatics applications, but it is provided "AS IS" and WITHOUT 
+  ANY EXPRESS OR IMPLIED WARRANTIES including but not limited to implied 
+  warranties of merchantability or fitness for any particular purpose.  
+  For details, see the full text of the license in the file LICENSE.txt.
+
+  You should have received a copy of the Artistic License 2.0 along with 
+  JCVI VICS.  If not, the license can be obtained from 
+  "http://www.perlfoundation.org/artistic_license_2_0."
+-->
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>search-proteins</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">search-proteins</td></tr>
+</thead><tbody>
+<!--// search for "kinase" in the protein category-->
+<tr>
+	<td>open</td>
+	<td>/cameraweb/gwt/org.jcvi.camera.web.gwt.search.Search/Search.oa</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>gwt-debug-KeywordTextBox</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>gwt-debug-KeywordTextBox</td>
+	<td>kinase</td>
+</tr>
+<tr>
+	<td>clickAt</td>
+	<td>gwt-debug-ProteinsSearchIconPanelImage</td>
+	<td>29,24</td>
+</tr>
+<tr>
+	<td>mouseDownAt</td>
+	<td>gwt-debug-SearchButton</td>
+	<td>0,0</td>
+</tr>
+<!---->
+<!--// verify charts appear-->
+<tr>
+	<td>waitForTextPresent</td>
+	<td>Gene Ontology Summary</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Gene Ontology Summary</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Enzyme Summary</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Protein Cluster Membership</td>
+	<td></td>
+</tr>
+<tr>
+	<td>storeText</td>
+	<td>gwt-debug-ProteinsSearchIconPanelFooter</td>
+	<td>numMatches</td>
+</tr>
+<!---->
+<!--// click "detail view" link and verify detail page appears-->
+<tr>
+	<td>clickAt</td>
+	<td>link=detail view</td>
+	<td>32,9</td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Gene Ontology Summary</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Enzyme Summary</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Protein Cluster Membership</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>All Matching Proteins</td>
+	<td></td>
+</tr>
+<!---->
+<!--// verify result table matches number of results found in category-->
+<tr>
+	<td>verifyText</td>
+	<td>gwt-debug-CategorySearchDataTable</td>
+	<td>*of ${numMatches}*</td>
+</tr>
+
+</tbody></table>
+</body>
+</html>
