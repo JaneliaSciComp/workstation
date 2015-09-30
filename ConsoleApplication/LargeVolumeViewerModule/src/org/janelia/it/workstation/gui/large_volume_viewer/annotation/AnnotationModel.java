@@ -1164,18 +1164,21 @@ called from a  SimpleWorker thread.
 
         TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(geoAnnotation.getId());
         ObjectMapper mapper = new ObjectMapper();
+        String jsonString = "";
         if (textAnnotation != null) {
             // if you've got a structured text annotation already, use it; for now, you only get one
             JsonNode rootNode = textAnnotation.getData();
             if (noteString.length() > 0) {
                 ((ObjectNode) rootNode).put("note", noteString);
-                modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
+                jsonString = mapper.writeValueAsString(rootNode);
+                modelMgr.updateStructuredTextAnnotation(textAnnotation, jsonString);
             } else {
                 // there is a note attached, but we want it gone; if it's the only thing there,
                 //  delete the whole structured text annotation
                 ((ObjectNode) rootNode).remove("note");
                 if (rootNode.size() > 0) {
-                    modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
+                    jsonString = mapper.writeValueAsString(rootNode);
+                    modelMgr.updateStructuredTextAnnotation(textAnnotation, jsonString);
                 } else {
                     // otherwise, there's something left, so persist it (note: as of this
                     //  writing, there aren't any other structured text annotations besides
@@ -1190,9 +1193,10 @@ called from a  SimpleWorker thread.
                 ObjectNode rootNode = mapper.createObjectNode();
                 rootNode.put("note", noteString);
 
+                jsonString = mapper.writeValueAsString(rootNode);
                 textAnnotation = modelMgr.addStructuredTextAnnotation(neuron.getId(), geoAnnotation.getId(),
                         TmStructuredTextAnnotation.GEOMETRIC_ANNOTATION, TmStructuredTextAnnotation.FORMAT_VERSION,
-                        mapper.writeValueAsString(rootNode));
+                        jsonString);
             }
         }
 
@@ -1206,7 +1210,7 @@ called from a  SimpleWorker thread.
             // if it's not empty and in neuron, update string in note object
             // if it's not empty and not in neuron, add new note object to neuron
             if (neuron.getStructuredTextAnnotationMap().containsKey(geoAnnotation.getId())) {
-                neuron.getStructuredTextAnnotationMap().get(geoAnnotation.getId()).setDataString(noteString);
+                neuron.getStructuredTextAnnotationMap().get(geoAnnotation.getId()).setDataString(jsonString);
             } else {
                 neuron.getStructuredTextAnnotationMap().put(geoAnnotation.getId(), textAnnotation);
             }
