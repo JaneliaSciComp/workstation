@@ -75,7 +75,9 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
         URL url = getClass().getResource("/ehcacheCountedTiff.xml");
         manager = CacheManager.create(url);                
         
-        cacheCount = (int)((16L * (long)GIGA)/standardFileSize);
+        // Get close to a maximum, so that we are not very tight on cache
+        // size, before releasing.
+        cacheCount = (int)((16L * (long)GIGA)/standardFileSize) - 10;
         allocateStorage();
         
         CacheCollection toolkit = new CacheCollection() {            
@@ -98,7 +100,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
         Cache cache = manager.getCache(cacheName);
         CacheConfiguration config = cache.getCacheConfiguration();
         if (! config.isFrozen()) {
-            long maxEntries = cacheCount;//(long)(0.75 * (double)(config.getMaxBytesLocalHeap() / standardFileSize));
+            long maxEntries = cacheCount;
             log.debug("Setting max entries value to {} for heap storage {}.", maxEntries, config.getMaxBytesLocalHeap());
             config.setMaxEntriesLocalHeap(maxEntries);
         }

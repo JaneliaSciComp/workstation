@@ -786,7 +786,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         buttonsPanel.add(gotoLocationButton);
         
         if (cache3DSize() > 0) {
-            positionalStatusPanel = new PositionalStatusPanel();
+            positionalStatusPanel = new PositionalStatusPanel(this.getBackground());
             CacheController.getInstance().registerForEvents(positionalStatusPanel);
             buttonsPanel.add(positionalStatusPanel);
         }
