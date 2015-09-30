@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.compression.CompressedFileResolver;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 
 /**
  * This class will take a neighborhood builder, and will use that to populate
@@ -102,7 +103,11 @@ public class EHCacheFacade implements CacheFacadeI {
         if (settingInt > 0) {
             // Must warn about memory use.
             MemoryCheckDialog memoryChecker = new MemoryCheckDialog();
-            if (! memoryChecker.unusedIfInsufficientMemory("3D Cache", 30, WindowLocator.getMainFrame())) {
+            int minMem = 30;
+            if (SystemInfo.isLinux) {
+                minMem = 24;
+            }
+            if (! memoryChecker.unusedIfInsufficientMemory("3D Cache", minMem, WindowLocator.getMainFrame())) {
                 settingInt = 0;
             }                    
         }
@@ -140,9 +145,9 @@ public class EHCacheFacade implements CacheFacadeI {
                 return new byte[standardFileSize];
             }
         };
+        /*
         Cache cache = manager.getCache(cacheName);
         CacheConfiguration config = cache.getCacheConfiguration();
-        /*
         if (! config.isFrozen()) {
             long maxEntries = (long)(0.75 * (double)(config.getMaxBytesLocalHeap() / standardFileSize));
             log.debug("Setting max entries value to {} for heap storage {}.", maxEntries, config.getMaxBytesLocalHeap());
