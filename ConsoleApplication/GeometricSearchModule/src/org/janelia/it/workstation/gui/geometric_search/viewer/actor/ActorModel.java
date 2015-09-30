@@ -102,7 +102,9 @@ public class ActorModel implements VoxelViewerEventListener {
                     logger.error("Unexpectedly the allActor is null, when looking up by name="+actorAOSEvent.getActorName());
                 } else {
                     if (actorAOSEvent.isSelected()) {
+                        // Turn all on
                         for (Actor actor : getAllActorsByType(allActor.getClass())) {
+                            actor.setMasked(false);
                             if (actor.getName().equals(actorAOSEvent.getActorName())) {
                                 actor.setProxyActor(null);
                             } else {
@@ -110,6 +112,7 @@ public class ActorModel implements VoxelViewerEventListener {
                             }
                         }
                     } else {
+                        // Turn all off
                         for (Actor actor : getAllActorsByType(allActor.getClass())) {
                             actor.setProxyActor(null);
                         }
@@ -120,20 +123,49 @@ public class ActorModel implements VoxelViewerEventListener {
 
             if (actorAOSEvent.getAosType().equals(ActorAOSEvent.OFF_TYPE)) {
                 Actor noneActor = getActorByName(actorAOSEvent.getActorName());
-                if (actorAOSEvent.isSelected()) {
-                    // Turn back on
-                    for (Actor actor : getAllActorsByType(noneActor.getClass())) {
-                        actor.setMasked(false);
-                    }
+                if (noneActor==null) {
+                    logger.error("Unexpectedly the noneActor is null, when looking up by name="+actorAOSEvent.getActorName());
                 } else {
-                    // Turn off with mask
-                    for (Actor actor : getAllActorsByType(noneActor.getClass())) {
-                        if (!actor.getName().equals(actorAOSEvent.getActorName())) {
+                    if (!actorAOSEvent.isSelected()) {
+                        // Turn back on
+                        for (Actor actor : getAllActorsByType(noneActor.getClass())) {
+                            actor.setMasked(false);
+                        }
+                    } else {
+                        // Turn off with mask
+                        for (Actor actor : getAllActorsByType(noneActor.getClass())) {
                             actor.setMasked(true);
+                            actor.setProxyActor(null);
                         }
                     }
+                    EventManager.sendEvent(this, new ActorModifiedEvent());
                 }
-                EventManager.sendEvent(this, new ActorModifiedEvent());
+            }
+
+            if (actorAOSEvent.getAosType().equals(ActorAOSEvent.SOLO_TYPE)) {
+                Actor soloActor = getActorByName(actorAOSEvent.getActorName());
+                if (soloActor==null) {
+                    logger.error("Unexpectedly the soloActor is null, when looking up by name="+actorAOSEvent.getActorName());
+                } else {
+                    if (actorAOSEvent.isSelected()) {
+                        for (Actor actor : getAllActorsByType(soloActor.getClass())) {
+                            actor.setProxyActor(null);
+                            // Turn solo on
+                            if (actor.getName().equals(actorAOSEvent.getActorName())) {
+                                actor.setMasked(false);
+                            } else {
+                                actor.setMasked(true);
+                            }
+                        }
+                    } else {
+                        // Turn solo off
+                        for (Actor actor : getAllActorsByType(soloActor.getClass())) {
+                            actor.setMasked(false);
+                            actor.setProxyActor(null);
+                        }
+                    }
+                    EventManager.sendEvent(this, new ActorModifiedEvent());
+                }
             }
 
         }

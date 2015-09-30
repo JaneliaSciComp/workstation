@@ -185,13 +185,13 @@ public abstract class ScrollableColorRowPanel extends JPanel {
                         if (component instanceof ColorSelectionRow) {
                             ColorSelectionRow colorSelectionRow = (ColorSelectionRow)component;
                             if (!colorSelectionRow.equals(c)) {
-                                if (eventButton.getText().equals(GroupSelectionButton.A_TYPE)) {
+                             //   if (eventButton.getText().equals(GroupSelectionButton.A_TYPE)) {
                                     colorSelectionRow.getAllButton().setSelected(false);
-                                } else if (eventButton.getText().equals(GroupSelectionButton.N_TYPE)) {
+                            //    } else if (eventButton.getText().equals(GroupSelectionButton.N_TYPE)) {
                                     colorSelectionRow.getNoneButton().setSelected(false);
-                                } else if (eventButton.getText().equals(GroupSelectionButton.S_TYPE)) {
+                            //    } else if (eventButton.getText().equals(GroupSelectionButton.S_TYPE)) {
                                     colorSelectionRow.getSoloButton().setSelected(false);
-                                }
+                            //    }
                             }
                         }
                     }
