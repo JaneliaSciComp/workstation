@@ -1,12 +1,19 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Vector;
 
 public class LoadTimer {
-	private String previousStepName = null;
+    private String previousStepName = null;
 	private long previousTime = 0;
 	private HashMap<String, Vector<Double>> data = new HashMap<String, Vector<Double>>();
+
+	private static final Logger log = LoggerFactory.getLogger(LoadTimer.class);
 
 	public synchronized void putAll(LoadTimer other) {
 		if (other == this)
@@ -36,12 +43,18 @@ public class LoadTimer {
 		previousTime = t1;
 	}
 	
-	public synchronized void report() {
+	public void report() {
+        for (String report: reportStrings()) {
+            log.info(report);
+        }
+	}
+
+    public synchronized List<String> reportStrings() {
+        List<String> results = new ArrayList<>();
 		for (String interval : data.keySet()) {
 			Vector<Double> values = data.get(interval);
 			if (values.size() < 1)
 				continue; // no data for this interval
-			System.out.println(interval + ": ");
 			double max = values.get(0);
 			double min = values.get(0);
 			double sum = 0.0;
@@ -66,11 +79,26 @@ public class LoadTimer {
 			}
 			double standardDeviation = Math.sqrt(variance);
 
-			System.out.println("  mean = "+mean+" ms");
-			System.out.println("  stdDev = "+standardDeviation+" ms");
-			System.out.println("  n = "+values.size());
-			System.out.println("  min = "+min+" ms");
-			System.out.println("  max = "+max+" ms");
+            results.add(interval + ": \n" +
+                    "  mean = "+mean+" ms\n" +
+                    "  stdDev = "+standardDeviation+" ms\n" +
+                    "  n = "+values.size() + "\n" +
+                    "  min = "+min+" ms\n" +
+                    "  max = "+max+" ms");
 		}
+        return results;
 	}
+
+    public String getPreviousStepName() {
+        return previousStepName;
+    }
+
+    public void setPreviousStepName(String previousStepName) {
+        this.previousStepName = previousStepName;
+    }
+
+	public void clearPreviousStepName() {
+        previousStepName = null;
+    }
+
 }

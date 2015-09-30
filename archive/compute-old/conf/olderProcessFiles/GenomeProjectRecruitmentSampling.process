@@ -1,0 +1,49 @@
+<!--
+  ~ Copyright (c) 2010-2011, J. Craig Venter Institute, Inc.
+  ~
+  ~ This file is part of JCVI VICS.
+  ~
+  ~ JCVI VICS is free software; you can redistribute it and/or modify it
+  ~ under the terms and conditions of the Artistic License 2.0.  For
+  ~ details, see the full text of the license in the file LICENSE.txt.  No
+  ~ other rights are granted.  Any and all third party software rights to
+  ~ remain with the original developer.
+  ~
+  ~ JCVI VICS is distributed in the hope that it will be useful in
+  ~ bioinformatics applications, but it is provided "AS IS" and WITHOUT
+  ~ ANY EXPRESS OR IMPLIED WARRANTIES including but not limited to
+  ~ implied warranties of merchantability or fitness for any particular
+  ~ purpose.  For details, see the full text of the license in the file
+  ~ LICENSE.txt.
+  ~
+  ~ You should have received a copy of the Artistic License 2.0 along with
+  ~ JCVI VICS.  If not, the license can be obtained from
+  ~ "http://www.perlfoundation.org/artistic_license_2_0."
+  -->
+
+<process name="GenomeProjectRecruitmentSampling" processor="queue/gpRecruitmentSamplingLauncher" updateProcessStatus="on_success">  <!-- Executed by ProcessLauncher Pojo -->
+    <!-- This process runs blast and recruitment for a genome against specific blast db's then adds to old recruitment data. -->
+    <sequence name="Recruitment Sampling Processing" >
+        <operation name="Execute GenomeProjectRecruitmentSampling job" processor="compute/GenomeProjectRecruitmentSamplingSLSB/local" />
+        <operation name="Create Recruitment Viewer File Node and Insert Data" processor="compute/CreateRecruitmentViewerFileNodeSLSB/local"/>
+        <operation name="Convert Blast Output" processor="org.janelia.it.jacs.compute.service.recruitment.BlastXmlToFrvTabService">
+            <input name="percentIdCutoff" value="0.7"/>
+        </operation>
+        <operation name="Recruitment Statistics Generation" processor="org.janelia.it.jacs.compute.service.recruitment.FrvStatisticsGenerationService"/>
+        <operation name="Initiate Recruitment" processor="org.janelia.it.jacs.compute.service.recruitment.FrvRecruitFromStatisticsService" />
+        <operation name="Monitor recruitment runs" processor="org.janelia.it.jacs.compute.service.recruitment.ChildProcessMonitor" />
+        <!-- Probably not the best to encode the dir name (below) in the process file - BlastResults -->
+        <operation name="Delete Blast Dirs" processor="org.janelia.it.jacs.compute.service.common.file.FileService" async="true" haltOnError="false" updateProcessStatus="never">
+              <input name="mode" value="delete" />
+              <input name="sourceDir" value="$V{RESULT_DIR}" />
+              <input name="sourceFilePattern" value="BlastResults" />
+              <input name="RESULT_DIR" />
+        </operation>
+        <operation name="Delete Fasta Dirs" processor="org.janelia.it.jacs.compute.service.common.file.FileService" async="true" haltOnError="false" updateProcessStatus="never">
+              <input name="mode" value="delete" />
+              <input name="sourceDir" value="$V{RESULT_DIR}" />
+              <input name="sourceFilePattern" value="FastaFiles" />
+              <input name="RESULT_DIR" />
+        </operation>
+    </sequence>
+</process>
