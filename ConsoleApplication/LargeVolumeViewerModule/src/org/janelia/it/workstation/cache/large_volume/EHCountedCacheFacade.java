@@ -39,6 +39,8 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
     // TODO use more dynamic means of determining how many of the slabs
     // to put into memory at one time.
     
+    private static final int CACHE_FUDGE = 12;
+    
     private GeometricNeighborhoodBuilder neighborhoodBuilder;
     private GeometricNeighborhood neighborhood;
     private CachePopulator cachePopulator;
@@ -100,7 +102,9 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
         Cache cache = manager.getCache(cacheName);
         CacheConfiguration config = cache.getCacheConfiguration();
         if (! config.isFrozen()) {
-            long maxEntries = cacheCount;
+            // Add fudge margin, so that there is something to shove into the
+            // cache, to force other entries to go away.
+            long maxEntries = cacheCount - CACHE_FUDGE;
             log.debug("Setting max entries value to {} for heap storage {}.", maxEntries, config.getMaxBytesLocalHeap());
             config.setMaxEntriesLocalHeap(maxEntries);
         }
