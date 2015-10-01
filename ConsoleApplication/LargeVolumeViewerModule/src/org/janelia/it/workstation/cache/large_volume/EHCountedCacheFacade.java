@@ -92,7 +92,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
             @Override
             public boolean hasKey(String id) {
                 Cache cache = manager.getCache(cacheName);
-                return cache.get(id) != null;
+                return isInCache(id);
             }
             @Override
             public byte[] getStorage(String id) {
@@ -267,8 +267,9 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
     }
 
     private boolean isInCache(Cache cache, String id) throws CacheException, IllegalStateException {
-        Element cachedElement = cache.get(id);
-        return (cachedElement != null);
+        return cache.isKeyInCache(id);
+//        Element cachedElement = cache.get(id);
+//        return (cachedElement != null);
     }
 
     private void updateRegion() {
@@ -361,7 +362,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
         try {
             CachableWrapper wrapper = null;
             Cache cache = manager.getCache(cacheName);
-            if (cache.get(id) != null) {                
+            if (isInCache(id)) {                
                 wrapper = (CachableWrapper) cache.get(id).getObjectValue();
                 log.debug("Returning {}: found in cache.", keyOnly);
             } else {

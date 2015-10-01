@@ -15,7 +15,7 @@
     <cache name="CompressedTiffCache"
            timeToIdleSeconds="0" 
            timeToLiveSeconds="0" 
-           memoryStoreEvictionPolicy="LFU"
+           memoryStoreEvictionPolicy="LRU"
            eternal="false"
            overflowToOffHeap="false"
            maxEntriesLocalHeap="90"

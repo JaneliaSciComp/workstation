@@ -76,16 +76,24 @@ public class CachePopulator {
             };
             memAllocExecutor.submit(callable);
         }
+        
+        // Do another touch.  This time, the one that had been sorted
+        // to first position will be touched last.
+        Callable<Void> refreshCallable = new Callable<Void>() {
+            public Void call() throws Exception {
+                for (String key : lruRefresh) {
+                    cacheCollection.hasKey(key);
+                }
+                return null;
+            }
+        };
+        memAllocExecutor.submit(refreshCallable);
+        
         if (neighborhood.getFiles().isEmpty()) {
             double[] focus = neighborhood.getFocus();
             log.warn(
                 "Neighborhood of size 0, at zoom {}.  Focus {},{},{}.", neighborhood.getZoom(), focus[0], focus[1], focus[2]
             );
-        }
-        for (String key: lruRefresh) {
-            // Do another touch.  This time, the one that had been sorted
-            // to first position will be touched last.
-            cacheCollection.hasKey(key);
         }
         return populatedList;
 
