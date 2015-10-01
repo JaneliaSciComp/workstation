@@ -7,25 +7,25 @@ import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 import javax.swing.SwingConstants;
 
-import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.entity.Entity;
 
 /**
- * A combo-box renderer for Subject selection. 
+ * A combo-box renderer for Data Set selection. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SubjectComboBoxRenderer extends JLabel implements ListCellRenderer<Subject> {
+public class DataSetComboBoxRenderer extends JLabel implements ListCellRenderer<Entity> {
 
-    public SubjectComboBoxRenderer() {
+    public DataSetComboBoxRenderer() {
         setOpaque(true);
         setHorizontalAlignment(SwingConstants.LEFT);
         setVerticalAlignment(SwingConstants.CENTER);
     }
 
     @Override
-    public Component getListCellRendererComponent(JList<? extends Subject> list, Subject subject, int index, boolean isSelected, boolean cellHasFocus) {
+    public Component getListCellRendererComponent(JList<? extends Entity> list, Entity dataSetEntity, int index, boolean isSelected, boolean cellHasFocus) {
 
-        if (subject == null) {
+        if (dataSetEntity == null) {
             setIcon(null);
             setText("");
             return this;
@@ -40,14 +40,8 @@ public class SubjectComboBoxRenderer extends JLabel implements ListCellRenderer<
             setForeground(list.getForeground());
         }
 
-        if (subject.getKey() != null && subject.getKey().startsWith("group:")) {
-            setIcon(Icons.getIcon("group.png"));
-        }
-        else {
-            setIcon(Icons.getIcon("user.png"));
-        }
-
-        setText(subject.getFullName() + " (" + subject.getName() + ")");
+        setIcon(Icons.getIcon("folder_database.png"));
+        setText(dataSetEntity.getName());
 
         return this;
     }

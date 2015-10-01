@@ -6,7 +6,10 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -22,6 +25,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.utils.ISO8601Utils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -38,185 +43,133 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  */
 public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable {
 
-    private JLabel loadingLabel;
-    private JPanel mainPanel;
-    private DynamicTable dynamicTable;
-    private FlyLineReleaseDialog releaseDialog;
+    private static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
     
+    private final JLabel loadingLabel;
+    private final JPanel mainPanel;
+    private final DynamicTable dynamicTable;
+    private final FlyLineReleaseDialog releaseDialog;
+
     public FlyLineReleaseListDialog() {
 
         setTitle("My Fly Line Releases");
-        
+
         releaseDialog = new FlyLineReleaseDialog(this);
-        
+
         loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);
         loadingLabel.setIcon(Icons.getLoadingIcon());
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
         loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
-        
+
         mainPanel = new JPanel(new BorderLayout());
-    	mainPanel.add(loadingLabel, BorderLayout.CENTER);
-    	
-    	add(mainPanel, BorderLayout.CENTER);
-        
+        mainPanel.add(loadingLabel, BorderLayout.CENTER);
+
+        add(mainPanel, BorderLayout.CENTER);
+
         dynamicTable = new DynamicTable(true, false) {
             @Override
-			public Object getValue(Object userObject, DynamicColumn column) {
-            	Entity releaseEntity = (Entity)userObject;
-                if (releaseEntity!=null) {
+            public Object getValue(Object userObject, DynamicColumn column) {
+                Entity releaseEntity = (Entity) userObject;
+                if (releaseEntity != null) {
                     if ("Name".equals(column.getName())) {
                         return releaseEntity.getName();
                     }
-                    else {
-                    	String value = releaseEntity.getValueByAttributeName(column.getName());
-//                    	if (EntityConstants.ATTRIBUTE_PIPELINE_PROCESS.equals(column.getName())) {
-//                    		return decodeEnumList(PipelineProcess.class, value);
-//                    	}
-//                    	else if (EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN.equals(column.getName())) {
-//                            return value;
-//                        }
-//                    	else if (EntityConstants.ATTRIBUTE_SAGE_SYNC.equals(column.getName())) {
-//                            return new Boolean(value!=null);
-//                        }
-//                    	else {
-//                    		return value;	
-//                    	}
-                    	return value;
+                    if (EntityConstants.ATTRIBUTE_RELEASE_DATE.equals(column.getName())) {
+                        String value = releaseEntity.getValueByAttributeName(column.getName());
+                        if (value != null) {
+                            return df.format(ISO8601Utils.parse(value));
+                        }
                     }
                 }
                 return null;
-			}
-            
-        	@Override
-        	protected JPopupMenu createPopupMenu(MouseEvent e) {
-        		JPopupMenu menu = super.createPopupMenu(e);
-        		
-        		if (menu!=null) {
-        			JTable table = getTable();
-        			ListSelectionModel lsm = table.getSelectionModel();
-            		if (lsm.getMinSelectionIndex() != lsm.getMaxSelectionIndex()) return menu;
-            		
-        			final Entity releaseEntity = (Entity)getRows().get(table.getSelectedRow()).getUserObject();
-    		        
-        			JMenuItem editItem = new JMenuItem("  Edit");
-    		        editItem.addActionListener(new ActionListener() {
-    					@Override
-    					public void actionPerformed(ActionEvent e) {
-    						releaseDialog.showForRelease(releaseEntity);
-    					}
-    				});
-    		        menu.add(editItem);
-    		        
-    		        JMenuItem deleteItem = new JMenuItem("  Delete");
-    		        deleteItem.addActionListener(new ActionListener() {
-    					@Override
-    					public void actionPerformed(ActionEvent e) {
-    						
-    						Utils.setWaitingCursor(FlyLineReleaseListDialog.this);
-
-    				        SimpleWorker worker = new SimpleWorker() {
-
-    							@Override
-    							protected void doStuff() throws Exception {
-    								ModelMgr.getModelMgr().deleteEntityTree(releaseEntity.getId());
-    							}
-    							
-    							@Override
-    							protected void hadSuccess() {
-    								Utils.setDefaultCursor(FlyLineReleaseListDialog.this);
-    								loadReleases();
-    							}
-    							
-    							@Override
-    							protected void hadError(Throwable error) {
-    								SessionMgr.getSessionMgr().handleException(error);
-    								Utils.setDefaultCursor(FlyLineReleaseListDialog.this);
-    								loadReleases();
-    							}
-    						};
-    						worker.execute();
-    					}
-    				});
-    		        menu.add(deleteItem);
-        		}
-        		
-        		return menu;
-        	}
-        	
-			@Override
-			protected void rowDoubleClicked(int row) {
-    			final Entity dataSetEntity = (Entity)getRows().get(row).getUserObject();
-				releaseDialog.showForRelease(dataSetEntity);
-			}
-
-            @Override
-            public Class<?> getColumnClass(int column) {
-                DynamicColumn dc = getColumns().get(column);
-//                if (dc.getName().equals(EntityConstants.ATTRIBUTE_SAGE_SYNC)) {
-//                    return Boolean.class;
-//                }
-                return super.getColumnClass(column);
             }
 
             @Override
-            protected void valueChanged(DynamicColumn dc, int row, Object data) {
-//                if (dc.getName().equals(EntityConstants.ATTRIBUTE_SAGE_SYNC)) {
-//                    final Boolean selected = data==null? Boolean.FALSE : (Boolean)data;
-//                    DynamicRow dr = getRows().get(row);
-//                    final Entity dataSetEntity = (Entity)dr.getUserObject();
-//                    SimpleWorker worker = new SimpleWorker() {
-//                        
-//                        @Override
-//                        protected void doStuff() throws Exception {
-//                            if (selected) {
-//                                ModelMgr.getModelMgr().setAttributeAsTag(dataSetEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
-//                            }
-//                            else {
-//                                EntityData sageSyncEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC);
-//                                if (sageSyncEd!=null) {
-//                                    dataSetEntity.getEntityData().remove(sageSyncEd);
-//                                    ModelMgr.getModelMgr().removeEntityData(sageSyncEd);
-//                                }
-//                            }
-//                        }
-//                        
-//                        @Override
-//                        protected void hadSuccess() {
-//                        }
-//                        
-//                        @Override
-//                        protected void hadError(Throwable error) {
-//                            SessionMgr.getSessionMgr().handleException(error);
-//                        }
-//                    };
-//                    worker.execute();
-//                }
+            protected JPopupMenu createPopupMenu(MouseEvent e) {
+                JPopupMenu menu = super.createPopupMenu(e);
+
+                if (menu != null) {
+                    JTable table = getTable();
+                    ListSelectionModel lsm = table.getSelectionModel();
+                    if (lsm.getMinSelectionIndex() != lsm.getMaxSelectionIndex()) {
+                        return menu;
+                    }
+
+                    final Entity releaseEntity = (Entity) getRows().get(table.getSelectedRow()).getUserObject();
+
+                    JMenuItem editItem = new JMenuItem("  Edit");
+                    editItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            releaseDialog.showForRelease(releaseEntity);
+                        }
+                    });
+                    menu.add(editItem);
+
+                    JMenuItem deleteItem = new JMenuItem("  Delete");
+                    deleteItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+
+                            Utils.setWaitingCursor(FlyLineReleaseListDialog.this);
+
+                            SimpleWorker worker = new SimpleWorker() {
+
+                                @Override
+                                protected void doStuff() throws Exception {
+                                    ModelMgr.getModelMgr().deleteEntityTree(releaseEntity.getId());
+                                }
+
+                                @Override
+                                protected void hadSuccess() {
+                                    Utils.setDefaultCursor(FlyLineReleaseListDialog.this);
+                                    loadReleases();
+                                }
+
+                                @Override
+                                protected void hadError(Throwable error) {
+                                    SessionMgr.getSessionMgr().handleException(error);
+                                    Utils.setDefaultCursor(FlyLineReleaseListDialog.this);
+                                    loadReleases();
+                                }
+                            };
+                            worker.execute();
+                        }
+                    });
+                    menu.add(deleteItem);
+                }
+
+                return menu;
+            }
+
+            @Override
+            protected void rowDoubleClicked(int row) {
+                final Entity dataSetEntity = (Entity) getRows().get(row).getUserObject();
+                releaseDialog.showForRelease(dataSetEntity);
             }
         };
-        
+
         dynamicTable.addColumn("Name");
-//        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS);
-//        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
-//        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_SAGE_SYNC).setEditable(true);
-        
+        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_RELEASE_DATE);
+
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new fly line release definition");
         addButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				releaseDialog.showForNewDataSet();
-			}
-		});
-        
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                releaseDialog.showForNewDataSet();
+            }
+        });
+
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close this dialog");
         okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-	            setVisible(false);
-			}
-		});
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+            }
+        });
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
@@ -224,68 +177,68 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
         buttonPane.add(addButton);
         buttonPane.add(Box.createHorizontalGlue());
         buttonPane.add(okButton);
-        
+
         add(buttonPane, BorderLayout.SOUTH);
     }
-    
+
     public void showDialog() {
 
-    	loadReleases();
+        loadReleases();
 
-		Component mainFrame = SessionMgr.getMainFrame();
-		setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.4),(int)(mainFrame.getHeight()*0.4)));
-		
+        Component mainFrame = SessionMgr.getMainFrame();
+        setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.4)));
+
         // Show dialog and wait
         packAndShow();
     }
-    
+
     private void loadReleases() {
 
-    	mainPanel.removeAll();
-    	mainPanel.add(loadingLabel, BorderLayout.CENTER);
-    	
+        mainPanel.removeAll();
+        mainPanel.add(loadingLabel, BorderLayout.CENTER);
+
         SimpleWorker worker = new SimpleWorker() {
 
-        	private List<Entity> releaseEntities = new ArrayList<Entity>();
-        	
-			@Override
-			protected void doStuff() throws Exception {
-				for(Entity releaseEntity : ModelMgr.getModelMgr().getFlyLineReleases()) {
-					releaseEntities.add(releaseEntity);
-				}
-			}
-			
-			@Override
-			protected void hadSuccess() {
+            private List<Entity> releaseEntities = new ArrayList<Entity>();
 
-		        // Update the attribute table
-		        dynamicTable.removeAllRows();
-		        for(Entity dataSetEntity : releaseEntities) {
-		        	dynamicTable.addRow(dataSetEntity);
-		        }
-		        
-		        dynamicTable.updateTableModel();
-		        mainPanel.removeAll();
-		        mainPanel.add(dynamicTable, BorderLayout.CENTER);
-		        mainPanel.revalidate();
-			}
-			
-			@Override
-			protected void hadError(Throwable error) {
-				SessionMgr.getSessionMgr().handleException(error);
-				mainPanel.removeAll();
-		        mainPanel.add(dynamicTable, BorderLayout.CENTER);
-		        mainPanel.revalidate();
-			}
-		};
-		worker.execute();
+            @Override
+            protected void doStuff() throws Exception {
+                for (Entity releaseEntity : ModelMgr.getModelMgr().getFlyLineReleases()) {
+                    releaseEntities.add(releaseEntity);
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+
+                // Update the attribute table
+                dynamicTable.removeAllRows();
+                for (Entity dataSetEntity : releaseEntities) {
+                    dynamicTable.addRow(dataSetEntity);
+                }
+
+                dynamicTable.updateTableModel();
+                mainPanel.removeAll();
+                mainPanel.add(dynamicTable, BorderLayout.CENTER);
+                mainPanel.revalidate();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+                mainPanel.removeAll();
+                mainPanel.add(dynamicTable, BorderLayout.CENTER);
+                mainPanel.revalidate();
+            }
+        };
+        worker.execute();
     }
 
     public void refresh() {
-    	loadReleases();
+        loadReleases();
     }
 
     public void totalRefresh() {
-    	throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 }

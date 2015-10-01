@@ -157,8 +157,6 @@ public abstract class DynamicImagePanel extends JPanel {
 
                             if (getNewScaledImage() == null) {
                                 log.warn("Scaled image is null: {}",imageFilename);
-                                errorLabel.setText("Null image");
-                                setImageLabel(errorLabel);
                                 return;
                             }
 
