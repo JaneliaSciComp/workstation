@@ -244,6 +244,7 @@ public class CacheController {
             this.focus = focus;
         }
         
+        @Override
         public void run() {
             TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
             Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());

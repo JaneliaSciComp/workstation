@@ -182,7 +182,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
      */
     @Override
 	public synchronized void setFocus(double[] focus) {
-        log.debug("Setting focus...");
+        log.trace("Setting focus from thread {}.", Thread.currentThread().getName());
         try {
             cameraFocus = focus;
             updateRegion();
@@ -268,8 +268,6 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
 
     private boolean isInCache(Cache cache, String id) throws CacheException, IllegalStateException {
         return cache.isKeyInCache(id);
-//        Element cachedElement = cache.get(id);
-//        return (cachedElement != null);
     }
 
     private void updateRegion() {
@@ -294,6 +292,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
     }
     
     private synchronized byte[] reuseStorage(String targetId) {
+        log.trace("Starting reuse Storage from thread {}.", Thread.currentThread().getName());
         Cache cache = manager.getCache(cacheName);
         byte[] rtnVal = null;
         AllocationUnit oldUnit = null;
@@ -328,6 +327,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
             log.error("No reusable storage available.");
             throw new IllegalStateException("Insufficient storage available.");
         }
+        log.trace("Return from reuse Storage");
         
         return rtnVal;
     }
@@ -354,7 +354,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
         return rtnVal;
     }
 
-    private byte[] getBytes(final String id) {
+    private byte[] getBytes(final String id) {        
         String keyOnly = Utilities.trimToOctreePath(id);
         log.debug("Getting {}", keyOnly);
         totalGets++;

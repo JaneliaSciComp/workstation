@@ -164,7 +164,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             }
         }
 
-        log.debug("Building neighborhood at zoom {}, focus {},{},{}", zoom, focus[0], focus[1], focus[2] );
+        log.trace("Building neighborhood at zoom {}, focus {},{},{}", zoom, focus[0], focus[1], focus[2] );
         WorldExtentSphere neighborhood = new WorldExtentSphere();
         neighborhood.setFocus(focus);
         neighborhood.setZoom(zoom);
@@ -182,7 +182,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
         log.debug("Dimensions in voxels are: {},{},{}.", dimensions[0], dimensions[1], dimensions[2]);
         // NOTE: when dumped, this looks like voxels, even though all the
         // classes/members in play are stated as microns.
-        log.debug("Voxel volume in cache extends from\n  {},{},{}\n  to\n    {},{},{}\nin voxels.",
+        log.debug("Voxel volume in cache extends from\n\t{},{},{}\nto\n\t{},{},{}\nin voxels.",
                  center.getX() - radiusInMicrons, center.getY() - radiusInMicrons, center.getZ() - radiusInMicrons,
                  center.getX() + radiusInMicrons, center.getY() + radiusInMicrons, center.getZ() + radiusInMicrons
         );
@@ -330,13 +330,13 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             double screenY = yTrans * (tileCenter[1] - minCoords[1]);
             double screenZ = zTrans * (tileCenter[2] - minCoords[2]);
             
-            log.debug(
+            log.trace(
                     String.format("Convert %6.2f,%6.2f,%6.2f => %6.2f,%6.2f,%6.2f  for %s",
                             tileCenter[0], tileCenter[1], tileCenter[2],
                             screenX, screenY, screenZ, Utilities.trimToOctreePath(tilePath))
             );
             final int[] tileXyz = fileToTileXyz.get(tilePath);
-            log.debug(
+            log.trace(
                     String.format("At Tile Location: %d,%d,%d", tileXyz[0], tileXyz[1], tileXyz[2])
             );
             
@@ -398,7 +398,7 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             pixelsPerSceneUnit = 1.0;
         }
         else {
-            log.debug("PixelsPerSceneUnit={}.", pixelsPerSceneUnit);
+            log.trace("PixelsPerSceneUnit={}.", pixelsPerSceneUnit);
         }
         
         int[] xyzFromWhd = new int[]{0, 1, 2};
@@ -423,7 +423,6 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             minDepth = 0;
         }
         
-        // NEED: to figure out why neighborhood is so huge.
         log.debug("Tile BoundingBox span. Width: " + tileBoundingBox.getwMin() + ":" 
                            + tileBoundingBox.getwMax() + " Height: " + tileBoundingBox.gethMin()
                            + ":" + tileBoundingBox.gethMax() + " Depth:" + minDepth + ":" + maxDepth);
