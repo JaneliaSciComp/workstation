@@ -4,6 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -36,8 +39,6 @@ import org.janelia.it.workstation.gui.util.MembershipListPanel;
 import org.janelia.it.workstation.gui.util.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
 
@@ -50,7 +51,6 @@ import de.javasoft.swing.DateComboBox;
  */
 public class FlyLineReleaseDialog extends ModalDialog {
 
-    private static final Logger log = LoggerFactory.getLogger(FlyLineReleaseDialog.class);
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
 
     private final FlyLineReleaseListDialog parentDialog;
@@ -115,7 +115,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
         addSeparator(attrPanel, "Release Attributes", true);
 
-        final JLabel ownerLabel = new JLabel("Release Owner: ");
+        final JLabel ownerLabel = new JLabel("Annotator: ");
 
         final JLabel ownerValue = new JLabel(releaseOwnerKey);
         attrPanel.add(ownerLabel, "gap para");
@@ -133,16 +133,36 @@ public class FlyLineReleaseDialog extends ModalDialog {
         attrPanel.add(dateLabel, "gap para");
         attrPanel.add(dateInput);
 
-        JPanel bottomPanel = new JPanel(new MigLayout("wrap 3"));
-        
+        JPanel bottomPanel = new JPanel(new GridBagLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.gridx = 0;
+        c.gridy = 0;
+        c.insets = new Insets(0, 0, 0, 0);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.LINE_START;
+        c.weightx = 1;
         dataSetPanel = new MembershipListPanel<>("Data Sets", DataSetComboBoxRenderer.class);
-        bottomPanel.add(dataSetPanel, "growx");
+        bottomPanel.add(dataSetPanel, c);
 
+        c.gridx = 1;
+        c.gridy = 0;
+        c.insets = new Insets(0, 0, 0, 0);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.LINE_START;
+        c.weightx = 1;
         annotatorsPanel = new MembershipListPanel<>("Additional Annotators", SubjectComboBoxRenderer.class);
-        bottomPanel.add(annotatorsPanel, "growx");
+        bottomPanel.add(annotatorsPanel, c);
 
+        c.gridx = 2;
+        c.gridy = 0;
+        c.insets = new Insets(0, 0, 0, 0);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.LINE_START;
+        c.weightx = 1;
         subscribersPanel = new MembershipListPanel<>("Subscribers", SubjectComboBoxRenderer.class);
-        bottomPanel.add(subscribersPanel, "growx");
+        bottomPanel.add(subscribersPanel, c);
 
         attrPanel.add(bottomPanel, "span 2");
 
