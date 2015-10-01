@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractCacheFacade implements CacheFacadeI {
     public static final int GIGA = 1024 * 1024 * 1024;
+    public static final long CACHE_MEMORY_SIZE_GB = 24L;
 
     public static final String CACHE_NAME = "CompressedTiffCache";
     public static final int MAX_3D_CACHE_SIZE = 500;

@@ -79,7 +79,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
         
         // Get close to a maximum, so that we are not very tight on cache
         // size, before releasing.
-        cacheCount = (int)((16L * (long)GIGA)/standardFileSize) - 10;
+        cacheCount = (int)((CACHE_MEMORY_SIZE_GB * (long)GIGA)/standardFileSize) - 10;
         allocateStorage();
         
         CacheCollection toolkit = new CacheCollection() {            

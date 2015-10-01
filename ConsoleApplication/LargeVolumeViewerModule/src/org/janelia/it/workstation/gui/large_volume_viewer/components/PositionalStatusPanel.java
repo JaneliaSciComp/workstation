@@ -42,8 +42,8 @@ public class PositionalStatusPanel extends JPanel {
     
     private static final Color[] BGRND_Z = new Color[] {
         // Make more than max depth.
-        Color.black,
-        new Color( 120, 120, 120 ),
+        Color.white,
+        Color.lightGray,
     };
 
     public PositionalStatusPanel(Color clearColor) {
