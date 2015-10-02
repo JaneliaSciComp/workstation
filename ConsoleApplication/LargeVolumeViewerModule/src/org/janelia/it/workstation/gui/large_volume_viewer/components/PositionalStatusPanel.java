@@ -33,7 +33,7 @@ public class PositionalStatusPanel extends JPanel {
     public static final Color IN_PROGRESS_COLOR = Color.yellow;
     public static final Color UNFILLED_COLOR = Color.red;
 
-    private static final int INSET_LEFT = 15;
+    private static final int INSET_LEFT = 10;
     
     private final Logger log = LoggerFactory.getLogger(PositionalStatusPanel.class);
     // Key is expected to be some sort of file-path.
@@ -98,8 +98,8 @@ public class PositionalStatusPanel extends JPanel {
          );
          */
         Dimension markerDims = new Dimension();
-        markerDims.width = 6;
-        markerDims.height = 6;
+        markerDims.width = 4;
+        markerDims.height = 4;
 
         int zPanelWidth = markerDims.width * tileExtents[2];
         

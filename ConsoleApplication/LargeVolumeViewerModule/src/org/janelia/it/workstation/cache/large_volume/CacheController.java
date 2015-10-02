@@ -200,18 +200,18 @@ public class CacheController {
 
             @Override
             public void run() {
-                if (receivedZoom != null  &&  !receivedZoom.equals( lastSetZoom )) {
+                if (receivedZoom != null  &&   (lastSetZoom == null  ||  !receivedZoom.equals( lastSetZoom ))) {
                     lastSetZoom = receivedZoom;
                     cameraListener.zoomChanged(lastSetZoom);
                 }
-                if (receivedFocus != null  &&  !receivedFocus.equals( lastSetFocus )) {
+                if (receivedFocus != null  &&  (lastSetFocus == null  ||  !receivedFocus.equals( lastSetFocus ))) {
                     lastSetFocus = receivedFocus;
                     cameraListener.focusChanged(lastSetFocus);
                 }
             }
             
         };
-        pollTimer.scheduleAtFixedRate(pollTask, 50, 1000);
+        pollTimer.scheduleAtFixedRate(pollTask, 5, 3000);
     }
 
     private static class CacheCameraListener implements CameraListener {
