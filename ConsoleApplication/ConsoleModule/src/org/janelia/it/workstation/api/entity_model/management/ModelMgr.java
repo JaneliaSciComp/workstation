@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.EventQueue;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1063,8 +1064,8 @@ public final class ModelMgr {
         return entityModel.createDataSet(dataSetName);
     }
 
-    public Entity createFlyLineRelease(String releaseName) throws Exception {
-        return entityModel.createFlyLineRelease(releaseName);
+    public Entity createFlyLineRelease(String releaseName, Date releaseDate, List<String> dataSetList) throws Exception {
+        return entityModel.createFlyLineRelease(releaseName, releaseDate, dataSetList);
     }
     
     public Set<EntityActorPermission> getFullPermissions(Long entityId) throws Exception {

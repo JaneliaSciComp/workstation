@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.api.facade.concrete_facade.ejb;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -118,8 +119,8 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     }
     
     @Override
-    public Entity createFlyLineRelease(String releaseName) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createFlyLineRelease(SessionMgr.getSubjectKey(), releaseName);
+    public Entity createFlyLineRelease(String releaseName, Date releaseDate, List<String> dataSetList) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().createFlyLineRelease(SessionMgr.getSubjectKey(), releaseName, releaseDate, dataSetList);
     }
 
     @Override

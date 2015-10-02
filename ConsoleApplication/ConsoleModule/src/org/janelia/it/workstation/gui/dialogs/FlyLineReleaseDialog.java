@@ -13,14 +13,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
@@ -28,8 +31,11 @@ import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
 
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -39,6 +45,7 @@ import org.janelia.it.workstation.gui.util.MembershipListPanel;
 import org.janelia.it.workstation.gui.util.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
 
@@ -132,7 +139,10 @@ public class FlyLineReleaseDialog extends ModalDialog {
         dateLabel.setLabelFor(dateInput);
         attrPanel.add(dateLabel, "gap para");
         attrPanel.add(dateInput);
+        dateInput.setEditable(releaseEntity==null);
 
+        attrPanel.add(Box.createVerticalStrut(10), "span 2");
+        
         JPanel bottomPanel = new JPanel(new GridBagLayout());
 
         GridBagConstraints c = new GridBagConstraints();
@@ -144,6 +154,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
         c.anchor = GridBagConstraints.LINE_START;
         c.weightx = 1;
         dataSetPanel = new MembershipListPanel<>("Data Sets", DataSetComboBoxRenderer.class);
+        dataSetPanel.setEditable(releaseEntity==null);
         bottomPanel.add(dataSetPanel, c);
 
         c.gridx = 1;
@@ -268,15 +279,17 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
         Utils.setWaitingCursor(FlyLineReleaseDialog.this);
 
-        final String releaseDateStr = ISO8601Utils.format(dateInput.getDate());
-
-        final StringBuilder dataSetsSb = new StringBuilder();
+        // TODO: check for duplicate release name
+        
+        if (StringUtils.isEmpty(nameInput.getText().trim())) {
+            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "The release name cannot be blank", "Cannot save", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        final List<String> dataSets = new ArrayList<>();
         for (Entity dataSet : dataSetPanel.getItemsInList()) {
-            if (dataSetsSb.length() > 0) {
-                dataSetsSb.append(",");
-            }
             String identifier = dataSet.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER);
-            dataSetsSb.append(identifier);
+            dataSets.add(identifier);
         }
 
         final StringBuilder annotatorsSb = new StringBuilder();
@@ -300,17 +313,18 @@ public class FlyLineReleaseDialog extends ModalDialog {
             @Override
             protected void doStuff() throws Exception {
 
+                boolean syncFolders = false;
                 if (releaseEntity == null) {
-                    releaseEntity = ModelMgr.getModelMgr().createFlyLineRelease(nameInput.getText());
-                }
-                else {
-                    releaseEntity.setName(nameInput.getText());
+                    releaseEntity = ModelMgr.getModelMgr().createFlyLineRelease(nameInput.getText(), dateInput.getDate(), dataSets);
+                    syncFolders = true;
                 }
 
-                ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_RELEASE_DATE, releaseDateStr);
-                ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_DATA_SETS, dataSetsSb.toString());
                 ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_ANNOTATORS, annotatorsSb.toString());
                 ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_SUBSCRIBERS, subscribersSb.toString());
+                
+                if (syncFolders) {
+                    launchSyncTask();
+                }
             }
 
             @Override
@@ -329,5 +343,46 @@ public class FlyLineReleaseDialog extends ModalDialog {
         };
 
         worker.execute();
+    }
+    
+    private void launchSyncTask() {
+
+        Task task;
+        try {
+            HashSet<TaskParameter> taskParameters = new HashSet<>();
+            taskParameters.add(new TaskParameter("release entity id", releaseEntity.getId().toString(), null));
+            task = ModelMgr.getModelMgr().submitJob("ConsoleSyncReleaseFolders", "Sync Release Folders", taskParameters);
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return;
+        }
+
+        TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
+
+            @Override
+            public String getName() {
+                return "Creating fly line folder structures";
+            }
+
+            @Override
+            protected void doStuff() throws Exception {
+                setStatus("Executing");
+                super.doStuff();
+            }
+
+            @Override
+            public Callable<Void> getSuccessCallback() {
+                return new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        SessionMgr.getBrowser().getEntityOutline().refresh();
+                        return null;
+                    }
+                };
+            }
+        };
+
+        taskWorker.executeWithEvents();
     }
 }
