@@ -65,8 +65,8 @@ public class FlyLineReleaseDialog extends ModalDialog {
     private final FlyLineReleaseListDialog parentDialog;
 
     private JPanel attrPanel;
-    private JTextField nameInput;
-    private DateComboBox dateInput;
+    private JTextField nameInput = new JTextField(30);
+    private DateComboBox dateInput = new DateComboBox();
     private MembershipListPanel<Entity> dataSetPanel;
     private MembershipListPanel<Subject> annotatorsPanel;
     private MembershipListPanel<Subject> subscribersPanel;
@@ -95,7 +95,6 @@ public class FlyLineReleaseDialog extends ModalDialog {
         });
 
         this.okButton = new JButton("OK");
-        okButton.setToolTipText("Close and save changes");
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -121,9 +120,13 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
         this.releaseEntity = releaseEntity;
         
-        if (releaseEntity!=null) {
+        if (releaseEntity==null) {
             okButton.setText("Create Folder Hierarchy");
             okButton.setToolTipText("Create the release and corresponding folder hierarchy of all the lines due to be released");
+        }
+        else {
+            okButton.setText("OK");
+            okButton.setToolTipText("Close and save changes");
         }
         
         boolean editable = releaseEntity==null;
@@ -140,14 +143,18 @@ public class FlyLineReleaseDialog extends ModalDialog {
         attrPanel.add(ownerValue);
 
         final JLabel nameLabel = new JLabel("Release Name: ");
-        nameInput = new JTextField(30);
-        nameInput.setEditable(editable);
-        nameLabel.setLabelFor(nameInput);
         attrPanel.add(nameLabel, "gap para");
-        attrPanel.add(nameInput);
+        
+        if (editable) {
+            nameInput.setEditable(editable);
+            nameLabel.setLabelFor(nameInput);
+            attrPanel.add(nameInput);
+        }
+        else {
+            attrPanel.add(new JLabel(releaseEntity.getName()));
+        }
 
         final JLabel dateLabel = new JLabel("Release Date: ");
-        dateInput = new DateComboBox();
         dateLabel.setLabelFor(dateInput);
         attrPanel.add(dateLabel, "gap para");
         attrPanel.add(dateInput);
