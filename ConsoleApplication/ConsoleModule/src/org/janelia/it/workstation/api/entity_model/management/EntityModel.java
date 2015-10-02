@@ -871,12 +871,12 @@ public class EntityModel {
     public void deleteEntityTree(Entity entity) throws Exception {
         checkIfCanonicalEntity(entity);
 
-        Set<EntityData> parentEds = new HashSet<EntityData>();
+        Set<EntityData> parentEds = new HashSet<>();
 
+        log.debug("Deleting entity tree: {}", EntityUtils.identify(entity));
+        entityFacade.deleteEntityTree(entity.getId());
+            
         synchronized (this) {
-            log.debug("Deleting entity tree: {}", EntityUtils.identify(entity));
-            entityFacade.deleteEntityTree(entity.getId());
-
             // Remove from cache
             entityCache.invalidate(entity.getId());
             workspaceCache.remove(entity.getId());
