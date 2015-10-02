@@ -198,7 +198,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
      */
     @Override
     public void setCameraZoomValue(Double zoom) {
-        log.trace("Setting zoom {}....", zoom);
+        log.debug("Setting zoom {}....", zoom);
         this.cameraZoom = zoom;
     }
     
@@ -219,6 +219,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
             setCameraZoomValue(zoom);
             // Force a recalculation, based on both focus and zoom.
             if (this.cameraFocus != null) {
+                log.debug("Re-Setting focus {}.", cameraFocus);
                 updateRegion();
             }
         } catch ( Exception ex ) {

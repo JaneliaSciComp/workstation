@@ -203,6 +203,9 @@ public class CacheController {
                 if (receivedZoom != null  &&   (lastSetZoom == null  ||  !receivedZoom.equals( lastSetZoom ))) {
                     lastSetZoom = receivedZoom;
                     cameraListener.zoomChanged(lastSetZoom);
+                    if (POLLING) {
+                        cameraListener.focusChanged(lastSetFocus);
+                    }
                 }
                 if (receivedFocus != null  &&  (lastSetFocus == null  ||  !receivedFocus.equals( lastSetFocus ))) {
                     lastSetFocus = receivedFocus;
@@ -250,6 +253,7 @@ public class CacheController {
 
         @Override
         public void focusChanged( Vec3 focus ) {
+            log.info("Focus Change {}", focus);
             // Make sure that any thread, which is waiting to set the
             // focus, uses this new focus.
             Vec3 oldFocus = focusInWaiting.getAndSet(focus);
@@ -316,10 +320,15 @@ public class CacheController {
         public void run() {
             Double referencedZoom = zoom.get();
             zoom.set(null);
-            TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
-            Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
+            //TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
+            //Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
             manager.setPixelsPerSceneUnit(1.0);//camera.getPixelsPerSceneUnit());
-            manager.setCameraZoom(referencedZoom);
+            if (POLLING) {
+                manager.setCameraZoomValue(referencedZoom);
+            }
+            else {
+                manager.setCameraZoom(referencedZoom);
+            }
         }
         
     }
