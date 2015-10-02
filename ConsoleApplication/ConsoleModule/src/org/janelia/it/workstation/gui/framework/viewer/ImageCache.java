@@ -37,6 +37,7 @@ public class ImageCache {
     }
 
     public BufferedImage put(String identifier, BufferedImage image) {
+        if (image==null) return null;
         cache.put(identifier, image);
         return image;
     }

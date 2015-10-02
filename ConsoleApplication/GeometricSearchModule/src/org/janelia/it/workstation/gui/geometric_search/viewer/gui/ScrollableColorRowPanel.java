@@ -1,12 +1,12 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer.gui;
 
-import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorModifiedEvent;
-import org.janelia.it.workstation.gui.geometric_search.viewer.event.ActorSetVisibleEvent;
-import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
-import org.janelia.it.workstation.gui.geometric_search.viewer.event.RowSelectedEvent;
+import magicofcalculus.*;
+import org.janelia.it.workstation.gui.geometric_search.viewer.event.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.Component;
+import java.util.List;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -28,7 +28,7 @@ public abstract class ScrollableColorRowPanel extends JPanel {
 
     protected JPanel rowPanel = new JPanel();
 
-    protected java.util.List<Component> components=new ArrayList<>();
+   // protected java.util.List<Component> components=new ArrayList<>();
 
     public ScrollableColorRowPanel() {
         rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.Y_AXIS));
@@ -40,7 +40,7 @@ public abstract class ScrollableColorRowPanel extends JPanel {
     public abstract void addEntry(final String name, boolean isInitiallyVisible, Map<String,SyncedCallback> callbackMap) throws Exception;
 
     public void setSelectedRowByName(String name) {
-        for (Component component : components) {
+        for (Component component : rowPanel.getComponents()) {
             if (component instanceof ColorSelectionRow) {
                 ColorSelectionRow row = (ColorSelectionRow)component;
                 if (row.getName().equals(name)) {
@@ -60,7 +60,7 @@ public abstract class ScrollableColorRowPanel extends JPanel {
     }
 
     private ColorSelectionRow getRowByName(String name) {
-        for (Component component : components) {
+        for (Component component : rowPanel.getComponents()) {
             if (component instanceof ColorSelectionRow) {
                 ColorSelectionRow row = (ColorSelectionRow)component;
                 if (row.getName().equals(name)) {
@@ -75,11 +75,13 @@ public abstract class ScrollableColorRowPanel extends JPanel {
 
         logger.info("clear() start");
 
-        for (Component component : components) {
-            logger.info("removing component="+component.getName());
-            rowPanel.remove(component);
+        for (Component component : rowPanel.getComponents()) {
+            if (component instanceof ColorSelectionRow) {
+                logger.info("removing component=" + component.getName());
+                rowPanel.remove(component);
+            }
         }
-        components.clear();
+        //components.clear();
     }
 
     protected SyncedCallback getCallback(String key, Map<String, SyncedCallback> callbackMap) throws Exception {
@@ -93,7 +95,7 @@ public abstract class ScrollableColorRowPanel extends JPanel {
     public void selectAllRows() {
         boolean changed=false;
         EventManager.setDisallowViewerRefresh(true);
-        for (Component component : components) {
+        for (Component component : rowPanel.getComponents()) {
             if (component instanceof ColorSelectionRow) {
                 ColorSelectionRow row = (ColorSelectionRow)component;
                 JCheckBox visibleCheckBox = row.getVisibleCheckBox();
@@ -113,7 +115,7 @@ public abstract class ScrollableColorRowPanel extends JPanel {
     public void deselectAllRows() {
         boolean changed=false;
         EventManager.setDisallowViewerRefresh(true);
-        for (Component component : components) {
+        for (Component component : rowPanel.getComponents()) {
             if (component instanceof ColorSelectionRow) {
                 ColorSelectionRow row = (ColorSelectionRow)component;
                 JCheckBox visibleCheckBox = row.getVisibleCheckBox();
@@ -129,5 +131,77 @@ public abstract class ScrollableColorRowPanel extends JPanel {
             EventManager.sendEvent(this, new ActorModifiedEvent());
         }
     }
+
+    protected void setupActorStateCallbacks(final String actorName, final ColorSelectionRow c) {
+        final ScrollableColorRowPanel actionSource = this;
+
+        c.getVisibleCheckBox().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                logger.info("checkbox set to=" + c.getVisibleCheckBox().isSelected());
+                EventManager.sendEvent(actionSource, new ActorSetVisibleEvent(actorName, c.getVisibleCheckBox().isSelected()));
+            }
+        });
+
+        c.getAllButton().addActionListener(getAOSActionListener(actionSource, c, actorName, ActorAOSEvent.ALL_TYPE, c.getAllButton()));
+        c.getNoneButton().addActionListener(getAOSActionListener(actionSource, c, actorName, ActorAOSEvent.OFF_TYPE, c.getNoneButton()));
+        c.getSoloButton().addActionListener(getAOSActionListener(actionSource, c, actorName, ActorAOSEvent.SOLO_TYPE, c.getSoloButton()));
+
+    }
+
+    private ActionListener getAOSActionListener(final ScrollableColorRowPanel actionSource, final ColorSelectionRow c, final String actorName, final String aosType,
+                                                final GroupSelectionButton eventButton) {
+        return new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<GroupSelectionButton> updateButtons=new ArrayList<>();
+
+                if (!c.getAllButton().equals(eventButton)) {
+                    updateButtons.add(c.getAllButton());
+                }
+                if (!c.getNoneButton().equals(eventButton)) {
+                    updateButtons.add(c.getNoneButton());
+                }
+                if (!c.getSoloButton().equals(eventButton)) {
+                    updateButtons.add(c.getSoloButton());
+                }
+
+                if (eventButton.isSelected()) {
+                    // Turn off
+                    eventButton.setSelected(false);
+                    EventManager.sendEvent(actionSource, new ActorAOSEvent(actorName, aosType, false));
+                } else {
+                    // Turn on
+                    eventButton.setSelected(true);
+                    for (GroupSelectionButton aosButton : updateButtons) {
+                        if (aosButton.isSelected()) {
+                            aosButton.setSelected(false);
+                        }
+                    }
+
+                    // Make this action exclusive
+                    Component[] components=actionSource.rowPanel.getComponents();
+                    for (Component component : components) {
+                        if (component instanceof ColorSelectionRow) {
+                            ColorSelectionRow colorSelectionRow = (ColorSelectionRow)component;
+                            if (!colorSelectionRow.equals(c)) {
+                             //   if (eventButton.getText().equals(GroupSelectionButton.A_TYPE)) {
+                                    colorSelectionRow.getAllButton().setSelected(false);
+                            //    } else if (eventButton.getText().equals(GroupSelectionButton.N_TYPE)) {
+                                    colorSelectionRow.getNoneButton().setSelected(false);
+                            //    } else if (eventButton.getText().equals(GroupSelectionButton.S_TYPE)) {
+                                    colorSelectionRow.getSoloButton().setSelected(false);
+                            //    }
+                            }
+                        }
+                    }
+
+
+                    EventManager.sendEvent(actionSource, new ActorAOSEvent(actorName, aosType, true));
+                }
+            }
+        };
+    }
+
 
 }

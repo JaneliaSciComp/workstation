@@ -1,0 +1,106 @@
+<!--
+  ~ Copyright (c) 2010-2011, J. Craig Venter Institute, Inc.
+  ~
+  ~ This file is part of JCVI VICS.
+  ~
+  ~ JCVI VICS is free software; you can redistribute it and/or modify it
+  ~ under the terms and conditions of the Artistic License 2.0.  For
+  ~ details, see the full text of the license in the file LICENSE.txt.  No
+  ~ other rights are granted.  Any and all third party software rights to
+  ~ remain with the original developer.
+  ~
+  ~ JCVI VICS is distributed in the hope that it will be useful in
+  ~ bioinformatics applications, but it is provided "AS IS" and WITHOUT
+  ~ ANY EXPRESS OR IMPLIED WARRANTIES including but not limited to
+  ~ implied warranties of merchantability or fitness for any particular
+  ~ purpose.  For details, see the full text of the license in the file
+  ~ LICENSE.txt.
+  ~
+  ~ You should have received a copy of the Artistic License 2.0 along with
+  ~ JCVI VICS.  If not, the license can be obtained from
+  ~ "http://www.perlfoundation.org/artistic_license_2_0."
+  -->
+
+<process name="MetaGenoAnnotation"  startEvent="pending" processor="queue/metaGenoAnnotationLauncher" updateProcessStatus="on_success">
+    <sequence name="metaGenoAnnotationTopQueue">
+        <operation name="setup" processor="org.janelia.it.jacs.compute.service.metageno.anno.MetaGenoAnnotationSetupService">
+            <input name="SETUP_TYPE" value="START"/>
+            <output name="META_GENO_ANNOTATION_RESULT_NODE"/>
+            <output name="MG_INPUT_FILE"/>
+            <output name="MGA_FILE_ID"/>
+        </operation>
+        <operation name="splitFasta" processor="org.janelia.it.jacs.compute.service.metageno.MetaGenoFastaSplitterService">
+            <input name="FASTA_ENTRIES_PER_PIPELINE" value="50000"/>
+            <output name="MG_INPUT_ARRAY"/>
+        </operation>
+        <sequence waitForAsync="true">
+            <sequence>
+                <sequence forEach="MG_INPUT_ARRAY" waitForAsync="true">
+                    <sequence async="true">
+                        <sequence>
+                            <sequence waitForAsync="true">
+                                <operation name="hmmpfamFull" processor="org.janelia.it.jacs.compute.service.metageno.anno.Hmmpfam3Service" async="true">
+                                    <input name="MG_INPUT_ARRAY"/>
+                                    <input name="MGA_FILE_ID"/>
+                                    <input name="META_GENO_ANNOTATION_RESULT_NODE"/>
+                                </operation>
+                                <!--<operation name="hmmpfamFrag" processor="HmmpfamFragService" async="true">-->
+                                    <!--<input name="MG_INPUT_ARRAY"/>-->
+                                    <!--<input name="MGA_FILE_ID"/>-->
+                                    <!--<input name="META_GENO_ANNOTATION_RESULT_NODE"/>-->
+                                <!--</operation>-->
+                                <operation name="panda" processor="org.janelia.it.jacs.compute.service.metageno.anno.PandaBlastpService" async="true">
+                                    <input name="MG_INPUT_ARRAY"/>
+                                    <input name="MGA_FILE_ID"/>
+                                    <input name="META_GENO_ANNOTATION_RESULT_NODE"/>
+                                </operation>
+                                <!--<operation name="setup" processor="MetaGenoAnnotationSetupService">-->
+                                    <!--<input name="SETUP_TYPE" value="PIPELINE"/>-->
+                                    <!--<output name="PRIAM_TASK"/>-->
+                                <!--</operation>-->
+                            </sequence>
+                            <sequence waitForAsync="true">
+                                <!--<operation name="Priam"  processor="queue/gridSubmitAndWait" async="true">-->
+                                    <!--<input name="iservice" value="PriamEcService"/>-->
+                                    <!--<input name="PRIAM_TASK"/>-->
+                                    <!--<input name="MG_INPUT_ARRAY"/>-->
+                                    <!--<input name="MGA_FILE_ID"/>-->
+                                    <!--<input name="META_GENO_ANNOTATION_RESULT_NODE"/>-->
+                                <!--</operation>-->
+                                <operation name="lipoprotein" processor="org.janelia.it.jacs.compute.service.metageno.anno.LipoproteinService" async="true">
+                                    <input name="MG_INPUT_ARRAY"/>
+                                    <input name="MGA_FILE_ID"/>
+                                    <input name="META_GENO_ANNOTATION_RESULT_NODE"/>
+                                </operation>
+                                <operation name="tmhmm" processor="org.janelia.it.jacs.compute.service.metageno.anno.MgTmhmmService" async="true">
+                                    <input name="MG_INPUT_ARRAY"/>
+                                    <input name="MGA_FILE_ID"/>
+                                    <input name="META_GENO_ANNOTATION_RESULT_NODE"/>
+                                </operation>
+                                <operation name="hypothetical" processor="org.janelia.it.jacs.compute.service.metageno.anno.HypotheticalService" async="true">
+                                    <input name="MG_INPUT_ARRAY"/>
+                                    <input name="MGA_FILE_ID"/>
+                                    <input name="META_GENO_ANNOTATION_RESULT_NODE"/>
+                                </operation>
+                            </sequence>
+                        </sequence>
+                    </sequence>
+                </sequence>
+            </sequence>
+        </sequence>
+        <operation name="rules" processor="org.janelia.it.jacs.compute.service.metageno.anno.RulesService">
+            <input name="MG_INPUT_FILE"/>
+            <input name="MG_INPUT_ARRAY"/>
+            <input name="MGA_FILE_ID"/>
+            <input name="META_GENO_ANNOTATION_RESULT_NODE"/>
+        </operation>
+        <operation name="annoResults" processor="org.janelia.it.jacs.compute.service.metageno.anno.ResultsService">
+            <input name="MG_INPUT_FILE"/>
+            <input name="MG_INPUT_ARRAY"/>
+            <input name="META_GENO_ANNOTATION_RESULT_NODE"/>
+        </operation>
+        <!--<operation name="persistAnnoSql" processor="MetaGenoPersistAnnoSqlService">-->
+            <!--<input name="META_GENO_ANNOTATION_RESULT_NODE"/>-->
+        <!--</operation>-->
+    </sequence>
+</process>
