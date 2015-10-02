@@ -114,9 +114,9 @@ public class CacheController {
             log.warn("No positional status panel");
     }
     
-    public void loadComplete(File infile) {
+    public void loadComplete(File infile, int timeMs) {
         if (posStatPanel != null)
-            posStatPanel.setLoadComplete(infile);
+            posStatPanel.setLoadComplete(infile, timeMs);
     }
 
     /**

@@ -45,6 +45,7 @@ public class ExtractedCachePopulatorWorker implements java.util.concurrent.Calla
     }
 
     public byte[] readBytes() throws Exception {
+        Long startTime = new java.util.Date().getTime();
         log.debug("Grabbing {}.", Utilities.trimToOctreePath(infile));
         CacheController controller = CacheController.getInstance();
         controller.loadInProgress(infile);
@@ -59,7 +60,8 @@ public class ExtractedCachePopulatorWorker implements java.util.concurrent.Calla
         loader.loadVolumeInFormat(uncompressedRawFile);
         log.debug("Returning {}.", Utilities.trimToOctreePath(infile));
 
-        controller.loadComplete(infile);
+        int diff = (int)(new java.util.Date().getTime() - startTime);
+        controller.loadComplete(infile, diff);
         
         //Utilities.zeroScan(loader.getTextureByteArray(), infile.toString(), "ExtractedCachePopulatorWorker.call()::texBytes::" + loader.getTextureByteArray().hashCode());
         //Utilities.zeroScan(storage, infile.toString(), "ExtractedCachePopulatorWorker.call()::designated storage::" + storage.hashCode());

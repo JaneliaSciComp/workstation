@@ -32,6 +32,8 @@ public class PositionalStatusPanel extends JPanel {
     public static final Color COMPLETED_COLOR = Color.green;
     public static final Color IN_PROGRESS_COLOR = Color.yellow;
     public static final Color UNFILLED_COLOR = Color.red;
+    
+    private static final String TOOLTIP_FORMAT = "Average load time till now %10.2fs.";
 
     private static final int INSET_LEFT = 10;
     
@@ -39,6 +41,9 @@ public class PositionalStatusPanel extends JPanel {
     // Key is expected to be some sort of file-path.
     private GeometricNeighborhood neighborhood;
     private final Color clearColor;
+    
+    private int completeCount = 0;
+    private long combinedLoadTime = 0;
     
     private static final Color[] BGRND_Z = new Color[] {
         // Make more than max depth.
@@ -60,10 +65,19 @@ public class PositionalStatusPanel extends JPanel {
         setLoadStatus(infile, Status.InProgress);
     }
 
-    public void setLoadComplete(File infile) {
+    public void setLoadComplete(File infile, int elapsedMs) {
+        // Reflect average load in the tool tip.
+        synchronized(log) {
+            completeCount ++;
+            combinedLoadTime += elapsedMs;
+            this.setToolTipText(
+                    String.format(TOOLTIP_FORMAT, (double)(combinedLoadTime / 1000.0 / completeCount))
+            );
+        }
+                
         setLoadStatus(infile, Status.Filled);
     }
-
+    
     @Override
     public void paint(Graphics graphics) {
         log.trace("Size is: " + getSize().width + ":" + getSize().height);
@@ -121,8 +135,8 @@ public class PositionalStatusPanel extends JPanel {
             );
         }
 
-    }
-
+    }     
+    
     private void setLoadStatus(File infile, Status status) {
         PositionalStatusModelBean bean = null;
         bean = getModelBean( infile.getAbsolutePath() );
