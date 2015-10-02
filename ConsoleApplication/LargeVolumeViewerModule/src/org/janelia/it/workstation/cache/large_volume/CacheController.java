@@ -6,6 +6,8 @@
 package org.janelia.it.workstation.cache.large_volume;
 
 import java.io.File;
+import java.util.Timer;
+import java.util.TimerTask;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,6 +27,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CacheController {
     public static final int CACHE_MGR_SLEEP_TIME = 100;
+    private static final boolean POLLING = true;
 
     private CacheFacadeI manager;
     private CacheCameraListener cameraListener;
@@ -63,6 +66,9 @@ public class CacheController {
     public void setManager(CacheFacadeI manager) {
         this.manager = manager;
         this.cameraListener = new CacheCameraListener(manager);
+        if (POLLING) {
+            establishPollTimer();
+        }
     }
     
     public void setInUse( boolean flag ) {
@@ -122,18 +128,29 @@ public class CacheController {
         establishGeoNeighborhoodListener();
     }
     
-    public void zoomChanged(Double zoom) {
+    // Will poll periodically to see whether most recently-received
+    // value matches last set value.  If not, proceed.
+    private Double receivedZoom;
+    private Double lastSetZoom = null;
+    private Vec3 receivedFocus;
+    private Vec3 lastSetFocus = null;
+
+    public synchronized void zoomChanged(Double zoom) {
         if (cameraListener == null) {
             return;
         }
-        cameraListener.zoomChanged(zoom);
+        receivedZoom = zoom;
+        if (! POLLING)
+            cameraListener.zoomChanged(zoom);
     }
     
     public void focusChanged(Vec3 focus) {
         if (cameraListener == null) {
             return;
         }
-        cameraListener.focusChanged(focus);
+        receivedFocus = focus;
+        if (! POLLING)
+            cameraListener.focusChanged(focus);
     }
     
     private void establishGeoNeighborhoodListener() {
@@ -175,6 +192,26 @@ public class CacheController {
         }
         log.trace("Cache manager wait is over.");
         return manager;
+    }
+    
+    private void establishPollTimer() {
+        Timer pollTimer = new Timer("CacheControllerTimer");
+        TimerTask pollTask = new TimerTask() {
+
+            @Override
+            public void run() {
+                if (receivedZoom != null  &&  !receivedZoom.equals( lastSetZoom )) {
+                    lastSetZoom = receivedZoom;
+                    cameraListener.zoomChanged(lastSetZoom);
+                }
+                if (receivedFocus != null  &&  !receivedFocus.equals( lastSetFocus )) {
+                    lastSetFocus = receivedFocus;
+                    cameraListener.focusChanged(lastSetFocus);
+                }
+            }
+            
+        };
+        pollTimer.scheduleAtFixedRate(pollTask, 50, 1000);
     }
 
     private static class CacheCameraListener implements CameraListener {
