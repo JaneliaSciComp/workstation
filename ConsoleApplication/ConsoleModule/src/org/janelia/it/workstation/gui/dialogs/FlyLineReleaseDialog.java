@@ -7,6 +7,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Dialog.ModalityType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.user_data.Subject;
@@ -68,11 +70,13 @@ public class FlyLineReleaseDialog extends ModalDialog {
     private MembershipListPanel<Entity> dataSetPanel;
     private MembershipListPanel<Subject> annotatorsPanel;
     private MembershipListPanel<Subject> subscribersPanel;
+    private JButton okButton;
 
     private Entity releaseEntity;
 
     public FlyLineReleaseDialog(FlyLineReleaseListDialog parentDialog) {
 
+        super(parentDialog);
         this.parentDialog = parentDialog;
 
         setTitle("Fly Line Release Definition");
@@ -90,7 +94,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
             }
         });
 
-        JButton okButton = new JButton("OK");
+        this.okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");
         okButton.addActionListener(new ActionListener() {
             @Override
@@ -116,6 +120,13 @@ public class FlyLineReleaseDialog extends ModalDialog {
     public void showForRelease(final Entity releaseEntity) {
 
         this.releaseEntity = releaseEntity;
+        
+        if (releaseEntity!=null) {
+            okButton.setText("Create Folder Hierarchy");
+            okButton.setToolTipText("Create the release and corresponding folder hierarchy of all the lines due to be released");
+        }
+        
+        boolean editable = releaseEntity==null;
         String releaseOwnerKey = releaseEntity == null ? SessionMgr.getSubjectKey() : releaseEntity.getOwnerKey();
 
         attrPanel.removeAll();
@@ -130,6 +141,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
         final JLabel nameLabel = new JLabel("Release Name: ");
         nameInput = new JTextField(30);
+        nameInput.setEditable(editable);
         nameLabel.setLabelFor(nameInput);
         attrPanel.add(nameLabel, "gap para");
         attrPanel.add(nameInput);
@@ -139,12 +151,11 @@ public class FlyLineReleaseDialog extends ModalDialog {
         dateLabel.setLabelFor(dateInput);
         attrPanel.add(dateLabel, "gap para");
         attrPanel.add(dateInput);
-        dateInput.setEditable(releaseEntity==null);
+        dateInput.setEditable(editable);
 
         attrPanel.add(Box.createVerticalStrut(10), "span 2");
         
         JPanel bottomPanel = new JPanel(new GridBagLayout());
-
         GridBagConstraints c = new GridBagConstraints();
 
         c.gridx = 0;
@@ -154,7 +165,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
         c.anchor = GridBagConstraints.LINE_START;
         c.weightx = 1;
         dataSetPanel = new MembershipListPanel<>("Data Sets", DataSetComboBoxRenderer.class);
-        dataSetPanel.setEditable(releaseEntity==null);
+        dataSetPanel.setEditable(editable);
         bottomPanel.add(dataSetPanel, c);
 
         c.gridx = 1;
@@ -278,18 +289,29 @@ public class FlyLineReleaseDialog extends ModalDialog {
     private void saveAndClose() {
 
         Utils.setWaitingCursor(FlyLineReleaseDialog.this);
-
-        // TODO: check for duplicate release name
         
         if (StringUtils.isEmpty(nameInput.getText().trim())) {
-            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "The release name cannot be blank", "Cannot save", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "The release name cannot be blank", "Cannot save release", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        
+        for(Entity release : parentDialog.getReleases()) {
+            if (releaseEntity!=null && release.getName().equals(releaseEntity.getName())) {
+                JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "A release with this name already exists", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+        
         
         final List<String> dataSets = new ArrayList<>();
         for (Entity dataSet : dataSetPanel.getItemsInList()) {
             String identifier = dataSet.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER);
             dataSets.add(identifier);
+        }
+        
+        if (dataSets.isEmpty()) {
+            JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "A release must include at least one data set", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
         final StringBuilder annotatorsSb = new StringBuilder();
@@ -319,8 +341,11 @@ public class FlyLineReleaseDialog extends ModalDialog {
                     syncFolders = true;
                 }
 
-                ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_ANNOTATORS, annotatorsSb.toString());
+                EntityData ed = ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_ANNOTATORS, annotatorsSb.toString());
+                releaseEntity = ed.getParentEntity(); // Entity was invalidated by setOrUpdateValue
+                
                 ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_SUBSCRIBERS, subscribersSb.toString());
+                releaseEntity = ed.getParentEntity(); // Entity was invalidated by setOrUpdateValue
                 
                 if (syncFolders) {
                     launchSyncTask();
@@ -376,7 +401,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
                 return new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        SessionMgr.getBrowser().getEntityOutline().refresh();
+                        SessionMgr.getBrowser().getEntityOutline().refresh(true, true, null);
                         return null;
                     }
                 };
