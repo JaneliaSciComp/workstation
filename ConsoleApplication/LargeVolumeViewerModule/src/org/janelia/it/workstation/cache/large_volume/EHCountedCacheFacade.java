@@ -367,9 +367,24 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
                 wrapper = (CachableWrapper) cache.get(id).getObjectValue();
                 log.debug("Returning {}: found in cache.", keyOnly);
             } else {
-                byte[] storage = reuseStorage( id );
-                wrapper = cachePopulator.pushLaunch(id, storage);
-                log.debug("Missing.  Returning {}: pushed to cache. Zoom={}.", keyOnly, cameraZoom);
+                int combinedWaitMs = 0;
+                while (! isInCache(id) ) {
+                    Thread.sleep(WAIT_TIME_GET_BYTES);
+                    combinedWaitMs += WAIT_TIME_GET_BYTES;
+                    
+                    if (combinedWaitMs > 2500) {
+                        break;
+                    }
+                }
+                if (isInCache(id)) {
+                    wrapper = (CachableWrapper) cache.get(id).getObjectValue();
+                    log.info("Returning {}: after a wait.", keyOnly);
+                }
+                else {
+                    byte[] storage = reuseStorage(id);
+                    wrapper = cachePopulator.pushLaunch(id, storage);
+                    log.info("Missing.  Returning {}: pushed to cache. Zoom={}.", keyOnly, cameraZoom);
+                }
             }
             log.trace("Getting {} from cache wrapper.", keyOnly);
             dumpCacheMemoryUse(cache);
@@ -392,6 +407,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
         }
         return rtnVal;
     }
+    public static final int WAIT_TIME_GET_BYTES = 300;
     
     private void dumpCacheMemoryUse(Cache cache) {
         List<String> keys = cache.getKeys();
