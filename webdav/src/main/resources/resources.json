@@ -5,8 +5,10 @@
             "groupattribute": "memberUid"
         },
         "scality": {
-            "url": "http://sc101-jrc:81/proxy",
-            "driver":  "bparc2"
+            "objectUrl": "http://jacs-joss:8080/jos/object",
+            "metaUrl": "http://jacs-joss:8080/jos/metadata",
+            "user": "tester",
+            "password": "jos"
         }
     },
     "authorizers": {
