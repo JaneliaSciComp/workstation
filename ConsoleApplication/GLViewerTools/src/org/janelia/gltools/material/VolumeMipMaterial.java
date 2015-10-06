@@ -65,7 +65,6 @@ public class VolumeMipMaterial extends BasicMaterial
     private int opacityFunctionMaxIndex = -1;
     private int volumeMicrometersIndex = -1;
     private int tcToCameraIndex = -1;
-    private int viewportSizeIndex = -1;
     private int opaqueZNearFarIndex = -1;
     
     private float[] opaqueZNearFar = {1e-2f, 1e4f};
@@ -240,11 +239,6 @@ public class VolumeMipMaterial extends BasicMaterial
             // for isosurface, we need to convert normals from texCoords to camera
             gl.glUniformMatrix4fv(tcToCameraIndex, 1, false, camera_X_tc.inverse().asArray(), 0);
 
-            // viewport size, to help resolve depth values
-            float viewportSize[] = {
-                camera.getViewport().getWidthPixels(),
-                camera.getViewport().getHeightPixels()};
-            gl.glUniform2fv(viewportSizeIndex, 1, viewportSize, 0);
             gl.glUniform2fv(opaqueZNearFarIndex, 1, opaqueZNearFar, 0);
         }
        
@@ -334,7 +328,6 @@ public class VolumeMipMaterial extends BasicMaterial
         modelViewIndex = gl.glGetUniformLocation(s, "modelViewMatrix"); // -1 means no such item
         projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
         tcToCameraIndex = gl.glGetUniformLocation(s, "tcToCamera");
-        viewportSizeIndex = gl.glGetUniformLocation(s, "viewportSize");
         opaqueZNearFarIndex = gl.glGetUniformLocation(s, "opaqueZNearFar");
         
         uniformIndicesAreDirty = false;

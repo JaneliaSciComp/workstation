@@ -155,7 +155,7 @@ public class Framebuffer implements GL3Resource, GLEventListener {
             rt.reshape(gl, width, height);
             rt.init(gl);
             rt.bind(gl);
-            rt.clear(gl);
+            // rt.clear(gl); // Causes problems on ATI
             gl.glFramebufferTexture2D(GL3.GL_FRAMEBUFFER, rt.getAttachment(), 
                     rt.getTextureTarget(),
                     rt.getHandle(), 0);
@@ -214,7 +214,7 @@ public class Framebuffer implements GL3Resource, GLEventListener {
         for (RenderTarget rt : renderTargets) {
             rt.reshape(gl, w, h);
             rt.bind(gl);
-            rt.clear(gl);
+            // rt.clear(gl);
             gl.glFramebufferTexture2D(GL3.GL_FRAMEBUFFER, rt.getAttachment(), 
                     rt.getTextureTarget(),
                     rt.getHandle(), 0);

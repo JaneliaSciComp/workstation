@@ -256,55 +256,13 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         neuronMPRenderer = setUpActors();
         
+        setBackgroundColor( workspace.getBackgroundColor() ); // call this AFTER setUpActors
         workspace.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
             {
                 // Update background color
-                Color c = workspace.getBackgroundColor();
-                float[] cf = c.getColorComponents(new float[3]);
-                // Convert sRGB to linear RGB
-                for (int i = 0; i < 3; ++i)
-                    cf[i] = cf[i]*cf[i]; // second power is close enough...
-                // Create color gradient from single color
-                double deltaLuma = 0.05; // desired intensity change
-                double midLuma = 0.30*cf[0] + 0.59*cf[1] + 0.11*cf[2];
-                double topLuma = midLuma - 0.5*deltaLuma;
-                double bottomLuma = midLuma + 0.5*deltaLuma;
-                if (bottomLuma > 1.0) { // user wants it REALLY light
-                    bottomLuma = 1.0; // white
-                    topLuma = midLuma; // whatever color user said
-                }
-                if (topLuma < 0.0) { // user wants it REALLY dark
-                    topLuma = 0.0; // black
-                    bottomLuma = midLuma; // whatever color user said
-                }
-                Color topColor = c;
-                Color bottomColor = c;
-                if (midLuma > 0) {
-                    float t = (float) (255 * topLuma / midLuma);
-                    float b = (float) (255 * bottomLuma / midLuma);
-                    int[] tb = {
-                        (int)(cf[0]*t), (int)(cf[1]*t), (int)(cf[2]*t),
-                        (int)(cf[0]*b), (int)(cf[1]*b), (int)(cf[2]*b)
-                    };
-                    // Clamp color components to range 0-255
-                    for (int i = 0; i < 6; ++i) {
-                        if (tb[i] < 0) tb[i] = 0;
-                        if (tb[i] > 255) tb[i] = 255;
-                    }
-                    topColor = new Color(tb[0], tb[1], tb[2]);
-                    bottomColor = new Color(tb[3], tb[4], tb[5]);
-                }
-                setBackgroundColor(topColor, bottomColor);
-                if (bottomLuma > 0.25) { // sRGB luma 0.5 == lRGB luma 0.25...
-                    scaleBar.setForegroundColor(Color.black);
-                    scaleBar.setBackgroundColor(new Color(255, 255, 255, 50));
-                }
-                else {
-                    scaleBar.setForegroundColor(Color.white);
-                    scaleBar.setBackgroundColor(new Color(0, 0, 0, 50));                    
-                }
+                setBackgroundColor( workspace.getBackgroundColor() );
                 
                 // Update neuron models
                 Set<NeuronReconstruction> latestNeurons = new java.util.HashSet<>();
@@ -342,7 +300,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // tracingInteractor
         );
         
-        workspace.setBackgroundColor(Color.darkGray);
         workspace.notifyObservers();
     }
 
@@ -579,39 +536,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         // TODO - print out tile X, Y, Z (voxels)
         // TODO - print out tile identifier       
     }
-
-    /*
-    private int intensityForScreenXy(Point2D xy) {
-        int result = neuronMPRenderer.valueForScreenXy(xy, GL3.GL_COLOR_ATTACHMENT0);
-        if (result <= 0) {
-            return -1;
-        }
-        return result;
-    }
-
-    /*
-    private int pickIdForScreenXy(Point2D xy) {
-        return valueForScreenXy(xy, GL3.GL_COLOR_ATTACHMENT1);
-    }
-
-    private int valueForScreenXy(Point2D xy, int glAttachment) {
-        int result = -1;
-        if (mprActor == null) {
-            return result;
-        }
-        RenderTarget target = mprActor.getRenderTarget(glAttachment);
-        if (target == null) {
-            return result;
-        }
-        int intensity = target.getIntensity(
-                sceneWindow.getGLAutoDrawable(),
-                (int) Math.round(xy.getX()),
-                // y convention is opposite between screen and texture buffer
-                target.getHeight() - (int) Math.round(xy.getY()),
-                0); // channel index
-        return intensity;
-    }
-    */
 
     private float depthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
         float result = neuronMPRenderer.relativeDepthOffsetForScreenXy(xy, camera);
@@ -1217,7 +1141,57 @@ public final class NeuronTracerTopComponent extends TopComponent
         return true;
     }
     
+    // Create background gradient using a single base color
+    private void setBackgroundColor(Color c) {
+        // Update background color
+        float[] cf = c.getColorComponents(new float[3]);
+        // Convert sRGB to linear RGB
+        for (int i = 0; i < 3; ++i)
+            cf[i] = cf[i]*cf[i]; // second power is close enough...
+        // Create color gradient from single color
+        double deltaLuma = 0.05; // desired intensity change
+        double midLuma = 0.30*cf[0] + 0.59*cf[1] + 0.11*cf[2];
+        double topLuma = midLuma - 0.5*deltaLuma;
+        double bottomLuma = midLuma + 0.5*deltaLuma;
+        if (bottomLuma > 1.0) { // user wants it REALLY light
+            bottomLuma = 1.0; // white
+            topLuma = midLuma; // whatever color user said
+        }
+        if (topLuma < 0.0) { // user wants it REALLY dark
+            topLuma = 0.0; // black
+            bottomLuma = midLuma; // whatever color user said
+        }
+        Color topColor = c;
+        Color bottomColor = c;
+        if (midLuma > 0) {
+            float t = (float) (255 * topLuma / midLuma);
+            float b = (float) (255 * bottomLuma / midLuma);
+            int[] tb = {
+                (int)(cf[0]*t), (int)(cf[1]*t), (int)(cf[2]*t),
+                (int)(cf[0]*b), (int)(cf[1]*b), (int)(cf[2]*b)
+            };
+            // Clamp color components to range 0-255
+            for (int i = 0; i < 6; ++i) {
+                if (tb[i] < 0) tb[i] = 0;
+                if (tb[i] > 255) tb[i] = 255;
+            }
+            topColor = new Color(tb[0], tb[1], tb[2]);
+            bottomColor = new Color(tb[3], tb[4], tb[5]);
+        }
+        setBackgroundColor(topColor, bottomColor);
+    }
+    
     public void setBackgroundColor(Color topColor, Color bottomColor) {
         neuronMPRenderer.setBackgroundColor(topColor, bottomColor);
+        float[] bf = bottomColor.getColorComponents(new float[3]);
+        double bottomLuma = 0.30*bf[0] + 0.59*bf[1] + 0.11*bf[2];
+        if (bottomLuma > 0.25) { // sRGB luma 0.5 == lRGB luma 0.25...
+            scaleBar.setForegroundColor(Color.black);
+            scaleBar.setBackgroundColor(new Color(255, 255, 255, 50));
+        }
+        else {
+            scaleBar.setForegroundColor(Color.white);
+            scaleBar.setBackgroundColor(new Color(0, 0, 0, 50));                    
+        }
     }
 }

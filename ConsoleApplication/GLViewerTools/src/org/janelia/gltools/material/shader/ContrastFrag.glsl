@@ -17,14 +17,14 @@ in vec2 screenCoord; // from RenderPassVrtx shader
 out vec4 fragColor;
 
 const vec4 hue = vec4(
-    120, // cyan/blue?
-    // 158, // GFP green, 509 nm
+    120, // Pure green
+    // 158, // GFP green, 509 nm, bluish
     49, // TDTomato red
     326, // magenta
     242 // blue
     );
 
-const vec4 saturation = vec4(1, 1, 1, 1) * 0.95;
+const vec4 saturation = vec4(1, 1, 1, 1) * 0.90;
 
 vec3 hslToRgb(vec3 hsl) 
 {
@@ -67,9 +67,11 @@ void main() {
     // float opacity = intensity * opacityIn;
     float opacity = opacityIn;
 
+	// TODO: allow inversion of lightness spectrum
     // HSL approach
-    if (false) {
-        vec3 hsl = vec3(hue.x, saturation.x, intensity);
+    if (true) {
+        const float rampOffset = 1.6; // Enhance low-end of lightness spectrum; larger value => blacker color
+        vec3 hsl = vec3( hue.x, saturation.x, pow(intensity, rampOffset) );
         vec3 rgb = hslToRgb(hsl);
         fragColor = vec4(rgb, opacity);
         return;
@@ -80,10 +82,10 @@ void main() {
     const bool applyColorMap = true;
     vec3 color = vec3(1,1,1); // white
     if (applyColorMap) {
-        vec3 color1 = vec3(0, 0.2, 0.05); // green
-        vec3 color2 = vec3(0, 0.9, 0); // green/cyan
+        vec3 color1 = vec3(0, 0.1, 0); // dark dark green
+        vec3 color2 = vec3(0, 1.0, 0.2); // green/cyan
         vec3 color3 = vec3(1,1,0.80); // white-ish
-        if (intensity < 0.5)
+        if (intensity < 0.7)
             color = mix(color1, color2, 2*intensity);
         else
             color = mix(color2, color3, 2*intensity-1);
