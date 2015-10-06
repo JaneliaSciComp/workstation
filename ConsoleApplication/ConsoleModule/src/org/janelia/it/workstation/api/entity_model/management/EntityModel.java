@@ -1348,8 +1348,8 @@ public class EntityModel {
      * @return
      * @throws Exception
      */
-    public Entity createFlyLineRelease(String releaseName, Date releaseDate, List<String> dataSetList) throws Exception {
-        return putOrUpdate(annotationFacade.createFlyLineRelease(releaseName, releaseDate, dataSetList));
+    public Entity createFlyLineRelease(String releaseName, Date releaseDate, Integer lagTimeMonths, List<String> dataSetList) throws Exception {
+        return putOrUpdate(annotationFacade.createFlyLineRelease(releaseName, releaseDate, lagTimeMonths, dataSetList));
     }
 
     /**

@@ -119,8 +119,8 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     }
     
     @Override
-    public Entity createFlyLineRelease(String releaseName, Date releaseDate, List<String> dataSetList) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createFlyLineRelease(SessionMgr.getSubjectKey(), releaseName, releaseDate, dataSetList);
+    public Entity createFlyLineRelease(String releaseName, Date releaseDate, Integer lagTimeMonths, List<String> dataSetList) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().createFlyLineRelease(SessionMgr.getSubjectKey(), releaseName, releaseDate, lagTimeMonths, dataSetList);
     }
 
     @Override

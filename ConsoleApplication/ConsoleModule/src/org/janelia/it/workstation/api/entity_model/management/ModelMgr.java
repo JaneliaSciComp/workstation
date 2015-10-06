@@ -1064,8 +1064,8 @@ public final class ModelMgr {
         return entityModel.createDataSet(dataSetName);
     }
 
-    public Entity createFlyLineRelease(String releaseName, Date releaseDate, List<String> dataSetList) throws Exception {
-        return entityModel.createFlyLineRelease(releaseName, releaseDate, dataSetList);
+    public Entity createFlyLineRelease(String releaseName, Date releaseDate, Integer lagTimeMonths, List<String> dataSetList) throws Exception {
+        return entityModel.createFlyLineRelease(releaseName, releaseDate, lagTimeMonths, dataSetList);
     }
     
     public Set<EntityActorPermission> getFullPermissions(Long entityId) throws Exception {
