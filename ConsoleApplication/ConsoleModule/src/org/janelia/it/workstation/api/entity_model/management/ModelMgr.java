@@ -1199,6 +1199,10 @@ public final class ModelMgr {
             double x, double y, double z, String comment) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
     }
+    
+    public void addLinkedGeometricAnnotations(Map<Integer, Integer> nodeParentLinkage, Map<Integer, TmGeoAnnotation> annotations) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
+    }
 
     public void reparentGeometricAnnotation(TmGeoAnnotation annotation, Long newParentAnnotationID,
             TmNeuron neuron) throws Exception {

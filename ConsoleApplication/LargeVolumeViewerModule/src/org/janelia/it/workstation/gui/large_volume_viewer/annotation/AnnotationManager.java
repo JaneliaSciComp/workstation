@@ -1484,9 +1484,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             BackgroundWorker importer = new BackgroundWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.importSWCData(swcFile, this);
-                }
+                    annotationModel.importBulkSWCData(swcFile, null);
 
+                    //annotationModel.importSWCData(swcFile, this);
+                }
+                
                 @Override
                 public String getName() {
                     return "import " + swcFile.getName();
