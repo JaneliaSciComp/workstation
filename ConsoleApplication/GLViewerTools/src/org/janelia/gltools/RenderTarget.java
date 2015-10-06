@@ -198,11 +198,16 @@ public class RenderTarget extends Texture2d
         hostTextureBuffer = null;
     }
     
+    /*  // clear() method causes problems on ATI
+    // Presumably because render textures should not be writeable in general.
+    // ESPECIALLY MSAA render textures, which we use sometimes.
+    // I'm not sure why the nvidia cards did not complain, now that I think about it.
     public void clear(GL3 gl) {
         int totalBytes = width*height*bytesPerIntensity*numberOfComponents + height*widthPadInBytes;
         ByteBuffer clearBuffer = Buffers.newDirectByteBuffer(totalBytes);
         clearBuffer.order(ByteOrder.nativeOrder());
         clearBuffer.clear();
+        
         gl.glTexSubImage2D(
                 textureTarget, 
                 0, // mipmap level
@@ -212,6 +217,7 @@ public class RenderTarget extends Texture2d
                 type, 
                 clearBuffer);
     }
+     */
     
     // RenderTargets have nothing to upload.
     @Override
