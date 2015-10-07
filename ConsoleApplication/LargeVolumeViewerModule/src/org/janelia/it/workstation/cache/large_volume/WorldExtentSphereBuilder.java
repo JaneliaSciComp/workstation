@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
+
+    public static final String FILE_SEPARATOR = System.getProperties().getProperty("file.separator");
     
     private CompressedFileResolver resolver = new CompressedFileResolver();
     private CompressedFileResolver.CompressedFileNamer namer;
@@ -341,9 +343,8 @@ public class WorldExtentSphereBuilder implements GeometricNeighborhoodBuilder {
             );
             
             for ( int i = 0; i < chCount; i++ ) {
-                //todo possible problem with Windows: could fail to update
                 // from all-red swatch.
-                String fullTifPath = tilePath + "/" + OctreeMetadataSniffer.getFilenameForChannel(tiffBase, i);                
+                String fullTifPath = tilePath + FILE_SEPARATOR + OctreeMetadataSniffer.getFilenameForChannel(tiffBase, i);
                 PositionalStatusModelBean model = new PositionalStatusModelBean(tileCenter);
                 model.setTileXyz(justifyTileCoords(minTiles, tileXyz, zTilePosOrdinal));
                 if (cacheManager.isReady(new File(fullTifPath))) {

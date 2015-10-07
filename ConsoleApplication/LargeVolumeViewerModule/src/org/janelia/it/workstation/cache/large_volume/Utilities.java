@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class Utilities {
+
+    public static final String FILE_SEPARATOR = System.getProperties().getProperty("file.separator");
     private static final Logger log = LoggerFactory.getLogger(Utilities.class);
     /**
      * See if this buffer is completely filled with zeros.
@@ -43,7 +45,7 @@ public class Utilities {
     }
     
     public static String trimToOctreePath(String id) {
-        int endPoint = id.lastIndexOf("/");
+        int endPoint = id.lastIndexOf(FILE_SEPARATOR);
         int startPoint = 0;
         boolean foundAlpha = false;
         while (!foundAlpha) {
@@ -51,7 +53,7 @@ public class Utilities {
             if (Character.isAlphabetic(id.charAt(endPoint))) {
                 foundAlpha = true;
                 startPoint = endPoint;
-                startPoint = id.indexOf("/", startPoint);
+                startPoint = id.indexOf(FILE_SEPARATOR, startPoint);
             }
         }
         return id.substring(startPoint);
