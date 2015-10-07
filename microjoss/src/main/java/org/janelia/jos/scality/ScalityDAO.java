@@ -59,7 +59,7 @@ public class ScalityDAO {
             EntityUtils.consumeQuietly(res.getEntity());
             
             int statusCode = res.getStatusLine().getStatusCode();
-            log.info("Got headers from Scality for {}",path);
+            //log.info("Got headers from Scality for {}",path);
 
             switch (Response.Status.fromStatusCode(statusCode)) {
             case OK: 
