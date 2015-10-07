@@ -4,20 +4,29 @@ import java.io.IOException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.HeadMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.DeleteMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.workstation.webdav.exception.FileNotFoundException;
+import org.janelia.workstation.webdav.exception.FileUploadException;
 import org.janelia.workstation.webdav.propfind.Multistatus;
 import org.janelia.workstation.webdav.propfind.Prop;
 import org.janelia.workstation.webdav.propfind.PropfindResponse;
 import org.janelia.workstation.webdav.propfind.Propstat;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.StreamingOutput;
@@ -25,22 +34,16 @@ import javax.ws.rs.core.UriInfo;
 
 /**
  * Created by schauderd on 6/26/15.
- * For now, this works only with Scality.  At some point, we can abstract it to work with any object storage
+ * For now, this delegates mostly to JOSS.  At some point, we should probably merge all this functionality into one web-app.
  */
 public class ObjectFileShare extends FileShare {
-    private static final String SCALITY_PREPEND = "/Scality";
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 1024 * 2;
-
-    private String getUrlFromBPID(String bpid) {
-        ScalityProvider provider = (ScalityProvider) WebdavContextManager.getProviders().get("scality");
-        return provider.getUrlFromBPID(bpid);
-    }
 
     @Override
     public String propFind(UriInfo uriInfo, HttpHeaders headers) throws FileNotFoundException, IOException {
         // there is no hierarchical concept in Scality, so always only return existing file info
         String filepath = "/" + uriInfo.getPath();
-        String scalityFilepath = filepath.substring(SCALITY_PREPEND.length());
+        String scalityFilepath = filepath.substring(this.getMapping().length());
 
         // create Multistatus top level
         Multistatus propfindContainer = new Multistatus();
@@ -48,16 +51,22 @@ public class ObjectFileShare extends FileShare {
         propfindContainer.getResponse().add(fileMeta);
         Propstat propstat = new Propstat();
         Prop prop = new Prop();
-        String url = getUrlFromBPID(scalityFilepath);
-        GetMethod get = new GetMethod(url);
+
+        JOSSProvider provider = (JOSSProvider) WebdavContextManager.getProviders().get("scality");
+        String url = provider.getObjectUrl() + scalityFilepath;
+        System.out.println (url);
+
+        HeadMethod get = new HeadMethod(url);
         try {
             MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
             HttpConnectionManagerParams managerParams = mgr.getParams();
             managerParams.setDefaultMaxConnectionsPerHost(10);
             managerParams.setMaxTotalConnections(20);
             HttpClient httpClient = new HttpClient(mgr);
+            Credentials credentials = new UsernamePasswordCredentials(provider.getUser(), provider.getPassword());
+            httpClient.getState().setCredentials(AuthScope.ANY, credentials);
             httpClient.executeMethod(get);
-            prop.setGetContentLength(get.getResponseHeader("Content-length").getValue());
+            prop.setGetContentLength(get.getResponseHeader("X-Joss-Size").getValue());
         } catch (Exception e) {
             throw new FileNotFoundException("Problem getting information about file from Scality");
         }
@@ -65,11 +74,7 @@ public class ObjectFileShare extends FileShare {
             get.releaseConnection();
         }
 
-        // TO DO: point to mongo and get meta-data
-        //prop.setCreationDate(Files.getAttribute(file, "creationTime").toString());
-        //prop.setGetContentType(Files.probeContentType(file));
-        //prop.setGetLastModified(Files.getLastModifiedTime(file).toString());
-        fileMeta.setHref("/Webdav/Scality" + scalityFilepath.toString());
+        fileMeta.setHref("/Webdav" + this.getMapping() + scalityFilepath.toString());
         propstat.setProp(prop);
         propstat.setStatus("HTTP/1.1 200 OK");
         fileMeta.setPropstat(propstat);
@@ -88,27 +93,149 @@ public class ObjectFileShare extends FileShare {
     }
 
     @Override
-    public StreamingOutput getFile (String filename) throws FileNotFoundException {
-        // strip off the Scality prepend
-        final String qualifiedFilename = filename.substring(SCALITY_PREPEND.length());
+    public StreamingOutput getFile (HttpServletResponse response, String filename) throws FileNotFoundException {
+        MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
+        HttpConnectionManagerParams managerParams = mgr.getParams();
+        managerParams.setDefaultMaxConnectionsPerHost(100);
+        managerParams.setMaxTotalConnections(100);
+        HttpClient httpClient = new HttpClient(mgr);
+
+        JOSSProvider provider = (JOSSProvider) WebdavContextManager.getProviders().get("scality");
+        String url = provider.getObjectUrl() + filename;
+        final GetMethod get = new GetMethod(url);
+        try {
+            Credentials credentials = new UsernamePasswordCredentials(provider.getUser(), provider.getPassword());
+            httpClient.getState().setCredentials(AuthScope.ANY, credentials);
+            int responseCode = httpClient.executeMethod(get);
+            System.out.println (responseCode);
+        } catch (IOException e) {
+            throw new FileNotFoundException("problem getting data from scality");
+        }
+        final String contentLengthStr = get.getResponseHeader("Content-length").getValue();
+        response.setHeader("Content-Length", contentLengthStr);
+
         return new StreamingOutput() {
             @Override
             public void write(OutputStream output) throws IOException, WebApplicationException {
-                String url = getUrlFromBPID(qualifiedFilename);
-                final GetMethod get = new GetMethod(url);
                 try {
-                    int responseCode;
-
-                    MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
-                    HttpConnectionManagerParams managerParams = mgr.getParams();
-                    managerParams.setDefaultMaxConnectionsPerHost(10);
-                    managerParams.setMaxTotalConnections(20);
-                    HttpClient httpClient = new HttpClient(mgr);
-                    responseCode = httpClient.executeMethod(get);
-
-                    String contentLengthStr = get.getResponseHeader("Content-length").getValue();
-                    final long contentLength = Long.parseLong(contentLengthStr);
+                    long contentLength = Long.parseLong(contentLengthStr);
+                    System.out.println ("Content length is " + contentLength);
                     copyBytes(get.getResponseBodyAsStream(), output, contentLength);
+                }
+                finally {
+                    get.releaseConnection();
+                }
+            }
+        };
+    }
+
+    public void deleteFile (String qualifiedFilename) throws IOException {
+        System.out.println (qualifiedFilename);
+        HttpClient httpClient = new HttpClient();
+
+        JOSSProvider provider = (JOSSProvider) WebdavContextManager.getProviders().get("scality");
+        String url = provider.getObjectUrl() + qualifiedFilename;
+        System.out.println (url);
+
+        final DeleteMethod delete = new DeleteMethod(url);
+        Credentials credentials = new UsernamePasswordCredentials(provider.getUser(), provider.getPassword());
+        httpClient.getState().setCredentials(AuthScope.ANY, credentials);
+
+        int responseCode = httpClient.executeMethod(delete);
+        System.out.println (responseCode);
+    }
+
+    @Override
+    public void putFile(InputStream binaryStream, String filepath) throws FileUploadException {
+        try {
+            System.out.println (filepath);
+            MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
+            HttpConnectionManagerParams managerParams = mgr.getParams();
+            managerParams.setDefaultMaxConnectionsPerHost(100);
+            managerParams.setMaxTotalConnections(100);
+            HttpClient httpClient = new HttpClient(mgr);
+
+            JOSSProvider provider = (JOSSProvider) WebdavContextManager.getProviders().get("scality");
+            String url = provider.getObjectUrl() + filepath;
+            System.out.println (url);
+
+            final PutMethod put = new PutMethod(url);
+            Credentials credentials = new UsernamePasswordCredentials(provider.getUser(), provider.getPassword());
+            httpClient.getState().setCredentials(AuthScope.ANY, credentials);
+            put.setRequestEntity(new InputStreamRequestEntity(binaryStream));
+
+            int responseCode = httpClient.executeMethod(put);
+            System.out.println (responseCode);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new FileUploadException("Problem creating new file in joss");
+        }
+    }
+
+    @Override
+    public StreamingOutput getInfo (HttpServletResponse response, String filepath) throws FileNotFoundException {
+        final String qualifiedFilename = "/" + filepath.substring(this.getMapping().length());
+        MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
+        HttpConnectionManagerParams managerParams = mgr.getParams();
+        managerParams.setDefaultMaxConnectionsPerHost(100);
+        managerParams.setMaxTotalConnections(100);
+        HttpClient httpClient = new HttpClient(mgr);
+
+        JOSSProvider provider = (JOSSProvider) WebdavContextManager.getProviders().get("scality");
+        String url = provider.getMetaUrl() + qualifiedFilename;
+        final GetMethod get = new GetMethod(url);
+        try {
+            Credentials credentials = new UsernamePasswordCredentials(provider.getUser(), provider.getPassword());
+            httpClient.getState().setCredentials(AuthScope.ANY, credentials);
+            int responseCode = httpClient.executeMethod(get);
+            System.out.println (responseCode);
+        } catch (IOException e) {
+            throw new FileNotFoundException("problem getting data from scality");
+        }
+
+        return new StreamingOutput() {
+            @Override
+            public void write(OutputStream output) throws IOException, WebApplicationException {
+                try {
+                    System.out.println (get.getResponseBodyAsString());
+                    output.write(get.getResponseBodyAsString().getBytes());
+                }
+                finally {
+                    get.releaseConnection();
+                }
+            }
+        };
+    }
+
+    @Override
+    public StreamingOutput searchFile (HttpServletResponse response, String filepath) throws FileNotFoundException {
+        final String qualifiedFilename = "/" + filepath.substring(this.getMapping().length());
+        System.out.println (qualifiedFilename);
+        MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
+        HttpConnectionManagerParams managerParams = mgr.getParams();
+        managerParams.setDefaultMaxConnectionsPerHost(100);
+        managerParams.setMaxTotalConnections(100);
+        HttpClient httpClient = new HttpClient(mgr);
+
+        JOSSProvider provider = (JOSSProvider) WebdavContextManager.getProviders().get("scality");
+        String url = provider.getSearchUrl() + qualifiedFilename;
+        System.out.println (url);
+        final GetMethod get = new GetMethod(url);
+        try {
+            Credentials credentials = new UsernamePasswordCredentials(provider.getUser(), provider.getPassword());
+            httpClient.getState().setCredentials(AuthScope.ANY, credentials);
+            int responseCode = httpClient.executeMethod(get);
+            System.out.println (responseCode);
+        } catch (IOException e) {
+            throw new FileNotFoundException("problem getting data from scality");
+        }
+
+        return new StreamingOutput() {
+            @Override
+            public void write(OutputStream output) throws IOException, WebApplicationException {
+                try {
+                    System.out.println (get.getResponseBodyAsString());
+                    output.write(get.getResponseBodyAsString().getBytes());
                 }
                 finally {
                     get.releaseConnection();

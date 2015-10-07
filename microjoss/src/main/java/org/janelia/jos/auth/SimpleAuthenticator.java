@@ -16,7 +16,7 @@ public class SimpleAuthenticator implements Authenticator<BasicCredentials, Simp
     @Override
     public Optional<SimplePrincipal> authenticate(BasicCredentials credentials) throws AuthenticationException {
         if ("jos".equals(credentials.getPassword())) {
-            return Optional.of(new SimplePrincipal(credentials.getUsername()));
+            return Optional.of(new SimplePrincipal(credentials.getUsername().trim()));
         }
         return Optional.absent();
     }

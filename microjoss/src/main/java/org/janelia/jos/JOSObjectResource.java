@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -44,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -94,7 +97,7 @@ public class JOSObjectResource {
             @Auth SimplePrincipal principal,
             InputStream is) throws Throwable {
 
-        authorize(principal);
+      //  authorize(principal);
         
         boolean bzipped = compress==null?false:compress;
         
@@ -144,8 +147,7 @@ public class JOSObjectResource {
             @ApiParam(value="Force decompression of the stream with bzip2?") @QueryParam("decompress") Boolean decompress,
             @Auth SimplePrincipal principal) throws Exception {
 
-        authorize(principal);
-
+      //  authorize(principal);
         final JOSObject obj = getObject(path, principal, false);
         final boolean bzipped = decompress==null?obj.isBzipped():decompress;
         final InputStream input = scality.get(path, obj.getNumBytes(), bzipped);
@@ -190,7 +192,7 @@ public class JOSObjectResource {
             @ApiParam(value="Path to object", required=true) @PathParam("path") final String path,
             @Auth SimplePrincipal principal) throws Exception {
 
-        authorize(principal);
+      //  authorize(principal);
 
         final JOSObject obj = getObject(path, principal, false);
         
@@ -217,7 +219,7 @@ public class JOSObjectResource {
                         + "If false, the object is marked for deletion and deleted asynchronously.") @QueryParam("sync") final boolean sync,
                 @Auth SimplePrincipal principal) throws Exception {
 
-        authorize(principal);
+      //  authorize(principal);
         
         JOSObject obj = getObject(path, principal, false);
         
@@ -252,7 +254,7 @@ public class JOSObjectResource {
             @ApiParam(value="Path to object", required=true) @PathParam("path") String path,
             @Auth SimplePrincipal principal) throws Throwable {
 
-        authorize(principal);
+      //  authorize(principal);
 
         JOSObject existingObj = getObject(path, principal, true);
         
@@ -305,7 +307,7 @@ public class JOSObjectResource {
             @ApiParam(value="Path to object", required=true) @PathParam("path") final String path,
             @Auth SimplePrincipal principal) {
 
-        authorize(principal);
+      //  authorize(principal);
         
         final String finalPath = getFormattedPath(path);
         log.debug("Getting info for "+finalPath);
@@ -329,7 +331,7 @@ public class JOSObjectResource {
             @ApiParam(value="Object name", required=true) @PathParam("name") final String name,
             @Auth SimplePrincipal principal) {
         
-        authorize(principal);
+     //   authorize(principal);
         
         log.debug("Getting listing for "+name);
         
@@ -355,7 +357,7 @@ public class JOSObjectResource {
             @ApiParam(value="Parent path", required=true) @PathParam("parentPath") String parentPath,
             @Auth SimplePrincipal principal) {
         
-        authorize(principal);
+      //  authorize(principal);
         
         final String finalPath = getFormattedPath(parentPath);
         log.debug("Getting listing for "+finalPath);
@@ -382,7 +384,7 @@ public class JOSObjectResource {
             @ApiParam(value="Path prefix", required=true) @PathParam("path") String parentPath,
             @Auth SimplePrincipal principal) {
         
-        authorize(principal);
+      //  authorize(principal);
         
         String regex = getFormattedPath(parentPath)+".*";
         log.debug("Getting listing for "+regex);
@@ -404,13 +406,23 @@ public class JOSObjectResource {
     @ApiResponses(value = {
       @ApiResponse(code = 200, message = "Report returned")
     })
-    public List getUsageByOwner(
+    public Map<String,String> getUsageByOwner(
             @Auth SimplePrincipal principal) {
         
-        authorize(principal);
+      //  authorize(principal);
 
-        List map = getObjectCollection().aggregate("{\"$group\" : {_id:\"$owner\", totalBytes:{$sum:{$divide:[\"$numBytes\","+MEGABYTE+"]}}}}").as(List.class);
-        return map;   
+        List<DBObject> results = getObjectCollection().aggregate("{\"$group\" : {_id:\"$owner\", totalMb:{$sum:{$divide:[\"$numBytes\","+MEGABYTE+"]}}}}").as(DBObject.class);
+        
+        Map<String,String> usage = new HashMap<>();
+        
+        DecimalFormat df = new DecimalFormat("0.0000 MB"); 
+        
+        for (DBObject result : results) {
+        	Double sum = (Double)result.get("totalMb");
+        	usage.put(result.get("_id").toString(), df.format(sum));
+        }
+        
+        return usage;
     }
     
     /*
@@ -446,7 +458,7 @@ public class JOSObjectResource {
 
         String owner = principal.getUsername();
         
-        log.trace("Logged in as {}",owner);
+        log.trace("Logged in as [{}]",owner);
         
         JOSObject obj = getObjectCollection().findOne("{path:#}",path).as(JOSObject.class);
         if (obj==null) {

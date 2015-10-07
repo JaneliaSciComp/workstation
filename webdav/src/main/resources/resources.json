@@ -5,8 +5,11 @@
             "groupattribute": "memberUid"
         },
         "scality": {
-            "url": "http://sc101-jrc:81/proxy",
-            "driver":  "bparc2"
+            "objectUrl": "http://schauderd-ws1.janelia.priv:8080/jos/object",
+            "metaUrl": "http://schauderd-ws1.janelia.priv:8080/jos/metadata",
+            "searchUrl": "http://schauderd-ws1.janelia.priv:8080/jos/search/name",
+            "user": "tester",
+            "password": "jos"
         }
     },
     "authorizers": {
@@ -38,7 +41,30 @@
         }
     },
     "resources": {
-        "Cluster Temp": {
+        "Scality Data 1": {
+            "mapping": "/DATA1",
+            "type": "object",
+            "path": "mirror",
+            "permissions": [
+                "read",
+                "write",
+                "delete",
+                "search",
+                "info"
+            ]
+        },
+        "Scality Data 2": {
+            "mapping": "/DATA2",
+            "type": "object",
+            "path": "mirror",
+            "permissions": [
+                "read",
+                "write",
+                "delete",
+                "search",
+                "info"
+            ]
+        },"Cluster Temp": {
             "mapping": "/nobackup/jacs/jacsData/filestore/upload",
             "type": "block",
             "path": "mirror",
