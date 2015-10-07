@@ -23,6 +23,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -67,6 +68,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
     private JPanel attrPanel;
     private JTextField nameInput = new JTextField(30);
     private DateComboBox dateInput = new DateComboBox();
+    private JTextField lagTimeInput = new JTextField(10);
     private MembershipListPanel<Entity> dataSetPanel;
     private MembershipListPanel<Subject> annotatorsPanel;
     private MembershipListPanel<Subject> subscribersPanel;
@@ -81,6 +83,8 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
         setTitle("Fly Line Release Definition");
 
+        lagTimeInput.setToolTipText("Number of months between release date and the completion date of any samples included in the release");
+        
         attrPanel = new JPanel(new MigLayout("wrap 2, ins 20"));
 
         add(attrPanel, BorderLayout.CENTER);
@@ -146,7 +150,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
         attrPanel.add(nameLabel, "gap para");
         
         if (editable) {
-            nameInput.setEditable(editable);
+            nameInput.setEnabled(editable);
             nameLabel.setLabelFor(nameInput);
             attrPanel.add(nameInput);
         }
@@ -154,12 +158,18 @@ public class FlyLineReleaseDialog extends ModalDialog {
             attrPanel.add(new JLabel(releaseEntity.getName()));
         }
 
-        final JLabel dateLabel = new JLabel("Release Date: ");
+        final JLabel dateLabel = new JLabel("Target Release Date: ");
         dateLabel.setLabelFor(dateInput);
         attrPanel.add(dateLabel, "gap para");
         attrPanel.add(dateInput);
-        dateInput.setEditable(editable);
+        dateInput.setEnabled(editable);
 
+        final JLabel lagTimeLabel = new JLabel("Lag Time Months (Optional): ");
+        lagTimeLabel.setLabelFor(lagTimeInput);
+        attrPanel.add(lagTimeLabel, "gap para");
+        attrPanel.add(lagTimeInput);
+        lagTimeInput.setEnabled(editable);
+        
         attrPanel.add(Box.createVerticalStrut(10), "span 2");
         
         JPanel bottomPanel = new JPanel(new GridBagLayout());
@@ -239,7 +249,12 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
                 if (releaseEntity != null) {
                     nameInput.setText(releaseEntity.getName());
-
+                    
+                    String lagTimeMonths = releaseEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_LAG_TIME_MONTHS);
+                    if (lagTimeMonths != null) {
+                        lagTimeInput.setText(lagTimeMonths);
+                    }
+                    
                     String releaseDateStr = releaseEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_RELEASE_DATE);
 
                     if (releaseDateStr != null) {
@@ -302,6 +317,18 @@ public class FlyLineReleaseDialog extends ModalDialog {
             return;
         }
         
+        Integer lagTime = null;
+        try {
+            String lagTimeStr = lagTimeInput.getText().trim();
+            if (!StringUtils.isEmpty(lagTimeStr)) {
+                lagTime = Integer.parseInt(lagTimeStr);
+            }
+        }
+        catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "Lag time must be a number", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
         for(Entity release : parentDialog.getReleases()) {
             if (releaseEntity!=null && release.getName().equals(releaseEntity.getName())) {
                 JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "A release with this name already exists", "Cannot save release", JOptionPane.ERROR_MESSAGE);
@@ -337,6 +364,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
             subscribersSb.append(subject.getKey());
         }
 
+        final Integer lagTimeFinal = lagTime;
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -344,7 +372,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
                 boolean syncFolders = false;
                 if (releaseEntity == null) {
-                    releaseEntity = ModelMgr.getModelMgr().createFlyLineRelease(nameInput.getText(), dateInput.getDate(), dataSets);
+                    releaseEntity = ModelMgr.getModelMgr().createFlyLineRelease(nameInput.getText(), dateInput.getDate(), lagTimeFinal, dataSets);
                     syncFolders = true;
                 }
 

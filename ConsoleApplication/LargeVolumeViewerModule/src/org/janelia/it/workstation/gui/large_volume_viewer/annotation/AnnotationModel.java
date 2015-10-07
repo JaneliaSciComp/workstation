@@ -1513,6 +1513,94 @@ called from a  SimpleWorker thread.
 
     }
 
+    public void importBulkSWCData(File swcFile, SimpleWorker worker) throws Exception {
+
+        // the constructor also triggers the parsing, but not the validation
+        SWCData swcData = SWCData.read(swcFile);
+        if (!swcData.isValid()) {
+            throw new Exception(String.format("invalid SWC file %s; reason: %s",
+                    swcFile.getName(), swcData.getInvalidReason()));
+        }
+
+        // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
+        //  so he added an OFFSET header and recentered on zero when exporting
+        // therefore, if that header is present, respect it
+        double[] externalOffset = swcData.parseOffset();
+
+        // create one neuron for the file; take name from the filename (strip extension)
+        String neuronName = swcData.parseName();
+        if (neuronName == null) {
+            neuronName = swcFile.getName();
+        }
+        if (neuronName.endsWith(STD_SWC_EXTENSION)) {
+            neuronName = neuronName.substring(0, neuronName.length() - STD_SWC_EXTENSION.length());
+        }
+        final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
+
+        // let's go with brute force for now; loop over nodes and
+        //  insert into db sequentially, since we have no bulk update
+        //  for annotations right now
+        // and as long as we're doing brute force, we can update progress
+        //  granularly (if we have a worker); start with 5% increments (1/20)
+        int totalLength = swcData.getNodeList().size();
+        int updateFrequency = totalLength / 20;
+        if (updateFrequency == 0) {
+            updateFrequency = 1;
+        }
+        if (worker != null) {
+            worker.setProgress(0L, totalLength);
+        }
+
+        Map<Integer, Integer> nodeParentLinkage = new HashMap<>();
+
+        Map<Integer, TmGeoAnnotation> annotations = new HashMap<>();
+        for (SWCNode node : swcData.getNodeList()) {
+            // Internal points, as seen in annotations, are same as external
+            // points in SWC: represented as voxels. --LLF
+            double[] internalPoint = swcDataConverter.internalFromExternal(
+                    new double[]{
+                        node.getX() + externalOffset[0],
+                        node.getY() + externalOffset[1],
+                        node.getZ() + externalOffset[2],}
+            );
+
+            // Build an external, unblessed annotation.  Set the id to the index.
+            TmGeoAnnotation unserializedAnnotation = new TmGeoAnnotation(
+                    new Long(node.getIndex()), "",
+                    internalPoint[0], internalPoint[1], internalPoint[2],
+                    null, new Date()
+            );
+            unserializedAnnotation.setNeuronId(neuron.getId());
+            annotations.put(node.getIndex(), unserializedAnnotation);
+            if (worker != null && (node.getIndex() % updateFrequency) == 0) {
+                worker.setProgress(node.getIndex(), totalLength);
+            }
+
+            nodeParentLinkage.put(node.getIndex(), node.getParentIndex());
+        }
+
+        // Fire off the bulk update.  The "un-serialized" or
+        // db-unknown annoations could be swapped for "blessed" versions.
+        modelMgr.addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
+
+        updateNeuronColor(swcData, neuron);
+
+        // update workspace; update and select new neuron; this will draw points as well
+        updateCurrentWorkspace();
+        final TmWorkspace workspace = getCurrentWorkspace();
+        setCurrentNeuron(neuron);
+        final TmNeuron updateNeuron = getCurrentNeuron();
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fireWorkspaceLoaded(workspace);
+                fireNeuronSelected(updateNeuron);
+            }
+        });
+
+    }
+
     public void fireAnnotationNotMoved(TmGeoAnnotation annotation) {
         for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {
             l.annotationNotMoved(annotation);

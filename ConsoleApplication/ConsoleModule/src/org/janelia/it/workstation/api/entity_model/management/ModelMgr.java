@@ -1064,8 +1064,8 @@ public final class ModelMgr {
         return entityModel.createDataSet(dataSetName);
     }
 
-    public Entity createFlyLineRelease(String releaseName, Date releaseDate, List<String> dataSetList) throws Exception {
-        return entityModel.createFlyLineRelease(releaseName, releaseDate, dataSetList);
+    public Entity createFlyLineRelease(String releaseName, Date releaseDate, Integer lagTimeMonths, List<String> dataSetList) throws Exception {
+        return entityModel.createFlyLineRelease(releaseName, releaseDate, lagTimeMonths, dataSetList);
     }
     
     public Set<EntityActorPermission> getFullPermissions(Long entityId) throws Exception {
@@ -1198,6 +1198,10 @@ public final class ModelMgr {
     public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
             double x, double y, double z, String comment) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
+    }
+    
+    public void addLinkedGeometricAnnotations(Map<Integer, Integer> nodeParentLinkage, Map<Integer, TmGeoAnnotation> annotations) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
     }
 
     public void reparentGeometricAnnotation(TmGeoAnnotation annotation, Long newParentAnnotationID,

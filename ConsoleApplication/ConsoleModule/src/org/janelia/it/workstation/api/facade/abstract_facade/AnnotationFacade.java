@@ -55,7 +55,7 @@ public interface AnnotationFacade {
 
     public Entity createDataSet(String dataSetName) throws Exception;
     
-    public Entity createFlyLineRelease(String releaseName, Date releaseDate, List<String> dataSetList) throws Exception;
+    public Entity createFlyLineRelease(String releaseName, Date releaseDate, Integer lagTimeMonths, List<String> dataSetList) throws Exception;
 
     public List<Entity> getDataSets() throws Exception;
     
