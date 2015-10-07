@@ -234,7 +234,7 @@ public class ArrayTransparencyContext {
         gl.glBindTexture(GL4.GL_TEXTURE_2D, headPointerId.get(0));
         checkGlError(gl, "d3 ArrayTransparencyContext glBindTexture() error");
 
-        logger.info("Calling glTexSubImage2D with width="+width+" height="+height);
+        //logger.info("Calling glTexSubImage2D with width="+width+" height="+height);
 
         gl.glTexSubImage2D(GL4.GL_TEXTURE_2D,
                 0, // level

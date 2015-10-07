@@ -256,6 +256,11 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
+    public void addLinkedGeometricAnnotations(Map<Integer, Integer> nodeParentLinkage, Map<Integer, TmGeoAnnotation> annotations) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
+    }
+            
+    @Override
     public void reparentGeometricAnnotation(TmGeoAnnotation annotation,
                                             Long newParentAnnotationID, TmNeuron neuron) throws Exception {
         EJBFactory.getRemoteTiledMicroscopeBean().reparentGeometricAnnotation(annotation, newParentAnnotationID, neuron);

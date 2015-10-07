@@ -6,9 +6,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.awt.Color;
+
+import com.google.common.base.Stopwatch;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.shared.util.SWCDataConverter;
 import org.janelia.it.workstation.shared.util.SWCNode;
@@ -44,9 +47,13 @@ they should all be called from worker threads.  the others, typically getters of
 various info, do not.  private methods don't necessarily follow that pattern.
 
 a note on entities: in general, we want to only work with the domain objects in 
-this class.  use "updateCurrentWorkspace/Neuron" to keep the local copies of
+this class.  use "updateCurrentWorkspace(AndNeuron)" to keep the local copies of
 those objects in sync with the back end.  other components will limit themselves
 to accessing those two objects in general.
+
+it turns out that it's expensive to update the domain objects from the db when
+there's a lot of data, so we started updating the objects locally instead;
+after more complicated operations (typically rarer), we'll still update from db
 
 this class does not interact directly with the UI.  it observes 
 UI elements that select, and its events are connected with a variety of UI
@@ -78,7 +85,9 @@ called from a  SimpleWorker thread.
     private Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
     private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
     private Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
-    
+
+    private LoadTimer addTimer = new LoadTimer();
+
     // ----- constants
     // name of entity that holds our workspaces
     public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
@@ -91,6 +100,15 @@ called from a  SimpleWorker thread.
         modelMgr = ModelMgr.getModelMgr();
         sessionMgr = SessionMgr.getSessionMgr();
         filteredAnnotationModel = new FilteredAnnotationModel();
+
+        // Report performance statistics when program closes
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                addTimer.report();
+            }
+        });
+
     }
     
     public FilteredAnnotationModel getFilteredAnnotationModel() {
@@ -139,6 +157,14 @@ called from a  SimpleWorker thread.
             currentWorkspace = modelMgr.loadWorkspace(currentWorkspace.getId());
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void updateCurrentWorkspaceAndNeuron() {
+        updateCurrentWorkspace();
+        // we can refresh the neuron object from the workspace:
+        if (getCurrentNeuron() != null) {
+            currentNeuron = getNeuronFromNeuronID(getCurrentNeuron().getId());
         }
     }
 
@@ -199,9 +225,13 @@ called from a  SimpleWorker thread.
 
     // this method sets the current neuron but does not
     //  fire an event to update the UI
-    public void setCurrentNeuron(TmNeuron neuron) {
-            currentNeuron = neuron;
-            updateCurrentNeuron();
+    private void setCurrentNeuron(TmNeuron neuron) {
+        // be sure we're using the neuron object from the current workspace
+        if (neuron != null) {
+            currentNeuron = getNeuronFromNeuronID(neuron.getId());
+        } else {
+            currentNeuron = null;
+        }
     }
 
     // this method sets the current neuron *and*
@@ -212,16 +242,6 @@ called from a  SimpleWorker thread.
         }
         setCurrentNeuron(neuron);
         fireNeuronSelected(neuron);
-    }
-
-    private void updateCurrentNeuron() {
-        if (currentNeuron != null) {
-            try {
-                currentNeuron = modelMgr.loadNeuron(currentNeuron.getId());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     // convenience methods
@@ -252,6 +272,17 @@ called from a  SimpleWorker thread.
         TmNeuron foundNeuron = null;
         for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
             if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
+                foundNeuron = neuron;
+                break;
+            }
+        }
+        return foundNeuron;
+    }
+
+    public TmNeuron getNeuronFromNeuronID(Long neuronID) {
+        TmNeuron foundNeuron = null;
+        for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
+            if (neuron.getId().equals(neuronID)) {
                 foundNeuron = neuron;
                 break;
             }
@@ -356,12 +387,10 @@ called from a  SimpleWorker thread.
         modelMgr.renameEntity(neuronEntity, name);
 
         // update & notify
-        updateCurrentWorkspace();
+        final TmNeuron neuron = getNeuronFromNeuronID(currentNeuronID);
+        neuron.setName(name);
+
         final TmWorkspace workspace = getCurrentWorkspace();
-
-        final TmNeuron neuron = modelMgr.loadNeuron(currentNeuronID);
-        setCurrentNeuron(neuron);
-
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -383,12 +412,12 @@ called from a  SimpleWorker thread.
         // delete
         modelMgr.deleteEntityTree(deletedNeuron.getId());
 
-        // things to update:
-        updateCurrentWorkspace();
+        // updates
         final TmWorkspace workspace = getCurrentWorkspace();
+        workspace.getNeuronList().remove(deletedNeuron);
+
         final ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<>(deletedNeuron.getGeoAnnotationMap().values());
         final ArrayList<TmAnchoredPath> tempPathList = new ArrayList<>(deletedNeuron.getAnchoredPathMap().values());
-
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -433,22 +462,20 @@ called from a  SimpleWorker thread.
      * @param xyz = x, y, z location of new annotation
      * @throws Exception
      */
-    public void addRootAnnotation(TmNeuron neuron, Vec3 xyz) throws Exception {
+    public void addRootAnnotation(final TmNeuron neuron, Vec3 xyz) throws Exception {
         // the null  in this call means "this is a root annotation" (would otherwise
         //  be the parent)
         final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 null, 0, xyz.x(), xyz.y(), xyz.z(), "");
 
-        updateCurrentWorkspace();
-        if (neuron.getId().equals(getCurrentNeuron().getId())) {
-            updateCurrentNeuron();
-        }
+        // update neuron locally instead of getting from db again
+        neuron.getRootAnnotations().add(annotation);
+        neuron.getGeoAnnotationMap().put(annotation.getId(), annotation);
 
-        final TmNeuron currNeuron = getCurrentNeuron();
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireNeuronSelected(currNeuron);
+                fireNeuronSelected(neuron);
                 fireAnnotationAdded(annotation);
             }
         });
@@ -466,21 +493,22 @@ called from a  SimpleWorker thread.
             return;
         }
 
+        addTimer.mark("start addChildAnn");
+        // Stopwatch stopwatch = new Stopwatch();
+        // stopwatch.start();
+        // System.out.println("entering addChildAnnotation: " + stopwatch);
+
         final TmNeuron neuron = getNeuronFromAnnotationID(parentAnn.getId());
         final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
-        updateCurrentWorkspace();
-        if (neuron.getId().equals(getCurrentNeuron().getId())) {
-            updateCurrentNeuron();
-        }
+        // update the neuron locally so we don't have to update from db
+        TmGeoAnnotation parent = getGeoAnnotationFromID(annotation.getParentId());
+        parent.addChild(annotation);
+        neuron.getGeoAnnotationMap().put(annotation.getId(), annotation);
+
 
         // the parent may lose some predefined notes (finished end, possible branch)
-        // note 1: probably really ought to have some kind of "annotation connectivity
-        //  changed" listener so we don't need to remember to call this routine
-        //  when appropriate
-
-        // note2 : need to get updated copy of neuron:
         stripPredefNotes(getNeuronFromAnnotationID(parentAnn.getId()), parentAnn.getId());
 
         if (automatedTracingEnabled()) {
@@ -496,6 +524,11 @@ called from a  SimpleWorker thread.
             }
         });
 
+        // System.out.println("leaving addChildAnnotation: " + stopwatch);
+        // stopwatch.stop();
+        addTimer.mark("end addChildAnn");
+        // reset timer state; we don't care about end > start
+        addTimer.clearPreviousStepName();
     }
 
     /**
@@ -528,19 +561,26 @@ called from a  SimpleWorker thread.
         }
 
         // find each connecting annotation; if there's a traced path to it,
-        //  remove it (refresh annotation!):
+        //  remove it (refresh annotation!)
+        // at the same time, delete the paths out of the local neuron object, too
         final TmNeuron neuron = getNeuronFromAnnotationID(annotationID);
 
         TmGeoAnnotation parent = neuron.getParentOf(annotation);
         if (parent != null) {
             removeAnchoredPath(annotation, parent);
+            neuron.getAnchoredPathMap().remove(new TmAnchoredPathEndpoints(annotation.getId(), parent.getId()));
         }
         for (TmGeoAnnotation neighbor: neuron.getChildrenOf(annotation)) {
             removeAnchoredPath(annotation, neighbor);
+            neuron.getAnchoredPathMap().remove(new TmAnchoredPathEndpoints(annotation.getId(), neighbor.getId()));
         }
 
-        updateCurrentWorkspace();
-        updateCurrentNeuron();
+        // update local annotation object
+        annotation.setX(location.getX());
+        annotation.setY(location.getY());
+        annotation.setZ(location.getZ());
+
+
         final TmWorkspace workspace = getCurrentWorkspace();
 
         if (automatedTracingEnabled()) {
@@ -586,7 +626,8 @@ called from a  SimpleWorker thread.
             removeAnchoredPath(child, sourceAnnotation);
         }
 
-        // if source neurite not in same neuron as dest neruite: move it
+        // if source neurite not in same neuron as dest neurite: move it; don't
+        //  use annModel.moveNeurite() because we don't want those updates & signals yet
         TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
             modelMgr.moveNeurite(sourceAnnotation, targetNeuron);
@@ -686,12 +727,8 @@ called from a  SimpleWorker thread.
         modelMgr.moveNeurite(annotation, neuron);
 
         // updates
-        updateCurrentWorkspace();
+        updateCurrentWorkspaceAndNeuron();
         final TmWorkspace workspace = getCurrentWorkspace();
-
-        if (getCurrentNeuron() != null && getCurrentNeuron().getId().equals(neuron.getId())) {
-            updateCurrentNeuron();
-        }
         final TmNeuron currentNeuron = getCurrentNeuron();
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -709,6 +746,7 @@ called from a  SimpleWorker thread.
     /**
      * this method deletes a link, which is defined as an annotation with
      * one parent and no more than one child (not a root, not a branch point)
+     * (unless it's a root with no children)
      *
      * @param link = annotation object
      * @throws Exception
@@ -718,8 +756,12 @@ called from a  SimpleWorker thread.
             return;
         }
 
-        // check it's a link; trust no one; error or return?
-        if (link.isRoot() || link.getChildIds().size() > 1) {
+        // check it's not a branch or a root with children
+        if (link.getChildIds().size() > 1) {
+            return;
+        }
+
+        if (link.isRoot() && link.getChildIds().size() > 0) {
             return;
         }
 
@@ -754,9 +796,8 @@ called from a  SimpleWorker thread.
         // if segment to parent had a trace, remove it
         removeAnchoredPath(link, parent);
 
-        updateCurrentWorkspace();
+        updateCurrentWorkspaceAndNeuron();
         final TmWorkspace workspace = getCurrentWorkspace();
-        updateCurrentNeuron();
 
         final TmGeoAnnotation updateChild;
         if (child != null) {
@@ -835,8 +876,7 @@ called from a  SimpleWorker thread.
         }
 
 
-        updateCurrentWorkspace();
-        updateCurrentNeuron();
+        updateCurrentWorkspaceAndNeuron();
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron updateNeuron = getCurrentNeuron();
 
@@ -919,10 +959,7 @@ called from a  SimpleWorker thread.
         removeAnchoredPath(annotation1, annotation2);
 
         // updates:
-        updateCurrentWorkspace();
-        if (getCurrentNeuron() != null && neuron.getId().equals(getCurrentNeuron().getId())){
-            updateCurrentNeuron();
-        }
+        updateCurrentWorkspaceAndNeuron();
 
         // retrace
         if (automatedTracingEnabled()) {
@@ -956,14 +993,13 @@ called from a  SimpleWorker thread.
         modelMgr.rerootNeurite(neuron, newRoot);
 
         // notify, etc.; don't need to redraw anything, but the neurite list etc. need to be reloaded
-        updateCurrentWorkspace();
+        updateCurrentWorkspaceAndNeuron();
 
         // see notes in addChildAnnotation re: the predef notes
         // in this case, the new root is the only annotation we need to check
         stripPredefNotes(getNeuronFromAnnotationID(newRootID), newRootID);
 
         if (neuron.getId().equals(getCurrentNeuron().getId())){
-            updateCurrentNeuron();
             final TmNeuron updateNeuron = getCurrentNeuron();
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
@@ -989,8 +1025,7 @@ called from a  SimpleWorker thread.
         modelMgr.splitNeurite(neuron, newRoot);
 
         // update and notify
-        updateCurrentWorkspace();
-        updateCurrentNeuron();
+        updateCurrentWorkspaceAndNeuron();
         final TmNeuron updateNeuron = getNeuronFromAnnotationID(newRootID);
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -1020,7 +1055,7 @@ called from a  SimpleWorker thread.
         //  was being drawn (ie, make sure user didn't move the endpoints in the meantime)
         // check that the first and last points in the list match the current locations of the
         //  annotations, in some order (despite stated convention, I have not found the point
-        //  list to be in consistant order vis a vis the ordering of the annotation IDs)
+        //  list to be in consistent order vis a vis the ordering of the annotation IDs)
 
         TmGeoAnnotation ann1 = neuron1.getGeoAnnotationMap().get(endpoints.getAnnotationID1());
         TmGeoAnnotation ann2 = neuron2.getGeoAnnotationMap().get(endpoints.getAnnotationID2());
@@ -1042,14 +1077,9 @@ called from a  SimpleWorker thread.
         final TmAnchoredPath path = modelMgr.addAnchoredPath(neuron1.getId(), endpoints.getAnnotationID1(),
                 endpoints.getAnnotationID2(), points);
 
-
-        // updates
-        updateCurrentWorkspace();
-        // Guard against null neuron, here.  Can happen as signals are passed
-        // around and things are termporarily cleared. LLF
-        if (currentNeuron != null  &&  neuron1.getId().equals(currentNeuron.getId())) {
-            updateCurrentNeuron();
-        }
+        // update local domain object
+        TmNeuron neuron = getNeuronFromAnnotationID(ann1.getId());
+        neuron.getAnchoredPathMap().put(endpoints, path);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -1134,18 +1164,21 @@ called from a  SimpleWorker thread.
 
         TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(geoAnnotation.getId());
         ObjectMapper mapper = new ObjectMapper();
+        String jsonString = "";
         if (textAnnotation != null) {
             // if you've got a structured text annotation already, use it; for now, you only get one
             JsonNode rootNode = textAnnotation.getData();
             if (noteString.length() > 0) {
                 ((ObjectNode) rootNode).put("note", noteString);
-                modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
+                jsonString = mapper.writeValueAsString(rootNode);
+                modelMgr.updateStructuredTextAnnotation(textAnnotation, jsonString);
             } else {
                 // there is a note attached, but we want it gone; if it's the only thing there,
                 //  delete the whole structured text annotation
                 ((ObjectNode) rootNode).remove("note");
                 if (rootNode.size() > 0) {
-                    modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
+                    jsonString = mapper.writeValueAsString(rootNode);
+                    modelMgr.updateStructuredTextAnnotation(textAnnotation, jsonString);
                 } else {
                     // otherwise, there's something left, so persist it (note: as of this
                     //  writing, there aren't any other structured text annotations besides
@@ -1160,16 +1193,31 @@ called from a  SimpleWorker thread.
                 ObjectNode rootNode = mapper.createObjectNode();
                 rootNode.put("note", noteString);
 
-                modelMgr.addStructuredTextAnnotation(neuron.getId(), geoAnnotation.getId(),
+                jsonString = mapper.writeValueAsString(rootNode);
+                textAnnotation = modelMgr.addStructuredTextAnnotation(neuron.getId(), geoAnnotation.getId(),
                         TmStructuredTextAnnotation.GEOMETRIC_ANNOTATION, TmStructuredTextAnnotation.FORMAT_VERSION,
-                        mapper.writeValueAsString(rootNode));
+                        jsonString);
             }
         }
 
-        // updates
-        updateCurrentWorkspace();
-        final TmWorkspace workspace = getCurrentWorkspace();
+        // update domain object; similar logic to above
+        // if it's empty string, delete note object from neuron
+        if (noteString.length() == 0) {
+            if (neuron.getStructuredTextAnnotationMap().containsKey(geoAnnotation.getId())) {
+                neuron.getStructuredTextAnnotationMap().remove(geoAnnotation.getId());
+            }
+        } else {
+            // if it's not empty and in neuron, update string in note object
+            // if it's not empty and not in neuron, add new note object to neuron
+            if (neuron.getStructuredTextAnnotationMap().containsKey(geoAnnotation.getId())) {
+                neuron.getStructuredTextAnnotationMap().get(geoAnnotation.getId()).setDataString(jsonString);
+            } else {
+                neuron.getStructuredTextAnnotationMap().put(geoAnnotation.getId(), textAnnotation);
+            }
+        }
 
+
+        final TmWorkspace workspace = getCurrentWorkspace();
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -1183,8 +1231,9 @@ called from a  SimpleWorker thread.
         modelMgr.deleteStructuredTextAnnotation(textAnnotation.getId());
 
         // updates
-        updateCurrentWorkspace();
         final TmWorkspace workspace = getCurrentWorkspace();
+        TmNeuron neuron = getNeuronFromAnnotationID(textAnnotation.getParentId());
+        neuron.getStructuredTextAnnotationMap().remove(textAnnotation.getParentId());
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -1461,6 +1510,94 @@ called from a  SimpleWorker thread.
         // normally if automatic tracing is enabled, we'd do that here, but
         //  for bulk import, I don't think this is a good idea right now,
         //  as we have no mechanism for managing the jobs
+
+    }
+
+    public void importBulkSWCData(File swcFile, SimpleWorker worker) throws Exception {
+
+        // the constructor also triggers the parsing, but not the validation
+        SWCData swcData = SWCData.read(swcFile);
+        if (!swcData.isValid()) {
+            throw new Exception(String.format("invalid SWC file %s; reason: %s",
+                    swcFile.getName(), swcData.getInvalidReason()));
+        }
+
+        // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
+        //  so he added an OFFSET header and recentered on zero when exporting
+        // therefore, if that header is present, respect it
+        double[] externalOffset = swcData.parseOffset();
+
+        // create one neuron for the file; take name from the filename (strip extension)
+        String neuronName = swcData.parseName();
+        if (neuronName == null) {
+            neuronName = swcFile.getName();
+        }
+        if (neuronName.endsWith(STD_SWC_EXTENSION)) {
+            neuronName = neuronName.substring(0, neuronName.length() - STD_SWC_EXTENSION.length());
+        }
+        final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
+
+        // let's go with brute force for now; loop over nodes and
+        //  insert into db sequentially, since we have no bulk update
+        //  for annotations right now
+        // and as long as we're doing brute force, we can update progress
+        //  granularly (if we have a worker); start with 5% increments (1/20)
+        int totalLength = swcData.getNodeList().size();
+        int updateFrequency = totalLength / 20;
+        if (updateFrequency == 0) {
+            updateFrequency = 1;
+        }
+        if (worker != null) {
+            worker.setProgress(0L, totalLength);
+        }
+
+        Map<Integer, Integer> nodeParentLinkage = new HashMap<>();
+
+        Map<Integer, TmGeoAnnotation> annotations = new HashMap<>();
+        for (SWCNode node : swcData.getNodeList()) {
+            // Internal points, as seen in annotations, are same as external
+            // points in SWC: represented as voxels. --LLF
+            double[] internalPoint = swcDataConverter.internalFromExternal(
+                    new double[]{
+                        node.getX() + externalOffset[0],
+                        node.getY() + externalOffset[1],
+                        node.getZ() + externalOffset[2],}
+            );
+
+            // Build an external, unblessed annotation.  Set the id to the index.
+            TmGeoAnnotation unserializedAnnotation = new TmGeoAnnotation(
+                    new Long(node.getIndex()), "",
+                    internalPoint[0], internalPoint[1], internalPoint[2],
+                    null, new Date()
+            );
+            unserializedAnnotation.setNeuronId(neuron.getId());
+            annotations.put(node.getIndex(), unserializedAnnotation);
+            if (worker != null && (node.getIndex() % updateFrequency) == 0) {
+                worker.setProgress(node.getIndex(), totalLength);
+            }
+
+            nodeParentLinkage.put(node.getIndex(), node.getParentIndex());
+        }
+
+        // Fire off the bulk update.  The "un-serialized" or
+        // db-unknown annoations could be swapped for "blessed" versions.
+        modelMgr.addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
+
+        updateNeuronColor(swcData, neuron);
+
+        // update workspace; update and select new neuron; this will draw points as well
+        updateCurrentWorkspace();
+        final TmWorkspace workspace = getCurrentWorkspace();
+        setCurrentNeuron(neuron);
+        final TmNeuron updateNeuron = getCurrentNeuron();
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fireWorkspaceLoaded(workspace);
+                fireNeuronSelected(updateNeuron);
+            }
+        });
 
     }
 

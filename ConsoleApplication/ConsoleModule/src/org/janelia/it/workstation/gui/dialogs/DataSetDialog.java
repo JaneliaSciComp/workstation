@@ -64,6 +64,7 @@ public class DataSetDialog extends ModalDialog {
    
     public DataSetDialog(DataSetListDialog parentDialog) {
 
+        super(parentDialog);
     	this.parentDialog = parentDialog;
     	
         setTitle("Data Set Definition");

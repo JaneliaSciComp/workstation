@@ -871,12 +871,12 @@ public class EntityModel {
     public void deleteEntityTree(Entity entity) throws Exception {
         checkIfCanonicalEntity(entity);
 
-        Set<EntityData> parentEds = new HashSet<EntityData>();
+        Set<EntityData> parentEds = new HashSet<>();
 
+        log.debug("Deleting entity tree: {}", EntityUtils.identify(entity));
+        entityFacade.deleteEntityTree(entity.getId());
+            
         synchronized (this) {
-            log.debug("Deleting entity tree: {}", EntityUtils.identify(entity));
-            entityFacade.deleteEntityTree(entity.getId());
-
             // Remove from cache
             entityCache.invalidate(entity.getId());
             workspaceCache.remove(entity.getId());
@@ -1321,6 +1321,16 @@ public class EntityModel {
     }
 
     /**
+     * Returns all fly lines release entities for the current user.
+     *
+     * @return canonical entity instances
+     * @throws Exception
+     */
+    public List<Entity> getFlyLineReleases() throws Exception {
+        return putOrUpdateAll(annotationFacade.getFlyLineReleases());
+    }
+
+    /**
      * Create a new data set with the given name, for the current user.
      *
      * @param dataSetName
@@ -1329,6 +1339,17 @@ public class EntityModel {
      */
     public Entity createDataSet(String dataSetName) throws Exception {
         return putOrUpdate(annotationFacade.createDataSet(dataSetName));
+    }
+
+    /**
+     * Create a new data set with the given name, for the current user.
+     *
+     * @param dataSetName
+     * @return
+     * @throws Exception
+     */
+    public Entity createFlyLineRelease(String releaseName, Date releaseDate, Integer lagTimeMonths, List<String> dataSetList) throws Exception {
+        return putOrUpdate(annotationFacade.createFlyLineRelease(releaseName, releaseDate, lagTimeMonths, dataSetList));
     }
 
     /**

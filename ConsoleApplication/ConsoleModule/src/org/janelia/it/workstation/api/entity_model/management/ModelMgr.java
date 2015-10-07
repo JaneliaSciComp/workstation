@@ -1,9 +1,55 @@
 package org.janelia.it.workstation.api.entity_model.management;
 
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
+import java.awt.Color;
+import java.awt.EventQueue;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.Executor;
+
+import javax.swing.SwingUtilities;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.janelia.it.jacs.compute.api.support.MappedId;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityActorPermission;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
+import org.janelia.it.jacs.model.tasks.Event;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
+import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
+import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
+import org.janelia.it.jacs.model.tasks.utility.GenericTask;
+import org.janelia.it.jacs.model.user_data.Node;
+import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.user_data.prefs.SubjectPreference;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPath;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuronDescriptor;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmStructuredTextAnnotation;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspaceDescriptor;
+import org.janelia.it.jacs.shared.annotation.DataDescriptor;
+import org.janelia.it.jacs.shared.annotation.DataFilter;
+import org.janelia.it.jacs.shared.annotation.FilterResult;
+import org.janelia.it.jacs.shared.solr.SageTerm;
+import org.janelia.it.jacs.shared.solr.SolrResults;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.fundtype.TaskFilter;
 import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequest;
@@ -20,36 +66,11 @@ import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.janelia.it.workstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.workstation.shared.util.ThreadQueue;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.compute.api.support.MappedId;
-import org.janelia.it.jacs.shared.solr.SageTerm;
-import org.janelia.it.jacs.shared.solr.SolrResults;
-import org.janelia.it.jacs.model.entity.*;
-import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
-import org.janelia.it.jacs.model.tasks.Event;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
-import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
-import org.janelia.it.jacs.model.tasks.utility.GenericTask;
-import org.janelia.it.jacs.model.user_data.Node;
-import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.model.user_data.prefs.SubjectPreference;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
-import org.janelia.it.jacs.shared.annotation.DataDescriptor;
-import org.janelia.it.jacs.shared.annotation.DataFilter;
-import org.janelia.it.jacs.shared.annotation.FilterResult;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-
-import java.awt.*;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Executor;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 
 public final class ModelMgr {
 
@@ -591,6 +612,10 @@ public final class ModelMgr {
         return entityModel.getDataSets();
     }
 
+    public List<Entity> getFlyLineReleases() throws Exception {
+        return entityModel.getFlyLineReleases();
+    }
+    
     public Entity createCommonRoot(String name) throws Exception {
         if (currWorkspaceId == null) {
             throw new IllegalStateException("Cannot create common root when workspace is not selected");
@@ -1039,6 +1064,10 @@ public final class ModelMgr {
         return entityModel.createDataSet(dataSetName);
     }
 
+    public Entity createFlyLineRelease(String releaseName, Date releaseDate, Integer lagTimeMonths, List<String> dataSetList) throws Exception {
+        return entityModel.createFlyLineRelease(releaseName, releaseDate, lagTimeMonths, dataSetList);
+    }
+    
     public Set<EntityActorPermission> getFullPermissions(Long entityId) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getFullPermissions(entityId);
     }
@@ -1169,6 +1198,10 @@ public final class ModelMgr {
     public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
             double x, double y, double z, String comment) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
+    }
+    
+    public void addLinkedGeometricAnnotations(Map<Integer, Integer> nodeParentLinkage, Map<Integer, TmGeoAnnotation> annotations) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
     }
 
     public void reparentGeometricAnnotation(TmGeoAnnotation annotation, Long newParentAnnotationID,

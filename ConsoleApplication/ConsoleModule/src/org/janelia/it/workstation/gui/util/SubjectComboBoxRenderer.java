@@ -26,8 +26,8 @@ public class SubjectComboBoxRenderer extends JLabel implements ListCellRenderer<
     public Component getListCellRendererComponent(JList<? extends Subject> list, Subject subject, int index, boolean isSelected, boolean cellHasFocus) {
 
         if (subject == null) {
-            setIcon(Icons.getIcon("error.png"));
-            setText("Unknown");
+            setIcon(null);
+            setText("");
             return this;
         }
 

@@ -7,6 +7,7 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.jaxrs.config.BeanConfig;
 import org.apache.directory.api.ldap.model.exception.LdapInvalidDnException;
 import org.apache.directory.api.ldap.model.name.Dn;
 
@@ -39,10 +40,12 @@ public class WebdavContextManager implements ServletContextListener  {
                     providers.put("ldap",ldap);
                 }
                 if (providersConfig.containsKey("scality")) {
-                    ScalityProvider scality = new ScalityProvider();
+                    JOSSProvider scality = new JOSSProvider();
                     Map<String, Object> scalityConfig = (Map<String,Object>)providersConfig.get("scality");
-                    scality.setUrl((String)scalityConfig.get("url"));
-                    scality.setDriver((String) scalityConfig.get("driver"));
+                    scality.setObjectUrl((String)scalityConfig.get("objectUrl"));
+                    scality.setMetaUrl((String) scalityConfig.get("metaUrl"));
+                    scality.setUser((String)scalityConfig.get("user"));
+                    scality.setPassword((String)scalityConfig.get("password"));
                     scality.init();
                     providers.put("scality",scality);
                 }

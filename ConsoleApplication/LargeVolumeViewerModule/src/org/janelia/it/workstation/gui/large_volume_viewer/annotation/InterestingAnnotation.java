@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import java.util.Date;
+
 /**
  *
  * @author olbrisd
@@ -10,14 +12,17 @@ public class InterestingAnnotation {
     private Long neuronID;
     private String noteText;
     private AnnotationGeometry geometry;
+    private Date creationDate;
 
-    public InterestingAnnotation(Long annotationID, Long neuronID, AnnotationGeometry geometry) {
-        new InterestingAnnotation(annotationID, neuronID, geometry, "");
+    public InterestingAnnotation(Long annotationID, Long neuronID, Date creationDate, AnnotationGeometry geometry) {
+        new InterestingAnnotation(annotationID, neuronID, creationDate, geometry, "");
     }
 
-    public InterestingAnnotation(Long annotationID, Long neuronID, AnnotationGeometry geometry, String noteText) {
+    public InterestingAnnotation(Long annotationID, Long neuronID, Date creationDate,
+         AnnotationGeometry geometry, String noteText) {
         this.annotationID = annotationID;
         this.neuronID = neuronID;
+        this.creationDate = creationDate;
         this.noteText = noteText;
         this.geometry = geometry;
     }
@@ -33,6 +38,10 @@ public class InterestingAnnotation {
     public String getAnnIDText() {
         String annID = annotationID.toString();
         return annID.substring(annID.length() - 4);
+    }
+
+    public Date getCreationDate() {
+        return creationDate;
     }
 
     public boolean hasNote() {

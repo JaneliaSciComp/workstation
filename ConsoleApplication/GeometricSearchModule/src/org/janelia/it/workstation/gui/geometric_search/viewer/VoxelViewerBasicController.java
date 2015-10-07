@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.geometric_search.viewer;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
+import org.janelia.it.workstation.gui.geometric_search.viewer.actor.ActorSharedResource;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GLDisplayUpdateCallback;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.ArrayCubeGLActor;
@@ -45,34 +46,32 @@ public class VoxelViewerBasicController implements VoxelViewerController {
         threadPool.submit(addDatasetRunnable);
     }
 
-    Runnable createAddDatasetRunnable(Dataset dataset) {
+    Runnable createAddDatasetRunnable(final Dataset dataset) {
         Runnable runnable=new Runnable() {
             @Override
             public void run() {
-                logger.info("Check0");
-
-                final int index0=model.getNextActorIndex();
-                final int index1=model.getNextActorIndex();
-
-                //ArrayCubeGLActor cubeActor0=createCubeActor(alignedStackFile, 0, 0.20f, 500000, new Vector4(1.0f, 0.0f, 0.0f, 0.05f));
-                //cubeActor0.setId(index0);
-                logger.info("Check1");
-                //ArrayCubeGLActor cubeActor1=createCubeGLActor(alignedStackFile, 1, 0.25f, 20000000, new Vector4(0.0f, 1.0f, 0.0f, 0.03f));
-                //cubeActor1.setId(index1);
-                logger.info("Check3");
-
-                model.setDisposeAndClearAllActorsMsg();
-
-                logger.info("Check3.1");
-                //model.addActorToInitQueue(cubeActor0);
-               // model.addActorToInitQueue(cubeActor1);
-                logger.info("Check3.2");
-
-                viewer.resetView();
+                dataset.createRenderables();
+                List<ActorSharedResource> neededActorSharedResources=dataset.getNeededActorSharedResources();
+                if (neededActorSharedResources!=null) {
+                    for (ActorSharedResource actorSharedResource : neededActorSharedResources) {
+                        if (!model.actorSharedResourceMap.containsKey(actorSharedResource.getName())) {
+                            if (!actorSharedResource.isLoaded()) actorSharedResource.load();
+                            model.actorSharedResourceMap.put(actorSharedResource.getName(), actorSharedResource);
+                        }
+                    }
+                }
+                model.getDatasetModel().addDataset(dataset);
+                logger.info("calling viewer.refresh()");
+                viewer.refresh();
             }
         };
         return runnable;
     }
+
+//    public void selectDataset(Dataset dataset) {
+//        model.getDatasetModel().addDataset(dataset);
+//        viewer.resetView();
+//    }
 
 //    public List<ArrayCubeGLActor> createCubeGLActorsFromStack(File stackFile, int maxVoxels, List<Vector4> preferredColorList, Matrix4 rotation) {
 //        final ArrayCubeShader cubeShader=(ArrayCubeShader)model.getDenseVolumeShaderActionSequence().getShader();
