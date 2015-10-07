@@ -55,8 +55,7 @@ public class WebdavApplication extends ResourceConfig {
                     @Override
                     public Response apply(ContainerRequestContext containerRequestContext) {
                         // generate XML response for propfind
-
-                        String filepath = "/" + Util.stripApiPath(uriInfo.getPath());
+                        String filepath = "/" + uriInfo.getPath();
                         FileShare mapping;
                         String xmlResponse;
                         try {

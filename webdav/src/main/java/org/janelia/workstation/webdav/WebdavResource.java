@@ -46,7 +46,8 @@ public class WebdavResource {
             @ApiResponse(code = 200, message = "OK"),
             @ApiResponse(code = 500, message = "Something wrong in Server")})
     public StreamingOutput getFile() throws PermissionsFailureException, FileNotFoundException {
-        String filepath = "/" + Util.stripApiPath(uriInfo.getPath());
+        String filepath = "/" + uriInfo.getPath();
+        System.out.println ("GET " + filepath);
         FileShare mapping = Util.checkPermissions(filepath, headers, request);
 
         // check file share for read permissions
@@ -63,8 +64,8 @@ public class WebdavResource {
     public void putFile(InputStream binaryStream) throws PermissionsFailureException,
             FileNotFoundException, FileUploadException {
         String filepath = "/" + uriInfo.getPath();
+        System.out.println ("PUT " + filepath);
         FileShare mapping = Util.checkPermissions(filepath, headers, request);
-        System.out.println ("asdfasdfafd");
         // check file share for write permissions
         if (!mapping.getPermissions().contains(Permission.WRITE)) {
             throw new PermissionsFailureException("Not permitted to write from this file share");
