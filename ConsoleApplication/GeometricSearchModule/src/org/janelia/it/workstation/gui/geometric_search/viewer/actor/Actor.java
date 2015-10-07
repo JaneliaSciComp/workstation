@@ -10,8 +10,35 @@ public abstract class Actor {
     String name;
     GL4SimpleActor glActor;
     Vector4 color;
+    Actor proxyActor;
+    boolean masked=false;
+    boolean visible=true;
+
+    public Actor getProxyActor() {
+        return proxyActor;
+    }
+
+    public void setProxyActor(Actor proxyActor) {
+        this.proxyActor = proxyActor;
+    }
+
+    public boolean isMasked() {
+        return masked;
+    }
+
+    public void setMasked(boolean masked) {
+        if (masked) {
+            glActor.setIsVisible(false);
+        } else {
+            glActor.setIsVisible(this.visible);
+        }
+        this.masked = masked;
+    }
 
     public Vector4 getColor() {
+        if (proxyActor!=null) {
+            return proxyActor.getColor();
+        }
         return color;
     }
 
@@ -32,11 +59,14 @@ public abstract class Actor {
     public void dispose() {}
 
     public boolean isVisible() {
-        return glActor.isVisible();
+        return visible;
     }
 
     public void setIsVisible(boolean isVisible) {
-        glActor.setIsVisible(isVisible);
+        this.visible=isVisible;
+        if (!masked) {
+            glActor.setIsVisible(isVisible);
+        }
     }
 
     public GL4SimpleActor getGlActor() { return glActor; }

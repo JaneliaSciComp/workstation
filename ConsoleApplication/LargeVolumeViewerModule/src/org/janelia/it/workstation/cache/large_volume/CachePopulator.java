@@ -7,8 +7,12 @@ package org.janelia.it.workstation.cache.large_volume;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import java.io.File;
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -24,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class CachePopulator {
-    private static final int FILE_READ_THREAD_COUNT = 4;
+    private static final int FILE_READ_THREAD_COUNT = 12;
     private static final int MEM_ALLOC_THREAD_COUNT = 1;
     private static final String FILE_READ_THREAD_PREFIX = "CacheFileReaderThread";
     private static final String MEM_ALLOC_THREAD_PREFIX = "CacheByteAllocThread";
@@ -54,12 +58,14 @@ public class CachePopulator {
         final Set<String> populatedList = new HashSet<>();
         // Now, repopulate the running queue with the new neighborhood.
         log.debug("Neighborhood size is {}.  Expected memory demand is {}Gb.", neighborhood.getFiles().size(), ((long)neighborhood.getFiles().size() * (long)standardFileSize)/1024/1024/1024);
+        final Queue<String> lruRefresh = Collections.asLifoQueue(new LinkedList<String>());
         for (final File file : neighborhood.getFiles()) {
             Callable<Void> callable = new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     try {
                         if (!allocateAndLaunch(file, populatedList, neighborhood)) {
+                            lruRefresh.add(file.getAbsolutePath());
                             log.trace("Did not launch {}.  Neighborhood {}.  Total {}.", Utilities.trimToOctreePath(file), neighborhood.getId(), neighborhood.getFiles().size());
                         }                                
                     } catch (Exception ex) {
@@ -70,6 +76,19 @@ public class CachePopulator {
             };
             memAllocExecutor.submit(callable);
         }
+        
+        // Do another touch.  This time, the one that had been sorted
+        // to first position will be touched last.
+        Callable<Void> refreshCallable = new Callable<Void>() {
+            public Void call() throws Exception {
+                for (String key : lruRefresh) {
+                    cacheCollection.hasKey(key);
+                }
+                return null;
+            }
+        };
+        memAllocExecutor.submit(refreshCallable);
+        
         if (neighborhood.getFiles().isEmpty()) {
             double[] focus = neighborhood.getFocus();
             log.warn(
@@ -125,6 +144,11 @@ public class CachePopulator {
                 throw new IllegalArgumentException("Pre-sized byte array required.");
             }
         }
+        else if ( cacheCollection.hasKey(key) ) {
+            // Must 'touch' this one, to force it into LRU.
+            cacheCollection.hasKey(key);
+            
+        }                
         return rtnVal;
     }
 

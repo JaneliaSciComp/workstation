@@ -20,6 +20,7 @@
            overflowToOffHeap="false"
            maxEntriesLocalHeap="90"
     >
+        <!--<persistence strategy="none"/>-->
         <cacheEventListenerFactory class="org.janelia.it.workstation.cache.large_volume.listener.LargeVolumeCacheListenerFactory" properties="" listenFor="all"/>
     </cache>
 </ehcache>

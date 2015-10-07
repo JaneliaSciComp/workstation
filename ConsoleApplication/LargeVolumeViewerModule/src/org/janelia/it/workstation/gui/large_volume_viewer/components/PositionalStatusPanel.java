@@ -28,35 +28,32 @@ import org.slf4j.LoggerFactory;
  */
 public class PositionalStatusPanel extends JPanel {
 
-    private static final int PANEL_WIDTH = 120;
-    private static final int PANEL_HEIGHT = 36;
     public static final Color UNDEFINED_COLOR = Color.lightGray;
     public static final Color COMPLETED_COLOR = Color.green;
     public static final Color IN_PROGRESS_COLOR = Color.yellow;
     public static final Color UNFILLED_COLOR = Color.red;
-    public static final Color CLEAR_COLOR = Color.black;
+    
+    private static final String TOOLTIP_FORMAT = "Average load time till now %10.2fs.";
 
-    private Logger log = LoggerFactory.getLogger(PositionalStatusPanel.class);
+    private static final int INSET_LEFT = 10;
+    
+    private final Logger log = LoggerFactory.getLogger(PositionalStatusPanel.class);
     // Key is expected to be some sort of file-path.
     private GeometricNeighborhood neighborhood;
+    private final Color clearColor;
+    
+    private int completeCount = 0;
+    private long combinedLoadTime = 0;
+    
+    private static final Color[] BGRND_Z = new Color[] {
+        // Make more than max depth.
+        Color.white,
+        Color.lightGray,
+    };
 
-    public PositionalStatusPanel() {
+    public PositionalStatusPanel(Color clearColor) {
+        this.clearColor = clearColor;
     }
-
-    @Override
-    public Dimension getPreferredSize() {
-        return new Dimension(PANEL_WIDTH, PANEL_HEIGHT);
-    }
-
-    @Override
-    public Dimension getMaximumSize() {
-        return getPreferredSize();
-    }    
-
-    @Override
-    public Dimension getMinimumSize() {
-        return new Dimension(PANEL_WIDTH * 2 / 3, PANEL_HEIGHT);
-    }    
 
     public synchronized void set3DCacheNeighborhood(GeometricNeighborhood neighborhood) {
         log.debug("New neighborhood established.");
@@ -68,15 +65,24 @@ public class PositionalStatusPanel extends JPanel {
         setLoadStatus(infile, Status.InProgress);
     }
 
-    public void setLoadComplete(File infile) {
+    public void setLoadComplete(File infile, int elapsedMs) {
+        // Reflect average load in the tool tip.
+        synchronized(log) {
+            completeCount ++;
+            combinedLoadTime += elapsedMs;
+            this.setToolTipText(
+                    String.format(TOOLTIP_FORMAT, (double)(combinedLoadTime / 1000.0 / completeCount))
+            );
+        }
+                
         setLoadStatus(infile, Status.Filled);
     }
-
+    
     @Override
     public void paint(Graphics graphics) {
-        log.info("Size is: " + getSize().width + ":" + getSize().height);
+        log.trace("Size is: " + getSize().width + ":" + getSize().height);
         Graphics2D g2d = (Graphics2D) graphics;
-        g2d.setBackground(CLEAR_COLOR);
+        g2d.setBackground(clearColor);
         g2d.clearRect(0, 0, getSize().width, getSize().height);
 
         int[] tileExtents = new int[3];
@@ -107,20 +113,30 @@ public class PositionalStatusPanel extends JPanel {
          */
         Dimension markerDims = new Dimension();
         markerDims.width = 4;
-        markerDims.height = 6;
+        markerDims.height = 4;
 
         int zPanelWidth = markerDims.width * tileExtents[2];
-
+        
         int allMarkersHeight = markerDims.height * tileExtents[2];
         for (PositionalStatusModel model : posModels) {
             int[] xyz = model.getTileXyz();
+            int zOffs = xyz[2];
+            g2d.setColor(BGRND_Z[ zOffs % BGRND_Z.length ]);
+            g2d.fillRect(
+                    zOffs * zPanelWidth + xyz[0] * markerDims.width + INSET_LEFT,
+                    allMarkersHeight - (xyz[1] * markerDims.height),
+                    markerDims.width, markerDims.height
+            );
             g2d.setColor(decodeColor(model));
-            g2d.fillRect(xyz[2] * zPanelWidth + xyz[0] * markerDims.width, allMarkersHeight - (xyz[1] * markerDims.height),
-                markerDims.width - 1, markerDims.height - 1);
+            g2d.fillRect(
+                zOffs * zPanelWidth + xyz[0] * markerDims.width + INSET_LEFT,
+                allMarkersHeight - (xyz[1] * markerDims.height),
+                markerDims.width - 1, markerDims.height - 1
+            );
         }
 
-    }
-
+    }     
+    
     private void setLoadStatus(File infile, Status status) {
         PositionalStatusModelBean bean = null;
         bean = getModelBean( infile.getAbsolutePath() );
@@ -144,7 +160,7 @@ public class PositionalStatusPanel extends JPanel {
     }
 
     private Color decodeColor(PositionalStatusModel model) {
-        Color rtnVal = CLEAR_COLOR;
+        Color rtnVal = clearColor;
         switch (model.getStatus()) {
             case Unfilled:
                 rtnVal = UNFILLED_COLOR;

@@ -1,0 +1,208 @@
+<jxb:bindings version="1.0"
+  xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+   <jxb:bindings schemaLocation="file:../gml-3.1.1/geometryPrimitives.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='rows']">
+         <jxb:class name="RowsElement"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:element[@name='_Solid']">
+         <jxb:class name="AbstractSolid"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+   <jxb:bindings schemaLocation="file:../gml-3.1.1/defaultStyle.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='topologyStyle']">
+         <jxb:class name="TopologyStyleElement"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:element[@name='featureStyle']">
+         <jxb:class name="FeatureStyleElement"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:element[@name='labelStyle']">
+         <jxb:class name="LabelStyleElement"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+   <jxb:bindings schemaLocation="file:../gml-3.1.1/geometryBasic0d1d.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='_Curve']">
+         <jxb:class name="AbstractCurve"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+   <jxb:bindings schemaLocation="file:../gml-3.1.1/defaultStyle.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='_Style']">
+         <jxb:class name="AbstractStyle"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:element[@name='geometryStyle']">
+         <jxb:class name="GeometryStyleElement"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:element[@name='graphStyle']">
+         <jxb:class name="GraphStyleElement"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+   <jxb:bindings schemaLocation="file:../smil/smil20.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='animateMotion']">
+         <jxb:class name="AnimateMotionElement"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:element[@name='animateColor']">
+         <jxb:class name="AnimateColorElement"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:element[@name='animate']">
+         <jxb:class name="AnimateElement"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:attribute[@name='class']">
+         <jxb:property name="classAttribute"/>
+     </jxb:bindings>
+
+
+   </jxb:bindings>
+
+   <jxb:bindings schemaLocation="file:../gml-3.1.1/geometryBasic2d.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='_Ring']">
+         <jxb:class name="AbstractRing"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:element[@name='_Surface']">
+         <jxb:class name="AbstractSurface"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+   <jxb:bindings schemaLocation="file:../gml-3.1.1/feature.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='_FeatureCollection']">
+         <jxb:class name="AbstractFeatureCollection"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+   <jxb:bindings schemaLocation="file:../smil/smil20-language.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='set']">
+         <jxb:class name="setElement"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+   <jxb:bindings schemaLocation="file:../gml-3.1.1/basicTypes.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='Null']">
+         <jxb:class name="NullElement"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+  <jxb:bindings schemaLocation="file:../gcdml-20071130/environmentalSample.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='_SampleLocation']">
+         <jxb:class name="AbstractSampleLocation"/>
+     </jxb:bindings>
+
+      <jxb:bindings node="//xs:element[@name='_Measurement']">
+         <jxb:class name="AbstractMeasurement"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:element[@type='gcdml:MeasurementType']">
+         <jxb:class name="GcdMeasurement"/>
+     </jxb:bindings>
+
+     <!--<jxb:bindings node="//xs:element[@name='measure']">-->
+         <!--<jxb:class name="GcdmlMeasure"/>-->
+     <!--</jxb:bindings>-->
+
+      <jxb:bindings node="//xs:element[@type='gcdml:MeasureListType']">
+         <jxb:class name="GcdmlMeasureList"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:element[@name='_Habitat']">
+         <jxb:class name="AbstractHabitat"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+   <jxb:bindings schemaLocation="file:../gml-3.1.1/coordinateReferenceSystems.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='derivedCRSType']">
+            <jxb:class name="DerivedCRSTypeElement"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+   <jxb:bindings schemaLocation="file:../gml-3.1.1/datums.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='verticalDatumType']">
+            <jxb:class name="VerticalDatumTypeElement"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+   <jxb:bindings schemaLocation="file:../gcdml-20071130/gcdml.xsd" node="/xs:schema">
+
+     <jxb:bindings node="//xs:element[@name='_NasReport']">
+         <jxb:class name="AbstractNasReport"/>
+     </jxb:bindings>
+
+     <!--<jxb:bindings node="//xs:element[@name='_Material']">-->
+         <!--<jxb:class name="AbstractMaterial"/>-->
+     <!--</jxb:bindings>-->
+
+     <jxb:bindings node="//xs:element[@name='_Assay']">
+         <jxb:class name="AbstractAssay"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+   <jxb:bindings schemaLocation="file:../gcdml-20071130/simpleTypes.xsd" node="/xs:schema">
+
+     <!--<jxb:bindings node="//xs:complexType[@name='MeasureOrNullListType']">-->
+         <!--<jxb:class name="GcdMeasureOrNullListType"/>-->
+     <!--</jxb:bindings>-->
+
+     <jxb:bindings node="//xs:complexType[@name='CodeListType']">
+         <jxb:class name="GcdCodeListType"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:complexType[@name='CoordinatesType']">
+         <jxb:class name="GcdCoordinatesType"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:complexType[@name='CodeType']">
+         <jxb:class name="GcdCodeType"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:complexType[@name='MeasureType']">
+         <jxb:class name="GcdMeasureType"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:complexType[@name='MeasureListType']">
+         <jxb:class name="GcdMeasureListType"/>
+     </jxb:bindings>
+
+     <jxb:bindings node="//xs:complexType[@name='CodeOrNullListType']">
+         <jxb:class name="GcdCodeOrNullListType"/>
+     </jxb:bindings>
+
+   </jxb:bindings>
+
+
+
+</jxb:bindings>

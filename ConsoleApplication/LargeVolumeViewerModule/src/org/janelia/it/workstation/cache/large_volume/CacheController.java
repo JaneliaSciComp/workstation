@@ -6,6 +6,8 @@
 package org.janelia.it.workstation.cache.large_volume;
 
 import java.io.File;
+import java.util.Timer;
+import java.util.TimerTask;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,6 +27,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CacheController {
     public static final int CACHE_MGR_SLEEP_TIME = 100;
+    private static final boolean POLLING = true;
 
     private CacheFacadeI manager;
     private CacheCameraListener cameraListener;
@@ -63,6 +66,9 @@ public class CacheController {
     public void setManager(CacheFacadeI manager) {
         this.manager = manager;
         this.cameraListener = new CacheCameraListener(manager);
+        if (POLLING) {
+            establishPollTimer();
+        }
     }
     
     public void setInUse( boolean flag ) {
@@ -108,9 +114,9 @@ public class CacheController {
             log.warn("No positional status panel");
     }
     
-    public void loadComplete(File infile) {
+    public void loadComplete(File infile, int timeMs) {
         if (posStatPanel != null)
-            posStatPanel.setLoadComplete(infile);
+            posStatPanel.setLoadComplete(infile, timeMs);
     }
 
     /**
@@ -122,18 +128,29 @@ public class CacheController {
         establishGeoNeighborhoodListener();
     }
     
-    public void zoomChanged(Double zoom) {
+    // Will poll periodically to see whether most recently-received
+    // value matches last set value.  If not, proceed.
+    private Double receivedZoom;
+    private Double lastSetZoom = null;
+    private Vec3 receivedFocus;
+    private Vec3 lastSetFocus = null;
+
+    public synchronized void zoomChanged(Double zoom) {
         if (cameraListener == null) {
             return;
         }
-        cameraListener.zoomChanged(zoom);
+        receivedZoom = zoom;
+        if (! POLLING)
+            cameraListener.zoomChanged(zoom);
     }
     
     public void focusChanged(Vec3 focus) {
         if (cameraListener == null) {
             return;
         }
-        cameraListener.focusChanged(focus);
+        receivedFocus = focus;
+        if (! POLLING)
+            cameraListener.focusChanged(focus);
     }
     
     private void establishGeoNeighborhoodListener() {
@@ -176,6 +193,29 @@ public class CacheController {
         log.trace("Cache manager wait is over.");
         return manager;
     }
+    
+    private void establishPollTimer() {
+        Timer pollTimer = new Timer("CacheControllerTimer");
+        TimerTask pollTask = new TimerTask() {
+
+            @Override
+            public void run() {
+                if (receivedZoom != null  &&   (lastSetZoom == null  ||  !receivedZoom.equals( lastSetZoom ))) {
+                    lastSetZoom = receivedZoom;
+                    cameraListener.zoomChanged(lastSetZoom);
+                    if (POLLING) {
+                        cameraListener.focusChanged(lastSetFocus);
+                    }
+                }
+                if (receivedFocus != null  &&  (lastSetFocus == null  ||  !receivedFocus.equals( lastSetFocus ))) {
+                    lastSetFocus = receivedFocus;
+                    cameraListener.focusChanged(lastSetFocus);
+                }
+            }
+            
+        };
+        pollTimer.scheduleAtFixedRate(pollTask, 5, 3000);
+    }
 
     private static class CacheCameraListener implements CameraListener {
 
@@ -213,6 +253,7 @@ public class CacheController {
 
         @Override
         public void focusChanged( Vec3 focus ) {
+            log.info("Focus Change {}", focus);
             // Make sure that any thread, which is waiting to set the
             // focus, uses this new focus.
             Vec3 oldFocus = focusInWaiting.getAndSet(focus);
@@ -244,6 +285,7 @@ public class CacheController {
             this.focus = focus;
         }
         
+        @Override
         public void run() {
             TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
             Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
@@ -278,10 +320,15 @@ public class CacheController {
         public void run() {
             Double referencedZoom = zoom.get();
             zoom.set(null);
-            TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
-            Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
+            //TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
+            //Double zoom = (double) tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
             manager.setPixelsPerSceneUnit(1.0);//camera.getPixelsPerSceneUnit());
-            manager.setCameraZoom(referencedZoom);
+            if (POLLING) {
+                manager.setCameraZoomValue(referencedZoom);
+            }
+            else {
+                manager.setCameraZoom(referencedZoom);
+            }
         }
         
     }

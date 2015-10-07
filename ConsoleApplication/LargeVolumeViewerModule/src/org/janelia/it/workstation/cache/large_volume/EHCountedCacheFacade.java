@@ -77,7 +77,9 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
         URL url = getClass().getResource("/ehcacheCountedTiff.xml");
         manager = CacheManager.create(url);                
         
-        cacheCount = (int)((16L * (long)GIGA)/standardFileSize);
+        // Get close to a maximum, so that we are not very tight on cache
+        // size, before releasing.
+        cacheCount = (int)((CACHE_MEMORY_SIZE_GB * (long)GIGA)/standardFileSize) - 10;
         allocateStorage();
         
         CacheCollection toolkit = new CacheCollection() {            
@@ -90,7 +92,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
             @Override
             public boolean hasKey(String id) {
                 Cache cache = manager.getCache(cacheName);
-                return cache.get(id) != null;
+                return isInCache(id);
             }
             @Override
             public byte[] getStorage(String id) {
@@ -180,7 +182,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
      */
     @Override
 	public synchronized void setFocus(double[] focus) {
-        log.debug("Setting focus...");
+        log.trace("Setting focus from thread {}.", Thread.currentThread().getName());
         try {
             cameraFocus = focus;
             updateRegion();
@@ -196,7 +198,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
      */
     @Override
     public void setCameraZoomValue(Double zoom) {
-        log.trace("Setting zoom {}....", zoom);
+        log.debug("Setting zoom {}....", zoom);
         this.cameraZoom = zoom;
     }
     
@@ -217,6 +219,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
             setCameraZoomValue(zoom);
             // Force a recalculation, based on both focus and zoom.
             if (this.cameraFocus != null) {
+                log.debug("Re-Setting focus {}.", cameraFocus);
                 updateRegion();
             }
         } catch ( Exception ex ) {
@@ -265,8 +268,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
     }
 
     private boolean isInCache(Cache cache, String id) throws CacheException, IllegalStateException {
-        Element cachedElement = cache.get(id);
-        return (cachedElement != null);
+        return cache.isKeyInCache(id);
     }
 
     private void updateRegion() {
@@ -291,6 +293,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
     }
     
     private synchronized byte[] reuseStorage(String targetId) {
+        log.trace("Starting reuse Storage from thread {}.", Thread.currentThread().getName());
         Cache cache = manager.getCache(cacheName);
         byte[] rtnVal = null;
         AllocationUnit oldUnit = null;
@@ -325,6 +328,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
             log.error("No reusable storage available.");
             throw new IllegalStateException("Insufficient storage available.");
         }
+        log.trace("Return from reuse Storage");
         
         return rtnVal;
     }
@@ -351,7 +355,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
         return rtnVal;
     }
 
-    private byte[] getBytes(final String id) {
+    private byte[] getBytes(final String id) {        
         String keyOnly = Utilities.trimToOctreePath(id);
         log.debug("Getting {}", keyOnly);
         totalGets++;
@@ -359,13 +363,28 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
         try {
             CachableWrapper wrapper = null;
             Cache cache = manager.getCache(cacheName);
-            if (cache.get(id) != null) {                
+            if (isInCache(id)) {                
                 wrapper = (CachableWrapper) cache.get(id).getObjectValue();
                 log.debug("Returning {}: found in cache.", keyOnly);
             } else {
-                byte[] storage = reuseStorage( id );
-                wrapper = cachePopulator.pushLaunch(id, storage);
-                log.debug("Missing.  Returning {}: pushed to cache. Zoom={}.", keyOnly, cameraZoom);
+                int combinedWaitMs = 0;
+                while (! isInCache(id) ) {
+                    Thread.sleep(WAIT_TIME_GET_BYTES);
+                    combinedWaitMs += WAIT_TIME_GET_BYTES;
+                    
+                    if (combinedWaitMs > 2500) {
+                        break;
+                    }
+                }
+                if (isInCache(id)) {
+                    wrapper = (CachableWrapper) cache.get(id).getObjectValue();
+                    log.info("Returning {}: after a wait.", keyOnly);
+                }
+                else {
+                    byte[] storage = reuseStorage(id);
+                    wrapper = cachePopulator.pushLaunch(id, storage);
+                    log.info("Missing.  Returning {}: pushed to cache. Zoom={}.", keyOnly, cameraZoom);
+                }
             }
             log.trace("Getting {} from cache wrapper.", keyOnly);
             dumpCacheMemoryUse(cache);
@@ -388,6 +407,7 @@ public class EHCountedCacheFacade extends AbstractCacheFacade implements CacheFa
         }
         return rtnVal;
     }
+    public static final int WAIT_TIME_GET_BYTES = 300;
     
     private void dumpCacheMemoryUse(Cache cache) {
         List<String> keys = cache.getKeys();
