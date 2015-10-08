@@ -44,8 +44,6 @@ implements GLActor
 	private NumeralShader numeralShader = new NumeralShader();
 	private OutlineShader outlineShader = new OutlineShader();
 	
-	private List<Integer> dbg_deletedTexIds = new java.util.ArrayList<>();
-	
 	public SliceActor(ViewTileManager viewTileManager)
 	{
 		this.viewTileManager = viewTileManager;
@@ -67,9 +65,6 @@ implements GLActor
 	            int[] txIds = tc.popObsoleteTextureIds();
 	            if (txIds.length > 0)
 	                gl.glDeleteTextures(txIds.length, txIds, 0);
-				for (int id: txIds) {
-					dbg_deletedTexIds.add(id);
-				}
 	        }
 	    }
 	    
@@ -97,15 +92,6 @@ implements GLActor
         GL2 gl2 = glDrawable.getGL().getGL2();
 		shader.load(gl2);
 		for (Tile2d tile: tiles) {
-			if (tile.getBestTexture() != null && tile.getBestTexture().getTexture() != null) {
-				int id = tile.getBestTexture().getTexture().getTextureId();
-				if (dbg_deletedTexIds.contains(id)) {
-					log.info("Reuse of ID: {}, in texture {}, best-texture {}/{}, covering {}.", id, tile.hashCode(), tile.getBestTexture().hashCode(), System.identityHashCode(tile.getBestTexture()), tile.getBestTexture().getIndex());
-				}
-				else {
-					log.info("First use of texture {}, in texture {}, best-texture {}/{}, covering {}.", id, tile.hashCode(), tile.getBestTexture().hashCode(), System.identityHashCode(tile.getBestTexture()), tile.getBestTexture().getIndex());
-				}
-			}
 			tile.setFilter(filter);
 			tile.display(glDrawable, camera);
 		}
