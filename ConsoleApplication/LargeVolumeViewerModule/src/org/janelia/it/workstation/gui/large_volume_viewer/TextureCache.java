@@ -75,7 +75,12 @@ public class TextureCache
     public boolean isLoadQueued(TileIndex index) {
         if (! queuedTextureTime.containsKey(index))
             return false;
-        long elapsed = System.nanoTime() - queuedTextureTime.get(index);
+        Long queuedTextureTimeForIndex = queuedTextureTime.get(index);
+        if (queuedTextureTimeForIndex == null) {
+            log.warn("Queued Texture Time had no entry for index {}.  Setting queued time to 0.", index);
+            queuedTextureTimeForIndex = System.nanoTime();
+        }
+        long elapsed = System.nanoTime() - queuedTextureTimeForIndex;
         // Don't wait longer than ten seconds
         long maxSeconds = 10;
         if (elapsed > maxSeconds * 1e9) {
