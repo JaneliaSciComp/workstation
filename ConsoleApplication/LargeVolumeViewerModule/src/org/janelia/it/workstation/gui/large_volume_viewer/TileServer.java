@@ -401,6 +401,11 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 		// log.info("Future cache size = "+futureTileMax);
 	}
 	
+	public void setCachedSizesSmall() {
+		getTextureCache().getHistoryCache().setMaxEntries(50);
+		getTextureCache().getFutureCache().setMaxEntries(150);
+	}
+	
 	public AbstractTextureLoadAdapter getLoadAdapter() {
 		return sharedVolumeImage.getLoadAdapter();
 	}
@@ -455,7 +460,9 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
         minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
         futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
         clearCache();
-        setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
+		//DEBUG 
+		setCachedSizesSmall();
+        //setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
         refreshCurrentTileSet();
     }
 	
