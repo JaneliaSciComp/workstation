@@ -70,8 +70,9 @@ implements Map<TileIndex, TileTexture>
 	}
 
 	public Set<Integer> popObsoleteGlTextures() {
-		if (obsoleteGlTextures.size() > 0)
-			log.info("Popping obsolete textures.  Size {}.", obsoleteGlTextures.size());
+		if (log.isTraceEnabled()  &&  obsoleteGlTextures.size() > 0) {
+			log.trace("Popping obsolete textures.  Size {}.", obsoleteGlTextures.size());
+        }
 		Set<Integer> result = obsoleteGlTextures;
 		obsoleteGlTextures = new HashSet<Integer>();
 		return result;
