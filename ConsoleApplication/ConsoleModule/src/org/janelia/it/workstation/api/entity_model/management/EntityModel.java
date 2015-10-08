@@ -871,12 +871,12 @@ public class EntityModel {
     public void deleteEntityTree(Entity entity) throws Exception {
         checkIfCanonicalEntity(entity);
 
-        Set<EntityData> parentEds = new HashSet<EntityData>();
+        Set<EntityData> parentEds = new HashSet<>();
 
+        log.debug("Deleting entity tree: {}", EntityUtils.identify(entity));
+        entityFacade.deleteEntityTree(entity.getId());
+            
         synchronized (this) {
-            log.debug("Deleting entity tree: {}", EntityUtils.identify(entity));
-            entityFacade.deleteEntityTree(entity.getId());
-
             // Remove from cache
             entityCache.invalidate(entity.getId());
             workspaceCache.remove(entity.getId());
@@ -1348,8 +1348,8 @@ public class EntityModel {
      * @return
      * @throws Exception
      */
-    public Entity createFlyLineRelease(String releaseName) throws Exception {
-        return putOrUpdate(annotationFacade.createFlyLineRelease(releaseName));
+    public Entity createFlyLineRelease(String releaseName, Date releaseDate, Integer lagTimeMonths, List<String> dataSetList) throws Exception {
+        return putOrUpdate(annotationFacade.createFlyLineRelease(releaseName, releaseDate, lagTimeMonths, dataSetList));
     }
 
     /**

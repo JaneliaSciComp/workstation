@@ -38,7 +38,9 @@ public class MembershipListPanel<T> extends JPanel {
     private DefaultListModel<T> model;
     private JList<T> itemList;
     private DefaultComboBoxModel<T> comboBoxModel;
+    private JPanel addPane;
     private JComboBox<T> subjectCombobox;
+    private boolean editable;
 
     public MembershipListPanel(String title, Class<? extends ListCellRenderer<T>> cellRendererClass) {
 
@@ -91,7 +93,7 @@ public class MembershipListPanel<T> extends JPanel {
             }
         });
 
-        JPanel addPane = new JPanel();
+        this.addPane = new JPanel();
         addPane.setLayout(new BoxLayout(addPane, BoxLayout.LINE_AXIS));
         addPane.add(subjectCombobox);
         addPane.add(addButton);
@@ -122,6 +124,15 @@ public class MembershipListPanel<T> extends JPanel {
         });
     }
 
+    public boolean isEditable() {
+        return editable;
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
+        addPane.setVisible(editable);
+    }
+
     protected void showPopupMenu(MouseEvent e) {
         JPopupMenu popupMenu = createPopupMenu(e);
         if (popupMenu != null) {
@@ -131,6 +142,10 @@ public class MembershipListPanel<T> extends JPanel {
 
     private JPopupMenu createPopupMenu(MouseEvent e) {
 
+        if (!editable) {
+            return null;
+        }
+        
         JList target = (JList) e.getSource();
         if (target.getSelectedValue() == null) {
             return null;

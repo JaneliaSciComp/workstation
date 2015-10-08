@@ -23,7 +23,6 @@ import javax.swing.JPanel;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.dialogs.AnnotationSessionPropertyDialog;
 import org.janelia.it.workstation.gui.dialogs.DataSetListDialog;
 import org.janelia.it.workstation.gui.dialogs.FlyLineReleaseListDialog;
 import org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog;
@@ -100,7 +99,6 @@ public class Browser implements Cloneable {
     private VerticalPanelPicker rightPanel;
     private OntologyOutline ontologyOutline;
 
-    private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
     private ImportDialog importDialog;
     private SearchConfiguration generalSearchConfig;
     private GeneralSearchDialog generalSearchDialog;
@@ -183,9 +181,7 @@ public class Browser implements Cloneable {
                 return roots;
             }
         };
-        
-        //annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
-        
+                
         ontologyOutline.setPreferredSize(new Dimension());
 
         resetBrowserPosition();
@@ -424,10 +420,6 @@ public class Browser implements Cloneable {
 
     public SessionOutline getAnnotationSessionOutline() {
         return sessionOutline;
-    }
-
-    public AnnotationSessionPropertyDialog getAnnotationSessionPropertyDialog() {
-        return annotationSessionPropertyPanel;
     }
 
     public ImportDialog getImportDialog() {

@@ -7,20 +7,25 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Dialog.ModalityType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
@@ -28,8 +33,12 @@ import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
 
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -39,6 +48,7 @@ import org.janelia.it.workstation.gui.util.MembershipListPanel;
 import org.janelia.it.workstation.gui.util.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 
 import com.fasterxml.jackson.databind.util.ISO8601Utils;
 
@@ -56,20 +66,25 @@ public class FlyLineReleaseDialog extends ModalDialog {
     private final FlyLineReleaseListDialog parentDialog;
 
     private JPanel attrPanel;
-    private JTextField nameInput;
-    private DateComboBox dateInput;
+    private JTextField nameInput = new JTextField(30);
+    private DateComboBox dateInput = new DateComboBox();
+    private JTextField lagTimeInput = new JTextField(10);
     private MembershipListPanel<Entity> dataSetPanel;
     private MembershipListPanel<Subject> annotatorsPanel;
     private MembershipListPanel<Subject> subscribersPanel;
+    private JButton okButton;
 
     private Entity releaseEntity;
 
     public FlyLineReleaseDialog(FlyLineReleaseListDialog parentDialog) {
 
+        super(parentDialog);
         this.parentDialog = parentDialog;
 
         setTitle("Fly Line Release Definition");
 
+        lagTimeInput.setToolTipText("Number of months between release date and the completion date of any samples included in the release");
+        
         attrPanel = new JPanel(new MigLayout("wrap 2, ins 20"));
 
         add(attrPanel, BorderLayout.CENTER);
@@ -83,8 +98,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
             }
         });
 
-        JButton okButton = new JButton("OK");
-        okButton.setToolTipText("Close and save changes");
+        this.okButton = new JButton("OK");
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -109,6 +123,17 @@ public class FlyLineReleaseDialog extends ModalDialog {
     public void showForRelease(final Entity releaseEntity) {
 
         this.releaseEntity = releaseEntity;
+        
+        if (releaseEntity==null) {
+            okButton.setText("Create Folder Hierarchy");
+            okButton.setToolTipText("Create the release and corresponding folder hierarchy of all the lines due to be released");
+        }
+        else {
+            okButton.setText("OK");
+            okButton.setToolTipText("Close and save changes");
+        }
+        
+        boolean editable = releaseEntity==null;
         String releaseOwnerKey = releaseEntity == null ? SessionMgr.getSubjectKey() : releaseEntity.getOwnerKey();
 
         attrPanel.removeAll();
@@ -122,19 +147,32 @@ public class FlyLineReleaseDialog extends ModalDialog {
         attrPanel.add(ownerValue);
 
         final JLabel nameLabel = new JLabel("Release Name: ");
-        nameInput = new JTextField(30);
-        nameLabel.setLabelFor(nameInput);
         attrPanel.add(nameLabel, "gap para");
-        attrPanel.add(nameInput);
+        
+        if (editable) {
+            nameInput.setEnabled(editable);
+            nameLabel.setLabelFor(nameInput);
+            attrPanel.add(nameInput);
+        }
+        else {
+            attrPanel.add(new JLabel(releaseEntity.getName()));
+        }
 
-        final JLabel dateLabel = new JLabel("Release Date: ");
-        dateInput = new DateComboBox();
+        final JLabel dateLabel = new JLabel("Target Release Date: ");
         dateLabel.setLabelFor(dateInput);
         attrPanel.add(dateLabel, "gap para");
         attrPanel.add(dateInput);
+        dateInput.setEnabled(editable);
 
+        final JLabel lagTimeLabel = new JLabel("Lag Time Months (Optional): ");
+        lagTimeLabel.setLabelFor(lagTimeInput);
+        attrPanel.add(lagTimeLabel, "gap para");
+        attrPanel.add(lagTimeInput);
+        lagTimeInput.setEnabled(editable);
+        
+        attrPanel.add(Box.createVerticalStrut(10), "span 2");
+        
         JPanel bottomPanel = new JPanel(new GridBagLayout());
-
         GridBagConstraints c = new GridBagConstraints();
 
         c.gridx = 0;
@@ -144,6 +182,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
         c.anchor = GridBagConstraints.LINE_START;
         c.weightx = 1;
         dataSetPanel = new MembershipListPanel<>("Data Sets", DataSetComboBoxRenderer.class);
+        dataSetPanel.setEditable(editable);
         bottomPanel.add(dataSetPanel, c);
 
         c.gridx = 1;
@@ -210,7 +249,12 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
                 if (releaseEntity != null) {
                     nameInput.setText(releaseEntity.getName());
-
+                    
+                    String lagTimeMonths = releaseEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_LAG_TIME_MONTHS);
+                    if (lagTimeMonths != null) {
+                        lagTimeInput.setText(lagTimeMonths);
+                    }
+                    
                     String releaseDateStr = releaseEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_RELEASE_DATE);
 
                     if (releaseDateStr != null) {
@@ -267,16 +311,41 @@ public class FlyLineReleaseDialog extends ModalDialog {
     private void saveAndClose() {
 
         Utils.setWaitingCursor(FlyLineReleaseDialog.this);
-
-        final String releaseDateStr = ISO8601Utils.format(dateInput.getDate());
-
-        final StringBuilder dataSetsSb = new StringBuilder();
-        for (Entity dataSet : dataSetPanel.getItemsInList()) {
-            if (dataSetsSb.length() > 0) {
-                dataSetsSb.append(",");
+        
+        if (StringUtils.isEmpty(nameInput.getText().trim())) {
+            JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "The release name cannot be blank", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        Integer lagTime = null;
+        try {
+            String lagTimeStr = lagTimeInput.getText().trim();
+            if (!StringUtils.isEmpty(lagTimeStr)) {
+                lagTime = Integer.parseInt(lagTimeStr);
             }
+        }
+        catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "Lag time must be a number", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        for(Entity release : parentDialog.getReleases()) {
+            if (releaseEntity!=null && release.getName().equals(releaseEntity.getName())) {
+                JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "A release with this name already exists", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+        
+        
+        final List<String> dataSets = new ArrayList<>();
+        for (Entity dataSet : dataSetPanel.getItemsInList()) {
             String identifier = dataSet.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER);
-            dataSetsSb.append(identifier);
+            dataSets.add(identifier);
+        }
+        
+        if (dataSets.isEmpty()) {
+            JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "A release must include at least one data set", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
         final StringBuilder annotatorsSb = new StringBuilder();
@@ -295,22 +364,27 @@ public class FlyLineReleaseDialog extends ModalDialog {
             subscribersSb.append(subject.getKey());
         }
 
+        final Integer lagTimeFinal = lagTime;
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
 
+                boolean syncFolders = false;
                 if (releaseEntity == null) {
-                    releaseEntity = ModelMgr.getModelMgr().createFlyLineRelease(nameInput.getText());
-                }
-                else {
-                    releaseEntity.setName(nameInput.getText());
+                    releaseEntity = ModelMgr.getModelMgr().createFlyLineRelease(nameInput.getText(), dateInput.getDate(), lagTimeFinal, dataSets);
+                    syncFolders = true;
                 }
 
-                ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_RELEASE_DATE, releaseDateStr);
-                ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_DATA_SETS, dataSetsSb.toString());
-                ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_ANNOTATORS, annotatorsSb.toString());
+                EntityData ed = ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_ANNOTATORS, annotatorsSb.toString());
+                releaseEntity = ed.getParentEntity(); // Entity was invalidated by setOrUpdateValue
+                
                 ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_SUBSCRIBERS, subscribersSb.toString());
+                releaseEntity = ed.getParentEntity(); // Entity was invalidated by setOrUpdateValue
+                
+                if (syncFolders) {
+                    launchSyncTask();
+                }
             }
 
             @Override
@@ -329,5 +403,46 @@ public class FlyLineReleaseDialog extends ModalDialog {
         };
 
         worker.execute();
+    }
+    
+    private void launchSyncTask() {
+
+        Task task;
+        try {
+            HashSet<TaskParameter> taskParameters = new HashSet<>();
+            taskParameters.add(new TaskParameter("release entity id", releaseEntity.getId().toString(), null));
+            task = ModelMgr.getModelMgr().submitJob("ConsoleSyncReleaseFolders", "Sync Release Folders", taskParameters);
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return;
+        }
+
+        TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
+
+            @Override
+            public String getName() {
+                return "Creating fly line folder structures";
+            }
+
+            @Override
+            protected void doStuff() throws Exception {
+                setStatus("Executing");
+                super.doStuff();
+            }
+
+            @Override
+            public Callable<Void> getSuccessCallback() {
+                return new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        SessionMgr.getBrowser().getEntityOutline().refresh(true, true, null);
+                        return null;
+                    }
+                };
+            }
+        };
+
+        taskWorker.executeWithEvents();
     }
 }

@@ -17,6 +17,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
@@ -48,6 +49,7 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
     private final JPanel mainPanel;
     private final DynamicTable dynamicTable;
     private final FlyLineReleaseDialog releaseDialog;
+    private List<Entity> releases;
 
     public FlyLineReleaseListDialog() {
 
@@ -74,10 +76,16 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
                     if ("Name".equals(column.getName())) {
                         return releaseEntity.getName();
                     }
-                    if (EntityConstants.ATTRIBUTE_RELEASE_DATE.equals(column.getName())) {
-                        String value = releaseEntity.getValueByAttributeName(column.getName());
-                        if (value != null) {
+                    String value = releaseEntity.getValueByAttributeName(column.getName());
+                    if (value != null) {
+                        if (EntityConstants.ATTRIBUTE_RELEASE_DATE.equals(column.getName())) {
                             return df.format(ISO8601Utils.parse(value));
+                        }
+                        else if (EntityConstants.ATTRIBUTE_DATA_SETS.equals(column.getName())) {
+                            return value.replaceAll(",", ", ");
+                        }
+                        else {
+                            return value;
                         }
                     }
                 }
@@ -111,6 +119,11 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
                         @Override
                         public void actionPerformed(ActionEvent e) {
 
+                            int result = JOptionPane.showConfirmDialog(FlyLineReleaseListDialog.this, "Are you sure you want to delete release '" + 
+                                    releaseEntity.getName() + "'? This will not remove anything already published to the web.",
+                                    "Delete Release", JOptionPane.OK_CANCEL_OPTION);
+                            if (result != 0) return;
+                            
                             Utils.setWaitingCursor(FlyLineReleaseListDialog.this);
 
                             SimpleWorker worker = new SimpleWorker() {
@@ -151,6 +164,7 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
 
         dynamicTable.addColumn("Name");
         dynamicTable.addColumn(EntityConstants.ATTRIBUTE_RELEASE_DATE);
+        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_DATA_SETS);
 
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new fly line release definition");
@@ -195,15 +209,15 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
 
         mainPanel.removeAll();
         mainPanel.add(loadingLabel, BorderLayout.CENTER);
-
+        
+        this.releases = new ArrayList<Entity>();
+        
         SimpleWorker worker = new SimpleWorker() {
-
-            private List<Entity> releaseEntities = new ArrayList<Entity>();
 
             @Override
             protected void doStuff() throws Exception {
                 for (Entity releaseEntity : ModelMgr.getModelMgr().getFlyLineReleases()) {
-                    releaseEntities.add(releaseEntity);
+                    releases.add(releaseEntity);
                 }
             }
 
@@ -212,7 +226,7 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
 
                 // Update the attribute table
                 dynamicTable.removeAllRows();
-                for (Entity dataSetEntity : releaseEntities) {
+                for (Entity dataSetEntity : releases) {
                     dynamicTable.addRow(dataSetEntity);
                 }
 
@@ -240,4 +254,9 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
     public void totalRefresh() {
         throw new UnsupportedOperationException();
     }
+
+    List<Entity> getReleases() {
+        return releases;
+    }
+    
 }

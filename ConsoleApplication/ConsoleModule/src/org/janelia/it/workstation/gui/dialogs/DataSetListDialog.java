@@ -106,7 +106,12 @@ public class DataSetListDialog extends ModalDialog implements Refreshable {
     		        deleteItem.addActionListener(new ActionListener() {
     					@Override
     					public void actionPerformed(ActionEvent e) {
-    						
+
+                            int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to delete data set '" + dataSetEntity.getName() + 
+                                    "'? This will not delete the images associated with the data set.",
+                                    "Delete Data Set", JOptionPane.OK_CANCEL_OPTION);
+                            if (result != 0) return;
+                            
     						Utils.setWaitingCursor(DataSetListDialog.this);
 
     				        SimpleWorker worker = new SimpleWorker() {

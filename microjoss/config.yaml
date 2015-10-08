@@ -1,9 +1,9 @@
 mongodb:
-    host: rokicki-ws
+    host: mongodb2
     port: 27017
     database: jos
-    #username: flyportal
-    #password: flyportal
+    username: josApp
+    password: insert password here
 
 scality:
     url: http://jacs-sproxyd:81/proxy

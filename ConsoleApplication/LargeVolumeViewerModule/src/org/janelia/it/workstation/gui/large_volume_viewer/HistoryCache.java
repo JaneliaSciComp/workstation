@@ -33,13 +33,20 @@ implements Map<TileIndex, TileTexture>
 			private static final long serialVersionUID = 1L;
 			@Override
 			// Fix size of LRU cache
-			protected boolean removeEldestEntry(Map.Entry<TileIndex, TileTexture> eldest) {
-				boolean result = (size() > maxEntries);
+			protected boolean removeEldestEntry(Map.Entry<TileIndex, TileTexture> eldest) {				
+				boolean result = (map.size() > maxEntries);
 				if (result && ! fullReported) {
 					log.info("cache full");
                     eldest.getValue().releaseMemory();
                     map.remove(eldest.getKey());
 					fullReported = true;
+				}
+				if (result) {
+					if (eldest.getValue() != null  &&
+					    eldest.getValue().getTexture() != null) {
+						final int eldestTextureId = eldest.getValue().getTexture().getTextureId();					
+						obsoleteGlTextures.add(eldestTextureId);					
+					}
 				}
 				return result;
 			}
@@ -65,6 +72,8 @@ implements Map<TileIndex, TileTexture>
 	}
 
 	public Set<Integer> popObsoleteGlTextures() {
+		if (obsoleteGlTextures.size() > 0)
+			log.info("Popping obsolete textures.  Size {}.", obsoleteGlTextures.size());
 		Set<Integer> result = obsoleteGlTextures;
 		obsoleteGlTextures = new HashSet<Integer>();
 		return result;
@@ -72,6 +81,9 @@ implements Map<TileIndex, TileTexture>
 	
 	@Override
 	public TileTexture remove(Object item) {
+        if (! (item instanceof TileIndex)) {
+            throw new IllegalArgumentException("Wrong type of key used in remove operation.");
+        }
 		TileTexture tile = map.remove(item);
 		if (tile == null)
 			return tile;

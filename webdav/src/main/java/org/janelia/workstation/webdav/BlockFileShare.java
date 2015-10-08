@@ -104,7 +104,7 @@ public class BlockFileShare extends FileShare {
     @Override
     public String propFind(UriInfo uriInfo, HttpHeaders headers) throws FileNotFoundException, IOException {
         String filepath = "/" + uriInfo.getPath();
-
+System.out.println (filepath);
         // create Multistatus top level
         Multistatus propfindContainer = new Multistatus();
 
