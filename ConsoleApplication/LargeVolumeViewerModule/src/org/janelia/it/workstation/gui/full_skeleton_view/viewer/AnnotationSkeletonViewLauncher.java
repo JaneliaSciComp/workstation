@@ -36,6 +36,11 @@ public class AnnotationSkeletonViewLauncher {
             @Override
             public void actionPerformed(ActionEvent e) {
                 reopenView();
+                AnnotationSkeletalViewTopComponent comp = getTopComponent();
+                // Coerce a redraw.
+                comp.invalidate();
+                comp.validate();
+                comp.repaint();
             }
         };
         menuItems.add(new JMenuItem(launchAction));

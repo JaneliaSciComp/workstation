@@ -9,6 +9,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -58,7 +59,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
     private static final double MANUAL_SEGMENT_RADIUS = 6;
     private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
     private static final double TRACED_SEGMENT_RADIUS = 8;
-    private static final int TRACED_SEGMENT_POLYGON_SIDES = 5;
+    private static final int TRACED_SEGMENT_POLYGON_SIDES = 8;
     public static final double ANNO_RADIUS = TRACED_SEGMENT_RADIUS * 4;
     private static final int ANNO_POLYGON_SIDES = 12;
     
@@ -144,6 +145,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
      */
     @Override
     public synchronized List<TriangleSource> execute() throws Exception {
+        Long startTime = new Date().getTime();
         // Can re-execute this.
         renderIdToBuffers.clear();
         triangleSources.clear();
@@ -173,6 +175,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
 		}
         //exportVertices(new File("/Users/fosterl/"), "NeuronTraceVtxAttribMgr_Test");
         
+        log.info("Execution of NeuronTraceVtxAttribMgr took {}s", (new Date().getTime() - startTime) / 1000.0);
         return triangleSources;
     }
 

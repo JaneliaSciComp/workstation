@@ -31,8 +31,6 @@ public class LineEnclosureFactory implements TriangleSource {
     private static final Logger logger = LoggerFactory.getLogger(LineEnclosureFactory.class);
 	public static final double ZERO_TOLERANCE = 0.3;
     private static final int X = 0, Y = 1, Z = 2;
-    private static final int SIN_POS_IN_ARR = 0;
-    private static final int COS_POS_IN_ARR = 1;
 	private static final int PERPENDICULAR_ALIGNMENT = 100;
     
     private final List<VertexInfoBean> vertices = new ArrayList<>();
@@ -117,9 +115,6 @@ public class LineEnclosureFactory implements TriangleSource {
 
     @Override
     public List<Triangle> getTriangleList() {
-        logger.info("Total attempts at sin/cos lookup {}.  Total hits sin/cos lookup {}.  Success rate {}.",
-                this.totalLookupAttempts, this.hitCount, (double)this.hitCount/(double)this.totalLookupAttempts
-                );
         return triangles;
     }
 
@@ -275,44 +270,11 @@ public class LineEnclosureFactory implements TriangleSource {
                 aboutZ = lineUnitVector[Y] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Y]);
 			
 			// Now that we have our angles, we make transforms.
-            /*
-             *
-             * Pre-computed cosines and sines provided for faster calculation.
-             * 
-             * @param cosAboutX cosine of rotation about X axis
-             * @param sinAboutX sin about X
-             * @param cosAboutY cos about Y
-             * @param sinAboutY sin about Y
-             * @param cosAboutZ cos about Z
-             * @param sinAboutZ sin about Z
-             * @param translateX move to this pos X
-             * @param translateY pos Y
-             * @param translateZ pos Z
-             * @return matrix, ready to transform points.
-             */
-//            double[] sinCosAboutX = lookupSinCos( -aboutX );
-//            double[] sinCosAboutY = lookupSinCos( aboutY );
-//            Matrix transform1 = matrixUtils.getTransform3D(
-//                    sinCosAboutX[SIN_POS_IN_ARR], 
-//                    sinCosAboutX[COS_POS_IN_ARR], 
-//                    sinCosAboutY[SIN_POS_IN_ARR],
-//                    sinCosAboutY[COS_POS_IN_ARR],
-//                    0, 0,
-//                    0, 0, 0
-//            );
 			Matrix transform1 = matrixUtils.getTransform3D(
 					-aboutX, aboutY, 0,
 					0, 0, 0);
 			final double[][] startEndPolygon = clonePrototypePolygon(zAxisAlignedPrototypePolygon);
 			transformPolygon(startEndPolygon, transform1);
-//            double[] sinCosAboutZ = lookupSinCos( aboutZ );
-//            Matrix transform2 = matrixUtils.getTransform3D(
-//                    0, 0,
-//                    0, 0,
-//                    sinCosAboutZ[SIN_POS_IN_ARR],
-//                    sinCosAboutZ[COS_POS_IN_ARR],                    
-//                    startCoords[X], startCoords[Y], startCoords[Z]
-//            );
 			Matrix transform2 = matrixUtils.getTransform3D(
 					0, 0, aboutZ,
 					startCoords[X], startCoords[Y], startCoords[Z]);
@@ -380,26 +342,6 @@ public class LineEnclosureFactory implements TriangleSource {
 			endCapPolygonsHolder.add(producePolygon(transform, prototypePolygon));
 		}
         return endCapPolygonsHolder;
-    }
-    
-    private Map<String,double[]> precomputedSinCos = new HashMap<>();
-    private int hitCount = 0;
-    private int totalLookupAttempts = 0;
-    private double[] lookupSinCos( double angle ) {
-        totalLookupAttempts ++;
-        String key = "" + Math.round( angle * 1000 );
-        double[] rtnVal = precomputedSinCos.get(key);
-        if (rtnVal == null) {
-            rtnVal = new double[2];
-            rtnVal[0] = Math.sin(angle);
-            rtnVal[1] = Math.cos(angle);
-            precomputedSinCos.put(key, rtnVal);
-        }
-        else {
-            hitCount ++;
-        }
-        
-        return rtnVal;
     }
     
 	private int getAxialAlignmentByLineDelta(double[] lineDelta) {
