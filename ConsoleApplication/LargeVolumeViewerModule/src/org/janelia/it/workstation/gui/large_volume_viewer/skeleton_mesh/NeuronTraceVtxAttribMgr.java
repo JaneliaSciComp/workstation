@@ -649,12 +649,10 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
             if ( previousCoords != null ) {
                 int coordsAdded = tracedSegmentEnclosureFactory.addEnclosure(
                         previousCoords, currentCoords, colorAsFloatArray);
-                if (coordsAdded == 0) {
-                    if (previousVoxelPos != null) {
-                        log.info("Encountered identical endpoints: " + fmtVoxelPos(previousVoxelPos) + ":" + fmtVoxelPos(voxelPos) +
-                                ".  Encountered identical converted coords: " + fmtCoords(previousCoords) + ":" + fmtCoords(currentCoords) +
-                                ".  Found in segment index: " + voxelPath.getSegmentIndex() + ", and in neuron " + neuronId + ".");
-                    }
+                if (log.isTraceEnabled()  &&  coordsAdded == 0  &&  previousVoxelPos != null) {
+                    log.trace("Encountered identical endpoints: " + fmtVoxelPos(previousVoxelPos) + ":" + fmtVoxelPos(voxelPos) +
+                              ".  Encountered identical converted coords: " + fmtCoords(previousCoords) + ":" + fmtCoords(currentCoords) +
+                              ".  Found in segment index: " + voxelPath.getSegmentIndex() + ", and in neuron " + neuronId + ".");
                 }
             }
             previousCoords = currentCoords;
