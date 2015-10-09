@@ -83,7 +83,7 @@ public class LineEnclosureFactory implements TriangleSource {
      * @param color applied to each vertex.
      * @return number of coordinates created here.
      */
-    public int addEnclosure( double[] startingCoords, double[] endingCoords, float[] color ) {
+    public synchronized int addEnclosure( double[] startingCoords, double[] endingCoords, float[] color ) {
         if ( startingCoords.length != 3 ) {
             throw new IllegalArgumentException("3-D starting coords only.");
         }
