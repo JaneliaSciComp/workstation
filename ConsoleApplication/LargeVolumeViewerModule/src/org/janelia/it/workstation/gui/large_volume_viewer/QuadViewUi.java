@@ -55,6 +55,7 @@ import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
+import org.janelia.it.workstation.gui.dialogs.MemoryCheckDialog;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
@@ -62,8 +63,10 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonCon
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.util.SWCDataConverter;
 
 /** 
@@ -85,6 +88,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private static final String IMAGES_MOUSE_SCROLL = "mouse_scroll.png";
     private static final String IMAGES_MOUSE_LEFT = "mouse_left.png";
     
+    private static final int MINIMUM_MEMORY_REQUIRED_GB = 8;
+
     public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
 	private boolean bAllowOrthoView = true; // false until ready for release
@@ -272,6 +277,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	 */
 	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
 	{
+        new MemoryCheckDialog().unusedIfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
+
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
 		largeVolumeViewer.setImageColorModel(imageColorModel);
