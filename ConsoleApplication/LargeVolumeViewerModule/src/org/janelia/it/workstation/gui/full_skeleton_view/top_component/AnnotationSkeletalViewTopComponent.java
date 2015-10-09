@@ -33,12 +33,13 @@ import org.openide.util.NbBundle.Messages;
 )
 @Messages({
     "CTL_AnnotationSkeletalViewAction=AnnotationSkeletalView",
-    "CTL_AnnotationSkeletalViewTopComponent=LVV Landmarks",
+    "CTL_AnnotationSkeletalViewTopComponent=" + AnnotationSkeletalViewTopComponent.LABEL_TEXT,
     "HINT_AnnotationSkeletalViewTopComponent=Skeletal View of LVV Annotations"
 })
 public final class AnnotationSkeletalViewTopComponent extends TopComponent {
 
     public static final String PREFERRED_ID = "AnnotationSkeletalViewTopComponent";
+    public static final String LABEL_TEXT = "  LVV Landmarks  ";
     private final TopComponentPopulator populator = new TopComponentPopulator();
     
     public AnnotationSkeletalViewTopComponent() {
