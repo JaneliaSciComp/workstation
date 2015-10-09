@@ -277,7 +277,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	 */
 	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
 	{
-        new MemoryCheckDialog().unusedIfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
+        new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
 
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
