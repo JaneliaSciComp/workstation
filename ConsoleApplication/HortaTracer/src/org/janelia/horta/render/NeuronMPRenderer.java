@@ -123,6 +123,7 @@ extends MultipassRenderer
             }
         });
         
+        setRelativeSlabThickness(0.5f);
     }
     
     public void addVolumeActor(GL3Actor boxMesh) {
@@ -180,6 +181,10 @@ extends MultipassRenderer
         return result;
     }
 
+    public final void setRelativeSlabThickness(float thickness) {
+        opaqueRenderPass.setRelativeSlabThickness(thickness);
+    }
+    
     public void setWorkspace(final HortaWorkspace workspace) {
         workspace.addObserver(new Observer() {
             // Update is called when the set of neurons changes, or the background color changes

@@ -34,6 +34,7 @@ import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.PerspectiveCamera;
+import org.janelia.geometry3d.Viewport;
 import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.RenderPass;
@@ -61,6 +62,10 @@ public class OpaqueRenderPass extends RenderPass
     private boolean useMsaa = true;
     private float cachedZNear = 1e-2f;
     private float cachedZFar = 1e4f;
+    
+    private PerspectiveCamera localCamera; // local version of camera with custom slab
+    private Viewport localViewport = new Viewport(); // local version of camera with custom slab
+    private float slabThickness = 0.50f; // Half of view height
 
     public OpaqueRenderPass(GLAutoDrawable drawable)
     {
@@ -113,13 +118,41 @@ public class OpaqueRenderPass extends RenderPass
         super.init(gl);
     }
     
+    public void setRelativeSlabThickness(float relativeThickness) {
+        this.slabThickness = relativeThickness;
+    }
+    
     @Override
     protected void renderScene(GL3 gl, AbstractCamera camera)
     {
+        // Create local copy of camera, so we can fuss with the slab thickness
+        if ( (localCamera == null) || (localCamera.getVantage() != camera.getVantage()) ) {
+            localCamera = new PerspectiveCamera(camera.getVantage(), localViewport);
+        }
+        Viewport vp = camera.getViewport();
+        localViewport.setWidthPixels(vp.getWidthPixels());
+        localViewport.setHeightPixels(vp.getHeightPixels());
+        localViewport.setOriginXPixels(vp.getOriginXPixels());
+        localViewport.setOriginYPixels(vp.getOriginYPixels());
+        localViewport.setzNearRelative(vp.getzNearRelative()); // TODO
+        localViewport.setzFarRelative(vp.getzFarRelative()); // TODO
+        // TODO - set slab thickness and update projection
+        
+        float focusDistance = localCamera.getCameraFocusDistance();
+        float heightInUnits = localCamera.getVantage().getSceneUnitsPerViewportHeight();
+        float slabInUnits = slabThickness * heightInUnits;
+        float zNear = focusDistance - 0.5f * slabInUnits;
+        float zFar  = focusDistance + 0.5f * slabInUnits;
+        if (zNear < 1e-3f) zNear = 1e-3f;
+        if (zFar <= zNear) zFar = zNear + 1e-3f;
+        float relNear = zNear/focusDistance;
+        float relFar = zFar/focusDistance;
+        localViewport.setzNearRelative(relNear);
+        localViewport.setzFarRelative(relFar);
+        
         // Store camera parameters for use by volume rendering pass
-        float focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
-        cachedZNear = camera.getViewport().getzNearRelative() * focusDistance;
-        cachedZFar = camera.getViewport().getzFarRelative() * focusDistance;
+        cachedZNear = zNear;
+        cachedZFar = zFar;
         
         if (useMsaa) {
             gl.glEnable(GL3.GL_MULTISAMPLE);
@@ -137,7 +170,7 @@ public class OpaqueRenderPass extends RenderPass
         gl.glDisablei(GL3.GL_BLEND, 0); // TODO
         gl.glDisablei(GL3.GL_BLEND, 1); // TODO - how to write pick for BRIGHTER image?
 
-        super.renderScene(gl, camera);
+        super.renderScene(gl, localCamera);
 
         for (RenderTarget rt : new RenderTarget[] {normalMaterialTarget, pickTarget}) 
         {
