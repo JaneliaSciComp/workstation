@@ -196,7 +196,7 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
             return;
         this.color = color;
         getColorChangeObservable().setChanged();
-        // notifyObservers(); // commented, so delegate to a higher authority...
+        // notifyObservers(); // commented, so delegate to a higher authority, such as the ReconstructionNode
     }
 
     @Override
@@ -212,7 +212,7 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
             return;
         this.visible = visible;
         getVisibilityChangeObservable().setChanged();
-        // notifyObservers(); // delegate to a higher authority...
+        // notifyObservers(); // delegate to a higher authority, such as the ReconstructionNode
     }
 
     @Override

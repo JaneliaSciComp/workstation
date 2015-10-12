@@ -139,13 +139,19 @@ public class NeuronReconstructionNode extends AbstractNode
     public int getSize() {return neuron.getVertexes().size();}
     public boolean isVisible() {return neuron.isVisible();}
     public void setVisible(boolean visible) {
+        if (neuron.isVisible() == visible)
+            return;
         neuron.setVisible(visible);
+        neuron.getVisibilityChangeObservable().notifyObservers();
         triggerRepaint();
     }
     public Color getColor() {return neuron.getColor();}
     public void setColor(Color color) {
+        if (neuron.getColor().equals(color))
+            return;
         // logger.info("NeuronNode color set to "+color);
         neuron.setColor(color);
+        neuron.getColorChangeObservable().notifyObservers();
         triggerRepaint();
     }
     public void triggerRepaint() {

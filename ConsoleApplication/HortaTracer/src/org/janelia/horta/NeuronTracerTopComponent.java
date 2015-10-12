@@ -258,6 +258,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         setBackgroundColor( workspace.getBackgroundColor() ); // call this AFTER setUpActors
         workspace.addObserver(new Observer() {
+            // Update is called when the set of neurons changes, or the background color changes
             @Override
             public void update(Observable o, Object arg)
             {
