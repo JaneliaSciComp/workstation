@@ -56,6 +56,7 @@ public class VolumeRenderPass extends RenderPass
     private Texture2d cachedDepthTexture = null;
     private float cachedOpaqueZNear = 1e-2f;
     private float cachedOpaqueZFar = 1e4f;
+    private float relativeSlabThickness = 0.5f;
 
     public VolumeRenderPass(GLAutoDrawable drawable)
     {
@@ -155,6 +156,23 @@ public class VolumeRenderPass extends RenderPass
             return;
         BrickActor ba = (BrickActor) actor;
         ba.setOpaqueDepthTexture(cachedDepthTexture, cachedOpaqueZNear, cachedOpaqueZFar);
+        ba.setRelativeSlabThickness(relativeSlabThickness);
     }
 
+    void setRelativeSlabThickness(float thickness)
+    {
+        relativeSlabThickness = thickness;
+        for (GL3Actor actor : getActors()) {
+            if (! (actor instanceof BrickActor))
+                continue;
+            BrickActor ba = (BrickActor) actor;
+            ba.setRelativeSlabThickness(thickness);
+        }
+    }
+
+    public float getViewSlabThickness(AbstractCamera camera) {
+        // NOTE: MUST MATCH computation in VolumeMipMaterial!
+        return relativeSlabThickness * camera.getVantage().getSceneUnitsPerViewportHeight();
+    }
+    
 }

@@ -183,6 +183,11 @@ extends MultipassRenderer
 
     public final void setRelativeSlabThickness(float thickness) {
         opaqueRenderPass.setRelativeSlabThickness(thickness);
+        volumeRenderPass.setRelativeSlabThickness(thickness);
+    }
+    
+    public float getViewSlabThickness(AbstractCamera camera) {
+        return volumeRenderPass.getViewSlabThickness(camera);
     }
     
     public void setWorkspace(final HortaWorkspace workspace) {

@@ -510,10 +510,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         // TODO - print out tile X, Y, Z (voxels)
         // TODO - print out tile identifier       
     }
-
+    
+    // TODO - move to NeuronMPRenderer
     private float depthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
         float result = neuronMPRenderer.relativeDepthOffsetForScreenXy(xy, camera);
-        result *= 0.5f * VolumeMipMaterial.getViewSlabThickness(camera);
+        result *= 0.5f * neuronMPRenderer.getViewSlabThickness(camera);
         return result;
     }
 

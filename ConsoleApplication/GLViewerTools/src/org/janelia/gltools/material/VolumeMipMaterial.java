@@ -86,6 +86,7 @@ public class VolumeMipMaterial extends BasicMaterial
     
     private boolean uniformIndicesAreDirty = true;
     private VolumeState volumeState = new VolumeState();
+    private float relativeSlabThickness = 0.5f;
     
     public VolumeMipMaterial(Texture3d volumeTexture, BrightnessModel colorMap) 
     {
@@ -120,6 +121,15 @@ public class VolumeMipMaterial extends BasicMaterial
         gl.glCullFace(GL3.GL_FRONT);
     }
     
+    public void setRelativeSlabThickness(float thickness) {
+        relativeSlabThickness = thickness;
+    }
+    
+    public float getViewSlabThickness(AbstractCamera camera) {
+        return relativeSlabThickness * camera.getVantage().getSceneUnitsPerViewportHeight();
+    }
+    
+    /*
     public static float getViewSlabThickness(AbstractCamera camera) {
         // Clip on slab, to limit depth of rendering
         float screenResolution = 
@@ -129,6 +139,7 @@ public class VolumeMipMaterial extends BasicMaterial
         slabThickness = Math.max(25.0f, slabThickness);
         return slabThickness;
     }
+    */
 
     public int getFilteringOrder() {
         return volumeState.filteringOrder;
@@ -197,6 +208,7 @@ public class VolumeMipMaterial extends BasicMaterial
             
             // Clip on slab, to limit depth of rendering
             float slabThickness = getViewSlabThickness(camera);
+            // float slabThickness = relativeSlabThickness * camera.getVantage().getSceneUnitsPerViewportHeight();
             float cameraFocusDistance = 0.0f;
             if (camera instanceof PerspectiveCamera) {
                 PerspectiveCamera pc = (PerspectiveCamera) camera;

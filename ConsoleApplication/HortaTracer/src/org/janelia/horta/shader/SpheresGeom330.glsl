@@ -42,7 +42,7 @@ uniform mat4 projectionMatrix = mat4(1);
 layout(points) in; // input vertices are sphere centers
 // Create viewer-facing half-cube imposter geometry 
 // layout(triangle_strip, max_vertices=10) out;
-layout(triangle_strip, max_vertices=6) out; // only six vertices needed for "mid-hull" approach
+layout(triangle_strip, max_vertices=10) out; // only six vertices needed for "mid-hull" approach
 
 
 in float geomRadius[]; // sphere radius as vertex attribute
@@ -182,6 +182,6 @@ void main() {
     // Choice of imposter hull strategies below
     // NOTE: modify the above "layout(..., max_vertices=...) out;" statement to match your chosen hull strategy
     // near_hull(); // imposter in front of sphere (10 vertices)
-    // far_hull(); // imposter behind sphere (10 vertices)
-    mid_hull(); // simpler geometry, imposter intersects sphere (6 vertices)
+    far_hull(); // imposter behind sphere (10 vertices)
+    // mid_hull(); // simpler geometry, imposter intersects sphere (6 vertices)
  }

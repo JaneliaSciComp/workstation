@@ -59,7 +59,9 @@ vec3 image_based_lighting(
 
     // convert normal vector to position in diffuse light probe texture
     float radius = 0.50 * (-normal.z + 1.0);
-    vec2 direction = normalize(normal.xy);
+    vec2 direction = normal.xy;
+    if (dot(direction, direction) > 0)
+        direction = normalize(direction);
     vec2 diffuseTc = diffuseTcPos.xy + diffuseTcPos.zw * radius * direction;
     vec3 iblDiffuse = diffuseCoefficient * texture(lightProbe, diffuseTc).rgb;
 
@@ -67,7 +69,9 @@ vec3 image_based_lighting(
     vec3 view = pos;
     vec3 r = normalize(view - 2.0 * dot(normal, view) * normal); // reflection vector
     radius = 0.50 * (-r.z + 1.0);
-    direction = normalize(r.xy);
+    direction = normal.xy;
+    if (dot(direction, direction) > 0)
+        direction = normalize(direction);
     vec2 reflectTc = reflectTcPos.xy + reflectTcPos.zw * radius * direction;
     vec3 iblReflect = 35 * specularCoefficient * texture(lightProbe, reflectTc).rgb;
 
