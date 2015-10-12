@@ -33,6 +33,7 @@ package org.janelia.horta.nodes;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import java.awt.BorderLayout;
 import java.util.Collection;
+import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
@@ -52,6 +53,7 @@ import org.openide.windows.TopComponent;
  */
 @TopComponent.Description(
         preferredID = "HortaSceneEditorTopComponent", 
+        iconBase = "org/janelia/horta/images/brain-icon2.png",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS) 
 @TopComponent.Registration( 
         mode = "properties", 
@@ -61,7 +63,9 @@ import org.openide.windows.TopComponent;
 @ActionReference( 
         path = "Menu/Window/Horta") 
 @TopComponent.OpenActionRegistration( 
-        displayName = "#CTL_HortaSceneEditorAction") 
+        displayName = "#CTL_HortaSceneEditorAction",
+        preferredID = "HortaSceneEditorTopComponent"
+) 
 @NbBundle.Messages({ 
     "CTL_HortaSceneEditorAction=Scene Editor",
     "CTL_HortaSceneEditorTopComponent=Scene Editor",
