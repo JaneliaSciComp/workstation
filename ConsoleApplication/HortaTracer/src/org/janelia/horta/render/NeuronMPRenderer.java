@@ -32,6 +32,11 @@ package org.janelia.horta.render;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Set;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
@@ -44,6 +49,8 @@ import org.janelia.gltools.RemapColorActor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
 import org.janelia.horta.actors.SwcActor;
+import org.janelia.horta.modelapi.HortaWorkspace;
+import org.janelia.horta.modelapi.NeuronReconstruction;
 
 /**
  *
@@ -53,12 +60,11 @@ public class NeuronMPRenderer
 extends MultipassRenderer
 {
     private final GLAutoDrawable drawable;
-    // private final ColorBackgroundActor backgroundActor;
-    
     private final BackgroundRenderPass backgroundRenderPass;
     private final OpaqueRenderPass opaqueRenderPass;
     private final VolumeRenderPass volumeRenderPass;
-    
+    private Map<NeuronReconstruction, GL3Actor> currentNeuronActors = new HashMap<>();
+
     public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel) 
     {
         this.drawable = drawable;
@@ -174,6 +180,57 @@ extends MultipassRenderer
         return result;
     }
 
+    public void setWorkspace(final HortaWorkspace workspace) {
+        workspace.addObserver(new Observer() {
+            // Update is called when the set of neurons changes, or the background color changes
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                // Update neuron models
+                Set<NeuronReconstruction> latestNeurons = new java.util.HashSet<>();
+                // 1 - enumerate latest neurons
+                for (NeuronReconstruction neuron : workspace.getNeurons()) {
+                    latestNeurons.add(neuron);
+                }
+                // 2 - remove obsolete neurons
+                for (NeuronReconstruction neuron : currentNeuronActors.keySet()) {
+                    if (! latestNeurons.contains(neuron)) {
+                        removeNeuronReconstruction(neuron);
+                    }
+                }
+                // 3 - add new neurons
+                for (NeuronReconstruction neuron : workspace.getNeurons()) {
+                    addNeuronReconstruction(neuron);
+                }
+            }
+        });        
+    }
+    
+    private void addNeuronReconstruction(NeuronReconstruction neuron) {
+        if (currentNeuronActors.containsKey(neuron))
+            return;
+        SwcActor na = new SwcActor(neuron);
+        // na.setColor(Color.PINK);
+        na.setVisible(true);
+        currentNeuronActors.put(neuron, na);
+        addOpaqueActor(na);
+        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                setIntensityBufferDirty(); // Now we can see behind the neuron, so repaint
+            }
+        });
+    }
+    
+    private void removeNeuronReconstruction(NeuronReconstruction neuron) {
+        if (! currentNeuronActors.containsKey(neuron))
+            return;
+        GL3Actor actor = currentNeuronActors.get(neuron);
+        currentNeuronActors.remove(neuron);
+        removeOpaqueActor(actor);        
+    }
+    
     private int valueForScreenXy(Point2D xy, int glAttachment, int channel) {
         int result = -1;
         if (volumeRenderPass.getFramebuffer() == null) {

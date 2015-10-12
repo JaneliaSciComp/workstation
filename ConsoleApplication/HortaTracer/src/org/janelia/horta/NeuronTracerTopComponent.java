@@ -165,7 +165,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor interactor;
     private HortaWorkspace workspace;
-    private Map<NeuronReconstruction, GL3Actor> currentNeuronActors = new HashMap<>();
     
     // private MultipassVolumeActor mprActor;
     // private VolumeMipMaterial volumeMipMaterial;
@@ -257,40 +256,14 @@ public final class NeuronTracerTopComponent extends TopComponent
         neuronMPRenderer = setUpActors();
         
         setBackgroundColor( workspace.getBackgroundColor() ); // call this AFTER setUpActors
+        neuronMPRenderer.setWorkspace(workspace); // set up signals in renderer
         workspace.addObserver(new Observer() {
             // Update is called when the set of neurons changes, or the background color changes
             @Override
             public void update(Observable o, Object arg)
             {
-                // Update background color
                 setBackgroundColor( workspace.getBackgroundColor() );
-                
-                // Update neuron models
-                Set<NeuronReconstruction> latestNeurons = new java.util.HashSet<>();
-                // 1 - enumerate latest neurons
-                for (NeuronReconstruction neuron : workspace.getNeurons()) {
-                    latestNeurons.add(neuron);
-                }
-                // 2 - remove obsolete neurons
-                for (NeuronReconstruction neuron : currentNeuronActors.keySet()) {
-                    if (! latestNeurons.contains(neuron)) {
-                        GL3Actor actor = currentNeuronActors.get(neuron);
-                        currentNeuronActors.remove(neuron);
-                        neuronMPRenderer.removeOpaqueActor(actor);
-                    }
-                }
-                // 3 - add new neurons
-                for (NeuronReconstruction neuron : workspace.getNeurons()) {
-                    if (! currentNeuronActors.containsKey(neuron)) {
-                        SwcActor na = new SwcActor(neuron);
-                        // na.setColor(Color.PINK);
-                        na.setVisible(true);
-                        currentNeuronActors.put(neuron, na);
-                        neuronMPRenderer.addOpaqueActor(na);
-                    }
-                }
-                
-                sceneWindow.getInnerComponent().repaint();
+                sceneWindow.getInnerComponent().repaint();                
             }
         });
 
