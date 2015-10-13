@@ -639,21 +639,22 @@ void main() {
     // vec3 c = color*integratedIntensity;
     // #if PROJECTION_MODE == PROJECTION_ISOSURFACE
     // TODO - put normals in a separate frame buffer
-    #if false
-    vec3 uvw = x0 + tMaxAbs * x1;
-    vec3 voxelMicrometers = volumeMicrometers / volumeSize;
-    vec3 normal = calculateNormalInScreenSpace(
-            volumeTexture, 
-            uvw, 
-            voxelMicrometers, 
-            textureScale);
-    // Clip normal at front of slab
-    if (tMaxAbs <= tMinSlab) normal = vec3(0, 0, 1);
-    normal = 0.5 * (normal + vec3(1, 1, 1)); // restrict to range 0-1
-    colorOut = vec4(normal.xyz, 1.0);
-    #else
-    colorOut = vec4(vecIntegratedIntensity.xyz, integratedOpacity);
-    #endif
+    if (false) {
+        vec3 uvw = x0 + tMaxAbs * x1;
+        vec3 voxelMicrometers = volumeMicrometers / volumeSize;
+        vec3 normal = calculateNormalInScreenSpace(
+                volumeTexture, 
+                uvw, 
+                voxelMicrometers, 
+                textureScale);
+        // Clip normal at front of slab
+        if (tMaxAbs <= tMinSlab) normal = vec3(0, 0, 1);
+        normal = 0.5 * (normal + vec3(1, 1, 1)); // restrict to range 0-1
+        colorOut = vec4(normal.xyz, 1.0);
+    }
+    else {
+        colorOut = vec4(vecIntegratedIntensity.xyz, integratedOpacity);
+    }
 
     // pick value to alternate render target
     float relativeDepth = (tMaxAbs - tMinSlab) / (tMaxSlab - tMinSlab);
