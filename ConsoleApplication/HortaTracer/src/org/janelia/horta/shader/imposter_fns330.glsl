@@ -171,12 +171,15 @@ void cone_nonlinear_coeffs(in float tAP, in float qe_c, in float qe_half_b, in v
 
 // Third and final phase of sphere imposter shading: Compute sphere
 // surface XYZ coordinates in fragment shader.
-vec3 cone_surface_from_coeffs(in vec3 pos, in float qe_half_b, in float qe_half_a, in float discriminant)
+vec3 cone_surface_from_coeffs(in vec3 pos, in float qe_half_b, in float qe_half_a, in float discriminant,
+        out vec3 back_surface)
 {
     float left = -qe_half_b / qe_half_a;
     float right = sqrt(discriminant) / qe_half_a;
-    float alpha1 = left - right; // near surface of sphere
-    // float alpha2 = left + right; // far/back surface of sphere
+    float alpha1 = left - right; // near surface of cone
+    float alpha2 = left + right; // far/back surface of cone
+    back_surface = alpha2 * pos;
+    // TODO - case when looking down cone axis
     vec3 surface_pos = alpha1 * pos;
     return surface_pos;
 }
@@ -207,7 +210,8 @@ bool cone_imposter_frag(
         return false; // Point does not intersect cone
 
     // Compute projected surface of cone
-    vec3 s = cone_surface_from_coeffs(pos, qe_half_b, qe_half_a, discriminant);
+    vec3 back_surface;
+    vec3 s = cone_surface_from_coeffs(pos, qe_half_b, qe_half_a, discriminant, back_surface);
     vec3 cs = s - center;
     
     // Truncate cone geometry to prescribed ends

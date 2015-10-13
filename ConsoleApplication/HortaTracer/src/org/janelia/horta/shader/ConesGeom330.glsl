@@ -122,6 +122,23 @@ void near_cone_hull(mat3 frame2348, mat3 frame1567) {
     EndPrimitive();
 }
 
+// sometimes you can see five of the six hull sides
+void far_cone_hull(mat3 frame2348, mat3 frame1567) {
+    emit_one_vertex(frame2348*p8);
+    emit_one_vertex(frame2348*p2);
+    emit_one_vertex(frame2348*p4);
+    emit_one_vertex(frame2348*p3);
+    emit_one_vertex(frame1567*p1);
+    emit_one_vertex(frame2348*p2);
+    emit_one_vertex(frame1567*p7);
+    emit_one_vertex(frame2348*p8);
+    emit_one_vertex(frame1567*p6);
+    emit_one_vertex(frame2348*p4);
+    emit_one_vertex(frame1567*p5);
+    emit_one_vertex(frame1567*p1);
+
+    EndPrimitive();
+}
 
 void main() {
     vec3 c1 = gl_PositionIn[0].xyz/gl_PositionIn[0].w; // center of smaller cone end
@@ -213,5 +230,5 @@ void main() {
             y * r2, 
             z * r2);
 
-    near_cone_hull(frame2348, frame1567); // near cone hull
+    far_cone_hull(frame2348, frame1567); // near cone hull
 }

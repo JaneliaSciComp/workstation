@@ -60,9 +60,10 @@ out vec4 fragColor;
 // forward declaraion of methods defined in imposter_fns330.glsl
 void cone_nonlinear_coeffs(in float tAP, in float qe_c, in float qe_half_b, in vec3 qe_undot_half_a,
     out float qe_half_a, out float discriminant);
-vec3 cone_surface_from_coeffs(in vec3 pos, in float qe_half_b, in float qe_half_a, in float discriminant);
+vec3 cone_surface_from_coeffs(in vec3 pos, in float qe_half_b, in float qe_half_a, in float discriminant, out vec3 back_surface);
 vec3 light_rig(vec3 pos, vec3 normal, vec3 surface_color);
 float fragDepthFromEyeXyz(vec3 eyeXyz, mat4 projectionMatrix);
+float zNearFromProjection(mat4 projectionMatrix);
 vec3 image_based_lighting(
         vec3 pos, // surface position, in camera frame
         vec3 normal, // surface normal, in camera frame
@@ -79,7 +80,10 @@ void main() {
         discard; // ray does not intersect cone
 
     // Compute projected surface of cone
-    vec3 s = cone_surface_from_coeffs(imposterPos, qe_half_b, qe_half_a, discriminant);
+    // TODO - distinguish near-axis vs off-axis view cases
+    vec3 back_surface;
+    vec3 s = cone_surface_from_coeffs(imposterPos, qe_half_b, qe_half_a, discriminant,
+         back_surface);
     vec3 cs = s - center;
     
     // Truncate cone geometry to prescribed ends
@@ -91,10 +95,17 @@ void main() {
     vec3 normal = normalScale * (n1 + taper * aHat);
     // Put computed cone surface Z depth into depth buffer
     gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
-    // Use flat face for near clip
-    if (gl_FragDepth <= 0) {
-        normal = vec3(0, 0, 1);
-    }
+
+    // Near clip to reveal solid core 
+    /*
+    if (gl_FragDepth < 0) {
+        // Show nothing if rear surface is also closer than zNear
+        // float back_depth = fragDepthFromEyeXyz(back_surface, projectionMatrix);
+        // if (back_depth <= 0) discard;
+        gl_FragDepth = 0;
+        // s.z = zNearFromProjection(projectionMatrix); // Update clipped Z coordinate
+        normal = vec3(0, 0, 1); // slice core parallel to screen
+    } /* */
 
     // illuminate the cone surface
     vec3 reflectColor = mix(color.rgb, vec3(1,1,1), 0.5); // midway between metal and plastic.
