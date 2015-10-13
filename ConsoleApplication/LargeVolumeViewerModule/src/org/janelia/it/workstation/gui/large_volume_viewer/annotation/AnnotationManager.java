@@ -35,6 +35,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1463,7 +1464,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         saver.execute();
     }
 
-    public void importSWCFile(final File swcFile) {
+    public void importSWCFile(final File swcFile, final AtomicInteger countDownSemaphor) {
+        final boolean selectOnCompletion = countDownSemaphor == null;
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
             return;
@@ -1474,7 +1476,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     "SWC file " + swcFile.getName() + " does not exist!",
                     "No SWC file!");
         } else {
-
             // note for the future: at this point, we could pop another dialog with:
             //  (a) info: file has xxx nodes; continue?
             //  (b) option to downsample
@@ -1484,8 +1485,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             BackgroundWorker importer = new BackgroundWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.importBulkSWCData(swcFile, null);
-
+                    annotationModel.importBulkSWCData(swcFile, null, selectOnCompletion);
                     //annotationModel.importSWCData(swcFile, this);
                 }
                 
@@ -1496,7 +1496,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
                 @Override
                 protected void hadSuccess() {
-                    // signal will be sent, stuff will happen...
+                    if (countDownSemaphor != null) {
+                        int latestValue = countDownSemaphor.decrementAndGet();
+                        if (latestValue == 0) {
+                            annotationModel.postWorkspaceUpdate();
+                        }
+                    }
                 }
 
                 @Override

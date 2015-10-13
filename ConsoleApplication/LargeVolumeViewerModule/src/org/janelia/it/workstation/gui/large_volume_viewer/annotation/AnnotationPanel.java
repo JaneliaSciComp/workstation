@@ -17,11 +17,13 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
+import org.janelia.it.workstation.shared.util.SWCData;
 
 
 /**
@@ -210,9 +212,9 @@ public class AnnotationPanel extends JPanel
         workspaceToolMenu.add(new JMenuItem(exportAllSWCAction));
 
         ImportSWCAction importSWCAction = new ImportSWCAction();
-        importSWCAction.putValue(Action.NAME, "Import SWC file...");
+        importSWCAction.putValue(Action.NAME, "Import SWC data...");
         importSWCAction.putValue(Action.SHORT_DESCRIPTION,
-                "Import an SWC file into the workspace");
+                "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCAction));
 
         workspaceToolMenu.add(new JMenuItem(new AbstractAction("Save color model") {
@@ -499,23 +501,46 @@ public class AnnotationPanel extends JPanel
 
             // could specify a dir to open in, but not sure what to choose
             JFileChooser chooser = new JFileChooser();
-            chooser.setDialogTitle("Choose swc file");
-            chooser.setFileFilter(new FileFilter() {
-                @Override
-                public boolean accept( File f ) {
-                    return f.getName().endsWith(AnnotationModel.STD_SWC_EXTENSION) || f.isDirectory();                    
-                }
-
-                @Override
-                public String getDescription() {
-                    return "*" + AnnotationModel.STD_SWC_EXTENSION;
-                }
-            });
+            chooser.setDialogTitle("Choose swc file or directory");
+            chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+            final FileFilter swcAndDirFilter = new SwcAndFileFilter();
+            chooser.setFileFilter(swcAndDirFilter);
             int returnValue = chooser.showOpenDialog(AnnotationPanel.this);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
-                annotationMgr.importSWCFile(chooser.getSelectedFile());
+                File selectedFile = chooser.getSelectedFile();
+                if (selectedFile.isDirectory()) {
+                    File[] swcFiles = selectedFile.listFiles(new SwcDirListFilter());
+                    AtomicInteger countDownSemaphor = new AtomicInteger(swcFiles.length);
+                    for (File swc: swcFiles) {
+                        // Import all the little neurons from the file.
+                        annotationMgr.importSWCFile(swc, countDownSemaphor);
+                    }
+                }
+                else {
+                    annotationMgr.importSWCFile(selectedFile, null);
+                }
             }
         }
+    }
+    
+    class SwcAndFileFilter extends FileFilter {
+        @Override
+        public boolean accept(File f) {
+            return f.getName().endsWith(AnnotationModel.STD_SWC_EXTENSION) || f.isDirectory();
+        }
+
+        @Override
+        public String getDescription() {
+            return "*" + SWCData.STD_SWC_EXTENSION;
+        }
+    }
+    
+    class SwcDirListFilter implements java.io.FileFilter {
+        @Override
+        public boolean accept(File pathname) {
+            return pathname.getName().endsWith(AnnotationModel.STD_SWC_EXTENSION);
+        }
+
     }
 }
 

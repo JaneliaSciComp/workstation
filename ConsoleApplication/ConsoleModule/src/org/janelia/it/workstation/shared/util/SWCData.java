@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SWCData {
 
+    public static final String STD_SWC_EXTENSION = ".swc";
     private static final Logger logger = LoggerFactory.getLogger(SWCData.class);
     private static final String COLOR_HEADER_PREFIX = "COLOR";
     private static final String NAME_HEADER_PREFIX = "NAME";
@@ -109,13 +110,24 @@ public class SWCData {
     public void write(File swcFile, int offset) throws Exception {
         if (isValid()) {
             if (offset != -1) {
-                String newName = swcFile.getName();
+                final String swcFileName = swcFile.getName();
+                String parentDirName = swcFileName.substring(0, swcFileName.length() - STD_SWC_EXTENSION.length());
+                File parentDir = new File(swcFile.getParent(), parentDirName);
+                // If anyone ever made a file of the name we wish to call our
+                // directory, we'll make an alternative with unique name.
+                if (parentDir.exists()  &&  !parentDir.isDirectory()) {
+                    parentDir = new File(parentDir.getParentFile(), swcFileName + "_" + new java.util.Date().getTime());                    
+                }
+                if (! parentDir.exists() ) {
+                    parentDir.mkdirs();
+                }                
+                String newName = swcFileName;
                 int periodPos = newName.indexOf('.');
                 if (periodPos > -1) {
                     newName = newName.substring(0, periodPos) +
                               '_' + offset + newName.substring(periodPos);
                 }
-                swcFile = new File(swcFile.getParent(), newName);
+                swcFile = new File(parentDir, newName);
             }
             FileWriter writer = new FileWriter(swcFile);
             writeSwcFile(writer);
