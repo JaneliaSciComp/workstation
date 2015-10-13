@@ -42,9 +42,9 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
-import org.janelia.horta.modelapi.NeuronEdge;
-import org.janelia.horta.modelapi.NeuronReconstruction;
-import org.janelia.horta.modelapi.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronEdge;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,8 +99,8 @@ public class ConesActor extends BasicGL3Actor
                     if (parent == null) 
                         continue; // need an edge, to draw a cone
                     
-                    Vector3 c1 = neuronVertex.getLocation(); // center of first sphere
-                    Vector3 c2 = parent.getLocation(); // center of second sphere
+                    Vector3 c1 = new Vector3(neuronVertex.getLocation()); // center of first sphere
+                    Vector3 c2 = new Vector3(parent.getLocation()); // center of second sphere
                     double r1 = neuronVertex.getRadius();
                     double r2 = parent.getRadius();
 
@@ -119,8 +119,8 @@ public class ConesActor extends BasicGL3Actor
                         double rs2 = r2;
                         // Swap so r2 is always the largest
                         if (rs2 < rs1) {
-                            cs2 = neuronVertex.getLocation(); // center of first sphere
-                            cs1 = parent.getLocation(); // center of second sphere
+                            cs2 = new Vector3(neuronVertex.getLocation()); // center of first sphere
+                            cs1 = new Vector3(parent.getLocation()); // center of second sphere
                             rs2 = neuronVertex.getRadius();
                             rs1 = parent.getRadius();
                         }

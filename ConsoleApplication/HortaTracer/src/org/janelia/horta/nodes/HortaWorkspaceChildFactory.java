@@ -34,7 +34,7 @@ import org.janelia.horta.modelapi.HortaWorkspace;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import org.janelia.horta.modelapi.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 

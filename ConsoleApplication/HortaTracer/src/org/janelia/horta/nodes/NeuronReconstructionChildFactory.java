@@ -31,8 +31,8 @@
 package org.janelia.horta.nodes;
 
 import java.util.List;
-import org.janelia.horta.modelapi.NeuronReconstruction;
-import org.janelia.horta.modelapi.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 

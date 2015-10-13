@@ -47,7 +47,7 @@ import static javax.swing.Action.NAME;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.horta.modelapi.HortaWorkspace;
-import org.janelia.horta.modelapi.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;

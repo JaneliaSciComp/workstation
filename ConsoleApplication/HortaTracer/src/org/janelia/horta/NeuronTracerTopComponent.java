@@ -112,7 +112,7 @@ import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.horta.actors.SwcActor;
 import org.janelia.horta.modelapi.HortaWorkspace;
-import org.janelia.horta.modelapi.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.BasicNeuronReconstruction;
 import org.janelia.horta.volume.BrickActor;

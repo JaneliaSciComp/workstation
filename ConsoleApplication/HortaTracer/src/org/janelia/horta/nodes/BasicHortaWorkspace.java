@@ -38,7 +38,7 @@ import java.util.Observer;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.horta.modelapi.HortaWorkspace;
-import org.janelia.horta.modelapi.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
 
 /**
  * TODO: - in future, set Observable interface on workspace subcomponents

@@ -28,7 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.modelapi;
+package org.janelia.console.viewerapi.model;
 
 /**
  * Exposes two vertices, representing a neuron reconstruction edge.

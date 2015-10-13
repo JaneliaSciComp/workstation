@@ -35,7 +35,7 @@ import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.gltools.BasicGL3Actor;
-import org.janelia.horta.modelapi.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
 
 /**
  *

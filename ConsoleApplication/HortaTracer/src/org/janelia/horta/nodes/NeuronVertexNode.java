@@ -30,7 +30,7 @@
 
 package org.janelia.horta.nodes;
 
-import org.janelia.horta.modelapi.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 import org.openide.util.lookup.Lookups;

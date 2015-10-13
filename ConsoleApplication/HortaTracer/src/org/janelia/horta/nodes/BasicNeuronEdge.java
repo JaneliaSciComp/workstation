@@ -34,8 +34,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
-import org.janelia.horta.modelapi.NeuronEdge;
-import org.janelia.horta.modelapi.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronEdge;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 
 /**
  *

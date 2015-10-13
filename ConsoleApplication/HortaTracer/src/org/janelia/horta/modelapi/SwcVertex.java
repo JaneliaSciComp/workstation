@@ -30,6 +30,8 @@
 
 package org.janelia.horta.modelapi;
 
+import org.janelia.console.viewerapi.model.NeuronVertex;
+
 /**
  * Full interface for SWC format neuron reconstructions
  * @author Christopher Bruns

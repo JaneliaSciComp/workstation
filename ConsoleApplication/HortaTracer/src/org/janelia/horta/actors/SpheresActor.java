@@ -40,8 +40,8 @@ import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
-import org.janelia.horta.modelapi.NeuronReconstruction;
-import org.janelia.horta.modelapi.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

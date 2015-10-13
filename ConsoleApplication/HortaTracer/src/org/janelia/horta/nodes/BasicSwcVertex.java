@@ -31,7 +31,6 @@
 package org.janelia.horta.nodes;
 
 import org.janelia.geometry3d.Vector3;
-import org.janelia.horta.modelapi.NeuronVertex;
 import org.janelia.horta.modelapi.SwcVertex;
 
 /**
@@ -40,7 +39,7 @@ import org.janelia.horta.modelapi.SwcVertex;
  */
 public class BasicSwcVertex implements SwcVertex
 {
-    private final Vector3 location = new Vector3(0,0,0);
+    private final float[] location = {0,0,0};
     private double radius = 0.0; // micrometers
     private int label = 1;
     private int typeIndex = 0;
@@ -48,24 +47,28 @@ public class BasicSwcVertex implements SwcVertex
 
     BasicSwcVertex(float x, float y, float z)
     {
-        location.set(x, y, z);
+        location[0] = x;
+        location[1] = y;
+        location[2] = z;
     }
 
     @Override
-    public Vector3 getLocation()
+    public float[] getLocation()
     {
         return location;
     }
 
     public void setLocation(Vector3 location)
     {
-        this.location.copy(location);
+        System.arraycopy(location.toArray(), 0, this.location, 0, 3);
     }
 
     @Override
     public void setLocation(float x, float y, float z)
     {
-        location.set(x, y, z);
+        location[0] = x;
+        location[1] = y;
+        location[2] = z;
     }
 
     @Override

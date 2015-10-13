@@ -50,7 +50,7 @@ import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
 import org.janelia.horta.actors.SwcActor;
 import org.janelia.horta.modelapi.HortaWorkspace;
-import org.janelia.horta.modelapi.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
 
 /**
  *

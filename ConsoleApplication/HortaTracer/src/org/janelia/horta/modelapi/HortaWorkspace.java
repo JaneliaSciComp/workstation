@@ -30,6 +30,7 @@
 
 package org.janelia.horta.modelapi;
 
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
 import java.awt.Color;
 import java.util.Collection;
 import org.janelia.console.viewerapi.ObservableInterface;

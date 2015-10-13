@@ -28,28 +28,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.modelapi;
-
-import java.awt.Color;
-import java.util.Collection;
-import org.janelia.console.viewerapi.ObservableInterface;
+package org.janelia.console.viewerapi.model;
 
 /**
- *
+ * Method in common to all neuron reconstructions
  * @author Christopher Bruns
  */
-public interface NeuronReconstruction extends Hideable
+public interface NeuronVertex
 {
-    String getName();
-    void setName(String name);
+    float[] getLocation();
+    void setLocation(float x, float y, float z);
     
-    Color getColor();
-    void setColor(Color color);
-    ObservableInterface getColorChangeObservable();
+    // NeuronVertex getParentVertex(); // can be null
+    // void setParentVertex(NeuronVertex parent);
     
-    Collection<NeuronVertex> getVertexes();
-    Collection<NeuronEdge> getEdges();
-    ObservableInterface getGeometryChangeObservable();
-    
-    ObservableInterface getVisibilityChangeObservable();
+    double getRadius();
+    void setRadius(double radius);
 }

@@ -45,6 +45,13 @@ implements ConstVector3
         data[2] = z;
     }
 
+    public Vector3(float[] xyz) {
+        super(3);
+        data[0] = xyz[0];
+        data[1] = xyz[1];
+        data[2] = xyz[2];
+    }
+
     /**
      * Copy constructor, to avoid broken Java clone() approach.
      * @param cloned 

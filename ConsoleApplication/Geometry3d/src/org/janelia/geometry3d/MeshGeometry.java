@@ -76,6 +76,10 @@ implements Collection<Vertex>, ObservableInterface
         return addVertex(new Vector3(x, y, z));
     }
     
+    public Vertex addVertex(float[] xyz) {
+        return addVertex(new Vector3(xyz));
+    }
+    
     public Vertex addVertex(ConstVector3 v) {
         Vertex result = new Vertex(v);
         if (add(result))

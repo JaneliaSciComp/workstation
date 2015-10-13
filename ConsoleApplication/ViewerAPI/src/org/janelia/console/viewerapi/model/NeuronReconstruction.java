@@ -28,14 +28,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.modelapi;
+package org.janelia.console.viewerapi.model;
+
+import java.awt.Color;
+import java.util.Collection;
+import org.janelia.console.viewerapi.ObservableInterface;
 
 /**
  *
  * @author Christopher Bruns
  */
-public interface Hideable
+public interface NeuronReconstruction extends Hideable
 {
-    boolean isVisible();
-    void setVisible(boolean visible);
+    String getName();
+    void setName(String name);
+    
+    Color getColor();
+    void setColor(Color color);
+    ObservableInterface getColorChangeObservable();
+    
+    Collection<NeuronVertex> getVertexes();
+    Collection<NeuronEdge> getEdges();
+    ObservableInterface getGeometryChangeObservable();
+    
+    ObservableInterface getVisibilityChangeObservable();
 }

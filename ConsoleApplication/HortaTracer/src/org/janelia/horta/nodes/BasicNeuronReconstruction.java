@@ -48,10 +48,10 @@ import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.geometry3d.Vector3;
-import org.janelia.horta.modelapi.NeuronEdge;
+import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.horta.modelapi.SwcVertex;
-import org.janelia.horta.modelapi.NeuronReconstruction;
-import org.janelia.horta.modelapi.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -28,22 +28,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.modelapi;
-
-import org.janelia.geometry3d.Vector3;
+package org.janelia.console.viewerapi.model;
 
 /**
- * Method in common to all neuron reconstructions
+ *
  * @author Christopher Bruns
  */
-public interface NeuronVertex
+public interface Hideable
 {
-    Vector3 getLocation();
-    void setLocation(float x, float y, float z);
-    
-    // NeuronVertex getParentVertex(); // can be null
-    // void setParentVertex(NeuronVertex parent);
-    
-    double getRadius();
-    void setRadius(double radius);
+    boolean isVisible();
+    void setVisible(boolean visible);
 }

@@ -42,9 +42,9 @@ import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.WireframeMaterial;
-import org.janelia.horta.modelapi.NeuronEdge;
-import org.janelia.horta.modelapi.NeuronReconstruction;
-import org.janelia.horta.modelapi.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronEdge;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,8 +113,8 @@ public class NeuriteLineActor extends BasicGL3Actor
             NeuronVertex neuronVertex = i.next();
             if (parent == null)
                 continue;
-            Vector3 pt1 = neuronVertex.getLocation();
-            Vector3 pt2 = parent.getLocation();
+            Vector3 pt1 = new Vector3(neuronVertex.getLocation());
+            Vector3 pt2 = new Vector3(parent.getLocation());
             Vertex meshVertex1 = meshGeometry.addVertex(pt1);
             Vertex meshVertex2 = meshGeometry.addVertex(pt2);
             // Add first point again, to reuse already written triangle code...

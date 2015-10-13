@@ -40,8 +40,8 @@ import javax.swing.Action;
 import org.janelia.geometry3d.Box3;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
-import org.janelia.horta.modelapi.NeuronReconstruction;
-import org.janelia.horta.modelapi.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
@@ -106,20 +106,20 @@ public class NeuronReconstructionNode extends AbstractNode
                     // 1 - compute neuron bounding box center point
                     Box3 boundingBox = new Box3();
                     for (NeuronVertex vertex: neuron.getVertexes())
-                        boundingBox.include(vertex.getLocation());
+                        boundingBox.include(new Vector3(vertex.getLocation()));
                     Vector3 centroid = boundingBox.getCentroid();
                     // 2 - find actual vertex closest to that center point
                     NeuronVertex closestVertex = neuron.getVertexes().iterator().next();
-                    float minDistSquared = centroid.distanceSquared(closestVertex.getLocation());
+                    float minDistSquared = centroid.distanceSquared(new Vector3(closestVertex.getLocation()));
                     for (NeuronVertex vertex: neuron.getVertexes()) {
-                        float d2 = centroid.distanceSquared(vertex.getLocation());
+                        float d2 = centroid.distanceSquared(new Vector3(vertex.getLocation()));
                         if (d2 < minDistSquared) {
                             minDistSquared = d2;
                             closestVertex = vertex;
                         }
                     }
                     // 3 - center on that vertex
-                    Vector3 center = closestVertex.getLocation();
+                    Vector3 center = new Vector3(closestVertex.getLocation());
                     vantage.setFocusPosition(center);
                     // 4 - adjust scale
                     float maxScale = 5.0f;
