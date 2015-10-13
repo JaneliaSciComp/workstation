@@ -242,14 +242,15 @@ vec2 sphere_nonlinear_coeffs(vec3 pos, float pc, float c2) {
 
 // Third and final phase of sphere imposter shading: Compute sphere
 // surface XYZ coordinates in fragment shader.
-vec3 sphere_surface_from_coeffs(vec3 pos, float pc, vec2 a2_d) {
+vec3 sphere_surface_from_coeffs(vec3 pos, float pc, vec2 a2_d, out vec3 back_surface) {
     float discriminant = a2_d.y; // Negative values should be discarded.
     float a2 = a2_d.x;
     float b = pc;
     float left = b / a2; // left half of quadratic formula: -b/2a
     float right = sqrt(discriminant) / a2; // (negative) right half of quadratic formula: sqrt(b^2-4ac)/2a
     float alpha1 = left - right; // near/front surface of sphere
-    // float alpha2 = left + right; // far/back surface of sphere
+    float alpha2 = left + right; // far/back surface of sphere
+    back_surface = alpha2 * pos;
     return alpha1 * pos;
 }
 

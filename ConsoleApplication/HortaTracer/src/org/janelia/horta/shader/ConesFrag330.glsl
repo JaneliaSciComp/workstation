@@ -89,6 +89,12 @@ void main() {
     // Compute surface normal vector, for shading
     vec3 n1 = normalize( cs - dot(cs, aHat)*aHat );
     vec3 normal = normalScale * (n1 + taper * aHat);
+    // Put computed cone surface Z depth into depth buffer
+    gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
+    // Use flat face for near clip
+    if (gl_FragDepth <= 0) {
+        normal = vec3(0, 0, 1);
+    }
 
     // illuminate the cone surface
     vec3 reflectColor = mix(color.rgb, vec3(1,1,1), 0.5); // midway between metal and plastic.
@@ -97,6 +103,4 @@ void main() {
         // light_rig(s, normal, color.rgb),
         color.a);
 
-    // Put computed cone surface Z depth into depth buffer
-    gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
 }

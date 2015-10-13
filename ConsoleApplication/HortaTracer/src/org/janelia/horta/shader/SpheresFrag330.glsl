@@ -50,7 +50,7 @@ out vec4 fragColor;
 
 // methods defined in imposter_fns330.glsl
 vec2 sphere_nonlinear_coeffs(vec3 pos, float pc, float c2); // sphere surface ray-casting intermediate parameters
-vec3 sphere_surface_from_coeffs(vec3 pos, float pc, vec2 a2_d); //
+vec3 sphere_surface_from_coeffs(vec3 pos, float pc, vec2 a2_d, out vec3 back_surface); //
 vec3 light_rig(vec3 pos, vec3 normal, vec3 color); // simple hard-coded shading, for testing
 float fragDepthFromEyeXyz(vec3 eyeXyz, mat4 projectionMatrix); // computes correct sphere depth-buffer value
 vec3 image_based_lighting(
@@ -66,13 +66,24 @@ void main() {
     // fast-fail rays that miss sphere, before expensively solving exact surface location
     if (a2_d.y < 0) // quadratic formula discriminant, (b^2 - 4ac) < 0
         discard; // ray through point does not intersect sphere
-    vec3 s = sphere_surface_from_coeffs(imposterPos, pc, a2_d);
+    vec3 back_surface;
+    vec3 s = sphere_surface_from_coeffs(imposterPos, pc, a2_d, back_surface);
     vec3 normal = 1.0 / fragRadius * (s - center); // normalized without an additional sqrt! :)
     gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
-    // Use flat face for near clip
-    if (gl_FragDepth <= 0) {
-        normal = vec3(0, 0, 1);
+
+    // Near clip to reveal solid core
+    if (gl_FragDepth < 0) { // Near surface is clipped by zNear
+        // Show nothing if rear surface is also closer than zNear
+        float back_depth = fragDepthFromEyeXyz(back_surface, projectionMatrix);
+        if (back_depth <= 0) {
+            discard;
+        }
+        gl_FragDepth = 0;
+        // s.z = ?; // TODO - what's zNear in scene units?
+        normal = vec3(0, 0, 1); // slice core parallel to screen
     }
+
+    // Color and shading
     vec3 reflectColor = mix(color.rgb, vec3(1,1,1), 0.5); // midway between metal and plastic.
     fragColor = vec4(
         image_based_lighting(s, normal, color.rgb, reflectColor, lightProbe),

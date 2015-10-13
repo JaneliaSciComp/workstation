@@ -105,7 +105,7 @@ void emit_one_vertex(vec3 offset) {
 
 
 // sometimes you can see five of the six hull sides
-void cone_hull(mat3 frame2348, mat3 frame1567) {
+void near_cone_hull(mat3 frame2348, mat3 frame1567) {
     emit_one_vertex(frame1567*p6);
     emit_one_vertex(frame1567*p7);
     emit_one_vertex(frame1567*p5);
@@ -213,5 +213,5 @@ void main() {
             y * r2, 
             z * r2);
 
-    cone_hull(frame2348, frame1567); // near cone hull
+    near_cone_hull(frame2348, frame1567); // near cone hull
 }
