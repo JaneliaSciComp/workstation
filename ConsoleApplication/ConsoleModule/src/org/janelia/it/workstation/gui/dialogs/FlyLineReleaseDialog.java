@@ -294,7 +294,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
         worker.execute();
 
         Component mainFrame = SessionMgr.getMainFrame();
-        setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.5), (int) (mainFrame.getHeight() * 0.4)));
+        setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.5), (int) (mainFrame.getHeight() * 0.5)));
 
         packAndShow();
     }
