@@ -121,6 +121,15 @@ float fragDepthFromEyeXyz(vec3 eyeXyz, mat4 projectionMatrix) {
 }
 
 
+float zNearFromProjection(mat4 projectionMatrix) {
+    float m22 = projectionMatrix[2][2];
+    float m32 = projectionMatrix[3][2];
+    float near = (2.0f*m32)/(2.0*m22-2.0);
+    // float far = ((m22-1.0)*near)/(m22+1.0);
+    return -near;
+}
+
+
 // CONES
 // Methods for ray casting cone geometry from imposter geometry
 

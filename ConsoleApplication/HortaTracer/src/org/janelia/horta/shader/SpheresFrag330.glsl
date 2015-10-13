@@ -53,6 +53,7 @@ vec2 sphere_nonlinear_coeffs(vec3 pos, float pc, float c2); // sphere surface ra
 vec3 sphere_surface_from_coeffs(vec3 pos, float pc, vec2 a2_d, out vec3 back_surface); //
 vec3 light_rig(vec3 pos, vec3 normal, vec3 color); // simple hard-coded shading, for testing
 float fragDepthFromEyeXyz(vec3 eyeXyz, mat4 projectionMatrix); // computes correct sphere depth-buffer value
+float zNearFromProjection(mat4 projectionMatrix);
 vec3 image_based_lighting(
         vec3 pos, // surface position, in camera frame
         vec3 normal, // surface normal, in camera frame
@@ -75,11 +76,10 @@ void main() {
     if (gl_FragDepth < 0) { // Near surface is clipped by zNear
         // Show nothing if rear surface is also closer than zNear
         float back_depth = fragDepthFromEyeXyz(back_surface, projectionMatrix);
-        if (back_depth <= 0) {
+        if (back_depth <= 0)
             discard;
-        }
         gl_FragDepth = 0;
-        // s.z = ?; // TODO - what's zNear in scene units?
+        s.z = zNearFromProjection(projectionMatrix); // Update clipped Z coordinate
         normal = vec3(0, 0, 1); // slice core parallel to screen
     }
 
