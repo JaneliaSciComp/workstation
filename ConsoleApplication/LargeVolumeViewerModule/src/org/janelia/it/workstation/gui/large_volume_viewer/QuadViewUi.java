@@ -1349,6 +1349,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         result.setMicrometersPerWindowHeight(
                 viewer.getViewport().getHeight()
                 / camera.getPixelsPerSceneUnit());
+        
+        // TODO neurons
+        
+        
         return result;
     }
     

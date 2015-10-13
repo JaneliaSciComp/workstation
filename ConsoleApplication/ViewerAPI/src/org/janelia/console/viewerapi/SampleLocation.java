@@ -31,6 +31,8 @@
 package org.janelia.console.viewerapi;
 
 import java.net.URL;
+import java.util.Collection;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
 
 /**
  *
@@ -52,4 +54,6 @@ public interface SampleLocation
     // TODO - remove this temporary hack once Horta can show all channels
     int getDefaultColorChannel();
     void setDefaultColorChannel(int channelIndex);
+    
+    Collection<NeuronReconstruction> getNeurons();
 }

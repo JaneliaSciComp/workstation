@@ -60,6 +60,7 @@ out float halfConeLength;
 out vec3 aHat;
 out vec3 imposterPos; // location of imposter bounding geometry, in camera frame
 out float normalScale;
+out float bViewAlongCone; // Is view angle less than taper angle?
 
 
 // forward declaration of methods defined in imposter_fns330.glsl
@@ -152,7 +153,7 @@ void main() {
     // allow better dynamic changes to the radii.
     // This is a subtle effect that mainly affects cones 
     // connecting spheres of very different radii.
-    bool postModifyRadii = true;
+    const bool postModifyRadii = true;
     if (postModifyRadii) {
         // Modify locations and radii, so cone is flush with adjacent spheres
         vec3 cs1 = c1; // center of first sphere
@@ -192,6 +193,17 @@ void main() {
     halfConeLength = 0.5 * cone_length;
     aHat = -cone_spine/cone_length;
     normalScale = 1.0 / sqrt(1.0 + taper*taper);
+
+    // Decide whether view direction is sort of "along" cone axis, or 
+    // sort of perpendicular to cone axis. Each case has different ray 
+    // casting consequences.
+    bViewAlongCone = 0; // default to false
+    if (abs(taper) > 1e-4) { // not for cylinders...
+        float cos_cone_angle = abs(cos(atan(r2 - r1, cone_length)));
+        vec3 cone_tip = center + aHat * fragRadius/taper;
+        float cos_view_angle = abs(dot(normalize(cone_tip), aHat));
+        if (cos_view_angle > cos_cone_angle) bViewAlongCone = 1; // true
+    }
 
     // Compute local coordinate system of cone bounding box
     // Put "X" axis of bounding geometry along cone axis

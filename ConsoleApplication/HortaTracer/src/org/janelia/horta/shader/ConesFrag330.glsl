@@ -52,6 +52,7 @@ in vec3 imposterPos; // location of imposter bounding geometry, in camera frame
 in float halfConeLength;
 in vec3 aHat;
 in float normalScale;
+in float bViewAlongCone; // Is view angle less than taper angle?
 
 
 out vec4 fragColor;
@@ -93,17 +94,30 @@ void main() {
     // Compute surface normal vector, for shading
     vec3 n1 = normalize( cs - dot(cs, aHat)*aHat );
     vec3 normal = normalScale * (n1 + taper * aHat);
+
+    bool viewAlongCone = bViewAlongCone > 0.5;
+
+    // color for testing
+    // vec4 testColor = vec4(1, 0, 0, 1);
+    // if (viewAlongCone)
+    //     testColor = vec4(0, 1, 0, 1);
+
+    if (viewAlongCone) {
+        // s = back_surface; // second surface is the seen one in this case
+    }
+
     // Put computed cone surface Z depth into depth buffer
     gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
 
     // Near clip to reveal solid core 
-    /*
     if (gl_FragDepth < 0) {
         // Show nothing if rear surface is also closer than zNear
-        // float back_depth = fragDepthFromEyeXyz(back_surface, projectionMatrix);
-        // if (back_depth <= 0) discard;
+        if (! viewAlongCone) {
+            float back_depth = fragDepthFromEyeXyz(back_surface, projectionMatrix);
+            // if (back_depth < 0) discard;
+        }
         gl_FragDepth = 0;
-        // s.z = zNearFromProjection(projectionMatrix); // Update clipped Z coordinate
+        s.z = zNearFromProjection(projectionMatrix); // Update clipped Z coordinate
         normal = vec3(0, 0, 1); // slice core parallel to screen
     } /* */
 

@@ -76,8 +76,7 @@ void main() {
     if (gl_FragDepth < 0) { // Near surface is clipped by zNear
         // Show nothing if rear surface is also closer than zNear
         float back_depth = fragDepthFromEyeXyz(back_surface, projectionMatrix);
-        if (back_depth <= 0)
-            discard;
+        // if (back_depth < 0) discard;
         gl_FragDepth = 0;
         s.z = zNearFromProjection(projectionMatrix); // Update clipped Z coordinate
         normal = vec3(0, 0, 1); // slice core parallel to screen
