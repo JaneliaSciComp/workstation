@@ -23,7 +23,6 @@ import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
-import org.janelia.it.workstation.shared.util.SWCData;
 
 
 /**
@@ -531,7 +530,7 @@ public class AnnotationPanel extends JPanel
 
         @Override
         public String getDescription() {
-            return "*" + SWCData.STD_SWC_EXTENSION;
+            return "*" + AnnotationModel.STD_SWC_EXTENSION;
         }
     }
     
