@@ -9,11 +9,17 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
 import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
@@ -23,7 +29,9 @@ import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
+import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationGeometry;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
@@ -51,7 +59,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
     private static final double MANUAL_SEGMENT_RADIUS = 6;
     private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
     private static final double TRACED_SEGMENT_RADIUS = 8;
-    private static final int TRACED_SEGMENT_POLYGON_SIDES = 10;
+    private static final int TRACED_SEGMENT_POLYGON_SIDES = 8;
     public static final double ANNO_RADIUS = TRACED_SEGMENT_RADIUS * 4;
     private static final int ANNO_POLYGON_SIDES = 12;
     
@@ -137,6 +145,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
      */
     @Override
     public synchronized List<TriangleSource> execute() throws Exception {
+        Long startTime = new Date().getTime();
         // Can re-execute this.
         renderIdToBuffers.clear();
         triangleSources.clear();
@@ -166,6 +175,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
 		}
         //exportVertices(new File("/Users/fosterl/"), "NeuronTraceVtxAttribMgr_Test");
         
+        log.info("Execution of NeuronTraceVtxAttribMgr took {}s", (new Date().getTime() - startTime) / 1000.0);
         return triangleSources;
     }
 
@@ -565,56 +575,90 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
         }
     }
 
-    protected void calculateTracedSegmentVertices(Set<SegmentIndex> voxelPathAnchorPairs, TileFormat tileFormat, LineEnclosureFactory tracedSegmentEnclosureFactory) {
+    protected void calculateTracedSegmentVertices(
+            final Set<SegmentIndex> voxelPathAnchorPairs,
+            final TileFormat tileFormat, 
+            final LineEnclosureFactory tracedSegmentEnclosureFactory
+    ) {
         // Iterate over all the traced segments, and add enclosures for each.
-        for ( AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {
-            final SegmentIndex segmentIndex = voxelPath.getSegmentIndex();
-            if (segmentIndex == null) {
-                continue;
-            }
-            voxelPathAnchorPairs.add( segmentIndex );
-            // need neuron ID; get it from the anchor at either end of the
-            //  traced path; if there isn't an anchor, just move on--that
-            //  path is also gone (happens when neurons deleted, merged)
-            //  [from earlier code]
-            Long anchorGuid = segmentIndex.getAnchor1Guid();
-            Anchor anchor = getSkeleton().getAnchorByID(anchorGuid);
-            if ( anchor == null ) {
-                continue;
-            }
-            Long neuronId = anchor.getNeuronID();
-            NeuronStyle style = getNeuronStyle(neuronId);
-            final float[] colorAsFloatArray = style.getColorAsFloatArray();
-            
-            double[] previousCoords = null;
-            VoxelPosition previousVoxelPos = null;
-            for ( VoxelPosition voxelPos: voxelPath.getPath() ) {
-                TileFormat.MicrometerXyz microns = tileFormat.micrometerXyzForVoxelXyz(
-                        new TileFormat.VoxelXyz(
-                                voxelPos.getX(),
-                                voxelPos.getY(),
-                                voxelPos.getZ()
-                        ),
-                        CoordinateAxis.Z
-                );
-                Vec3 v = tileFormat.centerJustifyMicrometerCoordsAsVec3(microns);
-                double[] currentCoords = getPoint(v);
-                
-                if ( previousCoords != null ) {
-                    int coordsAdded = tracedSegmentEnclosureFactory.addEnclosure(
-                            previousCoords, currentCoords, colorAsFloatArray);
-                    if (coordsAdded == 0) {
-                        if (previousVoxelPos != null) {
-                            log.info("Encountered identical endpoints: " + fmtVoxelPos(previousVoxelPos) + ":" + fmtVoxelPos(voxelPos) +
-                                    ".  Encountered identical converted coords: " + fmtCoords(previousCoords) + ":" + fmtCoords(currentCoords) +
-                                    ".  Found in segment index: " + voxelPath.getSegmentIndex() + ", and in neuron " + neuronId + ".");
-                        }
-                    }
+        ExecutorService executorService = Executors.newFixedThreadPool(
+                10, 
+                new CustomNamedThreadFactory(
+                        NeuronTraceVtxAttribMgr.class.getSimpleName()
+                )
+        );
+        
+        List<Future<Void>> callbacks = new ArrayList<>();
+        for ( final AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {
+            Callable<Void> callable = new Callable<Void>() {
+                public Void call() throws Exception {
+                    processTracedSegment(voxelPath, voxelPathAnchorPairs, tileFormat, tracedSegmentEnclosureFactory);
+                    return null;
                 }
-                previousCoords = currentCoords;
-                previousVoxelPos = voxelPos;
-            }
+            };
+            callbacks.add( executorService.submit(callable) );
         }
+        
+        // Follow-up.
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(15, TimeUnit.MINUTES);
+
+            for (Future<Void> future : callbacks) {                
+                future.get(); // 'Enjoy' any exceptions encountered.
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            log.error("Failure during finalization of the traced segment vertex calculations.");
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
+    }
+
+    private boolean processTracedSegment(AnchoredVoxelPath voxelPath, Set<SegmentIndex> voxelPathAnchorPairs, TileFormat tileFormat, LineEnclosureFactory tracedSegmentEnclosureFactory) {
+        final SegmentIndex segmentIndex = voxelPath.getSegmentIndex();
+        if (segmentIndex == null) {
+            return false;
+        }
+        voxelPathAnchorPairs.add( segmentIndex );
+        // need neuron ID; get it from the anchor at either end of the
+        //  traced path; if there isn't an anchor, just move on--that
+        //  path is also gone (happens when neurons deleted, merged)
+        //  [from earlier code]
+        Long anchorGuid = segmentIndex.getAnchor1Guid();
+        Anchor anchor = getSkeleton().getAnchorByID(anchorGuid);
+        if (anchor == null) {
+            return true;
+        }
+        Long neuronId = anchor.getNeuronID();
+        NeuronStyle style = getNeuronStyle(neuronId);
+        final float[] colorAsFloatArray = style.getColorAsFloatArray();
+        double[] previousCoords = null;
+        VoxelPosition previousVoxelPos = null;
+        for ( VoxelPosition voxelPos: voxelPath.getPath() ) {
+            TileFormat.MicrometerXyz microns = tileFormat.micrometerXyzForVoxelXyz(
+                    new TileFormat.VoxelXyz(
+                            voxelPos.getX(),
+                            voxelPos.getY(),
+                            voxelPos.getZ()
+                    ),
+                    CoordinateAxis.Z
+            );
+            Vec3 v = tileFormat.centerJustifyMicrometerCoordsAsVec3(microns);
+            double[] currentCoords = getPoint(v);
+            
+            if ( previousCoords != null ) {
+                int coordsAdded = tracedSegmentEnclosureFactory.addEnclosure(
+                        previousCoords, currentCoords, colorAsFloatArray);
+                if (log.isTraceEnabled()  &&  coordsAdded == 0  &&  previousVoxelPos != null) {
+                    log.trace("Encountered identical endpoints: " + fmtVoxelPos(previousVoxelPos) + ":" + fmtVoxelPos(voxelPos) +
+                              ".  Encountered identical converted coords: " + fmtCoords(previousCoords) + ":" + fmtCoords(currentCoords) +
+                              ".  Found in segment index: " + voxelPath.getSegmentIndex() + ", and in neuron " + neuronId + ".");
+                }
+            }
+            previousCoords = currentCoords;
+            previousVoxelPos = voxelPos;
+        }
+        return false;
     }
     
     private String fmtVoxelPos( VoxelPosition pos ) {

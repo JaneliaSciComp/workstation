@@ -31,11 +31,16 @@ public class AnnotationSkeletonViewLauncher {
         List<JMenuItem> menuItems = new ArrayList<>();
         Action launchAction = new AbstractAction() {
             {
-                super.putValue(NAME, "Launch Annotation Landmark Viewer");
+                super.putValue(NAME, AnnotationSkeletalViewTopComponent.LABEL_TEXT.trim());
             }
             @Override
             public void actionPerformed(ActionEvent e) {
                 reopenView();
+                AnnotationSkeletalViewTopComponent comp = getTopComponent();
+                // Coerce a redraw.
+                comp.invalidate();
+                comp.validate();
+                comp.repaint();
             }
         };
         menuItems.add(new JMenuItem(launchAction));
