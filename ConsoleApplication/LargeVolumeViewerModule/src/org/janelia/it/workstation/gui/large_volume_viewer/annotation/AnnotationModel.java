@@ -1601,6 +1601,10 @@ called from a  SimpleWorker thread.
         }
 
     }
+    
+    public List<File> breakOutByRoots(File infile) throws IOException {
+        return new SWCData().breakOutByRoots(infile);
+    }
 
     public void fireAnnotationNotMoved(TmGeoAnnotation annotation) {
         for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {

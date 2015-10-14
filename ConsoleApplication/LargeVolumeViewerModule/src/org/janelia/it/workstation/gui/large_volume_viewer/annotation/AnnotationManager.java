@@ -1486,7 +1486,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 @Override
                 protected void doStuff() throws Exception {
                     annotationModel.importBulkSWCData(swcFile, null, selectOnCompletion);
-                    //annotationModel.importSWCData(swcFile, this);
                 }
                 
                 @Override
