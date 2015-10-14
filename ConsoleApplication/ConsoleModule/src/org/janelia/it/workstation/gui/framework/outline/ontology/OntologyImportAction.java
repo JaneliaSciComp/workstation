@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.framework.outline.ontology;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +20,8 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.YamlFileFilter;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.openide.filesystems.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -59,8 +59,9 @@ public class OntologyImportAction implements Action  {
     public void doAction() {
 
         final JFileChooser fc = new JFileChooser();
-        fc.addChoosableFileFilter(new TxtFilter());
-        fc.setAcceptAllFileFilterUsed(false);
+        FileFilter ff = new YamlFileFilter();
+        fc.addChoosableFileFilter(ff);
+        fc.setFileFilter(ff);
         
         int returnVal = fc.showOpenDialog(SessionMgr.getMainFrame());
         if (returnVal != JFileChooser.APPROVE_OPTION) {
@@ -87,7 +88,7 @@ public class OntologyImportAction implements Action  {
                 
                 @Override
                 protected void hadError(Throwable error) {
-                    error.printStackTrace();
+                    log.error("Error creating ontology terms", error);
                     JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Error creating ontology term", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             };
@@ -95,14 +96,13 @@ public class OntologyImportAction implements Action  {
             worker.execute();
             
         }
-        catch (IOException e) {
+        catch (FileNotFoundException e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
     
     private void createOntologyTerms(Entity parentEntity, Map<String,Object> newNode) throws Exception {
 
-        
         String termName = (String)newNode.get("name");
         String typeName = (String)newNode.get("type");
         if (typeName==null) typeName = "Tag";
@@ -112,13 +112,23 @@ public class OntologyImportAction implements Action  {
         OntologyElementType childType = OntologyElementType.createTypeByName(typeName);
 
         if (childType instanceof Interval) {
-            String lowerBoundStr = (String)newNode.get("lowerBound");
-            String upperBoundStr = (String)newNode.get("upperBound");
-            ((Interval) childType).init(lowerBoundStr, upperBoundStr);
+            Object lowerBound = newNode.get("lowerBound");
+            if (lowerBound==null) {
+                throw new IllegalArgumentException("lowerBound property must be specified for term "+termName+" of type Interval");
+            }
+            Object upperBound = newNode.get("upperBound");
+            if (upperBound==null) {
+                throw new IllegalArgumentException("lowerBound property must be specified for term "+termName+" of type Interval");
+            }
+            ((Interval) childType).init(lowerBound.toString(), upperBound.toString());
         }
         else if (childType instanceof EnumText) {
-            String enumIdStr = (String)newNode.get("enumId");
-            ((EnumText) childType).init(Long.parseLong(enumIdStr));
+            Object enumId = newNode.get("enumId");
+            if (enumId==null) {
+                throw new IllegalArgumentException("enumId property must be specified for term "+termName+" of type EnumText");
+            }
+            // TODO: should be able to reference an enum in the ontology being loaded
+            ((EnumText) childType).init(Long.parseLong(enumId.toString()));
         }
         
         Entity newEntity = ModelMgr.getModelMgr().createOntologyTerm(ontology.getId(), parentEntity.getId(), termName, childType, null);
@@ -130,15 +140,4 @@ public class OntologyImportAction implements Action  {
             }
         }
     }
-    
-    
-    private class TxtFilter extends FileFilter {
-        public boolean accept(File f) {
-            String extension = FileUtil.getExtension(f.getName());
-            return extension.equals("txt");
-        }
-        public String getDescription() {
-            return "Text Files";
-        }
-    }   
 }

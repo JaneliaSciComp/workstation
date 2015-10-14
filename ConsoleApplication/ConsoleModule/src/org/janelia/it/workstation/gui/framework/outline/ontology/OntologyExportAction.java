@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileFilter;
 
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.EnumText;
@@ -16,6 +17,7 @@ import org.janelia.it.jacs.model.ontology.types.Interval;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.YamlFileFilter;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -26,6 +28,8 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class OntologyExportAction implements Action  {
 
+    private static final String SAVE_FILE_EXTENSION = "yaml";
+    
     private OntologyElement ontologyElement;
     
     public OntologyExportAction(OntologyElement ontologyElement) {
@@ -40,9 +44,12 @@ public class OntologyExportAction implements Action  {
     @Override
     public void doAction() {
         
-        String defaultSaveFilename = ontologyElement.getName().replaceAll("\\s+", "_")+".txt";
+        String defaultSaveFilename = ontologyElement.getName().replaceAll("\\s+", "_")+"."+SAVE_FILE_EXTENSION;
     
         final JFileChooser fc = new JFileChooser();
+        FileFilter ff = new YamlFileFilter();
+        fc.addChoosableFileFilter(ff);
+        fc.setFileFilter(ff);
         fc.setSelectedFile(new File(defaultSaveFilename));
         
         int returnVal = fc.showSaveDialog(SessionMgr.getMainFrame());
