@@ -129,11 +129,4 @@ public class BasicSampleLocation implements SampleLocation
     {
         defaultColorChannel = channelIndex;
     }
-
-    @Override
-    public Collection<NeuronReconstruction> getNeurons()
-    {
-        return neurons;
-    }
-
 }

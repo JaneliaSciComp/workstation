@@ -66,14 +66,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Set;
 import javax.imageio.ImageIO;
-import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -109,10 +105,9 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
-import org.janelia.gltools.BasicGL3Actor;
-import org.janelia.horta.actors.SwcActor;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.ReconstructionCollection;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.BasicNeuronReconstruction;
 import org.janelia.horta.volume.BrickActor;
@@ -124,6 +119,9 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.MouseUtils;
 import org.openide.awt.StatusDisplayer;
 import org.openide.util.Exceptions;
+import org.openide.util.Lookup;
+import org.openide.util.LookupEvent;
+import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.Utilities;
@@ -157,7 +155,7 @@ import org.slf4j.LoggerFactory;
     "HINT_NeuronTracerTopComponent=Horta Neuron Tracer window"
 })
 public final class NeuronTracerTopComponent extends TopComponent
-        implements VolumeProjection, YamlStreamLoader
+        implements VolumeProjection, YamlStreamLoader, LookupListener
 {
     public static final String PREFERRED_ID = "NeuronTracerTopComponent";
     public static final String BASE_YML_FILE = "tilebase.cache.yml";
@@ -1167,6 +1165,33 @@ public final class NeuronTracerTopComponent extends TopComponent
         else {
             scaleBar.setForegroundColor(Color.white);
             scaleBar.setBackgroundColor(new Color(0, 0, 0, 50));                    
+        }
+    }
+
+    // Use Lookup to access neuron models from LVV
+    // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
+    private Lookup.Result<ReconstructionCollection> neuronsLookupResult = null;
+    
+    @Override
+    public void componentOpened() {
+        neuronsLookupResult = Utilities.actionsGlobalContext().lookupResult(ReconstructionCollection.class);
+        neuronsLookupResult.addLookupListener(this);
+    }
+    
+    @Override
+    public void componentClosed() {
+        neuronsLookupResult.removeLookupListener(this);
+    }
+    
+    @Override
+    public void resultChanged(LookupEvent le)
+    {
+        Collection<? extends ReconstructionCollection> allNeuronLists = neuronsLookupResult.allInstances();
+        if (! allNeuronLists.isEmpty()) {
+            // TODO - notice the neurons!
+        }
+        else {
+            // TODO - notice the lack of neurons!
         }
     }
 }
