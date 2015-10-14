@@ -31,6 +31,7 @@
 package org.janelia.console.viewerapi.model;
 
 import java.util.Collection;
+import org.janelia.console.viewerapi.ObservableInterface;
 
 /**
  *
@@ -38,5 +39,6 @@ import java.util.Collection;
  */
 public interface ReconstructionCollection extends Collection<NeuronReconstruction>
 {
-    
+    // getMembershipChangeObservable() signals when whole neurons are added or removed from the collection
+    ObservableInterface getMembershipChangeObservable();
 }

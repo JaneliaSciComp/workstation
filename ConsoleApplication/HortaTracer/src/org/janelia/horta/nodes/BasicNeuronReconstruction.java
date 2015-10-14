@@ -41,7 +41,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Observer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.io.FilenameUtils;
@@ -237,6 +236,18 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
     public ObservableInterface getVisibilityChangeObservable()
     {
         return visibilityChangeObservable;
+    }
+
+    @Override
+    public ObservableInterface getMembersAddedObservable()
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public ObservableInterface getMembersRemovedObservable()
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
 }

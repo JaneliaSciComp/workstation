@@ -66,9 +66,11 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Set;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
@@ -1171,11 +1173,13 @@ public final class NeuronTracerTopComponent extends TopComponent
     // Use Lookup to access neuron models from LVV
     // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
     private Lookup.Result<ReconstructionCollection> neuronsLookupResult = null;
+    private Set<ReconstructionCollection> currentNeuronLists = new HashSet<>();
     
     @Override
     public void componentOpened() {
         neuronsLookupResult = Utilities.actionsGlobalContext().lookupResult(ReconstructionCollection.class);
         neuronsLookupResult.addLookupListener(this);
+        checkNeuronLookup();
     }
     
     @Override
@@ -1186,12 +1190,24 @@ public final class NeuronTracerTopComponent extends TopComponent
     @Override
     public void resultChanged(LookupEvent le)
     {
+        checkNeuronLookup();
+    }
+    
+    private void checkNeuronLookup() {
         Collection<? extends ReconstructionCollection> allNeuronLists = neuronsLookupResult.allInstances();
         if (! allNeuronLists.isEmpty()) {
-            // TODO - notice the neurons!
+            logger.info("Neuron Lookup found!");
+            for (ReconstructionCollection neuronList : allNeuronLists) {
+                if (! currentNeuronLists.contains(neuronList)) {
+                    logger.info("Found new neuron list!");
+                    currentNeuronLists.add(neuronList);
+                    // TODO - process the new neuron list
+                }
+            }
         }
         else {
-            // TODO - notice the lack of neurons!
+            logger.info("Hey! There are no lists of neurons around.");
+            // TODO - repond to lack of neuron collections.
         }
     }
 }

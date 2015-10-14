@@ -32,6 +32,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
 import java.util.Collection;
 import java.util.Iterator;
+import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
 import org.janelia.console.viewerapi.model.ReconstructionCollection;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
@@ -122,6 +123,12 @@ public class ReconstructionCollectionAdapter implements ReconstructionCollection
 
     @Override
     public void clear()
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public ObservableInterface getMembershipChangeObservable()
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

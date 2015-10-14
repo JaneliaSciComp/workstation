@@ -45,11 +45,19 @@ public interface NeuronReconstruction extends Hideable
     
     Color getColor();
     void setColor(Color color);
+    // Signals when the color of this neuron is toggled on or off
     ObservableInterface getColorChangeObservable();
     
     Collection<NeuronVertex> getVertexes();
     Collection<NeuronEdge> getEdges();
-    ObservableInterface getGeometryChangeObservable();
     
+    // Adding a vertex is so common that it gets its own signal
+    ObservableInterface getMembersAddedObservable(); // vertices added to neuron
+    ObservableInterface getMembersRemovedObservable(); // vertices removed from neuron
+    // Probably too much overhead to attach a listener to every vertex, so listen to vertex changes
+    // at the neuron level.
+    ObservableInterface getGeometryChangeObservable(); // vertices changed location or radius
+    
+    // Signals when the visibility of this neuron is toggled on or off
     ObservableInterface getVisibilityChangeObservable();
 }
