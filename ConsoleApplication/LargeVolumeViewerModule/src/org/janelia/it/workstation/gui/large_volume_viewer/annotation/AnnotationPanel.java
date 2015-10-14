@@ -539,7 +539,7 @@ public class AnnotationPanel extends JPanel
                     }
                 }
                 else {
-                    annotationMgr.importSWCFile(chooser.getSelectedFile(), null);
+                    annotationMgr.importSWCFile(swcFiles.get(0), null);
                 }
             }
         }
@@ -567,6 +567,9 @@ public class AnnotationPanel extends JPanel
                     throw new RuntimeException(ioe);
                 }
             }
+            else {
+                rtnVal.addAll(rawFileList);
+            }
             return rtnVal;
         }
     }
@@ -585,8 +588,8 @@ public class AnnotationPanel extends JPanel
     
     class SwcDirListFilter implements java.io.FileFilter {
         @Override
-        public boolean accept(File pathname) {
-            return pathname.getName().endsWith(AnnotationModel.STD_SWC_EXTENSION);
+        public boolean accept(File file) {
+            return file.isFile() && file.getName().endsWith(AnnotationModel.STD_SWC_EXTENSION);
         }
 
     }

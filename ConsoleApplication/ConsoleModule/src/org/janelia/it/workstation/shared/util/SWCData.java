@@ -184,7 +184,7 @@ public class SWCData {
                 rtnVal.add(infile);
             }
             else {
-                int fileNum = 0;
+                int fileNum = 1;
 
                 File tempDir = new File(System.getProperty("java.io.tmpdir"), "SWCData_" + new java.util.Date().getTime());                
                 tempDir.mkdirs();
