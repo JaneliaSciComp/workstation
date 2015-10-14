@@ -30,99 +30,16 @@
 
 package org.janelia.horta.nodes;
 
-import org.janelia.geometry3d.Vector3;
-import org.janelia.horta.modelapi.SwcVertex;
+import java.util.ArrayList;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.ReconstructionCollection;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class BasicSwcVertex implements SwcVertex
+public class BasicReconstructionCollection 
+extends ArrayList<NeuronReconstruction>
+implements ReconstructionCollection
 {
-    private final float[] location = {0,0,0};
-    private double radius = 0.0; // micrometers
-    private int label = 1;
-    private int typeIndex = 0;
-    private SwcVertex parent = null;
-
-    BasicSwcVertex(float x, float y, float z)
-    {
-        location[0] = x;
-        location[1] = y;
-        location[2] = z;
-    }
-
-    @Override
-    public float[] getLocation()
-    {
-        return location;
-    }
-
-    public void setLocation(Vector3 location)
-    {
-        System.arraycopy(location.toArray(), 0, this.location, 0, 3);
-    }
-
-    @Override
-    public void setLocation(float x, float y, float z)
-    {
-        location[0] = x;
-        location[1] = y;
-        location[2] = z;
-    }
-
-    @Override
-    public double getRadius()
-    {
-        return radius;
-    }
-
-    @Override
-    public void setRadius(double radius)
-    {
-        this.radius = radius;
-    }
-
-    @Override
-    public int getLabel()
-    {
-        return label;
-    }
-
-    @Override
-    public void setLabel(int label)
-    {
-        this.label = label;
-    }
-
-    @Override
-    public int getTypeIndex()
-    {
-        return typeIndex;
-    }
-
-    @Override
-    public void setTypeIndex(int typeIndex)
-    {
-        this.typeIndex = typeIndex;
-    }
-
-    @Override
-    public SwcVertex getParent()
-    {
-        return parent;
-    }
-
-    @Override
-    public void setParent(SwcVertex parent)
-    {
-        this.parent = parent;
-    }
-
-    @Override
-    public boolean hasRadius()
-    {
-        return true;
-    }
-
 }

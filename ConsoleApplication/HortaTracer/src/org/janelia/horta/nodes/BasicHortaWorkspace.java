@@ -31,14 +31,11 @@
 package org.janelia.horta.nodes;
 
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Observer;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.horta.modelapi.HortaWorkspace;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.ReconstructionCollection;
 
 /**
  * TODO: - in future, set Observable interface on workspace subcomponents
@@ -46,7 +43,7 @@ import org.janelia.console.viewerapi.model.NeuronReconstruction;
  */
 public class BasicHortaWorkspace implements HortaWorkspace
 {
-    private final List<NeuronReconstruction> neurons = new ArrayList<>();
+    private final ReconstructionCollection neurons = new BasicReconstructionCollection();
     private final Vantage vantage;
     private final ComposableObservable changeObservable = new ComposableObservable();
     private Color backgroundColor = new Color(0.1f, 0.1f, 0.1f, 1f);
@@ -56,7 +53,7 @@ public class BasicHortaWorkspace implements HortaWorkspace
     }
     
     @Override
-    public Collection<NeuronReconstruction> getNeurons()
+    public ReconstructionCollection getNeurons()
     {
         return neurons;
     }

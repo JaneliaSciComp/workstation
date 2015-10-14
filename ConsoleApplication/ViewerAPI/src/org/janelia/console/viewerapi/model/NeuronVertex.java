@@ -42,6 +42,8 @@ public interface NeuronVertex
     // NeuronVertex getParentVertex(); // can be null
     // void setParentVertex(NeuronVertex parent);
     
+    boolean hasRadius();
     double getRadius();
     void setRadius(double radius);
+    
 }

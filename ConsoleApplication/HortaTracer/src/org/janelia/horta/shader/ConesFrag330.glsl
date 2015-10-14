@@ -87,6 +87,12 @@ void main() {
          back_surface);
     vec3 cs = s - center;
     
+    bool viewAlongCone = bViewAlongCone > 0.5;
+
+    if (viewAlongCone) {
+        s = back_surface; // second surface is the seen one in this case
+    }
+
     // Truncate cone geometry to prescribed ends
     if ( abs(dot(cs, aHat)) > halfConeLength ) 
         discard;
@@ -95,16 +101,10 @@ void main() {
     vec3 n1 = normalize( cs - dot(cs, aHat)*aHat );
     vec3 normal = normalScale * (n1 + taper * aHat);
 
-    bool viewAlongCone = bViewAlongCone > 0.5;
-
     // color for testing
     // vec4 testColor = vec4(1, 0, 0, 1);
     // if (viewAlongCone)
     //     testColor = vec4(0, 1, 0, 1);
-
-    if (viewAlongCone) {
-        // s = back_surface; // second surface is the seen one in this case
-    }
 
     // Put computed cone surface Z depth into depth buffer
     gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
