@@ -110,6 +110,7 @@ void main() {
     gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
 
     // Near clip to reveal solid core 
+    /*
     if (gl_FragDepth < 0) {
         // Show nothing if rear surface is also closer than zNear
         if (! viewAlongCone) {

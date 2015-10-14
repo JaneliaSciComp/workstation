@@ -41,4 +41,5 @@ public interface ReconstructionCollection extends Collection<NeuronReconstructio
 {
     // getMembershipChangeObservable() signals when whole neurons are added or removed from the collection
     ObservableInterface getMembershipChangeObservable();
+    String getName();
 }

@@ -46,6 +46,8 @@ import org.openide.util.LookupListener;
 import org.openide.util.NbBundle;
 import org.openide.util.Utilities;
 import org.openide.windows.TopComponent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -79,11 +81,14 @@ implements ExplorerManager.Provider,  LookupListener
 
     // private HortaWorkspace workspace = null;
     private Lookup.Result<HortaWorkspace> workspaceResult = null;
+    private HortaWorkspace cachedWorkspace = null;
     
     // https://platform.netbeans.org/tutorials/74/nbm-selection-2.html
     // private final BeanTreeView treeView = new BeanTreeView();
     // child actions may reveal better with OutlineView than with BeanTreeView
     private final OutlineView treeView = new OutlineView("Scene Items"); 
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
      * Creates new form HortaWorkspaceEditorTopComponent
@@ -158,7 +163,11 @@ implements ExplorerManager.Provider,  LookupListener
             return;
         }
         HortaWorkspace workspace = allWorkspaces.iterator().next();
-        mgr.setRootContext( new HortaWorkspaceNode(workspace) );        
+        if (workspace != cachedWorkspace) {
+            logger.info("Creating new scene root");
+            cachedWorkspace = workspace;
+            mgr.setRootContext( new HortaWorkspaceNode(workspace) );
+        }
     }
 
 }

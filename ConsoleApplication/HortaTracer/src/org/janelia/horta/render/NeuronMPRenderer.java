@@ -51,6 +51,7 @@ import org.janelia.gltools.RenderTarget;
 import org.janelia.horta.actors.SwcActor;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.ReconstructionCollection;
 
 /**
  *
@@ -199,8 +200,10 @@ extends MultipassRenderer
                 // Update neuron models
                 Set<NeuronReconstruction> latestNeurons = new java.util.HashSet<>();
                 // 1 - enumerate latest neurons
-                for (NeuronReconstruction neuron : workspace.getNeurons()) {
-                    latestNeurons.add(neuron);
+                for (ReconstructionCollection neuronList : workspace.getNeuronLists()) {
+                    for (NeuronReconstruction neuron : neuronList) {
+                        latestNeurons.add(neuron);
+                    }
                 }
                 // 2 - remove obsolete neurons
                 for (NeuronReconstruction neuron : currentNeuronActors.keySet()) {
@@ -209,11 +212,13 @@ extends MultipassRenderer
                     }
                 }
                 // 3 - add new neurons
-                for (NeuronReconstruction neuron : workspace.getNeurons()) {
-                    addNeuronReconstruction(neuron);
+                for (ReconstructionCollection neuronList : workspace.getNeuronLists()) {
+                    for (NeuronReconstruction neuron : neuronList) {
+                        addNeuronReconstruction(neuron);
+                    }
                 }
             }
-        });        
+        });
     }
     
     private void addNeuronReconstruction(NeuronReconstruction neuron) {

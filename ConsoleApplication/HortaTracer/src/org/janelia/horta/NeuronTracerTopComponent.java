@@ -157,7 +157,7 @@ import org.slf4j.LoggerFactory;
     "HINT_NeuronTracerTopComponent=Horta Neuron Tracer window"
 })
 public final class NeuronTracerTopComponent extends TopComponent
-        implements VolumeProjection, YamlStreamLoader, LookupListener
+        implements VolumeProjection, YamlStreamLoader
 {
     public static final String PREFERRED_ID = "NeuronTracerTopComponent";
     public static final String BASE_YML_FILE = "tilebase.cache.yml";
@@ -192,7 +192,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     private NeuronTraceLoader loader;
     
     private boolean doCubifyVoxels = false;
-    private Logger logger = LoggerFactory.getLogger(NeuronTracerTopComponent.class);
+    private NeuronManager neuronManager = new NeuronManager();
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public static NeuronTracerTopComponent findThisComponent() {
         return (NeuronTracerTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
@@ -665,7 +666,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         switch (extension) {
                             case "SWC":
                                 NeuronReconstruction neuron = new BasicNeuronReconstruction(f);
-                                workspace.getNeurons().add(neuron);
+                                workspace.addNeuron(neuron);
                                 workspace.setChanged();
                                 workspace.notifyObservers();
                                 neuron.getGeometryChangeObservable().setChanged();
@@ -1170,44 +1171,14 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
     }
 
-    // Use Lookup to access neuron models from LVV
-    // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
-    private Lookup.Result<ReconstructionCollection> neuronsLookupResult = null;
-    private Set<ReconstructionCollection> currentNeuronLists = new HashSet<>();
-    
     @Override
     public void componentOpened() {
-        neuronsLookupResult = Utilities.actionsGlobalContext().lookupResult(ReconstructionCollection.class);
-        neuronsLookupResult.addLookupListener(this);
-        checkNeuronLookup();
+        neuronManager.onOpened();
     }
     
     @Override
     public void componentClosed() {
-        neuronsLookupResult.removeLookupListener(this);
+        neuronManager.onClosed();
     }
     
-    @Override
-    public void resultChanged(LookupEvent le)
-    {
-        checkNeuronLookup();
-    }
-    
-    private void checkNeuronLookup() {
-        Collection<? extends ReconstructionCollection> allNeuronLists = neuronsLookupResult.allInstances();
-        if (! allNeuronLists.isEmpty()) {
-            logger.info("Neuron Lookup found!");
-            for (ReconstructionCollection neuronList : allNeuronLists) {
-                if (! currentNeuronLists.contains(neuronList)) {
-                    logger.info("Found new neuron list!");
-                    currentNeuronLists.add(neuronList);
-                    // TODO - process the new neuron list
-                }
-            }
-        }
-        else {
-            logger.info("Hey! There are no lists of neurons around.");
-            // TODO - repond to lack of neuron collections.
-        }
-    }
 }

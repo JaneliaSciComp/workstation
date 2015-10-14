@@ -157,7 +157,7 @@ public class NeuronReconstructionNode extends AbstractNode
     public void triggerRepaint() {
         // logger.info("NeuronNode repaint triggered");
         // Maybe the parent node would have better access to repainting...
-        HortaWorkspaceNode parentNode = (HortaWorkspaceNode)getParentNode();
+        HortaWorkspaceNode parentNode = (HortaWorkspaceNode)(getParentNode().getParentNode());
         if (parentNode != null)
             parentNode.triggerRepaint();
     }

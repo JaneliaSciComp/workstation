@@ -31,6 +31,7 @@
 package org.janelia.horta.nodes;
 
 import java.util.ArrayList;
+import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
 import org.janelia.console.viewerapi.model.ReconstructionCollection;
@@ -43,11 +44,23 @@ public class BasicReconstructionCollection
 extends ArrayList<NeuronReconstruction>
 implements ReconstructionCollection
 {
+    private final String name;
+    private final ComposableObservable changeObservable = new ComposableObservable();
+    
+    public BasicReconstructionCollection(String name) {
+        this.name = name;
+    }
 
     @Override
     public ObservableInterface getMembershipChangeObservable()
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return changeObservable;
+    }
+
+    @Override
+    public String getName()
+    {
+        return name;
     }
     
 }

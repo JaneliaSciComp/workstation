@@ -31,8 +31,11 @@
 package org.janelia.horta.nodes;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Observer;
 import org.janelia.console.viewerapi.ComposableObservable;
+import org.janelia.console.viewerapi.model.NeuronReconstruction;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.ReconstructionCollection;
@@ -43,21 +46,29 @@ import org.janelia.console.viewerapi.model.ReconstructionCollection;
  */
 public class BasicHortaWorkspace implements HortaWorkspace
 {
-    private final ReconstructionCollection neurons = new BasicReconstructionCollection();
     private final Vantage vantage;
     private final ComposableObservable changeObservable = new ComposableObservable();
     private Color backgroundColor = new Color(0.1f, 0.1f, 0.1f, 1f);
+    private final Collection<ReconstructionCollection> neuronLists = new ArrayList<>();
 
     public BasicHortaWorkspace(Vantage vantage) {
         this.vantage = vantage;
     }
     
-    @Override
-    public ReconstructionCollection getNeurons()
-    {
-        return neurons;
+    // Adds a neuron to the first list of neurons.
+    // If no list exist yet, a new one is created, called "Temporary Neurons".
+    public void addNeuron(NeuronReconstruction neuron) {
+        if (getNeuronLists().isEmpty()) {
+            ReconstructionCollection localNeurons = new BasicReconstructionCollection("Temporary Neurons");
+            getNeuronLists().add(localNeurons);
+            setChanged();
+        }
+        // Drop neuron into first list of neurons, when dropping on whole workspace
+        ReconstructionCollection neuronList = getNeuronLists().iterator().next();
+        neuronList.add(neuron);
+        neuronList.getMembershipChangeObservable().setChanged();
     }
-
+    
     @Override
     public Vantage getVantage()
     {
@@ -106,5 +117,11 @@ public class BasicHortaWorkspace implements HortaWorkspace
         if (backgroundColor.equals(color)) return;
         backgroundColor = color;
         setChanged();
+    }
+
+    @Override
+    public Collection<ReconstructionCollection> getNeuronLists()
+    {
+        return neuronLists;
     }
 }

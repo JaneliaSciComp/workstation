@@ -38,16 +38,15 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.geometry3d.Vantage;
-import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.ReconstructionCollection;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
+import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
+import org.openide.nodes.Node;
 import org.openide.nodes.PropertySupport;
 import org.openide.nodes.Sheet;
 import org.openide.util.Exceptions;
@@ -58,38 +57,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Presentation layer for neuron reconstructions in Horta.
- * Following tutorial at https://platform.netbeans.org/tutorials/74/nbm-nodesapi2.html
+ *
  * @author Christopher Bruns
  */
-public class HortaWorkspaceNode extends AbstractNode
+public class ReconstructionCollectionNode extends AbstractNode
 {
-    private final HortaWorkspace workspace;
+    private final ReconstructionCollection neuronList;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public HortaWorkspaceNode(HortaWorkspace workspace) {
-        super(Children.create(new HortaWorkspaceChildFactory(workspace), true), Lookups.singleton(workspace));
-        this.workspace = workspace;
-        updateDisplayName();
-        // The factory is already listening on behalf of the children, 
-        // so we just need to update the label, in case the neuron count has changed.
-        workspace.addObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg)
-            {
-                updateDisplayName();
-            }
-        });
+    public ReconstructionCollectionNode(ReconstructionCollection neuronList) {
+        super(Children.create(new NeuronListChildFactory(neuronList), true), null);
+        this.neuronList = neuronList;
+        setDisplayName(neuronList.getName());
     }
     
-    private void updateDisplayName() {
-        setDisplayName("Scene"); //  (" + workspace.getNeuronLists().size() + " neurons)");
-    }
-    
-    public Vantage getVantage() {
-        return workspace.getVantage();
-    }
-    
+    // Allow to drop SWC files on List, to add neurons
     @Override
     public PasteType getDropType(final Transferable transferable, int action, int index) {
         return new PasteType() {
@@ -104,8 +86,10 @@ public class HortaWorkspaceNode extends AbstractNode
                         if ( "SWC".equals(extension.toUpperCase()) ) {
                             // If no neuron lists are available, create a new one.
                             NeuronReconstruction neuron = new BasicNeuronReconstruction(f);
-                            workspace.addNeuron(neuron);
-                            workspace.notifyObservers();
+                            neuronList.add(neuron);
+                            neuronList.getMembershipChangeObservable().setChanged();
+                            // workspace.setChanged();
+                            neuronList.getMembershipChangeObservable().notifyObservers();
                             // neuron.getGeometryChangeObservable().setChanged();
                             // neuron.getGeometryChangeObservable().notifyObservers();
                         } else {
@@ -121,51 +105,53 @@ public class HortaWorkspaceNode extends AbstractNode
     
     @Override
     public Image getIcon(int type) {
-        return ImageUtilities.loadImage("org/janelia/horta/images/brain-icon2.png");
-    }
+        return ImageUtilities.loadImage("org/janelia/horta/images/neuron_group.png");
+    }    
     
     @Override
     public Image getOpenedIcon(int i) {
         return getIcon(i);
     }
     
-    public Integer getSize() {return workspace.getNeuronLists().size();}
-    
-    public Color getBackgroundColor() {
-        return workspace.getBackgroundColor();
-    }
-    
-    public void setBackgroundColor(Color color) {
-        workspace.setBackgroundColor(color);
-        workspace.notifyObservers();
-    }
+    public int getSize() {return neuronList.size();}
     
     @Override 
     protected Sheet createSheet() { 
         Sheet sheet = Sheet.createDefault(); 
         Sheet.Set set = Sheet.createPropertiesSet(); 
         try { 
-            // size - number of neurons
-            Property prop = new PropertySupport.Reflection(this, Integer.class, "getSize", null); 
-            prop.setName("size");
-            set.put(prop);
-            // color
-            prop = new PropertySupport.Reflection(this, Color.class, "getBackgroundColor", "setBackgroundColor");
-            prop.setName("color");
-            set.put(prop);
+            Property prop;
+            // size
+            prop = new PropertySupport.Reflection(this, int.class, "getSize", null); 
+            prop.setName("size"); 
+            set.put(prop); 
         } 
         catch (NoSuchMethodException ex) {
             ErrorManager.getDefault(); 
         } 
         sheet.put(set); 
         return sheet; 
-    } // - See more at: https://platform.netbeans.org/tutorials/nbm-nodesapi2.html#sthash.0xrEv8DO.dpuf
+    }
 
-    void triggerRepaint()
+    private static class NeuronListChildFactory extends ChildFactory<NeuronReconstruction>
     {
-        // logger.info("Workspace repaint triggered");
-        workspace.setChanged();
-        workspace.notifyObservers();
+        private final ReconstructionCollection neuronList;
+        
+        public NeuronListChildFactory(ReconstructionCollection neuronList) {
+            this.neuronList = neuronList;
+        }
+
+        @Override
+        protected boolean createKeys(List<NeuronReconstruction> toPopulate)
+        {
+            toPopulate.addAll(neuronList);
+            return true;
+        }
+
+        @Override
+        protected Node createNodeForKey(NeuronReconstruction key) {
+            return new NeuronReconstructionNode(key);
+        }
     }
     
 }

@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.ReconstructionCollection;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 
@@ -42,7 +43,7 @@ import org.openide.nodes.Node;
  *
  * @author Christopher Bruns
  */
-class HortaWorkspaceChildFactory extends ChildFactory<NeuronReconstruction>
+class HortaWorkspaceChildFactory extends ChildFactory<ReconstructionCollection>
 {
     private final HortaWorkspace workspace;
 
@@ -57,18 +58,18 @@ class HortaWorkspaceChildFactory extends ChildFactory<NeuronReconstruction>
     }
 
     @Override
-    protected boolean createKeys(List<NeuronReconstruction> toPopulate)
+    protected boolean createKeys(List<ReconstructionCollection> toPopulate)
     {
-        for (NeuronReconstruction neuron : workspace.getNeurons()) {
-            toPopulate.add(neuron);
+        for (ReconstructionCollection neuronList : workspace.getNeuronLists()) {
+            toPopulate.add(neuronList);
         }
         return true;
     }
     
     @Override
-    protected Node createNodeForKey(NeuronReconstruction key)
+    protected Node createNodeForKey(ReconstructionCollection key)
     {
-        return new NeuronReconstructionNode(key);
+        return new ReconstructionCollectionNode(key);
     }
     
 }
