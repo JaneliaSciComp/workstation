@@ -40,7 +40,6 @@ import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronSet;
 
 /**
- * TODO: - in future, set Observable interface on workspace subcomponents
  * @author Christopher Bruns
  */
 public class BasicHortaWorkspace implements HortaWorkspace

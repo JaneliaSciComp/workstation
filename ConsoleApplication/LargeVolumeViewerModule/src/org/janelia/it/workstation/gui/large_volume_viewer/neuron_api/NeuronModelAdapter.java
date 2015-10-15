@@ -38,7 +38,6 @@ import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 
 /**
  *
@@ -46,12 +45,10 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
  */
 public class NeuronModelAdapter implements NeuronModel
 {
-    private final Skeleton skeleton;
     private final Long neuronId;
     private final Collection<NeuronVertex> vertexes = new ArrayList<>();
     
-    public NeuronModelAdapter(Skeleton skeleton, Long neuronId) {
-        this.skeleton = skeleton;
+    public NeuronModelAdapter(Long neuronId) {
         this.neuronId = neuronId;
     }
 

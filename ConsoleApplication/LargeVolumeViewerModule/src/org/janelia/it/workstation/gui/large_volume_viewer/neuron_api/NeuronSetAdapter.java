@@ -36,10 +36,16 @@ import java.util.Map;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -53,6 +59,7 @@ implements NeuronSet
     private Skeleton m_skeleton = null;
     private final Map<Long, NeuronModel> neuronMap = new HashMap<>();
     private final LargeVolumeViewViewer lvvv;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public NeuronSetAdapter(LargeVolumeViewViewer lvvv)
     {
@@ -80,12 +87,32 @@ implements NeuronSet
         for (Anchor anchor : skeleton.getAnchors()) {
             Long neuronId = anchor.getNeuronID();
             if (! neuronMap.containsKey(neuronId)) {
-                NeuronModel neuron = new NeuronModelAdapter(skeleton, neuronId);
+                NeuronModel neuron = new NeuronModelAdapter(neuronId);
                 neuronMap.put(neuronId, neuron);
                 neurons.add(neuron);
             }
             NeuronModel neuron = neuronMap.get(neuronId);
             neuron.getVertexes().add(new NeuronVertexAdapter(anchor));
         }
+    }
+    
+    
+    // TODO use this class
+    private class AnnotationListener implements GlobalAnnotationListener {
+
+        @Override
+        public void workspaceLoaded(TmWorkspace workspace)
+        {
+            logger.info("Workspace loaded");
+        }
+
+        @Override
+        public void neuronSelected(TmNeuron neuron)
+        {}
+
+        @Override
+        public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style)
+        {}
+        
     }
 }
