@@ -71,7 +71,7 @@ extends MultipassRenderer
     {
         this.drawable = drawable;
         this.workspace = workspace;
-        setWorkspace(workspace);
+        workspace.addObserver(new NeuronListRefresher());
         
         backgroundRenderPass = new BackgroundRenderPass();
         add(backgroundRenderPass);
@@ -194,36 +194,6 @@ extends MultipassRenderer
         return volumeRenderPass.getViewSlabThickness(camera);
     }
     
-    private final void setWorkspace(final HortaWorkspace workspace) {
-        workspace.addObserver(new Observer() {
-            // Update is called when the set of neurons changes, or the background color changes
-            @Override
-            public void update(Observable o, Object arg)
-            {
-                // Update neuron models
-                Set<NeuronReconstruction> latestNeurons = new java.util.HashSet<>();
-                // 1 - enumerate latest neurons
-                for (ReconstructionCollection neuronList : workspace.getNeuronLists()) {
-                    for (NeuronReconstruction neuron : neuronList) {
-                        latestNeurons.add(neuron);
-                    }
-                }
-                // 2 - remove obsolete neurons
-                for (NeuronReconstruction neuron : currentNeuronActors.keySet()) {
-                    if (! latestNeurons.contains(neuron)) {
-                        removeNeuronReconstruction(neuron);
-                    }
-                }
-                // 3 - add new neurons
-                for (ReconstructionCollection neuronList : workspace.getNeuronLists()) {
-                    for (NeuronReconstruction neuron : neuronList) {
-                        addNeuronReconstruction(neuron);
-                    }
-                }
-            }
-        });
-    }
-    
     private void addNeuronReconstruction(NeuronReconstruction neuron) {
         if (currentNeuronActors.containsKey(neuron))
             return;
@@ -293,4 +263,33 @@ extends MultipassRenderer
         opaqueRenderPass.addActor(na);
     }
 
+    private class NeuronListRefresher implements Observer 
+    {
+
+        @Override
+        public void update(Observable o, Object arg)
+        {
+            // Update neuron models
+            Set<NeuronReconstruction> latestNeurons = new java.util.HashSet<>();
+            // 1 - enumerate latest neurons
+            for (ReconstructionCollection neuronList : workspace.getNeuronLists()) {
+                for (NeuronReconstruction neuron : neuronList) {
+                    latestNeurons.add(neuron);
+                }
+            }
+            // 2 - remove obsolete neurons
+            for (NeuronReconstruction neuron : currentNeuronActors.keySet()) {
+                if (! latestNeurons.contains(neuron)) {
+                    removeNeuronReconstruction(neuron);
+                }
+            }
+            // 3 - add new neurons
+            for (ReconstructionCollection neuronList : workspace.getNeuronLists()) {
+                for (NeuronReconstruction neuron : neuronList) {
+                    addNeuronReconstruction(neuron);
+                }
+            }
+        }
+    }
+    
 }
