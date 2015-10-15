@@ -66,6 +66,8 @@ public class SpheresActor extends BasicGL3Actor
         this.neuron = neuron;
         setColor(neuron.getColor());
         
+        updateGeometry();
+        
         neuron.getVisibilityChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
@@ -84,15 +86,19 @@ public class SpheresActor extends BasicGL3Actor
             @Override
             public void update(Observable o, Object arg)
             {
-                // TODO: more careful updating of nodes
-                meshGeometry.clear();
-                for (NeuronVertex neuronVertex : neuron.getVertexes()) {
-                    Vertex vertex = meshGeometry.addVertex(neuronVertex.getLocation());
-                    vertex.setAttribute("radius", (float)neuronVertex.getRadius());
-                }
-                meshGeometry.notifyObservers(); // especially the Material?
+                updateGeometry();
             }
         });
+    }
+    
+    private void updateGeometry() {
+        // TODO: more careful updating of nodes
+        meshGeometry.clear();
+        for (NeuronVertex neuronVertex : neuron.getVertexes()) {
+            Vertex vertex = meshGeometry.addVertex(neuronVertex.getLocation());
+            vertex.setAttribute("radius", (float)neuronVertex.getRadius());
+        }
+        meshGeometry.notifyObservers(); // especially the Material?
     }
     
     @Override

@@ -143,6 +143,9 @@ public class NeuriteActor extends BasicGL3Actor {
         this.addChild(meshActor);
 
         this.neuriteModel = null;
+        
+        updateGeometry();
+        
         neuron.getVisibilityChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
@@ -161,21 +164,25 @@ public class NeuriteActor extends BasicGL3Actor {
             @Override
             public void update(Observable o, Object arg)
             {
-                // System.out.println("Neurite actor update");
-                if (! meshGeometry.isEmpty()) {
-                    meshGeometry.clear();
-                }
-                
-                if (! neuron.getVertexes().isEmpty()) {
-                    for (NeuronVertex neuronVertex : neuron.getVertexes()) {
-                        Vertex vertex = meshGeometry.addVertex(neuronVertex.getLocation());
-                        vertex.setAttribute("radius", 10.0f);
-                        // System.out.println("Neurite actor anchor location "+anchor.getLocationUm()+"; radius = "+anchor.getRadiusUm()); // works
-                    }
-                }
-                meshGeometry.notifyObservers();
+                updateGeometry();
             }
         });
+    }
+    
+    private void updateGeometry() {
+        // System.out.println("Neurite actor update");
+        if (! meshGeometry.isEmpty()) {
+            meshGeometry.clear();
+        }
+
+        if (! neuron.getVertexes().isEmpty()) {
+            for (NeuronVertex neuronVertex : neuron.getVertexes()) {
+                Vertex vertex = meshGeometry.addVertex(neuronVertex.getLocation());
+                vertex.setAttribute("radius", 10.0f);
+                // System.out.println("Neurite actor anchor location "+anchor.getLocationUm()+"; radius = "+anchor.getRadiusUm()); // works
+            }
+        }
+        meshGeometry.notifyObservers();        
     }
     
     @Override

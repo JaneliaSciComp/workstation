@@ -669,8 +669,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 workspace.addNeuron(neuron);
                                 workspace.setChanged();
                                 workspace.notifyObservers();
-                                neuron.getGeometryChangeObservable().setChanged();
-                                neuron.getGeometryChangeObservable().notifyObservers();
                                 logger.info("dragged SWC file loaded!");
                                 break;
                             case "YML":
