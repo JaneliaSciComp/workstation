@@ -31,8 +31,8 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
 import java.util.Collection;
-import java.util.Iterator;
-import org.janelia.console.viewerapi.ObservableInterface;
+import java.util.HashSet;
+import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
@@ -42,101 +42,15 @@ import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVol
  * @author Christopher Bruns
  Expose NeuronSet interface, using in-memory data resident in LVV
  */
-public class ReconstructionCollectionAdapter implements NeuronSet
+public class ReconstructionCollectionAdapter
+extends BasicNeuronSet
+implements NeuronSet
 {
+    // TODO - replace with data structure that actually represents LVV neuron models
+    private Collection<NeuronModel> neurons = new HashSet<>();
 
     public ReconstructionCollectionAdapter(LargeVolumeViewerTopComponent tc)
     {
+        super("LVV Neurons", new HashSet<NeuronModel>());
     }
-
-    @Override
-    public int size()
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean isEmpty()
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean contains(Object o)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Iterator<NeuronModel> iterator()
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object[] toArray()
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public <T> T[] toArray(T[] a)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean add(NeuronModel e)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean remove(Object o)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean containsAll(Collection<?> c)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean addAll(Collection<? extends NeuronModel> c)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean removeAll(Collection<?> c)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean retainAll(Collection<?> c)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void clear()
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public ObservableInterface getMembershipChangeObservable()
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public String getName()
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
 }

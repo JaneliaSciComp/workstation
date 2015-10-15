@@ -30,6 +30,8 @@
 
 package org.janelia.horta.nodes;
 
+import org.janelia.console.viewerapi.model.BasicNeuronSet;
+import java.util.ArrayList;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.horta.modelapi.HortaWorkspace;
@@ -51,7 +53,7 @@ public class WorkspaceUtil
         boolean bWorkspaceChanged = false;
         boolean bNeuronSetChanged = false;
         if (workspace.getNeuronSets().isEmpty()) {
-            NeuronSet localNeurons = new BasicNeuronSet("Temporary Neurons");
+            NeuronSet localNeurons = new BasicNeuronSet("Temporary Neurons", new ArrayList<NeuronModel>());
             workspace.getNeuronSets().add(localNeurons);
             workspace.setChanged();
             bWorkspaceChanged = true;

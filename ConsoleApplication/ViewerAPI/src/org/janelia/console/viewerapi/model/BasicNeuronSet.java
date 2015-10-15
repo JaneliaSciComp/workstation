@@ -28,7 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.nodes;
+package org.janelia.console.viewerapi.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,10 +49,11 @@ implements NeuronSet
 {
     private final String name;
     private final ComposableObservable membershipChangeObservable = new ComposableObservable();
-    private final Collection<NeuronModel> neurons = new ArrayList<>();
+    private final Collection<NeuronModel> neurons;
     
-    public BasicNeuronSet(String name) {
+    public BasicNeuronSet(String name, Collection<NeuronModel> contents) {
         this.name = name;
+        neurons = contents;
     }
 
     @Override

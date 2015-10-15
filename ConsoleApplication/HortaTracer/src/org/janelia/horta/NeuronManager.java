@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.horta.modelapi.HortaWorkspace;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -50,11 +51,12 @@ public class NeuronManager implements LookupListener
     // Use Lookup to access neuron models from LVV
     // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
     private Lookup.Result<NeuronSet> neuronsLookupResult = null;
-    private final Set<NeuronSet> currentNeuronLists = new HashSet<>();
+//     private final Set<NeuronSet> currentNeuronLists = new HashSet<>();
+    private final HortaWorkspace workspace;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public NeuronManager() {
-        // TODO - link to workspace...
+    public NeuronManager(HortaWorkspace workspace) {
+        this.workspace = workspace;
     }
     
     // When Horta TopComponent opens
@@ -80,13 +82,19 @@ public class NeuronManager implements LookupListener
     private void checkNeuronLookup() {
         Collection<? extends NeuronSet> allNeuronLists = neuronsLookupResult.allInstances();
         if (! allNeuronLists.isEmpty()) {
+            boolean bWorkspaceChanged = false;
             logger.info("Neuron Lookup found!");
             for (NeuronSet neuronList : allNeuronLists) {
-                if (! currentNeuronLists.contains(neuronList)) {
-                    logger.info("Found new neuron list!");
-                    currentNeuronLists.add(neuronList);
+                boolean bListAdded = workspace.getNeuronSets().add(neuronList);
+                if (bListAdded) {
+                    logger.info("Added new neuron list!");
+                    workspace.setChanged();
+                    bWorkspaceChanged = true;
                     // TODO - process the new neuron list
                 }
+            }
+            if (bWorkspaceChanged) {
+                workspace.notifyObservers();
             }
         }
         else {

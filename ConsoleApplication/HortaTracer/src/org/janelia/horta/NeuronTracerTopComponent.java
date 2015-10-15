@@ -193,7 +193,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private NeuronTraceLoader loader;
     
     private boolean doCubifyVoxels = false;
-    private NeuronManager neuronManager = new NeuronManager();
+    private final NeuronManager neuronManager;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public static NeuronTracerTopComponent findThisComponent() {
@@ -211,7 +211,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         setupDragAndDropYml();
 
         // Insert a specialized SceneWindow into the component
-        initialize3DViewer();
+        initialize3DViewer(); // initializes workspace
+        neuronManager = new NeuronManager(workspace);
 
         // Change default rotation to Y-down, like large-volume viewer
         sceneWindow.getVantage().setDefaultRotation(new Rotation().setFromAxisAngle(
