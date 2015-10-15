@@ -31,8 +31,8 @@
 package org.janelia.horta.nodes;
 
 import java.awt.Color;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Observer;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.geometry3d.Vantage;
@@ -48,7 +48,7 @@ public class BasicHortaWorkspace implements HortaWorkspace
     private final Vantage vantage;
     private final ComposableObservable changeObservable = new ComposableObservable();
     private Color backgroundColor = new Color(0.1f, 0.1f, 0.1f, 1f);
-    private final Collection<NeuronSet> neuronLists = new ArrayList<>();
+    private final Collection<NeuronSet> neuronLists = new HashSet<>();
 
     public BasicHortaWorkspace(Vantage vantage) {
         this.vantage = vantage;

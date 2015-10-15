@@ -30,27 +30,79 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
-import java.util.Collection;
-import java.util.HashSet;
-import org.janelia.console.viewerapi.model.BasicNeuronSet;
-import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import java.util.Objects;
+import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 
 /**
  *
  * @author Christopher Bruns
- Expose NeuronSet interface, using in-memory data resident in LVV
  */
-public class ReconstructionCollectionAdapter
-extends BasicNeuronSet
-implements NeuronSet
+public class NeuronVertexAdapter implements NeuronVertex
 {
-    // TODO - replace with data structure that actually represents LVV neuron models
-    private Collection<NeuronModel> neurons = new HashSet<>();
+    private final Anchor anchor;
+    private final Long anchorGuid;
 
-    public ReconstructionCollectionAdapter(LargeVolumeViewerTopComponent tc)
-    {
-        super("LVV Neurons", new HashSet<NeuronModel>());
+    public NeuronVertexAdapter(Anchor anchor) {
+        this.anchor = anchor;
+        this.anchorGuid = anchor.getGuid();
     }
+    
+    @Override
+    public float[] getLocation()
+    {
+        return new float[] {
+                (float) anchor.getLocation().getX(), 
+                (float) anchor.getLocation().getY(), 
+                (float) anchor.getLocation().getZ()};
+    }
+
+    @Override
+    public void setLocation(float x, float y, float z)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean hasRadius()
+    {
+        return false; // TODO: LVV radius field is present, but has no meaning
+    }
+
+    @Override
+    public float getRadius()
+    {
+        return (float)anchor.getRadius();
+    }
+
+    @Override
+    public void setRadius(float radius)
+    {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = 7;
+        hash = 61 * hash + Objects.hashCode(this.anchorGuid);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final NeuronVertexAdapter other = (NeuronVertexAdapter) obj;
+        if (!Objects.equals(this.anchorGuid, other.anchorGuid)) {
+            return false;
+        }
+        return true;
+    }
+
 }

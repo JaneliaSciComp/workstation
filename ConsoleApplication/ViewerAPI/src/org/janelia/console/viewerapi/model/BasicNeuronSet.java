@@ -30,13 +30,10 @@
 
 package org.janelia.console.viewerapi.model;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronSet;
 
 /**
  *
@@ -49,7 +46,7 @@ implements NeuronSet
 {
     private final String name;
     private final ComposableObservable membershipChangeObservable = new ComposableObservable();
-    private final Collection<NeuronModel> neurons;
+    protected final Collection<NeuronModel> neurons;
     
     public BasicNeuronSet(String name, Collection<NeuronModel> contents) {
         this.name = name;

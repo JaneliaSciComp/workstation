@@ -133,7 +133,7 @@ extends MultipassRenderer
             }
         });
         
-        setRelativeSlabThickness(2.0f);
+        setRelativeSlabThickness(0.5f);
     }
     
     public void addVolumeActor(GL3Actor boxMesh) {

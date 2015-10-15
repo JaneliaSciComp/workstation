@@ -43,7 +43,7 @@ public interface NeuronVertex
     // void setParentVertex(NeuronVertex parent);
     
     boolean hasRadius();
-    double getRadius();
-    void setRadius(double radius);
+    float getRadius();
+    void setRadius(float radius);
     
 }

@@ -40,7 +40,7 @@ import org.janelia.horta.modelapi.SwcVertex;
 public class BasicSwcVertex implements SwcVertex
 {
     private final float[] location = {0,0,0};
-    private double radius = 0.0; // micrometers
+    private float radius = 0.0f; // micrometers
     private int label = 1;
     private int typeIndex = 0;
     private SwcVertex parent = null;
@@ -72,13 +72,13 @@ public class BasicSwcVertex implements SwcVertex
     }
 
     @Override
-    public double getRadius()
+    public float getRadius()
     {
         return radius;
     }
 
     @Override
-    public void setRadius(double radius)
+    public void setRadius(float radius)
     {
         this.radius = radius;
     }

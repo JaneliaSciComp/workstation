@@ -11,7 +11,9 @@ import javax.swing.JPopupMenu;
 import javax.swing.ToolTipManager;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
-import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.ReconstructionCollectionAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -132,10 +134,10 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         // TODO: separate data source from current view details
         LargeVolumeViewerLocationProvider locProvider = 
                 new LargeVolumeViewerLocationProvider(state.getLvvv());
-       
         // Use Lookup to communicate neuron reconstructions.
         // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
-        NeuronSet neurons = new ReconstructionCollectionAdapter(this);
+        LargeVolumeViewViewer lvvv = state.getLvvv();
+        NeuronSet neurons = new NeuronSetAdapter(lvvv);
         
         associateLookup(Lookups.fixed(
             locProvider, 
