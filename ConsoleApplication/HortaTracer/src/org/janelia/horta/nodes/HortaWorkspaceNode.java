@@ -44,7 +44,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
-import org.janelia.console.viewerapi.model.ReconstructionCollection;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;

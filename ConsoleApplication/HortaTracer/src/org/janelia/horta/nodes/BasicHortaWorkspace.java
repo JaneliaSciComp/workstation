@@ -38,7 +38,7 @@ import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.horta.modelapi.HortaWorkspace;
-import org.janelia.console.viewerapi.model.ReconstructionCollection;
+import org.janelia.console.viewerapi.model.NeuronSet;
 
 /**
  * TODO: - in future, set Observable interface on workspace subcomponents
@@ -49,7 +49,7 @@ public class BasicHortaWorkspace implements HortaWorkspace
     private final Vantage vantage;
     private final ComposableObservable changeObservable = new ComposableObservable();
     private Color backgroundColor = new Color(0.1f, 0.1f, 0.1f, 1f);
-    private final Collection<ReconstructionCollection> neuronLists = new ArrayList<>();
+    private final Collection<NeuronSet> neuronLists = new ArrayList<>();
 
     public BasicHortaWorkspace(Vantage vantage) {
         this.vantage = vantage;
@@ -59,12 +59,12 @@ public class BasicHortaWorkspace implements HortaWorkspace
     // If no list exist yet, a new one is created, called "Temporary Neurons".
     public void addNeuron(NeuronReconstruction neuron) {
         if (getNeuronLists().isEmpty()) {
-            ReconstructionCollection localNeurons = new BasicReconstructionCollection("Temporary Neurons");
+            NeuronSet localNeurons = new BasicReconstructionCollection("Temporary Neurons");
             getNeuronLists().add(localNeurons);
             setChanged();
         }
         // Drop neuron into first list of neurons, when dropping on whole workspace
-        ReconstructionCollection neuronList = getNeuronLists().iterator().next();
+        NeuronSet neuronList = getNeuronLists().iterator().next();
         neuronList.add(neuron);
         neuronList.getMembershipChangeObservable().setChanged();
     }
@@ -120,7 +120,7 @@ public class BasicHortaWorkspace implements HortaWorkspace
     }
 
     @Override
-    public Collection<ReconstructionCollection> getNeuronLists()
+    public Collection<NeuronSet> getNeuronLists()
     {
         return neuronLists;
     }

@@ -55,7 +55,7 @@ import org.janelia.gltools.RenderTarget;
 import org.janelia.horta.actors.SwcActor;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
-import org.janelia.console.viewerapi.model.ReconstructionCollection;
+import org.janelia.console.viewerapi.model.NeuronSet;
 
 /**
  *
@@ -69,7 +69,7 @@ extends MultipassRenderer
     private final OpaqueRenderPass opaqueRenderPass;
     private final VolumeRenderPass volumeRenderPass;
     private final Map<NeuronReconstruction, GL3Actor> currentNeuronActors = new HashMap<>();
-    private final Set<ReconstructionCollection> currentNeuronLists = new HashSet<>();
+    private final Set<NeuronSet> currentNeuronLists = new HashSet<>();
     private final HortaWorkspace workspace;
     private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
     private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
@@ -287,9 +287,9 @@ extends MultipassRenderer
         {
             // Update neuron models
             Set<NeuronReconstruction> latestNeurons = new java.util.HashSet<>();
-            Set<ReconstructionCollection> latestNeuronLists = new java.util.HashSet<>();
+            Set<NeuronSet> latestNeuronLists = new java.util.HashSet<>();
             // 1 - enumerate latest neurons
-            for (ReconstructionCollection neuronList : workspace.getNeuronLists()) {
+            for (NeuronSet neuronList : workspace.getNeuronLists()) {
                 latestNeuronLists.add(neuronList);
                 for (NeuronReconstruction neuron : neuronList) {
                     latestNeurons.add(neuron);
@@ -305,13 +305,13 @@ extends MultipassRenderer
                     ni.remove();
             }
             // Remove obsolete lists too
-            Iterator<ReconstructionCollection> nli = currentNeuronLists.iterator();
+            Iterator<NeuronSet> nli = currentNeuronLists.iterator();
             while (nli.hasNext()) {
                 if (! latestNeuronLists.contains(nli.next()))
                     nli.remove();
             }
             // 3 - add new neurons
-            for (ReconstructionCollection neuronList : workspace.getNeuronLists()) {
+            for (NeuronSet neuronList : workspace.getNeuronLists()) {
                 currentNeuronLists.add(neuronList);
                 for (NeuronReconstruction neuron : neuronList) {
                     addNeuronReconstruction(neuron);

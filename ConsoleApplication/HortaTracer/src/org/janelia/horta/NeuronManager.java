@@ -33,7 +33,7 @@ package org.janelia.horta;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import org.janelia.console.viewerapi.model.ReconstructionCollection;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -49,8 +49,8 @@ public class NeuronManager implements LookupListener
 {
     // Use Lookup to access neuron models from LVV
     // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
-    private Lookup.Result<ReconstructionCollection> neuronsLookupResult = null;
-    private final Set<ReconstructionCollection> currentNeuronLists = new HashSet<>();
+    private Lookup.Result<NeuronSet> neuronsLookupResult = null;
+    private final Set<NeuronSet> currentNeuronLists = new HashSet<>();
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public NeuronManager() {
@@ -59,7 +59,7 @@ public class NeuronManager implements LookupListener
     
     // When Horta TopComponent opens
     public void onOpened() {
-        neuronsLookupResult = Utilities.actionsGlobalContext().lookupResult(ReconstructionCollection.class);
+        neuronsLookupResult = Utilities.actionsGlobalContext().lookupResult(NeuronSet.class);
         neuronsLookupResult.addLookupListener(this);
         checkNeuronLookup();
     }
@@ -69,19 +69,19 @@ public class NeuronManager implements LookupListener
         neuronsLookupResult.removeLookupListener(this);
     }
     
-    // When the contents of the ReconstructionCollection Lookup changes
+    // When the contents of the NeuronSet Lookup changes
     @Override
     public void resultChanged(LookupEvent le)
     {
         checkNeuronLookup();
     }
     
-    // Respond to changes in ReconstructionCollection Lookup
+    // Respond to changes in NeuronSet Lookup
     private void checkNeuronLookup() {
-        Collection<? extends ReconstructionCollection> allNeuronLists = neuronsLookupResult.allInstances();
+        Collection<? extends NeuronSet> allNeuronLists = neuronsLookupResult.allInstances();
         if (! allNeuronLists.isEmpty()) {
             logger.info("Neuron Lookup found!");
-            for (ReconstructionCollection neuronList : allNeuronLists) {
+            for (NeuronSet neuronList : allNeuronLists) {
                 if (! currentNeuronLists.contains(neuronList)) {
                     logger.info("Found new neuron list!");
                     currentNeuronLists.add(neuronList);

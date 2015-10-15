@@ -34,15 +34,15 @@ import java.util.Collection;
 import java.util.Iterator;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
-import org.janelia.console.viewerapi.model.ReconstructionCollection;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 
 /**
  *
  * @author Christopher Bruns
- * Expose ReconstructionCollection interface, using in-memory data resident in LVV
+ Expose NeuronSet interface, using in-memory data resident in LVV
  */
-public class ReconstructionCollectionAdapter implements ReconstructionCollection
+public class ReconstructionCollectionAdapter implements NeuronSet
 {
 
     public ReconstructionCollectionAdapter(LargeVolumeViewerTopComponent tc)

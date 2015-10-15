@@ -37,7 +37,7 @@ import org.janelia.console.viewerapi.ObservableInterface;
  *
  * @author Christopher Bruns
  */
-public interface ReconstructionCollection extends Collection<NeuronReconstruction>
+public interface NeuronSet extends Collection<NeuronReconstruction>
 {
     // getMembershipChangeObservable() signals when whole neurons are added or removed from the collection
     ObservableInterface getMembershipChangeObservable();

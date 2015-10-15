@@ -36,7 +36,7 @@ import java.util.Iterator;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
-import org.janelia.console.viewerapi.model.ReconstructionCollection;
+import org.janelia.console.viewerapi.model.NeuronSet;
 
 /**
  *
@@ -45,7 +45,7 @@ import org.janelia.console.viewerapi.model.ReconstructionCollection;
 public class BasicReconstructionCollection 
 // Don't extend a built in collection, because we need hash() and equals() to respect object identity.
 // extends ArrayList<NeuronReconstruction>
-implements ReconstructionCollection
+implements NeuronSet
 {
     private final String name;
     private final ComposableObservable membershipChangeObservable = new ComposableObservable();

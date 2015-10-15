@@ -41,7 +41,7 @@ import java.util.List;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.console.viewerapi.model.ReconstructionCollection;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
@@ -62,10 +62,10 @@ import org.slf4j.LoggerFactory;
  */
 public class ReconstructionCollectionNode extends AbstractNode
 {
-    private final ReconstructionCollection neuronList;
+    private final NeuronSet neuronList;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public ReconstructionCollectionNode(ReconstructionCollection neuronList) {
+    public ReconstructionCollectionNode(NeuronSet neuronList) {
         super(Children.create(new NeuronListChildFactory(neuronList), true), null);
         this.neuronList = neuronList;
         setDisplayName(neuronList.getName());
@@ -135,9 +135,9 @@ public class ReconstructionCollectionNode extends AbstractNode
 
     private static class NeuronListChildFactory extends ChildFactory<NeuronReconstruction>
     {
-        private final ReconstructionCollection neuronList;
+        private final NeuronSet neuronList;
         
-        public NeuronListChildFactory(ReconstructionCollection neuronList) {
+        public NeuronListChildFactory(NeuronSet neuronList) {
             this.neuronList = neuronList;
         }
 
