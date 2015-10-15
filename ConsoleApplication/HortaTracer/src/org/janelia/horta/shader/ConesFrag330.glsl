@@ -90,7 +90,7 @@ void main() {
     bool viewAlongCone = bViewAlongCone > 0.5;
 
     if (viewAlongCone) {
-        s = back_surface; // second surface is the seen one in this case
+        // s = back_surface; // second surface is the seen one in this case
     }
 
     // Truncate cone geometry to prescribed ends
