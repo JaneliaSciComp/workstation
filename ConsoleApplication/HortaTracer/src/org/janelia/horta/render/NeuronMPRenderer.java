@@ -71,14 +71,14 @@ extends MultipassRenderer
     private final Map<NeuronReconstruction, GL3Actor> currentNeuronActors = new HashMap<>();
     private final Set<ReconstructionCollection> currentNeuronLists = new HashSet<>();
     private final HortaWorkspace workspace;
-    private final Observer neuronListRefresher; // helps with signalling
+    private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
+    private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
 
     public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel, HortaWorkspace workspace) 
     {
         this.drawable = drawable;
         
         this.workspace = workspace;
-        neuronListRefresher = new NeuronListRefresher();
         workspace.addObserver(neuronListRefresher);
         
         backgroundRenderPass = new BackgroundRenderPass();
@@ -210,13 +210,7 @@ extends MultipassRenderer
         na.setVisible(true);
         currentNeuronActors.put(neuron, na);
         addOpaqueActor(na);
-        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg)
-            {
-                setIntensityBufferDirty(); // Now we can see behind the neuron, so repaint
-            }
-        });
+        neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
     
     private void removeNeuronReconstruction(NeuronReconstruction neuron) {
@@ -224,7 +218,8 @@ extends MultipassRenderer
             return;
         GL3Actor actor = currentNeuronActors.get(neuron);
         currentNeuronActors.remove(neuron);
-        removeOpaqueActor(actor);        
+        removeOpaqueActor(actor);
+        neuron.getVisibilityChangeObservable().deleteObserver(volumeLayerExpirer);
     }
     
     private int valueForScreenXy(Point2D xy, int glAttachment, int channel) {
@@ -271,6 +266,19 @@ extends MultipassRenderer
         opaqueRenderPass.addActor(na);
     }
 
+    
+    private class VolumeLayerExpirer implements Observer
+    {
+
+        @Override
+        public void update(Observable o, Object arg)
+        {
+            setIntensityBufferDirty(); // Now we can see behind the neuron, so repaint
+        }
+        
+    }
+    
+    
     private class NeuronListRefresher implements Observer 
     {
 
@@ -304,6 +312,7 @@ extends MultipassRenderer
             }
             // 3 - add new neurons
             for (ReconstructionCollection neuronList : workspace.getNeuronLists()) {
+                currentNeuronLists.add(neuronList);
                 for (NeuronReconstruction neuron : neuronList) {
                     addNeuronReconstruction(neuron);
                 }
