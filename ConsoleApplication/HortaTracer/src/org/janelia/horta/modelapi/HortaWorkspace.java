@@ -33,7 +33,6 @@ package org.janelia.horta.modelapi;
 import java.awt.Color;
 import java.util.Collection;
 import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.geometry3d.Vantage;
 

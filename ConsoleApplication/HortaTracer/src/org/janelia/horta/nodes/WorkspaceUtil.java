@@ -48,16 +48,20 @@ public class WorkspaceUtil
     
     // Convenience function for use after dragging a lone SWC onto the viewer.
     public void addNeuronAndNotify(NeuronModel neuron) {
+        boolean bWorkspaceChanged = false;
+        boolean bNeuronSetChanged = false;
         if (workspace.getNeuronSets().isEmpty()) {
             NeuronSet localNeurons = new BasicNeuronSet("Temporary Neurons");
             workspace.getNeuronSets().add(localNeurons);
             workspace.setChanged();
+            bWorkspaceChanged = true;
         }
         // Drop neuron into first list of neurons, when dropping on whole workspace
         NeuronSet neuronList = workspace.getNeuronSets().iterator().next();
-        neuronList.add(neuron);
-        neuronList.getMembershipChangeObservable().setChanged();
-        workspace.setChanged();
-        workspace.notifyObservers();
+        bNeuronSetChanged = neuronList.add(neuron);
+        if (bWorkspaceChanged)
+            workspace.notifyObservers();        
+        if (bNeuronSetChanged)
+            neuronList.getMembershipChangeObservable().notifyObservers();
     }
 }

@@ -32,8 +32,6 @@ package org.janelia.horta.render;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -307,12 +305,17 @@ extends MultipassRenderer
             // Remove obsolete lists too
             Iterator<NeuronSet> nli = currentNeuronLists.iterator();
             while (nli.hasNext()) {
-                if (! latestNeuronLists.contains(nli.next()))
+                NeuronSet set = nli.next();
+                if (! latestNeuronLists.contains(set)) {
                     nli.remove();
+                    set.getMembershipChangeObservable().deleteObserver(neuronListRefresher);
+                }
             }
             // 3 - add new neurons
             for (NeuronSet neuronList : workspace.getNeuronSets()) {
-                currentNeuronLists.add(neuronList);
+                if (currentNeuronLists.add(neuronList)) {
+                    neuronList.getMembershipChangeObservable().addObserver(neuronListRefresher);
+                }
                 for (NeuronModel neuron : neuronList) {
                     addNeuronReconstruction(neuron);
                 }

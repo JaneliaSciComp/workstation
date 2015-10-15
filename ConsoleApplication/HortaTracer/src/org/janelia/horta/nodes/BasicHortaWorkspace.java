@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Observer;
 import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronSet;
