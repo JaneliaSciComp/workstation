@@ -31,6 +31,8 @@
 package org.janelia.horta.nodes;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.NeuronReconstruction;
@@ -41,11 +43,13 @@ import org.janelia.console.viewerapi.model.ReconstructionCollection;
  * @author Christopher Bruns
  */
 public class BasicReconstructionCollection 
-extends ArrayList<NeuronReconstruction>
+// Don't extend a built in collection, because we need hash() and equals() to respect object identity.
+// extends ArrayList<NeuronReconstruction>
 implements ReconstructionCollection
 {
     private final String name;
-    private final ComposableObservable changeObservable = new ComposableObservable();
+    private final ComposableObservable membershipChangeObservable = new ComposableObservable();
+    private final Collection<NeuronReconstruction> neurons = new ArrayList<>();
     
     public BasicReconstructionCollection(String name) {
         this.name = name;
@@ -54,13 +58,109 @@ implements ReconstructionCollection
     @Override
     public ObservableInterface getMembershipChangeObservable()
     {
-        return changeObservable;
+        return membershipChangeObservable;
     }
 
     @Override
     public String getName()
     {
         return name;
+    }
+
+    @Override
+    public int size()
+    {
+        return neurons.size();
+    }
+
+    @Override
+    public boolean isEmpty()
+    {
+        return neurons.isEmpty();
+    }
+
+    @Override
+    public boolean contains(Object o)
+    {
+        return neurons.contains(o);
+    }
+
+    @Override
+    public Iterator<NeuronReconstruction> iterator()
+    {
+        return neurons.iterator();
+    }
+
+    @Override
+    public Object[] toArray()
+    {
+        return neurons.toArray();
+    }
+
+    @Override
+    public <T> T[] toArray(T[] a)
+    {
+        return neurons.toArray(a);
+    }
+
+    @Override
+    public boolean add(NeuronReconstruction e)
+    {
+        boolean result = neurons.add(e);
+        if (result)
+            membershipChangeObservable.setChanged();
+        return result;
+    }
+
+    @Override
+    public boolean remove(Object o)
+    {
+        boolean result = neurons.remove(o);
+        if (result)
+            membershipChangeObservable.setChanged();
+        return result;
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> c)
+    {
+        return neurons.containsAll(c);
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends NeuronReconstruction> c)
+    {
+        boolean result = neurons.addAll(c);
+        if (result)
+            membershipChangeObservable.setChanged();
+        return result;
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c)
+    {
+        boolean result = neurons.removeAll(c);
+        if (result)
+            membershipChangeObservable.setChanged();
+        return result;
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c)
+    {
+        boolean result = neurons.retainAll(c);
+        if (result)
+            membershipChangeObservable.setChanged();
+        return result;
+    }
+
+    @Override
+    public void clear()
+    {
+        boolean result = neurons.size() > 0;
+        neurons.clear();
+        if (result)
+            membershipChangeObservable.setChanged();
     }
     
 }
