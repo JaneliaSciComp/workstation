@@ -257,7 +257,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         neuronMPRenderer = setUpActors();
         
         setBackgroundColor( workspace.getBackgroundColor() ); // call this AFTER setUpActors
-        neuronMPRenderer.setWorkspace(workspace); // set up signals in renderer
+        // neuronMPRenderer.setWorkspace(workspace); // set up signals in renderer
         workspace.addObserver(new Observer() {
             // Update is called when the set of neurons changes, or the background color changes
             @Override
@@ -307,7 +307,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     {
         
         // TODO - refactor all stages to use multipass renderer, like this
-        NeuronMPRenderer neuronMPRenderer0 = new NeuronMPRenderer(sceneWindow.getGLAutoDrawable(), brightnessModel);
+        NeuronMPRenderer neuronMPRenderer0 = new NeuronMPRenderer(sceneWindow.getGLAutoDrawable(), brightnessModel, workspace);
         List<MultipassRenderer> renderers = sceneWindow.getRenderer().getMultipassRenderers();
         renderers.clear();
         renderers.add(neuronMPRenderer0);

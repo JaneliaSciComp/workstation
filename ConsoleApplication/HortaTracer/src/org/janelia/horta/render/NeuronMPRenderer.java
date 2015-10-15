@@ -65,10 +65,13 @@ extends MultipassRenderer
     private final OpaqueRenderPass opaqueRenderPass;
     private final VolumeRenderPass volumeRenderPass;
     private Map<NeuronReconstruction, GL3Actor> currentNeuronActors = new HashMap<>();
+    private final HortaWorkspace workspace;
 
-    public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel) 
+    public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel, HortaWorkspace workspace) 
     {
         this.drawable = drawable;
+        this.workspace = workspace;
+        setWorkspace(workspace);
         
         backgroundRenderPass = new BackgroundRenderPass();
         add(backgroundRenderPass);
@@ -124,7 +127,7 @@ extends MultipassRenderer
             }
         });
         
-        setRelativeSlabThickness(0.5f);
+        setRelativeSlabThickness(2.0f);
     }
     
     public void addVolumeActor(GL3Actor boxMesh) {
@@ -191,7 +194,7 @@ extends MultipassRenderer
         return volumeRenderPass.getViewSlabThickness(camera);
     }
     
-    public void setWorkspace(final HortaWorkspace workspace) {
+    private final void setWorkspace(final HortaWorkspace workspace) {
         workspace.addObserver(new Observer() {
             // Update is called when the set of neurons changes, or the background color changes
             @Override
