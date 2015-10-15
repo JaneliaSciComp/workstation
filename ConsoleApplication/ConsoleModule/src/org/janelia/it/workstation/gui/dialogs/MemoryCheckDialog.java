@@ -10,6 +10,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 
 /**
  * This dialog maker, informs the user when they do not have enough memory
@@ -33,14 +34,21 @@ public class MemoryCheckDialog {
         boolean sufficient = true;
         // Must warn about memory use.
         try {
-            // Find the largest memory estimate, and use  for this purpose.
-            MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
-            long memoryGigs = (memoryBean.getHeapMemoryUsage().getMax() +
-                               memoryBean.getNonHeapMemoryUsage().getMax()) / GIGA;
-            long tempGigs = Runtime.getRuntime().maxMemory() / GIGA;
-            if (tempGigs > memoryGigs) {
-                memoryGigs = tempGigs;
+            int userSetMemoryGigs = SystemInfo.getMemoryAllocation();
+            long memoryGigs = userSetMemoryGigs;
+            // Prefer the user setting over all else.  If not found,
+            // as in development, look at maximum of all other possibilities.
+            if (memoryGigs < 0) {
+                // Find the largest memory estimate, and use  for this purpose.
+                MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+                memoryGigs = (memoryBean.getHeapMemoryUsage().getMax()
+                        + memoryBean.getNonHeapMemoryUsage().getMax()) / GIGA;
+                long tempGigs = Runtime.getRuntime().maxMemory() / GIGA;
+                if (tempGigs > memoryGigs) {
+                    memoryGigs = tempGigs;
+                }
             }
+
             if (memoryGigs < requiredSize) {
                 JOptionPane.showMessageDialog(
                         parent,
