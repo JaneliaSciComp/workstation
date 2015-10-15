@@ -33,7 +33,7 @@ package org.janelia.horta.modelapi;
 import java.awt.Color;
 import java.util.Collection;
 import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.geometry3d.Vantage;
 
@@ -45,7 +45,7 @@ public interface HortaWorkspace extends ObservableInterface
 {
     Vantage getVantage();
     Collection<NeuronSet> getNeuronLists();
-    public void addNeuron(NeuronReconstruction neuron);
+    public void addNeuron(NeuronModel neuron);
     Color getBackgroundColor();
     void setBackgroundColor(Color color);
 }

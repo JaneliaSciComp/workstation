@@ -34,7 +34,7 @@ import org.janelia.horta.modelapi.HortaWorkspace;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -69,7 +69,7 @@ class HortaWorkspaceChildFactory extends ChildFactory<NeuronSet>
     @Override
     protected Node createNodeForKey(NeuronSet key)
     {
-        return new ReconstructionCollectionNode(key);
+        return new NeuronSetNode(key);
     }
     
 }

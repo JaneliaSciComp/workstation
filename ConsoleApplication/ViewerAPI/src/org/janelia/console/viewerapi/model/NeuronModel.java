@@ -28,37 +28,36 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.nodes;
+package org.janelia.console.viewerapi.model;
 
-import java.util.List;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
-import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.openide.nodes.ChildFactory;
-import org.openide.nodes.Node;
+import java.awt.Color;
+import java.util.Collection;
+import org.janelia.console.viewerapi.ObservableInterface;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class NeuronReconstructionChildFactory extends ChildFactory<NeuronVertex>
+public interface NeuronModel extends Hideable
 {
-    private NeuronReconstruction neuron;
+    String getName();
+    void setName(String name);
     
-    public NeuronReconstructionChildFactory(NeuronReconstruction neuron) {
-        this.neuron = neuron;
-    }
-
-    @Override
-    protected boolean createKeys(List<NeuronVertex> toPopulate)
-    {
-        for ( NeuronVertex vertex : neuron.getVertexes()) {
-            toPopulate.add(vertex);
-        }
-        return true;
-    }
-
-    @Override
-    protected Node createNodeForKey(NeuronVertex key) {
-        return new NeuronVertexNode(key);
-    }
+    Color getColor();
+    void setColor(Color color);
+    // Signals when the color of this neuron is toggled on or off
+    ObservableInterface getColorChangeObservable();
+    
+    Collection<NeuronVertex> getVertexes();
+    Collection<NeuronEdge> getEdges();
+    
+    // Adding a vertex is so common that it gets its own signal
+    ObservableInterface getMembersAddedObservable(); // vertices added to neuron
+    ObservableInterface getMembersRemovedObservable(); // vertices removed from neuron
+    // Probably too much overhead to attach a listener to every vertex, so listen to vertex changes
+    // at the neuron level.
+    ObservableInterface getGeometryChangeObservable(); // vertices changed location or radius
+    
+    // Signals when the visibility of this neuron is toggled on or off
+    ObservableInterface getVisibilityChangeObservable();
 }

@@ -40,7 +40,7 @@ import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,10 +54,10 @@ public class SpheresActor extends BasicGL3Actor
     private final MeshGeometry meshGeometry;
     private final MeshActor meshActor;
     private final SpheresMaterial material;
-    private final NeuronReconstruction neuron;
+    private final NeuronModel neuron;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public SpheresActor(final NeuronReconstruction neuron) {
+    public SpheresActor(final NeuronModel neuron) {
         super(null);
         material = new SpheresMaterial();
         meshGeometry = new MeshGeometry();

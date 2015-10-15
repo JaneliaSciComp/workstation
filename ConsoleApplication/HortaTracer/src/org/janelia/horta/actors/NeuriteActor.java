@@ -48,7 +48,7 @@ import org.janelia.gltools.texture.Texture2d;
 import org.janelia.gltools.material.ImageParticleMaterial;
 import org.janelia.horta.NeuriteAnchor;
 import org.janelia.horta.NeuriteModel;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
@@ -65,7 +65,7 @@ public class NeuriteActor extends BasicGL3Actor {
     private final MeshActor meshActor;
     private final ImageParticleMaterial material;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private NeuronReconstruction neuron = null;
+    private NeuronModel neuron = null;
     
     public NeuriteActor(CompositeObject3d parent, final NeuriteModel neuriteModel) 
     {
@@ -117,7 +117,7 @@ public class NeuriteActor extends BasicGL3Actor {
         });
     }
     
-    public NeuriteActor(final NeuronReconstruction neuron) 
+    public NeuriteActor(final NeuronModel neuron) 
     {
         super(null);
         this.neuron = neuron;

@@ -54,7 +54,7 @@ import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
 import org.janelia.horta.actors.SwcActor;
 import org.janelia.horta.modelapi.HortaWorkspace;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 
 /**
@@ -68,7 +68,7 @@ extends MultipassRenderer
     private final BackgroundRenderPass backgroundRenderPass;
     private final OpaqueRenderPass opaqueRenderPass;
     private final VolumeRenderPass volumeRenderPass;
-    private final Map<NeuronReconstruction, GL3Actor> currentNeuronActors = new HashMap<>();
+    private final Map<NeuronModel, GL3Actor> currentNeuronActors = new HashMap<>();
     private final Set<NeuronSet> currentNeuronLists = new HashSet<>();
     private final HortaWorkspace workspace;
     private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
@@ -202,7 +202,7 @@ extends MultipassRenderer
         return volumeRenderPass.getViewSlabThickness(camera);
     }
     
-    private void addNeuronReconstruction(NeuronReconstruction neuron) {
+    private void addNeuronReconstruction(NeuronModel neuron) {
         if (currentNeuronActors.containsKey(neuron))
             return;
         SwcActor na = new SwcActor(neuron);
@@ -213,7 +213,7 @@ extends MultipassRenderer
         neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
     
-    private void removeNeuronReconstruction(NeuronReconstruction neuron) {
+    private void removeNeuronReconstruction(NeuronModel neuron) {
         if (! currentNeuronActors.containsKey(neuron))
             return;
         GL3Actor actor = currentNeuronActors.get(neuron);
@@ -286,19 +286,19 @@ extends MultipassRenderer
         public void update(Observable o, Object arg)
         {
             // Update neuron models
-            Set<NeuronReconstruction> latestNeurons = new java.util.HashSet<>();
+            Set<NeuronModel> latestNeurons = new java.util.HashSet<>();
             Set<NeuronSet> latestNeuronLists = new java.util.HashSet<>();
             // 1 - enumerate latest neurons
             for (NeuronSet neuronList : workspace.getNeuronLists()) {
                 latestNeuronLists.add(neuronList);
-                for (NeuronReconstruction neuron : neuronList) {
+                for (NeuronModel neuron : neuronList) {
                     latestNeurons.add(neuron);
                 }
             }
             // 2 - remove obsolete neurons
             // Use iterator.remove() technique, to avoid concurrent modification
             // http://stackoverflow.com/questions/223918/iterating-through-a-list-avoiding-concurrentmodificationexception-when-removing
-            Iterator<NeuronReconstruction> ni = currentNeuronActors.keySet().iterator();
+            Iterator<NeuronModel> ni = currentNeuronActors.keySet().iterator();
             while (ni.hasNext()) {
                 if (! latestNeurons.contains(ni.next()))
                     // Apparently yes, this does delete from the map, when the iterator is on the keySet().
@@ -313,7 +313,7 @@ extends MultipassRenderer
             // 3 - add new neurons
             for (NeuronSet neuronList : workspace.getNeuronLists()) {
                 currentNeuronLists.add(neuronList);
-                for (NeuronReconstruction neuron : neuronList) {
+                for (NeuronModel neuron : neuronList) {
                     addNeuronReconstruction(neuron);
                 }
             }

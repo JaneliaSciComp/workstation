@@ -43,7 +43,7 @@ import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.WireframeMaterial;
 import org.janelia.console.viewerapi.model.NeuronEdge;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,10 +57,10 @@ public class NeuriteLineActor extends BasicGL3Actor
     private final WireframeMaterial material;
     private final MeshGeometry meshGeometry;
     private final MeshActor meshActor;
-    private final NeuronReconstruction neuron;
+    private final NeuronModel neuron;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public NeuriteLineActor(final NeuronReconstruction neuron) {
+    public NeuriteLineActor(final NeuronModel neuron) {
         super(null);
         material = new WireframeMaterial();
         meshGeometry = new MeshGeometry();
@@ -104,7 +104,7 @@ public class NeuriteLineActor extends BasicGL3Actor
         super.display(gl, camera, modelViewMatrix);
     }
     
-    private void buildMesh(NeuronReconstruction neuron) {
+    private void buildMesh(NeuronModel neuron) {
         logger.info("Neuron actor rebuild mesh");
         meshGeometry.clear();
         for (NeuronEdge neuronEdge : neuron.getEdges()) {

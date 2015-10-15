@@ -33,7 +33,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 import java.util.Collection;
 import java.util.Iterator;
 import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 
@@ -68,7 +68,7 @@ public class ReconstructionCollectionAdapter implements NeuronSet
     }
 
     @Override
-    public Iterator<NeuronReconstruction> iterator()
+    public Iterator<NeuronModel> iterator()
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -86,7 +86,7 @@ public class ReconstructionCollectionAdapter implements NeuronSet
     }
 
     @Override
-    public boolean add(NeuronReconstruction e)
+    public boolean add(NeuronModel e)
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -104,7 +104,7 @@ public class ReconstructionCollectionAdapter implements NeuronSet
     }
 
     @Override
-    public boolean addAll(Collection<? extends NeuronReconstruction> c)
+    public boolean addAll(Collection<? extends NeuronModel> c)
     {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

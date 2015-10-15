@@ -35,23 +35,23 @@ import java.util.Collection;
 import java.util.Iterator;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class BasicReconstructionCollection 
+public class BasicNeuronSet 
 // Don't extend a built in collection, because we need hash() and equals() to respect object identity.
 // extends ArrayList<NeuronReconstruction>
 implements NeuronSet
 {
     private final String name;
     private final ComposableObservable membershipChangeObservable = new ComposableObservable();
-    private final Collection<NeuronReconstruction> neurons = new ArrayList<>();
+    private final Collection<NeuronModel> neurons = new ArrayList<>();
     
-    public BasicReconstructionCollection(String name) {
+    public BasicNeuronSet(String name) {
         this.name = name;
     }
 
@@ -86,7 +86,7 @@ implements NeuronSet
     }
 
     @Override
-    public Iterator<NeuronReconstruction> iterator()
+    public Iterator<NeuronModel> iterator()
     {
         return neurons.iterator();
     }
@@ -104,7 +104,7 @@ implements NeuronSet
     }
 
     @Override
-    public boolean add(NeuronReconstruction e)
+    public boolean add(NeuronModel e)
     {
         boolean result = neurons.add(e);
         if (result)
@@ -128,7 +128,7 @@ implements NeuronSet
     }
 
     @Override
-    public boolean addAll(Collection<? extends NeuronReconstruction> c)
+    public boolean addAll(Collection<? extends NeuronModel> c)
     {
         boolean result = neurons.addAll(c);
         if (result)

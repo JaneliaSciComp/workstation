@@ -35,7 +35,7 @@ import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.gltools.BasicGL3Actor;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 
 /**
  *
@@ -46,7 +46,7 @@ public class SwcActor extends BasicGL3Actor
     final SpheresActor spheresActor;
     final ConesActor conesActor;
     
-    public SwcActor(final NeuronReconstruction neuron) {
+    public SwcActor(final NeuronModel neuron) {
         super(null);
         spheresActor = new SpheresActor(neuron);
         conesActor = new ConesActor(neuron);

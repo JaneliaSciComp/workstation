@@ -40,7 +40,7 @@ import javax.swing.Action;
 import org.janelia.geometry3d.Box3;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
@@ -57,13 +57,13 @@ import org.slf4j.LoggerFactory;
  *
  * @author Christopher Bruns
  */
-public class NeuronReconstructionNode extends AbstractNode
+public class NeuronModelNode extends AbstractNode
 {
-    private final NeuronReconstruction neuron;
+    private final NeuronModel neuron;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public NeuronReconstructionNode(NeuronReconstruction neuron) {
-        super(Children.create(new NeuronReconstructionChildFactory(neuron), true), Lookups.singleton(neuron));
+    public NeuronModelNode(NeuronModel neuron) {
+        super(Children.create(new NeuronSetChildFactory(neuron), true), Lookups.singleton(neuron));
         setDisplayName(neuron.getName()); //  + " (" + neuron.getVertexes().size() + " vertices)");
         this.neuron = neuron;
     }

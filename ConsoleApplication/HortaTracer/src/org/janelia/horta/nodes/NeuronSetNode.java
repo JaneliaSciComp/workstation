@@ -30,7 +30,6 @@
 
 package org.janelia.horta.nodes;
 
-import java.awt.Color;
 import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -39,8 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
-import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
@@ -60,13 +58,13 @@ import org.slf4j.LoggerFactory;
  *
  * @author Christopher Bruns
  */
-public class ReconstructionCollectionNode extends AbstractNode
+public class NeuronSetNode extends AbstractNode
 {
     private final NeuronSet neuronList;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public ReconstructionCollectionNode(NeuronSet neuronList) {
-        super(Children.create(new NeuronListChildFactory(neuronList), true), null);
+    public NeuronSetNode(NeuronSet neuronList) {
+        super(Children.create(new NeuronListChildFactory(neuronList), true), Lookups.singleton(neuronList));
         this.neuronList = neuronList;
         setDisplayName(neuronList.getName());
     }
@@ -85,7 +83,7 @@ public class ReconstructionCollectionNode extends AbstractNode
                         String extension = FilenameUtils.getExtension(f.getName());
                         if ( "SWC".equals(extension.toUpperCase()) ) {
                             // If no neuron lists are available, create a new one.
-                            NeuronReconstruction neuron = new BasicNeuronReconstruction(f);
+                            NeuronModel neuron = new BasicNeuronModel(f);
                             neuronList.add(neuron);
                             neuronList.getMembershipChangeObservable().setChanged();
                             // workspace.setChanged();
@@ -133,7 +131,7 @@ public class ReconstructionCollectionNode extends AbstractNode
         return sheet; 
     }
 
-    private static class NeuronListChildFactory extends ChildFactory<NeuronReconstruction>
+    private static class NeuronListChildFactory extends ChildFactory<NeuronModel>
     {
         private final NeuronSet neuronList;
         
@@ -142,15 +140,15 @@ public class ReconstructionCollectionNode extends AbstractNode
         }
 
         @Override
-        protected boolean createKeys(List<NeuronReconstruction> toPopulate)
+        protected boolean createKeys(List<NeuronModel> toPopulate)
         {
             toPopulate.addAll(neuronList);
             return true;
         }
 
         @Override
-        protected Node createNodeForKey(NeuronReconstruction key) {
-            return new NeuronReconstructionNode(key);
+        protected Node createNodeForKey(NeuronModel key) {
+            return new NeuronModelNode(key);
         }
     }
     

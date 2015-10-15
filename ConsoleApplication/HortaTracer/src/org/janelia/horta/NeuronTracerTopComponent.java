@@ -108,10 +108,10 @@ import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.horta.modelapi.HortaWorkspace;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
-import org.janelia.horta.nodes.BasicNeuronReconstruction;
+import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.volume.BrickActor;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -665,7 +665,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         String extension = FilenameUtils.getExtension(f.getName()).toUpperCase();
                         switch (extension) {
                             case "SWC":
-                                NeuronReconstruction neuron = new BasicNeuronReconstruction(f);
+                                NeuronModel neuron = new BasicNeuronModel(f);
                                 workspace.addNeuron(neuron);
                                 workspace.setChanged();
                                 workspace.notifyObservers();

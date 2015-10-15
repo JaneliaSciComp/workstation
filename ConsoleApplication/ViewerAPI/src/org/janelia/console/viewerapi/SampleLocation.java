@@ -32,7 +32,7 @@ package org.janelia.console.viewerapi;
 
 import java.net.URL;
 import java.util.Collection;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 
 /**
  *

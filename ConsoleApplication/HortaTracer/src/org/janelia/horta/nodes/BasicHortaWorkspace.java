@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Observer;
 import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronSet;
@@ -57,9 +57,9 @@ public class BasicHortaWorkspace implements HortaWorkspace
     
     // Adds a neuron to the first list of neurons.
     // If no list exist yet, a new one is created, called "Temporary Neurons".
-    public void addNeuron(NeuronReconstruction neuron) {
+    public void addNeuron(NeuronModel neuron) {
         if (getNeuronLists().isEmpty()) {
-            NeuronSet localNeurons = new BasicReconstructionCollection("Temporary Neurons");
+            NeuronSet localNeurons = new BasicNeuronSet("Temporary Neurons");
             getNeuronLists().add(localNeurons);
             setChanged();
         }

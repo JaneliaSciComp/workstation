@@ -28,36 +28,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi.model;
+package org.janelia.horta.nodes;
 
-import java.awt.Color;
-import java.util.Collection;
-import org.janelia.console.viewerapi.ObservableInterface;
+import java.util.List;
+import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.openide.nodes.ChildFactory;
+import org.openide.nodes.Node;
 
 /**
  *
  * @author Christopher Bruns
  */
-public interface NeuronReconstruction extends Hideable
+public class NeuronSetChildFactory extends ChildFactory<NeuronVertex>
 {
-    String getName();
-    void setName(String name);
+    private NeuronModel neuron;
     
-    Color getColor();
-    void setColor(Color color);
-    // Signals when the color of this neuron is toggled on or off
-    ObservableInterface getColorChangeObservable();
-    
-    Collection<NeuronVertex> getVertexes();
-    Collection<NeuronEdge> getEdges();
-    
-    // Adding a vertex is so common that it gets its own signal
-    ObservableInterface getMembersAddedObservable(); // vertices added to neuron
-    ObservableInterface getMembersRemovedObservable(); // vertices removed from neuron
-    // Probably too much overhead to attach a listener to every vertex, so listen to vertex changes
-    // at the neuron level.
-    ObservableInterface getGeometryChangeObservable(); // vertices changed location or radius
-    
-    // Signals when the visibility of this neuron is toggled on or off
-    ObservableInterface getVisibilityChangeObservable();
+    public NeuronSetChildFactory(NeuronModel neuron) {
+        this.neuron = neuron;
+    }
+
+    @Override
+    protected boolean createKeys(List<NeuronVertex> toPopulate)
+    {
+        for ( NeuronVertex vertex : neuron.getVertexes()) {
+            toPopulate.add(vertex);
+        }
+        return true;
+    }
+
+    @Override
+    protected Node createNodeForKey(NeuronVertex key) {
+        return new NeuronVertexNode(key);
+    }
 }

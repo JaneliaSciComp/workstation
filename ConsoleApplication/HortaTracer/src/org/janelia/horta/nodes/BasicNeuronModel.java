@@ -49,7 +49,7 @@ import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.horta.modelapi.SwcVertex;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Christopher Bruns
  */
-public class BasicNeuronReconstruction implements NeuronReconstruction
+public class BasicNeuronModel implements NeuronModel
 {
     private String name = "(unnamed neuron)";
     private List<NeuronVertex> nodes = new ArrayList<>();
@@ -70,7 +70,7 @@ public class BasicNeuronReconstruction implements NeuronReconstruction
     private boolean visible = true;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public BasicNeuronReconstruction(File swcFile) throws FileNotFoundException, IOException
+    public BasicNeuronModel(File swcFile) throws FileNotFoundException, IOException
     {
         BufferedReader br = new BufferedReader(new FileReader(swcFile));
         String line;

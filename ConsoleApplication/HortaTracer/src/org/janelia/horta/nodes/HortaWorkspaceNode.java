@@ -43,7 +43,7 @@ import java.util.Observer;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.horta.modelapi.HortaWorkspace;
-import org.janelia.console.viewerapi.model.NeuronReconstruction;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
@@ -103,7 +103,7 @@ public class HortaWorkspaceNode extends AbstractNode
                         String extension = FilenameUtils.getExtension(f.getName());
                         if ( "SWC".equals(extension.toUpperCase()) ) {
                             // If no neuron lists are available, create a new one.
-                            NeuronReconstruction neuron = new BasicNeuronReconstruction(f);
+                            NeuronModel neuron = new BasicNeuronModel(f);
                             workspace.addNeuron(neuron);
                             workspace.notifyObservers();
                             // neuron.getGeometryChangeObservable().setChanged();
