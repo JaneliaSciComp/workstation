@@ -66,12 +66,15 @@ extends MultipassRenderer
     private final VolumeRenderPass volumeRenderPass;
     private Map<NeuronReconstruction, GL3Actor> currentNeuronActors = new HashMap<>();
     private final HortaWorkspace workspace;
+    private final Observer neuronListRefresher; // helps with signalling
 
     public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel, HortaWorkspace workspace) 
     {
         this.drawable = drawable;
+        
         this.workspace = workspace;
-        workspace.addObserver(new NeuronListRefresher());
+        neuronListRefresher = new NeuronListRefresher();
+        workspace.addObserver(neuronListRefresher);
         
         backgroundRenderPass = new BackgroundRenderPass();
         add(backgroundRenderPass);
