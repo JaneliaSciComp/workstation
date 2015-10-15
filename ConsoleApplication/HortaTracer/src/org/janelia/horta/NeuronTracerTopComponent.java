@@ -112,6 +112,7 @@ import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.BasicNeuronModel;
+import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -666,9 +667,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         switch (extension) {
                             case "SWC":
                                 NeuronModel neuron = new BasicNeuronModel(f);
-                                workspace.addNeuron(neuron);
-                                workspace.setChanged();
-                                workspace.notifyObservers();
+                                new WorkspaceUtil(workspace).addNeuronAndNotify(neuron);
                                 logger.info("dragged SWC file loaded!");
                                 break;
                             case "YML":

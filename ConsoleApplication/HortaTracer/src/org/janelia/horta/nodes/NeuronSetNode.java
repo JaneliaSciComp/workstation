@@ -37,6 +37,8 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
@@ -64,7 +66,7 @@ public class NeuronSetNode extends AbstractNode
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public NeuronSetNode(NeuronSet neuronList) {
-        super(Children.create(new NeuronListChildFactory(neuronList), true), Lookups.singleton(neuronList));
+        super(Children.create(new NeuronSetChildFactory(neuronList), true), Lookups.singleton(neuronList));
         this.neuronList = neuronList;
         setDisplayName(neuronList.getName());
     }
@@ -131,12 +133,19 @@ public class NeuronSetNode extends AbstractNode
         return sheet; 
     }
 
-    private static class NeuronListChildFactory extends ChildFactory<NeuronModel>
+    private static class NeuronSetChildFactory extends ChildFactory<NeuronModel>
     {
         private final NeuronSet neuronList;
         
-        public NeuronListChildFactory(NeuronSet neuronList) {
+        public NeuronSetChildFactory(NeuronSet neuronList) {
             this.neuronList = neuronList;
+            neuronList.getMembershipChangeObservable().addObserver(new Observer() {
+                @Override
+                public void update(Observable o, Object arg)
+                {
+                    refresh(false);
+                }
+            });
         }
 
         @Override

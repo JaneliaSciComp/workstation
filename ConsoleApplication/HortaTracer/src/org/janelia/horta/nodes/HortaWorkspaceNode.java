@@ -83,7 +83,7 @@ public class HortaWorkspaceNode extends AbstractNode
     }
     
     private void updateDisplayName() {
-        setDisplayName("Scene"); //  (" + workspace.getNeuronLists().size() + " neurons)");
+        setDisplayName("Scene"); //  (" + workspace.getNeuronSets().size() + " neurons)");
     }
     
     public Vantage getVantage() {
@@ -104,10 +104,7 @@ public class HortaWorkspaceNode extends AbstractNode
                         if ( "SWC".equals(extension.toUpperCase()) ) {
                             // If no neuron lists are available, create a new one.
                             NeuronModel neuron = new BasicNeuronModel(f);
-                            workspace.addNeuron(neuron);
-                            workspace.notifyObservers();
-                            // neuron.getGeometryChangeObservable().setChanged();
-                            // neuron.getGeometryChangeObservable().notifyObservers();
+                            new WorkspaceUtil(workspace).addNeuronAndNotify(neuron);
                         } else {
                         }
                     }
@@ -129,7 +126,7 @@ public class HortaWorkspaceNode extends AbstractNode
         return getIcon(i);
     }
     
-    public Integer getSize() {return workspace.getNeuronLists().size();}
+    public Integer getSize() {return workspace.getNeuronSets().size();}
     
     public Color getBackgroundColor() {
         return workspace.getBackgroundColor();

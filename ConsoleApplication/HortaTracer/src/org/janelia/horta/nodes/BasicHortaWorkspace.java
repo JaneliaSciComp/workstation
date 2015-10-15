@@ -54,20 +54,7 @@ public class BasicHortaWorkspace implements HortaWorkspace
     public BasicHortaWorkspace(Vantage vantage) {
         this.vantage = vantage;
     }
-    
-    // Adds a neuron to the first list of neurons.
-    // If no list exist yet, a new one is created, called "Temporary Neurons".
-    public void addNeuron(NeuronModel neuron) {
-        if (getNeuronLists().isEmpty()) {
-            NeuronSet localNeurons = new BasicNeuronSet("Temporary Neurons");
-            getNeuronLists().add(localNeurons);
-            setChanged();
-        }
-        // Drop neuron into first list of neurons, when dropping on whole workspace
-        NeuronSet neuronList = getNeuronLists().iterator().next();
-        neuronList.add(neuron);
-        neuronList.getMembershipChangeObservable().setChanged();
-    }
+
     
     @Override
     public Vantage getVantage()
@@ -120,7 +107,7 @@ public class BasicHortaWorkspace implements HortaWorkspace
     }
 
     @Override
-    public Collection<NeuronSet> getNeuronLists()
+    public Collection<NeuronSet> getNeuronSets()
     {
         return neuronLists;
     }

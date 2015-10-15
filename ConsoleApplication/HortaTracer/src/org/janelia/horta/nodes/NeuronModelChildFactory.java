@@ -28,23 +28,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.modelapi;
+package org.janelia.horta.nodes;
 
-import java.awt.Color;
-import java.util.Collection;
-import org.janelia.console.viewerapi.ObservableInterface;
+import java.util.List;
 import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.geometry3d.Vantage;
+import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.openide.nodes.ChildFactory;
+import org.openide.nodes.Node;
 
 /**
  *
  * @author Christopher Bruns
  */
-public interface HortaWorkspace extends ObservableInterface
+public class NeuronModelChildFactory extends ChildFactory<NeuronVertex>
 {
-    Vantage getVantage();
-    Collection<NeuronSet> getNeuronSets();
-    Color getBackgroundColor();
-    void setBackgroundColor(Color color);
+    private NeuronModel neuron;
+    
+    public NeuronModelChildFactory(NeuronModel neuron) {
+        this.neuron = neuron;
+    }
+
+    @Override
+    protected boolean createKeys(List<NeuronVertex> toPopulate)
+    {
+        for ( NeuronVertex vertex : neuron.getVertexes()) {
+            toPopulate.add(vertex);
+        }
+        return true;
+    }
+
+    @Override
+    protected Node createNodeForKey(NeuronVertex key) {
+        return new NeuronVertexNode(key);
+    }
 }

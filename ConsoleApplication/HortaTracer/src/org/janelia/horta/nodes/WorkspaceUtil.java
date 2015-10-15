@@ -30,35 +30,34 @@
 
 package org.janelia.horta.nodes;
 
-import java.util.List;
 import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.openide.nodes.ChildFactory;
-import org.openide.nodes.Node;
+import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.horta.modelapi.HortaWorkspace;
 
 /**
- *
+ * Convenience methods I don't want to place into lean HortaWorkspace API
  * @author Christopher Bruns
  */
-public class NeuronSetChildFactory extends ChildFactory<NeuronVertex>
+public class WorkspaceUtil
 {
-    private NeuronModel neuron;
+    private final HortaWorkspace workspace;
+
+    public WorkspaceUtil(HortaWorkspace workspace) {
+        this.workspace = workspace;
+    }
     
-    public NeuronSetChildFactory(NeuronModel neuron) {
-        this.neuron = neuron;
-    }
-
-    @Override
-    protected boolean createKeys(List<NeuronVertex> toPopulate)
-    {
-        for ( NeuronVertex vertex : neuron.getVertexes()) {
-            toPopulate.add(vertex);
+    // Convenience function for use after dragging a lone SWC onto the viewer.
+    public void addNeuronAndNotify(NeuronModel neuron) {
+        if (workspace.getNeuronSets().isEmpty()) {
+            NeuronSet localNeurons = new BasicNeuronSet("Temporary Neurons");
+            workspace.getNeuronSets().add(localNeurons);
+            workspace.setChanged();
         }
-        return true;
-    }
-
-    @Override
-    protected Node createNodeForKey(NeuronVertex key) {
-        return new NeuronVertexNode(key);
+        // Drop neuron into first list of neurons, when dropping on whole workspace
+        NeuronSet neuronList = workspace.getNeuronSets().iterator().next();
+        neuronList.add(neuron);
+        neuronList.getMembershipChangeObservable().setChanged();
+        workspace.setChanged();
+        workspace.notifyObservers();
     }
 }

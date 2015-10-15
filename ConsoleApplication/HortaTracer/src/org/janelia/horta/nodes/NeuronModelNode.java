@@ -63,7 +63,7 @@ public class NeuronModelNode extends AbstractNode
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public NeuronModelNode(NeuronModel neuron) {
-        super(Children.create(new NeuronSetChildFactory(neuron), true), Lookups.singleton(neuron));
+        super(Children.create(new NeuronModelChildFactory(neuron), true), Lookups.singleton(neuron));
         setDisplayName(neuron.getName()); //  + " (" + neuron.getVertexes().size() + " vertices)");
         this.neuron = neuron;
     }

@@ -60,7 +60,7 @@ class HortaWorkspaceChildFactory extends ChildFactory<NeuronSet>
     @Override
     protected boolean createKeys(List<NeuronSet> toPopulate)
     {
-        for (NeuronSet neuronList : workspace.getNeuronLists()) {
+        for (NeuronSet neuronList : workspace.getNeuronSets()) {
             toPopulate.add(neuronList);
         }
         return true;

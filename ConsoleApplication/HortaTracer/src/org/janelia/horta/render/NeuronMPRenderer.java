@@ -289,7 +289,7 @@ extends MultipassRenderer
             Set<NeuronModel> latestNeurons = new java.util.HashSet<>();
             Set<NeuronSet> latestNeuronLists = new java.util.HashSet<>();
             // 1 - enumerate latest neurons
-            for (NeuronSet neuronList : workspace.getNeuronLists()) {
+            for (NeuronSet neuronList : workspace.getNeuronSets()) {
                 latestNeuronLists.add(neuronList);
                 for (NeuronModel neuron : neuronList) {
                     latestNeurons.add(neuron);
@@ -311,7 +311,7 @@ extends MultipassRenderer
                     nli.remove();
             }
             // 3 - add new neurons
-            for (NeuronSet neuronList : workspace.getNeuronLists()) {
+            for (NeuronSet neuronList : workspace.getNeuronSets()) {
                 currentNeuronLists.add(neuronList);
                 for (NeuronModel neuron : neuronList) {
                     addNeuronReconstruction(neuron);
