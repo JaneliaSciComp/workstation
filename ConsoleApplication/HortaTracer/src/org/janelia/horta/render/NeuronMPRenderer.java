@@ -32,7 +32,11 @@ package org.janelia.horta.render;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
@@ -64,7 +68,8 @@ extends MultipassRenderer
     private final BackgroundRenderPass backgroundRenderPass;
     private final OpaqueRenderPass opaqueRenderPass;
     private final VolumeRenderPass volumeRenderPass;
-    private Map<NeuronReconstruction, GL3Actor> currentNeuronActors = new HashMap<>();
+    private final Map<NeuronReconstruction, GL3Actor> currentNeuronActors = new HashMap<>();
+    private final Set<ReconstructionCollection> currentNeuronLists = new HashSet<>();
     private final HortaWorkspace workspace;
     private final Observer neuronListRefresher; // helps with signalling
 
@@ -274,17 +279,28 @@ extends MultipassRenderer
         {
             // Update neuron models
             Set<NeuronReconstruction> latestNeurons = new java.util.HashSet<>();
+            Set<ReconstructionCollection> latestNeuronLists = new java.util.HashSet<>();
             // 1 - enumerate latest neurons
             for (ReconstructionCollection neuronList : workspace.getNeuronLists()) {
+                latestNeuronLists.add(neuronList);
                 for (NeuronReconstruction neuron : neuronList) {
                     latestNeurons.add(neuron);
                 }
             }
             // 2 - remove obsolete neurons
-            for (NeuronReconstruction neuron : currentNeuronActors.keySet()) {
-                if (! latestNeurons.contains(neuron)) {
-                    removeNeuronReconstruction(neuron);
-                }
+            // Use iterator.remove() technique, to avoid concurrent modification
+            // http://stackoverflow.com/questions/223918/iterating-through-a-list-avoiding-concurrentmodificationexception-when-removing
+            Iterator<NeuronReconstruction> ni = currentNeuronActors.keySet().iterator();
+            while (ni.hasNext()) {
+                if (! latestNeurons.contains(ni.next()))
+                    // Apparently yes, this does delete from the map, when the iterator is on the keySet().
+                    ni.remove();
+            }
+            // Remove obsolete lists too
+            Iterator<ReconstructionCollection> nli = currentNeuronLists.iterator();
+            while (nli.hasNext()) {
+                if (! latestNeuronLists.contains(nli.next()))
+                    nli.remove();
             }
             // 3 - add new neurons
             for (ReconstructionCollection neuronList : workspace.getNeuronLists()) {
