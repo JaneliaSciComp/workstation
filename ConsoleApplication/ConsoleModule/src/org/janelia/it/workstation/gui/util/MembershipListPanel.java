@@ -40,9 +40,9 @@ public class MembershipListPanel<T> extends JPanel {
     private DefaultComboBoxModel<T> comboBoxModel;
     private JPanel addPane;
     private JComboBox<T> subjectCombobox;
-    private boolean editable;
+    private boolean editable = true;
 
-    public MembershipListPanel(String title, Class<? extends ListCellRenderer<T>> cellRendererClass) {
+    public MembershipListPanel(final String title, Class<? extends ListCellRenderer<T>> cellRendererClass) {
 
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(200, 200));
@@ -84,9 +84,13 @@ public class MembershipListPanel<T> extends JPanel {
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                int i = subjectCombobox.getSelectedIndex();
                 T selected = (T) comboBoxModel.getSelectedItem();
                 if (selected != null) {
                     addItemToList(selected);
+                    if (i<comboBoxModel.getSize()) {
+                        subjectCombobox.setSelectedIndex(i);
+                    }
                     revalidate();
                     repaint();
                 }
@@ -170,9 +174,11 @@ public class MembershipListPanel<T> extends JPanel {
         if (row < 0) {
             return;
         }
-        T item = model.get(row);
-        if (item != null) {
-            removeItemFromList(item);
+        if (editable) {
+            T item = model.get(row);
+            if (item != null) {
+                removeItemFromList(item);
+            }
         }
     }
 
