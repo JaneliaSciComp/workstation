@@ -18,7 +18,9 @@ import java.awt.*;
 import java.net.MalformedURLException;
 import java.util.concurrent.Callable;
 import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
@@ -38,6 +40,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
     private QuadViewUi viewUI;
     private ModelMgrObserver modelMgrObserver;
+    private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(null); // For communicating annotations to Horta
     private final Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
 
     public LargeVolumeViewViewer() {
@@ -201,6 +204,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
             if ( viewUI == null ) {
                 viewUI = new QuadViewUi(SessionMgr.getMainFrame(), initialEntity, false);
+                neuronSetAdapter.observe(viewUI.getAnnotationModel());
             }
             removeAll();
             viewUI.setVisible(true);
@@ -245,6 +249,11 @@ public class LargeVolumeViewViewer extends JPanel {
         if ( modelMgrObserver != null ) {
             ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
         }
+    }
+
+    public NeuronSet getNeuronSetAdapter()
+    {
+        return neuronSetAdapter;
     }
 
     //------------------------------Inner Classes

@@ -173,6 +173,7 @@ public class BasicNeuronModel implements NeuronModel
     @Override
     public void setName(String name) {
         this.name = name;
+        // TODO: name change observable?
     }
 
     @Override

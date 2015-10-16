@@ -32,7 +32,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
 import java.util.Objects;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 
 /**
  *
@@ -40,21 +40,22 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
  */
 public class NeuronVertexAdapter implements NeuronVertex
 {
-    private final Anchor anchor;
-    private final Long anchorGuid;
+    private final TmGeoAnnotation vertex;
+    private final Long vertexId;
 
-    public NeuronVertexAdapter(Anchor anchor) {
-        this.anchor = anchor;
-        this.anchorGuid = anchor.getGuid();
+    public NeuronVertexAdapter(TmGeoAnnotation vertex) {
+        this.vertex = vertex;
+        this.vertexId = vertex.getId();
     }
     
     @Override
     public float[] getLocation()
     {
         return new float[] {
-                (float) anchor.getLocation().getX(), 
-                (float) anchor.getLocation().getY(), 
-                (float) anchor.getLocation().getZ()};
+                vertex.getX().floatValue(),
+                vertex.getY().floatValue(), 
+                vertex.getZ().floatValue(),
+        };
     }
 
     @Override
@@ -66,13 +67,13 @@ public class NeuronVertexAdapter implements NeuronVertex
     @Override
     public boolean hasRadius()
     {
-        return false; // TODO: LVV radius field is present, but has no meaning
+        return false; // Radius is not currently stored (Oct 2015 CMB)
     }
 
     @Override
     public float getRadius()
     {
-        return (float)anchor.getRadius();
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -85,7 +86,7 @@ public class NeuronVertexAdapter implements NeuronVertex
     public int hashCode()
     {
         int hash = 7;
-        hash = 61 * hash + Objects.hashCode(this.anchorGuid);
+        hash = 61 * hash + Objects.hashCode(this.vertexId);
         return hash;
     }
 
@@ -99,7 +100,7 @@ public class NeuronVertexAdapter implements NeuronVertex
             return false;
         }
         final NeuronVertexAdapter other = (NeuronVertexAdapter) obj;
-        if (!Objects.equals(this.anchorGuid, other.anchorGuid)) {
+        if (!Objects.equals(this.vertexId, other.vertexId)) {
             return false;
         }
         return true;
