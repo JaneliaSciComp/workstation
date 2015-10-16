@@ -268,7 +268,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         qvController.setCameraFocus(anchor.getLocation());
     }
 
-    private void fireComponentUpdate() {
+    public void fireComponentUpdate() {
         for (JComponent updateListener : updateListeners) {
             updateListener.validate();
             updateListener.repaint();
