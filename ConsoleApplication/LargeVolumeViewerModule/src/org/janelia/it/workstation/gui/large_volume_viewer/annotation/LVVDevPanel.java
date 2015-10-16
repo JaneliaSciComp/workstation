@@ -16,6 +16,9 @@ import java.awt.event.ActionEvent;
  * this panel is only shown to me; I use it when I need to insert
  * pieces of code for testing, etc.
  *
+ * prints output to std out rather than logs; this stuff should
+ * only be run by a dev who's paying attention!
+ *
  * djo, 11/14
  */
 public class LVVDevPanel extends JPanel {
@@ -23,7 +26,6 @@ public class LVVDevPanel extends JPanel {
     private AnnotationManager annotationMgr;
     private AnnotationModel annotationModel;
     private LargeVolumeViewerTranslator largeVolumeViewerTranslator;
-
 
     public LVVDevPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
                        LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
@@ -177,8 +179,49 @@ public class LVVDevPanel extends JPanel {
 
             }
         });
-        // disabled; testing is over
         add(testButton2);
+
+        // it's useful to duplicate things; currently for dev use only
+        JButton testButton3 = new JButton("Test 3");
+        testButton3.setAction(new AbstractAction("Duplicate neuron") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        TmNeuron neuron = annotationModel.getCurrentNeuron();
+                        if (neuron == null) {
+                            System.out.println("no selected neuron");
+                            return;
+                        }
+                        System.out.println("duplicating neuron " + neuron.getName());
+
+
+
+                        ModelMgr modelMgr = ModelMgr.getModelMgr();
+                        Entity workspaceEntity = modelMgr.getEntityById(annotationModel.getCurrentWorkspace().getId());
+                        Entity neuronEntity = modelMgr.getEntityById(neuron.getId());
+
+
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        System.out.println("duplicate neuron had no exceptions");
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        System.out.println("duplicate neuron reported exception");
+                        error.printStackTrace();
+                    }
+                };
+                worker.execute();
+
+            }
+        });
+        add(testButton3);
 
 
         /*
