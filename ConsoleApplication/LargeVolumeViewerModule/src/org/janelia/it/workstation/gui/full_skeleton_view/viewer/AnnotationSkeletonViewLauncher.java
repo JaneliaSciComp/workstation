@@ -24,7 +24,13 @@ public class AnnotationSkeletonViewLauncher {
     
     /** Always re-open the view on initial creation. */
     public AnnotationSkeletonViewLauncher() {
-        refreshView();
+        this(true);
+    }
+    
+    public AnnotationSkeletonViewLauncher(boolean refresh) {
+        if (refresh) {
+            refreshView();
+        }
     }
     
     public List<JMenuItem> getMenuItems() {
@@ -36,15 +42,19 @@ public class AnnotationSkeletonViewLauncher {
             @Override
             public void actionPerformed(ActionEvent e) {
                 reopenView();
-                AnnotationSkeletalViewTopComponent comp = getTopComponent();
-                // Coerce a redraw.
-                comp.invalidate();
-                comp.validate();
-                comp.repaint();
+                refreshTopComponent();
             }
         };
         menuItems.add(new JMenuItem(launchAction));
         return menuItems;
+    }
+
+    public void refreshTopComponent() {
+        AnnotationSkeletalViewTopComponent comp = getTopComponent();
+        // Coerce a redraw.
+        comp.invalidate();
+        comp.validate();
+        comp.repaint();
     }
     
     public void reopenView() {
