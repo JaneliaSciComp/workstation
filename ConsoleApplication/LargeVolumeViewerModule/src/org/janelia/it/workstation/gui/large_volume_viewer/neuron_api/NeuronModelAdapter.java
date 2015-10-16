@@ -57,7 +57,7 @@ public class NeuronModelAdapter implements NeuronModel
     private final TmNeuron neuron;
     private final Long neuronId;
     private final Collection<NeuronVertex> vertexes;
-    private final Collection<NeuronEdge> edges = new ArrayList<NeuronEdge>(); // TODO - create adapter
+    private final Collection<NeuronEdge> edges;
     private final ComposableObservable colorChangeObservable = new ComposableObservable();
     private final ComposableObservable geometryChangeObservable = new ComposableObservable();
     private final ComposableObservable visibilityChangeObservable = new ComposableObservable();
@@ -66,13 +66,16 @@ public class NeuronModelAdapter implements NeuronModel
     private ObservableInterface membersAddedObservable;
     private ObservableInterface membersRemovedObservable;
     private NeuronStyle neuronStyle;
+    private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
 
 
     public NeuronModelAdapter(TmNeuron neuron, NeuronStyle neuronStyle) {
         this.neuron = neuron;
         this.neuronId = neuron.getId();
         this.neuronStyle = neuronStyle;
+        bIsVisible = neuronStyle.isVisible();
         vertexes = new VertexList(neuron.getGeoAnnotationMap());
+        edges = new EdgeList((VertexList)vertexes);
     }
 
     @Override
@@ -145,13 +148,17 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public boolean isVisible()
     {
-        return neuronStyle.isVisible();
+        return bIsVisible;
+        // return neuronStyle.isVisible();
     }
 
     @Override
     public void setVisible(boolean visible)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (bIsVisible == visible)
+            return; // no change
+        bIsVisible = visible;
+        getVisibilityChangeObservable().setChanged();
     }
 
     // Hash based on database GUID, so distinct object with the same ID hash together
@@ -185,6 +192,35 @@ public class NeuronModelAdapter implements NeuronModel
     }
     
     
+    // TODO: - implement Edges correctly
+    private static class EdgeList extends ArrayList<NeuronEdge> 
+    {
+        private final VertexList vertices;
+        
+        public EdgeList(VertexList vertices) {
+            this.vertices = vertices;
+            // Count the number of nodes with parents
+            // TODO: This is a very brittle approach; the edge set could easily get stale.
+            for (NeuronVertex v : vertices) {
+                NeuronVertexAdapter v1 = (NeuronVertexAdapter)v;
+                TmGeoAnnotation child = v1.getTmGeoAnnotation();
+                if (child == null)
+                    continue;
+                Long parentId = child.getParentId();
+                TmGeoAnnotation parent = vertices.getAnnotationByGuid(parentId);
+                if (parent == null)
+                    continue;
+                NeuronEdge edge = new NeuronEdgeAdapter(
+                        vertices.getVertexByGuid(child.getId()), 
+                        vertices.getVertexByGuid(parentId));
+                add(edge);
+            }
+        }
+        
+        // TODO: Everything...
+    }
+
+
     // Adapter to make a Map<Long, TmGeoAnnotation> look like a Collection<NeuronVertex>
     private static class VertexList implements Collection<NeuronVertex> 
     {
@@ -231,10 +267,7 @@ public class NeuronModelAdapter implements NeuronModel
                 {
                     TmGeoAnnotation vertex = it.next();
                     Long guid = vertex.getId();
-                    if (! cachedVertices.containsKey(guid)) {
-                        cachedVertices.put(guid, new NeuronVertexAdapter(vertex));
-                    }
-                    return cachedVertices.get(guid);
+                    return getVertexByGuid(guid);
                 }
 
                 @Override
@@ -297,6 +330,22 @@ public class NeuronModelAdapter implements NeuronModel
         public void clear()
         {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        private TmGeoAnnotation getAnnotationByGuid(Long vertexId)
+        {
+            return vertices.get(vertexId);
+        }
+
+        private NeuronVertex getVertexByGuid(Long vertexId)
+        {
+            if (! cachedVertices.containsKey(vertexId)) {
+                TmGeoAnnotation a = getAnnotationByGuid(vertexId);
+                if (a == null)
+                    return null;
+                cachedVertices.put(vertexId, new NeuronVertexAdapter(a));
+            }
+            return cachedVertices.get(vertexId);
         }
         
     }

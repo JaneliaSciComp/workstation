@@ -30,85 +30,30 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class NeuronVertexAdapter implements NeuronVertex
+public class NeuronEdgeAdapter implements NeuronEdge
 {
-    private final TmGeoAnnotation vertex;
-    private final Long vertexId;
+    private final Collection<NeuronVertex> vertices = new ArrayList<>();
 
-    public NeuronVertexAdapter(TmGeoAnnotation vertex) {
-        this.vertex = vertex;
-        this.vertexId = vertex.getId();
+    NeuronEdgeAdapter(NeuronVertex vertex1, NeuronVertex vertex2)
+    {
+        vertices.add(vertex1);
+        vertices.add(vertex2);
+    }
+
+    @Override
+    public Iterator<NeuronVertex> iterator()
+    {
+        return vertices.iterator();
     }
     
-    @Override
-    public float[] getLocation()
-    {
-        return new float[] {
-                vertex.getX().floatValue(),
-                vertex.getY().floatValue(), 
-                vertex.getZ().floatValue(),
-        };
-    }
-
-    @Override
-    public void setLocation(float x, float y, float z)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean hasRadius()
-    {
-        return false; // Radius is not currently stored (Oct 2015 CMB)
-    }
-
-    @Override
-    public float getRadius()
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void setRadius(float radius)
-    {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int hash = 7;
-        hash = 61 * hash + Objects.hashCode(this.vertexId);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final NeuronVertexAdapter other = (NeuronVertexAdapter) obj;
-        if (!Objects.equals(this.vertexId, other.vertexId)) {
-            return false;
-        }
-        return true;
-    }
-
-    TmGeoAnnotation getTmGeoAnnotation()
-    {
-        return vertex;
-    }
-
 }
