@@ -192,8 +192,8 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         for (SkeletonActor actor : actors) {
             actor.setNextParent(parent);
         }
-        // Must rebuild everything, each time the anchor is selected.
-        updateMeshDrawActor();
+        // Need not rebuild everything, each time the anchor is selected.
+        //   ** this would make the whole display very slow ** updateMeshDrawActor();
         fireComponentUpdate();
     }
 
@@ -301,11 +301,13 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
      * annotations.
      */
     private class NVTTableModelListener implements TableModelListener {
-
+                
         @Override
         public void tableChanged(TableModelEvent e) {
-            updateMeshDrawActor();
-            fireComponentUpdate();
+            if (e.getColumn() > -1) {
+                updateMeshDrawActor();
+                fireComponentUpdate();
+            }                    
         }
 
     }
