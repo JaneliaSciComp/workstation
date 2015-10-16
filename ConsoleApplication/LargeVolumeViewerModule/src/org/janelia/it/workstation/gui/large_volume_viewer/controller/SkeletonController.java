@@ -90,10 +90,13 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         this.meshDrawActor = meshDrawActor;
         nvtTableModel = tableModel;
         nvtTableModel.addTableModelListener(new NVTTableModelListener());
+        meshDrawActor.refresh();
     }
     
     public void registerForEvents(JComponent component) {
         updateListeners.add(component);
+        // Retro-kick.
+        this.fireComponentUpdate();
     }
     
     public void unregister(JComponent component) {

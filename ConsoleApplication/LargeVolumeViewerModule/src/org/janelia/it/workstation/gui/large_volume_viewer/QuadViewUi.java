@@ -1271,9 +1271,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }
     		url.openStream();            
         	rtnVal = volumeImage.loadURL(url);
-            this.setLoadedUrl(url);
-            
-            skeletonController.fireComponentUpdate();
+            this.setLoadedUrl(url);            
+            new AnnotationSkeletonViewLauncher(false).refreshTopComponent();
 
     	} catch (IOException exc) {
             throw new RuntimeException(
