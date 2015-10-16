@@ -1243,7 +1243,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         snapshot3dLauncher.setAnnotationManager(annotationMgr);
         annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
-        volumeImage.setRemoteBasePath(canonicalLinuxPath);
+        volumeImage.setRemoteBasePath(canonicalLinuxPath);        
         return loadURL(url);
     }
 
@@ -1272,6 +1272,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     		url.openStream();            
         	rtnVal = volumeImage.loadURL(url);
             this.setLoadedUrl(url);
+            
+            skeletonController.fireComponentUpdate();
 
     	} catch (IOException exc) {
             throw new RuntimeException(
