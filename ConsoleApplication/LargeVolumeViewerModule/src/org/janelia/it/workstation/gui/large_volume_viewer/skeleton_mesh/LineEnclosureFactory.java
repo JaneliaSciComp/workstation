@@ -190,7 +190,7 @@ public class LineEnclosureFactory implements TriangleSource {
                         VertexInfoBean.KnownAttributes.b_color.name(), color, 3
                 );
 
-                logger.debug("Color attribute = [" + color[0] + "," + color[1] + "," + color[2] + "]");
+                logger.debug("Color attribute = [{},{},{}].", color[0], color[1], color[2]);
             }
             // Must setup a dummy value, so that all vertices have same-sized data in buffer.
             if (includeIDs) {
@@ -200,9 +200,7 @@ public class LineEnclosureFactory implements TriangleSource {
             }
             addVertex(bean);
 			polyBeans.add(bean);
-            if (Double.isNaN(key.getPosition()[X]) || Double.isNaN(key.getPosition()[Y]) || Double.isNaN(key.getPosition()[Z])) {
-                logger.error("Not-a-number in coordinate.");
-            }
+            assert !(Double.isNaN(key.getPosition()[X]) || Double.isNaN(key.getPosition()[Y]) || Double.isNaN(key.getPosition()[Z])) : "Not-a-number in coordinate.";
             logger.debug("Adding vertex {},{},{}", key.getPosition()[X], key.getPosition()[Y], key.getPosition()[Z]);
         }
         return polyBeans;
@@ -306,26 +304,6 @@ public class LineEnclosureFactory implements TriangleSource {
         double aboutZ = lineUnitVector[X] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[X]);
         aboutZ = placeRound(aboutZ);
 
-        // Multiplying effort, to figure out the net effect on the compute time.
-// Seems to show: difference in exec time is not chiefly-impacted by use of trig and inverse trig functions.        
-//        for (int i = 0; i < 100; i++) {
-//            double junk1 = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[Z]);
-//            double junk2 = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Z]);
-//            double junk3 = lineUnitVector[X] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[X]);
-//            
-//            double junk4 = Math.sin(junk1) + Math.sin(junk2) + Math.sin(junk3);
-//            double junk5 = Math.cos(junk1) + Math.cos(junk2) + Math.cos(junk3);
-//        }
-        
-        // Check: just getting MU transform, over and again.  Makes
-        // processing time difference?
-// Seems to show a significant time consumption.        
-//        for (int i = 0; i < 100; i++) {
-//            Matrix transformTest = matrixUtils.getTransform3D(
-//                    0, 0, aboutZ,
-//                    startCoords[X], startCoords[Y], startCoords[Z]);
-//        }
-        
         logger.debug("Using angles: {}, {}, {}.", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ));
 
         int axialAlignment = getAxialAlignmentByLineDelta(lineUnitVector);
