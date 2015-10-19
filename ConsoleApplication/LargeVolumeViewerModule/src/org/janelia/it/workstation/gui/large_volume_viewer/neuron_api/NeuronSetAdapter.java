@@ -34,9 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
@@ -121,9 +119,11 @@ implements NeuronSet
         private TmWorkspace workspace;
         private final Map<Long, NeuronModel> cachedNeurons = new HashMap<>();
         private Map<Long, NeuronStyle> neuronStyleMap;
+        // private final Jama.Matrix voxToMicronMatrix;
         
         public NeuronList(TmWorkspace workspace) {
             this.workspace = workspace;
+            // this.voxToMicronMatrix = workspace.getVoxToMicronMatrix();
         }
         
         @Override
@@ -179,7 +179,7 @@ implements NeuronSet
                     Long guid = neuron.getId();
                     if (! cachedNeurons.containsKey(guid)) {
                         NeuronStyle neuronStyle = neuronStyleMap.get(guid);
-                        cachedNeurons.put(guid, new NeuronModelAdapter(neuron, neuronStyle));
+                        cachedNeurons.put(guid, new NeuronModelAdapter(neuron, neuronStyle, workspace));
                     }
                     return cachedNeurons.get(guid);
                 }

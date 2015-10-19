@@ -44,6 +44,7 @@ import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,12 +70,12 @@ public class NeuronModelAdapter implements NeuronModel
     private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
 
 
-    public NeuronModelAdapter(TmNeuron neuron, NeuronStyle neuronStyle) {
+    public NeuronModelAdapter(TmNeuron neuron, NeuronStyle neuronStyle, TmWorkspace workspace) {
         this.neuron = neuron;
         this.neuronId = neuron.getId();
         this.neuronStyle = neuronStyle;
         bIsVisible = neuronStyle.isVisible();
-        vertexes = new VertexList(neuron.getGeoAnnotationMap());
+        vertexes = new VertexList(neuron.getGeoAnnotationMap(), workspace);
         edges = new EdgeList((VertexList)vertexes);
     }
 
@@ -226,10 +227,12 @@ public class NeuronModelAdapter implements NeuronModel
     {
         private final Map<Long, TmGeoAnnotation> vertices;
         private final Map<Long, NeuronVertex> cachedVertices = new HashMap<>();
+        private final TmWorkspace workspace;
 
-        private VertexList(Map<Long, TmGeoAnnotation> vertices)
+        private VertexList(Map<Long, TmGeoAnnotation> vertices, TmWorkspace workspace)
         {
             this.vertices = vertices;
+            this.workspace = workspace;
         }
         
         @Override
@@ -343,7 +346,7 @@ public class NeuronModelAdapter implements NeuronModel
                 TmGeoAnnotation a = getAnnotationByGuid(vertexId);
                 if (a == null)
                     return null;
-                cachedVertices.put(vertexId, new NeuronVertexAdapter(a));
+                cachedVertices.put(vertexId, new NeuronVertexAdapter(a, workspace));
             }
             return cachedVertices.get(vertexId);
         }

@@ -33,6 +33,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 import java.util.Objects;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 
 /**
  *
@@ -42,20 +43,31 @@ public class NeuronVertexAdapter implements NeuronVertex
 {
     private final TmGeoAnnotation vertex;
     private final Long vertexId;
+    private final Jama.Matrix voxToMicronMatrix;
 
-    public NeuronVertexAdapter(TmGeoAnnotation vertex) {
+    public NeuronVertexAdapter(TmGeoAnnotation vertex, TmWorkspace workspace) {
         this.vertex = vertex;
         this.vertexId = vertex.getId();
+        this.voxToMicronMatrix = workspace.getVoxToMicronMatrix();
     }
     
     @Override
     public float[] getLocation()
     {
+        // Convert from image voxel coordinates to Cartesian micrometers
+        // TmGeoAnnotation is in voxel coordinates
+        Jama.Matrix voxLoc = new Jama.Matrix(new double[][] {
+            {vertex.getX(), }, 
+            {vertex.getY(), }, 
+            {vertex.getZ(), },
+            {1.0, },
+        });
+        // NeuronVertex API requires coordinates in micrometers
+        Jama.Matrix micLoc = voxToMicronMatrix.times(voxLoc);
         return new float[] {
-                vertex.getX().floatValue(),
-                vertex.getY().floatValue(), 
-                vertex.getZ().floatValue(),
-        };
+                (float) micLoc.get(0, 0),
+                (float) micLoc.get(1, 0),
+                (float) micLoc.get(2, 0)};
     }
 
     @Override
