@@ -25,7 +25,6 @@ import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
 import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
-import org.janelia.it.jacs.shared.utils.ThreadUtils;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
@@ -567,63 +566,18 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
     }
 
     protected void calculateManualLineVertices(Set<SegmentIndex> voxelPathAnchorPairs, final LineEnclosureFactory manualSegmentEnclosureFactory) throws Exception {
-        Date starting = new Date();
         manualSegmentEnclosureFactory.clearTimeAccumulators();
         
-        Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);         
-        ExecutorService executorService = ThreadUtils.establishExecutor(
-                EXECUTOR_THREAD_COUNT,
-                new CustomNamedThreadFactory(
-                        NeuronTraceVtxAttribMgr.class.getSimpleName() + "_ManualLines"
-                )                
-        );
-        
-        List<Future<Void>> callbacks = new ArrayList<>();
-        List<List<AnchorLinesReturn>> segmentedList = new ArrayList<>();
-        int segmentLength = anchorLines.size() / LINE_CALC_WORKLOAD_SIZE;
-        int pos = 0;
-        List<AnchorLinesReturn> sublist = null;
+        Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);                 
         for ( AnchorLinesReturn anchorLine: anchorLines ) {
-            if (pos % segmentLength == 0) {
-                sublist = new ArrayList<AnchorLinesReturn>();
-                segmentedList.add( sublist );
-            }
-            sublist.add( anchorLine );
-            
-            pos ++;
+            manualSegmentEnclosureFactory.addEnclosure(
+                    anchorLine.getStart(),
+                    anchorLine.getEnd(),
+                    anchorLine.getStyle().getColorAsFloatArray()
+            );
         }                
 
-        Date afterMakeSubList = new Date();
-        
-        for (final List<AnchorLinesReturn> segment: segmentedList) {
-            Callable<Void> callable = new Callable<Void>() {
-                public Void call() throws Exception {
-                    for (AnchorLinesReturn anchorLine: segment) {
-                        manualSegmentEnclosureFactory.addEnclosure(
-                                anchorLine.getStart(),
-                                anchorLine.getEnd(),
-                                anchorLine.getStyle().getColorAsFloatArray()
-                        );
-                    }
-                    return null;
-                }
-            };
-            callbacks.add( executorService.submit(callable) );
-        }
-        
-        Date afterAnchorSub = new Date();
-        
-        // Follow-up
-        ThreadUtils.followUpExecution(executorService, callbacks, 15);
-
-        Date afterFollowUp = new Date();
-        
         manualSegmentEnclosureFactory.dumpTimeAccumulators();
-        log.info("Time lapses in ms.  From start-to-sublist {}; from sublist-to-anchors {}; from anchors-to-follow-up {}.",
-                afterMakeSubList.getTime() - starting.getTime(),
-                afterAnchorSub.getTime() - afterMakeSubList.getTime(),
-                afterFollowUp.getTime() - afterAnchorSub.getTime()
-        );
 
     }
 
@@ -632,23 +586,11 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
             final TileFormat tileFormat, 
             final LineEnclosureFactory tracedSegmentEnclosureFactory
     ) throws Exception {
-        ExecutorService executorService = ThreadUtils.establishExecutor(
-                 EXECUTOR_THREAD_COUNT,
-                new CustomNamedThreadFactory(NeuronTraceVtxAttribMgr.class.getSimpleName() + "_TracedSegment")
-        );
         log.info("Tracing {} segments.", getSkeleton().getTracedSegments().size());
         
-        List<Future<Void>> callbacks = new ArrayList<>();
         for ( final AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {
-            Callable<Void> callable = new Callable<Void>() {
-                public Void call() throws Exception {
-                    processTracedSegment(voxelPath, voxelPathAnchorPairs, tileFormat, tracedSegmentEnclosureFactory);
-                    return null;
-                }
-            };
-            callbacks.add( executorService.submit(callable) );
+            processTracedSegment(voxelPath, voxelPathAnchorPairs, tileFormat, tracedSegmentEnclosureFactory);
         }
-        ThreadUtils.followUpExecution(executorService, callbacks, 15);
     }
 
     private boolean processTracedSegment(AnchoredVoxelPath voxelPath, Set<SegmentIndex> voxelPathAnchorPairs, TileFormat tileFormat, LineEnclosureFactory tracedSegmentEnclosureFactory) {
