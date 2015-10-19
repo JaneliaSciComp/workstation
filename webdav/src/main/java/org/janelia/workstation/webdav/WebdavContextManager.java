@@ -44,7 +44,6 @@ public class WebdavContextManager implements ServletContextListener  {
                     Map<String, Object> scalityConfig = (Map<String,Object>)providersConfig.get("scality");
                     scality.setObjectUrl((String)scalityConfig.get("objectUrl"));
                     scality.setMetaUrl((String) scalityConfig.get("metaUrl"));
-                    scality.setSearchUrl((String) scalityConfig.get("searchUrl"));
                     scality.setUser((String)scalityConfig.get("user"));
                     scality.setPassword((String)scalityConfig.get("password"));
                     scality.init();

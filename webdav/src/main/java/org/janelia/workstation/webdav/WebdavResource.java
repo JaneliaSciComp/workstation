@@ -23,9 +23,8 @@ import javax.ws.rs.Path;
 /**
  * Created by schauderd on 10/5/15.
  */
-
-@Path("file/{path: .*}")
-@Api(value = "Janelia Object File Services", description = "Services for managing files in Object Stores (Scality)")
+@Path("{seg: .*}")
+@Api
 public class WebdavResource {
     @Context
     HttpHeaders headers;
@@ -41,18 +40,16 @@ public class WebdavResource {
 
     @GET
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @ApiOperation(value = "Get a file from an object store",
-            notes = "Get a file from the appropriate file store and return it as a stream.  Path Syntax is [Filestore]/[Path_To_File_Name]. Example: {path}=DATA1/somefile.ext")
+    @ApiOperation(value = "Say Hello World",
+            notes = "Anything Else?")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "The file was successfully retrieved"),
-            @ApiResponse(code = 401, message = "Either the file share doesn't have read permissions, or the user is not authorized to access this share"),
-            @ApiResponse(code = 500, message = "Unable to retrieve the file successfully from the file store")
-    })
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 500, message = "Something wrong in Server")})
     public StreamingOutput getFile() throws PermissionsFailureException, FileNotFoundException {
-        String filepath = "/" + Util.stripApiPath(uriInfo.getPath());
-        System.out.println ("GET "  + filepath);
-
+        String filepath = "/" + uriInfo.getPath();
+        System.out.println ("GET " + filepath);
         FileShare mapping = Util.checkPermissions(filepath, headers, request);
+
         // check file share for read permissions
         if (!mapping.getPermissions().contains(Permission.READ)) {
             throw new PermissionsFailureException("Not permitted to read from this file share");
@@ -64,18 +61,10 @@ public class WebdavResource {
 
     @PUT
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-    @ApiOperation(value = "Upload a file into the object store",
-            notes = "Upload a file into the appropriate file store.  Path Syntax is [Filestore]/[Path_To_File_Name]. Example: {path}=DATA1/somefile.ext")
-    @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "The file was uploaded successfully"),
-            @ApiResponse(code = 401, message = "Either the file share doesn't have write permissions, or the user is not authorized to access this share"),
-            @ApiResponse(code = 500, message = "Unable to write the file into the file store")
-    })
     public void putFile(InputStream binaryStream) throws PermissionsFailureException,
             FileNotFoundException, FileUploadException {
-        String filepath = "/" + Util.stripApiPath(uriInfo.getPath());
-
-        System.out.println ("PUT "  + filepath);
+        String filepath = "/" + uriInfo.getPath();
+        System.out.println ("PUT " + filepath);
         FileShare mapping = Util.checkPermissions(filepath, headers, request);
         // check file share for write permissions
         if (!mapping.getPermissions().contains(Permission.WRITE)) {
@@ -86,16 +75,9 @@ public class WebdavResource {
     }
 
     @DELETE
-    @ApiOperation(value = "Delete a file in the object store",
-            notes = "Delete a file in the file store.  Path Syntax is [Filestore]/[Path_To_File_Name]. Example: {path}=DATA1/somefile.ext")
-    @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "The file was deleted successfully"),
-            @ApiResponse(code = 401, message = "Either the file share doesn't have delete permissions, or the user is not authorized to access this share"),
-            @ApiResponse(code = 500, message = "Unable to remove the file into the file store")
-    })
     public void deleteFile() throws PermissionsFailureException,
             FileNotFoundException, FileUploadException, IOException {
-        String filepath = "/" + Util.stripApiPath(uriInfo.getPath());
+        String filepath = "/" + uriInfo.getPath();
         FileShare mapping = Util.checkPermissions(filepath, headers, request);
 
         // check file share for write permissions

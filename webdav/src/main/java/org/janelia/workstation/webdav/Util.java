@@ -15,7 +15,7 @@ import java.util.Map;
  * Created by schauderd on 10/5/15.
  */
 public class Util {
-    static final String API_PATH = "/file";
+    static final String API_PATH = "";
     public static FileShare checkPermissions(String filepath, HttpHeaders headers, HttpServletRequest request) throws PermissionsFailureException,FileNotFoundException {
         Token credentials = getCredentials(headers);
         FileShare mapping = mapResource(filepath, request);
@@ -92,6 +92,7 @@ public class Util {
     }
 
     public static String stripApiPath (String uriPath) {
-       return uriPath.substring(API_PATH.length());
+       // return uriPath.substring(API_PATH.length());
+        return uriPath;
     }
 }

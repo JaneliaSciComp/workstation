@@ -2,22 +2,28 @@ package org.janelia.workstation.webdav;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.*;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.*;
 
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.servlet.ServletProperties;
+import org.janelia.workstation.webdav.exception.FileUploadException;
 import org.janelia.workstation.webdav.exception.PermissionsFailureException;
 import org.janelia.workstation.webdav.exception.FileNotFoundException;
 
 import io.swagger.jaxrs.listing.*;
 import io.swagger.jaxrs.config.BeanConfig;
 
-@ApplicationPath("api")
+@ApplicationPath("/")
 public class WebdavApplication extends ResourceConfig {
     final Resource.Builder resourceBuilder;
 
@@ -37,20 +43,19 @@ public class WebdavApplication extends ResourceConfig {
         BeanConfig beanConfig = new BeanConfig();
         beanConfig.setVersion("1.0.2");
         beanConfig.setSchemes(new String[]{"http"});
-        beanConfig.setHost("schauderd-ws1:8880");
-        beanConfig.setBasePath("/Webdav/api");
+        beanConfig.setHost("localhost:8880");
+        beanConfig.setBasePath("/Webdav");
         beanConfig.setResourcePackage("org.janelia.workstation.webdav");
         beanConfig.setScan(true);
 
         resourceBuilder = Resource.builder();
-        resourceBuilder.path("file/{seg: .*}");
+        resourceBuilder.path("{seg: .*}");
         resourceBuilder.addMethod("PROPFIND")
                 .handledBy(new Inflector<ContainerRequestContext, Response>() {
                     @Override
                     public Response apply(ContainerRequestContext containerRequestContext) {
                         // generate XML response for propfind
-
-                        String filepath = "/" + Util.stripApiPath(uriInfo.getPath());
+                        String filepath = "/" + uriInfo.getPath();
                         FileShare mapping;
                         String xmlResponse;
                         try {
@@ -85,17 +90,21 @@ public class WebdavApplication extends ResourceConfig {
                         FileShare mapping;
                         try {
                             mapping = Util.checkPermissions(filepath, headers, request);
+                            System.out.println(mapping.getPermissions());
                             if (!mapping.getPermissions().contains(Permission.MKCOL)) {
                                 return Response.status(Response.Status.UNAUTHORIZED).build();
                             }
                             Files.createDirectory(Paths.get(filepath));
-                        } catch (PermissionsFailureException e) {
+                        }
+                        catch (PermissionsFailureException e) {
                             e.printStackTrace();
                             return Response.status(Response.Status.UNAUTHORIZED).build();
-                        } catch (FileNotFoundException e) {
+                        }
+                        catch (FileNotFoundException e) {
                             e.printStackTrace();
                             return Response.status(Response.Status.CONFLICT).build();
-                        } catch (IOException e) {
+                        }
+                        catch (IOException e) {
                             e.printStackTrace();
                             return Response.status(Response.Status.CONFLICT).build();
                         }
@@ -110,6 +119,8 @@ public class WebdavApplication extends ResourceConfig {
         register(SwaggerSerializers.class);
 
         packages("org.janelia.workstation.webdav");
+        property(ServletProperties.FILTER_FORWARD_ON_404, true);
+
     }
 
 

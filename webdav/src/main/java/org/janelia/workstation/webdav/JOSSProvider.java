@@ -7,7 +7,6 @@ package org.janelia.workstation.webdav;
 public class JOSSProvider extends Provider {
     private String objectUrl;
     private String metaUrl;
-    private String searchUrl;
     private String user;
     private String password;
 
@@ -21,15 +20,6 @@ public class JOSSProvider extends Provider {
 
     public void setObjectUrl(String objectUrl) {
         this.objectUrl = objectUrl;
-    }
-
-
-    public String getSearchUrl() {
-        return searchUrl;
-    }
-
-    public void setSearchUrl(String searchUrl) {
-        this.searchUrl = searchUrl;
     }
 
     public String getMetaUrl() {

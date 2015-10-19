@@ -55,15 +55,6 @@ public abstract class FileShare {
 
     }
 
-    //  METADATA api
-    public StreamingOutput getInfo (HttpServletResponse respopnse, String qualifiedFilename) throws FileNotFoundException {
-        return null;
-    }
-
-    public StreamingOutput searchFile (HttpServletResponse respopnse, String name) throws FileNotFoundException {
-        return null;
-    }
-
     public String getMapping() {
         return mapping;
     }
