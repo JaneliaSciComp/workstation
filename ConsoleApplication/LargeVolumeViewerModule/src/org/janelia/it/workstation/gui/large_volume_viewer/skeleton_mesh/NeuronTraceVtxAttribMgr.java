@@ -17,9 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
 import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
@@ -27,9 +25,9 @@ import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
 import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
+import org.janelia.it.jacs.shared.utils.ThreadUtils;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
@@ -62,6 +60,9 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
     private static final int TRACED_SEGMENT_POLYGON_SIDES = 8;
     public static final double ANNO_RADIUS = TRACED_SEGMENT_RADIUS * 4;
     private static final int ANNO_POLYGON_SIDES = 12;
+    
+    public static final int LINE_CALC_WORKLOAD_SIZE = 100;
+    public static final int EXECUTOR_THREAD_COUNT = 1;//1000;
     
     private static final int CURRENT_SELECTION_POLYGON_SIDES = 24;
     public static final double CURRENT_SELECTION_RADIUS = TRACED_SEGMENT_RADIUS * 10;
@@ -285,6 +286,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
      * @throws Exception 
      */
     private synchronized void createVertices() throws Exception {
+        Date starting = new Date();
         VertexNumberGenerator vertexNumberGenerator = new VertexNumberGenerator();
         // Make triangle sources.
         LineEnclosureFactory lineEnclosureFactory = new LineEnclosureFactory(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS, vertexNumberGenerator);
@@ -300,7 +302,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
         // The current selection.
         pointEnclosureFactory.setCharacteristics(CURRENT_SELECTION_POLYGON_SIDES, getCurrentSelectionRadius());
         calculateCurrentSelectionVertices(pointEnclosureFactory);
-
+        
         // Get the auto-traced segments.
         lineEnclosureFactory.setCharacteristics(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
         calculateTracedSegmentVertices(voxelPathAnchorPairs, tileFormat, lineEnclosureFactory);
@@ -308,7 +310,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
         // Now get the lines.
         lineEnclosureFactory.setCharacteristics(MANUAL_SEGMENT_POLYGON_SIDES, MANUAL_SEGMENT_RADIUS);
         calculateManualLineVertices(voxelPathAnchorPairs, lineEnclosureFactory);                        
-
+        
 		// TESTING 
 		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
         log.info("Number of vertices is {}.", vertexNumberGenerator.getCurrentVertex());
@@ -323,6 +325,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
 		// Add each factory to the collection.
         triangleSources.add(pointEnclosureFactory);
 		triangleSources.add(lineEnclosureFactory);
+        
+        log.info("Total time spent in vertex creation is {}ms.", new Date().getTime() - starting.getTime());
     }
 
 	@SuppressWarnings("unused")
@@ -562,31 +566,77 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
         return start;
     }
 
-    protected void calculateManualLineVertices(Set<SegmentIndex> voxelPathAnchorPairs, LineEnclosureFactory manualSegmentEnclosureFactory) {
-        Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);
+    protected void calculateManualLineVertices(Set<SegmentIndex> voxelPathAnchorPairs, final LineEnclosureFactory manualSegmentEnclosureFactory) throws Exception {
+        Date starting = new Date();
+        manualSegmentEnclosureFactory.clearTimeAccumulators();
+        
+        Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);         
+        ExecutorService executorService = ThreadUtils.establishExecutor(
+                EXECUTOR_THREAD_COUNT,
+                new CustomNamedThreadFactory(
+                        NeuronTraceVtxAttribMgr.class.getSimpleName() + "_ManualLines"
+                )                
+        );
+        
+        List<Future<Void>> callbacks = new ArrayList<>();
+        List<List<AnchorLinesReturn>> segmentedList = new ArrayList<>();
+        int segmentLength = anchorLines.size() / LINE_CALC_WORKLOAD_SIZE;
+        int pos = 0;
+        List<AnchorLinesReturn> sublist = null;
         for ( AnchorLinesReturn anchorLine: anchorLines ) {
-            manualSegmentEnclosureFactory.addEnclosure(
-                    anchorLine.getStart(),
-                    anchorLine.getEnd(),
-                    anchorLine.getStyle().getColorAsFloatArray()
-            );
+            if (pos % segmentLength == 0) {
+                sublist = new ArrayList<AnchorLinesReturn>();
+                segmentedList.add( sublist );
+            }
+            sublist.add( anchorLine );
             
-            //break; // TEMP: add only a single enclosure, so dump is easier to understand.
+            pos ++;
+        }                
+
+        Date afterMakeSubList = new Date();
+        
+        for (final List<AnchorLinesReturn> segment: segmentedList) {
+            Callable<Void> callable = new Callable<Void>() {
+                public Void call() throws Exception {
+                    for (AnchorLinesReturn anchorLine: segment) {
+                        manualSegmentEnclosureFactory.addEnclosure(
+                                anchorLine.getStart(),
+                                anchorLine.getEnd(),
+                                anchorLine.getStyle().getColorAsFloatArray()
+                        );
+                    }
+                    return null;
+                }
+            };
+            callbacks.add( executorService.submit(callable) );
         }
+        
+        Date afterAnchorSub = new Date();
+        
+        // Follow-up
+        ThreadUtils.followUpExecution(executorService, callbacks, 15);
+
+        Date afterFollowUp = new Date();
+        
+        manualSegmentEnclosureFactory.dumpTimeAccumulators();
+        log.info("Time lapses in ms.  From start-to-sublist {}; from sublist-to-anchors {}; from anchors-to-follow-up {}.",
+                afterMakeSubList.getTime() - starting.getTime(),
+                afterAnchorSub.getTime() - afterMakeSubList.getTime(),
+                afterFollowUp.getTime() - afterAnchorSub.getTime()
+        );
+
     }
 
     protected void calculateTracedSegmentVertices(
             final Set<SegmentIndex> voxelPathAnchorPairs,
             final TileFormat tileFormat, 
             final LineEnclosureFactory tracedSegmentEnclosureFactory
-    ) {
-        // Iterate over all the traced segments, and add enclosures for each.
-        ExecutorService executorService = Executors.newFixedThreadPool(
-                10, 
-                new CustomNamedThreadFactory(
-                        NeuronTraceVtxAttribMgr.class.getSimpleName()
-                )
+    ) throws Exception {
+        ExecutorService executorService = ThreadUtils.establishExecutor(
+                 EXECUTOR_THREAD_COUNT,
+                new CustomNamedThreadFactory(NeuronTraceVtxAttribMgr.class.getSimpleName() + "_TracedSegment")
         );
+        log.info("Tracing {} segments.", getSkeleton().getTracedSegments().size());
         
         List<Future<Void>> callbacks = new ArrayList<>();
         for ( final AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {
@@ -598,20 +648,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
             };
             callbacks.add( executorService.submit(callable) );
         }
-        
-        // Follow-up.
-        executorService.shutdown();
-        try {
-            executorService.awaitTermination(15, TimeUnit.MINUTES);
-
-            for (Future<Void> future : callbacks) {                
-                future.get(); // 'Enjoy' any exceptions encountered.
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            log.error("Failure during finalization of the traced segment vertex calculations.");
-            SessionMgr.getSessionMgr().handleException(ex);
-        }
+        ThreadUtils.followUpExecution(executorService, callbacks, 15);
     }
 
     private boolean processTracedSegment(AnchoredVoxelPath voxelPath, Set<SegmentIndex> voxelPathAnchorPairs, TileFormat tileFormat, LineEnclosureFactory tracedSegmentEnclosureFactory) {

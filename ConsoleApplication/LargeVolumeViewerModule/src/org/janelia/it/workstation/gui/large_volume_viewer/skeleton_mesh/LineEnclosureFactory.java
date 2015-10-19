@@ -84,6 +84,7 @@ public class LineEnclosureFactory implements TriangleSource {
      * @return number of coordinates created here.
      */
     public synchronized int addEnclosure( double[] startingCoords, double[] endingCoords, float[] color ) {
+        long startTime = System.currentTimeMillis();
         if ( startingCoords.length != 3 ) {
             throw new IllegalArgumentException("3-D starting coords only.");
         }
@@ -96,15 +97,48 @@ public class LineEnclosureFactory implements TriangleSource {
         if (endCaps == null) {
             return 0;
         }
+        long endPolyTime = System.currentTimeMillis();
+        
         //List<double[][]> endCaps = makeEndPolygonsNoTrig( startingCoords, endingCoords );
         int coordCount = 0;
         List<VertexInfoBean> startVertices = addVertices(endCaps.get(0), color);
+        long endStartVertTime = System.currentTimeMillis();
+        
 		coordCount += startVertices.size();
         List<VertexInfoBean> endVertices = addVertices(endCaps.get(1), color);
+        long endEndVertTime = System.currentTimeMillis();
+        
 		coordCount += endVertices.size();
         createCCWTriangles(startVertices, endVertices);
+        long endTriTime = System.currentTimeMillis();
+        
+        accumulators[POLYGON_INX] += endPolyTime - startTime;
+        accumulators[START_VERT_INX] += endStartVertTime - endPolyTime;
+        accumulators[END_VERT_INX] += endEndVertTime - endStartVertTime;
+        accumulators[TRI_INX] += endTriTime - endEndVertTime;
+        
         return coordCount;
     }
+    public static final long ONE_MIL = 1000000L;
+    
+    public void clearTimeAccumulators() {
+        for (int i = 0; i < accumulators.length; i++) {
+            accumulators[i] = 0L;
+        }
+    }
+    
+    public void dumpTimeAccumulators() {
+        logger.info("Accumulator indexes are 0=Polygon Generation; 1=Starting Vertexes; 2=Ending Vertexes; 3=Triangles.  All elapsed ns divided by 1M.");
+        for (int i = 0; i < accumulators.length; i++) {
+            logger.info("Time for index {} is {}ms.", i, accumulators[i]);
+        }
+    }
+    
+    private static final int POLYGON_INX = 0;
+    private static final int START_VERT_INX = 1;
+    private static final int END_VERT_INX = 2;
+    private static final int TRI_INX = 3;
+    private long[] accumulators = new long[4];
 
     //--------------------------------------------IMPLEMENT TriangleSource
     @Override

@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.janelia.it.jacs.shared.utils.ThreadUtils;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;
@@ -381,7 +382,7 @@ public class Subvolume {
     }
 
     private void multiThreadedFetch(Set<TileIndex> neededTiles, final TextureCache textureCache, final AbstractTextureLoadAdapter loadAdapter, final TileFormat tileFormat, final ZoomLevel zoom, final ZoomedVoxelIndex farCorner) {
-        ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
+        ExecutorService executorService = ThreadUtils.establishExecutor(N_THREADS, new CustomNamedThreadFactory("SubvolumeFetch"));
         List<Future<Boolean>> followUps = new ArrayList<>();
         totalTiles = neededTiles.size();
         remainingTiles = neededTiles.size();
