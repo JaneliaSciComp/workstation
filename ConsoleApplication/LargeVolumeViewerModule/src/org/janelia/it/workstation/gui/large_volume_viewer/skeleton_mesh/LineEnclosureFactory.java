@@ -34,6 +34,10 @@ public class LineEnclosureFactory implements TriangleSource {
 	private static final int PERPENDICULAR_ALIGNMENT = 100;
     private static final double PI_DIV_4 = Math.PI / 4.0;
 
+    // These caches should remain in effect for any time this class is in use.
+    private static Map<Integer, Matrix> aboutZToMatrix = new HashMap<>();
+    private static Map<String, Matrix> aboutXAboutYToMatrix = new HashMap<>();
+
     private final List<VertexInfoBean> vertices = new ArrayList<>();
     private final List<Triangle> triangles = new ArrayList<>();
     private final ViewMatrixSupport matrixUtils = new ViewMatrixSupport();
@@ -44,9 +48,6 @@ public class LineEnclosureFactory implements TriangleSource {
     private final Map<Integer,double[][]> axisAlignedPrototypePolygons = new HashMap<>();
     private double[][] zAxisAlignedPrototypePolygon;
     
-    private Map<Integer,Matrix> aboutZToMatrix = new HashMap<>();
-    private Map<String,Matrix> aboutXAboutYToMatrix = new HashMap<>();
-
     private final List<double[][]> endCapPolygonsHolder = new ArrayList<>();
     
     private PolygonSource polygonSource;
