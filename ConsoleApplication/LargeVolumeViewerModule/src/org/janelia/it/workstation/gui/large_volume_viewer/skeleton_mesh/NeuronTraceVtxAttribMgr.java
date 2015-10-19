@@ -15,9 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
 import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
@@ -28,7 +25,6 @@ import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
-import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationGeometry;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
@@ -311,7 +307,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
         calculateManualLineVertices(voxelPathAnchorPairs, lineEnclosureFactory);                        
         
 		// TESTING 
-		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
+		calculateAngleIllustrativeVertices(lineEnclosureFactory);
         log.info("Number of vertices is {}.", vertexNumberGenerator.getCurrentVertex());
 
 		if (vertexNumberGenerator.hasVertices()) {

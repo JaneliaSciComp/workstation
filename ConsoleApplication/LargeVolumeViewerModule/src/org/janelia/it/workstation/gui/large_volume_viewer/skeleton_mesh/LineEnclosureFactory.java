@@ -43,6 +43,9 @@ public class LineEnclosureFactory implements TriangleSource {
     
     private final Map<Integer,double[][]> axisAlignedPrototypePolygons = new HashMap<>();
     private double[][] zAxisAlignedPrototypePolygon;
+    
+    private Map<Integer,Matrix> aboutZToMatrix = new HashMap<>();
+    private Map<String,Matrix> aboutXAboutYToMatrix = new HashMap<>();
 
     private final List<double[][]> endCapPolygonsHolder = new ArrayList<>();
     
@@ -135,6 +138,12 @@ public class LineEnclosureFactory implements TriangleSource {
         }
         for (int i = 0; i < polygonCaseFrequencies.length; i++) {
             logger.info("Angles case {}={}", i, polygonCaseFrequencies[i]);
+        }
+        if (cacheMissCount > 0) {
+            logger.info("Cache hit for about-Z {}.  Cache-miss for about-Z {}.  Fraction hit/miss {}.", cacheHitCount, cacheMissCount, (cacheHitCount/cacheMissCount));
+        }
+        if (cacheMissXY > 0) {
+            logger.info("Cache hit for about-X/Y {}.  Cache-miss for about-X/Y {}.  Fraction hit/miss {}.", cacheHitXY, cacheMissXY, (cacheHitXY / cacheMissXY));
         }
     }
     
@@ -278,113 +287,181 @@ public class LineEnclosureFactory implements TriangleSource {
 		}
 	}
     
-    private List<double[][]> makeEndPolygons( double[] startCoords, double[] endCoords ) {
-        
+    private List<double[][]> makeEndPolygons(double[] startCoords, double[] endCoords) {
+
         endCapPolygonsHolder.clear();
-		final double[] lineDelta = getLineDelta(startCoords, endCoords);
-        
+        final double[] lineDelta = getLineDelta(startCoords, endCoords);
+
         // Get the three angles: about X, about Y, about Z.
         double[] lineUnitVector = normalize(lineDelta);
         if (lineUnitVector == null) {
             return null;
         }
-        
+
         double aboutX = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[Z]);
+        aboutX = placeRound(aboutX);
         double aboutY = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Z]);
+        aboutY = placeRound(aboutY);
         double aboutZ = lineUnitVector[X] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[X]);
-				
-		logger.debug("Using angles: {}, {}, {}.", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ));
+        aboutZ = placeRound(aboutZ);
 
-		int axialAlignment = getAxialAlignmentByLineDelta(lineUnitVector);
+        // Multiplying effort, to figure out the net effect on the compute time.
+// Seems to show: difference in exec time is not chiefly-impacted by use of trig and inverse trig functions.        
+//        for (int i = 0; i < 100; i++) {
+//            double junk1 = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[Z]);
+//            double junk2 = lineUnitVector[Z] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Z]);
+//            double junk3 = lineUnitVector[X] == 0 ? 0 : Math.atan(lineUnitVector[Y] / lineUnitVector[X]);
+//            
+//            double junk4 = Math.sin(junk1) + Math.sin(junk2) + Math.sin(junk3);
+//            double junk5 = Math.cos(junk1) + Math.cos(junk2) + Math.cos(junk3);
+//        }
+        
+        // Check: just getting MU transform, over and again.  Makes
+        // processing time difference?
+// Seems to show a significant time consumption.        
+//        for (int i = 0; i < 100; i++) {
+//            Matrix transformTest = matrixUtils.getTransform3D(
+//                    0, 0, aboutZ,
+//                    startCoords[X], startCoords[Y], startCoords[Z]);
+//        }
+        
+        logger.debug("Using angles: {}, {}, {}.", Math.toDegrees(aboutX), Math.toDegrees(aboutY), Math.toDegrees(aboutZ));
+
+        int axialAlignment = getAxialAlignmentByLineDelta(lineUnitVector);
         logger.debug("Aligned along the #{} axis.", axialAlignment);
-		
-		if (axialAlignment == -1) {
-            polygonCaseFrequencies[0] ++;
-			if (lineUnitVector[Z] < 0) {
-				// Switch start/end order if facing in negative direction.
-				double[] tempCoords = startCoords;
-				startCoords = endCoords;
-				endCoords = tempCoords;
-			}
-			// Use different part of triangle to calculate atan, if not special axial alignment.
-            if (Math.abs(aboutZ) > PI_DIV_4)
-                aboutZ = lineUnitVector[Y] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Y]);
-			
-			// Now that we have our angles, we make transforms.
-			Matrix transform1 = matrixUtils.getTransform3D(
-					-aboutX, aboutY, 0,
-					0, 0, 0);
-			final double[][] startEndPolygon = clonePrototypePolygon(zAxisAlignedPrototypePolygon);
-			transformPolygon(startEndPolygon, transform1);
-			Matrix transform2 = matrixUtils.getTransform3D(
-					0, 0, aboutZ,
-					startCoords[X], startCoords[Y], startCoords[Z]);
-			transformPolygon(startEndPolygon, transform2);
-			endCapPolygonsHolder.add(startEndPolygon);
 
-			final double[][] endingEndPolygon = clonePrototypePolygon(zAxisAlignedPrototypePolygon);
-			transformPolygon(endingEndPolygon, transform1);
-			transform2.set(0, 3, endCoords[X]);
-			transform2.set(1, 3, endCoords[Y]);
-			transform2.set(2, 3, endCoords[Z]);
-			transformPolygon(endingEndPolygon, transform2);
-			endCapPolygonsHolder.add(endingEndPolygon);			
-		}
-		else if (axialAlignment == PERPENDICULAR_ALIGNMENT) {
-            polygonCaseFrequencies[1] ++;
+        if (axialAlignment == -1) {
+            polygonCaseFrequencies[0]++;
+            if (lineUnitVector[Z] < 0) {
+                // Switch start/end order if facing in negative direction.
+                double[] tempCoords = startCoords;
+                startCoords = endCoords;
+                endCoords = tempCoords;
+            }
+            // Use different part of triangle to calculate atan, if not special axial alignment.
+            if (Math.abs(aboutZ) > PI_DIV_4) {
+                aboutZ = lineUnitVector[Y] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Y]);
+                aboutZ = placeRound(aboutZ);
+            }
+            Matrix transform1 = getAboutXAboutYTransformMatrix(aboutX, aboutY);
+            final double[][] startEndPolygon = clonePrototypePolygon(zAxisAlignedPrototypePolygon);
+            transformPolygon(startEndPolygon, transform1);
+            Matrix transform2 = getAboutZTransform(aboutZ);
+            
+            transform2.set(0, 3, startCoords[X]);
+            transform2.set(1, 3, startCoords[Y]);
+            transform2.set(2, 3, startCoords[Z]);
+            transformPolygon(startEndPolygon, transform2);
+            endCapPolygonsHolder.add(startEndPolygon);
+
+            final double[][] endingEndPolygon = clonePrototypePolygon(zAxisAlignedPrototypePolygon);
+            transformPolygon(endingEndPolygon, transform1);
+            transform2.set(0, 3, endCoords[X]);
+            transform2.set(1, 3, endCoords[Y]);
+            transform2.set(2, 3, endCoords[Z]);
+            transformPolygon(endingEndPolygon, transform2);
+            endCapPolygonsHolder.add(endingEndPolygon);
+        } else if (axialAlignment == PERPENDICULAR_ALIGNMENT) {
+            polygonCaseFrequencies[1]++;
 			// Special case: new normal lies in the xy plane, but not on an axis.
-			// Only spin about Z.
+            // Only spin about Z.
             if (lineUnitVector[X] > 0) {
                 // Switch start/end order if facing in negative direction.
                 double[] tempCoords = startCoords;
                 startCoords = endCoords;
                 endCoords = tempCoords;
             }
-			Matrix transform = matrixUtils.getTransform3D(
-					0f, 0f, aboutZ,
-					startCoords[X], startCoords[Y], startCoords[Z]
-			);
-			double[][] prototypePolygon = getPrototypePolygon(X);
-			final double[][] startEndPolygon = clonePrototypePolygon(prototypePolygon);
-			transformPolygon(startEndPolygon, transform);		
-			endCapPolygonsHolder.add(startEndPolygon);
-			
-			final double[][] endingEndPolygon = clonePrototypePolygon(prototypePolygon);
-			transform.set(0, 3, endCoords[X]);
-			transform.set(1, 3, endCoords[Y]);
-			transform.set(2, 3, endCoords[Z]);
-			transformPolygon(endingEndPolygon, transform);
-			endCapPolygonsHolder.add(endingEndPolygon);
-		}
-		else {
-            polygonCaseFrequencies[2] ++;
-			// Special case: aligned right along some axis.  Trig assumptions won't help.
-			boolean mustSwitch = false;
-			if (lineUnitVector[axialAlignment] < 0  &&  axialAlignment == Z) {
-				mustSwitch = true;
-			}
-			else if (lineUnitVector[axialAlignment] > 0  &&  axialAlignment != Z) {
-				mustSwitch = true;
-			}
-			if (mustSwitch) {
-				// Switch start/end order if facing in negative direction.
-				double[] tempCoords = startCoords;
-				startCoords = endCoords;
-				endCoords = tempCoords;
-			}
-			Matrix transform = matrixUtils.getTransform3D(
-					0f,
-					0f,
-					0f,
-					startCoords[X], startCoords[Y], startCoords[Z]);
-			double[][] prototypePolygon = getPrototypePolygon(axialAlignment);
-			endCapPolygonsHolder.add(producePolygon(transform, prototypePolygon));
-			transform.set(0, 3, endCoords[X]);
-			transform.set(1, 3, endCoords[Y]);
-			transform.set(2, 3, endCoords[Z]);
-			endCapPolygonsHolder.add(producePolygon(transform, prototypePolygon));
-		}
+            Matrix transform = getAboutZTransform(aboutZ);
+            transform.set(0, 3, startCoords[X]);
+            transform.set(1, 3, startCoords[Y]);
+            transform.set(2, 3, startCoords[Z]);
+            
+            double[][] prototypePolygon = getPrototypePolygon(X);
+            final double[][] startEndPolygon = clonePrototypePolygon(prototypePolygon);
+            transformPolygon(startEndPolygon, transform);
+            endCapPolygonsHolder.add(startEndPolygon);
+
+            final double[][] endingEndPolygon = clonePrototypePolygon(prototypePolygon);
+            transform.set(0, 3, endCoords[X]);
+            transform.set(1, 3, endCoords[Y]);
+            transform.set(2, 3, endCoords[Z]);
+            transformPolygon(endingEndPolygon, transform);
+            endCapPolygonsHolder.add(endingEndPolygon);
+        } else {
+            polygonCaseFrequencies[2]++;
+            // Special case: aligned right along some axis.  Trig assumptions won't help.
+            boolean mustSwitch = false;
+            if (lineUnitVector[axialAlignment] < 0 && axialAlignment == Z) {
+                mustSwitch = true;
+            } else if (lineUnitVector[axialAlignment] > 0 && axialAlignment != Z) {
+                mustSwitch = true;
+            }
+            if (mustSwitch) {
+                // Switch start/end order if facing in negative direction.
+                double[] tempCoords = startCoords;
+                startCoords = endCoords;
+                endCoords = tempCoords;
+            }
+            Matrix transform = matrixUtils.getTranslateTransform3D(
+                    startCoords[X], startCoords[Y], startCoords[Z]
+            );
+            double[][] prototypePolygon = getPrototypePolygon(axialAlignment);
+            endCapPolygonsHolder.add(producePolygon(transform, prototypePolygon));
+            transform.set(0, 3, endCoords[X]);
+            transform.set(1, 3, endCoords[Y]);
+            transform.set(2, 3, endCoords[Z]);
+            endCapPolygonsHolder.add(producePolygon(transform, prototypePolygon));
+        }
         return endCapPolygonsHolder;
+    }
+
+    int cacheHitXY = 0;
+    int cacheMissXY = 0;
+    private Matrix getAboutXAboutYTransformMatrix(double aboutX, double aboutY) {
+        // Now that we have our angles, we make transforms.
+        String xyKey = createXYKey(-aboutX, aboutY);
+        Matrix transform1 = aboutXAboutYToMatrix.get( xyKey );
+        if (transform1 == null) {
+            cacheMissXY ++;
+            transform1 = matrixUtils.getTransform3D(
+                    -aboutX, aboutY, 0,
+                    0, 0, 0);
+            aboutXAboutYToMatrix.put(xyKey, transform1);
+        }
+        else {
+            cacheHitXY ++;
+        }
+        return transform1;
+    }
+
+    int cacheHitCount = 0;
+    int cacheMissCount = 0;
+    private Matrix getAboutZTransform(double aboutZ) {
+        final Integer aboutZKey = convertPlaceRounded( aboutZ );
+        Matrix transform = aboutZToMatrix.get( aboutZKey);
+        if (transform == null) {
+            transform = matrixUtils.getTransform3D(
+                    0, 0, aboutZ,
+                    0, 0, 0);
+            aboutZToMatrix.put( aboutZKey, transform);
+            cacheMissCount ++;
+        }
+        else {
+            cacheHitCount ++;
+        }
+        return transform;
+    }
+    
+    private double placeRound(double val) {
+        return Math.round(val * 100.0) / 100.0;
+    }
+    
+    private Integer convertPlaceRounded(double val) {
+        return (int)(val * 100);
+    }
+
+    private String createXYKey(double aboutX, double aboutY) {
+        return Integer.toString((int)(aboutX * 100.0)) + ',' + Integer.toString((int)(aboutY * 100.0));
     }
     
 	private int getAxialAlignmentByLineDelta(double[] lineDelta) {
