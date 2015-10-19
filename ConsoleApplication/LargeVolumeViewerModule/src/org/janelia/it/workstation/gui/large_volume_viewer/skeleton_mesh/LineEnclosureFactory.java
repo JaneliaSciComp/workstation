@@ -32,7 +32,8 @@ public class LineEnclosureFactory implements TriangleSource {
 	public static final double ZERO_TOLERANCE = 0.3;
     private static final int X = 0, Y = 1, Z = 2;
 	private static final int PERPENDICULAR_ALIGNMENT = 100;
-    
+    private static final double PI_DIV_4 = Math.PI / 4.0;
+
     private final List<VertexInfoBean> vertices = new ArrayList<>();
     private final List<Triangle> triangles = new ArrayList<>();
     private final ViewMatrixSupport matrixUtils = new ViewMatrixSupport();
@@ -132,6 +133,9 @@ public class LineEnclosureFactory implements TriangleSource {
         for (int i = 0; i < accumulators.length; i++) {
             logger.info("Time for index {} is {}ms.", i, accumulators[i]);
         }
+        for (int i = 0; i < polygonCaseFrequencies.length; i++) {
+            logger.info("Angles case {}={}", i, polygonCaseFrequencies[i]);
+        }
     }
     
     private static final int POLYGON_INX = 0;
@@ -139,6 +143,8 @@ public class LineEnclosureFactory implements TriangleSource {
     private static final int END_VERT_INX = 2;
     private static final int TRI_INX = 3;
     private long[] accumulators = new long[4];
+    
+    private int[] polygonCaseFrequencies = new int[3];
 
     //--------------------------------------------IMPLEMENT TriangleSource
     @Override
@@ -293,6 +299,7 @@ public class LineEnclosureFactory implements TriangleSource {
         logger.debug("Aligned along the #{} axis.", axialAlignment);
 		
 		if (axialAlignment == -1) {
+            polygonCaseFrequencies[0] ++;
 			if (lineUnitVector[Z] < 0) {
 				// Switch start/end order if facing in negative direction.
 				double[] tempCoords = startCoords;
@@ -300,7 +307,7 @@ public class LineEnclosureFactory implements TriangleSource {
 				endCoords = tempCoords;
 			}
 			// Use different part of triangle to calculate atan, if not special axial alignment.
-            if (Math.abs(aboutZ) > Math.PI / 4.0)
+            if (Math.abs(aboutZ) > PI_DIV_4)
                 aboutZ = lineUnitVector[Y] == 0 ? 0 : Math.atan(lineUnitVector[X] / lineUnitVector[Y]);
 			
 			// Now that we have our angles, we make transforms.
@@ -324,6 +331,7 @@ public class LineEnclosureFactory implements TriangleSource {
 			endCapPolygonsHolder.add(endingEndPolygon);			
 		}
 		else if (axialAlignment == PERPENDICULAR_ALIGNMENT) {
+            polygonCaseFrequencies[1] ++;
 			// Special case: new normal lies in the xy plane, but not on an axis.
 			// Only spin about Z.
             if (lineUnitVector[X] > 0) {
@@ -349,6 +357,7 @@ public class LineEnclosureFactory implements TriangleSource {
 			endCapPolygonsHolder.add(endingEndPolygon);
 		}
 		else {
+            polygonCaseFrequencies[2] ++;
 			// Special case: aligned right along some axis.  Trig assumptions won't help.
 			boolean mustSwitch = false;
 			if (lineUnitVector[axialAlignment] < 0  &&  axialAlignment == Z) {
