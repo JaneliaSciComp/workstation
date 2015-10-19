@@ -25,7 +25,7 @@ import org.openide.util.NbBundle.Messages;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "properties", openAtStartup = false)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position = 33)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
@@ -34,11 +34,12 @@ import org.openide.util.NbBundle.Messages;
 )
 @Messages({
     "CTL_Snapshot3dAction=Snapshot3d",
-    "CTL_Snapshot3dTopComponent=LVV 3D Snapshot",
+    "CTL_Snapshot3dTopComponent=" + Snapshot3dTopComponent.LABEL_TEXT,
     "HINT_Snapshot3dTopComponent=Large Volume Viewer's snapshot of data containing the crosshair."
 })
 public final class Snapshot3dTopComponent extends TopComponent {
     public static final String SNAPSHOT3D_TOP_COMPONENT_PREFERRED_ID = "Snapshot3dTopComponent";
+    public static final String LABEL_TEXT = "  LVV 3D Snapshot  ";
     
     private JComponent externallySuppliedComponent = null;
 

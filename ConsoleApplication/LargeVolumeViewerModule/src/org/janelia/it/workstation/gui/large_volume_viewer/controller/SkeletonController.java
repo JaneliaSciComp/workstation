@@ -70,6 +70,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         actor.setNextParentByID(nextParentId);        
     }
     
+    public void unregister(SkeletonActor actor) {
+        this.actors.remove(actor);        
+    }
+    
     public void registerForEvents(LargeVolumeViewerTranslator lvvTranslator) {
         this.lvvTranslator = lvvTranslator;
     }
@@ -86,10 +90,19 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         this.meshDrawActor = meshDrawActor;
         nvtTableModel = tableModel;
         nvtTableModel.addTableModelListener(new NVTTableModelListener());
+        meshDrawActor.refresh();
     }
     
     public void registerForEvents(JComponent component) {
         updateListeners.add(component);
+        // Retro-kick.
+        this.fireComponentUpdate();
+    }
+    
+    public void unregister(JComponent component) {
+        if (updateListeners.contains(component)) {
+            updateListeners.remove(component);
+        }
     }
 
     public Vec3 getAnnotationPosition( long annotationID ) {
@@ -182,8 +195,8 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         for (SkeletonActor actor : actors) {
             actor.setNextParent(parent);
         }
-        // Must rebuild everything, each time the anchor is selected.
-        updateMeshDrawActor();
+        // Need not rebuild everything, each time the anchor is selected.
+        //   ** this would make the whole display very slow ** updateMeshDrawActor();
         fireComponentUpdate();
     }
 
@@ -258,7 +271,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         qvController.setCameraFocus(anchor.getLocation());
     }
 
-    private void fireComponentUpdate() {
+    public void fireComponentUpdate() {
         for (JComponent updateListener : updateListeners) {
             updateListener.validate();
             updateListener.repaint();
@@ -291,11 +304,13 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
      * annotations.
      */
     private class NVTTableModelListener implements TableModelListener {
-
+                
         @Override
         public void tableChanged(TableModelEvent e) {
-            updateMeshDrawActor();
-            fireComponentUpdate();
+            if (e.getColumn() > -1) {
+                updateMeshDrawActor();
+                fireComponentUpdate();
+            }                    
         }
 
     }

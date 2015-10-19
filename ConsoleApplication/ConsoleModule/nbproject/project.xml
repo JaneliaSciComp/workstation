@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.15</specification-version>
+                        <specification-version>1.17</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -21,7 +21,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.15</specification-version>
+                        <specification-version>1.17</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -30,7 +30,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.15</specification-version>
+                        <specification-version>1.17</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -215,6 +215,7 @@
                 <package>org.janelia.it.workstation.gui.viewer3d.mesh</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.mesh.actor</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.mesh.shader</package>
+                <package>org.janelia.it.workstation.gui.viewer3d.picking</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.renderable</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.resolver</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.scaled_image</package>

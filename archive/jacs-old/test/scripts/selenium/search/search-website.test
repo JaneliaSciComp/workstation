@@ -1,0 +1,87 @@
+<html>
+
+<!--
+  Copyright (c) 2010-2011, J. Craig Venter Institute, Inc.
+
+  This file is part of JCVI VICS.
+
+  JCVI VICS is free software; you can redistribute it and/or modify it 
+  under the terms and conditions of the Artistic License 2.0.  For 
+  details, see the full text of the license in the file LICENSE.txt.  
+  No other rights are granted.  Any and all third party software rights 
+  to remain with the original developer.
+
+  JCVI VICS is distributed in the hope that it will be useful in 
+  bioinformatics applications, but it is provided "AS IS" and WITHOUT 
+  ANY EXPRESS OR IMPLIED WARRANTIES including but not limited to implied 
+  warranties of merchantability or fitness for any particular purpose.  
+  For details, see the full text of the license in the file LICENSE.txt.
+
+  You should have received a copy of the Artistic License 2.0 along with 
+  JCVI VICS.  If not, the license can be obtained from 
+  "http://www.perlfoundation.org/artistic_license_2_0."
+-->
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>search-website</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">search-website</td></tr>
+</thead><tbody>
+<!--// search for Sargasso in the website category-->
+<tr>
+	<td>open</td>
+	<td>/cameraweb/gwt/org.jcvi.camera.web.gwt.search.Search/Search.oa</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>gwt-debug-KeywordTextBox</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>gwt-debug-KeywordTextBox</td>
+	<td>Sargasso</td>
+</tr>
+<tr>
+	<td>clickAt</td>
+	<td>gwt-debug-WebsiteSearchIconPanelImage</td>
+	<td>29,24</td>
+</tr>
+<tr>
+	<td>mouseDownAt</td>
+	<td>gwt-debug-SearchButton</td>
+	<td>0,0</td>
+</tr>
+<!---->
+<!--// verify that results appear-->
+<tr>
+	<td>waitForTextPresent</td>
+	<td>camera.calit2.net</td>
+	<td></td>
+</tr>
+<!---->
+<!--// click the "detail view" link and verify results on the detail page-->
+<tr>
+	<td>clickAt</td>
+	<td>link=detail view</td>
+	<td>32,9</td>
+</tr>
+<tr>
+	<td>waitForTextPresent</td>
+	<td>Site Search Details</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForTextPresent</td>
+	<td>camera.calit2.net</td>
+	<td></td>
+</tr>
+
+</tbody></table>
+</body>
+</html>

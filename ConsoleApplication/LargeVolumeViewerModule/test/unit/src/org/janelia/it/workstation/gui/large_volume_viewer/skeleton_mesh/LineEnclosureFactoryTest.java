@@ -43,7 +43,8 @@ public class LineEnclosureFactoryTest {
 
     @Test
     public void hexagonalPrismEnclosure() {
-        LineEnclosureFactory factory = new LineEnclosureFactory( 6, 16.0 );
+        VertexNumberGenerator vng = new VertexNumberGenerator();
+        LineEnclosureFactory factory = new LineEnclosureFactory( 6, 16.0, vng );
         
         int totalCoordCount = 0;
 		double[] origin = {0,0,0};

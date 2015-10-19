@@ -28,15 +28,15 @@ public class PointEnclosureFactory implements TriangleSource  {
     private final Map<Integer, VertexInfoBean> offsetToVertex;
     
     private PointPrototypeHelper prototypeHelper;
+    private final VertexNumberGenerator vertexNumberGenerator;
     
     private int numSides;
     
-    private int currentVertexNumber = 0;
-    
-    public PointEnclosureFactory(int numSides, double radius) {
+    public PointEnclosureFactory(int numSides, double radius, VertexNumberGenerator vertexNumberGenerator) {
         vtxInfoBeans = new ArrayList<>();
         triangles = new ArrayList<>();
-        offsetToVertex = new HashMap<>();        
+        offsetToVertex = new HashMap<>();
+        this.vertexNumberGenerator = vertexNumberGenerator;
 
         setCharacteristics(numSides, radius);
     }
@@ -53,20 +53,6 @@ public class PointEnclosureFactory implements TriangleSource  {
         prototypeHelper = new PointPrototypeHelper(numSides, radius);
     }
 
-    /**
-     * @return the currentVertexNumber
-     */
-    public int getCurrentVertexNumber() {
-        return currentVertexNumber;
-    }
-
-    /**
-     * @param currentVertexNumber the currentVertexNumber to set
-     */
-    public void setCurrentVertexNumber(int currentVertexNumber) {
-        this.currentVertexNumber = currentVertexNumber;
-    }
-    
     @Override
     public List<VertexInfoBean> getVertices() {
         return vtxInfoBeans;
@@ -77,11 +63,11 @@ public class PointEnclosureFactory implements TriangleSource  {
         return triangles;
     }
 
-    public void addEnclosure(double[] pointCoords, float[] color) {
+    public void addEnclosure(double[] pointCoords, float[] color, float[] id) {
         // Making a new bean for every point.
-        int enclosureBaseIndex = currentVertexNumber;
+        int enclosureBaseIndex = vertexNumberGenerator.getCurrentVertex();
         for (Matrix point: prototypeHelper.getPrototypePoints()) {
-            beanFromPoint(point, pointCoords, color);
+            beanFromPoint(point, pointCoords, color, id);
         }
         createTriangles(numSides, enclosureBaseIndex);
     }
@@ -91,7 +77,7 @@ public class PointEnclosureFactory implements TriangleSource  {
      * 
      * @param point triple telling position of point.
      */
-    private VertexInfoBean beanFromPoint(Matrix point, double[] pointCoords, float[] color) {
+    private VertexInfoBean beanFromPoint(Matrix point, double[] pointCoords, float[] color, float[] id) {
         VertexInfoBean bean = new VertexInfoBean();
         
         VertexInfoKey key = new VertexInfoKey();
@@ -105,8 +91,10 @@ public class PointEnclosureFactory implements TriangleSource  {
         key.setPosition(new double[] { point.get(0, 0), point.get(1, 0), point.get(2, 0) });
         bean.setKey(key);
         bean.setAttribute( VertexInfoBean.KnownAttributes.b_color.toString(), color, 3 );
-        offsetToVertex.put( currentVertexNumber, bean );
-        bean.setVtxBufOffset(currentVertexNumber++);
+        bean.setAttribute( NeuronTraceVtxAttribMgr.ID_VTX_ATTRIB, id, 3 );
+        int beanVertexNumber = vertexNumberGenerator.allocateVertexNumber();
+        offsetToVertex.put( beanVertexNumber, bean );
+        bean.setVtxBufOffset(beanVertexNumber);
         
         vtxInfoBeans.add( bean );
         return bean;

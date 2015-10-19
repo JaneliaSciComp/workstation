@@ -12,13 +12,14 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.EditNoteReq
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class FilteredAnnotationList extends JPanel {
 
     // GUI stuff
     private int width;
-    private static final int height = 2 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
+    private static final int height = 3 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
     private JTable filteredTable;
     private JTextField filterField;
     private TableRowSorter<FilteredAnnotationModel> sorter;
@@ -78,9 +79,7 @@ public class FilteredAnnotationList extends JPanel {
 
         // set up model & data-related stuff
         model = annotationModel.getFilteredAnnotationModel();
-//                new FilteredAnnotationModel();
         setupFilters();
-
 
         // GUI stuff
         setupUI();
@@ -96,7 +95,8 @@ public class FilteredAnnotationList extends JPanel {
 
 
         // single-click selects annotation, and
-        //  double-click shifts camera to annotation
+        //  double-click shifts camera to annotation, except if you
+        //  double-click note, then you get the edit/delete note dialog
         filteredTable.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
                 JTable table = (JTable) me.getSource();
@@ -107,11 +107,20 @@ public class FilteredAnnotationList extends JPanel {
                         InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
                         annoSelectListener.annotationSelected(ann.getAnnotationID());
                     } else if (me.getClickCount() == 2) {
-                        if (panListener != null) {
-                            InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
-                            TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getAnnotationID());
-                            if (ann != null) {
-                                panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                        // which column?
+                        int viewColumn = table.columnAtPoint(me.getPoint());
+                        int modelColumn = table.convertColumnIndexToModel(viewColumn);
+                        InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
+                        TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getAnnotationID());
+                        if (modelColumn == 2) {
+                            // double-click note: edit note dialog
+                            editNoteRequestedListener.editNote(ann);
+                        } else {
+                            // everyone else, shift camera to annotation
+                            if (panListener != null) {
+                                if (ann != null) {
+                                    panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                                }
                             }
                         }
                     }
@@ -122,7 +131,6 @@ public class FilteredAnnotationList extends JPanel {
         // set the current filter late, after both the filters and UI are
         //  set up
         setCurrentFilter(filters.get("default"));
-
     }
 
 
@@ -175,6 +183,7 @@ public class FilteredAnnotationList extends JPanel {
                     InterestingAnnotation maybeInteresting =
                         new InterestingAnnotation(ann.getId(),
                             neuron.getId(),
+                            ann.getCreationDate(),
                             getAnnotationGeometry(ann),
                             note);
                     if (filter.isInteresting(maybeInteresting)) {
@@ -197,6 +206,10 @@ public class FilteredAnnotationList extends JPanel {
 
         // default filter: interesting = has a note or isn't a straight link (ie, root, end, branch)
         filters.put("default", new OrFilter(new HasNoteFilter(), new NotFilter(new GeometryFilter(AnnotationGeometry.LINK))));
+
+        // ...and those two conditions separately:
+        filters.put("notes", new HasNoteFilter());
+        filters.put("geometry", new NotFilter(new GeometryFilter(AnnotationGeometry.LINK)));
 
 
         // endpoint that isn't marked traced or problem
@@ -248,8 +261,8 @@ public class FilteredAnnotationList extends JPanel {
                     int realRowIndex = convertRowIndexToModel(rowIndex);
 
                     if (realColumnIndex == 0) {
-                        // show full ID
-                        tip = model.getAnnotationAtRow(realRowIndex).getAnnotationID().toString();
+                        // show creation date
+                        tip = model.getAnnotationAtRow(realRowIndex).getCreationDate().toString();
                     } else if (realColumnIndex == 1) {
                         // no tip here
                         tip = null;
@@ -269,11 +282,13 @@ public class FilteredAnnotationList extends JPanel {
         // we respond to clicks, but we're not really selecting rows
         filteredTable.setRowSelectionAllowed(false);
 
+        // custom renderer for date column:
+        filteredTable.getColumnModel().getColumn(0).setCellRenderer(new ShortDateRenderer());
 
         // inelegant, but hand-tune column widths (finally seems to work):
-        filteredTable.getColumnModel().getColumn(0).setPreferredWidth(60);
+        filteredTable.getColumnModel().getColumn(0).setPreferredWidth(70);
         filteredTable.getColumnModel().getColumn(1).setPreferredWidth(50);
-        filteredTable.getColumnModel().getColumn(2).setPreferredWidth(115);
+        filteredTable.getColumnModel().getColumn(2).setPreferredWidth(105);
         filteredTable.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 
         JScrollPane scrollPane = new JScrollPane(filteredTable);
@@ -288,7 +303,6 @@ public class FilteredAnnotationList extends JPanel {
         add(scrollPane, c2);
 
 
-
         // combo box to change filters
         // names taken from contents of filter list set up elsewhere
         //  probably should take names directly?  but I'd like to control
@@ -297,7 +311,8 @@ public class FilteredAnnotationList extends JPanel {
         JPanel filterMenuPanel = new JPanel();
         filterMenuPanel.setLayout(new BorderLayout(2, 2));
         filterMenuPanel.add(new JLabel("Filter:"), BorderLayout.LINE_START);
-        String[] filterNames = {"default", "ends", "branches", "roots", "interesting", "review"};
+        String[] filterNames = {"default", "ends", "branches", "roots", "notes",
+            "geometry", "interesting", "review"};
         final JComboBox filterMenu = new JComboBox(filterNames);
         filterMenu.addActionListener(new ActionListener() {
             @Override
@@ -518,6 +533,51 @@ public class FilteredAnnotationList extends JPanel {
 }
 
 /**
+ * this renderer displays a short form of the time stamp:
+ *
+ *   hour:minute if less than a day old
+ *   day/month if less than a year old
+ *   year if more than a year old
+ *
+ */
+class ShortDateRenderer extends DefaultTableCellRenderer {
+    private final static String TIME_DATE_FORMAT = "HH:mm";
+    private final static String DAY_DATE_FORMAT = "MM/dd";
+    private final static String YEAR_DATE_FORMAT = "yyyy";
+
+    public ShortDateRenderer() { super(); }
+
+    public void setValue(Object value) {
+        if (value != null) {
+            Calendar oneDayAgo = Calendar.getInstance();
+            oneDayAgo.setTime(new Date());
+            oneDayAgo.add(Calendar.DATE, -1);
+
+            Calendar oneYearAgo = Calendar.getInstance();
+            oneYearAgo.setTime(new Date());
+            oneYearAgo.add(Calendar.YEAR, -1);
+
+            Calendar creation = Calendar.getInstance();
+            creation.setTime((Date) value);
+
+            String dateFormat;
+            if (oneDayAgo.compareTo(creation) < 0) {
+                // hour:minute if recent (24h clock)
+                dateFormat = TIME_DATE_FORMAT;
+            } else if (oneYearAgo.compareTo(creation) < 0) {
+                // month/day if older than 1 day
+                dateFormat = DAY_DATE_FORMAT;
+            } else {
+                // if older than 1 year, just year
+                dateFormat = YEAR_DATE_FORMAT;
+            }
+            setText(new SimpleDateFormat(dateFormat).format((Date) value));
+        }
+    }
+}
+
+
+/**
  * a system of configurable filters that will be generated
  * from the UI that will determine whether an annotation
  * is interesting or not
@@ -646,3 +706,4 @@ class NeuronFilter implements AnnotationFilter {
         return ann.getNeuronID().equals(neuronID);
     }
 }
+

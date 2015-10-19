@@ -1,10 +1,10 @@
 package org.janelia.it.workstation.api.facade.abstract_facade;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.janelia.it.jacs.compute.api.ComputeException;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
@@ -54,8 +54,12 @@ public interface AnnotationFacade {
     public FilterResult patternSearchGetFilteredResults(String type, Map<String, Set<DataFilter>> filterMap) throws Exception;
 
     public Entity createDataSet(String dataSetName) throws Exception;
+    
+    public Entity createFlyLineRelease(String releaseName, Date releaseDate, Integer lagTimeMonths, List<String> dataSetList) throws Exception;
 
     public List<Entity> getDataSets() throws Exception;
+    
+    public List<Entity> getFlyLineReleases() throws Exception;
 
     public Entity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception;
 

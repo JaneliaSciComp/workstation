@@ -386,29 +386,11 @@ public class SlideViewPanel extends JPanel implements Refreshable {
             ModelMgr.getModelMgr().loadLazyEntity(supportingData, true);
 
             for(Entity tileEntity : EntityUtils.getChildrenOfType(supportingData, EntityConstants.TYPE_IMAGE_TILE)) {
-
-                // Really cheating here. The model is the view. But this is the only way to get things done without rewriting the IconDemoPanel.
-                Set<EntityData> mips = new HashSet<>();
-                EntityData ed1 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
-                EntityData ed2 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_REFERENCE_MIP_IMAGE);
-                EntityData ed3 = tileEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SIGNAL_MIP_IMAGE);
-                if (ed1!=null) mips.add(ed1);
-                if (ed2!=null) mips.add(ed2);
-                if (ed3!=null) mips.add(ed3);
-
                 List<Entity> lsmEntities = EntityUtils.getChildrenOfType(tileEntity, EntityConstants.TYPE_LSM_STACK);
                 
                 int i = 1;
                 String patternCode = null;
                 for(Entity lsmEntity : lsmEntities) {
-
-                    Set<EntityData> lmips = new HashSet<>();
-                    EntityData led1 = lsmEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
-                    EntityData led2 = lsmEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_REFERENCE_MIP_IMAGE);
-                    EntityData led3 = lsmEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SIGNAL_MIP_IMAGE);
-                    if (led1!=null) mips.add(led1);
-                    if (led2!=null) mips.add(led2);
-                    if (led3!=null) mips.add(led3);
 
                     String lsmSlideCode = lsmEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SLIDE_CODE);
 
@@ -455,14 +437,21 @@ public class SlideViewPanel extends JPanel implements Refreshable {
                     
                     title.append("&nbsp;</html>");
                     
+                    // Really cheating here. The model is the view. But this is the only 
+                    // way to get things done without rewriting the IconDemoPanel.
                     Entity virtualLsm = getVirtualEntity(title.toString(), lsmEntity);
                     
                     // Use the LSM's MIPs if available, otherwise fallback on the tile's MIPs
-                    if (lmips.isEmpty()) {
-                        virtualLsm.getEntityData().addAll(mips);
-                    }
-                    else {
-                        virtualLsm.getEntityData().addAll(lmips);
+                    List<String> mipKeys = new ArrayList<>();
+                    mipKeys.add(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
+                    mipKeys.add(EntityConstants.ATTRIBUTE_REFERENCE_MIP_IMAGE);
+                    mipKeys.add(EntityConstants.ATTRIBUTE_SIGNAL_MIP_IMAGE);
+                    
+                    for(String mipKey : mipKeys) {
+                        if (virtualLsm.getValueByAttributeName(mipKey)==null) {
+                            String value = tileEntity.getValueByAttributeName(mipKey);
+                            virtualLsm.setValueByAttributeName(mipKey, value);
+                        }
                     }
 
                     EntityData ed = new EntityData();

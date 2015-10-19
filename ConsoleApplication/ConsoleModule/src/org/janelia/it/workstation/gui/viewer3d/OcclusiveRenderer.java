@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import javax.media.opengl.DebugGL2;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLProfile;
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.opengl.GL2Adapter;
@@ -12,10 +14,24 @@ import org.janelia.it.workstation.gui.opengl.GL2AdapterFactory;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import static org.janelia.it.workstation.gui.viewer3d.ActorRenderer.UP_IN_CAMERA;
 import org.janelia.it.workstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
+import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
+import org.slf4j.LoggerFactory;
 
 public class OcclusiveRenderer 
     extends ActorRenderer
 {
+	// Unknown utility.
+	static {
+		try {
+			GLProfile profile = GLProfile.get(GLProfile.GL3);
+			final GLCapabilities capabilities = new GLCapabilities(profile);
+			capabilities.setGLProfile(profile);
+		} catch (Throwable th) {
+			LoggerFactory.getLogger(RenderedIdPicker.class).error("No GL3 profile available");
+		}
+
+	}
+
     private ResetPositionerI resetPositioner;
     
     // scene objects
@@ -28,7 +44,7 @@ public class OcclusiveRenderer
     }
     
     @Override
-    public void display(GLAutoDrawable glDrawable) {
+    public void display(GLAutoDrawable glDrawable) {        
         // Preset background from the volume model.
         float[] backgroundClrArr = getVolumeModel().getBackgroundColorFArr();
         this.backgroundColor = new Color( backgroundClrArr[ 0 ], backgroundClrArr[ 1 ], backgroundClrArr[ 2 ] );
@@ -40,6 +56,10 @@ public class OcclusiveRenderer
 
         //final GL2 gl = glDrawable.getGL().getGL2();
         final GL2Adapter gl = GL2AdapterFactory.createGL2Adapter( glDrawable );
+
+        // TEMP: this should be flagged on or off.
+        gl.getGL2GL3().glDisable(GL2.GL_FRAMEBUFFER_SRGB);
+
         gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
         gl.glPushMatrix();
         updateProjection(gl);
@@ -65,6 +85,9 @@ public class OcclusiveRenderer
         // Copy member list of actors local for independent iteration.
         for (GLActor actor : new ArrayList<>( actors ))
             actor.display(glDrawable);
+
+        // TEMP: this should be flagged on or off.
+        gl.getGL2GL3().glEnable(GL2.GL_FRAMEBUFFER_SRGB);
 
         gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
         gl.glPopMatrix();

@@ -40,6 +40,9 @@ public class OntologyContextMenu extends EntityContextMenu {
         add(getCopyIdToClipboardItem());
         add(getDetailsItem());
         setNextAddRequiresSeparator(true);
+        add(getImportOntologyItem());
+        add(getExportOntologyItem());
+        setNextAddRequiresSeparator(true);
         add(getAssignShortcutItem());
         add(getAddItemMenu());
         add(getDeleteItem());
@@ -58,6 +61,14 @@ public class OntologyContextMenu extends EntityContextMenu {
         });
         return menuItem;
 
+    }
+
+    protected JMenuItem getImportOntologyItem() {
+        return getActionItem(new OntologyImportAction(ontologyElement));
+    }
+    
+    protected JMenuItem getExportOntologyItem() {
+        return getActionItem(new OntologyExportAction(ontologyElement));
     }
     
     protected JMenu getAddItemMenu() {

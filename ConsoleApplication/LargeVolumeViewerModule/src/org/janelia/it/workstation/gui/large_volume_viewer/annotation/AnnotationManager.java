@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import com.google.common.base.Stopwatch;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -34,6 +35,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -306,12 +308,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void doStuff() throws Exception {
                 Vec3 finalLocation;
                 if (annotationModel.automatedRefinementEnabled()) {
-                    // Stopwatch stopwatch = new Stopwatch();
-                    // stopwatch.start();
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.start();
                     PointRefiner refiner = new PointRefiner(quadViewUi.getSubvolumeProvider());
                     finalLocation = refiner.refine(xyz);
-                    // stopwatch.stop();
+                    stopwatch.stop();
                     // System.out.println("refined annotation; elapsed time = " + stopwatch.toString());
+                    log.info("refined annotation; elapsed time = " + stopwatch);
 
                     // System.out.println("add annotation: input point " + xyz);
                     // System.out.println("add annotation: refined point " + finalLocation);
@@ -319,8 +322,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     finalLocation = xyz;
                 }
 
-                // Stopwatch stopwatch = new Stopwatch();
-                // stopwatch.start();
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.start();
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
                     annotationModel.addRootAnnotation(currentNeuron, finalLocation);
@@ -328,8 +331,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     annotationModel.addChildAnnotation(
                             currentNeuron.getGeoAnnotationMap().get(parentID), finalLocation);
                 }
-                // stopwatch.stop();
+                stopwatch.stop();
                 // System.out.println("added annotation; elapsed time = " + stopwatch.toString());
+                log.info("added annotation; elapsed time = " + stopwatch);
             }
 
             @Override
@@ -363,9 +367,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                         "No annotation to delete.",
                         "No such annotation");
             }
-            if (annotation.isRoot() || annotation.getChildIds().size() > 1) {
+            if (annotation.isRoot() && annotation.getChildIds().size() > 0) {
                 presentError(
-                        "This annotation is either a root (no parent) or branch (many children), not a link!",
+                        "This annotation is a root with children, not a link!",
+                        "Not a link!");
+                return;
+            }
+            if (annotation.getChildIds().size() > 1) {
+                presentError(
+                        "This annotation is a branch (many children), not a link!",
                         "Not a link!");
                 return;
             }
@@ -892,27 +902,29 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         // prompt the user for a name, but suggest a standard name
         final String neuronName = promptForNeuronName(getNeuronName(annotationModel.getCurrentWorkspace()));
 
-        // create it:
-        SimpleWorker creator = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.createNeuron(neuronName);
-            }
+        if (neuronName != null) {
+            // create it:
+            SimpleWorker creator = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.createNeuron(neuronName);
+                }
 
-            @Override
-            protected void hadSuccess() {
-                // nothing here, annModel emits its own signals
-            }
+                @Override
+                protected void hadSuccess() {
+                    // nothing here, annModel emits its own signals
+                }
 
-            @Override
-            protected void hadError(Throwable error) {
-                presentError(
-                        "Could not create neuron!",
-                        "Error",
-                        error);
-            }
-        };
-        creator.execute();
+                @Override
+                protected void hadError(Throwable error) {
+                    presentError(
+                            "Could not create neuron!",
+                            "Error",
+                            error);
+                }
+            };
+            creator.execute();
+        }
     }
 
     public void deleteCurrentNeuron() {
@@ -1452,7 +1464,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         saver.execute();
     }
 
-    public void importSWCFile(final File swcFile) {
+    public void importSWCFile(final File swcFile, final AtomicInteger countDownSemaphor) {
+        final boolean selectOnCompletion = countDownSemaphor == null;
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
             return;
@@ -1463,7 +1476,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     "SWC file " + swcFile.getName() + " does not exist!",
                     "No SWC file!");
         } else {
-
             // note for the future: at this point, we could pop another dialog with:
             //  (a) info: file has xxx nodes; continue?
             //  (b) option to downsample
@@ -1473,9 +1485,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             BackgroundWorker importer = new BackgroundWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.importSWCData(swcFile, this);
+                    annotationModel.importBulkSWCData(swcFile, null, selectOnCompletion);
                 }
-
+                
                 @Override
                 public String getName() {
                     return "import " + swcFile.getName();
@@ -1483,7 +1495,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
                 @Override
                 protected void hadSuccess() {
-                    // signal will be sent, stuff will happen...
+                    if (countDownSemaphor != null) {
+                        int latestValue = countDownSemaphor.decrementAndGet();
+                        if (latestValue == 0) {
+                            annotationModel.postWorkspaceUpdate();
+                        }
+                    }
                 }
 
                 @Override
