@@ -41,7 +41,7 @@
         }
     },
     "resources": {
-        "Scality Data 1": {
+        "Scality Prototype Data 1": {
             "mapping": "/DATA1",
             "type": "object",
             "path": "mirror",
@@ -53,7 +53,7 @@
                 "info"
             ]
         },
-        "Scality Data 2": {
+        "Scality Prototype Data 2": {
             "mapping": "/DATA2",
             "type": "object",
             "path": "mirror",
@@ -91,7 +91,7 @@
             ]
         },
         "Scality Data": {
-            "mapping": "/Scality",
+            "mapping": "/JACS",
             "type": "object",
             "path": "mirror",
             "permissions": [

@@ -17,14 +17,14 @@ import java.util.Map;
 public class Util {
     static final String API_PATH = "/file";
     public static FileShare checkPermissions(String filepath, HttpHeaders headers, HttpServletRequest request) throws PermissionsFailureException,FileNotFoundException {
-        Token credentials = getCredentials(headers);
         FileShare mapping = mapResource(filepath, request);
-
-        // make sure user has access to this file share
-        if (!mapping.hasAccess(credentials)) {
-            throw new PermissionsFailureException("Not allowed to access this file share");
+        if (mapping.getAuthorizer()!=null) {
+            // make sure user has access to this file share
+            Token credentials = getCredentials(headers);
+            if (mapping.getAuthorizer() != null && !mapping.hasAccess(credentials)) {
+                throw new PermissionsFailureException("Not allowed to access this file share");
+            }
         }
-
         // since the check passed, store the authorized FileShare in the session
         HttpSession session = request.getSession();
         session.setAttribute(mapping.getMapping(), mapping);
