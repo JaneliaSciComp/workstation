@@ -46,22 +46,32 @@ import org.openide.nodes.Node;
 class HortaWorkspaceChildFactory extends ChildFactory<NeuronSet>
 {
     private final HortaWorkspace workspace;
+    private final Observer refresher;
 
     public HortaWorkspaceChildFactory(HortaWorkspace workspace)  {
         this.workspace = workspace;
-        workspace.addObserver(new Observer() {
+        refresher = new Observer() {
             @Override
             public void update(Observable o, Object arg) {
                 refresh(false);
             }
-        });
+        };
+        workspace.addObserver(refresher);
     }
 
     @Override
     protected boolean createKeys(List<NeuronSet> toPopulate)
     {
         for (NeuronSet neuronList : workspace.getNeuronSets()) {
-            toPopulate.add(neuronList);
+            // Only show neuron lists with, you know, neurons in them.
+            neuronList.getMembershipChangeObservable().deleteObserver(refresher);
+            if (neuronList.size() == 0) {
+                // Listen for changes to empty neuron list content
+                neuronList.getMembershipChangeObservable().addObserver(refresher);
+            }
+            else {
+                toPopulate.add(neuronList);
+            }
         }
         return true;
     }
