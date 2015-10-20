@@ -236,9 +236,13 @@ public class Framebuffer implements GL3Resource, GLEventListener {
         
         @Override
         protected void allocateTextureStorage(GL3 gl, int mipmapCount) {
+            //
+            int[] max_samples = {1};
+            gl.glGetIntegerv(GL3.GL_MAX_SAMPLES, max_samples, 0);
+            int samples = Math.min(max_samples[0] - 1, num_samples);
             gl.glTexImage2DMultisample(
                     textureTarget,
-                    num_samples,
+                    samples,
                     internalFormat, 
                     width, height,
                     false);
