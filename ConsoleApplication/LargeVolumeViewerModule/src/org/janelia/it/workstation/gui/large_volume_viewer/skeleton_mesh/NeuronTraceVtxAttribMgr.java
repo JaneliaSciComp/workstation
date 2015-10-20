@@ -307,8 +307,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
         calculateManualLineVertices(voxelPathAnchorPairs, lineEnclosureFactory);                        
         
 		// TESTING 
-		calculateAngleIllustrativeVertices(lineEnclosureFactory);
-        log.info("Number of vertices is {}.", vertexNumberGenerator.getCurrentVertex());
+		//calculateAngleIllustrativeVertices(lineEnclosureFactory);
+        //log.info("Number of vertices is {}.", vertexNumberGenerator.getCurrentVertex());
 
 		if (vertexNumberGenerator.hasVertices()) {
 			hasDisplayable = true;
