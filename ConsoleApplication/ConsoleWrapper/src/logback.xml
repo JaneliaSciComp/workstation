@@ -52,7 +52,7 @@
   
   <!-- NG classes -->
   
-  <logger name="org.janelia.it.workstation.gui.browser.api.DomainDAO" level="WARN"/>
+  <logger name="org.janelia.it.workstation.gui.browser.api.DomainDAO" level="INFO"/>
   <logger name="org.janelia.it.workstation.gui.browser.api.DomainModel" level="INFO"/>
   
   
