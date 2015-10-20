@@ -500,6 +500,42 @@ public class DomainModel {
         }
         return null;
     }
+
+    public Ontology create(Ontology ontology) throws Exception {
+        Ontology canonicalObject;
+        synchronized (this) {
+            canonicalObject = (Ontology)putOrUpdate(facade.create(ontology));
+        }
+        notifyDomainObjectCreated(canonicalObject);
+        return canonicalObject;
+    }
+
+    public Ontology reorderTerms(Long ontologyId, Long parentTermId, List<Long> childIdOrder) throws Exception {
+        Ontology canonicalObject;
+        synchronized (this) {
+            canonicalObject = (Ontology)putOrUpdate(facade.reorderTerms(ontologyId, parentTermId, childIdOrder));
+        }
+        notifyDomainObjectChanged(canonicalObject);
+        return canonicalObject;
+    }
+    
+    public Ontology addTerm(Long ontologyId, Long parentTermId, OntologyTerm term) throws Exception {
+        Ontology canonicalObject;
+        synchronized (this) {
+            canonicalObject = (Ontology)putOrUpdate(facade.addTerm(ontologyId, parentTermId, term));
+        }
+        notifyDomainObjectChanged(canonicalObject);
+        return canonicalObject;
+    }
+
+    public Ontology removeTerm(Long ontologyId, Long termId) throws Exception {
+        Ontology canonicalObject;
+        synchronized (this) {
+            canonicalObject = (Ontology)putOrUpdate(facade.removeTerm(ontologyId, termId));
+        }
+        notifyDomainObjectChanged(canonicalObject);
+        return canonicalObject;
+    }
     
     public void changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
         synchronized (this) {

@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import com.google.common.eventbus.Subscribe;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
@@ -26,8 +27,8 @@ import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
-import org.janelia.it.jacs.model.domain.DomainObject;
 
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
@@ -38,6 +39,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.OntologySelectionEvent;
@@ -342,6 +344,20 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     
     @Subscribe
     public void objectCreated(DomainObjectCreateEvent event) {
+        final DomainObject domainObject = event.getDomainObject();
+        if (domainObject instanceof Ontology) {
+            refresh(false, false, new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    selectOntology(domainObject.getId(), true);
+                    return null;
+                }
+            });
+        }
+    }
+
+    @Subscribe
+    public void objectChanged(DomainObjectChangeEvent event) {
         final DomainObject domainObject = event.getDomainObject();
         if (domainObject instanceof Ontology) {
             refresh(false, false, new Callable<Void>() {

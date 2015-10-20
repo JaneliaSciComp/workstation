@@ -4,10 +4,14 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+
 import org.janelia.it.jacs.model.domain.ontology.*;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.support.NodeChooser;
@@ -21,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * TODO: rename Enum term to something else that doesn't conflict with java.lang
- * TODO: port CreateOntologyTermAction functionality
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -95,7 +98,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
         return addMenuPopup;
     }
     
-    private void createTerm(OntologyTermNode parentNode, Class<? extends OntologyTerm> termClass) {
+    private void createTerm(final OntologyTermNode parentNode, Class<? extends OntologyTerm> termClass) {
        
         final OntologyTerm ontologyTerm = createTypeByName(termClass);
 
@@ -105,6 +108,8 @@ public class AddOntologyTermAction extends NodePresenterAction {
         if ((termName == null) || (termName.length() <= 0)) {
             return;
         }
+        
+        ontologyTerm.setName(termName);
 
         if (ontologyTerm instanceof Interval) {
 
@@ -153,12 +158,15 @@ public class AddOntologyTermAction extends NodePresenterAction {
             
             @Override
             protected void doStuff() throws Exception {
-                // TODO: add new ontology term
-                //ModelMgr.getModelMgr().createOntologyTerm(ontologyRoot.getId(), element.getId(), termName, childType, null);
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                Ontology ontology = parentNode.getOntology();
+                OntologyTerm parentTerm = parentNode.getOntologyTerm();
+                model.addTerm(ontology.getId(), parentTerm.getId(), ontologyTerm);
             }
             
             @Override
             protected void hadSuccess() {
+                // UI updated by events
             }
             
             @Override
@@ -181,3 +189,4 @@ public class AddOntologyTermAction extends NodePresenterAction {
         return null;
     }
 }
+;

@@ -8,6 +8,7 @@ import org.janelia.it.jacs.model.domain.sample.*;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
@@ -15,12 +16,14 @@ import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.glassfish.jersey.jackson.JacksonFeature;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.GenericType;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
@@ -230,6 +233,30 @@ public class RESTDomainFacade implements DomainFacade {
         return ontologies;
     }
 
+    @Override
+    public Ontology create(Ontology ontology) throws Exception {
+        // TODO: implement
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Ontology reorderTerms(Long ontologyId, Long parentTermId, List<Long> childOrder) throws Exception {
+        // TODO: implement
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Ontology addTerm(Long ontologyId, Long parentTermId, OntologyTerm term) throws Exception {
+        // TODO: implement
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Ontology removeTerm(Long ontologyId, Long termId) throws Exception {
+        // TODO: implement
+        throw new UnsupportedOperationException();
+    }
+    
     // search
     public Filter create(Filter filter) throws Exception {
         Response response = serviceEndpoints.get("filter")

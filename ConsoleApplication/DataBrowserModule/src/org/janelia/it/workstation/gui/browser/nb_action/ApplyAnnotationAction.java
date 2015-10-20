@@ -102,7 +102,11 @@ public class ApplyAnnotationAction extends NodeAction {
         log.info("Will annotate all selected objects with: {} ({})",keyTermValue,keyTermId);
         
         DomainListViewTopComponent listView = DomainListViewTopComponent.getActiveInstance();
+        if (listView==null || listView.getEditor()==null) return;
+        
         DomainObjectSelectionModel selectionModel = listView.getEditor().getSelectionModel();
+        if (selectionModel==null) return;
+        
         List<DomainObjectId> selectedIds = selectionModel.getSelectedIds();
         
         if (selectedIds.isEmpty()) {
@@ -125,10 +129,15 @@ public class ApplyAnnotationAction extends NodeAction {
             value = JOptionPane.showInputDialog(SessionMgr.getMainFrame(), 
             		"Value:\n", ontologyTerm.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 
-            if (StringUtils.isEmpty((String)value)) return;
-            Double dvalue = Double.parseDouble((String)value);
             Interval interval = (Interval) ontologyTerm;
-            if (dvalue < interval.getLowerBound().doubleValue() || dvalue > interval.getUpperBound().doubleValue()) {
+            if (StringUtils.isEmpty((String)value)) return;
+            try {
+                Double dvalue = Double.parseDouble((String)value);
+                if (dvalue < interval.getLowerBound().doubleValue() || dvalue > interval.getUpperBound().doubleValue()) {
+                    throw new NumberFormatException();
+                }
+            }
+            catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), 
                 		"Input out of range [" + interval.getLowerBound() + "," + interval.getUpperBound() + "]");
                 return;

@@ -16,16 +16,12 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-
-import static javax.swing.Action.NAME;
-
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
-import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
@@ -34,6 +30,7 @@ import org.janelia.it.workstation.gui.browser.components.DomainListViewTopCompon
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
+import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;

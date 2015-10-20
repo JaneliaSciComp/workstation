@@ -58,8 +58,9 @@ public class OntologyNode extends OntologyTermNode {
     }
     
     private void populateLookupMap(OntologyTermNode node) {
-        nodeById.put(node.getId(), node);
-        
+        if (node.getId()!=null) {
+            nodeById.put(node.getId(), node);
+        }
     }
     private void populateActionMap(OntologyTermNode node) {
         OntologyElementAction action = new RunNodeDefaultAction();

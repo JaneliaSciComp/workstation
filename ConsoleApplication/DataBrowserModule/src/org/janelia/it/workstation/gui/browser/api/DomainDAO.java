@@ -6,11 +6,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
@@ -18,6 +20,7 @@ import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
@@ -29,10 +32,14 @@ import org.janelia.it.jacs.model.domain.support.MongoUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.jacs.shared.utils.ReflectionUtils;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 import org.jongo.MongoCursor;
 import org.jongo.marshall.jackson.JacksonMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.google.common.collect.ArrayListMultimap;
@@ -44,11 +51,6 @@ import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
-import java.util.HashSet;
-import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
-import org.janelia.it.jacs.shared.utils.ReflectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The main domain-object DAO for the JACS system.
@@ -500,6 +502,66 @@ public class DomainDAO {
         
         // TODO: remove dependant objects?
     }
+
+    public Ontology reorderTerms(String subjectKey, Long ontologyId, Long parentTermId, List<Long> childOrder) throws Exception {
+        
+        Ontology ontology = getDomainObject(subjectKey, Ontology.class, ontologyId);
+        if (ontology==null) {
+            throw new IllegalArgumentException("Ontology not found: "+ontologyId);
+        }
+        OntologyTerm parent = findTerm(ontology, parentTermId);
+        
+        Map<Long,OntologyTerm> childMap = new HashMap<>();
+        for(OntologyTerm child : parent.getTerms()) {
+            childMap.put(child.getId(), child);
+        }
+        
+        List<OntologyTerm> ordered = new ArrayList<>();
+        for(Long id : childOrder) {
+            OntologyTerm child = childMap.get(id);
+            if (child==null) {
+                log.warn("Ontology term {} does not exist in parent {}",id,parentTermId);
+            }
+            else {
+                ordered.add(child);
+            }
+        }
+        parent.setTerms(ordered);
+        
+        return save(subjectKey, ontology);
+    }    
+
+    public Ontology addTerm(String subjectKey, Long ontologyId, Long parentTermId, OntologyTerm term) throws Exception {
+        if (term.getName()==null) {
+            throw new IllegalArgumentException("Ontology term may not have null name");
+        }
+        if (term.getId()==null) {
+            Long id = TimebasedIdentifierGenerator.generateIdList(1).get(0);
+            term.setId(id);
+        }
+        Ontology ontology = getDomainObject(subjectKey, Ontology.class, ontologyId);
+        if (ontology==null) {
+            throw new IllegalArgumentException("Ontology not found: "+ontologyId);
+        }
+        OntologyTerm parent = findTerm(ontology, parentTermId);
+        if (parent.getTerms()==null) {
+            parent.setTerms(new ArrayList<OntologyTerm>());
+        }
+        parent.getTerms().add(term);
+        return save(subjectKey, ontology);
+    }
+
+    public Ontology removeTerm(String subjectKey, Long ontologyId, Long termId) throws Exception {
+        Ontology ontology = getDomainObject(subjectKey, Ontology.class, ontologyId);
+        if (ontology==null) {
+            throw new IllegalArgumentException("Ontology not found: "+ontologyId);
+        }
+        OntologyTerm removed = findTermAndRemove(ontology, termId);
+        if (removed==null) {
+            throw new Exception("Could not find term to remove: "+termId);
+        }
+        return save(subjectKey, ontology);
+    }
     
     public TreeNode reorderChildren(String subjectKey, TreeNode treeNode, int[] order) throws Exception {
 
@@ -656,7 +718,41 @@ public class DomainDAO {
         }
         return getDomainObject(subjectKey, domainObject);
     }
+    
+    // UTILITY METHODS
+    
+    private OntologyTerm findTerm(OntologyTerm term, Long termId) {
+        if (term.getId().equals(termId)) {
+            return term;
+        }
+        if (term.getTerms()!=null) {
+            for(OntologyTerm child : term.getTerms()) {
+                OntologyTerm found = findTerm(child, termId);
+                if (found!=null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
 
+    private OntologyTerm findTermAndRemove(OntologyTerm term, Long termId) {
+        if (term.getTerms()!=null) {
+            for(Iterator<OntologyTerm> iterator = term.getTerms().iterator(); iterator.hasNext(); ) {
+                OntologyTerm child = iterator.next();
+                if (child.getId().equals(termId)) {
+                    iterator.remove();
+                    return child;
+                }
+                OntologyTerm found = findTermAndRemove(child, termId);
+                if (found!=null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+    
     // UNSECURE METHODS, SERVER SIDE ONLY
     // TODO: MOVE THESE ELSEWHERE
 

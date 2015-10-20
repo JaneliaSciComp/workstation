@@ -2,12 +2,14 @@ package org.janelia.it.workstation.gui.browser.api.facade.interfaces;
 
 import java.util.Collection;
 import java.util.List;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
@@ -36,6 +38,14 @@ public interface DomainFacade {
     public Collection<Workspace> getWorkspaces();
     
     public Collection<Ontology> getOntologies();
+
+    public Ontology create(Ontology ontology) throws Exception;
+    
+    public Ontology reorderTerms(Long ontologyId, Long parentTermId, List<Long> childOrder) throws Exception;
+    
+    public Ontology addTerm(Long ontologyId, Long parentTermId, OntologyTerm term) throws Exception;
+    
+    public Ontology removeTerm(Long ontologyId, Long termId) throws Exception;
     
     public void changePermissions(ObjectSet objectSet, String granteeKey, String rights, boolean grant) throws Exception;
     

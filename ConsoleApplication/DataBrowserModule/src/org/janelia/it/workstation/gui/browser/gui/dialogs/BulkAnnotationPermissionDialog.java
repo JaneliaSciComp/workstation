@@ -19,6 +19,7 @@ import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
+import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
@@ -51,14 +52,10 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
     private final JCheckBox readCheckbox;
     private final JCheckBox writeCheckbox;
 
-    private final DomainObjectSelectionModel selectionModel;
     private final List<DomainObjectId> selected = new ArrayList<>();
 
     public BulkAnnotationPermissionDialog() {
 
-        // TODO: get the correct selection model
-        this.selectionModel = null;
-            
         setTitle("Add or remove permissions for annotations");
 
         attrPanel = new JPanel(new MigLayout("wrap 2, ins 20"));
@@ -122,14 +119,28 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
         panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
     }
 
-    public void showForSelectedDomainObjects() {
-
-        selected.clear();
-        selected.addAll(selectionModel.getSelectedIds());
-                
-        if (selected.isEmpty()) {
+    private void showSelectionMessage() {
             JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                     "Select some items to bulk-edit permissions", "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    public void showForSelectedDomainObjects() {
+
+        DomainListViewTopComponent listView = DomainListViewTopComponent.getActiveInstance();
+        if (listView==null || listView.getEditor()==null) {
+            showSelectionMessage();
+            return;
+        }
+        
+        DomainObjectSelectionModel selectionModel = listView.getEditor().getSelectionModel();
+        if (selectionModel==null) {
+            showSelectionMessage();
+            return;
+        }
+        
+        selected.clear();
+        selected.addAll(selectionModel.getSelectedIds());
+        if (selected.isEmpty()) {
+            showSelectionMessage();
             return;
         } 
         
@@ -178,13 +189,11 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
                     // Must be owner to grant access
                     if (!DomainUtils.isOwner(annotation)) continue;
 
-                    model.changePermissions(selectedObjects, subject.getKey(), "r", read);
-                    model.changePermissions(selectedObjects, subject.getKey(), "w", write);
+                    model.changePermissions(annotation, subject.getKey(), "r", read);
+                    model.changePermissions(annotation, subject.getKey(), "w", write);
                     
                     numAnnotationsModified++;
                 }
-                
-                // TODO: invalidate or force refresh somehow
             }
 
             @Override
