@@ -61,7 +61,13 @@ public class VertexSubsetNode extends AbstractNode
     
     @Override
     public Image getIcon(int type) {
-        return ImageUtilities.loadImage("org/janelia/horta/images/VertexTip2.png");
+        // TODO: Icons for islands (0) and links (2)
+        if (vertices.getBranchCount() < 2) {
+            return ImageUtilities.loadImage("org/janelia/horta/images/VertexTip2.png");
+        }
+        else {
+            return ImageUtilities.loadImage("org/janelia/horta/images/VertexBranch2.png");            
+        }
     }
     
     @Override

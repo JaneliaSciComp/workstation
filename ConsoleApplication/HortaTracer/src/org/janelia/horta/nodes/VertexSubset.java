@@ -43,14 +43,17 @@ public class VertexSubset
     private final Collection<NeuronVertex> vertices;
     private final Map<NeuronVertex, Collection<NeuronVertex>> neighborMap;
     private final String name;
+    private final int branchCount;
     
     VertexSubset(Collection<NeuronVertex> vertices, 
                     String name, Map<NeuronVertex,
-                    Collection<NeuronVertex>> neighborMap) 
+                    Collection<NeuronVertex>> neighborMap,
+                    int branchCount) 
     {
         this.vertices = vertices;
         this.name = name;
         this.neighborMap = neighborMap;
+        this.branchCount = branchCount;
     }
 
     public Collection<NeuronVertex> getVertices()
@@ -67,6 +70,10 @@ public class VertexSubset
     {
         return neighborMap;
     }
-    
-    
+
+    public int getBranchCount()
+    {
+        return branchCount;
+    }
+
 }

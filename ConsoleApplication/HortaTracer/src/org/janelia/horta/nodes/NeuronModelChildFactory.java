@@ -53,11 +53,11 @@ public class NeuronModelChildFactory extends ChildFactory< VertexSubset >
     private final VertexSubset tips = new VertexSubset(
             new HashSet<NeuronVertex>(), 
             "Tips",
-            vertexNeighbors); // zero or one neighbor
+            vertexNeighbors, 1); // zero or one neighbor
     private final VertexSubset branchPoints = new VertexSubset(
             new HashSet<NeuronVertex>(), 
             "Branch Points",
-            vertexNeighbors); // more than two neighbors
+            vertexNeighbors, 3); // more than two neighbors
     
     public NeuronModelChildFactory(NeuronModel neuron) {
         this.neuron = neuron;

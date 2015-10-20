@@ -61,7 +61,13 @@ public class NeuronVertexNode extends AbstractNode
     
     @Override
     public Image getIcon(int type) {
-        return ImageUtilities.loadImage("org/janelia/horta/images/VertexTip2.png");
+        // TODO: Icons for islands (0) and links (2)
+        if (getSize() < 2) {
+            return ImageUtilities.loadImage("org/janelia/horta/images/VertexTip2.png");
+        }
+        else {
+            return ImageUtilities.loadImage("org/janelia/horta/images/VertexBranch2.png");            
+        }
     }
     
     @Override
@@ -69,7 +75,11 @@ public class NeuronVertexNode extends AbstractNode
         return getIcon(i);
     }
     
-    public int getSize() {return neighbors.size();}
+    public int getSize() {
+        if (neighbors == null)
+            return 0;
+        return neighbors.size();
+    }
     
     @Override 
     protected Sheet createSheet() { 
