@@ -294,14 +294,14 @@ extends MultipassRenderer
                 }
             }
             // 2 - remove obsolete neurons
-            // Use iterator.remove() technique, to avoid concurrent modification
-            // http://stackoverflow.com/questions/223918/iterating-through-a-list-avoiding-concurrentmodificationexception-when-removing
-            Iterator<NeuronModel> ni = currentNeuronActors.keySet().iterator();
-            while (ni.hasNext()) {
-                if (! latestNeurons.contains(ni.next()))
-                    // Apparently yes, this does delete from the map, when the iterator is on the keySet().
-                    ni.remove();
+            Set<NeuronModel> obsoleteNeurons = new HashSet<>();
+            // Perform two passes, to avoid concurrent modification
+            for (NeuronModel neuron : currentNeuronActors.keySet()) {
+                if (! latestNeurons.contains(neuron))
+                    obsoleteNeurons.add(neuron);
             }
+            for (NeuronModel neuron : obsoleteNeurons)
+                removeNeuronReconstruction(neuron);
             // Remove obsolete lists too
             Iterator<NeuronSet> nli = currentNeuronLists.iterator();
             while (nli.hasNext()) {
