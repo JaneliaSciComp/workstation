@@ -67,6 +67,7 @@ public class AnnotationSkeletonPanel extends JPanel {
     private Collection<GLActor> coreActors = new ArrayList<>();
     private Collection<GLActor> fixedFunctionActors = new ArrayList<>();
     private boolean meshMode = true;
+    private boolean forceReset = true;
     
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
@@ -82,12 +83,19 @@ public class AnnotationSkeletonPanel extends JPanel {
         return meshMode;
     }
     
+    /**
+     * Force a complete positional reset on the viewer.  This should definitely
+     * be done at creation of the panel.
+     * @param flag 
+     */
+    public void setForceReset(boolean flag) {
+        this.forceReset = flag;
+    }
+    
     public void establish3D() {
-        boolean forceReset = false;        
         if (occlusiveVolumeModel == null) {
             occlusiveVolumeModel = new OcclusiveVolumeModel();
             context = occlusiveVolumeModel;
-            forceReset = true;
         }
 
         if (viewer == null  &&  dataSource.getSkeleton() != null  &&  dataSource.getSkeleton().getTileFormat() != null) {
@@ -211,6 +219,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             this.add(viewer, BorderLayout.CENTER);
             // This should be done only initially.
             if (forceReset) {
+                forceReset = false;
                 viewer.resetView();
             }
 

@@ -8,6 +8,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import javax.swing.JComponent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -213,11 +215,24 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         lvvTranslator.annotationSelected(guid);
     }
     
+    private Timer meshDrawUpdateTimer;
+    
     public void skeletonChanged() {
         for (SkeletonActor actor: actors) {
             actor.updateAnchors();
         }
-        updateMeshDrawActor();
+        if (meshDrawUpdateTimer != null) {
+            meshDrawUpdateTimer.cancel();
+        }
+        meshDrawUpdateTimer = new Timer();
+        TimerTask meshDrawUpdateTask = new TimerTask() {
+            @Override
+            public void run() {
+                updateMeshDrawActor();
+                fireComponentUpdate();
+            }
+        };
+        meshDrawUpdateTimer.schedule(meshDrawUpdateTask, 10000);
         fireComponentUpdate();
     }
 
