@@ -46,12 +46,18 @@ import org.openide.nodes.Node;
  *
  * @author Christopher Bruns
  */
-public class NeuronModelChildFactory extends ChildFactory<NeuronVertex>
+public class NeuronModelChildFactory extends ChildFactory< VertexSubset >
 {
-    private NeuronModel neuron;
+    private final NeuronModel neuron;
     private final Map<NeuronVertex, Collection<NeuronVertex>> vertexNeighbors = new HashMap<>();
-    private final Collection<NeuronVertex> tips = new HashSet<>();
-    private final Collection<NeuronVertex> branchPoints = new HashSet<>();
+    private final VertexSubset tips = new VertexSubset(
+            new HashSet<NeuronVertex>(), 
+            "Tips",
+            vertexNeighbors); // zero or one neighbor
+    private final VertexSubset branchPoints = new VertexSubset(
+            new HashSet<NeuronVertex>(), 
+            "Branch Points",
+            vertexNeighbors); // more than two neighbors
     
     public NeuronModelChildFactory(NeuronModel neuron) {
         this.neuron = neuron;
@@ -71,23 +77,40 @@ public class NeuronModelChildFactory extends ChildFactory<NeuronVertex>
         insertDirectionalPair(vertex2, vertex1);
     }
     
-    @Override
-    protected boolean createKeys(List<NeuronVertex> toPopulate)
-    {
+    private void refreshCaches() {
         // Precache all vertex neighbors
         // TODO: somehow manage updates efficiently, or at all...
         vertexNeighbors.clear();
         for ( NeuronEdge edge : neuron.getEdges() ) {
             insertEdge(edge);
         }
+        tips.getVertices().clear();
+        branchPoints.getVertices().clear();
         for ( NeuronVertex vertex : neuron.getVertexes()) {
-            toPopulate.add(vertex);
-        }
+            Collection<NeuronVertex> neighbors = vertexNeighbors.get(vertex);
+            int neighborCount = 0;
+            if (neighbors != null)
+                neighborCount = neighbors.size();
+            if (neighborCount < 2)
+                tips.getVertices().add(vertex);
+            else if (neighborCount > 2)
+                branchPoints.getVertices().add(vertex);
+        }        
+    }
+    
+    @Override
+    protected boolean createKeys(List< VertexSubset > toPopulate)
+    {
+        refreshCaches();
+        if (tips.getVertices().size() > 0)
+            toPopulate.add(tips);
+        if (branchPoints.getVertices().size() > 0)
+            toPopulate.add(branchPoints);
         return true;
     }
 
     @Override
-    protected Node createNodeForKey(NeuronVertex key) {
-        return new NeuronVertexNode(key, vertexNeighbors.get(key));
+    protected Node createNodeForKey(VertexSubset key) {
+        return new VertexSubsetNode(key);
     }
 }
