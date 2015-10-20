@@ -72,7 +72,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     // These members deal with the context and entities within it
     private List<T> imageObjects;
     private Map<S,T> imageObjectMap;
-    private final Annotations annotations = new Annotations();
+//    private final Annotations annotations = new Annotations();
     private final List<String> allUsers = new ArrayList<>();
     private final Set<String> hiddenUsers = new HashSet<>();
     private int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
@@ -330,105 +330,12 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
         addKeyListener(keyListener);
         
-//        imagesPanel.addMouseListener(new MouseHandler() {
-//            @Override
-//            protected void popupTriggered(MouseEvent e) {
-//                JPopupMenu popupMenu = new JPopupMenu();
-//                JMenuItem titleItem = new JMenuItem("" + contextRootedEntity.getEntity().getName());
-//                titleItem.setEnabled(false);
-//                popupMenu.add(titleItem);
-//
-//                JMenuItem newFolderItem = new JMenuItem("  Create New Folder");
-//                newFolderItem.addActionListener(new ActionListener() {
-//                    public void actionPerformed(ActionEvent actionEvent) {
-//
-//                        // Add button clicked
-//                        String folderName = (String) JOptionPane.showInputDialog(IconDemoPanel.this, "Folder Name:\n",
-//                                "Create folder under " + contextRootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-//                        if ((folderName == null) || (folderName.length() <= 0)) {
-//                            return;
-//                        }
-//
-//                        try {
-//                            // Update database
-//                            Entity parentFolder = contextRootedEntity.getEntity();
-//                            Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-//                            ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder);
-//                        }
-//                        catch (Exception ex) {
-//                            SessionMgr.getSessionMgr().handleException(ex);
-//                        }
-//                    }
-//                });
-//
-//                if (!contextRootedEntity.getEntity().getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)
-//                        || !contextRootedEntity.getEntity().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
-//                    newFolderItem.setEnabled(false);
-//                }
-//
-//                popupMenu.add(newFolderItem);
-//                popupMenu.show(imagesPanel, e.getX(), e.getY());
-//            }
-//        });
-        
-        modelMgrObserver = new ModelMgrAdapter() {
-
-//            @Override
-//            public void annotationsChanged(final long entityId) {
-//                if (pageRootedEntities != null) {
-//                    SwingUtilities.invokeLater(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            reloadAnnotations(entityId);
-//                            filterEntities();
-//                        }
-//                    });
-//                }
-//            }
-//
-//            @Override
-//            public void entitySelected(String category, String entityId, boolean clearAll) {
-//                IconGridViewerPanel.this.entitySelected(entityId, clearAll);
-//            }
-//
-//            @Override
-//            public void entityDeselected(String category, String entityId) {
-//                if (category.equals(getSelectionCategory())) {
-//                    IconGridViewerPanel.this.entityDeselected(entityId);
-//                }
-//            }
-        };
-//        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
-//        ModelMgr.getModelMgr().registerOnEventBus(this);
-
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 imagesPanel.recalculateGrid();
             }
         });
-
-//        annotations.setFilter(new AnnotationFilter() {
-//            @Override
-//            public boolean accept(OntologyAnnotation annotation) {
-//
-//                // Hidden by user?
-//                if (hiddenUsers.contains(annotation.getOwner())) {
-//                    return false;
-//                }
-//                AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
-//
-//                // Hidden by session?
-//                Boolean onlySession = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
-//                        ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY);
-//                if ((onlySession != null && !onlySession) || session == null) {
-//                    return true;
-//                }
-//
-//                // At this point we know there is a current session, and we have to match it
-//                return (annotation.getSessionId() != null && annotation.getSessionId().equals(session.getId()));
-//            }
-//        });
 
         sessionModelListener = new SessionModelListener() {
 
@@ -440,9 +347,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 }
                 else if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
                     refreshAnnotations(null);
-                }
-                else if (ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY.equals(key)) {
-//                    filterEntities();
                 }
                 else if (ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
                     refresh();
@@ -713,22 +617,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 //            hud.setEntity(entity);
 //        }
 //    }
-
-//    public synchronized void goParent() {
-//        final String selectedUniqueId = contextRootedEntity.getUniqueId();
-//        SwingUtilities.invokeLater(new Runnable() {
-//            @Override
-//            public void run() {
-//                String parentId = Utils.getParentIdFromUniqueId(selectedUniqueId);
-//                if (StringUtils.isEmpty(parentId)) {
-//                    clear();
-//                }
-//                else {
-//                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, parentId, true);
-//                }
-//            }
-//        });
-//    }
     
     public void showImageObjects(List<T> imageObjects) {
         showImageObjects(imageObjects, null);
@@ -748,63 +636,13 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         imageObjectsLoadDone(success);
     }
     
-//    public synchronized void loadEntity(RootedEntity rootedEntity, final Callable<Void> success) {
-//
-//        this.contextRootedEntity = rootedEntity;
-//        if (contextRootedEntity == null) {
-//            return;
-//        }
-//
-//        Entity entity = contextRootedEntity.getEntity();
-//
-//        log.debug("loadEntity {} (@{})", entity.getName(), System.identityHashCode(entity));
-//
-//        List<EntityData> eds = ModelUtils.getSortedEntityDatas(entity);
-//        List<EntityData> children = new ArrayList<EntityData>();
-//        for (EntityData ed : eds) {
-//            Entity child = ed.getChildEntity();
-//            if (!EntityUtils.isHidden(ed) && child != null && !(child instanceof ForbiddenEntity)) {
-//                children.add(ed);
-//            }
-//        }
-//
-//        List<RootedEntity> lazyRootedEntities = new ArrayList<RootedEntity>();
-//        for (EntityData ed : children) {
-//            String childId = ModelUtils.getChildUniqueId(rootedEntity.getUniqueId(), ed);
-//            lazyRootedEntities.add(new RootedEntity(childId, ed));
-//        }
-//
-//        if (lazyRootedEntities.isEmpty()) {
-//            lazyRootedEntities.add(rootedEntity);
-//        }
-//
-//        // Update back/forward navigation
-////        EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
-////        iconDemoToolbar.getPrevButton().setEnabled(history.isBackEnabled());
-////        iconDemoToolbar.getNextButton().setEnabled(history.isNextEnabled());
-//
-//        loadImageEntities(lazyRootedEntities, success);
-//    }
-//
-//    public void loadImageEntities(final List<RootedEntity> lazyRootedEntities) {
-//        // TODO: revisit this, since it doesn't set contextRootedEntity
-//        loadImageEntities(lazyRootedEntities, null);
-//    }
-
-//    private synchronized void loadImageEntities(final List<RootedEntity> lazyRootedEntities, final Callable<Void> success) {
-//
-//        this.allRootedEntitiesByEntityId.clear();
-//        this.allRootedEntitiesByPathId.clear();
-//        this.allRootedEntities = lazyRootedEntities;
-//        for (RootedEntity re : allRootedEntities) {
-//            allRootedEntitiesByEntityId.put(re.getEntityId(), re);
-//            allRootedEntitiesByPathId.put(re.getId(), re);
-//        }
-//
-//        this.numPages = (int) Math.ceil((double) allRootedEntities.size() / (double) PAGE_SIZE);
-//        loadImageEntities(0, success);
-//    }
-
+    public void refreshImageObject(T imageObject) {
+        S uniqueId = imageModel.getImageUniqueId(imageObject);
+        for(AnnotatedImageButton<T,S> button : imagesPanel.getButtonsByUniqueId(uniqueId)) {
+            button.refresh(imageObject);
+        }
+    }
+    
     private synchronized void imageObjectsLoadDone(final Callable<Void> success) {
         
         // Create the image buttons
@@ -846,99 +684,28 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         });
     }
 
-//    protected void removeRootedEntity(final RootedEntity rootedEntity) {
-//        int index = getRootedEntities().indexOf(rootedEntity);
-//        if (index < 0) {
-//            return;
-//        }
-//
-//        pageRootedEntities.remove(rootedEntity);
-//        allRootedEntities.remove(rootedEntity);
-//        allRootedEntitiesByEntityId.removeAll(rootedEntity.getEntityId());
-//        allRootedEntitiesByPathId.removeAll(rootedEntity.getId());
-//
-//        this.numPages = (int) Math.ceil((double) allRootedEntities.size() / (double) PAGE_SIZE);
-//        updatePagingStatus();
-//
-//        SwingUtilities.invokeLater(new Runnable() {
-//            @Override
-//            public void run() {
-//                RootedEntity next = getNextEntity();
-//                if (next != null) {
-//                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), next.getId(), true);
-//                }
-//                imagesPanel.removeRootedEntity(rootedEntity);
-//                imagesPanel.recalculateGrid();
-//            }
-//        });
-//    }
-
-//    private void filterEntities() {
-//
-//        AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
-//        if (session == null) {
-//            return;
-//        }
-//        session.clearCompletedIds();
-//        Set<Long> completed = session.getCompletedEntityIds();
-//
-//        imagesPanel.showAllButtons();
-//        Boolean hideAnnotated = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
-//                ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY);
-//        if (hideAnnotated != null && hideAnnotated) {
-//            imagesPanel.hideButtons(completed);
-//        }
-//    }
-
-    /**
-     * Reload the annotations from the database and then refresh the UI.
-     */
-//    public synchronized void reloadAnnotations(final Long entityId) {
-//
-//        if (annotations == null || pageRootedEntities == null) {
-//            return;
-//        }
-//        
-//        annotationLoadingWorker = new SimpleWorker() {
-//
-//            protected void doStuff() throws Exception {
-//                annotations.reload(entityId);
-//            }
-//
-//            protected void hadSuccess() {
-//                refreshAnnotations(entityId);
-//            }
-//
-//            protected void hadError(Throwable error) {
-//                SessionMgr.getSessionMgr().handleException(error);
-//            }
-//        };
-//
-//        annotationLoadingWorker.execute();
-//    }
-
     /**
      * Refresh the annotation display in the UI, but do not reload anything from
      * the database.
      */
     private synchronized void refreshAnnotations(Long entityId) {
-        // Refresh all user list
-        allUsers.clear();
-        for (OntologyAnnotation annotation : annotations.getAnnotations()) {
-            String name = EntityUtils.getNameFromSubjectKey(annotation.getOwner());
-            if (!allUsers.contains(name)) {
-                allUsers.add(name);
-            }
-        }
-        Collections.sort(allUsers);
-        imagesPanel.setAnnotations(annotations);
-
-        if (entityId == null) {
-            imagesPanel.showAllAnnotations();
-        }
-        else {
-            imagesPanel.showAnnotationsForEntity(entityId);
-        }
+//        // Refresh all user list
+//        allUsers.clear();
+//        for (OntologyAnnotation annotation : annotations.getAnnotations()) {
+//            String name = EntityUtils.getNameFromSubjectKey(annotation.getOwner());
+//            if (!allUsers.contains(name)) {
+//                allUsers.add(name);
+//            }
+//        }
+//        Collections.sort(allUsers);
+//        imagesPanel.setAnnotations(annotations);
+//
+//        if (entityId == null) {
+//            imagesPanel.showAllAnnotations();
+//        }
+//        else {
+//            imagesPanel.showAnnotationsForEntity(entityId);
+//        }
     }
 
     public void refresh() {
@@ -1119,39 +886,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
 //    public Hud getHud() {
 //        return hud;
-//    }
-
-    public Annotations getAnnotations() {
-        return annotations;
-    }
-
-//    public RootedEntity getContextRootedEntity() {
-//        return contextRootedEntity;
-//    }
-//
-//    private List<RootedEntity> getRootedEntitiesById(String id) {
-//        List<RootedEntity> res = new ArrayList<RootedEntity>();
-//        // Assume these are path ids
-//        res.addAll(allRootedEntitiesByPathId.get(id));
-//        if (res.isEmpty()) {
-//            // Maybe we were given entity GUIDs
-//            try {
-//                Long entityId = Long.parseLong(id);
-//                res.addAll(allRootedEntitiesByEntityId.get(entityId));
-//            }
-//            catch (NumberFormatException e) {
-//                // Expected
-//            }
-//        }
-//        return res;
-//    }
-//
-//    public RootedEntity getRootedEntityById(String id) {
-//        List<RootedEntity> res = getRootedEntitiesById(id);
-//        if (res == null || res.isEmpty()) {
-//            return null;
-//        }
-//        return res.get(0);
 //    }
 
 //    public EntityViewerState saveViewerState() {

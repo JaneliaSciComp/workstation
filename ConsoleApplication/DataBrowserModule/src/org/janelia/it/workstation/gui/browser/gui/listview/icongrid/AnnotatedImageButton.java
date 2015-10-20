@@ -28,6 +28,7 @@ import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
+import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTagCloudPanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationView;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -54,7 +55,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
     protected final JPanel buttonPanel;
     protected final JLabel loadingLabel;
     protected boolean viewable = false;
-    protected AnnotationView annotationView;
+    protected AnnotationView<T,S> annotationView;
     protected boolean annotationsLoaded = false;
     protected DragSource source;
     protected double aspectRatio;
@@ -63,6 +64,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
     protected final SelectionModel<T,S> selectionModel;
     protected final T imageObject;
     protected SimpleWorker annotationLoadingWorker;
+    protected final JComponent innerComponent;
     
     /**
      * Factory method for creating AnnotatedImageButtons. 
@@ -147,13 +149,6 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         c.weighty = 0;
         buttonPanel.add(mainPanel, c);
 
-//        c.gridx = 0;
-//        c.gridy = 3;
-//        c.fill = GridBagConstraints.BOTH;
-//        c.anchor = GridBagConstraints.PAGE_START;
-//        c.weighty = 1;
-//        buttonPanel.add(loadingLabel, c);
-
         // Remove all default mouse listeners except drag gesture recognizer
         for (MouseListener mouseListener : getMouseListeners()) {
             if (!(mouseListener instanceof MouseDragGestureRecognizer)) {
@@ -165,12 +160,16 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         titleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
         subtitleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
 
+        setAnnotationView(new AnnotationTagCloudPanel<T,S>());
+
+        mainPanel.removeAll();
+        this.innerComponent = init(imageObject, imageModel);
+        mainPanel.add(innerComponent);
+        
         refresh(imageObject);
     }
 
     public final void refresh(T imageObject) {
-
-        mainPanel.removeAll();
 
         StringBuilder tsb = new StringBuilder();
         if (imageModel!=null) {
@@ -179,57 +178,8 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         else {
             tsb.append(imageObject.toString());
         }
-        
-//        String splitPart = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
-//        if (splitPart != null) {
-//            tsb.append(" (").append(splitPart).append(")");
-//        }
-//
-//        StringBuilder ssb = new StringBuilder();
-//
-//        String crossLabel = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_CROSS_LABEL);
-//        if (crossLabel != null) {
-//            ssb.append("Cross label: ").append(crossLabel);
-//        }
-//        else {
-//            final Entity rep = entity.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
-//            if (rep != null) {
-//                if (EntityUtils.isInitialized(rep)) {
-//                    ssb.append("Represented by ").append(rep.getName());
-//                }
-//                else {
-//                    SimpleWorker worker = new SimpleWorker() {
-//
-//                        private Entity loadedRep;
-//
-//                        @Override
-//                        protected void doStuff() throws Exception {
-//                            loadedRep = ModelMgr.getModelMgr().getEntityById(rep.getId());
-//                        }
-//
-//                        @Override
-//                        protected void hadSuccess() {
-//                            String subtitle = "Represented by " + loadedRep.getName();
-//                            setSubtitle(subtitle, 100);
-//                        }
-//
-//                        @Override
-//                        protected void hadError(Throwable error) {
-//                            SessionMgr.getSessionMgr().handleException(error);
-//                        }
-//
-//                    };
-//                    worker.execute();
-//                }
-//            }
-//        }
-//
         setTitle(tsb.toString(), 100);
-//        if (ssb.length() > 0) {
-//            setSubtitle(ssb.toString(), 100);
-//        }
-
-        mainPanel.add(init(imageObject, imageModel));
+        showAnnotations(imageModel.getAnnotations(imageObject));
     }
 
     public void setTitle(String title, int maxWidth) {
@@ -271,7 +221,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         ((JPanel) annotationView).setVisible(visible);
     }
 
-    public synchronized void setAnnotationView(AnnotationView annotationView) {
+    public final synchronized void setAnnotationView(AnnotationView<T,S> annotationView) {
         this.annotationView = annotationView;
         // Fix event dispatching so that user can click on the tags and still select the button
         ((JPanel) annotationView).addMouseListener(new MouseForwarder(this, "JPanel(annotationView)->AnnotatedImageButton"));
@@ -280,13 +230,16 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         }
     }
 
-    public synchronized AnnotationView getAnnotationView() {
+    public synchronized AnnotationView<T,S> getAnnotationView() {
         return annotationView;
     }
 
-    public synchronized void showAnnotations(List<Annotation> annotations) {
+    private void showAnnotations(List<Annotation> annotations) {
 
         annotationView.setAnnotations(annotations);
+        annotationView.setSelectionModel(selectionModel);
+        annotationView.setImageModel(imageModel);
+        
         annotationsLoaded = true;
 
         buttonPanel.remove(loadingLabel);
@@ -323,8 +276,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         }
     }
 
-    public void setViewable(boolean wantViewable) {
-    }
+    public abstract void setViewable(boolean wantViewable);
 
     protected synchronized void registerAspectRatio(double width, double height) {
         double a = width / height;

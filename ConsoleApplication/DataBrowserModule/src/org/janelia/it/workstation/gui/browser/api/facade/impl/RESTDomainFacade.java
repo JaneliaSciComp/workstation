@@ -180,6 +180,12 @@ public class RESTDomainFacade implements DomainFacade {
         return newAnnotation;
     }
 
+    @Override
+    public Annotation update(Annotation annotation) throws Exception {
+        // TODO: implement
+        throw new UnsupportedOperationException();
+    }
+    
     public void remove(Annotation annotation) throws Exception {
         Response response = serviceEndpoints.get("annotation")
                 .queryParam("annotationId", annotation.getId())

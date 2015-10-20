@@ -1,9 +1,5 @@
 package org.janelia.it.workstation.gui.browser.api;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,12 +7,16 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.swing.SwingUtilities;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.support.MongoUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -32,6 +32,11 @@ import org.janelia.it.workstation.gui.browser.model.DomainObjectComparator;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 
 /**
  * Implements a unified domain model for client-side operations. All changes to the model should go through this class, as well as any domain object accesses
@@ -476,6 +481,26 @@ public class DomainModel {
         return ontologies;
     }
     
+    public OntologyTerm getOntologyTerm(OntologyTermReference reference) {
+        Ontology ontology = (Ontology)getDomainObject("ontology", reference.getOntologyId());
+        return findTerm(ontology, reference.getOntologyTermId());
+    }
+    
+    private OntologyTerm findTerm(OntologyTerm term, Long termId) {
+        if (term.getId().equals(termId)) {
+            return term;
+        }
+        if (term.getTerms()!=null) {
+            for(OntologyTerm child : term.getTerms()) {
+                OntologyTerm found = findTerm(child, termId);
+                if (found!=null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+    
     public void changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
         synchronized (this) {
             ObjectSet objectSet = new ObjectSet();
@@ -527,7 +552,16 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = (Annotation)putOrUpdate(facade.create(annotation));
         }
-        notifyDomainObjectChanged(getDomainObjectByReference(annotation.getTarget()));
+        notifyAnnotationsChanged(getDomainObjectByReference(annotation.getTarget()));
+        return canonicalObject;
+    }
+    
+    public Annotation save(Annotation annotation) throws Exception {
+        Annotation canonicalObject;
+        synchronized (this) {
+            canonicalObject = (Annotation)putOrUpdate(annotation.getId()==null ? facade.create(annotation) : facade.update(annotation));
+        }
+        notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;
     }
     

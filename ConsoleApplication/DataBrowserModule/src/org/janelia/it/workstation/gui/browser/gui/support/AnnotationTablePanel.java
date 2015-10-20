@@ -14,10 +14,17 @@ import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImagesPanel;
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.DomainUtils;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
+import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +33,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AnnotationTablePanel extends JPanel implements AnnotationView {
+public class AnnotationTablePanel<T, S> extends JPanel implements AnnotationView<T, S> {
 
     private static final Logger log = LoggerFactory.getLogger(AnnotationTablePanel.class);
     
@@ -35,9 +42,20 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
     private DynamicTable dynamicTable;
     private JLabel summaryLabel;
-
     private List<Annotation> annotations = new ArrayList<>();
+    private SelectionModel<T,S> selectionModel;
+    private ImageModel<T,S> imageModel;
+    
+    @Override
+    public void setSelectionModel(SelectionModel<T, S> selectionModel) {
+        this.selectionModel = selectionModel;
+    }
 
+    @Override
+    public void setImageModel(ImageModel<T, S> imageModel) {
+        this.imageModel = imageModel;
+    }
+    
     public AnnotationTablePanel() {
         setLayout(new BorderLayout());
         setOpaque(false);
@@ -225,6 +243,8 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
     private JPopupMenu getPopupMenu(final MouseEvent e, final Annotation annotation) {
 
+        final DomainModel model = DomainMgr.getDomainMgr().getModel();
+        
         JPopupMenu popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
 
@@ -238,95 +258,94 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
         ListSelectionModel lsm = table.getSelectionModel();
         if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) {
 
-            // TODO: port to domain objects
-            
-//            JMenuItem titleItem = new JMenuItem(annotation.getEntity().getName());
-//            titleItem.setEnabled(false);
-//            popupMenu.add(titleItem);
-//
-//            JMenuItem copyMenuItem = new JMenuItem("  Copy to Clipboard");
-//            copyMenuItem.addActionListener(new ActionListener() {
-//                @Override
-//                public void actionPerformed(ActionEvent e) {
-//                    Transferable t = new StringSelection(annotation.getEntity().getName());
-//                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-//                }
-//            });
-//            popupMenu.add(copyMenuItem);
-//
-//            if (EntityUtils.hasWriteAccess(annotation.getEntity(), SessionMgr.getSubjectKeys())) {
-//                JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
-//                deleteItem.addActionListener(new ActionListener() {
-//                @Override
-//                    public void actionPerformed(ActionEvent actionEvent) {
-//                        deleteAnnotation(annotation);
-//                    }
-//                });
-//                popupMenu.add(deleteItem);
-//            }
-//
-//            if (null != annotation.getValueString()) {
-//                JMenuItem editItem = new JMenuItem("  Edit Annotation");
-//                editItem.addActionListener(new ActionListener() {
-//                    @Override
-//                    public void actionPerformed(ActionEvent e) {
-//                        AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
-//                        dialog.setAnnotationValue(annotation.getValueString());
-//                        dialog.setVisible(true);
-//                        String value = dialog.getAnnotationValue();
-//                        if (null == value) {
-//                            value = "";
-//                        }
-//                        annotation.setValueString(value);
-//                        annotation.getEntity().setValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM, value);
-//                        String tmpName = annotation.getEntity().getName();
-//                        String namePrefix = tmpName.substring(0, tmpName.indexOf("=") + 2);
-//                        annotation.getEntity().setName(namePrefix + value);
-//                        try {
-//                            Entity tmpAnnotatedEntity = ModelMgr.getModelMgr().getEntityById(annotation.getTargetEntityId());
-//                            ModelMgr.getModelMgr().saveOrUpdateAnnotation(tmpAnnotatedEntity, annotation.getEntity());
-//                        }
-//                        catch (Exception e1) {
-//                            log.error("Error editing annotation",e1);
-//                            SessionMgr.getSessionMgr().handleException(e1);
-//                        }
-//                    }
-//                });
-//
-//                popupMenu.add(editItem);
-//            }
-//
-//            JMenuItem detailsItem = new JMenuItem("  View Details");
-//            detailsItem.addActionListener(new ActionListener() {
-//                @Override
-//                public void actionPerformed(ActionEvent actionEvent) {
-//                    OntologyOutline.viewAnnotationDetails(annotation);
-//                }
-//            });
-//            popupMenu.add(detailsItem);
-//
-//        }
-//        else {
-//            JMenuItem titleMenuItem = new JMenuItem("(Multiple Items Selected)");
-//            titleMenuItem.setEnabled(false);
-//            popupMenu.add(titleMenuItem);
-//
-//            final List<Annotation> toDeleteList = new ArrayList<>();
-//            for (int i : table.getSelectedRows()) {
-//                int mi = table.convertRowIndexToModel(i);
-//                toDeleteList.add(annotations.get(mi));
-//            }
-//
-//            if (SessionMgr.getUsername().equals(annotation.getOwner())) {
-//                JMenuItem deleteItem = new JMenuItem("  Delete Annotations");
-//                deleteItem.addActionListener(new ActionListener() {
-//                    @Override
-//                    public void actionPerformed(ActionEvent actionEvent) {
-//                        deleteAnnotations(toDeleteList);
-//                    }
-//                });
-//                popupMenu.add(deleteItem);
-//            }
+            JMenuItem titleItem = new JMenuItem(annotation.getName());
+            titleItem.setEnabled(false);
+            popupMenu.add(titleItem);
+
+            JMenuItem copyMenuItem = new JMenuItem("  Copy to Clipboard");
+            copyMenuItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Transferable t = new StringSelection(annotation.getName());
+                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+                }
+            });
+            popupMenu.add(copyMenuItem);
+
+            if (DomainUtils.hasWriteAccess(annotation)) {
+                JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
+                deleteItem.addActionListener(new ActionListener() {
+                @Override
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        deleteAnnotation(annotation);
+                    }
+                });
+                popupMenu.add(deleteItem);
+            }
+
+            if (annotation.getValue() != null) {
+                JMenuItem editItem = new JMenuItem("  Edit Annotation");
+                editItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
+                        dialog.setAnnotationValue(annotation.getValue());
+                        dialog.setVisible(true);
+                        String value = dialog.getAnnotationValue();
+                        if (null == value) {
+                            value = "";
+                        }
+                        annotation.setValue(value);
+                        String tmpName = annotation.getName();
+                        String namePrefix = tmpName.substring(0, tmpName.indexOf("=") + 2);
+                        annotation.setName(namePrefix + value);
+                        try {
+                            model.save(annotation);
+                        }
+                        catch (Exception e1) {
+                            log.error("Error editing annotation",e1);
+                            SessionMgr.getSessionMgr().handleException(e1);
+                        }
+                    }
+                });
+
+                popupMenu.add(editItem);
+            }
+
+            JMenuItem detailsItem = new JMenuItem("  View Details");
+            detailsItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    // TODO: port this
+                    //OntologyOutline.viewAnnotationDetails(annotation);
+                }
+            });
+            popupMenu.add(detailsItem);
+
+        }
+        else {
+            JMenuItem titleMenuItem = new JMenuItem("(Multiple Items Selected)");
+            titleMenuItem.setEnabled(false);
+            popupMenu.add(titleMenuItem);
+
+            final List<Annotation> toDeleteList = new ArrayList<>();
+            for (int i : table.getSelectedRows()) {
+                int mi = table.convertRowIndexToModel(i);
+                if (DomainUtils.hasWriteAccess(annotation)) {
+                    toDeleteList.add(annotations.get(mi));
+                }
+            }
+
+            if (!toDeleteList.isEmpty()) {
+                JMenuItem deleteItem = new JMenuItem("  Delete Annotations");
+                deleteItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        deleteAnnotations(toDeleteList);
+                    }
+                });
+                popupMenu.add(deleteItem);
+            }
         }
 
         return popupMenu;

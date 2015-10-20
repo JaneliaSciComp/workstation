@@ -30,9 +30,9 @@ public class SearchResults {
         SearchResults searchResults = null;
         List<DomainObject> pageObjects = new ArrayList<>();
         
-        ArrayListMultimap<Long, Annotation> objectAnnotations = ArrayListMultimap.<Long, Annotation>create();
+        ArrayListMultimap<Long, Annotation> annotationsByTarget = ArrayListMultimap.<Long, Annotation>create();
         for(Annotation annotation : annotations) {
-            objectAnnotations.put(annotation.getTarget().getTargetId(), annotation);
+            annotationsByTarget.put(annotation.getTarget().getTargetId(), annotation);
         }
         
         List<Annotation> pageAnnotations = new ArrayList<>();
@@ -40,8 +40,7 @@ public class SearchResults {
         for(DomainObject domainObject : domainObjects)  {
             if (domainObject==null) continue;
             pageObjects.add(domainObject);
-            pageAnnotations.addAll(objectAnnotations.get(domainObject.getId()));
-            // TODO: populate pageAnnotations
+            pageAnnotations.addAll(annotationsByTarget.get(domainObject.getId()));
             if (pageObjects.size()>=PAGE_SIZE) {
                 ResultPage page = new ResultPage(pageObjects, pageAnnotations, domainObjects.size());
                 if (searchResults==null) {
@@ -56,9 +55,10 @@ public class SearchResults {
         }
         
         if (!pageObjects.isEmpty()) {
+            // Create one more page with the remaining items
             pageAnnotations = new ArrayList<>();
             for(DomainObject domainObject : pageObjects)  {
-                pageAnnotations.addAll(objectAnnotations.get(domainObject.getId()));
+                pageAnnotations.addAll(annotationsByTarget.get(domainObject.getId()));
             }
             ResultPage page = new ResultPage(pageObjects, pageAnnotations, domainObjects.size());
             if (searchResults==null) {

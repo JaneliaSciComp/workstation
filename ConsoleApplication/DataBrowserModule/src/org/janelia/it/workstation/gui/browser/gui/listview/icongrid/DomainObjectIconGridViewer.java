@@ -11,6 +11,7 @@ import javax.swing.JPopupMenu;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
@@ -34,6 +35,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     private final Map<DomainObjectId,DomainObject> domainObjectByUniqueId = new HashMap<>();
     
+    private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     
     private final ImageModel<DomainObject,DomainObjectId> imageModel = new ImageModel<DomainObject, DomainObjectId>() {
@@ -79,6 +81,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         public Object getImageLabel(DomainObject domainObject) {
             return domainObject.getName();
         }
+        
+        public List<Annotation> getAnnotations(DomainObject domainObject) {
+            return domainObjectList.getAnnotations(domainObject.getId());
+        }
     };
 
     public DomainObjectIconGridViewer() {
@@ -115,14 +121,19 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
     
     @Override
+    public void refreshDomainObject(DomainObject domainObject) {
+        refreshImageObject(domainObject);
+    }
+    
+    @Override
     protected void buttonDrillDown(DomainObject domainObject) {
     }
     
     @Override
     public void showDomainObjects(AnnotatedDomainObjectList domainObjectList) {
         
+        this.domainObjectList = domainObjectList;
         showImageObjects(domainObjectList.getDomainObjects());
-        // TODO: set annotations?
         
         domainObjectByUniqueId.clear();
         for(DomainObject domainObject : domainObjectList.getDomainObjects()) {

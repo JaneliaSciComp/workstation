@@ -1,17 +1,39 @@
 package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Rectangle;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import java.awt.event.ComponentListener;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JViewport;
+import javax.swing.Scrollable;
+import javax.swing.SwingUtilities;
+
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
-
-import org.janelia.it.workstation.gui.framework.outline.Annotations;
+import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
+import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTagCloudPanel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.slf4j.Logger;
@@ -47,7 +69,6 @@ public class ImagesPanel<T,S> extends JScrollPane {
     private boolean tagsVisible = true;
 
     // State
-    private Map<Long, List<Annotation>> filteredAnnotationMap = new HashMap<>();
     private final AtomicBoolean loadUnloadImagesInterrupt = new AtomicBoolean(false);
     private Double lowestAspectRatio;
     private Integer maxImageWidth = DEFAULT_THUMBNAIL_SIZE;
@@ -198,34 +219,6 @@ public class ImagesPanel<T,S> extends JScrollPane {
         }
         buttonsPanel.remove(button);
         buttons.remove(imageId);
-    }
-
-    public void setAnnotations(Annotations annotations) {
-//        filteredAnnotationMap = annotations.getFilteredAnnotationMap();
-    }
-
-    /**
-     * Show the given annotations on the appropriate images.
-     */
-    public void showAllAnnotations() {
-//        for (AnnotatedImageButton button : buttons.values()) {
-//            showAnnotationsForEntity(button.getRootedEntity().getEntity().getId());
-//        }
-    }
-
-    /**
-     * Show the given annotations on the appropriate images.
-     */
-    public void showAnnotationsForEntity(final Long entityId) {
-//        SwingUtilities.invokeLater(new Runnable() {
-//            @Override
-//            public void run() {
-//                for (AnnotatedImageButton button : getButtonsByEntityId(entityId)) {
-//                    List<OntologyAnnotation> entityAnnotations = filteredAnnotationMap.get(entityId);
-//                    button.showAnnotations(entityAnnotations);
-//                }
-//            }
-//        });
     }
 
     public List<AnnotatedImageButton<T,S>> getButtonsByUniqueId(S uniqueId) {
@@ -427,28 +420,29 @@ public class ImagesPanel<T,S> extends JScrollPane {
     }
 
     public void setTagTable(boolean tagTable) {
-//        for (final AnnotatedImageButton button : buttons.values()) {
-//            if (tagTable) {
-//                if (button.getAnnotationView() instanceof AnnotationTablePanel) {
-//                    return;
-//                }
-//                button.setAnnotationView(new AnnotationTablePanel());
-//            }
-//            else {
-//                if (button.getAnnotationView() instanceof AnnotationTagCloudPanel) {
-//                    return;
-//                }
-//                button.setAnnotationView(new AnnotationTagCloudPanel() {
-//                    @Override
-//                    protected void moreDoubleClicked(MouseEvent e) {
-//                        new EntityDetailsDialog().showForRootedEntity(button.getRootedEntity());
-//                    }
-//                });
-//            }
-//        }
+        for (final AnnotatedImageButton<T,S> button : buttons.values()) {
+            if (tagTable) {
+                if (button.getAnnotationView() instanceof AnnotationTablePanel) {
+                    return;
+                }
+                button.setAnnotationView(new AnnotationTablePanel());
+            }
+            else {
+                if (button.getAnnotationView() instanceof AnnotationTagCloudPanel) {
+                    return;
+                }
+                button.setAnnotationView(new AnnotationTagCloudPanel() {
+                    @Override
+                    protected void moreDoubleClicked(MouseEvent e) {
+                        // TODO: show more annotations
+                        //new EntityDetailsDialog().showForRootedEntity(button.getRootedEntity());
+                    }
+                });
+            }
+        }
     }
     
-    private boolean setSelection(final AnnotatedImageButton button, boolean selection) {
+    private boolean setSelection(final AnnotatedImageButton<T,S> button, boolean selection) {
         if (button.isSelected() != selection) {
             button.setSelected(selection);
             return true;
@@ -541,7 +535,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
         log.trace("Recalculating image grid");
 
         double maxButtonWidth = 0;
-        for (AnnotatedImageButton button : buttons.values()) {
+        for (AnnotatedImageButton<T,S> button : buttons.values()) {
             int w = button.getPreferredSize().width;
             if (w > maxButtonWidth) {
                 maxButtonWidth = w;
@@ -584,7 +578,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
                 if (buttonsPanel.getColumns() == 1) {
                     viewRect.setSize(viewRect.width, viewRect.height + 100);
                 }
-                for (AnnotatedImageButton button : buttons.values()) {
+                for (AnnotatedImageButton<T,S> button : buttons.values()) {
                     if (loadUnloadImagesInterrupt.get()) {
                         log.trace("loadUnloadImages interrupted");
                         return;

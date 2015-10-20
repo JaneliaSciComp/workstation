@@ -49,6 +49,8 @@ public interface DomainFacade {
     
     public Annotation create(Annotation annotation) throws Exception;
     
+    public Annotation update(Annotation annotation) throws Exception;
+    
     public void remove(Annotation annotation) throws Exception;
     
     public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception;       

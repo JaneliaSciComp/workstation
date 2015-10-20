@@ -61,17 +61,17 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
 
         toolbar.addSeparator();
 
-        userButton = new JButton("Annotations from...");
-        userButton.setIcon(Icons.getIcon("group.png"));
-        userButton.setFocusable(false);
-        userButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                showPopupUserMenu();
-            }
-        });
-        userButton.addMouseListener(new MouseForwarder(toolbar, "UserButton->JToolBar"));
-        toolbar.add(userButton);
+//        userButton = new JButton("Annotations from...");
+//        userButton.setIcon(Icons.getIcon("group.png"));
+//        userButton.setFocusable(false);
+//        userButton.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                showPopupUserMenu();
+//            }
+//        });
+//        userButton.addMouseListener(new MouseForwarder(toolbar, "UserButton->JToolBar"));
+//        toolbar.add(userButton);
 
         toolbar.addSeparator();
 

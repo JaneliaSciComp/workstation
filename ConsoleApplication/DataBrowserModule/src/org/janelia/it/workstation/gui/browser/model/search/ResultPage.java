@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.model.search;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
+
 import java.util.*;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -63,5 +64,11 @@ public class ResultPage implements AnnotatedDomainObjectList {
             }
         }
         return domainObjectById.get(domainObjectId);
+    }
+
+    @Override
+    public void updateAnnotations(Long domainObjectId, List<Annotation> annotations) {
+        annotationsByDomainObjectId.removeAll(domainObjectId);
+        annotationsByDomainObjectId.putAll(domainObjectId, annotations);
     }
 }

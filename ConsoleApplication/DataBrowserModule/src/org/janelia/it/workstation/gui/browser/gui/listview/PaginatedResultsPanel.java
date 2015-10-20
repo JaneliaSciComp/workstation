@@ -1,12 +1,14 @@
 package org.janelia.it.workstation.gui.browser.gui.listview;
 
-import com.google.common.eventbus.Subscribe;
-import de.javasoft.swing.SimpleDropDownButton;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -17,6 +19,13 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.UIManager;
+
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.DomainUtils;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
@@ -26,6 +35,10 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
+
+import de.javasoft.swing.SimpleDropDownButton;
 
 /**
  * A panel that builds pagination and selection features around an AnnotatedDomainObjectListViewer. 
@@ -218,6 +231,39 @@ public abstract class PaginatedResultsPanel extends JPanel {
         resultsView.selectDomainObject(event.getDomainObject(), event.isSelect(), event.isClearAll());
         updateStatusBar();
 //        updateHud(false);
+    }
+
+    @Subscribe
+    public void annotationsChanged(DomainObjectAnnotationChangeEvent event) {
+                
+        for(final ResultPage page : searchResults.getPages()) {
+            final Long domainObjectId = event.getDomainObject().getId();
+            final DomainObject pageObject = page.getDomainObject(domainObjectId);
+            if (pageObject!=null) {
+
+                SimpleWorker annotationUpdateWorker = new SimpleWorker() {
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        DomainModel model = DomainMgr.getDomainMgr().getModel();
+                        page.updateAnnotations(domainObjectId, model.getAnnotations(domainObjectId));
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        resultsView.refreshDomainObject(pageObject);
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+
+                annotationUpdateWorker.execute();
+                break;
+            }
+        }
     }
     
     private void updateStatusBar() {

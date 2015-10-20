@@ -50,7 +50,6 @@ public class StaticImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
     @Override
     public void setViewable(boolean viewable) {
-        super.setViewable(viewable);
         if (viewable) {
             Entity temp = new Entity();
             temp.setEntityTypeName("Folder");

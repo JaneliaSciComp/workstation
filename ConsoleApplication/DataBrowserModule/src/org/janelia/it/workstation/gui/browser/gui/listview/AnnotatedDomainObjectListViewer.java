@@ -20,6 +20,11 @@ public interface AnnotatedDomainObjectListViewer {
     public void showDomainObjects(AnnotatedDomainObjectList domainObjectList);
 
     /**
+     * Refresh the given domain object as the metadata in the AnnotatedDomainObjectList may have changed. 
+     */
+    public void refreshDomainObject(DomainObject domainObject);
+    
+    /**
      * Returns the actual GUI panel which implements the list viewer functionality.
      * @return a JPanel that can be added to a container for displaying the list
      */

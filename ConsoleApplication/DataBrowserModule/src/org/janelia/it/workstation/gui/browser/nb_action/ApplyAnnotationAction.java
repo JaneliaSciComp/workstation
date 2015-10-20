@@ -82,10 +82,7 @@ public class ApplyAnnotationAction extends NodeAction {
     
     @Override
     protected void performAction(Node[] activatedNodes) {
-        
-        log.info("performAction");
         if (!enable(activatedNodes)) return;
-
         for(OntologyTermNode node : selected) {
             performAction(node);
         }
@@ -115,7 +112,7 @@ public class ApplyAnnotationAction extends NodeAction {
         }
         
         for(DomainObjectId id : selectedIds) {
-            log.info("selected: "+id);
+            log.debug("Selected: "+id);
         }
         
         DomainModel model = DomainMgr.getDomainMgr().getModel();
@@ -205,6 +202,8 @@ public class ApplyAnnotationAction extends NodeAction {
     
     public void doAnnotation(DomainObject target, OntologyTermNode termNode, Object value) throws Exception {
         
+        // TODO: ensure no duplicates?
+        
         Ontology ontology = termNode.getOntology();
         
         // Save the annotation
@@ -241,6 +240,10 @@ public class ApplyAnnotationAction extends NodeAction {
         targetRef.setTargetType(MongoUtils.getCollectionName(target.getClass()));
         targetRef.setTargetId(target.getId());
         annotation.setTarget(targetRef);
+        
+        String tag = (annotation.getValue()==null ? annotation.getKey() : 
+                     annotation.getKey() + " = " + annotation.getValue());
+        annotation.setName(tag);
         
         createAndShareAnnotation(annotation);
     }

@@ -7,7 +7,9 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.swing.JPanel;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
@@ -108,6 +110,11 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
     @Override
     public void selectDomainObject(DomainObject domainObject, boolean selected, boolean clearAll) {
         // TODO: change table selection
+    }
+
+    @Override
+    public void refreshDomainObject(DomainObject domainObject) {
+        // TODO: refresh the table
     }
     
     @Override
