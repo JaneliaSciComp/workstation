@@ -90,6 +90,18 @@ public class Viewer3d extends BaseGLViewer implements ActionListener {
         addActorToRenderer(actor);
     }
     
+    public void addActorContinuousView(GLActor actor) {
+        synchronized (this) {
+            renderer.actors.add(actor);
+        }
+    }
+
+    public void removeActorContinuousView(GLActor actor) {
+        synchronized (this) {
+            renderer.actors.remove(actor);
+        }
+    }
+    
     public void removeActor(GLActor actor) {
         removeActorFromRenderer(actor);
     }
@@ -176,7 +188,7 @@ public class Viewer3d extends BaseGLViewer implements ActionListener {
             renderer.addActor(actor);
             renderer.resetView();
         }
-    }
+    }        
     
     private void removeActorFromRenderer(GLActor actor) {
         synchronized ( this ) {

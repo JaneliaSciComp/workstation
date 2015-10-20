@@ -39,6 +39,7 @@ import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.OcclusiveViewer;
 import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer;
+import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer.OcclusiveVolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.ResetPositionerI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.AttributeManagerBufferUploader;
@@ -65,6 +66,8 @@ public class AnnotationSkeletonPanel extends JPanel {
     private Collection<GLActor> fixedFunctionActors = new ArrayList<>();
     private boolean meshMode = true;
     
+    private OcclusiveRenderer.OcclusiveVolumeModel volumeModel;
+    
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
         this.setLayout(new BorderLayout());
@@ -80,6 +83,11 @@ public class AnnotationSkeletonPanel extends JPanel {
     }
     
     public void establish3D() {
+        boolean forceReset = false;
+        if (volumeModel == null) {
+            volumeModel = new OcclusiveVolumeModel();
+            forceReset = true;
+        }
         if (viewer == null  &&  dataSource.getSkeleton() != null  &&  dataSource.getSkeleton().getTileFormat() != null) {
             // Establish the lines-ish version of the skele viewer.
             // This one also acts as a collector of data.
@@ -96,7 +104,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             linesDrawActor.getBoundingBox3d().setMin( boundingBox.getMin().minus( yExtender ) );
 
             // Establish the renderer.
-            OcclusiveRenderer renderer = new OcclusiveRenderer();
+            OcclusiveRenderer renderer = new OcclusiveRenderer( volumeModel );
             final SkeletalBoundsResetPositioner skeletalBoundsResetPositioner = new SkeletalBoundsResetPositioner(dataSource.getSkeleton());
             renderer.setResetPositioner( skeletalBoundsResetPositioner );
 
@@ -161,13 +169,6 @@ public class AnnotationSkeletonPanel extends JPanel {
             fixedFunctionActors.add(refAxisActor);
             
             viewer.addMenuAction(new BackgroundPickAction(viewer));
-//            viewer.addMenuAction(
-//                new ActorSwapAction(
-//                    viewer,
-//                    coreActors, "Mesh Draw",
-//                    fixedFunctionActors, "Lines Draw"
-//                )
-//            );
             viewer.addMenuAction(
                 new ModeSwapAction(
                     this, "Mesh Draw", "Lines Draw"
@@ -196,19 +197,25 @@ public class AnnotationSkeletonPanel extends JPanel {
             // Add the initial actor list.
             if (meshMode) {
                 for (GLActor actor : coreActors) {
-                    viewer.addActor(actor);
+                    viewer.addActorContinuousView(actor);
                 }
             }
             else {
                 for (GLActor actor: fixedFunctionActors) {
-                    viewer.addActor(actor);
+                    viewer.addActorContinuousView(actor);
                 }
             }
             
             this.add(viewer, BorderLayout.CENTER);
+            // This should be done only initially.
+            if (forceReset) {
+                viewer.resetView();
+            }
+
             validate();
             repaint();
             controller.registerForEvents(this);
+
         }
     }
 
@@ -483,60 +490,6 @@ public class AnnotationSkeletonPanel extends JPanel {
             }
         }
         
-    }
-    
-    public static class ActorSwapAction extends AbstractAction {
-        private final static String SWAP_FORMAT = "Replace %s with %s.";
-        private final String firstLabel;
-        private final String secondLabel;
-        
-        private OcclusiveViewer viewer;
-        private boolean inCore = true;
-        
-        private Collection<GLActor> coreActors;
-        private Collection<GLActor> fixedFunctionActors;
-        
-        public ActorSwapAction(
-                OcclusiveViewer viewer, 
-                Collection<GLActor> coreActors, String firstActorLabel, 
-                Collection<GLActor> fixedFunctionActors, String secondActorLabel
-        ) {
-            this.viewer = viewer;
-            this.firstLabel = String.format( SWAP_FORMAT, firstActorLabel, secondActorLabel );
-            this.coreActors = coreActors;
-            this.secondLabel = String.format( SWAP_FORMAT, secondActorLabel, firstActorLabel );
-            this.fixedFunctionActors = fixedFunctionActors;
-            
-            putValue( Action.NAME, firstLabel );
-                   
-        }
-        
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (inCore) {
-                inCore = false;
-                for (GLActor actor: coreActors) {
-                    viewer.removeActor(actor);
-                }
-                for (GLActor actor: fixedFunctionActors) {
-                    viewer.addActor(actor);
-                }
-                putValue(Action.NAME, secondLabel);
-            }
-            else {
-                inCore = true;
-                for (GLActor actor : fixedFunctionActors) {
-                    viewer.removeActor(actor);
-                }
-                for (GLActor actor : coreActors) {
-                    viewer.addActor(actor);
-                }
-                putValue(Action.NAME, firstLabel);
-            }
-            viewer.validate();
-            viewer.repaint();
-        }
-       
     }
     
     public static class ModeSwapAction extends AbstractAction {
