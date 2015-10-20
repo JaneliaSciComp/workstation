@@ -188,4 +188,9 @@ public class ConesActor extends BasicGL3Actor
     public final void setColor(Color color) {
         material.setColor(color);
     }
+
+    void setMinPixelRadius(float radius)
+    {
+        material.setMinPixelRadius(radius);
+    }
 }

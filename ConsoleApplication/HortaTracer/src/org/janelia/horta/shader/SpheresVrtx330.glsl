@@ -36,6 +36,8 @@
  */
 
 uniform mat4 modelViewMatrix = mat4(1);
+uniform float radiusOffset = 0.0;
+uniform float radiusScale = 1.0;
 
 
 in vec3 position; // center of sphere
@@ -47,5 +49,5 @@ out float geomRadius; // pass radius to geometry shader
 
 void main() {
     gl_Position = modelViewMatrix * vec4(position, 1); // sphere center in camera frame
-    geomRadius = radius;
+    geomRadius = radiusOffset + radiusScale * radius;
 }

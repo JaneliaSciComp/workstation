@@ -52,11 +52,19 @@ public class SwcActor extends BasicGL3Actor
         conesActor = new ConesActor(neuron);
         this.addChild(spheresActor);
         this.addChild(conesActor);
+        setMinPixelRadius(0.5f);
     }
     
     public void setColor(Color color) {
         spheresActor.setColor(color);
         conesActor.setColor(color);
+    }
+    
+    // A minimum size added to each neuron caliber, 
+    // so even very thin neurites will show up on the screen
+    public final void setMinPixelRadius(float radius) {
+        spheresActor.setMinPixelRadius(radius);
+        conesActor.setMinPixelRadius(radius);
     }
     
     @Override

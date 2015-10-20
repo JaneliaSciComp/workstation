@@ -51,9 +51,11 @@ public class SpheresMaterial extends BasicMaterial
     // shader uniform parameter handles
     private int colorIndex = 0;
     private int lightProbeIndex = 0;
+    private int radiusOffsetIndex = 0;
     
     private Texture2d lightProbeTexture;
     private final float[] color = new float[] {1, 0, 0, 1};
+    private float minPixelRadius = 0.0f;
 
     public SpheresMaterial() {
         shaderProgram = new SpheresShader();
@@ -79,6 +81,7 @@ public class SpheresMaterial extends BasicMaterial
         colorIndex = 0;
         lightProbeIndex = 0;
         lightProbeTexture.dispose(gl);
+        radiusOffsetIndex = 0;
     }
     
     @Override
@@ -96,6 +99,9 @@ public class SpheresMaterial extends BasicMaterial
             shaderProgram.getProgramHandle(),
             "lightProbe");
         lightProbeTexture.init(gl);
+        radiusOffsetIndex = gl.glGetUniformLocation(
+            shaderProgram.getProgramHandle(),
+            "radiusOffset");
     }
 
     @Override
@@ -106,6 +112,12 @@ public class SpheresMaterial extends BasicMaterial
         lightProbeTexture.bind(gl, 0);
         gl.glUniform4fv(colorIndex, 1, color, 0);
         gl.glUniform1i(lightProbeIndex, 0); // use default texture unit, 0
+        // radius offset depends on current zoom
+        float micrometersPerPixel = 
+            camera.getVantage().getSceneUnitsPerViewportHeight()
+                / camera.getViewport().getHeightPixels();
+        float radiusOffset = minPixelRadius * micrometersPerPixel;
+        gl.glUniform1f(radiusOffsetIndex, radiusOffset);
     }
     
     @Override
@@ -138,6 +150,11 @@ public class SpheresMaterial extends BasicMaterial
                 (float)Math.sqrt(color[2]), 
                 color[3]);
     }    
+
+    public void setMinPixelRadius(float minPixelRadius)
+    {
+        this.minPixelRadius = minPixelRadius;
+    }
     
     private static class SpheresShader extends BasicShaderProgram
     {
