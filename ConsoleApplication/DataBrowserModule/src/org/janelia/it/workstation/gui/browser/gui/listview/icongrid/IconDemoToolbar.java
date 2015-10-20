@@ -5,7 +5,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
-import javax.swing.JPopupMenu;
 import javax.swing.JSlider;
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
@@ -102,16 +101,6 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
     protected abstract void showTagsButtonPressed();
 
     protected abstract void currImageSizeChanged(int imageSize);
-
-    protected abstract JPopupMenu getPopupUserMenu();
-
-    private void showPopupUserMenu() {
-        JPopupMenu menu = getPopupUserMenu();
-        if (menu == null) {
-            return;
-        }
-        menu.show(userButton, 0, userButton.getHeight());
-    }
 
     public boolean areTitlesVisible() {
         return showTitlesButton.isSelected();

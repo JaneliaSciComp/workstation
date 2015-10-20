@@ -17,7 +17,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -30,7 +29,6 @@ import javax.swing.JViewport;
 import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTagCloudPanel;
@@ -63,12 +61,14 @@ public class ImagesPanel<T,S> extends JScrollPane {
     // UI Components
     private final HashMap<S, AnnotatedImageButton<T,S>> buttons = new LinkedHashMap<>();
     private final ScrollableGridPanel buttonsPanel;
+    
+    // Model
     private ImageModel<T,S> imageModel;
     private SelectionModel<T,S> selectionModel;
-    private boolean titlesVisible = true;
-    private boolean tagsVisible = true;
 
     // State
+    private boolean titlesVisible = true;
+    private boolean tagsVisible = true;
     private final AtomicBoolean loadUnloadImagesInterrupt = new AtomicBoolean(false);
     private Double lowestAspectRatio;
     private Integer maxImageWidth = DEFAULT_THUMBNAIL_SIZE;
@@ -160,13 +160,12 @@ public class ImagesPanel<T,S> extends JScrollPane {
 
     public void cancelAllLoads() {
         for (AnnotatedImageButton<T,S> button : buttons.values()) {
-//            if (button instanceof DynamicImageButton) {
-//                ((DynamicImageButton) button).cancelLoad();
-//            }
+            if (button instanceof DynamicImageButton) {
+                ((DynamicImageButton) button).cancelLoad();
+            }
         }
     }
 
-    
     /**
      * Create the image buttons, but leave the images unloaded for now.
      */

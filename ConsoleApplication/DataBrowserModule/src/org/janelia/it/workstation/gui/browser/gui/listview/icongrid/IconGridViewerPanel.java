@@ -12,7 +12,6 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,16 +28,12 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.UserColorMapping;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
-import org.janelia.it.workstation.gui.framework.outline.Annotations;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
@@ -72,19 +67,14 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     // These members deal with the context and entities within it
     private List<T> imageObjects;
     private Map<S,T> imageObjectMap;
-//    private final Annotations annotations = new Annotations();
-    private final List<String> allUsers = new ArrayList<>();
-    private final Set<String> hiddenUsers = new HashSet<>();
     private int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
     private ImageModel<T,S> imageModel;
+    private SelectionModel<T,S> selectionModel;
 
     // Listeners
-    private SessionModelListener sessionModelListener;
+    private final SessionModelListener sessionModelListener;
     private ModelMgrObserver modelMgrObserver;
     
-    private SelectionModel<T,S> selectionModel;
-    
-
     // Listen for key strokes and execute the appropriate key bindings
     // TODO: we should replace this with an action map in the future
     protected KeyListener keyListener = new KeyAdapter() {
@@ -345,9 +335,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 if (key == "console.serverLogin") {
                     IconGridViewerPanel.this.clear();
                 }
-                else if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
-                    refreshAnnotations(null);
-                }
                 else if (ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
                     refresh();
                 }
@@ -400,92 +387,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         return selectionModel;
     }
     
-//    @Subscribe
-//    public void entityChanged(EntityChangeEvent event) {
-//        Entity entity = event.getEntity();
-//        if (contextRootedEntity == null) {
-//            return;
-//        }
-//        if (contextRootedEntity.getEntity().getId().equals(entity.getId())) {
-//            log.debug("({}) Reloading because context entity was changed: '{}'", getSelectionCategory(), entity.getName());
-//            //loadEntity(contextRootedEntity, null);
-//        }
-//        else {
-//            for (AnnotatedImageButton button : imagesPanel.getButtonsByEntityId(entity.getId())) {
-//                log.debug("({}) Refreshing button because entity was changed: '{}'", getSelectionCategory(), entity.getName());
-//
-//                RootedEntity rootedEntity = button.getRootedEntity();
-//                if (rootedEntity != null) {
-//                    Entity buttonEntity = rootedEntity.getEntity();
-//                    if (entity != buttonEntity) {
-//                        log.warn("({}) entityChanged: Instance mismatch: " + entity.getName()
-//                                + " (cached=" + System.identityHashCode(entity) + ") vs (this=" + System.identityHashCode(buttonEntity) + ")", getSelectionCategory());
-//                        rootedEntity.setEntity(entity);
-//                    }
-//
-//                    button.refresh(rootedEntity);
-//                    imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
-//                }
-//            }
-//        }
-//    }
-//
-//    @Subscribe
-//    public void entityRemoved(EntityRemoveEvent event) {
-//        Entity entity = event.getEntity();
-//        if (contextRootedEntity == null) {
-//            return;
-//        }
-//        if (contextRootedEntity.getEntity() != null && contextRootedEntity.getEntityId().equals(entity.getId())) {
-//            goParent();
-//        }
-//        else {
-//            for (RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
-//                if (rootedEntity.getEntityId().equals(entity.getId())) {
-//                    removeRootedEntity(rootedEntity);
-//                    return;
-//                }
-//            }
-//        }
-//    }
-//
-//    @Subscribe
-//    public void entityInvalidated(EntityInvalidationEvent event) {
-//
-//        if (contextRootedEntity == null) {
-//            return;
-//        }
-//        boolean affected = false;
-//
-//        if (event.isTotalInvalidation()) {
-//            affected = true;
-//        }
-//        else {
-//            for (Entity entity : event.getInvalidatedEntities()) {
-//                if (contextRootedEntity.getEntity() != null && contextRootedEntity.getEntityId().equals(entity.getId())) {
-//                    affected = true;
-//                    break;
-//                }
-//                else {
-//                    for (final RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
-//                        if (rootedEntity.getEntityId().equals(entity.getId())) {
-//                            affected = true;
-//                            break;
-//                        }
-//                    }
-//                    if (affected) {
-//                        break;
-//                    }
-//                }
-//            }
-//        }
-//
-//        if (affected) {
-//            log.debug("({}) Some entities were invalidated so we're refreshing the viewer", getSelectionCategory());
-//            refresh(false, null);
-//        }
-//    }
-
     protected IconDemoToolbar createToolbar() {
 
         return new IconDemoToolbar() {
@@ -517,54 +418,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                         imagesPanel.scrollSelectedEntitiesToCenter();
                     }
                 });
-            }
-
-            @Override
-            protected JPopupMenu getPopupUserMenu() {
-                final JPopupMenu userListMenu = new JPopupMenu();
-                UserColorMapping userColors = ModelMgr.getModelMgr().getUserColorMapping();
-
-                // Save the list of users so that when the function actually runs, the
-                // users it affects are the same users that were displayed
-                final List<String> savedUsers = new ArrayList<>(allUsers);
-
-                JMenuItem allUsersMenuItem = new JCheckBoxMenuItem("All Users", hiddenUsers.isEmpty());
-                allUsersMenuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (hiddenUsers.isEmpty()) {
-                            for (String username : savedUsers) {
-                                hiddenUsers.add(username);
-                            }
-                        }
-                        else {
-                            hiddenUsers.clear();
-                        }
-                        refreshAnnotations(null);
-                    }
-                });
-                userListMenu.add(allUsersMenuItem);
-
-                userListMenu.addSeparator();
-
-                for (final String username : savedUsers) {
-                    JMenuItem userMenuItem = new JCheckBoxMenuItem(username, !hiddenUsers.contains(username));
-                    userMenuItem.setBackground(userColors.getColor(username));
-                    userMenuItem.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            if (hiddenUsers.contains(username)) {
-                                hiddenUsers.remove(username);
-                            }
-                            else {
-                                hiddenUsers.add(username);
-                            }
-                            refreshAnnotations(null);
-                        }
-                    });
-                    userMenuItem.setIcon(Icons.getIcon("user.png"));
-                    userListMenu.add(userMenuItem);
-                }
-
-                return userListMenu;
             }
         };
     }
@@ -664,10 +517,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
         imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
 
-        // Update selection
-//        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
-//        esm.deselectAll(getSelectionCategory());
-
         // Actually display everything
         showImagePanel();
 
@@ -682,30 +531,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 ConcurrentUtils.invokeAndHandleExceptions(success);
             }
         });
-    }
-
-    /**
-     * Refresh the annotation display in the UI, but do not reload anything from
-     * the database.
-     */
-    private synchronized void refreshAnnotations(Long entityId) {
-//        // Refresh all user list
-//        allUsers.clear();
-//        for (OntologyAnnotation annotation : annotations.getAnnotations()) {
-//            String name = EntityUtils.getNameFromSubjectKey(annotation.getOwner());
-//            if (!allUsers.contains(name)) {
-//                allUsers.add(name);
-//            }
-//        }
-//        Collections.sort(allUsers);
-//        imagesPanel.setAnnotations(annotations);
-//
-//        if (entityId == null) {
-//            imagesPanel.showAllAnnotations();
-//        }
-//        else {
-//            imagesPanel.showAnnotationsForEntity(entityId);
-//        }
     }
 
     public void refresh() {

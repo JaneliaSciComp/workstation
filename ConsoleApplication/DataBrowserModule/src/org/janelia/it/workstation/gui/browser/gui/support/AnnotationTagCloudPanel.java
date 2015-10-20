@@ -94,8 +94,6 @@ public class AnnotationTagCloudPanel<T,S> extends TagCloudPanel<Annotation> impl
         JPopupMenu popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
 
-        // TODO: domain object selection
-        
         if (selectionIds.size()>1) {
             JMenuItem titleItem = new JMenuItem("(Multiple Selected)");
             titleItem.setEnabled(false);
