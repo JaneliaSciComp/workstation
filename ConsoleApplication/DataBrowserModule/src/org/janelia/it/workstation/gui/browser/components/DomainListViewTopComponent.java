@@ -153,7 +153,9 @@ public final class DomainListViewTopComponent extends TopComponent {
         
     @Subscribe
     public void loadDomainObject(DomainObjectSelectionEvent event) {
-
+        
+        log.debug("loadDomainObject({})",event.getDomainObject().getName());
+        
         // We only care about events if we're active
         if (!isActive(this)) {
             log.debug("Browser is not active");

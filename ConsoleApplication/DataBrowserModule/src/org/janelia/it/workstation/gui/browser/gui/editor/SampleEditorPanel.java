@@ -174,8 +174,8 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
     public void loadDomainObject(final Sample sample) {
                 
         this.sample = sample;
-        
-        log.debug("Load sample {}",sample.getId());
+
+        log.info("loadDomainObject(Sample:{})",sample.getName());
         
         lips.clear();
         resultPanels.clear();

@@ -116,8 +116,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected void buttonDrillDown(DomainObject domainObject) {
-        
-        
     }
     
     @Override

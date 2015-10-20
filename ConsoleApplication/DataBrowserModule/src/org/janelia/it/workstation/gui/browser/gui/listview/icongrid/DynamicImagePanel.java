@@ -139,17 +139,23 @@ public class DynamicImagePanel extends JPanel {
      * @param wantViewable
      */
     public synchronized void setViewable(final boolean wantViewable, final Callable success) {
-
+        
+        log.debug("setViewable({},{})",wantViewable,imageFilename);
+        
         if (imageFilename != null) {
             if (wantViewable) {
                 if (!this.viewable) {
-                    
+
+                    log.debug("LoadImageWorker: {}",imageFilename);
                     loadWorker = new LoadImageWorker(imageFilename, getDisplaySize()) {
 
                         @Override
                         protected void hadSuccess() {
 
+                            log.debug("Load complete: {}",imageFilename);
+                            
                             if (isCancelled()) {
+                                log.info("Load was cancelled");
                                 return;
                             }
 
@@ -160,9 +166,11 @@ public class DynamicImagePanel extends JPanel {
                                 return;
                             }
 
+                            imageLabel.setIcon(new ImageIcon(getNewScaledImage()));
                             setMaxSizeImage(getNewMaxSizeImage());
                             setImageLabel(imageLabel);
-                            imageLabel.setIcon(new ImageIcon(getNewScaledImage()));
+                            revalidate();
+                            repaint();
 
                             ConcurrentUtils.invokeAndHandleExceptions(success);
 

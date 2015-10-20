@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an
+ * A SelectablePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an
  * ImagesPanel.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
