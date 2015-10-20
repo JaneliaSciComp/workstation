@@ -35,8 +35,9 @@ public class LineEnclosureFactory implements TriangleSource {
     private static final double PI_DIV_4 = Math.PI / 4.0;
 
     // These caches should remain in effect for any time this class is in use.
-    private static Map<Integer, Matrix> aboutZToMatrix = new HashMap<>();
-    private static Map<String, Matrix> aboutXAboutYToMatrix = new HashMap<>();
+    private static final Map<Integer, Matrix> aboutZToMatrix = new HashMap<>();
+    private static final Map<String, Matrix> aboutXAboutYToMatrix = new HashMap<>();
+    private static final Map<String, List<double[][]>> pointsToCaps = new HashMap<>();
 
     private final List<VertexInfoBean> vertices = new ArrayList<>();
     private final List<Triangle> triangles = new ArrayList<>();
@@ -96,8 +97,7 @@ public class LineEnclosureFactory implements TriangleSource {
         if (endingCoords.length != 3) {
             throw new IllegalArgumentException("3-D ending coords only.");
         }
-        
-        List<double[][]> endCaps = makeEndPolygons(startingCoords, endingCoords);
+        List<double[][]> endCaps = getCachedEndcaps(startingCoords, endingCoords);
         // End caps can be null, if start/end are identical.
         if (endCaps == null) {
             return 0;
@@ -124,6 +124,7 @@ public class LineEnclosureFactory implements TriangleSource {
         
         return coordCount;
     }
+
     public static final long ONE_MIL = 1000000L;
     
     public void clearTimeAccumulators() {
@@ -206,7 +207,22 @@ public class LineEnclosureFactory implements TriangleSource {
         return polyBeans;
     }
 	
-	private void createCCWTriangles(List<VertexInfoBean> startingVertices, List<VertexInfoBean> endingVertices) {			
+    private List<double[][]> getCachedEndcaps(double[] startingCoords, double[] endingCoords) {
+        String endPointsKey = createEndPointsKey(startingCoords, endingCoords);
+        List<double[][]> endCaps = pointsToCaps.get(endPointsKey);
+        if (endCaps == null) {
+            endCaps = makeEndPolygons(startingCoords, endingCoords);
+            if (endCaps != null && endCaps.size() == 2) {
+                // The end-polygon-maker keeps a single list for all time.
+                // Therefore, must re-copy that list.
+                endCaps = new ArrayList<>(endCaps);
+                pointsToCaps.put(endPointsKey, endCaps);
+            }
+        }
+        return endCaps;
+    }
+
+    private void createCCWTriangles(List<VertexInfoBean> startingVertices, List<VertexInfoBean> endingVertices) {			
 		int vertsPerPoly = startingVertices.size();
 		for ( int polygonVertex = 0; polygonVertex < vertsPerPoly; polygonVertex++ ) {
 			// Add a triangle that demarks leading corner of rectangle, to
@@ -441,6 +457,21 @@ public class LineEnclosureFactory implements TriangleSource {
 
     private String createXYKey(double aboutX, double aboutY) {
         return Integer.toString((int)(aboutX * 100.0)) + ',' + Integer.toString((int)(aboutY * 100.0));
+    }
+    
+    /**
+     * Makes a string-comparable key out of end-point 3D coordinates.
+     */
+    private String createEndPointsKey(double[] startingCoords, double[] endingCoords) {
+        return String.format(
+                "%11.3f,%11.3f%11.3f_%11.3f,%11.3f,%11.3f", 
+                startingCoords[0],
+                startingCoords[1],
+                startingCoords[2],
+                endingCoords[0],
+                endingCoords[1],
+                endingCoords[2]
+        );
     }
     
 	private int getAxialAlignmentByLineDelta(double[] lineDelta) {

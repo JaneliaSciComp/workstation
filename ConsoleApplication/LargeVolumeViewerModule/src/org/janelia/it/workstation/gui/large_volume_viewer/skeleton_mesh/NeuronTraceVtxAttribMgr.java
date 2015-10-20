@@ -50,9 +50,9 @@ import org.slf4j.LoggerFactory;
 public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderProvider {
     public static final String ID_VTX_ATTRIB = "c_id";
     private static final double MANUAL_SEGMENT_RADIUS = 6;
-    private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
+    private static final int MANUAL_SEGMENT_POLYGON_SIDES = 3;//8;
     private static final double TRACED_SEGMENT_RADIUS = 8;
-    private static final int TRACED_SEGMENT_POLYGON_SIDES = 8;
+    private static final int TRACED_SEGMENT_POLYGON_SIDES = 3;//8;
     public static final double ANNO_RADIUS = TRACED_SEGMENT_RADIUS * 4;
     private static final int ANNO_POLYGON_SIDES = 12;
     
