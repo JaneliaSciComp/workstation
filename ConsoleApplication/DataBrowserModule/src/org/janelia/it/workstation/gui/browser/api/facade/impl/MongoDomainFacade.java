@@ -24,10 +24,10 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
  */
 public class MongoDomainFacade implements DomainFacade {
 
-    protected static final String MONGO_SERVER_URL = "mongo-db";
+    protected static final String MONGO_SERVER_URL = "rokicki-ws";
     protected static final String MONGO_DATABASE = "jacs";
-    protected static final String MONGO_USERNAME = "flyportal";
-    protected static final String MONGO_PASSWORD = "flyportal";
+    protected static final String MONGO_USERNAME = null;
+    protected static final String MONGO_PASSWORD = null;
     
     private final DomainDAO dao;
     
@@ -107,6 +107,11 @@ public class MongoDomainFacade implements DomainFacade {
     
     @Override
     public Annotation create(Annotation annotation) throws Exception {
+        return dao.save(SessionMgr.getSubjectKey(), annotation);
+    }
+    
+    @Override
+    public Annotation update(Annotation annotation) throws Exception {
         return dao.save(SessionMgr.getSubjectKey(), annotation);
     }
     
