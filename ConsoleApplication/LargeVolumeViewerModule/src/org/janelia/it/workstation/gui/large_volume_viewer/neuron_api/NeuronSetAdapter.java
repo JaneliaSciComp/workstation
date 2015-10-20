@@ -57,13 +57,14 @@ implements NeuronSet
 {
     private TmWorkspace workspace = null;
     private AnnotationModel annotationModel;
-    private final GlobalAnnotationListener annotationListener = new AnnotationListener();
+    private final GlobalAnnotationListener annotationListener;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public NeuronSetAdapter(TmWorkspace workspace)
     {
         super("LVV Neurons", new NeuronList(workspace));
         this.workspace = workspace;
+        annotationListener = new AnnotationListener(this);
     }
     
     public void observe(AnnotationModel annotationModel)
@@ -88,19 +89,31 @@ implements NeuronSet
         else
             return super.getName();
     }
+    
+    private void setWorkspace(TmWorkspace workspace) {
+        this.workspace = workspace;
+    }
 
 
     private class AnnotationListener implements GlobalAnnotationListener {
+        private final NeuronSetAdapter neuronSetAdapter;
 
+        public AnnotationListener(NeuronSetAdapter neuronSetAdapter) {
+            this.neuronSetAdapter = neuronSetAdapter;
+        }
+        
         @Override
         public void workspaceLoaded(TmWorkspace workspace)
         {
             logger.info("Workspace loaded");
+            neuronSetAdapter.setWorkspace(workspace);
             NeuronList nl = (NeuronList) neurons;
             Map<Long, NeuronStyle> neuronStyleMap = annotationModel.getNeuronStyleMap();
             nl.wrap(workspace, neuronStyleMap);
             // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
             getMembershipChangeObservable().setChanged();
+            getNameChangeObservable().setChanged();
+            getNameChangeObservable().notifyObservers();
             getMembershipChangeObservable().notifyObservers();
         }
 

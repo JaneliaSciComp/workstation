@@ -65,10 +65,18 @@ public class NeuronSetNode extends AbstractNode
     private final NeuronSet neuronList;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public NeuronSetNode(NeuronSet neuronList) {
+    public NeuronSetNode(final NeuronSet neuronList) {
         super(Children.create(new NeuronSetChildFactory(neuronList), true), Lookups.singleton(neuronList));
         this.neuronList = neuronList;
-        setDisplayName(neuronList.getName());
+        String name = neuronList.getName();
+        setDisplayName(name);
+        neuronList.getNameChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                setDisplayName(neuronList.getName());
+            }
+        });
     }
     
     // Allow to drop SWC files on List, to add neurons

@@ -46,6 +46,7 @@ implements NeuronSet
 {
     private final String name;
     private final ComposableObservable membershipChangeObservable = new ComposableObservable();
+    private final ComposableObservable nameChangeObservable = new ComposableObservable();
     protected final Collection<NeuronModel> neurons;
     
     public BasicNeuronSet(String name, Collection<NeuronModel> contents) {
@@ -159,6 +160,12 @@ implements NeuronSet
         neurons.clear();
         if (result)
             membershipChangeObservable.setChanged();
+    }
+
+    @Override
+    public ObservableInterface getNameChangeObservable()
+    {
+        return nameChangeObservable;
     }
     
 }
