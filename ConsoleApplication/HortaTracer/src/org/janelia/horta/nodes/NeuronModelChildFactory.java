@@ -30,7 +30,13 @@
 
 package org.janelia.horta.nodes;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.openide.nodes.ChildFactory;
@@ -43,14 +49,37 @@ import org.openide.nodes.Node;
 public class NeuronModelChildFactory extends ChildFactory<NeuronVertex>
 {
     private NeuronModel neuron;
+    private final Map<NeuronVertex, Collection<NeuronVertex>> vertexNeighbors = new HashMap<>();
+    private final Collection<NeuronVertex> tips = new HashSet<>();
+    private final Collection<NeuronVertex> branchPoints = new HashSet<>();
     
     public NeuronModelChildFactory(NeuronModel neuron) {
         this.neuron = neuron;
     }
 
+    private void insertDirectionalPair(NeuronVertex vertex1, NeuronVertex vertex2) {
+        if (! vertexNeighbors.containsKey(vertex1))
+            vertexNeighbors.put(vertex1, new HashSet<NeuronVertex>());
+        vertexNeighbors.get(vertex1).add(vertex2);
+    }
+    
+    private void insertEdge(NeuronEdge edge) {
+        Iterator<NeuronVertex> it = edge.iterator();
+        NeuronVertex vertex1 = it.next();
+        NeuronVertex vertex2 = it.next();
+        insertDirectionalPair(vertex1, vertex2);
+        insertDirectionalPair(vertex2, vertex1);
+    }
+    
     @Override
     protected boolean createKeys(List<NeuronVertex> toPopulate)
     {
+        // Precache all vertex neighbors
+        // TODO: somehow manage updates efficiently, or at all...
+        vertexNeighbors.clear();
+        for ( NeuronEdge edge : neuron.getEdges() ) {
+            insertEdge(edge);
+        }
         for ( NeuronVertex vertex : neuron.getVertexes()) {
             toPopulate.add(vertex);
         }
@@ -59,6 +88,6 @@ public class NeuronModelChildFactory extends ChildFactory<NeuronVertex>
 
     @Override
     protected Node createNodeForKey(NeuronVertex key) {
-        return new NeuronVertexNode(key);
+        return new NeuronVertexNode(key, vertexNeighbors.get(key));
     }
 }

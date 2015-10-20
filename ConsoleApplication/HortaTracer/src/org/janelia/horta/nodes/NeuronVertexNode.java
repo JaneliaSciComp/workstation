@@ -30,9 +30,16 @@
 
 package org.janelia.horta.nodes;
 
+import java.awt.Color;
+import java.awt.Image;
+import java.util.Collection;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
+import org.openide.nodes.PropertySupport;
+import org.openide.nodes.Sheet;
+import org.openide.util.ImageUtilities;
 import org.openide.util.lookup.Lookups;
 
 /**
@@ -41,12 +48,44 @@ import org.openide.util.lookup.Lookups;
  */
 public class NeuronVertexNode extends AbstractNode
 {
-    private NeuronVertex vertex;
+    private final NeuronVertex vertex;
+    private final Collection<NeuronVertex> neighbors;
 
-    NeuronVertexNode(NeuronVertex vertex)
+
+    NeuronVertexNode(NeuronVertex vertex, Collection<NeuronVertex> neighbors)
     {
         super(Children.create(new NeuronVertexChildFactory(), true), Lookups.singleton(vertex));
         this.vertex = vertex;
+        this.neighbors = neighbors;
     }
     
+    @Override
+    public Image getIcon(int type) {
+        return ImageUtilities.loadImage("org/janelia/horta/images/VertexTip2.png");
+    }
+    
+    @Override
+    public Image getOpenedIcon(int i) {
+        return getIcon(i);
+    }
+    
+    public int getSize() {return neighbors.size();}
+    
+    @Override 
+    protected Sheet createSheet() { 
+        Sheet sheet = Sheet.createDefault(); 
+        Sheet.Set set = Sheet.createPropertiesSet(); 
+        try { 
+            Property prop;
+            // size
+            prop = new PropertySupport.Reflection(this, int.class, "getSize", null); 
+            prop.setName("size"); 
+            set.put(prop); 
+        } 
+        catch (NoSuchMethodException ex) {
+            ErrorManager.getDefault(); 
+        } 
+        sheet.put(set); 
+        return sheet; 
+    }
 }
