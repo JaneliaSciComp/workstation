@@ -37,7 +37,7 @@ public class WebdavApplication extends ResourceConfig {
         BeanConfig beanConfig = new BeanConfig();
         beanConfig.setVersion("1.0.2");
         beanConfig.setSchemes(new String[]{"http"});
-        beanConfig.setHost("schauderd-ws1:8880");
+        beanConfig.setHost("jacs-jfs:8880");
         beanConfig.setBasePath("/Webdav/api");
         beanConfig.setResourcePackage("org.janelia.workstation.webdav");
         beanConfig.setScan(true);

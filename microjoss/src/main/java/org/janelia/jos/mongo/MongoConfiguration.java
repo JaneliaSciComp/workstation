@@ -22,6 +22,16 @@ public class MongoConfiguration {
     public String username;
     public String password;
 
+    public String getCollection() {
+        return collection;
+    }
+
+    public void setCollection(String collection) {
+        this.collection = collection;
+    }
+
+    public String collection;
+
     public String getHost() {
         return host;
     }

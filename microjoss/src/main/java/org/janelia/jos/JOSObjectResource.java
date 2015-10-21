@@ -122,8 +122,8 @@ public class JOSObjectResource {
         obj.setOwner(principal.getUsername());
         obj.setNumBytes(contentLength);
         obj.setBzipped(bzipped);
-        
-        getObjectCollection().save(obj);
+
+        mm.getObjectCollection().save(obj);
         
         return Response.noContent().build();
     }
@@ -223,7 +223,7 @@ public class JOSObjectResource {
         
         JOSObject obj = getObject(path, principal, false);
         
-        WriteResult wr = getObjectCollection().update("{path:#}",path).with("{$set:{deleted:#}}",true);
+        WriteResult wr = mm.getObjectCollection().update("{path:#}",path).with("{$set:{deleted:#}}",true);
         if (wr.getN()<1) {
             log.error("Could not update object to set deleted flag: {}",path);
             throw new WebApplicationException(Status.INTERNAL_SERVER_ERROR);
@@ -231,7 +231,7 @@ public class JOSObjectResource {
 
         if (sync) {
             if (scality.delete(path)) {
-                getObjectCollection().remove("{path:#}",path);
+                mm.getObjectCollection().remove("{path:#}",path);
             }
         }
         else {
@@ -287,8 +287,8 @@ public class JOSObjectResource {
         obj.setFileType(extension);
         obj.setOwner(principal.getUsername());
         obj.setBzipped(false);
-        
-        getObjectCollection().save(obj);
+
+        mm.getObjectCollection().save(obj);
         
         return Response.noContent().build();
     }
@@ -312,7 +312,7 @@ public class JOSObjectResource {
         final String finalPath = getFormattedPath(path);
         log.debug("Getting info for "+finalPath);
         
-        JOSObject obj = getObjectCollection().findOne("{path:#}",finalPath).as(JOSObject.class);
+        JOSObject obj = mm.getObjectCollection().findOne("{path:#}",finalPath).as(JOSObject.class);
         notFoundIfNull(obj);
         return obj;
     }
@@ -337,7 +337,7 @@ public class JOSObjectResource {
         
         return new StreamingOutput() {
             public void write(OutputStream os) throws IOException, WebApplicationException {
-                MongoCursor<JOSObject> cursor = getObjectCollection().find("{name:#}",name).as(JOSObject.class);
+                MongoCursor<JOSObject> cursor = mm.getObjectCollection().find("{name:#}",name).as(JOSObject.class);
                 writeCursor(os, cursor);
             }
         };
@@ -364,7 +364,7 @@ public class JOSObjectResource {
         
         return new StreamingOutput() {
             public void write(OutputStream os) throws IOException, WebApplicationException {
-                MongoCursor<JOSObject> cursor = getObjectCollection().find("{parentPath:#}",finalPath).as(JOSObject.class);
+                MongoCursor<JOSObject> cursor = mm.getObjectCollection().find("{parentPath:#}",finalPath).as(JOSObject.class);
                 writeCursor(os, cursor);
             }
         };
@@ -392,7 +392,7 @@ public class JOSObjectResource {
         
         return new StreamingOutput() {
             public void write(OutputStream os) throws IOException, WebApplicationException {
-                MongoCursor<JOSObject> cursor = getObjectCollection().find("{path:#}",pattern).as(JOSObject.class);
+                MongoCursor<JOSObject> cursor = mm.getObjectCollection().find("{path:#}",pattern).as(JOSObject.class);
                 writeCursor(os, cursor);
             }
         };
@@ -411,7 +411,7 @@ public class JOSObjectResource {
         
       //  authorize(principal);
 
-        List<DBObject> results = getObjectCollection().aggregate("{\"$group\" : {_id:\"$owner\", totalMb:{$sum:{$divide:[\"$numBytes\","+MEGABYTE+"]}}}}").as(DBObject.class);
+        List<DBObject> results = mm.getObjectCollection().aggregate("{\"$group\" : {_id:\"$owner\", totalMb:{$sum:{$divide:[\"$numBytes\","+MEGABYTE+"]}}}}").as(DBObject.class);
         
         Map<String,String> usage = new HashMap<>();
         
@@ -443,10 +443,6 @@ public class JOSObjectResource {
         String formattedPath = path.endsWith("/") ? path.substring(0, path.length()-1) : path;
         return formattedPath;
     }
-    
-    private MongoCollection getObjectCollection() {
-        return mm.getJongo().getCollection("object");
-    }
 
     private void authorize(SimplePrincipal principal) {
         if (principal==null) {
@@ -460,7 +456,7 @@ public class JOSObjectResource {
         
         log.trace("Logged in as [{}]",owner);
         
-        JOSObject obj = getObjectCollection().findOne("{path:#}",path).as(JOSObject.class);
+        JOSObject obj = mm.getObjectCollection().findOne("{path:#}",path).as(JOSObject.class);
         if (obj==null) {
             if (nullOk) {
                 return null;

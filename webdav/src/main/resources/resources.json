@@ -5,9 +5,9 @@
             "groupattribute": "memberUid"
         },
         "scality": {
-            "objectUrl": "http://schauderd-ws1.janelia.priv:8080/jos/object",
-            "metaUrl": "http://schauderd-ws1.janelia.priv:8080/jos/metadata",
-            "searchUrl": "http://schauderd-ws1.janelia.priv:8080/jos/search/name",
+            "objectUrl": "http://jacs-jfs:8080/jos/object",
+            "metaUrl": "http://jacs-jfs:8080/jos/metadata",
+            "searchUrl": "http://jacs-jfs:8080/jos/search/name",
             "user": "tester",
             "password": "jos"
         }

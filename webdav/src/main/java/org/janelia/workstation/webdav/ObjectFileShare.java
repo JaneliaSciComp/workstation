@@ -192,7 +192,6 @@ public class ObjectFileShare extends FileShare {
         } catch (IOException e) {
             throw new FileNotFoundException("problem getting data from scality");
         }
-
         return new StreamingOutput() {
             @Override
             public void write(OutputStream output) throws IOException, WebApplicationException {

@@ -5,6 +5,7 @@ import io.dropwizard.lifecycle.Managed;
 import java.util.Arrays;
 
 import org.jongo.Jongo;
+import org.jongo.MongoCollection;
 import org.jongo.marshall.jackson.JacksonMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,20 +30,23 @@ public class MongoManaged implements Managed {
     }
 
     public void start() throws Exception {
-
-        String serverUrl = config.host+":"+config.port;
+        String[] members = config.host.split(",");
+        ServerAddress[] replicaUrls = new ServerAddress[members.length];
+        for (int i=0; i<members.length; i++) {
+            replicaUrls[i] = new ServerAddress(members[i] + ":"+config.port);
+        }
         String username = config.username;
         String password = config.password;
         String databaseName = config.database;
         
         if (username != null && password != null) {
             MongoCredential credential = MongoCredential.createMongoCRCredential(username, databaseName, password.toCharArray());
-            m = new MongoClient(new ServerAddress(serverUrl), Arrays.asList(credential));
-            log.info("Connected to MongoDB (" + databaseName + "@" + serverUrl + ") as user " + username);
+            m = new MongoClient(Arrays.asList(replicaUrls), Arrays.asList(credential));
+            log.info("Connected to MongoDB (" + databaseName + "@" + replicaUrls + ") as user " + username);
         } 
         else {
-            m = new MongoClient(serverUrl);
-            log.info("Connected to MongoDB (" + databaseName + "@" + serverUrl + ")");
+            m = new MongoClient(Arrays.asList(replicaUrls));
+            log.info("Connected to MongoDB (" + databaseName + "@" + replicaUrls + ")");
         }
 
         this.db = m.getDB(databaseName);
@@ -68,5 +72,10 @@ public class MongoManaged implements Managed {
     
     public Jongo getJongo() {
         return jongo;
+    }
+
+    public MongoCollection getObjectCollection() {
+        String collectionName = (config.getCollection()==null)?"object":config.getCollection();
+        return jongo.getCollection(collectionName);
     }
 }
