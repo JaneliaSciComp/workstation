@@ -107,7 +107,7 @@ public class KeyBindings {
      */
     public void loadOntologyKeybinds(Long rootId, Map<String, Action> entityActionMap) {
 
-        log.info("Loading key bindings for ontology: " + rootId);
+        log.debug("Loading key bindings for ontology: " + rootId);
 
         ontologyBindings.clear();
 
@@ -149,7 +149,7 @@ public class KeyBindings {
             return;
         }
 
-        log.info("Saving key bindings for ontology " + rootId);
+        log.debug("Saving key bindings for ontology " + rootId);
 
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(SessionMgr.getSubjectKey(), rootId);
         try {
