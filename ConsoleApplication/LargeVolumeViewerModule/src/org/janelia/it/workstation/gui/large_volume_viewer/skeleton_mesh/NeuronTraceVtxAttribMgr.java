@@ -50,11 +50,12 @@ import org.slf4j.LoggerFactory;
 public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderProvider {
     public static final String ID_VTX_ATTRIB = "c_id";
     private static final double MANUAL_SEGMENT_RADIUS = 6;
-    private static final int MANUAL_SEGMENT_POLYGON_SIDES = 3;//8;
+    private static final int MANUAL_SEGMENT_POLYGON_SIDES = 8;
     private static final double TRACED_SEGMENT_RADIUS = 8;
-    private static final int TRACED_SEGMENT_POLYGON_SIDES = 3;//8;
+    private static final int TRACED_SEGMENT_POLYGON_SIDES = 8;
     public static final double ANNO_RADIUS = TRACED_SEGMENT_RADIUS * 4;
     private static final int ANNO_POLYGON_SIDES = 12;
+    private static final int HIGH_VOL_LOW_RES_SIDE_COUNT = 3;
     
     public static final int LINE_CALC_WORKLOAD_SIZE = 100;
     public static final int EXECUTOR_THREAD_COUNT = 1;//1000;
@@ -160,7 +161,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
             }
             throw new Exception("Please set all model information before execution.");
         }
-        
         createVertices();
 		if (hasDisplayable) {
 			handleRenderBuffers(triangleSources, renderIdToBuffers);
@@ -299,7 +299,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
         calculateCurrentSelectionVertices(pointEnclosureFactory);
         
         // Get the auto-traced segments.
-        lineEnclosureFactory.setCharacteristics(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);
+        lineEnclosureFactory.setCharacteristics(TRACED_SEGMENT_POLYGON_SIDES, TRACED_SEGMENT_RADIUS);        
         calculateTracedSegmentVertices(voxelPathAnchorPairs, tileFormat, lineEnclosureFactory);
         
         // Now get the lines.
@@ -564,7 +564,11 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
     protected void calculateManualLineVertices(Set<SegmentIndex> voxelPathAnchorPairs, final LineEnclosureFactory manualSegmentEnclosureFactory) throws Exception {
         manualSegmentEnclosureFactory.clearTimeAccumulators();
         
-        Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);                 
+        Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);
+        // Degrade image for performance.
+        if (anchorLines.size() > 10000) {
+            manualSegmentEnclosureFactory.setCharacteristics(HIGH_VOL_LOW_RES_SIDE_COUNT, MANUAL_SEGMENT_RADIUS);
+        }
         for ( AnchorLinesReturn anchorLine: anchorLines ) {
             manualSegmentEnclosureFactory.addEnclosure(
                     anchorLine.getStart(),
@@ -583,7 +587,9 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
             final LineEnclosureFactory tracedSegmentEnclosureFactory
     ) throws Exception {
         log.info("Tracing {} segments.", getSkeleton().getTracedSegments().size());
-        
+        if (getSkeleton().getTracedSegments().size() > 10000) {
+            tracedSegmentEnclosureFactory.setCharacteristics(HIGH_VOL_LOW_RES_SIDE_COUNT, TRACED_SEGMENT_RADIUS);
+        }
         for ( final AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {
             processTracedSegment(voxelPath, voxelPathAnchorPairs, tileFormat, tracedSegmentEnclosureFactory);
         }
