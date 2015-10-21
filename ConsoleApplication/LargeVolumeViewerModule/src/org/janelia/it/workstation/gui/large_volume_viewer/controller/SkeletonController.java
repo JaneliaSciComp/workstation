@@ -44,6 +44,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     private QuadViewController qvController;
     private NVTTableModelListener nvtTableModelListener;
     private TableModel nvtTableModel;
+    private Timer meshDrawUpdateTimer;
     
     private static SkeletonController instance = new SkeletonController();
     
@@ -209,7 +210,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         for (SkeletonActor actor: actors) {
             actor.changeNeuronStyle(neuron, style);
         }
-        updateMeshDrawActor();
+        refreshMeshDrawUpdateTimer();
         fireComponentUpdate();
     }
 
@@ -217,24 +218,11 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         lvvTranslator.annotationSelected(guid);
     }
     
-    private Timer meshDrawUpdateTimer;
-    
     public void skeletonChanged() {
         for (SkeletonActor actor: actors) {
             actor.updateAnchors();
         }
-        if (meshDrawUpdateTimer != null) {
-            meshDrawUpdateTimer.cancel();
-        }
-        meshDrawUpdateTimer = new Timer();
-        TimerTask meshDrawUpdateTask = new TimerTask() {
-            @Override
-            public void run() {
-                updateMeshDrawActor();
-                fireComponentUpdate();
-            }
-        };
-        meshDrawUpdateTimer.schedule(meshDrawUpdateTask, 10000);
+        refreshMeshDrawUpdateTimer();
         fireComponentUpdate();
     }
 
@@ -299,6 +287,27 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         if (meshDrawActor != null) {
             meshDrawActor.refresh();
         }
+    }
+
+    /**
+     * Some events, being very numerous, cause a deluge of requests, each
+     * of which is time-consuming to honor.  Rather than honor each one,
+     * a timer/delay mechanism is in place to allow a single refresh to
+     * be carried out, after things become quiescent.
+     */
+    private void refreshMeshDrawUpdateTimer() {
+        if (meshDrawUpdateTimer != null) {
+            meshDrawUpdateTimer.cancel();
+        }
+        meshDrawUpdateTimer = new Timer();
+        TimerTask meshDrawUpdateTask = new TimerTask() {
+            @Override
+            public void run() {
+                updateMeshDrawActor();
+                fireComponentUpdate();
+            }
+        };
+        meshDrawUpdateTimer.schedule(meshDrawUpdateTask, 10000);
     }
 
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {

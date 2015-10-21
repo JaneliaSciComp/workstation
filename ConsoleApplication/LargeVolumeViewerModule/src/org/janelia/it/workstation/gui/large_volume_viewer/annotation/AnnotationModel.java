@@ -1536,9 +1536,7 @@ called from a  SimpleWorker thread.
         }
         final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
 
-        // let's go with brute force for now; loop over nodes and
-        //  insert into db sequentially, since we have no bulk update
-        //  for annotations right now
+        // Bulk update in play.
         // and as long as we're doing brute force, we can update progress
         //  granularly (if we have a worker); start with 5% increments (1/20)
         int totalLength = swcData.getNodeList().size();
