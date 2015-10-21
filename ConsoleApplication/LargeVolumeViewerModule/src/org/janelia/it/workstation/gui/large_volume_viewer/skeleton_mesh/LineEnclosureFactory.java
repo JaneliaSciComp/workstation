@@ -34,17 +34,11 @@ public class LineEnclosureFactory implements TriangleSource {
 	private static final int PERPENDICULAR_ALIGNMENT = 100;
     private static final double PI_DIV_4 = Math.PI / 4.0;
 
-    // These caches should remain in effect for any time this class is in use.
-    private static final Map<Integer, Matrix> aboutZToMatrix = new HashMap<>();
-    private static final Map<String, Matrix> aboutXAboutYToMatrix = new HashMap<>();
-    private static final Map<String, List<double[][]>> pointsToCaps = new HashMap<>();
-
     private final List<VertexInfoBean> vertices = new ArrayList<>();
     private final List<Triangle> triangles = new ArrayList<>();
     private final ViewMatrixSupport matrixUtils = new ViewMatrixSupport();
     
     private int endPolygonSides = -1;
-    private double endPolygonRadius; 
     
     private final Map<Integer,double[][]> axisAlignedPrototypePolygons = new HashMap<>();
     private double[][] zAxisAlignedPrototypePolygon;
@@ -65,7 +59,6 @@ public class LineEnclosureFactory implements TriangleSource {
         axisAlignedPrototypePolygons.clear();
         
         this.endPolygonSides = endPolygonSides;
-        this.endPolygonRadius = endPolygonRadius;
         this.zAxisAlignedPrototypePolygon = polygonSource.createZAxisAlignedPrototypeEndPolygon();
         axisAlignedPrototypePolygons.put(2, this.zAxisAlignedPrototypePolygon);
     }
@@ -90,7 +83,6 @@ public class LineEnclosureFactory implements TriangleSource {
      * @return number of coordinates created here.
      */
     public synchronized int addEnclosure( double[] startingCoords, double[] endingCoords, float[] color ) {
-        long startTime = System.currentTimeMillis();
         if ( startingCoords.length != 3 ) {
             throw new IllegalArgumentException("3-D starting coords only.");
         }
@@ -102,60 +94,19 @@ public class LineEnclosureFactory implements TriangleSource {
         if (endCaps == null) {
             return 0;
         }
-        long endPolyTime = System.currentTimeMillis();
         
         //List<double[][]> endCaps = makeEndPolygonsNoTrig( startingCoords, endingCoords );
         int coordCount = 0;
         List<VertexInfoBean> startVertices = addVertices(endCaps.get(0), color);
-        long endStartVertTime = System.currentTimeMillis();
         
 		coordCount += startVertices.size();
         List<VertexInfoBean> endVertices = addVertices(endCaps.get(1), color);
-        long endEndVertTime = System.currentTimeMillis();
         
 		coordCount += endVertices.size();
         createCCWTriangles(startVertices, endVertices);
-        long endTriTime = System.currentTimeMillis();
-        
-        accumulators[POLYGON_INX] += endPolyTime - startTime;
-        accumulators[START_VERT_INX] += endStartVertTime - endPolyTime;
-        accumulators[END_VERT_INX] += endEndVertTime - endStartVertTime;
-        accumulators[TRI_INX] += endTriTime - endEndVertTime;
         
         return coordCount;
     }
-
-    public static final long ONE_MIL = 1000000L;
-    
-    public void clearTimeAccumulators() {
-        for (int i = 0; i < accumulators.length; i++) {
-            accumulators[i] = 0L;
-        }
-    }
-    
-    public void dumpTimeAccumulators() {
-        logger.info("Accumulator indexes are 0=Polygon Generation; 1=Starting Vertexes; 2=Ending Vertexes; 3=Triangles.  All elapsed ns divided by 1M.");
-        for (int i = 0; i < accumulators.length; i++) {
-            logger.info("Time for index {} is {}ms.", i, accumulators[i]);
-        }
-        for (int i = 0; i < polygonCaseFrequencies.length; i++) {
-            logger.info("Angles case {}={}", i, polygonCaseFrequencies[i]);
-        }
-        if (cacheMissCount > 0) {
-            logger.info("Cache hit for about-Z {}.  Cache-miss for about-Z {}.  Fraction hit/miss {}.", cacheHitCount, cacheMissCount, (cacheHitCount/cacheMissCount));
-        }
-        if (cacheMissXY > 0) {
-            logger.info("Cache hit for about-X/Y {}.  Cache-miss for about-X/Y {}.  Fraction hit/miss {}.", cacheHitXY, cacheMissXY, (cacheHitXY / cacheMissXY));
-        }
-    }
-    
-    private static final int POLYGON_INX = 0;
-    private static final int START_VERT_INX = 1;
-    private static final int END_VERT_INX = 2;
-    private static final int TRI_INX = 3;
-    private long[] accumulators = new long[4];
-    
-    private int[] polygonCaseFrequencies = new int[3];
 
     //--------------------------------------------IMPLEMENT TriangleSource
     @Override
@@ -209,14 +160,14 @@ public class LineEnclosureFactory implements TriangleSource {
 	
     private List<double[][]> getCachedEndcaps(double[] startingCoords, double[] endingCoords) {
         String endPointsKey = createEndPointsKey(startingCoords, endingCoords);
-        List<double[][]> endCaps = pointsToCaps.get(endPointsKey);
+        List<double[][]> endCaps = LineEnclosurePrecomputes.getEndCaps(endPointsKey);
         if (endCaps == null) {
             endCaps = makeEndPolygons(startingCoords, endingCoords);
             if (endCaps != null && endCaps.size() == 2) {
                 // The end-polygon-maker keeps a single list for all time.
                 // Therefore, must re-copy that list.
                 endCaps = new ArrayList<>(endCaps);
-                pointsToCaps.put(endPointsKey, endCaps);
+                LineEnclosurePrecomputes.putEndCaps(endPointsKey, endCaps);
             }
         }
         return endCaps;
@@ -326,7 +277,6 @@ public class LineEnclosureFactory implements TriangleSource {
         logger.debug("Aligned along the #{} axis.", axialAlignment);
 
         if (axialAlignment == -1) {
-            polygonCaseFrequencies[0]++;
             if (lineUnitVector[Z] < 0) {
                 // Switch start/end order if facing in negative direction.
                 double[] tempCoords = startCoords;
@@ -357,7 +307,6 @@ public class LineEnclosureFactory implements TriangleSource {
             transformPolygon(endingEndPolygon, transform2);
             endCapPolygonsHolder.add(endingEndPolygon);
         } else if (axialAlignment == PERPENDICULAR_ALIGNMENT) {
-            polygonCaseFrequencies[1]++;
 			// Special case: new normal lies in the xy plane, but not on an axis.
             // Only spin about Z.
             if (lineUnitVector[X] > 0) {
@@ -383,7 +332,6 @@ public class LineEnclosureFactory implements TriangleSource {
             transformPolygon(endingEndPolygon, transform);
             endCapPolygonsHolder.add(endingEndPolygon);
         } else {
-            polygonCaseFrequencies[2]++;
             // Special case: aligned right along some axis.  Trig assumptions won't help.
             boolean mustSwitch = false;
             if (lineUnitVector[axialAlignment] < 0 && axialAlignment == Z) {
@@ -410,39 +358,27 @@ public class LineEnclosureFactory implements TriangleSource {
         return endCapPolygonsHolder;
     }
 
-    int cacheHitXY = 0;
-    int cacheMissXY = 0;
     private Matrix getAboutXAboutYTransformMatrix(double aboutX, double aboutY) {
         // Now that we have our angles, we make transforms.
         String xyKey = createXYKey(-aboutX, aboutY);
-        Matrix transform1 = aboutXAboutYToMatrix.get( xyKey );
+        Matrix transform1 = LineEnclosurePrecomputes.getAboutXAboutYMatrix(xyKey);
         if (transform1 == null) {
-            cacheMissXY ++;
             transform1 = matrixUtils.getTransform3D(
                     -aboutX, aboutY, 0,
                     0, 0, 0);
-            aboutXAboutYToMatrix.put(xyKey, transform1);
-        }
-        else {
-            cacheHitXY ++;
+            LineEnclosurePrecomputes.putAboutXAboutYMatrix(xyKey, transform1);
         }
         return transform1;
     }
 
-    int cacheHitCount = 0;
-    int cacheMissCount = 0;
     private Matrix getAboutZTransform(double aboutZ) {
         final Integer aboutZKey = convertPlaceRounded( aboutZ );
-        Matrix transform = aboutZToMatrix.get( aboutZKey);
+        Matrix transform = LineEnclosurePrecomputes.getAboutZMatrix( aboutZKey );
         if (transform == null) {
             transform = matrixUtils.getTransform3D(
                     0, 0, aboutZ,
                     0, 0, 0);
-            aboutZToMatrix.put( aboutZKey, transform);
-            cacheMissCount ++;
-        }
-        else {
-            cacheHitCount ++;
+            LineEnclosurePrecomputes.putAboutZMatrix(aboutZKey, transform);
         }
         return transform;
     }
@@ -460,17 +396,18 @@ public class LineEnclosureFactory implements TriangleSource {
     }
     
     /**
-     * Makes a string-comparable key out of end-point 3D coordinates.
+     * Makes a string-comparable key out of end-point 3D coordinates, and poly-sides.
      */
     private String createEndPointsKey(double[] startingCoords, double[] endingCoords) {
         return String.format(
-                "%11.3f,%11.3f%11.3f_%11.3f,%11.3f,%11.3f", 
+                "%11.3f,%11.3f%11.3f_%11.3f,%11.3f,%11.3f_%d", 
                 startingCoords[0],
                 startingCoords[1],
                 startingCoords[2],
                 endingCoords[0],
                 endingCoords[1],
-                endingCoords[2]
+                endingCoords[2],
+                endPolygonSides
         );
     }
     

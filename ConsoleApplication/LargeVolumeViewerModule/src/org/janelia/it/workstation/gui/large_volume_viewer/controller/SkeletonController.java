@@ -23,6 +23,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.LineEnclosurePrecomputes;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
@@ -63,6 +64,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         this.skeleton.setController(this);
 
         actors.clear();
+        LineEnclosurePrecomputes.clearWorkspaceRelevant();
         lvvTranslator = null;
         qvController = null;
     }

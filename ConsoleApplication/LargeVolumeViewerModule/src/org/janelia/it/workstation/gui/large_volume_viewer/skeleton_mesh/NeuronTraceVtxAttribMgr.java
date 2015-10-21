@@ -562,8 +562,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
     }
 
     protected void calculateManualLineVertices(Set<SegmentIndex> voxelPathAnchorPairs, final LineEnclosureFactory manualSegmentEnclosureFactory) throws Exception {
-        manualSegmentEnclosureFactory.clearTimeAccumulators();
-        
         Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);
         // Degrade image for performance.
         if (anchorLines.size() > 10000) {
@@ -576,8 +574,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
                     anchorLine.getStyle().getColorAsFloatArray()
             );
         }                
-
-        manualSegmentEnclosureFactory.dumpTimeAccumulators();
 
     }
 
