@@ -179,49 +179,9 @@ public class LVVDevPanel extends JPanel {
 
             }
         });
-        add(testButton2);
+        // disabled; testing is over
+        // add(testButton2);
 
-        // it's useful to duplicate things; currently for dev use only
-        JButton testButton3 = new JButton("Test 3");
-        testButton3.setAction(new AbstractAction("Duplicate neuron") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-                SimpleWorker worker = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        TmNeuron neuron = annotationModel.getCurrentNeuron();
-                        if (neuron == null) {
-                            System.out.println("no selected neuron");
-                            return;
-                        }
-                        System.out.println("duplicating neuron " + neuron.getName());
-
-
-
-                        ModelMgr modelMgr = ModelMgr.getModelMgr();
-                        Entity workspaceEntity = modelMgr.getEntityById(annotationModel.getCurrentWorkspace().getId());
-                        Entity neuronEntity = modelMgr.getEntityById(neuron.getId());
-
-
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        System.out.println("duplicate neuron had no exceptions");
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        System.out.println("duplicate neuron reported exception");
-                        error.printStackTrace();
-                    }
-                };
-                worker.execute();
-
-            }
-        });
-        add(testButton3);
 
 
         /*
