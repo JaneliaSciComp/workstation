@@ -133,11 +133,16 @@ public class ViewTileManager {
 	// June 20, 2013 Generalized for non-Z axes
 	public TileSet createLatestTiles(Camera3d camera, Viewport viewport,
 			CoordinateAxis sliceAxis, Rotation3d viewerInGround) {
+		//log.info("createLatestTiles() start");
 		TileSet result = new TileSet();
-		if (volumeImage.getLoadAdapter() == null)
+		if (volumeImage.getLoadAdapter() == null) {
+			//log.info("volumeImage.getLoadAdapter() is null - returning empty TileSet");
 			return result;
-		if (! tileConsumer.isShowing()) // Hidden viewer shows no tiles.
-			return result; 
+		}
+		if (! tileConsumer.isShowing()) { // Hidden viewer shows no tiles.
+			//log.info("tileConsumer is not showing - returning empty TileSet");
+			return result;
+		}
 
 		if (sliceAxis == CoordinateAxis.X) {
 			// System.out.println("X");
@@ -164,16 +169,31 @@ public class ViewTileManager {
 			fD = bottomY - fD - 0.5; // bounding box extends 0.5 voxels past final slice
 		}
         int relativeTileDepth = tileFormat.calcRelativeTileDepth(xyzFromWhd, fD, bb);
+
+		//log.info("relativeTileDepth="+relativeTileDepth);
 		
 		// 3) x and y tile index range
         ViewBoundingBox screenBounds =
                 tileFormat.findViewBounds(
                         viewport.getWidth(), viewport.getHeight(), focus, camera.getPixelsPerSceneUnit(), xyzFromWhd
                 );
+
+		//log.info("screenBounds width="+screenBounds.getwFMin()+" "+screenBounds.getwFMax());
+		//log.info("screenBounds height="+screenBounds.gethFMin()+" "+screenBounds.gethFMax());
+
+
         TileBoundingBox tileUnits = tileFormat.viewBoundsToTileBounds(xyzFromWhd, screenBounds, zoom );
+
+		//log.info("tileUnits.getwMin="+tileUnits.getwMin()+" getwMax="+tileUnits.getwMax());
+		//log.info("tileUnits.gethMin="+tileUnits.gethMin()+" gethMax="+tileUnits.gethMax());
 
 		TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
         // Must adjust the depth tile value relative to origin.
+
+		//log.info("starting Whd loop to populate result");
+
+		int tileCount=0;
+
 		for (int w = tileUnits.getwMin(); w <= tileUnits.getwMax(); ++w) {
 			for (int h = tileUnits.gethMin(); h <= tileUnits.gethMax(); ++h) {
 				int whd[] = {w, h, relativeTileDepth};
@@ -185,10 +205,13 @@ public class ViewTileManager {
 						zoomMax, indexStyle, sliceAxis);
 				Tile2d tile = new Tile2d(key, tileFormat);
 				tile.setYMax(bb.getMax().getY()); // To help flip y; Always actual Y! (right?)
+				tileCount++;
 				result.add(tile);
                 //dumpTileIndex(tile);
 			}
 		}
+
+		//log.info("added "+tileCount+" tiles");
 		return result;
 	}
 	

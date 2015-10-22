@@ -42,9 +42,9 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	private LoadStatus loadStatus = LoadStatus.UNINITIALIZED;
 	
 	// One thread pool to load minimal representation of volume
-	private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(10);
+	private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(5);
 	// One thread pool to load current and prefetch textures
-	private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(10);
+	private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(5);
 
 	// Refactoring 6/12/2013
 	private SharedVolumeImage sharedVolumeImage;
@@ -159,10 +159,16 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	};
 	
 	public TileSet createLatestTiles() {
+		//log.info("createLatestTiles() start");
 		TileSet result = new TileSet();
 		for (ViewTileManager vtm : viewTileManagers) {
-			if (vtm.getTileConsumer().isShowing())
+			//log.info("Checking if vtm is showing");
+			if (vtm.getTileConsumer().isShowing()) {
+				//log.info("Yes, calling vtm.createLatestTile()");
 				result.addAll(vtm.createLatestTiles());
+			} else {
+				//log.info("NOT showing");
+			}
 		}
 		return result;
 	}
@@ -178,7 +184,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	public void setLoadStatus(LoadStatus loadStatus) {
 		if (this.loadStatus == loadStatus)
 			return; // no change
-		log.info("Load status changed to "+loadStatus);
+		//log.info("Load status changed to "+loadStatus+" historyCache="+textureCache.getHistoryCache().size()+" futureCache="+textureCache.getFutureCache().size()+" persistentCache="+textureCache.getPersistentCache().size());
 		this.loadStatus = loadStatus;
         if (loadStatusListener != null) {
             loadStatusListener.updateLoadStatus(loadStatus);
@@ -239,6 +245,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	}
 	
 	private void rearrangeLoadQueue(TileSet currentTiles) {
+		//log.info("rearrangeLoadQueue() start");
 		for (ViewTileManager vtm : viewTileManagers) {
 			vtm.updateDisplayTiles();
 		}
@@ -265,6 +272,10 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 		}
 		
 		if (doPrefetch) {
+
+			//log.info("rearrangeLoadQueue() doPrefetch start");
+
+
 			/* TODO - LOD tiles are not working yet...
 			// Get level-of-detail tiles
 			Iterable<TileIndex> lodGen = new LodGenerator(TileServer.this);
@@ -368,6 +379,8 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 					cacheableTextures.add(ix);
 			}
 			*/
+
+			//log.info("doPrefetch end");
 
 		}			
 

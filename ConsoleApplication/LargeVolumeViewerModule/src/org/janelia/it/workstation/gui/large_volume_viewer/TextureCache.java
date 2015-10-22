@@ -136,6 +136,8 @@ public class TextureCache
 		return historyCache;
 	}
 
+	public PersistentCache getPersistentCache() { return persistentCache; }
+
 	public int[] popObsoleteTextureIds() {
 		Set<Integer> ids = historyCache.popObsoleteGlTextures();
 		ids.addAll(persistentCache.popObsoleteGlTextures());
@@ -146,6 +148,7 @@ public class TextureCache
 			result[i] = val;
 			i += 1;
 		}
+		log.info("popObsoleteTextureIds() returning "+result.length+" entries");
 		return result;
 	}
 

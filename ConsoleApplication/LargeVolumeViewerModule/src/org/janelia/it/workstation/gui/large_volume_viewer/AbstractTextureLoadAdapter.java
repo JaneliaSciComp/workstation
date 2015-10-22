@@ -27,7 +27,7 @@ public abstract class AbstractTextureLoadAdapter
 	
 	protected TileFormat tileFormat = new TileFormat();
 
-	abstract TextureData2dGL loadToRam(TileIndex tileIndex)
+	abstract public TextureData2dGL loadToRam(TileIndex tileIndex)
 		throws TileLoadError, MissingTileException;
 
 	public TileFormat getTileFormat() {

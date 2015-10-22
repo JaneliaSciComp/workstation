@@ -28,7 +28,7 @@ public class Mp4OctreeLoadAdapter extends AbstractTextureLoadAdapter
 	}
 
 	@Override
-    TextureData2dGL loadToRam(TileIndex tileIndex) throws TileLoadError,
+    public TextureData2dGL loadToRam(TileIndex tileIndex) throws TileLoadError,
 			MissingTileException 
 	{
 		URL folder;

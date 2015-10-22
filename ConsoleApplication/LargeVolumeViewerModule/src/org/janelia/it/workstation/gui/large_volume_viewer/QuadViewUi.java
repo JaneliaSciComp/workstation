@@ -5,6 +5,7 @@ import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.workstation.cache.large_volume.stack.TileStackCacheController;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
@@ -292,21 +293,24 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             @Override
             public void zoomChanged(Double zoom) {
                 // Re-position the 3D cache.
-                CacheController cacheController = CacheController.getInstance();
-                cacheController.zoomChanged(zoom);
+                //CacheController cacheController = CacheController.getInstance();
+                //cacheController.zoomChanged(zoom);
+                TileStackCacheController.getInstance().setZoom(zoom);
                 QuadViewUi.this.zoomChanged(zoom);
             }
 
             @Override
             public void focusChanged(Vec3 focus) {
-                 QuadViewUi.this.focusChanged(focus);
+                TileStackCacheController.getInstance().setFocus(focus);
+                QuadViewUi.this.focusChanged(focus);
             }
 
             @Override
             public void viewChanged() {
                 // Re-position the 3D cache.
-                CacheController cacheController = CacheController.getInstance();
-                cacheController.focusChanged(camera.getFocus());
+                //CacheController cacheController = CacheController.getInstance();
+                //cacheController.focusChanged(camera.getFocus());
+                TileStackCacheController.getInstance().setFocus(camera.getFocus());
                 tileServer.refreshCurrentTileSet();
             }            
         });
@@ -1296,14 +1300,22 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     	}
 
         // Initialize the cache for this new input source.
-        int cache3DN = cache3DSize();
-        if (cache3DN > 0) {
-            log.info("Using full-tiff cache.");
-            largeVolumeViewer.initCache(url, cache3DN);
-//            CacheController.getInstance().registerForEvents(positionalStatusPanel);
-        } else {
-            log.info("No full-tiff cache.");
-            largeVolumeViewer.initCache(url, 0);
+//        int cache3DN = cache3DSize();
+//        if (cache3DN > 0) {
+//            log.info("Using full-tiff cache.");
+//            largeVolumeViewer.initCache(url, cache3DN);
+////            CacheController.getInstance().registerForEvents(positionalStatusPanel);
+//        } else {
+//            log.info("No full-tiff cache.");
+//            largeVolumeViewer.initCache(url, 0);
+//        }
+
+        try {
+            TileStackCacheController.getInstance().init(url);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            log.error(ex.toString());
+            rtnVal=false;
         }
 
         return rtnVal;
