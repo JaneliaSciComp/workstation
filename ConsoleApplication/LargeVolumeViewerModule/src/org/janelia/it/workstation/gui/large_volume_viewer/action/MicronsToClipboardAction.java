@@ -10,6 +10,8 @@ import javax.swing.JLabel;
 
 /**
  * Action to copy the contents of the status label to the clipboard.
+ * @todo this could be generalized to "any label to clipboard", by just
+ * passing in the action label, and changing the class name.
  */
 public class MicronsToClipboardAction extends AbstractAction {
 
