@@ -36,9 +36,11 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.datatransfer.Clipboard;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -386,6 +388,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 public List<JMenuItem> getMenus(MouseEvent event) {
                     List<JMenuItem> result = new Vector<>();
                     result.add(addFileMenuItem());
+                    result.add(addCopyMicronLocMenuItem());
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());                    
@@ -1107,7 +1110,14 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         return mnFile;
     }
-
+    
+    public JMenuItem addCopyMicronLocMenuItem() {
+        JMenuItem mnCopyMicron = new JMenuItem(
+                new MicronsToClipboardAction(statusLabel)
+        );
+        return mnCopyMicron;
+    }
+    
     public JMenuItem addEditMenuItem() {
         JMenu mnEdit = new JMenu("Edit");
         menuBar.add(mnEdit);
