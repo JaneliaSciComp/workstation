@@ -118,19 +118,26 @@ public class PositionalStatusPanel extends JPanel {
         int zPanelWidth = markerDims.width * tileExtents[2];
         
         int allMarkersHeight = markerDims.height * tileExtents[2];
+
+        log.info("starting rendering of Positional Status Models, total number="+posModels.size());
+        log.info("tileExtents: "+tileExtents[0]+" "+tileExtents[1]+" "+tileExtents[2]);
+
         for (PositionalStatusModel model : posModels) {
             int[] xyz = model.getTileXyz();
+            //log.info("Positional Status Model, x="+xyz[0]+" y="+xyz[1]+" z="+xyz[2]);
             int zOffs = xyz[2];
-            g2d.setColor(BGRND_Z[ zOffs % BGRND_Z.length ]);
-            g2d.fillRect(
-                    zOffs * zPanelWidth + xyz[0] * markerDims.width + INSET_LEFT,
-                    allMarkersHeight - (xyz[1] * markerDims.height),
-                    markerDims.width, markerDims.height
-            );
+
+//            g2d.setColor(BGRND_Z[ zOffs % BGRND_Z.length ]);
+//            g2d.fillRect(
+//                    zOffs * zPanelWidth + xyz[0] * markerDims.width + INSET_LEFT,
+//                    allMarkersHeight - (xyz[1] * markerDims.height),
+//                    markerDims.width, markerDims.height
+//            );
+
             g2d.setColor(decodeColor(model));
             g2d.fillRect(
                 zOffs * zPanelWidth + xyz[0] * markerDims.width + INSET_LEFT,
-                allMarkersHeight - (xyz[1] * markerDims.height),
+                allMarkersHeight*(1 + model.getChannel()) - (xyz[1] * markerDims.height),
                 markerDims.width - 1, markerDims.height - 1
             );
         }

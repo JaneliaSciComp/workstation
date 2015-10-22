@@ -226,7 +226,6 @@ public class MapCacheFacade implements CacheFacadeI {
      * ID is an absolute path. Also, packages a decompressed version of
      * the cached data, into a seekable stream.
      *
-     * @see CacheManager#get(java.io.File) calls this.
      * @param id what to dig up.
      * @return result, after awaiting the future, or null on exception.
      */
@@ -248,7 +247,6 @@ public class MapCacheFacade implements CacheFacadeI {
      * ID is an absolute path. Also, packages a decompressed version of the
      * cached data, into a seekable stream.
      *
-     * @see CacheManager#get(java.io.File) calls this.
      * @param id what to dig up.
      * @return result, after awaiting the future, or null on exception.
      */
@@ -379,7 +377,7 @@ public class MapCacheFacade implements CacheFacadeI {
         return newAllocation;
     }
 
-    public static class MergedNeighborhood implements GeometricNeighborhood {
+    public static class MergedNeighborhood extends GeometricNeighborhood {
         
         private Set<File> files;
         private Double zoom;

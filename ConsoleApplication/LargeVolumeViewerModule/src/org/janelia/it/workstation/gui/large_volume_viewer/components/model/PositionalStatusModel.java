@@ -20,4 +20,7 @@ public interface PositionalStatusModel {
     Status getStatus();
     void addListener(PositionalStatusListener listener);
     void removeListener(PositionalStatusListener listener);
+    void setChannel(int channel);
+    int getChannel();
+
 }

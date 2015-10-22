@@ -18,6 +18,7 @@ public class PositionalStatusModelBean implements PositionalStatusModel {
     private double[] position;
     private int[] tileXyz;
     private Status status = Status.Unfilled;
+    private int channel;
     
     private Collection<PositionalStatusListener> listeners = new ArrayList<>();
 
@@ -69,5 +70,11 @@ public class PositionalStatusModelBean implements PositionalStatusModel {
             listener.update(this);
         }
     }
+
+    @Override
+    public void setChannel(int channel) { this.channel=channel; }
+
+    @Override
+    public int getChannel() { return channel; }
 
 }
