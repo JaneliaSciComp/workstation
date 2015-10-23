@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.awt.Color;
 
-import com.google.common.base.Stopwatch;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -66,7 +65,7 @@ therefore it should do its updates on the EDT, because it's probably being
 called from a  SimpleWorker thread.
 */
 {
-    public static final String STD_SWC_EXTENSION = ".swc";
+    public static final String STD_SWC_EXTENSION = SWCData.STD_SWC_EXTENSION;
     private static final String COLOR_FORMAT = "# COLOR %f,%f,%f";
     private static final String NAME_FORMAT = "# NAME %s";
 
@@ -1441,8 +1440,8 @@ called from a  SimpleWorker thread.
         String neuronName = swcData.parseName();
         if (neuronName == null)
             neuronName = swcFile.getName();
-        if (neuronName.endsWith(STD_SWC_EXTENSION)) {
-            neuronName = neuronName.substring(0, neuronName.length() - STD_SWC_EXTENSION.length());
+        if (neuronName.endsWith(SWCData.STD_SWC_EXTENSION)) {
+            neuronName = neuronName.substring(0, neuronName.length() - SWCData.STD_SWC_EXTENSION.length());
         }
         final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
 
@@ -1513,7 +1512,7 @@ called from a  SimpleWorker thread.
 
     }
 
-    public void importBulkSWCData(File swcFile, SimpleWorker worker) throws Exception {
+    public void importBulkSWCData(File swcFile, SimpleWorker worker, boolean selectOnCompletion) throws Exception {
 
         // the constructor also triggers the parsing, but not the validation
         SWCData swcData = SWCData.read(swcFile);
@@ -1532,14 +1531,12 @@ called from a  SimpleWorker thread.
         if (neuronName == null) {
             neuronName = swcFile.getName();
         }
-        if (neuronName.endsWith(STD_SWC_EXTENSION)) {
-            neuronName = neuronName.substring(0, neuronName.length() - STD_SWC_EXTENSION.length());
+        if (neuronName.endsWith(SWCData.STD_SWC_EXTENSION)) {
+            neuronName = neuronName.substring(0, neuronName.length() - SWCData.STD_SWC_EXTENSION.length());
         }
         final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
 
-        // let's go with brute force for now; loop over nodes and
-        //  insert into db sequentially, since we have no bulk update
-        //  for annotations right now
+        // Bulk update in play.
         // and as long as we're doing brute force, we can update progress
         //  granularly (if we have a worker); start with 5% increments (1/20)
         int totalLength = swcData.getNodeList().size();
@@ -1585,20 +1582,26 @@ called from a  SimpleWorker thread.
 
         updateNeuronColor(swcData, neuron);
 
-        // update workspace; update and select new neuron; this will draw points as well
-        updateCurrentWorkspace();
-        final TmWorkspace workspace = getCurrentWorkspace();
-        setCurrentNeuron(neuron);
-        final TmNeuron updateNeuron = getCurrentNeuron();
+        if (selectOnCompletion) {
+            // update workspace; update and select new neuron; this will draw points as well
+            updateCurrentWorkspace();
+            final TmWorkspace workspace = getCurrentWorkspace();
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireWorkspaceLoaded(workspace);
-                fireNeuronSelected(updateNeuron);
-            }
-        });
+            setCurrentNeuron(neuron);
+            final TmNeuron updateNeuron = getCurrentNeuron();
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    fireWorkspaceLoaded(workspace);
+                    fireNeuronSelected(updateNeuron);
+                }
+            });
+        }
 
+    }
+    
+    public List<File> breakOutByRoots(File infile) throws IOException {
+        return new SWCData().breakOutByRoots(infile);
     }
 
     public void fireAnnotationNotMoved(TmGeoAnnotation annotation) {
@@ -1607,6 +1610,17 @@ called from a  SimpleWorker thread.
         }
     }
 
+    public void postWorkspaceUpdate() {
+        updateCurrentWorkspace();
+        final TmWorkspace workspace = getCurrentWorkspace();        
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fireWorkspaceLoaded(workspace);
+            }
+        });
+    }
+    
     private void updateNeuronColor(SWCData swcData, final TmNeuron neuron) throws IOException {
         float[] colorArr = swcData.parseColorFloats();
         if (colorArr != null) {

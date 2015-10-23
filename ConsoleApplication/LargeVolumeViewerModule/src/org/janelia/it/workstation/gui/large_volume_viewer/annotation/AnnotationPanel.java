@@ -3,13 +3,19 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 // std lib imports
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.HeadlessException;
+import java.awt.Insets;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 
 import javax.swing.*;
 
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -17,6 +23,11 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
@@ -61,10 +72,9 @@ public class AnnotationPanel extends JPanel
     private final Action createNeuronAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-                annotationMgr.createNeuron();
-
-            }
-        };
+            annotationMgr.createNeuron();
+        }
+    };
 
     private final Action deleteNeuronAction = new AbstractAction() {
         @Override
@@ -210,10 +220,16 @@ public class AnnotationPanel extends JPanel
         workspaceToolMenu.add(new JMenuItem(exportAllSWCAction));
 
         ImportSWCAction importSWCAction = new ImportSWCAction();
-        importSWCAction.putValue(Action.NAME, "Import SWC file...");
+        importSWCAction.putValue(Action.NAME, "Import SWC Data as Single Neuron...");
         importSWCAction.putValue(Action.SHORT_DESCRIPTION,
-                "Import an SWC file into the workspace");
+                "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCAction));
+
+        ImportSWCAction importSWCActionMulti = new ImportSWCAction(true);
+        importSWCActionMulti.putValue(Action.NAME, "Import SWC Data as Neuron-per-Root...");
+        importSWCActionMulti.putValue(Action.SHORT_DESCRIPTION,
+                "Import one or more SWC files into the workspace");
+        workspaceToolMenu.add(new JMenuItem(importSWCActionMulti));
 
         workspaceToolMenu.add(new JMenuItem(new AbstractAction("Save color model") {
             @Override
@@ -490,6 +506,15 @@ public class AnnotationPanel extends JPanel
     }
 
     class ImportSWCAction extends AbstractAction {
+        private boolean neuronPerRoot = false;
+        public ImportSWCAction(boolean neuronPerRoot) {
+            this.neuronPerRoot = neuronPerRoot;
+        }
+        
+        public ImportSWCAction() {
+            this(false);
+        }
+        
         @Override
         public void actionPerformed(ActionEvent e) {
 
@@ -499,23 +524,74 @@ public class AnnotationPanel extends JPanel
 
             // could specify a dir to open in, but not sure what to choose
             JFileChooser chooser = new JFileChooser();
-            chooser.setDialogTitle("Choose swc file");
-            chooser.setFileFilter(new FileFilter() {
-                @Override
-                public boolean accept( File f ) {
-                    return f.getName().endsWith(AnnotationModel.STD_SWC_EXTENSION) || f.isDirectory();                    
-                }
-
-                @Override
-                public String getDescription() {
-                    return "*" + AnnotationModel.STD_SWC_EXTENSION;
-                }
-            });
+            chooser.setDialogTitle("Choose swc file or directory");
+            chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+            final FileFilter swcAndDirFilter = new SwcAndFileFilter();
+            chooser.setFileFilter(swcAndDirFilter);
             int returnValue = chooser.showOpenDialog(AnnotationPanel.this);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                annotationMgr.importSWCFile(chooser.getSelectedFile());
+            if (returnValue == JFileChooser.APPROVE_OPTION) {                
+                List<File> swcFiles = getFilesList(chooser.getSelectedFile());                
+                if (swcFiles.size() > 1) {
+                    AtomicInteger countDownSemaphor = new AtomicInteger(swcFiles.size());
+                    for (File swc: swcFiles) {
+                        // Import all the little neurons from the file.
+                        annotationMgr.importSWCFile(swc, countDownSemaphor);
+                    }
+                }
+                else {
+                    annotationMgr.importSWCFile(swcFiles.get(0), null);
+                }
             }
         }
+        
+        private List<File> getFilesList(File selectedFile) {
+            List<File> rtnVal = new ArrayList<>();
+            List<File> rawFileList = new ArrayList<>();
+            if (selectedFile.isDirectory()) {
+                File[] swcFiles = selectedFile.listFiles(new SwcDirListFilter());
+                rawFileList.addAll(Arrays.asList(swcFiles));                
+            }
+            else {
+                rawFileList.add(selectedFile);
+            }
+            
+            if (neuronPerRoot) {
+                try {
+                    // Now, we traverse list above, breaking any we see as
+                    // having more than one root, into multiple input files.
+                    for (File infile : rawFileList) {
+                        rtnVal.addAll(annotationModel.breakOutByRoots(infile));
+                    }
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                    throw new RuntimeException(ioe);
+                }
+            }
+            else {
+                rtnVal.addAll(rawFileList);
+            }
+            return rtnVal;
+        }
+    }
+    
+    class SwcAndFileFilter extends FileFilter {
+        @Override
+        public boolean accept(File f) {
+            return f.getName().endsWith(AnnotationModel.STD_SWC_EXTENSION) || f.isDirectory();
+        }
+
+        @Override
+        public String getDescription() {
+            return "*" + AnnotationModel.STD_SWC_EXTENSION;
+        }
+    }
+    
+    class SwcDirListFilter implements java.io.FileFilter {
+        @Override
+        public boolean accept(File file) {
+            return file.isFile() && file.getName().endsWith(AnnotationModel.STD_SWC_EXTENSION);
+        }
+
     }
 }
 

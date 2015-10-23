@@ -386,6 +386,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 public List<JMenuItem> getMenus(MouseEvent event) {
                     List<JMenuItem> result = new Vector<>();
                     result.add(addFileMenuItem());
+                    result.add(addCopyMicronLocMenuItem());
+                    result.add(addCopyTileLocMenuItem());
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());                    
@@ -1107,7 +1109,23 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         return mnFile;
     }
-
+    
+    public JMenuItem addCopyMicronLocMenuItem() {
+        JMenuItem mnCopyMicron = new JMenuItem(
+                new MicronsToClipboardAction(statusLabel)
+        );
+        return mnCopyMicron;
+    }
+    
+    public JMenuItem addCopyTileLocMenuItem() {
+        JMenuItem mnCopyTileInx = new JMenuItem(
+                new TileLocToClipboardAction(
+                        statusLabel, tileFormat, camera, CoordinateAxis.Z
+                )
+        );
+        return mnCopyTileInx;
+    }
+    
     public JMenuItem addEditMenuItem() {
         JMenu mnEdit = new JMenu("Edit");
         menuBar.add(mnEdit);
@@ -1243,7 +1261,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         snapshot3dLauncher.setAnnotationManager(annotationMgr);
         annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
-        volumeImage.setRemoteBasePath(canonicalLinuxPath);
+        volumeImage.setRemoteBasePath(canonicalLinuxPath);        
         return loadURL(url);
     }
 
@@ -1271,7 +1289,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }
     		url.openStream();            
         	rtnVal = volumeImage.loadURL(url);
-            this.setLoadedUrl(url);
+            this.setLoadedUrl(url);            
+            new AnnotationSkeletonViewLauncher(false).refreshTopComponent();
 
     	} catch (IOException exc) {
             throw new RuntimeException(

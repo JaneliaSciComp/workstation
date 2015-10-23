@@ -1,19 +1,17 @@
 package org.janelia.it.workstation.gui.framework.actions;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JOptionPane;
+import javax.swing.ProgressMonitor;
+
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.outline.Annotations;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
-import org.janelia.it.workstation.gui.framework.viewer.Viewer;
-import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-
-import javax.swing.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * This action removes an entity from some parent. If the entity becomes an orphan, then it is completely deleted.

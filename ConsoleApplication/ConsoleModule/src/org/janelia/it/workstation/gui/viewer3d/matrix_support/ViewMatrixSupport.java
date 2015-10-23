@@ -187,6 +187,27 @@ public class ViewMatrixSupport {
                 sinAboutZ, cosAboutZ, 
                 translateX, translateY, translateZ);
     }
+    
+    /**
+     * Produce a translate-only transform matrix.
+     * 
+     * @param translateX how far X
+     * @param translateY how far Y
+     * @param translateZ how far Z
+     * @return 
+     */
+    public Matrix getTranslateTransform3D(
+            double translateX,
+            double translateY,
+            double translateZ
+    ) {
+        Matrix rtnVal = Matrix.identity(4, 4);
+        rtnVal.set(0, 3, translateX);
+        rtnVal.set(1, 3, translateY);
+        rtnVal.set(2, 3, translateZ);
+        return rtnVal;
+    }
+            
 
     /**
      * Pre-computed cosines and sines provided for faster calculation.
