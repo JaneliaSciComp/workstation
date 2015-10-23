@@ -183,6 +183,7 @@ public class TracingInteractor extends MouseAdapter
     }
 
     private void exportDisabledMenuItems(JPopupMenu menu, final NeuriteAnchor anchor) {
+        /*
         menu.add(new AbstractAction("Begin tracing at this location") {
             @Override
             public void actionPerformed(ActionEvent e)
@@ -190,6 +191,7 @@ public class TracingInteractor extends MouseAdapter
                 setTracingModeOn(anchor);
             }
         }); 
+                */
     }    
 
     private boolean extendProvisionalAnchors(NeuriteAnchor anchor) {
