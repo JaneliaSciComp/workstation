@@ -286,6 +286,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     /** Tells caller what source we are examining. */
     public URL getCurrentSourceURL() throws MalformedURLException, URISyntaxException {
+        if (currentSource == null)
+            return null;
         return new URI(currentSource).toURL();
     }
     

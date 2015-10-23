@@ -60,13 +60,13 @@ public class NeuronModelAdapter implements NeuronModel
     private final Long neuronId;
     private final Collection<NeuronVertex> vertexes;
     private final Collection<NeuronEdge> edges;
-    private final ComposableObservable colorChangeObservable = new ComposableObservable();
-    private final ComposableObservable geometryChangeObservable = new ComposableObservable();
-    private final ComposableObservable visibilityChangeObservable = new ComposableObservable();
+    private final ObservableInterface colorChangeObservable = new ComposableObservable();
+    private final ObservableInterface geometryChangeObservable = new ComposableObservable();
+    private final ObservableInterface visibilityChangeObservable = new ComposableObservable();
+    private final ObservableInterface membersAddedObservable = new ComposableObservable();
+    private final ObservableInterface membersRemovedObservable = new ComposableObservable();
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private ObservableInterface membersAddedObservable;
-    private ObservableInterface membersRemovedObservable;
     // private NeuronStyle neuronStyle;
     // TODO: Stop using locally cached color and visibility, in favor of proper syncing with underlying Style
     private final AnnotationModel annotationModel;
@@ -100,6 +100,8 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public Color getColor()
     {
+        // Use just-in-time fetching of color, since NeuronStyle might not be
+        // set yet at WorkspaceLoaded time.
         if (cachedColor != null)
             return cachedColor;
         NeuronStyle style = annotationModel.getNeuronStyle(neuron);

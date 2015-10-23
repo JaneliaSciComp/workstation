@@ -34,12 +34,14 @@ import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -85,7 +87,7 @@ public class NeuronSetNode extends AbstractNode
     @Override
     public Action[] getActions(boolean popup) {
         List<Action> result = new ArrayList<>();
-        // TODO
+        result.add(new ManualUpdateNeuronsAction(neuronList));
         return result.toArray(new Action[result.size()]);
     }
     
@@ -178,6 +180,44 @@ public class NeuronSetNode extends AbstractNode
         protected Node createNodeForKey(NeuronModel key) {
             return new NeuronModelNode(key);
         }
+    }
+    
+    
+    private static class ManualUpdateNeuronsAction extends AbstractAction
+    {
+        private final NeuronSet neurons;
+        
+        public ManualUpdateNeuronsAction(NeuronSet neurons) 
+        {
+            putValue(NAME, "Refresh these neurons now");
+            this.neurons = neurons;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            // 1) Mark everything dirty in depth-first order
+            for (NeuronModel neuron : neurons) {
+                neuron.getGeometryChangeObservable().setChanged();
+                neuron.getMembersRemovedObservable().setChanged();
+                neuron.getMembersAddedObservable().setChanged();
+                neuron.getVisibilityChangeObservable().setChanged();
+                neuron.getColorChangeObservable().setChanged();
+            }
+            neurons.getMembershipChangeObservable().setChanged();
+            neurons.getNameChangeObservable().setChanged();
+            // 2) Notify observers in depth-first order
+            for (NeuronModel neuron : neurons) {
+                neuron.getGeometryChangeObservable().notifyObservers();
+                neuron.getMembersRemovedObservable().notifyObservers();
+                neuron.getMembersAddedObservable().notifyObservers();
+                neuron.getVisibilityChangeObservable().notifyObservers();
+                neuron.getColorChangeObservable().notifyObservers();
+            }
+            neurons.getMembershipChangeObservable().notifyObservers();
+            neurons.getNameChangeObservable().notifyObservers();
+        }
+        
     }
     
 }
