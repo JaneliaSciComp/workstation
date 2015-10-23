@@ -96,42 +96,7 @@ public class NeuronModelNode extends AbstractNode
         // 0 - is there a camera to actually center on?
         final Vantage vantage = getVantage();
         if ((vantage != null) && neuron.getVertexes().size() > 0) {
-            result.add(new AbstractAction() {
-                {
-                    putValue(NAME, "Center on this neuron");
-                }
-                @Override
-                public void actionPerformed(ActionEvent e)
-                {
-                    // 1 - compute neuron bounding box center point
-                    Box3 boundingBox = new Box3();
-                    for (NeuronVertex vertex: neuron.getVertexes())
-                        boundingBox.include(new Vector3(vertex.getLocation()));
-                    Vector3 centroid = boundingBox.getCentroid();
-                    // 2 - find actual vertex closest to that center point
-                    NeuronVertex closestVertex = neuron.getVertexes().iterator().next();
-                    float minDistSquared = centroid.distanceSquared(new Vector3(closestVertex.getLocation()));
-                    for (NeuronVertex vertex: neuron.getVertexes()) {
-                        float d2 = centroid.distanceSquared(new Vector3(vertex.getLocation()));
-                        if (d2 < minDistSquared) {
-                            minDistSquared = d2;
-                            closestVertex = vertex;
-                        }
-                    }
-                    // 3 - center on that vertex
-                    Vector3 center = new Vector3(closestVertex.getLocation());
-                    vantage.setFocusPosition(center);
-                    // 4 - adjust scale
-                    float maxScale = 5.0f;
-                    for (int i = 0; i < 3; ++i) {
-                        float boxEdge = boundingBox.max.get(i) - boundingBox.min.get(i);
-                        maxScale = Math.max(maxScale, boxEdge);
-                    }
-                    vantage.setSceneUnitsPerViewportHeight(maxScale);
-                    
-                    vantage.notifyObservers();
-                }
-            });
+            result.add(new CenterOnNeuronAction(neuron, vantage));
         }
         return result.toArray(new Action[result.size()]);
     }
@@ -187,4 +152,51 @@ public class NeuronModelNode extends AbstractNode
         sheet.put(set); 
         return sheet; 
     } // - See more at: https://platform.netbeans.org/tutorials/nbm-nodesapi2.html#sthash.0xrEv8DO.dpuf
+
+
+    private static class CenterOnNeuronAction extends AbstractAction
+    {
+        private final NeuronModel neuron;
+        private final Vantage vantage;
+        
+        public CenterOnNeuronAction(NeuronModel neuron, Vantage vantage)
+        {
+            putValue(NAME, "Center on this neuron");
+            this.neuron = neuron;
+            this.vantage = vantage;
+        }
+        
+        @Override
+        public void actionPerformed(ActionEvent e)
+        {
+            // 1 - compute neuron bounding box center point
+            Box3 boundingBox = new Box3();
+            for (NeuronVertex vertex: neuron.getVertexes())
+                boundingBox.include(new Vector3(vertex.getLocation()));
+            Vector3 centroid = boundingBox.getCentroid();
+            // 2 - find actual vertex closest to that center point
+            NeuronVertex closestVertex = neuron.getVertexes().iterator().next();
+            float minDistSquared = centroid.distanceSquared(new Vector3(closestVertex.getLocation()));
+            for (NeuronVertex vertex: neuron.getVertexes()) {
+                float d2 = centroid.distanceSquared(new Vector3(vertex.getLocation()));
+                if (d2 < minDistSquared) {
+                    minDistSquared = d2;
+                    closestVertex = vertex;
+                }
+            }
+            // 3 - center on that vertex
+            Vector3 center = new Vector3(closestVertex.getLocation());
+            vantage.setFocusPosition(center);
+            // 4 - adjust scale
+            float maxScale = 5.0f;
+            for (int i = 0; i < 3; ++i) {
+                float boxEdge = boundingBox.max.get(i) - boundingBox.min.get(i);
+                maxScale = Math.max(maxScale, boxEdge);
+            }
+            vantage.setSceneUnitsPerViewportHeight(maxScale);
+
+            vantage.notifyObservers();
+        }
+    }
+
 }

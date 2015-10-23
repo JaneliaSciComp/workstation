@@ -36,9 +36,11 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import javax.swing.Action;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
@@ -78,6 +80,15 @@ public class NeuronSetNode extends AbstractNode
             }
         });
     }
+    
+    // Context menu for NeuronSetNode'
+    @Override
+    public Action[] getActions(boolean popup) {
+        List<Action> result = new ArrayList<>();
+        // TODO
+        return result.toArray(new Action[result.size()]);
+    }
+    
     
     // Allow to drop SWC files on List, to add neurons
     @Override

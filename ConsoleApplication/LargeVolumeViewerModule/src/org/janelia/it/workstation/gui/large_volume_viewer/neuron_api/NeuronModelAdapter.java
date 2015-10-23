@@ -45,6 +45,7 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,15 +67,19 @@ public class NeuronModelAdapter implements NeuronModel
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private ObservableInterface membersAddedObservable;
     private ObservableInterface membersRemovedObservable;
-    private NeuronStyle neuronStyle;
+    // private NeuronStyle neuronStyle;
+    // TODO: Stop using locally cached color and visibility, in favor of proper syncing with underlying Style
+    private final AnnotationModel annotationModel;
     private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
+    private Color defaultColor = Color.GRAY;
+    private Color cachedColor = null;
 
-
-    public NeuronModelAdapter(TmNeuron neuron, NeuronStyle neuronStyle, TmWorkspace workspace) {
+    public NeuronModelAdapter(TmNeuron neuron, AnnotationModel annotationModel, TmWorkspace workspace) 
+    {
         this.neuron = neuron;
         this.neuronId = neuron.getId();
-        this.neuronStyle = neuronStyle;
-        bIsVisible = neuronStyle.isVisible();
+        this.annotationModel = annotationModel;
+        bIsVisible = true; // TODO: 
         vertexes = new VertexList(neuron.getGeoAnnotationMap(), workspace);
         edges = new EdgeList((VertexList)vertexes);
     }
@@ -95,13 +100,25 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public Color getColor()
     {
-        return neuronStyle.getColor();
+        if (cachedColor != null)
+            return cachedColor;
+        NeuronStyle style = annotationModel.getNeuronStyle(neuron);
+        if (style != null) {
+            cachedColor = style.getColor();
+            return cachedColor;
+        }
+        return defaultColor;
     }
 
     @Override
     public void setColor(Color color)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (color == null)
+            return;
+        if (color.equals(cachedColor))
+            return;
+        // TODO: set color in actual wrapped Style
+        cachedColor = color;
     }
 
     @Override

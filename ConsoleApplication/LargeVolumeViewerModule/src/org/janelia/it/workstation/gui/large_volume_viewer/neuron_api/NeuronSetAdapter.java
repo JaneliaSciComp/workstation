@@ -108,8 +108,8 @@ implements NeuronSet
             logger.info("Workspace loaded");
             neuronSetAdapter.setWorkspace(workspace);
             NeuronList nl = (NeuronList) neurons;
-            Map<Long, NeuronStyle> neuronStyleMap = annotationModel.getNeuronStyleMap();
-            nl.wrap(workspace, neuronStyleMap);
+            // Map<Long, NeuronStyle> neuronStyleMap = annotationModel.getNeuronStyleMap();
+            nl.wrap(workspace, annotationModel);
             // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
             getMembershipChangeObservable().setChanged();
             getNameChangeObservable().setChanged();
@@ -131,12 +131,11 @@ implements NeuronSet
     {
         private TmWorkspace workspace;
         private final Map<Long, NeuronModel> cachedNeurons = new HashMap<>();
-        private Map<Long, NeuronStyle> neuronStyleMap;
-        // private final Jama.Matrix voxToMicronMatrix;
+        private AnnotationModel annotationModel;
+        // private Map<Long, NeuronStyle> neuronStyleMap;
         
         public NeuronList(TmWorkspace workspace) {
             this.workspace = workspace;
-            // this.voxToMicronMatrix = workspace.getVoxToMicronMatrix();
         }
         
         @Override
@@ -191,8 +190,8 @@ implements NeuronSet
                     TmNeuron neuron = it.next();
                     Long guid = neuron.getId();
                     if (! cachedNeurons.containsKey(guid)) {
-                        NeuronStyle neuronStyle = neuronStyleMap.get(guid);
-                        cachedNeurons.put(guid, new NeuronModelAdapter(neuron, neuronStyle, workspace));
+                        // NeuronStyle neuronStyle = neuronStyleMap.get(guid);
+                        cachedNeurons.put(guid, new NeuronModelAdapter(neuron, annotationModel, workspace));
                     }
                     return cachedNeurons.get(guid);
                 }
@@ -265,10 +264,10 @@ implements NeuronSet
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        private void wrap(TmWorkspace workspace, Map<Long, NeuronStyle> neuronStyleMap)
+        private void wrap(TmWorkspace workspace, AnnotationModel annotationModel)
         {
             this.workspace = workspace;
-            this.neuronStyleMap = neuronStyleMap;
+            this.annotationModel = annotationModel;
         }
         
     }
