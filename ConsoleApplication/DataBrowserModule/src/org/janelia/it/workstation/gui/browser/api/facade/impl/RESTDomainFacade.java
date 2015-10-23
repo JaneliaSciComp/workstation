@@ -240,19 +240,25 @@ public class RESTDomainFacade implements DomainFacade {
     }
 
     @Override
-    public Ontology reorderTerms(Long ontologyId, Long parentTermId, List<Long> childOrder) throws Exception {
+    public Ontology reorderTerms(Long ontologyId, Long parentTermId, int[] order) throws Exception {
         // TODO: implement
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Ontology addTerm(Long ontologyId, Long parentTermId, OntologyTerm term) throws Exception {
+    public Ontology addTerms(Long ontologyId, Long parentTermId, Collection<OntologyTerm> terms, Integer index) throws Exception {
         // TODO: implement
         throw new UnsupportedOperationException();
     }
-
+    
     @Override
-    public Ontology removeTerm(Long ontologyId, Long termId) throws Exception {
+    public Ontology removeTerm(Long ontologyId, Long parentTermId, Long termId) throws Exception {
+        // TODO: implement
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public void removeOntology(Long ontologyId) throws Exception {
         // TODO: implement
         throw new UnsupportedOperationException();
     }
@@ -324,23 +330,30 @@ public class RESTDomainFacade implements DomainFacade {
         return updatedTreeNode;
     }
 
-    public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references) throws Exception {
-        for (Reference ref: references) {
-            treeNode.addChild(ref);
-        }
-        Response response = serviceEndpoints.get("treenode")
-                .path("children")
-                .queryParam("subjectKey", SessionMgr.getSubjectKey())
-                .queryParam("treeNodeId", treeNode.getId())
-                .queryParam("children", references)
-                .request("application/json")
-                .post(Entity.json(treeNode));
-        TreeNode updatedTreeNode = response.readEntity(TreeNode.class);
-        int responseStatus = response.getStatus();
+    // KR: This method is no longer needed by the facade interface
+//    public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references) throws Exception {
+//        for (Reference ref: references) {
+//            treeNode.addChild(ref);
+//        }
+//        Response response = serviceEndpoints.get("treenode")
+//                .path("children")
+//                .queryParam("subjectKey", SessionMgr.getSubjectKey())
+//                .queryParam("treeNodeId", treeNode.getId())
+//                .queryParam("children", references)
+//                .request("application/json")
+//                .post(Entity.json(treeNode));
+//        TreeNode updatedTreeNode = response.readEntity(TreeNode.class);
+//        int responseStatus = response.getStatus();
+//
+//        return updatedTreeNode;
+//    }
 
-        return updatedTreeNode;
+    @Override
+    public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references, Integer index) throws Exception {
+        // TODO: implement
+        throw new UnsupportedOperationException();
     }
-
+    
     public ObjectSet create(ObjectSet objectSet) throws Exception {
         Response response = serviceEndpoints.get("objectset")
                 .queryParam("subjectKey", SessionMgr.getSubjectKey())

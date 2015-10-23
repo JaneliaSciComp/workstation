@@ -19,6 +19,26 @@ public class NodeUtils {
 
     private final static Logger log = LoggerFactory.getLogger(NodeUtils.class);
     
+    /**
+     * Given a number of children, reorder the last node to the given index, and return the ordering array.
+     * @param size
+     * @param index
+     * @return
+     */
+    public static int[] getReordering(int size, int index) {
+        int[] order = new int[size];
+        int curr = 0;
+        for(int i=0; i<size; i++) {
+            if (i==index) {
+                order[i] = size-1;
+                curr++;
+            }
+            order[i] = curr++;
+        }
+        order[size-1] = index;
+        return order;
+    }
+    
     public static String createPathString(Long[] idPath) {
         StringBuilder sb = new StringBuilder();
         for(Long id : idPath) {
@@ -81,7 +101,7 @@ public class NodeUtils {
             }
         }
         else {
-            log.warn("Unsupported node type {} for node with name {}",node.getClass(),node.getDisplayName());
+            log.warn("Unsupported node type {} for node '{}'",node.getClass(),node.getDisplayName());
             return null;
         }
 
@@ -126,6 +146,8 @@ public class NodeUtils {
 
     public static Node findChild(Node node, Long id) {
         
+        if (id==null) return null;
+        
         if (log.isTraceEnabled()) {
             log.trace("findChild({},{})",node.getDisplayName(),id);
         }
@@ -143,7 +165,7 @@ public class NodeUtils {
             }
             if (child instanceof HasIdentifier) {
                 HasIdentifier hasId = (HasIdentifier)list[i];
-                if (id.equals(hasId.getId())) { 
+                if (hasId!=null && id.equals(hasId.getId())) { 
                     return list[i];
                 }
             }

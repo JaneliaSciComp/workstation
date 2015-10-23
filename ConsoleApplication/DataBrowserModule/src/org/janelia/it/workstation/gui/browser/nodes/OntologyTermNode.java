@@ -5,16 +5,16 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.jacs.model.domain.ontology.Category;
 import org.janelia.it.jacs.model.domain.ontology.Custom;
@@ -27,8 +27,10 @@ import org.janelia.it.jacs.model.domain.ontology.Tag;
 import org.janelia.it.jacs.model.domain.ontology.Text;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
-import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
+import org.janelia.it.workstation.gui.browser.flavors.OntologyTermFlavor;
+import org.janelia.it.workstation.gui.browser.flavors.OntologyTermNodeFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.AddOntologyTermAction;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
@@ -40,7 +42,10 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
 import org.openide.nodes.Node;
+import org.openide.nodes.NodeTransfer;
 import org.openide.util.datatransfer.ExTransferable;
+import org.openide.util.datatransfer.MultiTransferObject;
+import org.openide.util.datatransfer.PasteType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,18 +57,20 @@ import org.slf4j.LoggerFactory;
 public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasIdentifier {
     
     private final static Logger log = LoggerFactory.getLogger(OntologyTermNode.class);
-    
+
+    private final OntologyChildFactory parentChildFactory;
     private final OntologyChildFactory childFactory;
-    private final WeakReference<Ontology> ontologyRef;
+    private final Ontology ontology;
     
     public OntologyTermNode(OntologyChildFactory parentChildFactory, Ontology ontology, OntologyTerm ontologyTerm) {
         this(parentChildFactory, new OntologyChildFactory(ontology, ontologyTerm), ontology, ontologyTerm);    
     }
     
-    private OntologyTermNode(OntologyChildFactory parentChildFactory, OntologyChildFactory childFactory, Ontology ontology, OntologyTerm ontologyTerm) {
+    private OntologyTermNode(OntologyChildFactory parentChildFactory, OntologyChildFactory childFactory, final Ontology ontology, OntologyTerm ontologyTerm) {
         super(parentChildFactory, Children.create(childFactory, false), ontologyTerm);
+        this.parentChildFactory = parentChildFactory;
         this.childFactory = childFactory;
-        this.ontologyRef = new WeakReference<>(ontology);
+        this.ontology = ontology;
         getLookupContents().add(new Index.Support() {
 
             @Override
@@ -78,24 +85,12 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
 
             @Override
             public void reorder(final int[] order) {
-                log.info("reorder children of node "+getOntologyTerm().getName());
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        Ontology ontology = ontologyRef.get();
                         DomainModel model = DomainMgr.getDomainMgr().getModel();
                         OntologyTerm parentTerm = getOntologyTerm();
-                        
-                        List<Long> childIdOrder = new ArrayList<>();
-                        List<OntologyTerm> terms = parentTerm.getTerms();
-                        for(int i=0; i<order.length; i++) {
-                            int index = order[i];
-                            OntologyTerm term = terms.get(index);
-                            childIdOrder.add(term.getId());
-                        }
-
-                        log.info("reorder children of node "+parentTerm.getId());
-                        model.reorderTerms(ontology.getId(), parentTerm.getId(), childIdOrder);
+                        model.reorderOntologyTerms(ontology.getId(), parentTerm.getId(), order);
                     }
                     @Override
                     protected void hadSuccess() {
@@ -132,11 +127,16 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     }
     
     public Ontology getOntology() {
-        return (Ontology)ontologyRef.get();
+        return ontology;
     }
     
     public OntologyTerm getOntologyTerm() {
         return (OntologyTerm)getObject();
+    }
+
+    @Override
+    public Long getId() {
+        return getOntologyTerm().getId();
     }
     
     @Override
@@ -160,11 +160,6 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
             }
         }
         return null;
-    }
-    
-    @Override
-    public Long getId() {
-        return getOntologyTerm().getId();
     }
     
     @Override
@@ -199,7 +194,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
 
     @Override
     public boolean canCut() {
-        return true;
+        return DomainUtils.hasWriteAccess(getOntology());
     }
 
     @Override
@@ -214,47 +209,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
 
     @Override
     public boolean canDestroy() {
-        return true;
-    }
-
-    @Override
-    public Transferable clipboardCopy() throws IOException {
-        log.info("clipboard COPY "+getOntologyTerm());
-        Transferable deflt = super.clipboardCopy();
-        ExTransferable added = ExTransferable.create(deflt);
-        added.put(new ExTransferable.Single(DataFlavor.stringFlavor) {
-            @Override
-            protected String getData() {
-                return getPrimaryLabel();
-            }
-        });
-        added.put(new ExTransferable.Single(DomainObjectFlavor.SINGLE_FLAVOR) {
-            @Override
-            protected OntologyTerm getData() {
-                return (OntologyTerm) getOntologyTerm();
-            }
-        });
-        return added;
-    }
-
-    @Override
-    public Transferable clipboardCut() throws IOException {
-        log.info("clipboard CUT "+getOntologyTerm());
-        Transferable deflt = super.clipboardCut();
-        ExTransferable added = ExTransferable.create(deflt);
-        added.put(new ExTransferable.Single(DomainObjectFlavor.SINGLE_FLAVOR) {
-            @Override
-            protected OntologyTerm getData() {
-                return getOntologyTerm();
-            }
-        });
-        added.put(new ExTransferable.Single(DataFlavor.stringFlavor) {
-            @Override
-            protected String getData() {
-                return getPrimaryLabel();
-            }
-        });
-        return added;
+        return DomainUtils.hasWriteAccess(getOntology());
     }
     
     @Override
@@ -321,7 +276,12 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         public void actionPerformed(ActionEvent e) {
             try {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                model.removeTerm(getOntology().getId(), getOntologyTerm().getId());
+                if (getOntologyTerm() instanceof Ontology) {
+                    model.removeOntology(getOntology().getId());   
+                }
+                else {
+                    model.removeOntologyTerm(getOntology().getId(), getParent().getId(), getOntologyTerm().getId());    
+                }
             }
             catch (Exception ex) {
                 SessionMgr.getSessionMgr().handleException(ex);
@@ -369,5 +329,202 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
 //            action.doAction();
 //        }
 //    }
+
+    @Override
+    public void destroy() throws IOException {
+        if (!DomainUtils.hasWriteAccess(getOntology())) {
+            return;
+        }
+        if (parentChildFactory==null) {
+            throw new IllegalStateException("Cannot destroy node without parent");
+        }
+        if (parentChildFactory instanceof OntologyChildFactory) {
+            OntologyChildFactory ontologyChildFactory = (OntologyChildFactory) parentChildFactory;
+            try {
+                ontologyChildFactory.removeChild(getOntologyTerm());
+            }
+            catch (Exception e) {
+                throw new IOException("Error destroying node",e);
+            }
+        }
+        else {
+            throw new IllegalStateException("Cannot destroy term without parent");
+        }
+    }
     
+    @Override
+    public Transferable clipboardCopy() throws IOException {
+        log.debug("Copy to clipboard: {}",getOntologyTerm());
+        Transferable deflt = super.clipboardCopy();
+        return addFlavors(ExTransferable.create(deflt));
+    }
+
+    @Override
+    public Transferable clipboardCut() throws IOException {
+        log.debug("Cut to clipboard: {}",getOntologyTerm());
+        Transferable deflt = super.clipboardCut();
+        return addFlavors(ExTransferable.create(deflt));
+    }
+    
+    private Transferable addFlavors(ExTransferable added) {
+        added.put(new ExTransferable.Single(DataFlavor.stringFlavor) {
+            @Override
+            protected String getData() {
+                return getPrimaryLabel();
+            }
+        });
+        added.put(new ExTransferable.Single(OntologyTermFlavor.SINGLE_FLAVOR) {
+            @Override
+            protected OntologyTerm getData() {
+                return getOntologyTerm();
+            }
+        });
+        added.put(new ExTransferable.Single(OntologyTermNodeFlavor.SINGLE_FLAVOR) {
+            @Override
+            protected OntologyTermNode getData() {
+                return OntologyTermNode.this;
+            }
+        });
+        return added;
+    }
+
+    @Override
+    protected void createPasteTypes(Transferable t, List<PasteType> s) {
+        super.createPasteTypes(t, s);
+        PasteType dropType = getDropType(t, NodeTransfer.CLIPBOARD_COPY, -1);
+        if (dropType!=null) s.add(dropType);
+    }
+    
+    @Override
+    public PasteType getDropType(final Transferable t, int action, final int index) {
+
+        if (!DomainUtils.hasWriteAccess(getOntology())) {
+            return null;
+        }
+        
+        if (t.isDataFlavorSupported(OntologyTermNodeFlavor.SINGLE_FLAVOR)) {
+            OntologyTermNode node = OntologyTermNodeFlavor.getOntologyTermNode(t);
+            if (node==null || !(node instanceof OntologyTermNode)) { 
+                return null;
+            }
+            log.debug("  Single drop - {} with parent {}",node.getDisplayName(),node.getParentNode().getDisplayName());
+            return new OntologyTermPasteType(Arrays.asList((OntologyTermNode)node), this, index);
+        }
+        else if (t.isDataFlavorSupported(ExTransferable.multiFlavor)) {
+            MultiTransferObject multi;
+            try {
+                multi = (MultiTransferObject) t.getTransferData(ExTransferable.multiFlavor);
+            }
+            catch (UnsupportedFlavorException | IOException e) {
+                log.error("Error getting transfer data", e);
+                return null;
+            }
+            
+            List<OntologyTermNode> nodes = new ArrayList<>();
+            for(int i=0; i<multi.getCount(); i++) {
+                Transferable st = multi.getTransferableAt(i);
+                if (st.isDataFlavorSupported(OntologyTermNodeFlavor.SINGLE_FLAVOR)) {
+                    OntologyTermNode node = OntologyTermNodeFlavor.getOntologyTermNode(st);
+                    if (node==null || !(node instanceof OntologyTermNode)) {
+                        continue;
+                    }   
+                    log.debug("  Multi drop #{} - {} with parent {}",i,node.getDisplayName(),node.getParentNode().getDisplayName());
+                    nodes.add((OntologyTermNode)node);
+                }
+                else {
+                    log.debug("Multi-transferable is expected to support OntologyTermNodeFlavor.");
+                }
+            }
+            
+            if (!nodes.isEmpty()) {
+                return new OntologyTermPasteType(nodes, this, index);
+            }
+            
+            return null;
+        }
+        else {
+            log.debug("Transferable is expected to support either OntologyTermNodeFlavor or multiFlavor.");
+            return null;
+        }   
+    }
+    
+    private class OntologyTermPasteType extends PasteType {
+        
+        private final List<OntologyTermNode> nodes;
+        private final OntologyTermNode targetNode;
+        private final int startingIndex;
+        
+        OntologyTermPasteType(List<OntologyTermNode> nodes, OntologyTermNode targetNode, int startingIndex) {
+            log.trace("TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
+            this.nodes = nodes;
+            this.targetNode = targetNode;
+            this.startingIndex = startingIndex;
+        }
+        
+        @Override
+        public String getName() {
+            return "PasteIntoTreeNode";
+        }
+        @Override
+        public Transferable paste() throws IOException {
+            try {
+            log.trace("paste called on TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
+                OntologyTerm newParent = targetNode.getOntologyTerm();
+                
+                // Have to keep track of the original parents before we do anything, 
+                // because once we start moving nodes, the parents will be recreated
+                List<OntologyTerm> originalParents = new ArrayList<>();
+                for(OntologyTermNode node : nodes) {
+                    OntologyTermNode originalParentNode = (OntologyTermNode)node.getParentNode();
+                    OntologyTerm originalParent = originalParentNode.getOntologyTerm();
+                    originalParents.add(originalParent);
+                }
+                
+                List<OntologyTerm> toAdd = new ArrayList<>();
+                List<OntologyTermNode> toDestroy = new ArrayList<>();
+                
+                int i = 0;
+                for(OntologyTermNode node : nodes) {
+
+                    OntologyTerm ontologyTerm = node.getOntologyTerm();
+                    
+                    OntologyTerm originalParent = originalParents.get(i);
+                    log.trace("{} has parent {}",newParent.getId(),originalParent.getId());
+
+                    if (ontologyTerm.getId().equals(newParent.getId())) {
+                        log.info("Cannot move a node into itself: {}",ontologyTerm.getId());
+                        continue;
+                    }
+                    else if (DomainUtils.hasChild(newParent, ontologyTerm)) {
+                        log.info("Child already exists: {}",ontologyTerm.getId());
+                        continue;
+                    }
+                    log.info("Pasting '{}' on '{}'",ontologyTerm.getName(),newParent.getName());
+                    toAdd.add(ontologyTerm);
+                    toDestroy.add(node);
+                    i++;
+                }
+                
+                // Add all the nodes 
+                if (!toAdd.isEmpty()) {
+                    if (startingIndex<0) {
+                        childFactory.addChildren(toAdd);    
+                    }
+                    else {
+                        childFactory.addChildren(toAdd, startingIndex);
+                    }
+                }
+                
+                // Remove the originals
+                for(OntologyTermNode node : toDestroy) {
+                    node.destroy();
+                }
+                
+            } 
+            catch (Exception e) {
+                throw new IOException("Error pasting node",e);
+            }
+            return null;
+        }
+    }
 }

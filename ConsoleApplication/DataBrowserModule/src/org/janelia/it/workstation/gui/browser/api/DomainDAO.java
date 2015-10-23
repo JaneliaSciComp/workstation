@@ -33,7 +33,6 @@ import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 import org.jongo.MongoCursor;
@@ -459,9 +458,8 @@ public class DomainDAO {
         String type = getCollectionName(domainObject);
         MongoCollection collection = getCollectionByName(type);
         try {
-            if (domainObject.getId() == null) {
-                Long id = TimebasedIdentifierGenerator.generateIdList(1).get(0);
-                domainObject.setId(id);
+            if (domainObject.getId()==null) {
+                domainObject.setId(getNewId());
                 domainObject.setOwnerKey(subjectKey);
                 Set<String> subjects = new HashSet<>();
                 subjects.add(subjectKey);
@@ -486,6 +484,7 @@ public class DomainDAO {
     }
 
     public <T extends DomainObject> T save(String subjectKey, T domainObject) throws Exception {
+        log.info("Saving changes to '{}'",domainObject.getName());
         saveImpl(subjectKey, domainObject);
         return getDomainObject(subjectKey, domainObject);
     }
@@ -503,68 +502,125 @@ public class DomainDAO {
         // TODO: remove dependant objects?
     }
 
-    public Ontology reorderTerms(String subjectKey, Long ontologyId, Long parentTermId, List<Long> childOrder) throws Exception {
-        
-        Ontology ontology = getDomainObject(subjectKey, Ontology.class, ontologyId);
-        if (ontology==null) {
-            throw new IllegalArgumentException("Ontology not found: "+ontologyId);
-        }
-        OntologyTerm parent = findTerm(ontology, parentTermId);
-        
-        Map<Long,OntologyTerm> childMap = new HashMap<>();
-        for(OntologyTerm child : parent.getTerms()) {
-            childMap.put(child.getId(), child);
-        }
-        
-        List<OntologyTerm> ordered = new ArrayList<>();
-        for(Long id : childOrder) {
-            OntologyTerm child = childMap.get(id);
-            if (child==null) {
-                log.warn("Ontology term {} does not exist in parent {}",id,parentTermId);
-            }
-            else {
-                ordered.add(child);
-            }
-        }
-        parent.setTerms(ordered);
-        
-        return save(subjectKey, ontology);
-    }    
+    public Ontology reorderTerms(String subjectKey, Long ontologyId, Long parentTermId, int[] order) throws Exception {
 
-    public Ontology addTerm(String subjectKey, Long ontologyId, Long parentTermId, OntologyTerm term) throws Exception {
-        if (term.getName()==null) {
-            throw new IllegalArgumentException("Ontology term may not have null name");
-        }
-        if (term.getId()==null) {
-            Long id = TimebasedIdentifierGenerator.generateIdList(1).get(0);
-            term.setId(id);
-        }
         Ontology ontology = getDomainObject(subjectKey, Ontology.class, ontologyId);
         if (ontology==null) {
             throw new IllegalArgumentException("Ontology not found: "+ontologyId);
         }
-        OntologyTerm parent = findTerm(ontology, parentTermId);
-        if (parent.getTerms()==null) {
-            parent.setTerms(new ArrayList<OntologyTerm>());
+        OntologyTerm parent = DomainUtils.findTerm(ontology, parentTermId);
+        if (parent==null) {
+            throw new IllegalArgumentException("Term not found: "+parentTermId);
         }
-        parent.getTerms().add(term);
-        return save(subjectKey, ontology);
+        
+        List<OntologyTerm> childTerms = new ArrayList<>(parent.getTerms());
+
+        if (log.isTraceEnabled()) {
+            log.trace("{} has the following terms: ",parent.getName());
+            for(OntologyTerm term : childTerms) {
+                log.trace("  {}",term.getId());
+            }
+            log.trace("They should be put in this ordering: ");
+            for(int i=0; i<order.length; i++) {
+                log.trace("  {} -> {}",i,order[i]);
+            }
+        }
+
+        int originalSize = childTerms.size();
+        OntologyTerm[] reordered = new OntologyTerm[childTerms.size()];
+        for (int i = 0; i < order.length; i++) {
+            int j = order[i];
+            reordered[j] = childTerms.get(i);
+            childTerms.set(i, null);
+        }
+
+        parent.getTerms().clear();
+        for(OntologyTerm ref : reordered) {
+            parent.getTerms().add(ref);
+        }
+        for(OntologyTerm term : childTerms) {
+            if (term!=null) {
+                log.info("Adding broken term "+term.getId()+" at the end");
+                parent.getTerms().add(term);
+            }
+        }
+
+        if (childTerms.size()!=originalSize) {
+            throw new IllegalStateException("Reordered children have new size "+childTerms.size()+" (was "+originalSize+")");
+        }
+        else {
+            log.info("Reordering children of ontology term '{}'",parent.getName());
+            saveImpl(subjectKey, ontology);
+            return (Ontology)getDomainObject(subjectKey, ontology);
+        }
     }
 
-    public Ontology removeTerm(String subjectKey, Long ontologyId, Long termId) throws Exception {
+    public Ontology addTerms(String subjectKey, Long ontologyId, Long parentTermId, Collection<OntologyTerm> terms, Integer index) throws Exception {
+        
+        if (terms==null) {
+            throw new IllegalArgumentException("Cannot add null children");
+        }
         Ontology ontology = getDomainObject(subjectKey, Ontology.class, ontologyId);
         if (ontology==null) {
             throw new IllegalArgumentException("Ontology not found: "+ontologyId);
         }
-        OntologyTerm removed = findTermAndRemove(ontology, termId);
+        OntologyTerm parent = DomainUtils.findTerm(ontology, parentTermId);
+        if (parent==null) {
+            throw new IllegalArgumentException("Term not found: "+parentTermId);
+        }
+        
+        int i = 0;
+        for(OntologyTerm childTerm : terms) {
+            if (childTerm.getId()==null) {
+                childTerm.setId(getNewId());
+            }
+            if (index!=null) {
+                parent.insertChild(index+i, childTerm);
+            }
+            else {
+                parent.addChild(childTerm);
+            }
+            i++;
+        }
+        log.info("Adding "+terms.size()+" terms to "+parent.getName());
+        saveImpl(subjectKey, ontology);
+        return getDomainObject(subjectKey, ontology);
+    }
+    
+    public Ontology removeTerm(String subjectKey, Long ontologyId, Long parentTermId, Long termId) throws Exception {
+        
+        Ontology ontology = getDomainObject(subjectKey, Ontology.class, ontologyId);
+        if (ontology==null) {
+            throw new IllegalArgumentException("Ontology not found: "+ontologyId);
+        }
+        OntologyTerm parent = DomainUtils.findTerm(ontology, parentTermId);
+        if (parent.getTerms()==null) {
+            throw new Exception("Term has no children: "+parentTermId);
+        }
+        
+        OntologyTerm removed = null;
+        for(Iterator<OntologyTerm> iterator = parent.getTerms().iterator(); iterator.hasNext(); ) {
+            OntologyTerm child = iterator.next();
+            if (child!=null && child.getId()!=null && child.getId().equals(termId)) {
+                removed = child;
+                iterator.remove();
+                break;
+            }
+        }
         if (removed==null) {
             throw new Exception("Could not find term to remove: "+termId);
         }
-        return save(subjectKey, ontology);
+        log.info("Removing term '{}' from '{}'",removed.getName(),parent.getName());
+        saveImpl(subjectKey, ontology);
+        return (Ontology)getDomainObject(subjectKey, ontology);
     }
     
-    public TreeNode reorderChildren(String subjectKey, TreeNode treeNode, int[] order) throws Exception {
+    public TreeNode reorderChildren(String subjectKey, TreeNode treeNodeArg, int[] order) throws Exception {
 
+        TreeNode treeNode = getDomainObject(subjectKey, TreeNode.class, treeNodeArg.getId());
+        if (treeNode==null) {
+            throw new IllegalArgumentException("Tree node not found: "+treeNodeArg.getId());
+        }
         if (!treeNode.hasChildren()) {
             log.warn("Tree node has no children to reorder: "+treeNode.getId());
             return treeNode;
@@ -572,15 +628,18 @@ public class DomainDAO {
 
         List<Reference> references = new ArrayList<>(treeNode.getChildren());
 
+        if (references.size()!=order.length) {
+            throw new IllegalArgumentException("Order array must be the same size as the child array ("+order.length+"!="+references.size()+")");
+        }
+        
         if (log.isTraceEnabled()) {
             log.trace("{} has the following references: ",treeNode.getName());
             for(Reference reference : references) {
                 log.trace("  {}#{}",reference.getTargetType(),reference.getTargetId());
             }
-
             log.trace("They should be put in this ordering: ");
             for(int i=0; i<order.length; i++) {
-                log.trace("  "+order[i]);
+                log.trace("  {} -> {}",i,order[i]);
             }
         }
 
@@ -588,9 +647,8 @@ public class DomainDAO {
         Reference[] reordered = new Reference[references.size()];
         for (int i = 0; i < order.length; i++) {
             int j = order[i];
-            Reference c = references.get(i);
+            reordered[j] = references.get(i);
             references.set(i, null);
-            reordered[j] = c;
         }
 
         treeNode.getChildren().clear();
@@ -605,17 +663,22 @@ public class DomainDAO {
         }
 
         if (references.size()!=originalSize) {
-            log.error("Reordered children have new size "+references.size()+" (was "+originalSize+")");
+            throw new IllegalStateException("Reordered children have new size "+references.size()+" (was "+originalSize+")");
         }
         else {
+            log.info("Reordering children of tree node '{}'",treeNode.getName());
             saveImpl(subjectKey, treeNode);
+            return getDomainObject(subjectKey, treeNode);
         }
-        return getDomainObject(subjectKey, treeNode);
     }
 
-    public TreeNode addChildren(String subjectKey, TreeNode treeNode, Collection<Reference> references) throws Exception {
+    public TreeNode addChildren(String subjectKey, TreeNode treeNodeArg, Collection<Reference> references) throws Exception {
         if (references==null) {
             throw new IllegalArgumentException("Cannot add null children");
+        }
+        TreeNode treeNode = getDomainObject(subjectKey, TreeNode.class, treeNodeArg.getId());
+        if (treeNode==null) {
+            throw new IllegalArgumentException("Tree node not found: "+treeNodeArg.getId());
         }
         for(Reference ref : references) {
             if (ref.getTargetId()==null) {
@@ -631,9 +694,37 @@ public class DomainDAO {
         return getDomainObject(subjectKey, treeNode);
     }
 
-    public TreeNode removeChildren(String subjectKey, TreeNode treeNode, Collection<Reference> references) throws Exception {
+    public TreeNode addChildren(String subjectKey, TreeNode treeNodeArg, Collection<Reference> references, int startIndex) throws Exception {
+        if (references==null) {
+            throw new IllegalArgumentException("Cannot add null children");
+        }
+        TreeNode treeNode = getDomainObject(subjectKey, TreeNode.class, treeNodeArg.getId());
+        if (treeNode==null) {
+            throw new IllegalArgumentException("Tree node not found: "+treeNodeArg.getId());
+        }
+        int i = 0;
+        for(Reference ref : references) {
+            if (ref.getTargetId()==null) {
+                throw new IllegalArgumentException("Cannot add child without an id");
+            }
+            if (ref.getTargetType()==null) {
+                throw new IllegalArgumentException("Cannot add child without a type");
+            }
+            treeNode.insertChild(startIndex+i, ref);
+            i++;
+        }
+        log.info("Adding "+references.size()+" objects to "+treeNode.getName());
+        saveImpl(subjectKey, treeNode);
+        return getDomainObject(subjectKey, treeNode);
+    }
+    
+    public TreeNode removeChildren(String subjectKey, TreeNode treeNodeArg, Collection<Reference> references) throws Exception {
         if (references==null) {
             throw new IllegalArgumentException("Cannot remove null children");
+        }
+        TreeNode treeNode = getDomainObject(subjectKey, TreeNode.class, treeNodeArg.getId());
+        if (treeNode==null) {
+            throw new IllegalArgumentException("Tree node not found: "+treeNodeArg.getId());
         }
         for(Reference ref : references) {
             if (ref.getTargetId()==null) {
@@ -649,7 +740,11 @@ public class DomainDAO {
         return getDomainObject(subjectKey, treeNode);
     }
 
-    public TreeNode removeReference(String subjectKey, TreeNode treeNode, Reference reference) throws Exception {
+    public TreeNode removeReference(String subjectKey, TreeNode treeNodeArg, Reference reference) throws Exception {
+        TreeNode treeNode = getDomainObject(subjectKey, TreeNode.class, treeNodeArg.getId());
+        if (treeNode==null) {
+            throw new IllegalArgumentException("Tree node not found: "+treeNodeArg.getId());
+        }
         if (treeNode.hasChildren()) {
             for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
                 Reference iref = i.next();
@@ -657,6 +752,7 @@ public class DomainDAO {
                     i.remove();
                 }
             }
+            log.info("Removing reference from '{}'",treeNode.getName());
             saveImpl(subjectKey, treeNode);
         }
         return getDomainObject(subjectKey, treeNode);
@@ -718,39 +814,9 @@ public class DomainDAO {
         }
         return getDomainObject(subjectKey, domainObject);
     }
-    
-    // UTILITY METHODS
-    
-    private OntologyTerm findTerm(OntologyTerm term, Long termId) {
-        if (term.getId().equals(termId)) {
-            return term;
-        }
-        if (term.getTerms()!=null) {
-            for(OntologyTerm child : term.getTerms()) {
-                OntologyTerm found = findTerm(child, termId);
-                if (found!=null) {
-                    return found;
-                }
-            }
-        }
-        return null;
-    }
 
-    private OntologyTerm findTermAndRemove(OntologyTerm term, Long termId) {
-        if (term.getTerms()!=null) {
-            for(Iterator<OntologyTerm> iterator = term.getTerms().iterator(); iterator.hasNext(); ) {
-                OntologyTerm child = iterator.next();
-                if (child.getId().equals(termId)) {
-                    iterator.remove();
-                    return child;
-                }
-                OntologyTerm found = findTermAndRemove(child, termId);
-                if (found!=null) {
-                    return found;
-                }
-            }
-        }
-        return null;
+    private Long getNewId() {
+        return TimebasedIdentifierGenerator.generateIdList(1).get(0);
     }
     
     // UNSECURE METHODS, SERVER SIDE ONLY

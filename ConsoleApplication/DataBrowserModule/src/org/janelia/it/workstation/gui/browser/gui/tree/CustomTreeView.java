@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.gui.tree;
 
 import java.awt.Rectangle;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseListener;
 import java.beans.PropertyVetoException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -247,6 +248,14 @@ public class CustomTreeView extends BeanTreeView {
             tree.removeKeyListener(listener);
         }
         tree.addKeyListener(newListener);
+    }
+    
+    public void addMouseListener(MouseListener listener) {
+        tree.addMouseListener(listener);
+    }
+
+    public void removeMouseListener(MouseListener listener) {
+        tree.removeMouseListener(listener);
     }
     
     @Override

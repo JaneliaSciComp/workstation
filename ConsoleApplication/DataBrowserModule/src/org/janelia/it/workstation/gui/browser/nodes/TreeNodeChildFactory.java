@@ -85,10 +85,8 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
 
     @Override
     protected Node createNodeForKey(DomainObject key) {
-        log.debug("Creating node for {}",key.getName());
+        log.debug("Creating node for '{}'",key.getName());
         try {
-            // TODO: would be nice to do this dynamically, 
-            // or at least with some sort of annotation
             if (TreeNode.class.isAssignableFrom(key.getClass())) {
                 return new TreeNodeNode(this, (TreeNode)key);
             }
@@ -103,7 +101,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             }
         }
         catch (Exception e) {
-            log.error("Error creating node for key " + key, e);
+            log.error("Error creating node for '"+key+"'", e);
         }
         return null;
     }
@@ -113,24 +111,43 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         refresh(true);
     }
 
-    public void addChild(final DomainObject domainObject) throws Exception {
+    public void addChildren(List<DomainObject> domainObjects) throws Exception {
         if (treeNode==null) {
             log.warn("Cannot add child to unloaded treeNode");
             return;
         }   
 
-        log.info("Adding child {} to {}",domainObject.getId(),treeNode.getName());
+        for(DomainObject domainObject : domainObjects) {
+            log.info("Adding child '{}' to '{}'",domainObject.getName(),treeNode.getName());
+        }
+        
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        model.addChild(treeNode, domainObject);
+        model.addChildren(treeNode, domainObjects);
     }
+    
+    public void addChildren(List<DomainObject> domainObjects, int index) throws Exception {
+        if (treeNode==null) {
+            log.warn("Cannot add child to unloaded treeNode");
+            return;
+        }   
 
+        int i = 0;
+        for(DomainObject domainObject : domainObjects) {
+            log.info("Adding child '{}' to '{}' at {}",domainObject.getName(),treeNode.getName(),index+i);
+            i++;
+        }
+        
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        model.addChildren(treeNode, domainObjects, index);
+    }
+    
     public void removeChild(final DomainObject domainObject) throws Exception {
         if (treeNode==null) {
             log.warn("Cannot remove child from unloaded treeNode");
             return;
         }
 
-        log.info("Removing child {} from {}", domainObject.getId(), treeNode.getName());
+        log.info("Removing child '{}' from '{}'", domainObject.getName(), treeNode.getName());
 
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         if (domainObject instanceof DeadReference) {

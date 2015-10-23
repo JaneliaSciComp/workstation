@@ -33,7 +33,7 @@ import org.openide.util.NbBundle.Messages;
 @ActionRegistration(
         displayName = "#CTL_NewFolderAction"
 )
-@ActionReference(path = "Menu/File/New", position = 2)
+@ActionReference(path = "Menu/File/New", position = 1)
 @Messages("CTL_NewFolderAction=Folder")
 public final class NewFolderAction implements ActionListener {
 
@@ -66,7 +66,7 @@ public final class NewFolderAction implements ActionListener {
         }
 
         // Save the set and select it in the explorer so that it opens
-        SimpleWorker newSetWorker = new SimpleWorker() {
+        SimpleWorker worker = new SimpleWorker() {
 
             private TreeNode folder;
             
@@ -96,6 +96,6 @@ public final class NewFolderAction implements ActionListener {
             }
         };
         
-        newSetWorker.execute();
+        worker.execute();
     }
 }

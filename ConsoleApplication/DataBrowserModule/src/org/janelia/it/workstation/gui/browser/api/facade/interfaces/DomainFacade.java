@@ -41,11 +41,13 @@ public interface DomainFacade {
 
     public Ontology create(Ontology ontology) throws Exception;
     
-    public Ontology reorderTerms(Long ontologyId, Long parentTermId, List<Long> childOrder) throws Exception;
+    public Ontology reorderTerms(Long ontologyId, Long parentTermId, int[] order) throws Exception;
+        
+    public Ontology addTerms(Long ontologyId, Long parentTermId, Collection<OntologyTerm> terms, Integer index) throws Exception;
     
-    public Ontology addTerm(Long ontologyId, Long parentTermId, OntologyTerm term) throws Exception;
+    public Ontology removeTerm(Long ontologyId, Long parentTermId, Long termId) throws Exception;
     
-    public Ontology removeTerm(Long ontologyId, Long termId) throws Exception;
+    public void removeOntology(Long ontologyId) throws Exception;
     
     public void changePermissions(ObjectSet objectSet, String granteeKey, String rights, boolean grant) throws Exception;
     
@@ -64,8 +66,8 @@ public interface DomainFacade {
     public void remove(Annotation annotation) throws Exception;
     
     public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception;       
-    
-    public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references) throws Exception;
+
+    public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references, Integer index) throws Exception;
     
     public TreeNode removeChildren(TreeNode treeNode, Collection<Reference> references) throws Exception;
     

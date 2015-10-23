@@ -1,40 +1,42 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
-import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.List;
-import org.janelia.it.jacs.model.domain.DomainObject;
+
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * A child factory for ontology nodes (i.e. terms). Supports adding and removing 
+ * children dynamically. 
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
 
     private final static Logger log = LoggerFactory.getLogger(OntologyChildFactory.class);
     
-    private final WeakReference<Ontology> ontologyRef;
-    private final WeakReference<OntologyTerm> ontologyTermRef;
+    private final Ontology ontology;
+    private final OntologyTerm ontologyTerm;
     
-    public OntologyChildFactory(Ontology ontology, OntologyTerm ontologyTerm) {
-        this.ontologyRef = new WeakReference<>(ontology);
-        this.ontologyTermRef = new WeakReference<>(ontologyTerm);
+    OntologyChildFactory(Ontology ontology, OntologyTerm ontologyTerm) {
+        this.ontology = ontology;
+        this.ontologyTerm = ontologyTerm;
     }
     
     @Override
     protected boolean createKeys(List<OntologyTerm> list) {
-        OntologyTerm ontologyTerm = ontologyTermRef.get();
         if (ontologyTerm==null) return false;
         log.trace("Creating children keys for {}",ontologyTerm.getName());   
         if (ontologyTerm.getTerms()!=null) {
             for(OntologyTerm term : ontologyTerm.getTerms()) {
+                if (term==null) continue;
                 list.add(term);
             }
         }
@@ -43,8 +45,8 @@ public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
 
     @Override
     protected Node createNodeForKey(OntologyTerm key) {
-        final Ontology ontology = ontologyRef.get();
         if (ontology==null) return null;
+        log.debug("Creating node for {}",key.getName());
         try {
             return new OntologyTermNode(this, ontology, key);
         }
@@ -55,65 +57,49 @@ public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
     }
     
     public void refresh() {
+        log.debug("Refreshing child factory for: {}",ontologyTerm.getName());
         refresh(true);
     }
+
+    public void addChildren(List<OntologyTerm> childTerms) throws Exception {
+        if (ontologyTerm==null) {
+            log.warn("Cannot add child to unloaded treeNode");
+            return;
+        }   
+
+        for(OntologyTerm childTerm : childTerms) {
+            log.info("Adding child '{}' to '{}'",childTerm.getName(),ontologyTerm.getName());
+        }
+        
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        model.addOntologyTerms(ontology.getId(), ontologyTerm.getId(), childTerms);
+    }
     
-    public void addChild(final DomainObject domainObject) {
-        final Ontology ontology = ontologyRef.get();
-        if (ontology==null) return;
-        final OntologyTerm ontologyTerm = ontologyTermRef.get();
-        if (ontologyTerm==null) return;
+    public void addChildren(List<OntologyTerm> childTerms, int index) throws Exception {
+        if (ontologyTerm==null) {
+            log.warn("Cannot add child to unloaded treeNode");
+            return;
+        }   
+
+        int i = 0;
+        for(OntologyTerm childTerm : childTerms) {
+            log.info("Adding child '{}' to '{}' at {}",childTerm.getName(),ontologyTerm.getName(),index+i);
+            i++;
+        }
         
-        SimpleWorker worker = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-//                log.warn("adding child {} to {}",domainObject.getId(),treeNode.getName());
-//                DomainDAO dao = DomainExplorerTopComponent.getDao();
-//                dao.addChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
-            }
-            @Override
-            protected void hadSuccess() {
-                log.info("refreshing view after adding child");
-                refresh();
-            }
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        worker.execute();
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        model.addOntologyTerms(ontology.getId(), ontologyTerm.getId(), childTerms, index);
     }
+    
+    public void removeChild(final OntologyTerm childTerm) throws Exception {
+        if (ontologyTerm==null) {
+            log.warn("Cannot remove child from unloaded treeNode");
+            return;
+        }
 
-    public void removeChild(final DomainObject domainObject) {
-        final Ontology ontology = ontologyRef.get();
-        if (ontology==null) return;
-        final OntologyTerm ontologyTerm = ontologyTermRef.get();
-        if (ontologyTerm==null) return;
-        
-        SimpleWorker worker = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-//                log.warn("removing child {} from {}",domainObject.getId(),treeNode.getName());
-//                DomainDAO dao = DomainExplorerTopComponent.getDao();
-//                if (domainObject instanceof DeadReference) {
-//                    dao.removeReference(SessionMgr.getSubjectKey(), treeNode, ((DeadReference)domainObject).getReference());
-//                }
-//                else {
-//                    dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
-//                }
-            }
-            @Override
-            protected void hadSuccess() {
-                log.info("refreshing view after removing child");
-                refresh();
-            }
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        worker.execute();
+        log.info("Removing child '{}' from '{}'", childTerm.getName(), ontologyTerm.getName());
+
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        model.removeOntologyTerm(ontology.getId(), ontologyTerm.getId(), childTerm.getId());
     }
-
-
 }

@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.browser.api;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -19,16 +17,20 @@ import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFilepath;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.support.MongoUtils;
 import org.janelia.it.jacs.model.domain.support.SearchAttribute;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.util.ReflectionHelper;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.reflections.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 
 /**
  * Utility method for dealing with the Domain model.
@@ -96,6 +98,25 @@ public class DomainUtils {
             for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
                 Reference iref = i.next();
                 if (iref.getTargetId().equals(domainObject.getId())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Return true if the given ontology term has the specified ontology term as a child. 
+     * @param ontologyTerm parent term
+     * @param childTerm child term
+     * @return
+     */
+    public static boolean hasChild(OntologyTerm ontologyTerm, OntologyTerm childTerm) {
+        if (childTerm==null) return false;
+        if (ontologyTerm.hasChildren()) {
+            for(Iterator<OntologyTerm> i = ontologyTerm.getTerms().iterator(); i.hasNext(); ) {
+                OntologyTerm child = i.next();
+                if (child!=null && child.getId()!=null && child.getId().equals(childTerm.getId())) {
                     return true;
                 }
             }
@@ -231,7 +252,8 @@ public class DomainUtils {
     public static DomainObjectId getIdForReference(Reference ref) {
         Class<? extends DomainObject> clazz = MongoUtils.getObjectClass(ref.getTargetType());
         if (clazz==null) {
-            log.warn("Cannot generate DomainObjectId for unrecognized target type: "+ref.getTargetType());
+            // TODO: reenable this warning once we clean up the database
+            //log.warn("Cannot generate DomainObjectId for unrecognized target type: "+ref.getTargetType());
             return null;
         }
         return new DomainObjectId(clazz.getName(), ref.getTargetId());
@@ -247,10 +269,20 @@ public class DomainUtils {
         ref.setTargetId(id.getId());
         return ref;
     }
-    
-    public static <T> Collection<T> getCollectionOfOne(T object) {
-        List<T> list = new ArrayList<>();
-        list.add(object);
-        return list;
+
+    public static OntologyTerm findTerm(OntologyTerm term, Long termId) {
+        if (termId==null) return null;
+        if (term.getId()!=null && term.getId().equals(termId)) {
+            return term;
+        }
+        if (term.getTerms()!=null) {
+            for(OntologyTerm child : term.getTerms()) {
+                OntologyTerm found = findTerm(child, termId);
+                if (found!=null) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 }

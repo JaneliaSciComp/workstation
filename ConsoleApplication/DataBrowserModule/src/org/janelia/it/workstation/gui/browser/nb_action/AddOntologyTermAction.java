@@ -161,7 +161,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 Ontology ontology = parentNode.getOntology();
                 OntologyTerm parentTerm = parentNode.getOntologyTerm();
-                model.addTerm(ontology.getId(), parentTerm.getId(), ontologyTerm);
+                model.addOntologyTerm(ontology.getId(), parentTerm.getId(), ontologyTerm);
             }
             
             @Override
@@ -179,7 +179,6 @@ public class AddOntologyTermAction extends NodePresenterAction {
     }
     
     public static OntologyTerm createTypeByName(Class<? extends OntologyTerm> termClass) {
-
         try {
             return termClass.newInstance();
         }

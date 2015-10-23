@@ -35,7 +35,7 @@ import org.openide.util.NbBundle.Messages;
 @ActionRegistration(
         displayName = "#CTL_NewFilterAction"
 )
-@ActionReference(path = "Menu/File/New", position = 1)
+@ActionReference(path = "Menu/File/New", position = 2)
 @Messages("CTL_NewFilterAction=Filter")
 public final class NewFilterAction implements ActionListener {
 

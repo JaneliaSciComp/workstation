@@ -199,7 +199,7 @@ public class MoveToFolderAction extends NodePresenterAction {
                 
                 TreeNode folder;
                 try {
-                    folder = (TreeNode)model.getDomainObject(TreeNode.class, folderId);
+                    folder = model.getDomainObject(TreeNode.class, folderId);
                     if (folder == null) continue;
                 }
                 catch (Exception e) {
@@ -256,6 +256,7 @@ public class MoveToFolderAction extends NodePresenterAction {
         Multimap<TreeNode,DomainObject> removeMap = ArrayListMultimap.create();
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Node node : selectedNodes) {
+            log.info("Moving selected node '{}' to folder '{}'",node.getDisplayName(),folder.getName());
             DomainObjectNode selectedNode = (DomainObjectNode)node;
             TreeNodeNode parentNode = (TreeNodeNode)node.getParentNode();
             DomainObject domainObject = selectedNode.getDomainObject();
@@ -265,7 +266,9 @@ public class MoveToFolderAction extends NodePresenterAction {
             else {
                 domainObjects.add(domainObject);
             }
-            removeMap.put(parentNode.getTreeNode(), selectedNode.getDomainObject());
+            if (DomainUtils.isOwner(parentNode.getTreeNode())) {
+                removeMap.put(parentNode.getTreeNode(), selectedNode.getDomainObject());
+            }
         }
         
         // Add them to the given folder
@@ -273,9 +276,7 @@ public class MoveToFolderAction extends NodePresenterAction {
         
         // Remove from existing folders
         for(TreeNode treeNode : removeMap.keys()) {
-            if (DomainUtils.isOwner(treeNode)) {
-                model.removeChildren(treeNode, removeMap.get(treeNode));
-            }
+            model.removeChildren(treeNode, removeMap.get(treeNode));
         }
         
         // Update history

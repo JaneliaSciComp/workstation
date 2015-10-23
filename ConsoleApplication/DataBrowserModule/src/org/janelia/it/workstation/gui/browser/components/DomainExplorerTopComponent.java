@@ -1,37 +1,34 @@
 package org.janelia.it.workstation.gui.browser.components;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
-import java.lang.ref.WeakReference;
-
+import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.ActionMap;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
-
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNodeTracker;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.RootNode;
 import org.janelia.it.workstation.gui.browser.nodes.WorkspaceNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -44,12 +41,14 @@ import org.openide.nodes.Node;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
+import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Top component for the Data Explorer, which shows an outline tree view of the
@@ -79,32 +78,30 @@ import org.slf4j.LoggerFactory;
 })
 public final class DomainExplorerTopComponent extends TopComponent implements ExplorerManager.Provider, LookupListener {
 
-    private Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
+    private static final Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
 
     public static final String TC_NAME = "DomainExplorerTopComponent";
     
     public static DomainExplorerTopComponent getInstance() {
         return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
     }
-    
+
+    private final JPanel treePanel;
     private final CustomTreeView beanTreeView;
     private final ExplorerManager mgr = new ExplorerManager();
     private final DomainObjectNodeSelectionModel selectionModel = new DomainObjectNodeSelectionModel();
-    
+    private final Debouncer debouncer = new Debouncer();
+
     private Lookup.Result<AbstractNode> result = null;
     private RootNode root;
     
-    private final Debouncer debouncer = new Debouncer();
-    
-    private Multimap<Long, WeakReference> nodesById = HashMultimap.<Long, WeakReference>create();
-    
     public DomainExplorerTopComponent() {
         initComponents();
-        
+
+        this.treePanel = new JPanel(new BorderLayout());
         this.beanTreeView = new CustomTreeView(this);
         beanTreeView.setDefaultActionAllowed(false);
         beanTreeView.setRootVisible(false);
-        
         selectionModel.setSource(this);
         
         setName(Bundle.CTL_DomainExplorerTopComponent());
@@ -119,8 +116,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         map.put("delete", ExplorerUtils.actionDelete(mgr, true)); 
 
 //        bindKeys();
-
-        selectRoot();
         
         CustomTreeToolbar toolbar = new CustomTreeToolbar(beanTreeView) {
             @Override
@@ -129,8 +124,12 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             }
         };
         add(toolbar, BorderLayout.PAGE_START);
-        add(beanTreeView, BorderLayout.CENTER);
-                   
+        add(treePanel, BorderLayout.CENTER);
+
+        showLoadingIndicator();
+        
+        selectRoot();
+        
         // Expand the top-level workspace nodes
         for(Node node : root.getChildren().getNodes()) {
             beanTreeView.expandNode(node);
@@ -208,31 +207,71 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     // Custom methods
     
+    public void showNothing() {
+        treePanel.removeAll();
+        revalidate();
+        repaint();
+    }
+
+    public void showLoadingIndicator() {
+        treePanel.removeAll();
+        treePanel.add(new JLabel(Icons.getLoadingIcon()));
+        revalidate();
+        repaint();
+    }
+
+    public void showTree() {
+        treePanel.removeAll();
+        treePanel.add(beanTreeView);
+        revalidate();
+        repaint();
+    }
+    
     private void selectRoot() {
         this.root = new RootNode();
         mgr.setRootContext(root);
+        showTree();
     }
     
     @Subscribe
     public void objectsInvalidated(DomainObjectInvalidationEvent event) {
         if (event.isTotalInvalidation()) {
+            log.debug("Total invalidation detected, refreshing...");
             refresh(false, true, null);
         }
         else {
-            // TODO: might want to refresh specific nodes in the future
-            refresh(false, true, null);
-        }
-    }
-    
-    @Subscribe
-    public void objectChanged(DomainObjectChangeEvent event) {
-        
-        DomainObject domainObject = event.getDomainObject();
-        log.debug("Object changed: {}",domainObject.getId());
-        
-        for(DomainObjectNode node : getNodesById(domainObject.getId())) {
-            log.debug("  Updating matching node: {}",node.getDisplayName());
-            node.update(domainObject);
+            DomainModel model = DomainMgr.getDomainMgr().getModel();
+            for(DomainObject domainObject : event.getDomainObjects()) {
+                Set<DomainObjectNode> nodes = DomainObjectNodeTracker.getInstance().getNodesById(domainObject.getId());
+                if (!nodes.isEmpty()) {
+                log.info("Updating invalidated object: {}",domainObject.getName());
+                    for(DomainObjectNode node : nodes) {
+                        DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
+                        if (refreshed==null) {
+                            log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
+                            try {
+                                node.destroy();
+                            }
+                            catch (IOException e) {
+                                log.error("  Error destroying invalidated node",e);
+                            }
+                        }
+                        else {
+                            log.info("  Updating node@{} with refreshed object",System.identityHashCode(node));
+                            final List<Long[]> expanded = beanTreeView.getExpandedPaths();
+                            final List<Long[]> selected = beanTreeView.getSelectedPaths();
+                            node.update(refreshed);
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    beanTreeView.expand(expanded);
+                                    beanTreeView.selectPaths(selected);
+                                }
+                            });
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -264,12 +303,12 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     DomainModel model = DomainMgr.getDomainMgr().getModel();
                     model.invalidateAll();
                 }
-                root.refreshChildren();
             }
 
             @Override
             protected void hadSuccess() {
                 try {
+                    selectRoot();
                     if (restoreState) {
                         beanTreeView.expand(expanded);
                         beanTreeView.selectPaths(selected);
@@ -300,6 +339,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
         final Node node = allNodes.iterator().next();
         if (node instanceof DomainObjectNode) {
+            log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
             selectionModel.select((DomainObjectNode)node, true);
         }
     }
@@ -331,8 +371,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     public Node select(Long[] idPath) {
         if (root==null) return null;
         Node node = NodeUtils.findNodeWithPath(root, idPath);
-        log.info("Found node with path {}: {}",NodeUtils.createPathString(idPath),node.getDisplayName());
-        selectNode(node);
+        if (node!=null) {
+            log.info("Found node with path {}: {}",NodeUtils.createPathString(idPath),node.getDisplayName());
+            selectNode(node);
+        }
         return node;
     }
     
@@ -342,41 +384,5 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     public void selectNodeById(Long id) {
         throw new UnsupportedOperationException("Not yet implemented");
-    }
-    
-    public void registerNode(final DomainObjectNode node) {
-        // Clear existing references to similar nodes
-        int c = 0;
-        for(Iterator<WeakReference> iterator = nodesById.get(node.getId()).iterator(); iterator.hasNext(); ) {
-            WeakReference<DomainObjectNode> ref = iterator.next();
-            if (ref.get()==null) {
-                log.trace("removing expired reference for {}",node.getId());
-                iterator.remove();
-            }
-            else {
-                c++;
-            }
-        }
-        if (c>1) {
-            log.trace("Domain object {} has {} nodes",node.getDisplayName(), c);
-        }
-        nodesById.put(node.getId(), new WeakReference(node));
-        log.debug("registered {} ({} registered)",node.getDisplayName(), nodesById.size());
-    }
-    
-    public Set<DomainObjectNode> getNodesById(Long id) {
-        log.debug("getting nodes with id {}",id);
-        Set<DomainObjectNode> nodes = new HashSet<>();
-        for(Iterator<WeakReference> iterator = nodesById.get(id).iterator(); iterator.hasNext(); ) {
-            WeakReference<DomainObjectNode> ref = iterator.next();
-            DomainObjectNode node = ref.get();
-            if (node==null) {
-                iterator.remove();
-            }
-            else {
-                nodes.add(node);
-            }
-        }
-        return nodes;
     }
 }

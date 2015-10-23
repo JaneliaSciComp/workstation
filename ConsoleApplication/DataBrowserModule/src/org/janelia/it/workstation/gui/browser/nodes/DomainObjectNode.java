@@ -17,7 +17,6 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
@@ -28,6 +27,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
+import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
@@ -68,21 +68,19 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         this.parentChildFactory = parentChildFactory;
         this.lookupContents = lookupContents;
         lookupContents.add(domainObject);
-        
-        // Can only get the top component instnace inside the EDT, running this in other threads caused a deadlock
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                DomainExplorerTopComponent.getInstance().registerNode(DomainObjectNode.this);
-            }
-        });
+        DomainObjectNodeTracker.getInstance().registerNode(DomainObjectNode.this);
     }
     
     public void update(DomainObject domainObject) {
+        String oldName = getName();
+        String oldDisplayName = getDisplayName();
         log.debug("Updating node with: {}",domainObject.getName());
         lookupContents.remove(getDomainObject());
         lookupContents.add(domainObject);
         fireCookieChange();
+        fireNameChange(oldName, getName());
+        log.debug("Display name changed {} -> {}",oldDisplayName, getDisplayName());
+        fireDisplayNameChange(oldDisplayName, getDisplayName());
     }
     
     protected InstanceContent getLookupContents() {
@@ -92,6 +90,16 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
     public DomainObject getDomainObject() {
         DomainObject obj = getLookup().lookup(DomainObject.class);
         return obj;
+    }
+    
+    @Override
+    public String getName() {
+        return getDomainObject().getName();
+    }
+    
+    @Override
+    public Long getId() {
+        return getDomainObject().getId();
     }
 
     public String getPrimaryLabel() {
@@ -105,78 +113,10 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
     public String getExtraLabel() {
         return null;
     }
-    
-    @Override
-    public Long getId() {
-        return getDomainObject().getId();
-    }
-    
-    @Override
-    public boolean canCut() {
-        return true;
-    }
-
-    @Override
-    public boolean canCopy() {
-        return true;
-    }
-
-    @Override
-    public boolean canRename() {
-        return false;
-    }
-
-    @Override
-    public boolean canDestroy() {
-        return true;
-    }
-
-    @Override
-    public Action[] getActions(boolean context) {
-        List<Action> actions = new ArrayList<>();
-        actions.add(PopupLabelAction.get());
-        actions.add(null);
-        actions.add(new CopyNameAction());
-        actions.add(new CopyGUIDAction());
-        actions.add(null);
-        actions.add(new OpenInNewViewerAction());
-        actions.add(null);
-        actions.add(MoveToFolderAction.get());
-        actions.add(new RenameAction());
-        actions.add(RemoveAction.get());
-        actions.add(null);
-        
-//        DomainExplorerTopComponent detc = (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
-//        actions.add(new DebugAction(detc.getLookup()));
-        
-        //actions.add(CutAction.get(CutAction.class));
-//        actions.add(CopyAction.get(CopyAction.class));
-//        actions.add(PasteAction.get(PasteAction.class));
-//        actions.add(DeleteAction.get(DeleteAction.class));
-//        actions.add(MoveUpAction.get(MoveUpAction.class));
-//        actions.add(MoveDownAction.get(MoveDownAction.class));
-        actions.add(null);
-        return actions.toArray(new Action[actions.size()]);
-    }
-
-    @Override
-    public SystemAction[] getActions() {
-        return null;
-    }
-    
-    @Override
-    public Image getIcon(int type) {
-        return Icons.getIcon("brick_grey.png").getImage();
-    }
-
-    @Override
-    public Image getOpenedIcon(int type) {
-        return getIcon(type);
-    }
 
     @Override
     public String getDisplayName() {
-        return getPrimaryLabel();
+        return getPrimaryLabel()+" "+getSecondaryLabel()+" "+getExtraLabel();
     }
 
     @Override
@@ -204,64 +144,73 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
     }
 
     @Override
-    public Transferable clipboardCopy() throws IOException {
-        log.info("clipboard COPY "+getDomainObject());
-        Transferable deflt = super.clipboardCopy();
-        ExTransferable added = ExTransferable.create(deflt);
-        added.put(new ExTransferable.Single(DataFlavor.stringFlavor) {
-            @Override
-            protected String getData() {
-                return getPrimaryLabel();
-            }
-        });
-        added.put(new ExTransferable.Single(DomainObjectFlavor.SINGLE_FLAVOR) {
-            @Override
-            protected DomainObject getData() {
-                return (DomainObject) getDomainObject();
-            }
-        });
-        return added;
+    public Image getIcon(int type) {
+        return Icons.getIcon("brick_grey.png").getImage();
     }
 
     @Override
-    public Transferable clipboardCut() throws IOException {
-        log.info("clipboard CUT "+getDomainObject());
-        Transferable deflt = super.clipboardCut();
-        ExTransferable added = ExTransferable.create(deflt);
-        added.put(new ExTransferable.Single(DomainObjectFlavor.SINGLE_FLAVOR) {
-            @Override
-            protected DomainObject getData() {
-                return getDomainObject();
-            }
-        });
-        added.put(new ExTransferable.Single(DataFlavor.stringFlavor) {
-            @Override
-            protected String getData() {
-                return getPrimaryLabel();
-            }
-        });
-        return added;
+    public Image getOpenedIcon(int type) {
+        return getIcon(type);
+    }
+
+    @Override
+    public String get2dImageFilepath(String role) {
+        DomainObject domainObject = getDomainObject();
+        if (domainObject instanceof HasFiles) {
+            return DomainUtils.getFilepath((HasFiles) domainObject, role);
+        }
+        return null;
     }
     
     @Override
-    public void destroy() throws IOException {
-        if (parentChildFactory==null) {
-            throw new IllegalStateException("Cannot destroy node without parent");
-        }
-        if (parentChildFactory instanceof TreeNodeChildFactory) {
-            TreeNodeChildFactory treeNodeChildFactory = (TreeNodeChildFactory) parentChildFactory;
-            try {
-                treeNodeChildFactory.removeChild(getDomainObject());
-            }
-            catch (Exception e) {
-                throw new IOException("Error destroying node",e);
-            }
-        }
-        else {
-            throw new IllegalStateException("Cannot destroy sample without treeNode parent");
-        }
+    public boolean canCut() {
+        return DomainUtils.hasWriteAccess(getDomainObject());
     }
 
+    @Override
+    public boolean canCopy() {
+        return true;
+    }
+
+    @Override
+    public boolean canRename() {
+        return false;
+    }
+
+    @Override
+    public boolean canDestroy() {
+        return DomainUtils.hasWriteAccess(getDomainObject());
+    }
+
+    @Override
+    public Action[] getActions(boolean context) {
+        List<Action> actions = new ArrayList<>();
+        actions.add(PopupLabelAction.get());
+        actions.add(null);
+        actions.add(new CopyNameAction());
+        actions.add(new CopyGUIDAction());
+        actions.add(null);
+        actions.add(new OpenInNewViewerAction());
+        actions.add(null);
+        actions.add(MoveToFolderAction.get());
+        actions.add(new RenameAction());
+        actions.add(RemoveAction.get());
+        actions.add(null);
+//        actions.add(CutAction.get(CutAction.class));
+//        actions.add(CopyAction.get(CopyAction.class));
+//        actions.add(PasteAction.get(PasteAction.class));
+//        actions.add(DeleteAction.get(DeleteAction.class));
+//        actions.add(MoveUpAction.get(MoveUpAction.class));
+//        actions.add(MoveDownAction.get(MoveDownAction.class));
+        actions.add(null);
+        return actions.toArray(new Action[actions.size()]);
+    }
+
+    @Override
+    public SystemAction[] getActions() {
+        return null;
+    }
+    
     @Override
     protected Sheet createSheet() {
 
@@ -287,33 +236,6 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
 
         sheet.put(set);
         return sheet;
-    }
-
-    @Override
-    public String get2dImageFilepath(String role) {
-        DomainObject domainObject = getDomainObject();
-        if (domainObject instanceof HasFiles) {
-            return DomainUtils.getFilepath((HasFiles) domainObject, role);
-        }
-        return null;
-    }
-
-    /**
-     * Subclasses should override this method to add their their paste type to the set. 
-     */
-    @Override
-    public PasteType getDropType(final Transferable t, int action, int index) {
-        // Let subclasses define their paste types by overriding this method
-        return null;
-    }
-    
-    @Override
-    protected void createPasteTypes(Transferable t, List<PasteType> s) {
-        super.createPasteTypes(t, s);
-        PasteType p = getDropType(t, 0, 0);
-        if (p != null) {
-            s.add(p);
-        }
     }
 
     protected final class CopyNameAction extends AbstractAction {
@@ -403,5 +325,70 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
             DomainObject domainObject = getLookup().lookup(DomainObject.class);
             return DomainUtils.hasWriteAccess(domainObject);
         }
+    }
+    
+    @Override
+    public void destroy() throws IOException {
+        if (parentChildFactory==null) {
+            throw new IllegalStateException("Cannot destroy node without parent");
+        }
+        if (parentChildFactory instanceof TreeNodeChildFactory) {
+            TreeNodeChildFactory treeNodeChildFactory = (TreeNodeChildFactory) parentChildFactory;
+            try {
+                treeNodeChildFactory.removeChild(getDomainObject());
+            }
+            catch (Exception e) {
+                throw new IOException("Error destroying node",e);
+            }
+        }
+        else {
+            throw new IllegalStateException("Cannot destroy domain object without parent");
+        }
+        DomainObjectNodeTracker.getInstance().deregisterNode(DomainObjectNode.this);
+    }
+    
+    @Override
+    public Transferable clipboardCopy() throws IOException {
+        log.debug("Copy to clipboard: {}"+getDomainObject());
+        Transferable deflt = super.clipboardCopy();
+        return addFlavors(ExTransferable.create(deflt));
+    }
+
+    @Override
+    public Transferable clipboardCut() throws IOException {
+        log.debug("Cut to clipboard: {}"+getDomainObject());
+        Transferable deflt = super.clipboardCut();
+        return addFlavors(ExTransferable.create(deflt));
+    }
+    
+    private Transferable addFlavors(ExTransferable added) {
+        added.put(new ExTransferable.Single(DataFlavor.stringFlavor) {
+            @Override
+            protected String getData() {
+                return getPrimaryLabel();
+            }
+        });
+        added.put(new ExTransferable.Single(DomainObjectFlavor.SINGLE_FLAVOR) {
+            @Override
+            protected DomainObject getData() {
+                return getDomainObject();
+            }
+        });
+        added.put(new ExTransferable.Single(DomainObjectNodeFlavor.SINGLE_FLAVOR) {
+            @Override
+            protected DomainObjectNode getData() {
+                return DomainObjectNode.this;
+            }
+        });
+        return added;
+    }
+    
+    /**
+     * Subclasses should override this method to add their their paste type to the set. 
+     */
+    @Override
+    public PasteType getDropType(final Transferable t, int action, int index) {
+        // Let subclasses define their paste types by overriding this method
+        return null;
     }
 }

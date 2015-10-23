@@ -88,18 +88,24 @@ public class MongoDomainFacade implements DomainFacade {
     }
 
     @Override
-    public Ontology reorderTerms(Long ontologyId, Long parentTermId, List<Long> childOrder) throws Exception {
-        return dao.reorderTerms(SessionMgr.getSubjectKey(), ontologyId, parentTermId, childOrder);
+    public Ontology reorderTerms(Long ontologyId, Long parentTermId, int[] order) throws Exception {
+        return dao.reorderTerms(SessionMgr.getSubjectKey(), ontologyId, parentTermId, order);
     }
 
     @Override
-    public Ontology addTerm(Long ontologyId, Long parentTermId, OntologyTerm term) throws Exception {
-        return dao.addTerm(SessionMgr.getSubjectKey(), ontologyId, parentTermId, term);
+    public Ontology addTerms(Long ontologyId, Long parentTermId, Collection<OntologyTerm> terms, Integer index) throws Exception {
+        return dao.addTerms(SessionMgr.getSubjectKey(), ontologyId, parentTermId, terms, index);
     }
-
+    
     @Override
-    public Ontology removeTerm(Long ontologyId, Long termId) throws Exception {
-        return dao.removeTerm(SessionMgr.getSubjectKey(), ontologyId, termId);
+    public Ontology removeTerm(Long ontologyId, Long parentTermId, Long termId) throws Exception {
+        return dao.removeTerm(SessionMgr.getSubjectKey(), ontologyId, parentTermId, termId);
+    }
+    
+    @Override
+    public void removeOntology(Long ontologyId) throws Exception {
+        Ontology ontology = dao.getDomainObject(SessionMgr.getSubjectKey(), Ontology.class, ontologyId);
+        dao.remove(SessionMgr.getSubjectKey(), ontology);
     }
     
     @Override
@@ -148,10 +154,10 @@ public class MongoDomainFacade implements DomainFacade {
     }
 
     @Override
-    public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references) throws Exception {
-        return dao.addChildren(SessionMgr.getSubjectKey(), treeNode, references);
+    public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references, Integer index) throws Exception {
+        return dao.addChildren(SessionMgr.getSubjectKey(), treeNode, references, index);
     }
-
+    
     @Override
     public TreeNode removeChildren(TreeNode treeNode, Collection<Reference> references) throws Exception {
         return dao.removeChildren(SessionMgr.getSubjectKey(), treeNode, references);

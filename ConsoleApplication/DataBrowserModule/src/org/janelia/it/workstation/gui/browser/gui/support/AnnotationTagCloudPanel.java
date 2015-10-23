@@ -111,7 +111,7 @@ public class AnnotationTagCloudPanel<T,S> extends TagCloudPanel<Annotation> impl
 
                 try {
                     
-                    OntologyTerm keyTerm = model.getOntologyTerm(tag.getKeyTerm());
+                    OntologyTerm keyTerm = model.getOntologyTermByReference(tag.getKeyTerm());
                     if (keyTerm!=null) {
                         if (keyTerm instanceof org.janelia.it.jacs.model.domain.ontology.Enum 
                                 || keyTerm instanceof EnumText 

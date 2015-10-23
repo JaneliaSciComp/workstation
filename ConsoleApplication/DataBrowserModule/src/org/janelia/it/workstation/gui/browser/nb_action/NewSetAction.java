@@ -36,7 +36,7 @@ import org.openide.util.NbBundle.Messages;
 @ActionRegistration(
         displayName = "#CTL_NewSetAction"
 )
-@ActionReference(path = "Menu/File/New", position = 2)
+@ActionReference(path = "Menu/File/New", position = 3)
 @Messages("CTL_NewSetAction=Set")
 public final class NewSetAction implements ActionListener {
 
