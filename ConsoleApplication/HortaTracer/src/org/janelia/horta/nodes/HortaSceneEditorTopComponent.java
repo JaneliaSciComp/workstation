@@ -33,12 +33,11 @@ package org.janelia.horta.nodes;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import java.awt.BorderLayout;
 import java.util.Collection;
-import org.netbeans.api.settings.ConvertAsProperties;
+import org.netbeans.swing.outline.Outline;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
-import org.openide.explorer.view.BeanTreeView;
 import org.openide.explorer.view.OutlineView;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
@@ -167,6 +166,10 @@ implements ExplorerManager.Provider,  LookupListener
             logger.info("Creating new scene root");
             cachedWorkspace = workspace;
             mgr.setRootContext( new HortaWorkspaceNode(workspace) );
+            
+            // try to set column widths to better defaults...
+            // http://markmail.org/message/t3igjgr53dnibfr7
+            // treeView.getOutline().setModel(treeView.getOutline().getModel());
         }
     }
 
