@@ -63,9 +63,11 @@ public class BasicNeuronModel implements NeuronModel
     private String name = "(unnamed neuron)";
     private List<NeuronVertex> nodes = new ArrayList<>();
     private List<NeuronEdge> edges = new ArrayList<>();
-    private final ComposableObservable colorChangeObservable = new ComposableObservable();
-    private final ComposableObservable geometryChangeObservable = new ComposableObservable();
-    private final ComposableObservable visibilityChangeObservable = new ComposableObservable();
+    private final ObservableInterface colorChangeObservable = new ComposableObservable();
+    private final ObservableInterface geometryChangeObservable = new ComposableObservable();
+    private final ObservableInterface visibilityChangeObservable = new ComposableObservable();
+    private final ObservableInterface membersAddedObservable = new ComposableObservable();
+    private final ObservableInterface membersRemovedObservable = new ComposableObservable();
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private boolean visible = true;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -242,13 +244,13 @@ public class BasicNeuronModel implements NeuronModel
     @Override
     public ObservableInterface getMembersAddedObservable()
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return membersAddedObservable;
     }
 
     @Override
     public ObservableInterface getMembersRemovedObservable()
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return membersRemovedObservable;
     }
     
 }

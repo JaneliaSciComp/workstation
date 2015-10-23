@@ -98,6 +98,7 @@ public class ConesActor extends BasicGL3Actor
         // TODO: more careful updating of nodes
         meshGeometry.clear();
         int vertexIndex = 0;
+        // logger.info("Edge count = "+neuron.getEdges().size());
         for (NeuronEdge neuronEdge : neuron.getEdges()) {
             Iterator<NeuronVertex> i = neuronEdge.iterator();
             NeuronVertex parent = i.next();
@@ -159,14 +160,14 @@ public class ConesActor extends BasicGL3Actor
             Vertex vertex2 = meshGeometry.addVertex(c2);
             vertex2.setAttribute("radius", (float)r2);
 
-            // logger.info("Node locations " + cs1 + ":" + rs1 + ", " + cs2 + ":" + rs2);
+            // logger.info("Node locations " + c1 + ":" + r1 + ", " + c2 + ":" + r2);
             // logger.info("Creating edge " + c1 + ":" + r1 + ", " + c2 + ":" + r2);
 
             meshGeometry.addEdge(vertexIndex, vertexIndex+1);
 
             vertexIndex += 2;
         }
-        meshGeometry.notifyObservers(); // especially the Material?        
+        meshGeometry.notifyObservers(); // especially the Material? 
     }
     
     @Override

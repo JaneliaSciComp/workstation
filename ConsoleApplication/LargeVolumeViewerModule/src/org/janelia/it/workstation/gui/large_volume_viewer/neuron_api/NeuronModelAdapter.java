@@ -34,9 +34,13 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Set;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.NeuronEdge;
@@ -59,7 +63,7 @@ public class NeuronModelAdapter implements NeuronModel
     private final TmNeuron neuron;
     private final Long neuronId;
     private final Collection<NeuronVertex> vertexes;
-    private final Collection<NeuronEdge> edges;
+    private final EdgeList edges;
     private final ObservableInterface colorChangeObservable = new ComposableObservable();
     private final ObservableInterface geometryChangeObservable = new ComposableObservable();
     private final ObservableInterface visibilityChangeObservable = new ComposableObservable();
@@ -84,6 +88,14 @@ public class NeuronModelAdapter implements NeuronModel
         edges = new EdgeList((VertexList)vertexes);
     }
 
+    public boolean updateEdges() {
+        boolean result = edges.updateGeometry();
+        if (result) {
+            geometryChangeObservable.setChanged();
+        }
+        return result;
+    }
+    
     @Override
     public String getName()
     {
@@ -213,14 +225,25 @@ public class NeuronModelAdapter implements NeuronModel
     
     
     // TODO: - implement Edges correctly
-    private static class EdgeList extends ArrayList<NeuronEdge> 
+    private static class EdgeList 
+    implements Collection<NeuronEdge>
+    // extends ArrayList<NeuronEdge> 
     {
         private final VertexList vertices;
+        // Cache edge set for efficient updates
+        private final Set<NeuronEdge> cachedEdges = new HashSet<>();
         
         public EdgeList(VertexList vertices) {
             this.vertices = vertices;
+            updateGeometry();
+        }
+        
+        public final boolean updateGeometry() {
             // Count the number of nodes with parents
             // TODO: This is a very brittle approach; the edge set could easily get stale.
+            Set<NeuronEdge> freshEdges = new HashSet<>(); // All edges in the current model
+            Set<NeuronEdge> newEdges = new HashSet<>(); // Edges we did not know about before
+            Set<NeuronEdge> obsoleteEdges = new HashSet<>(); // Old edges no longer present
             for (NeuronVertex v : vertices) {
                 NeuronVertexAdapter v1 = (NeuronVertexAdapter)v;
                 TmGeoAnnotation child = v1.getTmGeoAnnotation();
@@ -233,11 +256,99 @@ public class NeuronModelAdapter implements NeuronModel
                 NeuronEdge edge = new NeuronEdgeAdapter(
                         vertices.getVertexByGuid(child.getId()), 
                         vertices.getVertexByGuid(parentId));
-                add(edge);
+                freshEdges.add(edge);
+                if (! cachedEdges.contains(edge))
+                    newEdges.add(edge);
             }
+            for (NeuronEdge edge : cachedEdges) {
+                if (! freshEdges.contains(edge))
+                    obsoleteEdges.add(edge);
+            }
+            if (newEdges.isEmpty() && obsoleteEdges.isEmpty())
+                return false; // no change
+            cachedEdges.removeAll(obsoleteEdges);
+            cachedEdges.addAll(newEdges);
+            return true;
         }
-        
-        // TODO: Everything...
+
+        @Override
+        public int size()
+        {
+            return cachedEdges.size();
+        }
+
+        @Override
+        public boolean isEmpty()
+        {
+            return cachedEdges.isEmpty();
+        }
+
+        @Override
+        public boolean contains(Object o)
+        {
+            return cachedEdges.contains(o);
+        }
+
+        @Override
+        public Iterator<NeuronEdge> iterator()
+        {
+            return cachedEdges.iterator();
+        }
+
+        @Override
+        public Object[] toArray()
+        {
+            return cachedEdges.toArray();
+        }
+
+        @Override
+        public <T> T[] toArray(T[] a)
+        {
+            return cachedEdges.toArray(a);
+        }
+
+        @Override
+        public boolean add(NeuronEdge e)
+        {
+            return cachedEdges.add(e);
+        }
+
+        @Override
+        public boolean remove(Object o)
+        {
+            return cachedEdges.remove(o);
+        }
+
+        @Override
+        public boolean containsAll(Collection<?> c)
+        {
+            return cachedEdges.containsAll(c);
+        }
+
+        @Override
+        public boolean addAll(Collection<? extends NeuronEdge> c)
+        {
+            return cachedEdges.addAll(c);
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> c)
+        {
+            return cachedEdges.removeAll(c);
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> c)
+        {
+            return cachedEdges.retainAll(c);
+        }
+
+        @Override
+        public void clear()
+        {
+            cachedEdges.clear();
+        }
+
     }
 
 
@@ -371,5 +482,5 @@ public class NeuronModelAdapter implements NeuronModel
         }
         
     }
-    
+
 }

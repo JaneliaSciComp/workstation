@@ -34,14 +34,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,14 +60,16 @@ implements NeuronSet
 {
     private TmWorkspace workspace = null;
     private AnnotationModel annotationModel;
-    private final GlobalAnnotationListener annotationListener;
+    private final GlobalAnnotationListener globalAnnotationListener;
+    private final TmGeoAnnotationModListener annotationModListener;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public NeuronSetAdapter(TmWorkspace workspace)
     {
         super("LVV Neurons", new NeuronList(workspace));
         this.workspace = workspace;
-        annotationListener = new AnnotationListener(this);
+        globalAnnotationListener = new MyGlobalAnnotationListener();
+        annotationModListener = new MyTmGeoAnnotationModListener();
     }
     
     public void observe(AnnotationModel annotationModel)
@@ -74,10 +79,26 @@ implements NeuronSet
         if (this.annotationModel == annotationModel)
             return; // already watching this model
         // Stop listening to whatever we were listening to earlier
-        if (this.annotationModel != null)
-            this.annotationModel.removeGlobalAnnotationListener(annotationListener);
+        if (this.annotationModel != null) {
+            this.annotationModel.removeGlobalAnnotationListener(globalAnnotationListener);
+            this.annotationModel.removeTmGeoAnnotationModListener(annotationModListener);
+        }
         this.annotationModel = annotationModel;
-        annotationModel.addGlobalAnnotationListener(annotationListener);
+        annotationModel.addGlobalAnnotationListener(globalAnnotationListener);
+        annotationModel.addTmGeoAnnotationModListener(annotationModListener);
+    }
+    
+    // Recache edge data structures after vertices change
+    private boolean updateEdges() {
+        boolean edgesChanged = false;
+        for (NeuronModel neuron : this) {
+            if (! (neuron instanceof NeuronModelAdapter))
+                continue;
+            NeuronModelAdapter n = (NeuronModelAdapter)neuron;
+            if (n.updateEdges())
+                edgesChanged = true;
+        }
+        return edgesChanged;
     }
 
     // TODO: setName()
@@ -94,19 +115,46 @@ implements NeuronSet
         this.workspace = workspace;
     }
 
-
-    private class AnnotationListener implements GlobalAnnotationListener {
-        private final NeuronSetAdapter neuronSetAdapter;
-
-        public AnnotationListener(NeuronSetAdapter neuronSetAdapter) {
-            this.neuronSetAdapter = neuronSetAdapter;
+    private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener
+    {
+        
+        @Override
+        public void annotationAdded(TmGeoAnnotation annotation)
+        {
+            logger.info("annotationAdded");
+            updateEdges();
         }
+
+        @Override
+        public void annotationsDeleted(List<TmGeoAnnotation> annotations)
+        {
+            logger.info("annotationDeleted");
+            updateEdges();
+        }
+
+        @Override
+        public void annotationReparented(TmGeoAnnotation annotation)
+        {
+            logger.info("annotationReparented");
+            updateEdges();
+        }
+
+        @Override
+        public void annotationNotMoved(TmGeoAnnotation annotation)
+        {
+            logger.info("annotationNotMoved");
+            updateEdges();
+        }
+    }
+
+
+    private class MyGlobalAnnotationListener implements GlobalAnnotationListener {
         
         @Override
         public void workspaceLoaded(TmWorkspace workspace)
         {
             logger.info("Workspace loaded");
-            neuronSetAdapter.setWorkspace(workspace);
+            setWorkspace(workspace);
             NeuronList nl = (NeuronList) neurons;
             // Map<Long, NeuronStyle> neuronStyleMap = annotationModel.getNeuronStyleMap();
             nl.wrap(workspace, annotationModel);

@@ -82,6 +82,7 @@ public class MeshActor extends BasicGL3Actor
     // TODO use this
     private boolean geometryIsDirty = true;
     private boolean particleIndicesAreDirty = true;
+    private boolean edgeIndicesAreDirty = true;
     
     public MeshActor(MeshGeometry geometry, Material material, CompositeObject3d parent) {
         super(parent);
@@ -223,8 +224,11 @@ public class MeshActor extends BasicGL3Actor
         
         // Edges/lines
         edgeIndexCount = 2 * geometry.getEdges().size();
+        if (edgeVertices.size() > 0)
+            edgeIndicesAreDirty = true;
         edgeVertices.clear();
         for (Edge edge : geometry.getEdges()) {
+            edgeIndicesAreDirty = true;
             for (int i : edge.asArray())
                 edgeVertices.add(new VertexIndex(i, i));
         }
@@ -287,6 +291,17 @@ public class MeshActor extends BasicGL3Actor
     {
         if (vboEdgeIndices > 0)
             return; // already initialized
+        
+        IntBuffer vbos = IntBuffer.allocate(1);
+        vbos.rewind();
+        gl.glGenBuffers(1, vbos);
+        vboEdgeIndices = vbos.get(0);
+        
+        refreshEdgeIndices(gl);
+    }
+    
+    private void refreshEdgeIndices(GL3 gl)
+    {        
         int edgeCount = geometry.getEdges().size();
         if (edgeCount < 1) {
             return;
@@ -295,11 +310,6 @@ public class MeshActor extends BasicGL3Actor
         for (VertexIndex vix : edgeVertices)
             indices.put(vix.vboIndex);
         indices.flip();
-
-        IntBuffer vbos = IntBuffer.allocate(1);
-        vbos.rewind();
-        gl.glGenBuffers(1, vbos);
-        vboEdgeIndices = vbos.get(0);
         gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboEdgeIndices);
         gl.glBufferData(
                 GL3.GL_ELEMENT_ARRAY_BUFFER,
@@ -307,6 +317,7 @@ public class MeshActor extends BasicGL3Actor
                 indices,
                 GL3.GL_STATIC_DRAW);
         gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, 0);
+        edgeIndicesAreDirty = false;
     }
     
     private void initParticleIndices(GL3 gl)
@@ -321,6 +332,7 @@ public class MeshActor extends BasicGL3Actor
         
         refreshParticleIndices(gl);
     }
+
     
     private void refreshParticleIndices(GL3 gl) {
         particleIndexCount = geometry.getVertexCount();
@@ -438,6 +450,9 @@ public class MeshActor extends BasicGL3Actor
         
         if (vboEdgeIndices == 0)
             initEdgeIndices(gl);
+        
+        if (edgeIndicesAreDirty)
+            refreshEdgeIndices(gl);
         
         vertexBufferObject.bind(gl, material.getShaderProgramHandle());
         

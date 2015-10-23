@@ -31,8 +31,6 @@
 package org.janelia.horta;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.openide.util.Lookup;
@@ -83,11 +81,11 @@ public class NeuronManager implements LookupListener
         Collection<? extends NeuronSet> allNeuronLists = neuronsLookupResult.allInstances();
         if (! allNeuronLists.isEmpty()) {
             boolean bWorkspaceChanged = false;
-            logger.info("Neuron Lookup found!");
+            // logger.info("Neuron Lookup found!");
             for (NeuronSet neuronList : allNeuronLists) {
                 boolean bListAdded = workspace.getNeuronSets().add(neuronList);
                 if (bListAdded) {
-                    logger.info("Added new neuron list!");
+                    // logger.info("Added new neuron list!");
                     workspace.setChanged();
                     bWorkspaceChanged = true;
                     // TODO - process the new neuron list
@@ -98,7 +96,7 @@ public class NeuronManager implements LookupListener
             }
         }
         else {
-            logger.info("Hey! There are no lists of neurons around.");
+            // logger.info("Hey! There are no lists of neurons around.");
             // TODO - repond to lack of neuron collections.
         }
     }

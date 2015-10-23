@@ -93,7 +93,8 @@ implements Collection<Vertex>, ObservableInterface
     }
     
     public int addEdge(Edge edge) {
-        edges.add(edge);
+        if (edges.add(edge))
+            setChanged();
         return edges.size() - 1;
     }
     
@@ -126,9 +127,16 @@ implements Collection<Vertex>, ObservableInterface
     /**
      * Removes all vertices, faces, edges, triangles, and reset bounding box.
      */
+    @Override
     public void clear() {
-        for (Collection c : collections)
+        boolean changed = false;
+        for (Collection c : collections) {
+            if (c.size() > 0)
+                changed = true;
             c.clear();
+        }
+        if (changed)
+            setChanged();
         boundingBox.clear();
     }
     
@@ -362,20 +370,21 @@ implements Collection<Vertex>, ObservableInterface
     @Override
     public boolean add(Vertex e) {
         boolean result = vertices.add(e);
-        observable.setChanged();
+        if (result)
+            setChanged();
         return result;
     }
 
     @Override
     public boolean remove(Object o) {
         boolean result = vertices.remove(o);
-        if (result)
-            observable.setChanged();
         // Next check non-vertex items
         for (Collection coll : collections) {
             if (coll == vertices) continue;
             if (coll.remove(o)) result = true;
         }        
+        if (result)
+            observable.setChanged();
         return result;
     }
 
