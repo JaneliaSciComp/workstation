@@ -312,7 +312,7 @@ void main() {
     ivec3 finestVolumeSize = textureSize(volumeTexture, 0);
     // Precompute conversion from ray segment length to transparency exponent
     float segmentLengthFactor = dot(volumeMicrometers, abs(x1));
-    segmentLengthFactor /= pow(2, levelOfDetail); // Try to reduce LOD popping
+    segmentLengthFactor /= pow(2.0, float(levelOfDetail)); // Try to reduce LOD popping
     segmentLengthFactor /= canonicalOccludingPathLengthUm;
 
     // How small a corner are we willing to precisely sample?
