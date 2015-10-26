@@ -5,29 +5,39 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
+
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.support.MongoUtils;
-
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -162,7 +172,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
 
     private void saveAndClose() {
 
-        final String annotationType = MongoUtils.getCollectionName(Annotation.class);
+        final String annotationType = DomainUtils.getCollectionName(Annotation.class);
         
         Utils.setWaitingCursor(SessionMgr.getMainFrame());
 
@@ -187,7 +197,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
                 for(Annotation annotation : model.getAnnotations(selectedObjects.getMembers())) {
                     
                     // Must be owner to grant access
-                    if (!DomainUtils.isOwner(annotation)) continue;
+                    if (!ClientDomainUtils.isOwner(annotation)) continue;
 
                     model.changePermissions(annotation, subject.getKey(), "r", read);
                     model.changePermissions(annotation, subject.getKey(), "w", write);

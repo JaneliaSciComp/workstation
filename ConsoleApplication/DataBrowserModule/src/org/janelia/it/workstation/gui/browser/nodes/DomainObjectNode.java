@@ -21,9 +21,10 @@ import javax.swing.JOptionPane;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
@@ -164,7 +165,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
     
     @Override
     public boolean canCut() {
-        return DomainUtils.hasWriteAccess(getDomainObject());
+        return ClientDomainUtils.hasWriteAccess(getDomainObject());
     }
 
     @Override
@@ -179,7 +180,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
 
     @Override
     public boolean canDestroy() {
-        return DomainUtils.hasWriteAccess(getDomainObject());
+        return ClientDomainUtils.hasWriteAccess(getDomainObject());
     }
 
     @Override
@@ -299,7 +300,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         @Override
         public boolean isEnabled() {
             DomainObject domainObject = getLookup().lookup(DomainObject.class);
-            return DomainUtils.hasWriteAccess(domainObject);
+            return ClientDomainUtils.hasWriteAccess(domainObject);
         }
     }
     
@@ -323,7 +324,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         @Override
         public boolean isEnabled() {
             DomainObject domainObject = getLookup().lookup(DomainObject.class);
-            return DomainUtils.hasWriteAccess(domainObject);
+            return ClientDomainUtils.hasWriteAccess(domainObject);
         }
     }
     

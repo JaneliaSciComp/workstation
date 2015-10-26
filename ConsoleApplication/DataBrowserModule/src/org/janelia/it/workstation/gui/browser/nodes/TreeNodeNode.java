@@ -12,10 +12,11 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
@@ -156,7 +157,7 @@ public class TreeNodeNode extends DomainObjectNode {
     @Override
     public PasteType getDropType(final Transferable t, int action, final int index) {
 
-        if (!DomainUtils.hasWriteAccess(getTreeNode())) {
+        if (!ClientDomainUtils.hasWriteAccess(getTreeNode())) {
             return null;
         }
         
@@ -261,7 +262,7 @@ public class TreeNodeNode extends DomainObjectNode {
                     log.info("Pasting '{}' on '{}'",domainObject.getName(),newParent.getName());
                     toAdd.add(domainObject);
 
-                    if (DomainUtils.hasWriteAccess(originalParent)) {
+                    if (ClientDomainUtils.hasWriteAccess(originalParent)) {
                         toDestroy.add(node);
                     }
                     

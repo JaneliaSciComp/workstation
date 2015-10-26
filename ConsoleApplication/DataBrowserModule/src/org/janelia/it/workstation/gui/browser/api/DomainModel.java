@@ -18,7 +18,7 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
-import org.janelia.it.jacs.model.domain.support.MongoUtils;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
@@ -244,7 +244,7 @@ public class DomainModel {
      * @throws Exception
      */
     public List<DomainObject> reload(Collection<DomainObject> objects) throws Exception {
-        return reloadById(DomainUtils.getDomainObjectIdList(objects));
+        return reloadById(ClientDomainUtils.getDomainObjectIdList(objects));
     }
 
     /**
@@ -284,7 +284,7 @@ public class DomainModel {
         catch (ClassNotFoundException e) {
             throw new RuntimeException("Illegal domain object class: "+id.getClassName());
         }
-        Reference ref = new Reference(MongoUtils.getCollectionName(clazz), id.getId());
+        Reference ref = new Reference(DomainUtils.getCollectionName(clazz), id.getId());
         return facade.getDomainObject(ref);
     }
     
@@ -308,7 +308,7 @@ public class DomainModel {
         log.debug("getDomainObjectByDomainObjectId({})",id);
         // This is sort of a hack to allow users to get objects by their superclass. 
         // TODO: Maybe instead of doing all this extra work, we could just key the cache by GUID. 
-        for(Class<?> clazz : MongoUtils.getObjectClasses(MongoUtils.getObjectClassByName(id.getClassName()))) {
+        for(Class<?> clazz : DomainUtils.getObjectClasses(DomainUtils.getObjectClassByName(id.getClassName()))) {
             DomainObjectId did = new DomainObjectId(clazz, id.getId());
             DomainObject domainObject = objectCache.getIfPresent(did);
             if (domainObject != null) {
@@ -336,7 +336,7 @@ public class DomainModel {
         List<Reference> unsatisfiedRefs = new ArrayList<>();
         
         for(Reference ref : references) {
-            DomainObjectId did = DomainUtils.getIdForReference(ref);
+            DomainObjectId did = ClientDomainUtils.getIdForReference(ref);
             DomainObject domainObject = did==null?null:objectCache.getIfPresent(did);
             if (domainObject!=null) {
                 map.put(did, domainObject);
@@ -348,14 +348,14 @@ public class DomainModel {
         
         if (!unsatisfiedRefs.isEmpty()) {
             List<DomainObject> objects = facade.getDomainObjects(unsatisfiedRefs);
-            map.putAll(DomainUtils.getMapByDomainObjectId(objects));
+            map.putAll(ClientDomainUtils.getMapByDomainObjectId(objects));
         }
         
         unsatisfiedRefs.clear();
         
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Reference ref : references) {
-            DomainObjectId did = DomainUtils.getIdForReference(ref);
+            DomainObjectId did = ClientDomainUtils.getIdForReference(ref);
             DomainObject domainObject = map.get(did);
             if (domainObject!=null) {
                 domainObjects.add(putOrUpdate(domainObject));
@@ -372,7 +372,7 @@ public class DomainModel {
     public List<DomainObject> getDomainObjectsByDomainObjectId(List<DomainObjectId> domainObjectIds) {
         List<Reference> references = new ArrayList<>();
         for(DomainObjectId id : domainObjectIds) {
-            references.add(DomainUtils.getReferenceForId(id));
+            references.add(ClientDomainUtils.getReferenceForId(id));
         }
         return getDomainObjectsByReference(references);
     }
@@ -400,7 +400,7 @@ public class DomainModel {
         
         for(Long id : ids) {
             Reference ref = new Reference(type, id);
-            DomainObjectId did = DomainUtils.getIdForReference(ref);
+            DomainObjectId did = ClientDomainUtils.getIdForReference(ref);
             DomainObject domainObject = did==null?null:objectCache.getIfPresent(did);
             if (domainObject!=null) {
                 map.put(did, domainObject);
@@ -412,7 +412,7 @@ public class DomainModel {
         
         if (!unsatisfiedIds.isEmpty()) {
             List<DomainObject> objects = facade.getDomainObjects(type, unsatisfiedIds);
-            map.putAll(DomainUtils.getMapByDomainObjectId(objects));
+            map.putAll(ClientDomainUtils.getMapByDomainObjectId(objects));
         }
         
         unsatisfiedIds.clear();
@@ -420,7 +420,7 @@ public class DomainModel {
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Long id : ids) {
             Reference ref = new Reference(type, id);
-            DomainObjectId did = DomainUtils.getIdForReference(ref);
+            DomainObjectId did = ClientDomainUtils.getIdForReference(ref);
             DomainObject domainObject = map.get(did);
             if (domainObject!=null) {
                 domainObjects.add(putOrUpdate(domainObject));
@@ -709,7 +709,7 @@ public class DomainModel {
     public void changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
         synchronized (this) {
             ObjectSet objectSet = new ObjectSet();
-            String type = MongoUtils.getCollectionName(domainObject.getClass());
+            String type = DomainUtils.getCollectionName(domainObject.getClass());
             objectSet.setTargetType(type);
             objectSet.addMember(domainObject.getId());
             changePermissions(objectSet, granteeKey, rights, grant);

@@ -1,6 +1,36 @@
 package org.janelia.it.workstation.gui.browser.gui.support;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.table.TableCellEditor;
+
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
+import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImagesPanel;
+import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
@@ -9,22 +39,6 @@ import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImagesPanel;
-
-import javax.swing.*;
-import javax.swing.table.TableCellEditor;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.List;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
-import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
-import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -272,7 +286,7 @@ public class AnnotationTablePanel<T, S> extends JPanel implements AnnotationView
             });
             popupMenu.add(copyMenuItem);
 
-            if (DomainUtils.hasWriteAccess(annotation)) {
+            if (ClientDomainUtils.hasWriteAccess(annotation)) {
                 JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
                 deleteItem.addActionListener(new ActionListener() {
                 @Override
@@ -331,7 +345,7 @@ public class AnnotationTablePanel<T, S> extends JPanel implements AnnotationView
             final List<Annotation> toDeleteList = new ArrayList<>();
             for (int i : table.getSelectedRows()) {
                 int mi = table.convertRowIndexToModel(i);
-                if (DomainUtils.hasWriteAccess(annotation)) {
+                if (ClientDomainUtils.hasWriteAccess(annotation)) {
                     toDeleteList.add(annotations.get(mi));
                 }
             }

@@ -1,22 +1,23 @@
 package org.janelia.it.workstation.gui.browser.nb_action;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.support.NodeChooser;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
@@ -31,6 +32,9 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  *
@@ -64,7 +68,7 @@ public class MoveToFolderAction extends NodePresenterAction {
         int numOwned = 0;
         for(Node node : selectedNodes) {
             DomainObjectNode domainNode = (DomainObjectNode)node;
-            if (DomainUtils.isOwner(domainNode.getDomainObject())) {
+            if (ClientDomainUtils.isOwner(domainNode.getDomainObject())) {
                 numOwned++;
             }
         }
@@ -240,7 +244,7 @@ public class MoveToFolderAction extends NodePresenterAction {
                     }
                 });
 
-                commonRootItem.setEnabled(DomainUtils.hasWriteAccess(finalFolder));
+                commonRootItem.setEnabled(ClientDomainUtils.hasWriteAccess(finalFolder));
                 newFolderMenu.add(commonRootItem);
             }
         }
@@ -266,7 +270,7 @@ public class MoveToFolderAction extends NodePresenterAction {
             else {
                 domainObjects.add(domainObject);
             }
-            if (DomainUtils.isOwner(parentNode.getTreeNode())) {
+            if (ClientDomainUtils.isOwner(parentNode.getTreeNode())) {
                 removeMap.put(parentNode.getTreeNode(), selectedNode.getDomainObject());
             }
         }

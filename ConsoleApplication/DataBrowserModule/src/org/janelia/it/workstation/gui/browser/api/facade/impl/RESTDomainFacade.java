@@ -1,34 +1,46 @@
 package org.janelia.it.workstation.gui.browser.api.facade.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.AbstractDomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
-import org.janelia.it.jacs.model.domain.sample.*;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.Image;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
+import org.janelia.it.jacs.model.domain.sample.PipelineError;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
+import org.janelia.it.jacs.model.domain.sample.SampleCellCountingResult;
+import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
+import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
-import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.glassfish.jersey.jackson.JacksonFeature;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.GenericType;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Implementation of the DomainFacade using secure RESTful connection
@@ -95,11 +107,11 @@ public class RESTDomainFacade implements DomainFacade {
         return domainObjs;
     }
 
-    public List<DomainObject> getDomainObjects(String type, Collection<Long> ids) {
+    public List<DomainObject> getDomainObjects(String collectionName, Collection<Long> ids) {
         DomainQuery query = new DomainQuery();
         //query.setSubjectKey(SessionMgr.getSubjectKey());
         query.setSubjectKey("group:leetlab");
-        query.setObjectType(type);
+        query.setObjectType(collectionName);
         query.setObjectIds(new ArrayList<Long>(ids));
 
         Response response = serviceEndpoints.get("domainobject")
@@ -108,33 +120,33 @@ public class RESTDomainFacade implements DomainFacade {
                 .post(Entity.json(query));
         // until we resolve adding domain object specific methods or class info into mongo collections, multi if statement
         List<?> domainObjs = null;
-        if (type.endsWith("DataSet")) {
+        if (collectionName.endsWith("DataSet")) {
             domainObjs = response.readEntity(new GenericType<List<DataSet>>(){});
-        } else if (type.endsWith("Image")) {
+        } else if (collectionName.endsWith("Image")) {
             domainObjs = response.readEntity(new GenericType<List<Image>>(){});
-        } else if (type.endsWith("LSMImage")) {
+        } else if (collectionName.endsWith("LSMImage")) {
             domainObjs = response.readEntity(new GenericType<List<LSMImage>>(){});
-        } else if (type.endsWith("NeuronFragment")) {
+        } else if (collectionName.endsWith("NeuronFragment")) {
             domainObjs = response.readEntity(new GenericType<List<NeuronFragment>>(){});
-        } else if (type.endsWith("NeuronSeparation")) {
+        } else if (collectionName.endsWith("NeuronSeparation")) {
             domainObjs = response.readEntity(new GenericType<List<NeuronSeparation>>(){});
-        } else if (type.endsWith("ObjectiveSample")) {
+        } else if (collectionName.endsWith("ObjectiveSample")) {
             domainObjs = response.readEntity(new GenericType<List<ObjectiveSample>>(){});
-        } else if (type.endsWith("PipelineError")) {
+        } else if (collectionName.endsWith("PipelineError")) {
             domainObjs = response.readEntity(new GenericType<List<PipelineError>>(){});
-        } else if (type.endsWith("PipelineResult")) {
+        } else if (collectionName.endsWith("PipelineResult")) {
             domainObjs = response.readEntity(new GenericType<List<PipelineResult>>(){});
-        } else if (type.endsWith("Sample")) {
+        } else if (collectionName.endsWith("Sample")) {
             domainObjs = response.readEntity(new GenericType<List<Sample>>(){});
-        } else if (type.endsWith("SampleAlignmentResult")) {
+        } else if (collectionName.endsWith("SampleAlignmentResult")) {
             domainObjs = response.readEntity(new GenericType<List<SampleAlignmentResult>>(){});
-        } else if (type.endsWith("SampleCellCountingResult")) {
+        } else if (collectionName.endsWith("SampleCellCountingResult")) {
             domainObjs = response.readEntity(new GenericType<List<SampleCellCountingResult>>(){});
-        } else if (type.endsWith("SamplePipelineRun")) {
+        } else if (collectionName.endsWith("SamplePipelineRun")) {
             domainObjs = response.readEntity(new GenericType<List<SamplePipelineRun>>(){});
-        } else if (type.endsWith("SampleProcessingResult")) {
+        } else if (collectionName.endsWith("SampleProcessingResult")) {
             domainObjs = response.readEntity(new GenericType<List<SampleProcessingResult>>(){});
-        } else if (type.endsWith("SampleTile")) {
+        } else if (collectionName.endsWith("SampleTile")) {
             domainObjs = response.readEntity(new GenericType<List<SampleTile>>(){});
         }
 
@@ -410,7 +422,7 @@ public class RESTDomainFacade implements DomainFacade {
 
     }
 
-    public void changePermissions(ObjectSet objectSet, String granteeKey, String rights, boolean grant) throws Exception {
+    public void changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
 
     }
 

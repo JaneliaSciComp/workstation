@@ -9,10 +9,18 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.model.domain.ontology.*;
+import org.janelia.it.jacs.model.domain.ontology.Category;
+import org.janelia.it.jacs.model.domain.ontology.Custom;
+import org.janelia.it.jacs.model.domain.ontology.EnumItem;
+import org.janelia.it.jacs.model.domain.ontology.EnumText;
+import org.janelia.it.jacs.model.domain.ontology.Interval;
+import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.domain.ontology.Tag;
+import org.janelia.it.jacs.model.domain.ontology.Text;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.support.NodeChooser;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
@@ -91,7 +99,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
         }
 
         Ontology ontology = termNode.getOntology();
-        if (!DomainUtils.hasWriteAccess(ontology)) {
+        if (!ClientDomainUtils.hasWriteAccess(ontology)) {
             addMenuPopup.setEnabled(false);
         }
         

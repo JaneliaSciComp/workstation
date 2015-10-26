@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.api.facade.impl;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -10,10 +11,11 @@ import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.domain.support.DomainDAO;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
@@ -58,8 +60,8 @@ public class MongoDomainFacade implements DomainFacade {
     }
 
     @Override
-    public List<DomainObject> getDomainObjects(String type, Collection<Long> ids) {
-        return dao.getDomainObjects(SessionMgr.getSubjectKey(), type, ids);
+    public List<DomainObject> getDomainObjects(String collectionName, Collection<Long> ids) {
+        return dao.getDomainObjects(SessionMgr.getSubjectKey(), collectionName, ids);
     }
 
     @Override
@@ -109,13 +111,18 @@ public class MongoDomainFacade implements DomainFacade {
     }
     
     @Override
-    public void changePermissions(ObjectSet objectSet, String granteeKey, String rights, boolean grant) throws Exception {
-        dao.changePermissions(SessionMgr.getSubjectKey(), objectSet.getTargetType(), objectSet.getMembers(), granteeKey, rights, grant);
+    public Annotation create(Annotation annotation) throws Exception {
+        return dao.save(SessionMgr.getSubjectKey(), annotation);
     }
-
+    
     @Override
-    public TreeNode create(TreeNode treeNode) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), treeNode);
+    public Annotation update(Annotation annotation) throws Exception {
+        return dao.save(SessionMgr.getSubjectKey(), annotation);
+    }
+    
+    @Override
+    public void remove(Annotation annotation) throws Exception {
+        dao.remove(SessionMgr.getSubjectKey(), annotation);
     }
 
     @Override
@@ -132,20 +139,10 @@ public class MongoDomainFacade implements DomainFacade {
     public Filter update(Filter filter) throws Exception {
         return dao.save(SessionMgr.getSubjectKey(), filter);
     }
-    
+
     @Override
-    public Annotation create(Annotation annotation) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), annotation);
-    }
-    
-    @Override
-    public Annotation update(Annotation annotation) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), annotation);
-    }
-    
-    @Override
-    public void remove(Annotation annotation) throws Exception {
-        dao.remove(SessionMgr.getSubjectKey(), annotation);
+    public TreeNode create(TreeNode treeNode) throws Exception {
+        return dao.save(SessionMgr.getSubjectKey(), treeNode);
     }
     
     @Override
@@ -175,6 +172,11 @@ public class MongoDomainFacade implements DomainFacade {
 
     @Override
     public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) {
-        return dao.updateProperty(SessionMgr.getSubjectKey(), domainObject, propName, propValue);
+        return dao.updateProperty(SessionMgr.getSubjectKey(), DomainUtils.getCollectionName(domainObject), domainObject.getId(), propName, propValue);
+    }
+    
+    @Override
+    public void changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
+        dao.changePermissions(SessionMgr.getSubjectKey(), DomainUtils.getCollectionName(domainObject), Arrays.asList(domainObject.getId()), granteeKey, rights, grant);
     }
 }

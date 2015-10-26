@@ -8,11 +8,10 @@ import java.io.IOException;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.support.MongoUtils;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -82,7 +81,7 @@ public class ObjectSetNode extends DomainObjectNode {
             }
             
             for(DomainObject domainObject : objects) {
-                String type = MongoUtils.getCollectionName(domainObject);
+                String type = DomainUtils.getCollectionName(domainObject);
                 if (objectSet.getTargetType()!=null && !type.equals(objectSet.getTargetType())) {
                     log.info("Type {} is incompatible with object set {}",type,objectSet.getId());
                     return null;

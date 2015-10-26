@@ -25,9 +25,10 @@ import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.Tag;
 import org.janelia.it.jacs.model.domain.ontology.Text;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.OntologyTermFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.OntologyTermNodeFlavor;
@@ -194,7 +195,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
 
     @Override
     public boolean canCut() {
-        return DomainUtils.hasWriteAccess(getOntology());
+        return ClientDomainUtils.hasWriteAccess(getOntology());
     }
 
     @Override
@@ -209,7 +210,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
 
     @Override
     public boolean canDestroy() {
-        return DomainUtils.hasWriteAccess(getOntology());
+        return ClientDomainUtils.hasWriteAccess(getOntology());
     }
     
     @Override
@@ -332,7 +333,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
 
     @Override
     public void destroy() throws IOException {
-        if (!DomainUtils.hasWriteAccess(getOntology())) {
+        if (!ClientDomainUtils.hasWriteAccess(getOntology())) {
             return;
         }
         if (parentChildFactory==null) {
@@ -398,7 +399,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     @Override
     public PasteType getDropType(final Transferable t, int action, final int index) {
 
-        if (!DomainUtils.hasWriteAccess(getOntology())) {
+        if (!ClientDomainUtils.hasWriteAccess(getOntology())) {
             return null;
         }
         

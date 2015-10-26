@@ -2,34 +2,37 @@ package org.janelia.it.workstation.gui.browser.gui.support;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.EnumText;
 import org.janelia.it.jacs.model.domain.ontology.Interval;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.Text;
-import org.janelia.it.jacs.model.domain.support.MongoUtils;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.actions.BulkEditAnnotationKeyValueAction;
 import org.janelia.it.workstation.gui.browser.actions.RemoveAnnotationKeyValueAction;
 import org.janelia.it.workstation.gui.browser.actions.RemoveAnnotationTermAction;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
-
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.viewer.TagCloudPanel;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A tag cloud of Entity-based annotations which support context menu operations such as deletion.
@@ -150,7 +153,7 @@ public class AnnotationTagCloudPanel<T,S> extends TagCloudPanel<Annotation> impl
             titleItem.setEnabled(false);
             popupMenu.add(titleItem);
 
-            if (DomainUtils.hasWriteAccess(tag)) {
+            if (ClientDomainUtils.hasWriteAccess(tag)) {
                 JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
                 deleteItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -219,7 +222,7 @@ public class AnnotationTagCloudPanel<T,S> extends TagCloudPanel<Annotation> impl
         
         // TODO: port over user color mapping
         label.setBackground(ModelMgr.getModelMgr().getUserColorMapping().getColor(tag.getOwnerKey()));
-        String owner = MongoUtils.getNameFromSubjectKey(tag.getOwnerKey());
+        String owner = DomainUtils.getNameFromSubjectKey(tag.getOwnerKey());
         label.setToolTipText("This annotation was made by "+owner);
         return label;
     }

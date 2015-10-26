@@ -1,15 +1,13 @@
 package org.janelia.it.workstation.gui.browser.nb_action;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -18,6 +16,9 @@ import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * Action which implements node removal for Folders and Workspaces. 
@@ -68,7 +69,7 @@ public final class RemoveAction extends NodeAction {
                 TreeNodeNode parentTreeNodeNode = (TreeNodeNode)parentNode;
                 TreeNode parentTreeNode = parentTreeNodeNode.getTreeNode();
                 // Must have write access to parent
-                if (!DomainUtils.hasWriteAccess(parentTreeNode)) {
+                if (!ClientDomainUtils.hasWriteAccess(parentTreeNode)) {
                     included = false;
                 }
             }

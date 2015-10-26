@@ -32,9 +32,9 @@ import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
@@ -594,7 +594,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                         String owner = subject==null?ontology.getOwnerKey():subject.getFullName();
                         boolean checked = currOntologyId != null && ontology.getId().equals(currOntologyId);
                         JMenuItem roleMenuItem = new JCheckBoxMenuItem(ontology.getName() + " (" + owner + ")", checked);
-                        String iconName = DomainUtils.isOwner(ontology)?"folder.png":"folder_blue.png";
+                        String iconName = ClientDomainUtils.isOwner(ontology)?"folder.png":"folder_blue.png";
                         roleMenuItem.setIcon(Icons.getIcon(iconName));
                         roleMenuItem.addActionListener(new ActionListener() {
                             public void actionPerformed(ActionEvent e) {

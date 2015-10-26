@@ -2,19 +2,29 @@ package org.janelia.it.workstation.gui.browser.nb_action;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.ontology.*;
-import org.janelia.it.jacs.model.domain.support.MongoUtils;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.ontology.Category;
+import org.janelia.it.jacs.model.domain.ontology.EnumItem;
+import org.janelia.it.jacs.model.domain.ontology.EnumText;
+import org.janelia.it.jacs.model.domain.ontology.Interval;
+import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
+import org.janelia.it.jacs.model.domain.ontology.Text;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -246,7 +256,7 @@ public class ApplyAnnotationAction extends NodeAction {
         annotation.setValue(valueString);
         
         Reference targetRef = new Reference();
-        targetRef.setTargetType(MongoUtils.getCollectionName(target.getClass()));
+        targetRef.setTargetType(DomainUtils.getCollectionName(target.getClass()));
         targetRef.setTargetId(target.getId());
         annotation.setTarget(targetRef);
         

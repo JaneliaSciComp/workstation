@@ -11,7 +11,7 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -69,7 +69,7 @@ public class UserViewRootNode extends AbstractNode {
 
             List<Workspace> owned = new ArrayList<>();
             for(Workspace workspace : workspaces) {
-                if (DomainUtils.isOwner(workspace)) {
+                if (ClientDomainUtils.isOwner(workspace)) {
                     owned.add(workspace);
                 }
             }

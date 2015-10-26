@@ -12,12 +12,12 @@ import javax.swing.JPanel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
-import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +60,7 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
         searchAttrs.add(annotationAttr);
         
         for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
-            for(DomainObjectAttribute attr : DomainUtils.getAttributes(domainObject)) {
+            for(DomainObjectAttribute attr : ClientDomainUtils.getAttributes(domainObject)) {
                 if (attr.isDisplay()) {
                     searchAttrs.add(attr);
                 }

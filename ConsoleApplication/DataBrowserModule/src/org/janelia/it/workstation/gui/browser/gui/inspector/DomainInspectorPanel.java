@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -24,7 +25,19 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainObjectPermissionDialog;
+import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
+import org.janelia.it.workstation.gui.browser.gui.support.AnnotationView;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectPermission;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
@@ -32,23 +45,10 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.jacs.model.user_data.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ComparisonChain;
-import java.lang.reflect.InvocationTargetException;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
-import org.janelia.it.workstation.gui.browser.gui.support.AnnotationView;
-import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainObjectPermissionDialog;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectPermission;
 
 
 /**
@@ -192,7 +192,7 @@ public class DomainInspectorPanel extends JPanel {
                         // No menu for the permanent owner permission. In the future this might show a "gifting" option
                         // if the owner wants to transfer ownership.
                     }
-                    else if (DomainUtils.isOwner(domainObject)) {
+                    else if (ClientDomainUtils.isOwner(domainObject)) {
 
                         JMenuItem editItem = new JMenuItem("  Edit Permission");
                         editItem.addActionListener(new ActionListener() {
@@ -338,7 +338,7 @@ public class DomainInspectorPanel extends JPanel {
         // Update the attribute table
         attributesTable.removeAllRows();
 
-        List<DomainObjectAttribute> searchAttrs = DomainUtils.getAttributes(domainObject);
+        List<DomainObjectAttribute> searchAttrs = ClientDomainUtils.getAttributes(domainObject);
                 
         Collections.sort(searchAttrs, new Comparator<DomainObjectAttribute>() {
             @Override
@@ -385,7 +385,7 @@ public class DomainInspectorPanel extends JPanel {
             protected void hadSuccess() {
                 setSubjects(subjects);
                 loadPermissions();
-                addPermissionButton.setEnabled(DomainUtils.isOwner(domainObject) && !DomainUtils.isVirtual(domainObject));
+                addPermissionButton.setEnabled(ClientDomainUtils.isOwner(domainObject));
                 log.debug("Setting permission button state to {}", addPermissionButton.isEnabled());
             }
 

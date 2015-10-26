@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
+import static org.janelia.it.jacs.model.domain.enums.FileType.Stack;
+
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -7,17 +9,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import static org.janelia.it.jacs.model.domain.enums.FileType.Stack;
+
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenWithDefaultAppAction;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;

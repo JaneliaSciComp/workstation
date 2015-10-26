@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.ontology.Ontology;

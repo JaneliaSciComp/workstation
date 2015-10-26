@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.gui.browser.api;
 
 import java.util.List;
+
 import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.facade.impl.MongoDomainFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;

@@ -4,21 +4,28 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
+
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
-import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
-
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * A dialog for selecting permissions to auto-add for any annotations

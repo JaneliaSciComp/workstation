@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
-import de.javasoft.swing.SimpleDropDownButton;
+import static org.janelia.it.jacs.model.domain.enums.FileType.ReferenceMip;
+import static org.janelia.it.jacs.model.domain.enums.FileType.SignalMip;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -19,6 +21,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -30,21 +33,22 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
-import static org.janelia.it.jacs.model.domain.enums.FileType.ReferenceMip;
-import static org.janelia.it.jacs.model.domain.enums.FileType.SignalMip;
+
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
-import org.janelia.it.workstation.gui.browser.api.DomainUtils;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import de.javasoft.swing.SimpleDropDownButton;
 
 /**
  *
