@@ -7,11 +7,17 @@
 package org.janelia.it.workstation.gui.passive_3d.filter;
 
 import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import javax.swing.ProgressMonitor;
+import org.janelia.it.jacs.shared.utils.ThreadUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -204,17 +210,17 @@ public class MatrixFilter3D {
         
         // First, let's change the bytes going into the neighborhoods, to
         // all long values.  One pass, rather than repeating that operation.
-        final long[] inputLongs = convertToLong( param );  
-        
-        final ExecutorService executorService = Executors.newFixedThreadPool( NUM_THREADS);
+        final long[] inputLongs = convertToLong( param );          
+        final ExecutorService executorService = ThreadUtils.establishExecutor( NUM_THREADS, new CustomNamedThreadFactory("MatrixFilter") );
+        List<Future<Void>> callbacks = new ArrayList<>();
         for (int ch = 0; ch < channelCount; ch++) {
             for (int z = 0; z < sz; z++) {
                 // Need final variables to pass into worker.
                 final int zF = z;
                 final int chF = ch;
-                Runnable runnable = new Runnable() {
+                Callable<Void> runnable = new Callable() {
                     @Override
-                    public void run() {
+                    public Void call() {
                         try {
                             filterZ(param, inputLongs, zF, chF, outputBytes, sheetSize, lineSize);
                         } catch (Exception ex) {
@@ -222,9 +228,10 @@ public class MatrixFilter3D {
                             executorService.shutdownNow();
                             SessionMgr.getSessionMgr().handleException(ex);
                         }
+                        return null;
                     }
                 };
-                executorService.submit(runnable);
+                callbacks.add( executorService.submit(runnable) );
                 
                 if (progressMonitor != null && progressMonitor.isCanceled()) {
                     // If user bails, the executor should go away.
@@ -237,12 +244,8 @@ public class MatrixFilter3D {
             // Now that everything has been queued, can send the shutdown
             // signal.  Then await termination, which in turn waits for all
             // the loads to complete.
-            executorService.shutdown();
-            boolean completed = executorService.awaitTermination(5, TimeUnit.MINUTES);
-            if ( !completed ) {
-                throw new RuntimeException("Timed out while attempting to smooth data.  Original 3D data shown.");
-            }
-        } catch ( InterruptedException | RuntimeException ex ) {
+            ThreadUtils.followUpExecution(executorService, callbacks, 5);
+        } catch ( Exception ex ) {
             SessionMgr.getSessionMgr().handleException(ex);
         }
         logger.info("Ending the filter run.");

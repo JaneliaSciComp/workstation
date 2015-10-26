@@ -39,6 +39,10 @@ public class OcclusiveRenderer
         super(new OcclusiveVolumeModel());
     }
     
+    public OcclusiveRenderer(OcclusiveVolumeModel volumeModel) {
+        super(volumeModel);
+    }
+    
     public void setResetPositioner( ResetPositionerI resetPositioner ) {
         this.resetPositioner = resetPositioner;
     }
@@ -137,7 +141,7 @@ public class OcclusiveRenderer
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);    		
     }
     
-    public static class OcclusiveVolumeModel extends VolumeModel {
+    public static class OcclusiveVolumeModel extends MeshViewContext {
         /**
          * Never return true for white-background.  Want colors remaining
          * same,

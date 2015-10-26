@@ -1,18 +1,16 @@
 package org.janelia.it.workstation.gui.dialogs;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Dialog.ModalityType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -23,7 +21,6 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -148,9 +145,10 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
         final JLabel nameLabel = new JLabel("Release Name: ");
         attrPanel.add(nameLabel, "gap para");
+
+        nameInput.setEnabled(editable);
         
         if (editable) {
-            nameInput.setEnabled(editable);
             nameLabel.setLabelFor(nameInput);
             attrPanel.add(nameInput);
         }
@@ -285,6 +283,13 @@ public class FlyLineReleaseDialog extends ModalDialog {
                         }
                     }
                 }
+                else {
+                    nameInput.setText("");
+                    dateInput.setDate(new Date());
+                    lagTimeInput.setText("");
+                }
+                
+                pack();
             }
 
             @Override
@@ -294,10 +299,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
         };
 
         worker.execute();
-
-        Component mainFrame = SessionMgr.getMainFrame();
-        setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.5), (int) (mainFrame.getHeight() * 0.4)));
-
+        
         packAndShow();
     }
 

@@ -55,6 +55,7 @@ import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
+import org.janelia.it.workstation.gui.dialogs.MemoryCheckDialog;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
@@ -62,8 +63,10 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonCon
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.util.SWCDataConverter;
 
 /** 
@@ -85,6 +88,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private static final String IMAGES_MOUSE_SCROLL = "mouse_scroll.png";
     private static final String IMAGES_MOUSE_LEFT = "mouse_left.png";
     
+    private static final int MINIMUM_MEMORY_REQUIRED_GB = 8;
+
     public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
 	private boolean bAllowOrthoView = true; // false until ready for release
@@ -272,6 +277,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	 */
 	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
 	{
+        new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
+
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
 		largeVolumeViewer.setImageColorModel(imageColorModel);
@@ -379,6 +386,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 public List<JMenuItem> getMenus(MouseEvent event) {
                     List<JMenuItem> result = new Vector<>();
                     result.add(addFileMenuItem());
+                    result.add(addCopyMicronLocMenuItem());
+                    result.add(addCopyTileLocMenuItem());
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());                    
@@ -1100,7 +1109,23 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         return mnFile;
     }
-
+    
+    public JMenuItem addCopyMicronLocMenuItem() {
+        JMenuItem mnCopyMicron = new JMenuItem(
+                new MicronsToClipboardAction(statusLabel)
+        );
+        return mnCopyMicron;
+    }
+    
+    public JMenuItem addCopyTileLocMenuItem() {
+        JMenuItem mnCopyTileInx = new JMenuItem(
+                new TileLocToClipboardAction(
+                        statusLabel, tileFormat, camera, CoordinateAxis.Z
+                )
+        );
+        return mnCopyTileInx;
+    }
+    
     public JMenuItem addEditMenuItem() {
         JMenu mnEdit = new JMenu("Edit");
         menuBar.add(mnEdit);
@@ -1236,7 +1261,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         snapshot3dLauncher.setAnnotationManager(annotationMgr);
         annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
-        volumeImage.setRemoteBasePath(canonicalLinuxPath);
+        volumeImage.setRemoteBasePath(canonicalLinuxPath);        
         return loadURL(url);
     }
 
@@ -1264,7 +1289,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }
     		url.openStream();            
         	rtnVal = volumeImage.loadURL(url);
-            this.setLoadedUrl(url);
+            this.setLoadedUrl(url);            
+            new AnnotationSkeletonViewLauncher(false).refreshTopComponent();
 
     	} catch (IOException exc) {
             throw new RuntimeException(

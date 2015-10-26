@@ -1,10 +1,13 @@
 package org.janelia.it.workstation.shared.util;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -12,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +47,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SWCData {
 
+    public static final String STD_SWC_EXTENSION = ".swc";
     private static final Logger logger = LoggerFactory.getLogger(SWCData.class);
     private static final String COLOR_HEADER_PREFIX = "COLOR";
     private static final String NAME_HEADER_PREFIX = "NAME";
@@ -109,13 +114,19 @@ public class SWCData {
     public void write(File swcFile, int offset) throws Exception {
         if (isValid()) {
             if (offset != -1) {
-                String newName = swcFile.getName();
-                int periodPos = newName.indexOf('.');
-                if (periodPos > -1) {
-                    newName = newName.substring(0, periodPos) +
-                              '_' + offset + newName.substring(periodPos);
+                final String swcFileName = swcFile.getName();
+                String parentDirName = swcFileName.substring(0, swcFileName.length() - STD_SWC_EXTENSION.length());
+                File parentDir = new File(swcFile.getParent(), parentDirName);
+                // If anyone ever made a file of the name we wish to call our
+                // directory, we'll make an alternative with unique name.
+                if (parentDir.exists()  &&  !parentDir.isDirectory()) {
+                    parentDir = new File(parentDir.getParentFile(), parentDirName + "_" + new java.util.Date().getTime());                    
                 }
-                swcFile = new File(swcFile.getParent(), newName);
+                if (! parentDir.exists() ) {
+                    parentDir.mkdirs();
+                }                
+                String newName = StringUtils.getIteratedName(swcFileName, offset);
+                swcFile = new File(parentDir, newName);
             }
             FileWriter writer = new FileWriter(swcFile);
             writeSwcFile(writer);
@@ -127,6 +138,74 @@ public class SWCData {
 
     }
 
+    /**
+     * Look through the input file, and make smaller files for any line that
+     * ends in the "-1 as parent" indicator.
+     * 
+     * @param infile to be subdivided.
+     * @return list of divided files.
+     * @throws IOException from called methods.
+     */
+    public List<File> breakOutByRoots(File infile) throws IOException {
+        List<File> rtnVal = new ArrayList<>();        
+        String lineTerm = System.getProperty("line.separator");
+        try (BufferedReader br = new BufferedReader( new FileReader( infile ) )) {
+            String inline = null;
+            List<String> headerLines = new ArrayList<>();
+            List<StringBuilder> newFileText = new ArrayList<>();
+            StringBuilder currentBuilder = null;
+            int rootNodeNum = -1;
+            while (null != (inline = br.readLine())) {
+                if (inline.startsWith("#")) {
+                    headerLines.add(inline);                    
+                }
+                else if (inline.endsWith("-1")) {
+                    int afterDigits = StringUtils.findFirstNonDigitPosition(inline);
+                    rootNodeNum = Integer.parseInt(inline.substring(0, afterDigits)) - 1;
+                    
+                    currentBuilder = new StringBuilder();
+                    newFileText.add(currentBuilder);
+                    for (String headerLine: headerLines) {
+                        currentBuilder.append(headerLine);
+                        currentBuilder.append(lineTerm);
+                    }
+                    currentBuilder.append(1);
+                    currentBuilder.append(inline.substring(afterDigits));
+                    currentBuilder.append(lineTerm);
+                }
+                else {
+                    currentBuilder.append(reorder(inline, rootNodeNum));
+                    currentBuilder.append(lineTerm);
+                }
+            }
+            
+            if (newFileText.size() <= 1) {
+                // We just wasted time scanning the input file.  Oh well.
+                rtnVal.add(infile);
+            }
+            else {
+                int fileNum = 1;
+
+                File tempDir = new File(System.getProperty("java.io.tmpdir"), "SWCData_" + new java.util.Date().getTime());                
+                tempDir.mkdirs();
+                tempDir.deleteOnExit();
+                logger.info("Making file {}", tempDir.toString());
+                for (StringBuilder builder : newFileText) {
+                    File newFile = new File(tempDir, StringUtils.getIteratedName(infile.getName(), fileNum));
+                    newFile.deleteOnExit();
+                    
+                    try ( PrintWriter pw = new PrintWriter( new FileWriter( newFile ) ) ) {
+                        pw.print(builder.toString());
+                    }
+                    
+                    rtnVal.add(newFile);
+                    fileNum++;
+                }
+            }
+        }        
+        return rtnVal;
+    }
+    
     /**
      * Validate contents and write back to target.
      * 
@@ -322,6 +401,26 @@ public class SWCData {
         return name;
     }
     
+    /**
+     * Take an input line from SWC, and re-order it so that its root becomes
+     * node 1.  This implies that its parent trace lineage back to 1.  In other
+     * words, reduce parent by the root offset.
+     * 
+     * @param inline to be modified
+     * @param rootOffset old node number of this line's root, minus 1.
+     * @return re-ordered line.
+     */
+    protected String reorder(String inline, int rootOffset) {
+        if (rootOffset == 0) {
+            return inline;
+        }
+        int lastDigitPos = StringUtils.lastDigitPosition(inline);
+        int afterDigitsPos = StringUtils.findFirstNonDigitPosition(inline);
+        int nodeNum = Integer.parseInt(inline.substring(0, afterDigitsPos)) - rootOffset;
+        int parentNodeNum = Integer.parseInt(inline.substring(lastDigitPos)) - rootOffset;
+        return nodeNum + inline.substring(afterDigitsPos, lastDigitPos) + parentNodeNum;
+    }
+
     /**
      * this routine is fairly dumb; it just has to write the lines,
      * since the hard work is done in generating the input data (eg, nodes)

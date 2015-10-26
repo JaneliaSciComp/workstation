@@ -116,7 +116,7 @@ public class Snapshot3DLauncher {
     }
 
     public List<JMenuItem> getSnapshotMenuItems() {
-        JMenu snapShot3dSubMenu = new JMenu("3D Snapshot");
+        JMenu snapShot3dSubMenu = new JMenu(Snapshot3dTopComponent.LABEL_TEXT.trim());
 
         List<JMenuItem> rtnVal = new ArrayList<>();
 

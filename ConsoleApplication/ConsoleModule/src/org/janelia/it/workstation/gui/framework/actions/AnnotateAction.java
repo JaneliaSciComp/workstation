@@ -60,10 +60,15 @@ public class AnnotateAction extends OntologyElementAction {
         ontologyOutline.navigateToOntologyElement(element);
         
         EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
-        final List<String> selectedEntityIds = esm.getSelectedEntitiesIds(esm.getActiveCategory());
+        if (esm.getActiveCategory()==null) {
+            // Nothing is selected
+            log.warn("AnnotateAction called without an active selection category");
+            return;
+        }
         
+        final List<String> selectedEntityIds = esm.getSelectedEntitiesIds(esm.getActiveCategory());
         if (selectedEntityIds.isEmpty()) {
-            // Cannot annotate nothing
+            // Nothing is selected
             log.warn("AnnotateAction called without an entity being selected");
             return;
         }
