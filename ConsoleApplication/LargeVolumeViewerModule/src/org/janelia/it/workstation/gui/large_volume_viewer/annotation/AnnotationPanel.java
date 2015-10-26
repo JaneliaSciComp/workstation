@@ -529,10 +529,17 @@ public class AnnotationPanel extends JPanel
             final FileFilter swcAndDirFilter = new SwcAndFileFilter();
             chooser.setFileFilter(swcAndDirFilter);
             int returnValue = chooser.showOpenDialog(AnnotationPanel.this);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {                
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
                 List<File> swcFiles = getFilesList(chooser.getSelectedFile());                
                 if (swcFiles.size() > 1) {
                     AtomicInteger countDownSemaphor = new AtomicInteger(swcFiles.size());
+                    // Unified notification across all the (possibly many) files.
+                    CountdownBackgroundWorker progressNotificationWorker = 
+                            new CountdownBackgroundWorker( 
+                                    "Import " + chooser.getSelectedFile(), 
+                                    countDownSemaphor 
+                            );
+                    progressNotificationWorker.executeWithEvents();
                     for (File swc: swcFiles) {
                         // Import all the little neurons from the file.
                         annotationMgr.importSWCFile(swc, countDownSemaphor);

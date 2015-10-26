@@ -1465,9 +1465,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void importSWCFile(final File swcFile, final AtomicInteger countDownSemaphor) {
-        final boolean selectOnCompletion = countDownSemaphor == null;
         if (annotationModel.getCurrentWorkspace() == null) {
-            // dialog?
+            JOptionPane.showMessageDialog(quadViewUi, "No workspace is open", "Cannot Import", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -1482,33 +1481,53 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             //  (c) option to include/exclude automatically traced paths, if we can
             //      store that info in the file
             //  (d) option to shift position (add constant x, y, z offset)
-            BackgroundWorker importer = new BackgroundWorker() {
-                @Override
-                protected void doStuff() throws Exception {
-                    annotationModel.importBulkSWCData(swcFile, null, selectOnCompletion);
-                }
-                
-                @Override
-                public String getName() {
-                    return "import " + swcFile.getName();
-                }
+            if (countDownSemaphor == null) {
+                BackgroundWorker importer = new BackgroundWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        annotationModel.importBulkSWCData(swcFile, null, true);
+                    }
 
-                @Override
-                protected void hadSuccess() {
-                    if (countDownSemaphor != null) {
+                    @Override
+                    public String getName() {
+                        return "import " + swcFile.getName();
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                importer.executeWithEvents();
+            }
+            else {
+                SimpleWorker importer = new SimpleWorker() {
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        annotationModel.importBulkSWCData(swcFile, null, false);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
                         int latestValue = countDownSemaphor.decrementAndGet();
                         if (latestValue == 0) {
                             annotationModel.postWorkspaceUpdate();
                         }
                     }
-                }
 
-                @Override
-                protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
-                }
-            };
-            importer.executeWithEvents();
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                    
+                };
+                importer.execute();
+            }
         }
     }
 
