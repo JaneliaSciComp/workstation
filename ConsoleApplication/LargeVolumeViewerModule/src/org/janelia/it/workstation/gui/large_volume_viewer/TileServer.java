@@ -38,7 +38,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 		PREFETCH_COMPLETE, // Best textures shown, plus precache is full
 	};
 	
-	private boolean doPrefetch = true;
+	private boolean doPrefetch = false;
 	private LoadStatus loadStatus = LoadStatus.UNINITIALIZED;
 	
 	// One thread pool to load minimal representation of volume

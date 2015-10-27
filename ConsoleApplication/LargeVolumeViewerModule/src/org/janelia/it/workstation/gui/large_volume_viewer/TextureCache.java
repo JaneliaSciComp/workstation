@@ -110,8 +110,9 @@ public class TextureCache
 		// (textures in the persistent cache should remain there)
 		if (persistentCache.containsKey(tile.getIndex()))
 			return;
-		futureCache.remove(tile.getIndex());
-		historyCache.put(tile.getIndex(), tile); // move texture to the front of the queue
+		if (futureCache.remove(tile.getIndex()) != null) {
+			historyCache.put(tile.getIndex(), tile); // move texture to the front of the queue
+		}
 	}
 	
 	public int size() {return futureCache.size() + historyCache.size() + persistentCache.size();}

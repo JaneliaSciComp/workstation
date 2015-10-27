@@ -112,24 +112,23 @@ extends AbstractTextureLoadAdapter
 		
         // Calling this with "true" means I, the caller, accept that the array
         // returned may have one or more nulls in it.
-		ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis(), true);
+		ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis(), true, tileFormat.getChannelCount());
 		
 		// log.info(tileIndex + "" + folder + " : " + relativeSlice);
-		TextureData2dGL result = loadSlice(relativeSlice, decoders);
+		TextureData2dGL result = loadSlice(relativeSlice, decoders, tileFormat.getChannelCount());
 		localLoadTimer.mark("finished slice load");
 
 		loadTimer.putAll(localLoadTimer);
 		return result;
 	}
 
-	public TextureData2dGL loadSlice(int relativeZ, ImageDecoder[] decoders) 
+	public static TextureData2dGL loadSlice(int relativeZ, ImageDecoder[] decoders, int channelCount)
 	throws TileLoadError 
     {
-		int sc = tileFormat.getChannelCount();
 		// 2 - decode image
-		RenderedImage channels[] = new RenderedImage[sc];
+		RenderedImage channels[] = new RenderedImage[channelCount];
         boolean emptyChannel = false;
-        for (int c = 0; c < sc; ++c) {
+        for (int c = 0; c < channelCount; ++c) {
             if (decoders[c] == null)
                 emptyChannel = true;
         }
@@ -137,7 +136,7 @@ extends AbstractTextureLoadAdapter
             return null;
         }
         else {
-            for (int c = 0; c < sc; ++c) {
+            for (int c = 0; c < channelCount; ++c) {
                 try {
                     ImageDecoder decoder = decoders[c];
                     assert (relativeZ < decoder.getNumPages());
@@ -149,10 +148,10 @@ extends AbstractTextureLoadAdapter
             }
             // Combine channels into one image
             RenderedImage composite = channels[0];
-            if (sc > 1) {
+            if (channelCount > 1) {
                 try {
                 ParameterBlockJAI pb = new ParameterBlockJAI("bandmerge");
-                for (int c = 0; c < sc; ++c) {
+                for (int c = 0; c < channelCount; ++c) {
                     pb.addSource(channels[c]);
                 }
                 composite = JAI.create("bandmerge", pb);
@@ -176,19 +175,18 @@ extends AbstractTextureLoadAdapter
 	public ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis)
 			throws MissingTileException, TileLoadError
 	{
-		return createImageDecoders(folder, axis, false);
+		return createImageDecoders(folder, axis, false, tileFormat.getChannelCount());
 	}
 	
-	public ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders)
+	public static ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders, int channelCount)
 			throws MissingTileException, TileLoadError 
 	{
         String tiffBase = OctreeMetadataSniffer.getTiffBase(axis);
-		int sc = tileFormat.getChannelCount();
-		ImageDecoder decoders[] = new ImageDecoder[sc];
+		ImageDecoder decoders[] = new ImageDecoder[channelCount];
         StringBuilder missingTiffs = new StringBuilder();
         StringBuilder requestedTiffs = new StringBuilder();
         CacheFacadeI cacheManager = CacheController.getInstance().getManager();
-		for (int c = 0; c < sc; ++c) {
+		for (int c = 0; c < channelCount; ++c) {
 			File tiff = new File(folder, OctreeMetadataSniffer.getFilenameForChannel(tiffBase, c));
             if ( requestedTiffs.length() > 0 ) {
                 requestedTiffs.append("; ");

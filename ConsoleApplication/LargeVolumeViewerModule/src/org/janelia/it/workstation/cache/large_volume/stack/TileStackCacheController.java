@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.cache.large_volume.stack;
 
 import com.sun.media.jai.codec.ImageDecoder;
+import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
@@ -13,8 +14,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +33,10 @@ public class TileStackCacheController {
     private int standardVolumeSize;
     private int sliceSize = -1;
     protected TileFormat tileFormat;
+    SimpleFileCache cache;
+    Double zoom;
+    Vec3 focus;
+    TileIndex focusTileIndex;
 
     boolean filesystemMetadataInitialized=false;
     boolean initialized=false;
@@ -83,20 +88,83 @@ public class TileStackCacheController {
 
 
     public void setZoom(Double zoom) {
-        //log.info("setZoom="+zoom);
+        log.info("setZoom="+zoom);
+        this.zoom=zoom;
+        updateFocusTileIndex();
     }
 
     public void setFocus(Vec3 focus) {
-        //log.info("setFocus="+focus.toString());
+        log.info("setFocus="+focus.toString());
+        this.focus=focus;
+        updateFocusTileIndex();
+    }
+
+    private synchronized void updateFocusTileIndex() {
+        if (zoom!=null && focus!=null) {
+            focusTileIndex = tileFormat.tileIndexForXyz(focus, tileFormat.zoomLevelForCameraZoom(zoom), CoordinateAxis.Z);
+            log.info("Current tile=" + focusTileIndex.toString());
+        }
     }
 
     public void shutdown() {
 
     }
 
+    private int getStackSliceFromTileIndex(TileIndex tileIndex) {
+        int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
+        int axisIx = tileIndex.getSliceAxis().index();
+        int tileDepth = tileFormat.getTileSize()[axisIx];
+        int absoluteSlice = (tileIndex.getCoordinate(axisIx)) / zoomScale;
+        int relativeSlice = absoluteSlice % tileDepth;
+        // Raveller y is flipped so flip when slicing in Y (right?)
+        if (axisIx == 1)
+            relativeSlice = tileDepth - relativeSlice - 1;
+        return relativeSlice;
+    }
+
     public TextureData2dGL loadToRam(TileIndex tileIndex) throws AbstractTextureLoadAdapter.TileLoadError, AbstractTextureLoadAdapter.MissingTileException {
-        log.info("loadToRam() request tileIndex="+tileIndex.getX()+" "+tileIndex.getY()+" "+tileIndex.getZ()+" zoom="+tileIndex.getZoom());
+        //log.info("loadToRam() request tileIndex="+tileIndex.getX()+" "+tileIndex.getY()+" "+tileIndex.getZ()+" zoom="+tileIndex.getZoom());
+        //try { Thread.sleep(1000L); } catch (Exception ex) {}
+
+//        final File octreeFilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, true /*zOriginNegativeShift*/);
+//        if (octreeFilePath == null) {
+//            return null;
+//        }
+//
+//        File stackFile = new File(topFolder, octreeFilePath.toString());
+//        int stackSlice=getStackSliceFromTileIndex(tileIndex);
+//
+//        ByteBuffer stackData=getFileDataFromCache(stackFile);
+//
+//        // Calling this with "true" means I, the caller, accept that the array
+//        // returned may have one or more nulls in it.
+//        ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis(), true, tileFormat.getChannelCount());
+//
+//        // log.info(tileIndex + "" + folder + " : " + relativeSlice);
+//        TextureData2dGL result = loadSlice(relativeSlice, decoders, tileFormat.getChannelCount());
+//        localLoadTimer.mark("finished slice load");
+
+
+
+
         return createDebugTileFromTileIndex(tileIndex);
+    }
+
+    private ByteBuffer getFileDataFromCache(File file) throws AbstractTextureLoadAdapter.TileLoadError, AbstractTextureLoadAdapter.MissingTileException {
+        ByteBuffer data=cache.getBytes(file);
+        if (data==null) {
+            data=getDataFromFile(file);
+            if (data!=null) {
+                cache.putBytes(file, data);
+            } else {
+                throw new AbstractTextureLoadAdapter.TileLoadError("null returned from getDataFromFile() file="+file.getAbsolutePath());
+            }
+        }
+        return data;
+    }
+
+    private ByteBuffer getDataFromFile(File file) throws AbstractTextureLoadAdapter.TileLoadError, AbstractTextureLoadAdapter.MissingTileException {
+        return null;
     }
 
     private TextureData2dGL createDebugTileFromTileIndex(TileIndex tileIndex) {
