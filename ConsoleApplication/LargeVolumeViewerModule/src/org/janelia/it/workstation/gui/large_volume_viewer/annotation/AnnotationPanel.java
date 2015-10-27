@@ -539,6 +539,7 @@ public class AnnotationPanel extends JPanel
                                     "Import " + chooser.getSelectedFile(), 
                                     countDownSemaphor 
                             );
+                    progressNotificationWorker.setAnnotationModel(annotationModel);
                     progressNotificationWorker.executeWithEvents();
                     for (File swc: swcFiles) {
                         // Import all the little neurons from the file.

@@ -18,6 +18,8 @@ public class CountdownBackgroundWorker extends BackgroundWorker {
     public static final int WAIT_INTERIM_MS = 1000 * WAIT_INTERIM_S;
     
     private final AtomicInteger countdownSemaphore;
+    private AnnotationModel annotationModel;
+
     private final String name;
     private Integer remainingWaitTime;  // Optional: null-> wait forever.
     
@@ -32,6 +34,10 @@ public class CountdownBackgroundWorker extends BackgroundWorker {
         this.countdownSemaphore = countdownSemaphore;
         this.remainingWaitTime = maxWaitTime;
     }
+    
+    public void setAnnotationModel( AnnotationModel model ) {
+        this.annotationModel = model;
+    }
 
     @Override
     public String getName() {
@@ -40,21 +46,32 @@ public class CountdownBackgroundWorker extends BackgroundWorker {
 
     @Override
     protected void doStuff() throws Exception {
-        while ( countdownSemaphore.get() > 0 ) {
-            try {
-                Thread.sleep( WAIT_INTERIM_MS );
-                
-                if (remainingWaitTime != null) {
-                    remainingWaitTime -= WAIT_INTERIM_MS;
-                    if (remainingWaitTime <= 0) {
-                        break;
+        int count = 0;
+        do {
+            count =  countdownSemaphore.get();
+            
+            if (count > 0) {
+                try {
+                    Thread.sleep(WAIT_INTERIM_MS);
+
+                    if (remainingWaitTime != null) {
+                        remainingWaitTime -= WAIT_INTERIM_MS;
+                        if (remainingWaitTime <= 0) {
+                            break;
+                        }
                     }
+
+                    if (countdownSemaphore.get() % 100 == 0) {
+                        // Need to "goose" the display, to show what it has.
+                        annotationModel.postWorkspaceUpdate();
+                    }
+
+                } catch (InterruptedException ex) {
+                    logger.warn("Exception {} during countdown for {}.", ex, name);
                 }
-                
-            } catch (InterruptedException ex) {
-                logger.warn("Exception {} during countdown for {}.", ex, name);
             }
-        }
+        } while ( count > 0 );
+        
     }
 
 }
