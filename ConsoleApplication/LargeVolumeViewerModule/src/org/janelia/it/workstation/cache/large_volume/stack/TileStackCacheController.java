@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.cache.large_volume.stack;
 
 import com.sun.media.jai.codec.ImageDecoder;
+import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.*;
@@ -12,12 +13,16 @@ import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
+import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 
 /**
  * Created by murphys on 10/22/2015.
@@ -27,10 +32,17 @@ public class TileStackCacheController {
     private static Logger log = LoggerFactory.getLogger(TileStackCacheController.class);
     private static TileStackCacheController theInstance=new TileStackCacheController();
 
+    private ScheduledThreadPoolExecutor fileLoadThreadPool = new ScheduledThreadPoolExecutor(1);
+
+    public static int REQUEST_FILE_DATA_FROM_CACHE_TIMEOUT_MS=30000;
+    public static int FILE_DATA_POLL_INTERVAL_MS=50;
+    public static final int MIN_RAW_VAL=10000;
+    public static final int MAX_RAW_VAL=23000;
+
     private String remoteBasePath;
     private File topFolder;
     private URL initUrl;
-    private int standardVolumeSize;
+    private int cacheVolumeSize;
     private int sliceSize = -1;
     protected TileFormat tileFormat;
     SimpleFileCache cache;
@@ -74,12 +86,13 @@ public class TileStackCacheController {
         final OctreeMetadataSniffer octreeMetadataSniffer = new OctreeMetadataSniffer(topFolder, tileFormat);
         octreeMetadataSniffer.setRemoteBasePath(remoteBasePath);
         octreeMetadataSniffer.sniffMetadata(topFolder);
-        standardVolumeSize = octreeMetadataSniffer.getStandardVolumeSize();
-        sliceSize = octreeMetadataSniffer.getSliceSize();
+        sliceSize = octreeMetadataSniffer.getSliceSize(); // maybe 16-bit
         log.info("initFilesystemMetadata()");
         int[] tileSize=tileFormat.getTileSize();
         int[] volumeSize=tileFormat.getVolumeSize();
         int zoomLevels=tileFormat.getZoomLevelCount();
+        cacheVolumeSize=tileSize[0]*tileSize[1]*tileSize[2]*tileFormat.getChannelCount(); // always 8-bit
+        cache=new SimpleFileCache(100, cacheVolumeSize);
         log.info("Tile size="+tileSize[0]+" "+tileSize[1]+" "+tileSize[2]);
         log.info("Volume size="+volumeSize[0]+" "+volumeSize[1]+" "+volumeSize[2]);
         log.info("zoom Levels="+zoomLevels);
@@ -110,6 +123,18 @@ public class TileStackCacheController {
 
     }
 
+    public SimpleFileCache getCache() {
+        return cache;
+    }
+
+    public int getCacheVolumeSize() {
+        return cacheVolumeSize;
+    }
+
+    public TileFormat getTileFormat() {
+        return tileFormat;
+    }
+
     private int getStackSliceFromTileIndex(TileIndex tileIndex) {
         int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
         int axisIx = tileIndex.getSliceAxis().index();
@@ -123,48 +148,199 @@ public class TileStackCacheController {
     }
 
     public TextureData2dGL loadToRam(TileIndex tileIndex) throws AbstractTextureLoadAdapter.TileLoadError, AbstractTextureLoadAdapter.MissingTileException {
-        //log.info("loadToRam() request tileIndex="+tileIndex.getX()+" "+tileIndex.getY()+" "+tileIndex.getZ()+" zoom="+tileIndex.getZoom());
-        //try { Thread.sleep(1000L); } catch (Exception ex) {}
+        log.info("loadToRam() request tileIndex="+tileIndex.getX()+" "+tileIndex.getY()+" "+tileIndex.getZ()+" zoom="+tileIndex.getZoom());
 
-//        final File octreeFilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, true /*zOriginNegativeShift*/);
-//        if (octreeFilePath == null) {
-//            return null;
-//        }
-//
-//        File stackFile = new File(topFolder, octreeFilePath.toString());
-//        int stackSlice=getStackSliceFromTileIndex(tileIndex);
-//
-//        ByteBuffer stackData=getFileDataFromCache(stackFile);
-//
-//        // Calling this with "true" means I, the caller, accept that the array
-//        // returned may have one or more nulls in it.
-//        ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis(), true, tileFormat.getChannelCount());
-//
-//        // log.info(tileIndex + "" + folder + " : " + relativeSlice);
-//        TextureData2dGL result = loadSlice(relativeSlice, decoders, tileFormat.getChannelCount());
-//        localLoadTimer.mark("finished slice load");
+        final File octreeFilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, true /*zOriginNegativeShift*/);
+        if (octreeFilePath == null) {
+            log.error("Received null octreeFilePath for file="+octreeFilePath.getAbsolutePath());
+            return null;
+        }
 
+        File stackFile = new File(topFolder, octreeFilePath.toString());
+        log.info("loadToRam() calling getStackSliceFromTileIndex() for stackFile="+stackFile.getAbsolutePath());
+        int stackSlice=getStackSliceFromTileIndex(tileIndex);
+        log.info("loadToRam() stackSlice="+stackSlice+", calling getFileDataFromCache()");
+        ByteBuffer stackData=getFileDataFromCache(stackFile);
+        if (stackData==null) {
+            throw new AbstractTextureLoadAdapter.TileLoadError("stackData is null");
+        }
+        return createTextureData2dGLFromCacheVolume(stackData, stackSlice);
 
+        //return createDebugTileFromTileIndex(tileIndex);
+    }
 
-
-        return createDebugTileFromTileIndex(tileIndex);
+    private TextureData2dGL createTextureData2dGLFromCacheVolume(ByteBuffer stackBuffer, int zSlice) {
+        int[] tileSize=tileFormat.getTileSize();
+        int sliceSize=tileSize[0]*tileSize[1];
+        int channelSize=sliceSize*tileSize[2];
+        byte[] stackBytes=stackBuffer.array();
+        List<BufferedImage> imageList=new ArrayList<>();
+        int sliceMin=Integer.MAX_VALUE;
+        int sliceMax=Integer.MIN_VALUE;
+        for (int c=0;c<tileFormat.getChannelCount();c++) {
+            //BufferedImage bufferedImage=new BufferedImage(tileSize[0], tileSize[1], BufferedImage.TYPE_USHORT_GRAY);
+            BufferedImage bufferedImage=new BufferedImage(tileSize[0], tileSize[1], BufferedImage.TYPE_USHORT_GRAY);
+            Raster imageCopy=bufferedImage.getData();
+            DataBuffer dataBuffer=imageCopy.getDataBuffer();
+            int cOffset=channelSize*c;
+            int zOffset=sliceSize*zSlice;
+            for (int y=0;y<tileSize[1];y++) {
+                int yOffset=y*tileSize[0];
+                int czyOffset=cOffset+zOffset+yOffset;
+                for (int x=0;x<tileSize[0];x++) {
+                    //dataBuffer.setElem(yOffset+x, ((stackBytes[czyOffset+x]+128)*256)/(MAX_RAW_VAL-MIN_RAW_VAL) + MIN_RAW_VAL);
+                    int stackValue=((stackBytes[czyOffset+x]+128)*256);
+                    //byte stackValue=stackBytes[czyOffset+x];
+                    if (stackValue>sliceMax) {
+                        sliceMax=stackValue;
+                    } else if (stackValue<sliceMin) {
+                        sliceMin=stackValue;
+                    }
+                    dataBuffer.setElem(yOffset+x, stackValue);
+                }
+            }
+            bufferedImage.setData(imageCopy);
+            imageList.add(bufferedImage);
+        }
+        log.info("createTextureData2dGLFromCacheVolume slice min="+sliceMin+" max="+sliceMax);
+        return getCombinedTextureData2dGLFromRenderedImages(imageList);
     }
 
     private ByteBuffer getFileDataFromCache(File file) throws AbstractTextureLoadAdapter.TileLoadError, AbstractTextureLoadAdapter.MissingTileException {
         ByteBuffer data=cache.getBytes(file);
         if (data==null) {
-            data=getDataFromFile(file);
-            if (data!=null) {
-                cache.putBytes(file, data);
-            } else {
-                throw new AbstractTextureLoadAdapter.TileLoadError("null returned from getDataFromFile() file="+file.getAbsolutePath());
+            log.info("getFileDataFromCache() data is null, proceeding with FileLoader submission to fileLoadThreadPool()");
+            fileLoadThreadPool.schedule(new FileLoader(file, this), 0, TimeUnit.MILLISECONDS);
+            int maxCheckCount=REQUEST_FILE_DATA_FROM_CACHE_TIMEOUT_MS / FILE_DATA_POLL_INTERVAL_MS;
+            int checkCount=0;
+            while (data==null && checkCount<maxCheckCount) {
+                try { Thread.sleep(FILE_DATA_POLL_INTERVAL_MS); } catch (Exception ex) {}
+                data=cache.getBytes(file);
+                checkCount++;
             }
+            if (checkCount==maxCheckCount) {
+                throw new AbstractTextureLoadAdapter.TileLoadError("Request File data from cache timeout for file="+file.getAbsolutePath());
+            }
+            if (data.capacity()==0) {
+                throw new AbstractTextureLoadAdapter.MissingTileException("ByteBuffer empty for file="+file.getAbsolutePath());
+            } else if (data.capacity()==1) {
+                throw new AbstractTextureLoadAdapter.TileLoadError("TileLoadError for file="+file.getAbsolutePath());
+            }
+        } else {
+            log.info("getFileDataFromCache() data is not null, returning cached stack ByteBuffer");
         }
         return data;
     }
 
-    private ByteBuffer getDataFromFile(File file) throws AbstractTextureLoadAdapter.TileLoadError, AbstractTextureLoadAdapter.MissingTileException {
-        return null;
+    private static class FileLoader implements Runnable {
+        private File file;
+        private TileStackCacheController tileStackCacheController;
+        private static ConcurrentHashSet<File> currentFilesBeingLoaded=new ConcurrentHashSet<>();
+
+        public FileLoader(File file, TileStackCacheController tileStackCacheController) {
+            this.file=file;
+            this.tileStackCacheController=tileStackCacheController;
+        }
+
+        @Override
+        public void run() {
+
+            log.info("***>>> FileLoader run()");
+            // Am I already done?
+            SimpleFileCache cache=tileStackCacheController.getCache();
+            ByteBuffer data=cache.getBytes(file);
+            if (data!=null)
+                return;
+
+            // Is someone else already loading this file, in which case I can just let them do it?
+            if (currentFilesBeingLoaded.contains(file)) {
+                return;
+            }
+
+            // Apparently not, so I will take responsibility
+            log.info("***>>> FileLoader loading file="+file.getAbsolutePath());
+            currentFilesBeingLoaded.add(file);
+
+            TileFormat tileFormat=tileStackCacheController.getTileFormat();
+            int[] tileSize=tileFormat.getTileSize();
+            int sliceSize=tileSize[0]*tileSize[1];
+            int channelSize=sliceSize*tileSize[2];
+            byte[] volumeData=new byte[tileStackCacheController.getCacheVolumeSize()];
+            int channelCount=tileFormat.getChannelCount();
+            try {
+                ImageDecoder[] decoders = BlockTiffOctreeLoadAdapter.createImageDecoders(file, CoordinateAxis.Z, true, tileFormat.getChannelCount());
+                RenderedImage[] channels = new RenderedImage[channelCount];
+                int minSliceValue=Integer.MAX_VALUE;
+                int maxSliceValue=Integer.MIN_VALUE;
+                int minByteValue=Integer.MAX_VALUE;
+                int maxByteValue=Integer.MIN_VALUE;
+                for (int z=0;z<tileSize[2];z++) {
+                    log.info("***>>> FileLoader loading zSlize="+z+" for file="+file.getAbsolutePath());
+                    for (int c = 0; c < channels.length; c++) {
+                        ImageDecoder decoder = decoders[c];
+                        channels[c] = decoder.decodeAsRenderedImage(z);
+                    }
+                    for (int c=0;c<channels.length;c++) {
+                        DataBuffer sliceData=channels[c].getData().getDataBuffer();
+                        int zOffset=channelSize*c+z*sliceSize;
+                        for (int y=0;y<tileSize[1];y++) {
+                            int yOffset=y*tileSize[0];
+                            for (int x=0;x<tileSize[0];x++) {
+                                int zyOffset=zOffset+yOffset;
+                                int sVal=sliceData.getElem(yOffset+x);
+                                if (sVal>maxSliceValue) {
+                                    maxSliceValue=sVal;
+                                }
+                                if (sVal<minSliceValue) {
+                                    minSliceValue=sVal;
+                                }
+                                //int iVal=((sVal-MIN_RAW_VAL)*256)/(MAX_RAW_VAL-MIN_RAW_VAL) - 128;
+                                int iVal=sVal/256 - 128;
+                                if (iVal>127) {
+                                    iVal=127;
+                                } else if(iVal<-128) {
+                                    iVal=-128;
+                                }
+                                byte b=(byte)iVal;
+                                if (b>maxByteValue) {
+                                    maxByteValue=b;
+                                } else if (b < minByteValue) {
+                                    minByteValue=b;
+                                }
+                                volumeData[zyOffset+x]=(byte)iVal;
+                            }
+                        }
+                    }
+                }
+                log.info("***>>> Slice Values: min="+minSliceValue+" max="+maxSliceValue+"  bmin="+minByteValue+" bmax="+maxByteValue);
+            } catch (AbstractTextureLoadAdapter.MissingTileException mte) {
+                log.error("***>>> FileLoader MissingTileException");
+                ByteBuffer emptyBuffer=ByteBuffer.wrap(new byte[0]); // to be interpreted as missing
+                try { cache.putBytes(file, emptyBuffer); } catch (Exception ex) {}
+            } catch (AbstractTextureLoadAdapter.TileLoadError tle) {
+                log.error("***>>> FileLoader TileLoadError");
+                ByteBuffer errorBuffer=ByteBuffer.wrap(new byte[1]);
+                try { cache.putBytes(file, errorBuffer); } catch (Exception ex) {}
+            } catch (IOException iex) {
+                log.error("***>>> FileLoader IOException");
+                ByteBuffer errorBuffer=ByteBuffer.wrap(new byte[1]);
+                try { cache.putBytes(file, errorBuffer); } catch (Exception ex2) {}
+            }
+            log.info("***>>> FileLoader wrapping volumeData");
+            ByteBuffer cacheData=ByteBuffer.wrap(volumeData);
+            try {
+                log.info("***>>> FileLoader done loading file="+file.getAbsolutePath()+", placing in cache");
+                cache.putBytes(file, cacheData);
+            }
+            catch (AbstractTextureLoadAdapter.TileLoadError tileLoadError) {
+                log.error("***>>> FileLoader error calling cache.putBytes()");
+                ByteBuffer errorBuffer=ByteBuffer.wrap(new byte[1]);
+                try { cache.putBytes(file, errorBuffer); } catch (Exception ex) {}
+            }
+            currentFilesBeingLoaded.remove(file);
+            log.info("FileLoader returning after loading file="+file.getAbsolutePath());
+            return;
+        }
     }
 
     private TextureData2dGL createDebugTileFromTileIndex(TileIndex tileIndex) {

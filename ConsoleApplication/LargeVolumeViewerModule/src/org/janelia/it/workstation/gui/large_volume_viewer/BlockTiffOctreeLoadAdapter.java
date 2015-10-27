@@ -185,7 +185,10 @@ extends AbstractTextureLoadAdapter
 		ImageDecoder decoders[] = new ImageDecoder[channelCount];
         StringBuilder missingTiffs = new StringBuilder();
         StringBuilder requestedTiffs = new StringBuilder();
-        CacheFacadeI cacheManager = CacheController.getInstance().getManager();
+
+        //CacheFacadeI cacheManager = CacheController.getInstance().getManager();
+        CacheFacadeI cacheManager=null; // developing volume cache
+
 		for (int c = 0; c < channelCount; ++c) {
 			File tiff = new File(folder, OctreeMetadataSniffer.getFilenameForChannel(tiffBase, c));
             if ( requestedTiffs.length() > 0 ) {
