@@ -68,7 +68,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     private ModelMgrObserver modelMgrObserver;
     
     // Listen for key strokes and execute the appropriate key bindings
-    // TODO: we should replace this with an action map in the future
     protected KeyListener keyListener = new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {

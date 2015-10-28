@@ -82,6 +82,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             return domainObject.getName();
         }
         
+        @Override
         public List<Annotation> getAnnotations(DomainObject domainObject) {
             return domainObjectList.getAnnotations(domainObject.getId());
         }
@@ -142,6 +143,18 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll) {
+        if (domainObjects.isEmpty()) {
+            return;
+        }
+        DomainObject first = domainObjects.get(0);
+        selectDomainObject(first, select, clearAll);
+        for(int i=1; i<domainObjects.size(); i++) {
+            DomainObject domainObject = domainObjects.get(i);
+            selectDomainObject(domainObject, select, false);
+        }
+    }
+    
     public void selectDomainObject(DomainObject domainObject, boolean selected, boolean clearAll) {
         if (selected) {
             selectImageObject(domainObject, clearAll);

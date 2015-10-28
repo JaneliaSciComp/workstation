@@ -304,7 +304,7 @@ public class DomainModel {
      * @return canonical domain object instance
      * @throws Exception
      */
-    public DomainObject getDomainObjectByDomainObjectId(DomainObjectId id) {
+    public DomainObject getDomainObject(DomainObjectId id) {
         log.debug("getDomainObjectByDomainObjectId({})",id);
         // This is sort of a hack to allow users to get objects by their superclass. 
         // TODO: Maybe instead of doing all this extra work, we could just key the cache by GUID. 
@@ -323,7 +323,7 @@ public class DomainModel {
     }
     
     public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) {
-        return (T)getDomainObjectByDomainObjectId(new DomainObjectId(domainClass, id));
+        return (T)getDomainObject(new DomainObjectId(domainClass, id));
     }
     
     public List<DomainObject> getDomainObjectsByReference(List<Reference> references) {

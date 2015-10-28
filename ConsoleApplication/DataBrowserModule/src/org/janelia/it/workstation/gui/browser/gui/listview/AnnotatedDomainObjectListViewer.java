@@ -1,10 +1,12 @@
 package org.janelia.it.workstation.gui.browser.gui.listview;
 
-import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
+import java.util.List;
 
 import javax.swing.JPanel;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 
 /**
  * An interface for a viewer that can display an AnnotatedDomainObjectList.
@@ -48,5 +50,5 @@ public interface AnnotatedDomainObjectListViewer {
      * @param select
      * @param clearAll 
      */
-    public void selectDomainObject(DomainObject domainObject, boolean select, boolean clearAll);
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll);
 }

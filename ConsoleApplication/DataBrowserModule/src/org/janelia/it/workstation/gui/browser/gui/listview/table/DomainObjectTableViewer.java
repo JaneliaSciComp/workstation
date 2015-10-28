@@ -18,6 +18,7 @@ import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObject
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
+import org.janelia.it.workstation.gui.framework.table.DynamicRow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,10 +109,41 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
     }
     
     @Override
-    public void selectDomainObject(DomainObject domainObject, boolean selected, boolean clearAll) {
-        // TODO: change table selection
-    }
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll) {
 
+        log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={})",domainObjects.size(),select,clearAll);
+            
+        if (!select) {
+            selectNone();
+            return;
+        }
+
+        Integer start = null;
+        Integer end = null;
+        int i = 0;
+        for(DynamicRow row : getRows()) {
+            DomainObject rowObject = (DomainObject)row.getUserObject();
+            if (domainObjects.indexOf(rowObject)>=0) {
+                if (start==null) {
+                    start = i;
+                }
+            }
+            else {
+                if (start!=null) {
+                    end = i-1;
+                    break;
+                }
+            }
+            i++;
+        }
+        
+        if (start!=null) {
+            if (end==null) end = i-1;
+            log.info("Selecting range: {} - {}",start,end);
+            selectRange(start, end);
+        }
+    }
+    
     @Override
     public void refreshDomainObject(DomainObject domainObject) {
         // TODO: refresh the table

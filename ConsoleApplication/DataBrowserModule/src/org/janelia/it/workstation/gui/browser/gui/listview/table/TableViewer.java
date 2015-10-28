@@ -3,13 +3,15 @@ package org.janelia.it.workstation.gui.browser.gui.listview.table;
 import java.awt.BorderLayout;
 import java.awt.event.MouseEvent;
 import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
+
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicRow;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
@@ -28,8 +30,9 @@ public abstract class TableViewer<T,S> extends JPanel {
     private final JPanel resultsPane;
     private final DynamicTable resultsTable;
     
+    private List<T> objectList;
     private SelectionModel<T,S> selectionModel;
-        
+    
     public TableViewer() {
         
         setLayout(new BorderLayout());
@@ -102,14 +105,25 @@ public abstract class TableViewer<T,S> extends JPanel {
         }
     }
     
+    protected List<DynamicRow> getRows() {
+        return resultsTable.getRows();
+    }
+
+    protected void selectNone() {
+        resultsTable.getTable().getSelectionModel().clearSelection();
+    }
+    
+    protected void selectRange(int index1, int index2) {
+        resultsTable.getTable().getSelectionModel().setSelectionInterval(index1, index2);
+    }
+    
     protected void showObjects(List<T> objectList) {
         
+        this.objectList = objectList;
         resultsTable.removeAllRows();
-        
         for (T object : objectList) {
             resultsTable.addRow(object);
         }
-        
         updateTableModel();
     }
     

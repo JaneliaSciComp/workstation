@@ -5,6 +5,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -23,6 +26,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -206,6 +210,18 @@ public abstract class PaginatedResultsPanel extends JPanel {
         }
         
         updateResultsView();
+        
+        // Reselect the items that were selected
+        List<DomainObject> selectedDomainObjects = new ArrayList<>(); 
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        for(DomainObjectId id : selectionModel.getSelectedIds()) {
+            DomainObject domainObject = model.getDomainObject(id);
+            if (domainObject!=null) {
+                selectedDomainObjects.add(domainObject);
+            }
+        }
+        resultsView.selectDomainObjects(selectedDomainObjects, true, false);
+        
     }
 
     private void setViewer(AnnotatedDomainObjectListViewer viewer) {
@@ -223,7 +239,6 @@ public abstract class PaginatedResultsPanel extends JPanel {
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
         if (event.getSource()!=resultsView) return;
-        resultsView.selectDomainObject(event.getDomainObject(), event.isSelect(), event.isClearAll());
         updateStatusBar();
 //        updateHud(false);
     }
