@@ -388,6 +388,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     result.add(addFileMenuItem());
                     result.add(addCopyMicronLocMenuItem());
                     result.add(addCopyTileLocMenuItem());
+                    result.add(addCopyTileFileLocMenuItem());
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());                    
@@ -1124,6 +1125,16 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 )
         );
         return mnCopyTileInx;
+    }
+    
+    public JMenuItem addCopyTileFileLocMenuItem() {
+        String topFolder = this.loadedUrl.getFile();
+        JMenuItem mnCopyTileFileLoc = new JMenuItem(
+                new RawFileLocToClipboardAction(
+                        statusLabel, tileFormat, topFolder, camera, CoordinateAxis.Z
+                )
+        );
+        return mnCopyTileFileLoc;
     }
     
     public JMenuItem addEditMenuItem() {
