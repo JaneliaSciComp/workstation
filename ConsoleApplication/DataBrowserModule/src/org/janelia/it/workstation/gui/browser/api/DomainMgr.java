@@ -43,7 +43,7 @@ public class DomainMgr {
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
                 log.info("modelPropertyChanged "+key+" newValue: "+newValue);
-                if (key == "RunAs") {
+                if (key == "RunAs" || key == "console.serverLogin") {
                     log.info("Resetting model");
                     model.invalidateAll();
                 }
