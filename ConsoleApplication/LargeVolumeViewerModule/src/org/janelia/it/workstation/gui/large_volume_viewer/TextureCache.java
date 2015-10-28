@@ -149,7 +149,7 @@ public class TextureCache
 			result[i] = val;
 			i += 1;
 		}
-		log.info("popObsoleteTextureIds() returning "+result.length+" entries");
+		//log.info("popObsoleteTextureIds() returning "+result.length+" entries");
 		return result;
 	}
 
