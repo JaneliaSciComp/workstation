@@ -1,6 +1,30 @@
 package org.janelia.it.workstation.gui.framework.session_mgr;
 
-import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
+import java.awt.IllegalComponentStateException;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.BindException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 
 import org.janelia.it.jacs.model.user_data.Group;
 import org.janelia.it.jacs.model.user_data.Subject;
@@ -31,21 +55,7 @@ import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.UIManager.LookAndFeelInfo;
-
-import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.*;
-import java.net.BindException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
 
 public final class SessionMgr {
 
@@ -778,8 +788,9 @@ public final class SessionMgr {
             log.info("Refreshing all views");
             browser.resetView();
         }
-        log.info("Clearing entity model");
+        log.info("Resetting model");
         ModelMgr.getModelMgr().reset();
+        sessionModel.removeAllBrowserModels();
         FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
     }
     

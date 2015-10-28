@@ -17,48 +17,46 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel;
+import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.SavebackEvent;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
-import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
-import org.janelia.it.workstation.gui.alignment_board_viewer.top_component.AlignmentBoardControlsTopComponent;
-import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
-import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
-import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.workstation.gui.alignment_board_viewer.texture.ABContextDataSource;
-import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.VolumeWritebackHandler;
-import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.viewer3d.BaseRenderer;
-import org.janelia.it.workstation.gui.viewer3d.Mip3d;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
-import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
+import org.janelia.it.workstation.gui.alignment_board_viewer.texture.ABContextDataSource;
+import org.janelia.it.workstation.gui.alignment_board_viewer.top_component.AlignmentBoardControlsTopComponent;
+import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.VolumeWritebackHandler;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
+import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.gui.viewer3d.BaseRenderer;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.viewer3d.Mip3d;
+import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
-import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.model.domain.AlignmentContext;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.viewer.AlignedItem;
+import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.util.lookup.ServiceProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -1024,25 +1022,11 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         }
     }
 
-    private class ShutdownListener implements SessionModelListener {
-
-        @Override
-        public void browserAdded(BrowserModel browserModel) {
-        }
-
-        @Override
-        public void browserRemoved(BrowserModel browserModel) {
-        }
-
+    private class ShutdownListener extends SessionModelAdapter {
         @Override
         public void sessionWillExit() {
             serializeInWorker();
         }
-
-        @Override
-        public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
-        }
-
     }
 
 }

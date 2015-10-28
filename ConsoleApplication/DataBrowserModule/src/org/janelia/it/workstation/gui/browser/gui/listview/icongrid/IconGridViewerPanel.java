@@ -2,8 +2,6 @@ package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
@@ -13,16 +11,12 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
@@ -30,14 +24,12 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.entity_model.management.UserColorMapping;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
-import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
@@ -327,7 +319,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             }
         });
 
-        sessionModelListener = new SessionModelListener() {
+        sessionModelListener = new SessionModelAdapter() {
 
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
@@ -350,18 +342,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                     imagesPanel.scrollSelectedEntitiesToCenter();
                     imagesPanel.loadUnloadImages();
                 }
-            }
-
-            @Override
-            public void sessionWillExit() {
-            }
-
-            @Override
-            public void browserRemoved(BrowserModel browserModel) {
-            }
-
-            @Override
-            public void browserAdded(BrowserModel browserModel) {
             }
         };
         

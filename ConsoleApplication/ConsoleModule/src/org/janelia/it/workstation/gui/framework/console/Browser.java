@@ -42,6 +42,7 @@ import org.janelia.it.workstation.gui.framework.outline.VerticalPanelPicker;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.workstation.gui.framework.viewer.ImageCache;
@@ -378,16 +379,7 @@ public class Browser implements Cloneable {
         }
     }
 
-    class MySessionModelListener implements SessionModelListener {
-
-        public void browserAdded(BrowserModel browserModel) {
-        }
-
-        public void browserRemoved(BrowserModel browserModel) {
-        }
-
-        public void sessionWillExit() {
-        }
+    class MySessionModelListener extends SessionModelAdapter {
 
         public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
             if (key.equals(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)) {
