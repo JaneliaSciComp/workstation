@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.media.opengl.GL2;
 
 
@@ -14,6 +17,9 @@ public class TileTexture
 	 * @author brunsc
 	 *
 	 */
+
+	private static final Logger log = LoggerFactory.getLogger(TileTexture.class);
+
 	public static enum LoadStatus 
 	{
 		LOAD_FAILED, // worst
@@ -146,6 +152,7 @@ public class TileTexture
 		try {
 			textureData = loadAdapter.loadToRam(index);
 		} catch (AbstractTextureLoadAdapter.TileLoadError e) {
+			log.error(("Received TileLoadError exception for TileIndex="+index.toString()));
 			setLoadStatus(LoadStatus.LOAD_FAILED); // error
 			return false;
 		} catch (AbstractTextureLoadAdapter.MissingTileException e) { // texture correctly has no data
