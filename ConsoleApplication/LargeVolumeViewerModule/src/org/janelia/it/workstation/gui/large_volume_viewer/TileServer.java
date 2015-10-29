@@ -155,7 +155,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
             vtm.clear();
             vtm.setTextureCache(textureCache);
         }
-        startMinResPreFetch();
+        // DEBUG startMinResPreFetch();
 	};
 	
 	public TileSet createLatestTiles() {

@@ -6,9 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by murphys on 10/23/2015.
@@ -44,6 +42,22 @@ public class SimpleFileCache {
             cache.put(file, data);
         } else {
             throw new AbstractTextureLoadAdapter.TileLoadError("ByteBuffer cache entry must match fileSize="+fileSize);
+        }
+    }
+
+    public int size() {
+        return cache.size();
+    }
+
+    public void limitToNeighborhood(List<File> neighborhoodList) {
+        Set<File> removeSet=new HashSet<>();
+        for (File f : cache.keySet()) {
+            if (!neighborhoodList.contains(f))
+                removeSet.add(f);
+        }
+        for (File f : removeSet) {
+            log.info("cache removing "+f.getAbsolutePath());
+            cache.remove(f);
         }
     }
 

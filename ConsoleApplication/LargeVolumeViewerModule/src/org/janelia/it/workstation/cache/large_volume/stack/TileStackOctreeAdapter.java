@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by murphys on 10/22/2015.
@@ -20,6 +21,7 @@ public class TileStackOctreeAdapter extends AbstractTextureLoadAdapter {
     File topFolder;
     String remoteBasePath;
     TileStackCacheController tileStackCacheController=TileStackCacheController.getInstance();
+    static AtomicInteger ltrCount=new AtomicInteger(0);
 
     public TileStackOctreeAdapter(String remoteBasePath, File topFolder) throws DataSourceInitializeException {
         super();
@@ -45,6 +47,8 @@ public class TileStackOctreeAdapter extends AbstractTextureLoadAdapter {
 
     @Override
     public TextureData2dGL loadToRam(TileIndex tileIndex) throws TileLoadError, MissingTileException {
+        int count=ltrCount.addAndGet(1);
+        log.info("ltrCount="+ltrCount);
         return tileStackCacheController.loadToRam(tileIndex);
     }
 

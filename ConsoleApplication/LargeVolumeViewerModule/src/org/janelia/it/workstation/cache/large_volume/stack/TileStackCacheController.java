@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 
 /**
@@ -122,45 +124,93 @@ public class TileStackCacheController {
     }
 
     private synchronized void updateFocusTileIndex() {
+
+        int sCount = 0;
         if (zoom!=null && focus!=null) {
 
             // Update focus tile/stack
             focusTileIndex = tileFormat.tileIndexForXyz(focus, tileFormat.zoomLevelForCameraZoom(zoom), CoordinateAxis.Z);
             focusStackFile = getStackFileForTileIndex(focusTileIndex);
 
-            log.info("focusStackFile="+focusStackFile.getAbsolutePath());
+            Set<File> previousNeighborhood=new HashSet<>();
+            previousNeighborhood.addAll(neighborhoodStackFiles);
 
             // Update neighborhood
             neighborhoodStackFiles.clear();
 
-            for (int zOffset=-1;zOffset<2;zOffset++) {
-                for (int yOffset = -1; yOffset < 2; yOffset++) {
-                    for (int xOffset = -1; xOffset < 2; xOffset++) {
-                        TileIndex offsetTileIndex = new TileIndex(focusTileIndex.getX() + xOffset, focusTileIndex.getY() + yOffset, focusTileIndex.getZ()+(zOffset*tileFormat.getTileSize()[2]), focusTileIndex.getZoom(), focusTileIndex.getMaxZoom(),
-                                focusTileIndex.getIndexStyle(), focusTileIndex.getSliceAxis());
-                        File octreeFile=OctreeMetadataSniffer.getOctreeFilePath(offsetTileIndex, tileFormat, true);
-                        if (octreeFile!=null) {
-                            neighborhoodStackFiles.add(new File(topFolder, octreeFile.toString()));
-                        }
-                    }
+            // We need to build the neighborhood in optimal order
+
+            // First, the focus tile
+            neighborhoodStackFiles.add(focusStackFile);
+
+            // Next, the inner same-z set
+            for (int yOffset=-1; yOffset<2; yOffset++) {
+                for (int xOffset=-1; xOffset<2; xOffset++) {
+                    File stackFile=getStackFileByOffset(xOffset, yOffset, 0);
+                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) neighborhoodStackFiles.add(stackFile);
                 }
             }
 
+            // Next, one level down
+            for (int yOffset=-1; yOffset<2; yOffset++) {
+                for (int xOffset=-1; xOffset<2; xOffset++) {
+                    File stackFile=getStackFileByOffset(xOffset, yOffset, 1);
+                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) neighborhoodStackFiles.add(stackFile);
+                }
+            }
+
+            // Next, one level up
+            for (int yOffset=-1; yOffset<2; yOffset++) {
+                for (int xOffset=-1; xOffset<2; xOffset++) {
+                    File stackFile=getStackFileByOffset(xOffset, yOffset, -1);
+                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) neighborhoodStackFiles.add(stackFile);
+                }
+            }
+
+            // Last, the outer same-level set
+            // Next, one level down
+            for (int yOffset=-2; yOffset<3; yOffset++) {
+                for (int xOffset=-2; xOffset<3; xOffset++) {
+                    File stackFile=getStackFileByOffset(xOffset, yOffset, 0);
+                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile))
+                        neighborhoodStackFiles.add(stackFile);
+                }
+            }
+
+            int nc=0;
             for (File nf : neighborhoodStackFiles) {
-                int sCount = 0;
-                //log.info("Neighborhood file="+nf.getAbsolutePath());
-                if (cache.getBytes(nf) == null) {
-                    if (nf.equals(focusStackFile)) {
-                        emergencyThreadPool.schedule(new FileLoader(nf, this), 0, TimeUnit.MILLISECONDS);
-                        sCount++;
-                    } else {
-                        fileLoadThreadPool.schedule(new FileLoader(nf, this), 2, TimeUnit.MILLISECONDS);
-                        sCount++;
+                //log.info("nc "+nc+" "+nf.getAbsolutePath());
+                if (!previousNeighborhood.contains(nf)) {
+                    //log.info("Neighborhood file="+nf.getAbsolutePath());
+                    if (cache.getBytes(nf) == null) {
+                        if (nf.equals(focusStackFile)) {
+                            emergencyThreadPool.schedule(new FileLoader(nf, this), 0, TimeUnit.MILLISECONDS);
+                            sCount++;
+                        } else {
+                            fileLoadThreadPool.schedule(new FileLoader(nf, this), 2, TimeUnit.MILLISECONDS);
+                            sCount++;
+                        }
                     }
                 }
-                log.info("Added "+sCount+" stack loads. Emergency="+getEmergencyPoolCount()+" Normal="+getFileLoadPoolCount());
+                nc++;
             }
+
+            // Clean cache
+            cache.limitToNeighborhood(neighborhoodStackFiles);
         }
+
+        log.info("Added " + sCount + " stack loads. Emergency=" + getEmergencyPoolCount() + " Normal=" + getFileLoadPoolCount() + " CacheSize="+cache.size());
+
+    }
+
+    private File getStackFileByOffset(int xOffset, int yOffset, int zOffset) {
+        int zIncrement=zOffset*tileFormat.getTileSize()[2]*(int)(Math.pow(2, focusTileIndex.getZoom()));
+        int zPosition=focusTileIndex.getZ()+zIncrement;
+        TileIndex offsetTileIndex = new TileIndex(focusTileIndex.getX() + xOffset, focusTileIndex.getY() + yOffset, zPosition, focusTileIndex.getZoom(), focusTileIndex.getMaxZoom(),
+                focusTileIndex.getIndexStyle(), focusTileIndex.getSliceAxis());
+
+        File stackFile=getStackFileForTileIndex(offsetTileIndex);
+        return stackFile;
     }
 
     public int getEmergencyPoolCount() {
@@ -242,7 +292,6 @@ public class TileStackCacheController {
     public File getStackFileForTileIndex(TileIndex tileIndex) {
         final File octreeFilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, true /*zOriginNegativeShift*/);
         if (octreeFilePath == null) {
-            log.error("Received null octreeFilePath for file="+octreeFilePath.getAbsolutePath());
             return null;
         }
 
@@ -461,9 +510,9 @@ public class TileStackCacheController {
             }
         }
 
-        private boolean inTheNeighborhood(File file) {
+        private synchronized boolean inTheNeighborhood(File file) {
             List<File> neighborhoodFiles=tileStackCacheController.getNeighborhoodStackFiles();
-            if (neighborhoodFiles!=null && neighborhoodFiles.size()==27 && (!neighborhoodFiles.contains(file))) {
+            if (neighborhoodFiles!=null &&  (!neighborhoodFiles.contains(file))) {
                 return false;
             }
             return true;
