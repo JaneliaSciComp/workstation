@@ -248,6 +248,6 @@ public interface DomainFacade {
      * @param grant grant or revoke?
      * @throws Exception something went wrong
      */
-    public void changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception;
+    public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception;
     
 }

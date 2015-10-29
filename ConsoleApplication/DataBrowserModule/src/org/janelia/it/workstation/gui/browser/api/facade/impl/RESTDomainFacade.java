@@ -418,12 +418,8 @@ public class RESTDomainFacade implements DomainFacade {
         return subjects;
     }
 
-    public void changePermissions(String type, Collection<Long> ids, String granteeKey, String rights, boolean grant) throws Exception {
-
-    }
-
-    public void changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
-
+    public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
+        return null;
     }
 
     public static void main(String[] args) throws Exception {

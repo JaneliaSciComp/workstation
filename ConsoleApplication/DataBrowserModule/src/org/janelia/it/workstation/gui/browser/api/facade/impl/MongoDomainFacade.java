@@ -28,10 +28,10 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
  */
 public class MongoDomainFacade implements DomainFacade {
 
-    protected static final String MONGO_SERVER_URL = "rokicki-ws";
+    protected static final String MONGO_SERVER_URL = "mongodb2";
     protected static final String MONGO_DATABASE = "jacs";
-    protected static final String MONGO_USERNAME = null;
-    protected static final String MONGO_PASSWORD = null;
+    protected static final String MONGO_USERNAME = "flyportal";
+    protected static final String MONGO_PASSWORD = "flyportal";
     
     private final DomainDAO dao;
     
@@ -176,7 +176,8 @@ public class MongoDomainFacade implements DomainFacade {
     }
     
     @Override
-    public void changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
+    public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
         dao.changePermissions(SessionMgr.getSubjectKey(), DomainUtils.getCollectionName(domainObject), Arrays.asList(domainObject.getId()), granteeKey, rights, grant);
+        return dao.getDomainObject(SessionMgr.getSubjectKey(), domainObject);
     }
 }

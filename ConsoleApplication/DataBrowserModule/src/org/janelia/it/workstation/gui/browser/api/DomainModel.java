@@ -706,23 +706,13 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public void changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
+    public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
+        DomainObject canonicalObject = null;
         synchronized (this) {
-            ObjectSet objectSet = new ObjectSet();
-            String type = DomainUtils.getCollectionName(domainObject.getClass());
-            objectSet.setTargetType(type);
-            objectSet.addMember(domainObject.getId());
-            changePermissions(objectSet, granteeKey, rights, grant);
+            canonicalObject = putOrUpdate(facade.changePermissions(domainObject, granteeKey, rights, grant));
         }
-    }
-    
-    public void changePermissions(ObjectSet objectSet, String granteeKey, String rights, boolean grant) throws Exception {
-        synchronized (this) {
-            facade.changePermissions(objectSet, granteeKey, rights, grant);
-            for(Long id : objectSet.getMembers()) {
-                putOrUpdate(getDomainObject(objectSet.getTargetType(), id));
-            }
-        }
+        notifyDomainObjectChanged(canonicalObject);
+        return canonicalObject;
     }
     
     private void notifyDomainObjectCreated(DomainObject domainObject) {

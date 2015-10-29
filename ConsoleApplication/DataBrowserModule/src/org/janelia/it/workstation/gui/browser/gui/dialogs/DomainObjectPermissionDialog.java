@@ -8,14 +8,16 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-
 import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectPermission;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
@@ -38,6 +40,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
     private final JCheckBox recursiveCheckbox;
 
     private DomainObjectPermission dop;
+    private DomainObject domainObject;
 
     public DomainObjectPermissionDialog(DomainInspectorPanel parent) {
 
@@ -110,33 +113,38 @@ public class DomainObjectPermissionDialog extends ModalDialog {
         panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
     }
 
-    public void showForNewPermission(final DomainObject domainObject) {
-        showForPermission(null);
+    public void showForPermission(final DomainObjectPermission dop) {
+        this.dop = dop;
+        this.domainObject = dop.getDomainObject();
+        showDialog();
     }
     
-    public void showForPermission(final DomainObjectPermission dop) {
-
-        this.dop = dop;
+    public void showForNewPermission(final DomainObject domainObject) {
+        this.dop = null;
+        this.domainObject = domainObject;
+        showDialog();
+    }
+    
+    private void showDialog() {
 
         DefaultComboBoxModel model = (DefaultComboBoxModel) subjectCombobox.getModel();
         model.removeAllElements();
 
-        // TODO: logic
-//        String currSubjectKey = eap==null?null:eap.getSubjectKey();
-//        Subject currSubject = null;
-//        for (Subject subject : parent.getUnusedSubjects(currSubjectKey)) {
-//            if (domainObject != null && !domainObject.getOwnerKey().equals(subject.getKey())) {
-//                model.addElement(subject);
-//            }
-//            if (eap != null && eap.getSubjectKey().equals(subject.getKey())) {
-//                currSubject = subject;
-//            }
-//        }
-//
-//        if (currSubject != null) {
-//            model.setSelectedItem(currSubject);
-//        }
-//
+        String currSubjectKey = dop==null?null:dop.getSubjectKey();
+        Subject currSubject = null;
+        for (Subject subject : parent.getUnusedSubjects(currSubjectKey)) {
+            if (domainObject != null && !domainObject.getOwnerKey().equals(subject.getKey())) {
+                model.addElement(subject);
+            }
+            if (dop != null && dop.getSubjectKey().equals(subject.getKey())) {
+                currSubject = subject;
+            }
+        }
+
+        if (currSubject != null) {
+            model.setSelectedItem(currSubject);
+        }
+
         readCheckbox.setSelected(dop == null || dop.isRead());
         writeCheckbox.setSelected(dop != null && dop.isWrite());
         if (dop!=null) {
@@ -153,23 +161,19 @@ public class DomainObjectPermissionDialog extends ModalDialog {
         final Subject subject = (Subject) subjectCombobox.getSelectedItem();
         final boolean recursive = recursiveCheckbox.isSelected();
 
+        final DomainModel model = DomainMgr.getDomainMgr().getModel();
+        
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
+                if (dop == null) {
+                    dop = new DomainObjectPermission(domainObject, subject.getKey());    
+                }
                 dop.setRead(readCheckbox.isSelected());
                 dop.setWrite(writeCheckbox.isSelected());
-//                String permissions = (readCheckbox.isSelected() ? "r" : "") + "" + (writeCheckbox.isSelected() ? "w" : "");
-                // TODO: save to mongo
-//                if (eap == null) {
-//                    eap = ModelMgr.getModelMgr().grantPermissions(domainObject.getId(), subject.getKey(), permissions, recursive);
-//                }
-//                else {
-//                    eap.setSubjectKey(subject.getKey());
-//                    eap.setPermissions(permissions);
-//                    ModelMgr.getModelMgr().saveOrUpdatePermission(eap);
-//                }
-//                ModelMgr.getModelMgr().invalidateCache(domainObject, recursive);
+                // TODO: implement recursive permission changes
+                model.changePermissions(domainObject, dop.getSubjectKey(), dop.getPermissions(), true);
             }
 
             @Override

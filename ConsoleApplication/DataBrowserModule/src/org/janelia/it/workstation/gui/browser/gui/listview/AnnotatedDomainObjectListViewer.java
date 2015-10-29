@@ -22,7 +22,8 @@ public interface AnnotatedDomainObjectListViewer {
     public void showDomainObjects(AnnotatedDomainObjectList domainObjectList);
 
     /**
-     * Refresh the given domain object as the metadata in the AnnotatedDomainObjectList may have changed. 
+     * Refresh the given domain object.
+     * @param domainObject updated domain object
      */
     public void refreshDomainObject(DomainObject domainObject);
     
@@ -34,21 +35,21 @@ public interface AnnotatedDomainObjectListViewer {
 
     /**
      * Configure the selection model to use in the list viewer. 
-     * @param selectionModel 
+     * @param selectionModel selection model
      */
     public void setSelectionModel(DomainObjectSelectionModel selectionModel);
     
     /**
      * Returns the current selection mode used in the list viewer. 
-     * @return Selection Model
+     * @return selection model
      */
     public DomainObjectSelectionModel getSelectionModel();
     
     /**
      * Tell the viewer that the selection should change.
-     * @param domainObject
-     * @param select
-     * @param clearAll 
+     * @param domainObjects list of domain objects for which to change selection
+     * @param select select if true, deselect if false
+     * @param clearAll clear the existing selection before selecting?
      */
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll);
 }

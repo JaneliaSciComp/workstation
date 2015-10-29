@@ -37,6 +37,7 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainObjectPermission
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationView;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectPermission;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
@@ -59,8 +60,6 @@ import com.google.common.collect.ComparisonChain;
 public class DomainInspectorPanel extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(DomainInspectorPanel.class);
-
-//    protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
 
     private static final String ATTRIBUTES_COLUMN_KEY = "Attribute Name";
     private static final String ATTRIBUTES_COLUMN_VALUE = "Attribute Value";
@@ -90,7 +89,7 @@ public class DomainInspectorPanel extends JPanel {
 
     private final JLabel annotationsLoadingLabel;
     private final JPanel annotationsPanel;
-    private final AnnotationView annotationsView;
+    private final AnnotationView<DomainObject, DomainObjectId> annotationsView;
 
     private final DomainObjectPermissionDialog dopDialog;
 
@@ -212,8 +211,8 @@ public class DomainInspectorPanel extends JPanel {
 
                                     @Override
                                     protected void doStuff() throws Exception {
-//                                        ModelMgr.getModelMgr().revokePermissions(dop.getEntity().getId(), dop.getSubjectKey(), recursive);
-//                                        ModelMgr.getModelMgr().invalidateCache(entity, true);
+                                        DomainModel model = DomainMgr.getDomainMgr().getModel();
+                                        model.changePermissions(domainObject, dop.getSubjectKey(), "rw", false);
                                     }
 
                                     @Override
@@ -511,25 +510,4 @@ public class DomainInspectorPanel extends JPanel {
         loadAttributes();
         loadAnnotations();
     }
-
-    // TODO: we might need this later if we want to display attribute which are not DomainObjectAttributes
-//    private class AttributeValue {
-//
-//        private final String name;
-//        private final String value;
-//
-//        public AttributeValue(String name, String value) {
-//            super();
-//            this.name = name;
-//            this.value = value;
-//        }
-//
-//        public String getName() {
-//            return name;
-//        }
-//
-//        public String getValue() {
-//            return value;
-//        }
-//    }
 }
