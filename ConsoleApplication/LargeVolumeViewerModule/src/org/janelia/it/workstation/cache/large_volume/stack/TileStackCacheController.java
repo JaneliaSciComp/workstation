@@ -280,10 +280,12 @@ public class TileStackCacheController {
         ByteBuffer data=cache.getBytes(file);
         if (data==null) {
             //log.info("getFileDataFromCache() data is null, proceeding with FileLoader submission to fileLoadThreadPool()");
-            if (file.getAbsolutePath().equals(focusStackFile.getAbsolutePath())) {
-                emergencyThreadPool.schedule(new FileLoader(file, this), 0, TimeUnit.MILLISECONDS);
-            } else {
-                fileLoadThreadPool.schedule(new FileLoader(file, this), 2, TimeUnit.MILLISECONDS);
+            if (!TileStackCacheController.FileLoader.currentFilesBeingLoaded.contains(file)) {
+                if (file.getAbsolutePath().equals(focusStackFile.getAbsolutePath())) {
+                    emergencyThreadPool.schedule(new FileLoader(file, this), 0, TimeUnit.MILLISECONDS);
+                } else {
+                    fileLoadThreadPool.schedule(new FileLoader(file, this), 2, TimeUnit.MILLISECONDS);
+                }
             }
             int maxCheckCount=REQUEST_FILE_DATA_FROM_CACHE_TIMEOUT_MS / FILE_DATA_POLL_INTERVAL_MS;
             int checkCount=0;
@@ -315,7 +317,7 @@ public class TileStackCacheController {
         private TileStackCacheController tileStackCacheController;
         private static ConcurrentHashSet<File> currentFilesBeingLoaded=new ConcurrentHashSet<>();
 
-        public ConcurrentHashSet<File> getCurrentFilesBeingLoaded() {
+        public static ConcurrentHashSet<File> getCurrentFilesBeingLoaded() {
             return currentFilesBeingLoaded;
         }
 
@@ -331,20 +333,24 @@ public class TileStackCacheController {
             // Am I already done?
             SimpleFileCache cache=tileStackCacheController.getCache();
             ByteBuffer data=cache.getBytes(file);
-            if (data!=null)
+            if (data!=null) {
+                log.info("***>>> FileLoader data already populated for file="+file.getAbsolutePath());
                 return;
+            }
 
             // Is someone else already loading this file, in which case I can just let them do it?
             if (currentFilesBeingLoaded.contains(file)) {
+                log.info("***>>> FileLoader file already being loaded="+file.getAbsolutePath());
                 return;
             }
 
             // Am I out of the neighborhood?
-//            if (!inTheNeighborhood(file)) {
-//                ByteBuffer errorBuffer=ByteBuffer.wrap(new byte[1]);
-//                try { cache.putBytes(file, errorBuffer); } catch (Exception ex) {}
-//                return;
-//            }
+            if (!inTheNeighborhood(file)) {
+                log.info("***>>> FileLoader skipping file because out of neighborhood="+file.getAbsolutePath());
+                ByteBuffer errorBuffer=ByteBuffer.wrap(new byte[1]);
+                try { cache.putBytes(file, errorBuffer); } catch (Exception ex) {}
+                return;
+            }
 
             // Apparently not, so I will take responsibility
             currentFilesBeingLoaded.add(file);
@@ -400,7 +406,11 @@ public class TileStackCacheController {
                 }
             }
             currentFilesBeingLoaded.remove(file);
-            log.info("FileLoader returning after loading file="+file.getAbsolutePath());
+            if (!errorFlag) {
+                log.info("FileLoader returning after loading file="+file.getAbsolutePath());
+            } else {
+                log.info("FileLoader did not succeed with file="+file.getAbsolutePath());
+            }
             return;
         }
 
@@ -421,9 +431,10 @@ public class TileStackCacheController {
                     }
                 }
 //                // Am I out of the neighborhood?
-//                if (!inTheNeighborhood(file)) {
-//                    throw new AbstractTextureLoadAdapter.TileLoadError("Out of neighborhood");
-//                }
+                if (!inTheNeighborhood(file)) {
+                    log.info("file="+file.getAbsolutePath()+" is not in the neighborhood");
+                    throw new AbstractTextureLoadAdapter.TileLoadError("Out of neighborhood");
+                }
                 //log.info("***>>> FileLoader loading zSlize="+z+" for file="+file.getAbsolutePath());
                 for (int c = 0; c < channels.length; c++) {
                     ImageDecoder decoder = decoders[c];
@@ -452,7 +463,7 @@ public class TileStackCacheController {
 
         private boolean inTheNeighborhood(File file) {
             List<File> neighborhoodFiles=tileStackCacheController.getNeighborhoodStackFiles();
-            if (neighborhoodFiles!=null && neighborhoodFiles.size()>0 && !neighborhoodFiles.contains(file)) {
+            if (neighborhoodFiles!=null && neighborhoodFiles.size()==27 && (!neighborhoodFiles.contains(file))) {
                 return false;
             }
             return true;
