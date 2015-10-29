@@ -101,6 +101,10 @@ implements VolumeImage3d
         this.remoteBasePath = basePath;
     }
     
+    public String getRemoteBasePath() {
+        return remoteBasePath;
+    }
+    
 	@Override
 	public boolean loadURL(URL folderUrl) {
 		// Sanity check before overwriting current view

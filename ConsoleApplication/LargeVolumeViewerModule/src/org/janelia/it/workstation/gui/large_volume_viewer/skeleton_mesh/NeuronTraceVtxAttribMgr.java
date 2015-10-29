@@ -9,6 +9,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -188,12 +189,12 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
 
     @Override
     public void exportVertices(File outputLocation, String filenamePrefix) throws Exception {
-        Skeleton skeleton = dataSource.getSkeleton();
-        if (skeleton == null || skeleton.getAnchors().isEmpty()) {
+        Collection<Anchor> anchors = getAnchorsSafe();
+        if (anchors == null || anchors.isEmpty()) {
             log.warn("Nothing to export");
             return;
         }
-        Anchor anAnchor = skeleton.getAnchors().iterator().next();
+        Anchor anAnchor = anchors.iterator().next();
         Long id = anAnchor.getNeuronID();
         this.execute();  // Ensure contents.
         exportVertices(outputLocation, filenamePrefix, triangleSources, id);
@@ -654,12 +655,13 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
         Collection<AnchorLinesReturn> rtnVal = new ArrayList<>();
         int currentIndex = 0;
         Set<SegmentIndex> existing = new HashSet<>();
-        Map<Anchor,Integer> anchorToIndex = new HashMap<>();
-        for (Anchor anchor: getSkeleton().getAnchors()) {
+        Map<Anchor,Integer> anchorToIndex = new HashMap<>();        
+        Collection<Anchor> anchors = getAnchorsSafe();
+        for (Anchor anchor: anchors) {
             anchorToIndex.put(anchor, currentIndex++);
         }
         int tracedPairSkipCount = 0;
-        for (Anchor anchor: getSkeleton().getAnchors()) {
+        for (Anchor anchor: anchors) {
             NeuronStyle style = getNeuronStyle(anchor.getNeuronID());
                     
             Integer i1 = anchorToIndex.get( anchor );
@@ -704,6 +706,15 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
             style = NeuronStyle.getStyleForNeuron(neuronId);
         }
         return style;
+    }
+    
+    private Collection<Anchor> getAnchorsSafe() {
+        if (dataSource.getSkeleton() == null) {
+            return Collections.EMPTY_LIST;
+        }
+        else {
+            return new ArrayList<Anchor>(dataSource.getSkeleton().getAnchors());
+        }
     }
 
     private static class AnchorLinesReturn {

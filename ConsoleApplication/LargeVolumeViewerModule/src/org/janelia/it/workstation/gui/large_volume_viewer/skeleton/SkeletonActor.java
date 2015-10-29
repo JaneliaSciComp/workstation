@@ -25,6 +25,7 @@ import javax.swing.ImageIcon;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Vector;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
@@ -579,7 +580,7 @@ public class SkeletonActor
         neuronVertices.clear();
         neuronColors.clear();
         // first, how many vertices per neuron; then, fill the buffers (one per neuron)
-        Collection<Anchor> anchors = new ArrayList<>(skeleton.getAnchors()); // Avoid concurrent mod.
+        Collection<Anchor> anchors = getAnchorsSafe();
         for (Anchor anchor : anchors) {
             neuronVertexCount.add(anchor.getNeuronID());
         }
@@ -667,7 +668,7 @@ public class SkeletonActor
         //  returns them in)
 
         Map<Long, List<Integer>> tempLineIndices = new HashMap<>();
-        for (Anchor anchor : skeleton.getAnchors()) {
+        for (Anchor anchor : getAnchorsSafe()) {
             int i1 = getIndexForAnchor(anchor);
             if (i1 < 0) {
                 continue;
@@ -721,7 +722,8 @@ public class SkeletonActor
         //  this is necessary because unlike in the old not-per-neuron way of
         //  doing things, we would normally need some info from anchors that
         //  just isn't there when the whole skeleton is cleared
-        if (skeleton.getAnchors().size() == 0) {
+        Collection<Anchor> anchors = getAnchorsSafe();
+        if ( anchors.isEmpty() ) {
             neuronTracedSegments.clear();
             return;
         }
@@ -1014,7 +1016,7 @@ public class SkeletonActor
 
     protected Anchor findAnchor(Long annotationID) {
         Anchor foundAnchor = null;
-        for (Anchor testAnchor : getSkeleton().getAnchors()) {
+        for (Anchor testAnchor : getAnchorsSafe()) {
             if (testAnchor.getGuid().equals(annotationID)) {
                 foundAnchor = testAnchor;
                 break;
@@ -1058,6 +1060,14 @@ public class SkeletonActor
 
     private TileFormat getTileFormat() {
         return tileFormat;
+    }
+    
+    /** Avoid concurrent modification exceptions, during import. */
+    private Collection<Anchor> getAnchorsSafe() {
+        if (skeleton == null || skeleton.getAnchors() == null) {
+            return Collections.EMPTY_LIST;
+        }
+        return new ArrayList<>(skeleton.getAnchors());
     }
 
 }

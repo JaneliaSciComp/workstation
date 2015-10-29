@@ -71,6 +71,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
 
 public final class ModelMgr {
 
@@ -1299,6 +1300,10 @@ public final class ModelMgr {
 
     public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, dimensions);
+    }
+    
+    public RawFileInfo getNearestChannelFiles( String basePath, int[] viewerCoord ) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getNearestChannelFiles( basePath, viewerCoord );
     }
 
     public List<List<Object>> getRootPaths(Entity entity, Set<Long> visited) throws Exception {

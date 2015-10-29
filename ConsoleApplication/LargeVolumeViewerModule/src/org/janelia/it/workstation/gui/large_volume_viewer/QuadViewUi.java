@@ -1131,7 +1131,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         String topFolder = this.loadedUrl.getFile();
         JMenuItem mnCopyTileFileLoc = new JMenuItem(
                 new RawFileLocToClipboardAction(
-                        statusLabel, tileFormat, topFolder, camera, CoordinateAxis.Z
+                        statusLabel, tileFormat, volumeImage, camera, CoordinateAxis.Z
                 )
         );
         return mnCopyTileFileLoc;
