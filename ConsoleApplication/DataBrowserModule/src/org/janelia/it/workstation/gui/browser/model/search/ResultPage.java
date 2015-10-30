@@ -32,7 +32,7 @@ public class ResultPage implements AnnotatedDomainObjectList {
         }
         
         for(Annotation annotation : annotations) {
-            annotationsByDomainObjectId.put(annotation.getTarget().getTargetId(), annotation);
+            annotationsByDomainObjectId.put(annotation.getTarget().getId(), annotation);
         }
         this.numTotalResults = totalNumResults;
     }

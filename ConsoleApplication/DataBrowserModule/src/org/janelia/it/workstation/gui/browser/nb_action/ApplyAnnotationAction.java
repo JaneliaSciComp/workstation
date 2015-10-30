@@ -256,8 +256,8 @@ public class ApplyAnnotationAction extends NodeAction {
         annotation.setValue(valueString);
         
         Reference targetRef = new Reference();
-        targetRef.setTargetType(DomainUtils.getCollectionName(target.getClass()));
-        targetRef.setTargetId(target.getId());
+        targetRef.setCollectionName(DomainUtils.getCollectionName(target.getClass()));
+        targetRef.setId(target.getId());
         annotation.setTarget(targetRef);
         
         String tag = (annotation.getValue()==null ? annotation.getKey() : 

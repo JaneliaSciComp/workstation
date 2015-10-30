@@ -691,8 +691,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 else if (criteria instanceof SetCriteria) {
                     SetCriteria sc = (SetCriteria) criteria;
                     Reference ref = sc.getSetReference();
-                    log.info("Setting query root: {}",ref.getTargetId());
-                    builder.setRootId(ref.getTargetId());
+                    log.info("Setting query root: {}",ref.getId());
+                    builder.setRootId(ref.getId());
                 }
             }
         }
@@ -1027,7 +1027,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             SetCriteria source = (SetCriteria)criteria;
             SetCriteria newCriteria = new SetCriteria();
             newCriteria.setSetName(source.getSetName());
-            Reference setReference = new Reference(source.getSetReference().getTargetType(), source.getSetReference().getTargetId());
+            Reference setReference = new Reference(source.getSetReference().getCollectionName(), source.getSetReference().getId());
             newCriteria.setSetReference(setReference);
             return newCriteria;
         }

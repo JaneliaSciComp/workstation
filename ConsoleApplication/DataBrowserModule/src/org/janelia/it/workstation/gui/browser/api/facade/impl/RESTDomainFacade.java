@@ -379,7 +379,7 @@ public class RESTDomainFacade implements DomainFacade {
 
     public ObjectSet addMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
         for (Reference ref: references) {
-            objectSet.addMember(ref.getTargetId());
+            objectSet.addMember(ref.getId());
         }
         Response response = serviceEndpoints.get("objectset")
                 .path("member")
@@ -394,7 +394,7 @@ public class RESTDomainFacade implements DomainFacade {
 
     public ObjectSet removeMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
         for (Reference ref: references) {
-            objectSet.removeMember(ref.getTargetId());
+            objectSet.removeMember(ref.getId());
         }
         Response response = serviceEndpoints.get("objectset")
                 .path("member")

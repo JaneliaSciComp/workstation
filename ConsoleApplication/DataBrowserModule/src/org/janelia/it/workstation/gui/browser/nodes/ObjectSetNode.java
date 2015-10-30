@@ -82,7 +82,7 @@ public class ObjectSetNode extends DomainObjectNode {
             
             for(DomainObject domainObject : objects) {
                 String type = DomainUtils.getCollectionName(domainObject);
-                if (objectSet.getTargetType()!=null && !type.equals(objectSet.getTargetType())) {
+                if (objectSet.getCollectionName()!=null && !type.equals(objectSet.getCollectionName())) {
                     log.info("Type {} is incompatible with object set {}",type,objectSet.getId());
                     return null;
                 }
