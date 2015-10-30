@@ -2,7 +2,8 @@ package org.janelia.it.workstation.cache.large_volume.stack;
 
 import com.sun.media.jai.codec.ImageDecoder;
 import org.eclipse.jetty.util.ConcurrentHashSet;
-import org.janelia.it.jacs.shared.img_3d_loader.H265FileLoader;
+import org.janelia.it.jacs.shared.ffmpeg.H5JLoader;
+import org.janelia.it.jacs.shared.ffmpeg.ImageStack;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.*;
@@ -126,7 +127,7 @@ public class TileStackCacheController {
     private synchronized void updateFocusTileIndex() {
 
         int sCount = 0;
-        if (zoom!=null && focus!=null) {
+        if (zoom!=null && focus!=null && cache!=null) {
 
             // Update focus tile/stack
             focusTileIndex = tileFormat.tileIndexForXyz(focus, tileFormat.zoomLevelForCameraZoom(zoom), CoordinateAxis.Z);
@@ -197,10 +198,8 @@ public class TileStackCacheController {
 
             // Clean cache
             cache.limitToNeighborhood(neighborhoodStackFiles);
+            log.info("Added " + sCount + " stack loads. Emergency=" + getEmergencyPoolCount() + " Normal=" + getFileLoadPoolCount() + " CacheSize="+cache.size());
         }
-
-        log.info("Added " + sCount + " stack loads. Emergency=" + getEmergencyPoolCount() + " Normal=" + getFileLoadPoolCount() + " CacheSize="+cache.size());
-
     }
 
     private File getStackFileByOffset(int xOffset, int yOffset, int zOffset) {
@@ -413,6 +412,7 @@ public class TileStackCacheController {
             int channelCount=tileFormat.getChannelCount();
             boolean errorFlag=false;
             try {
+
                 loadTiffToByteArray(file, volumeData, channelCount, tileSize);
 
                 //System.out.println("Has JavaCPP? " + System.getProperty("java.class.path").contains("javacpp"));
@@ -519,22 +519,15 @@ public class TileStackCacheController {
         }
 
         private void loadH5JToByteArray(File[] files, byte[] volumeData, int channelCount, int[] tileSize)throws AbstractTextureLoadAdapter.TileLoadError, AbstractTextureLoadAdapter.MissingTileException, IOException {
-            H265FileLoader loader = new H265FileLoader();
-//            loader.saveFramesAsPPM(filename);
+            int channelSize=tileSize[0] * tileSize[1] * tileSize[2];
             try {
-                log.info("Trying to load="+files[0].getAbsolutePath());
-                loader.loadVolumeFile(files[0].getAbsolutePath());
-                int pixelBytes=loader.getPixelBytes();
-                int sx=loader.getSx();
-                int sy=loader.getSy();
-                int sz=loader.getSz();
-                byte[] h5jBytes=loader.getTextureByteArray();
-                boolean h5jBytesNull=false;
-                if (h5jBytes==null) {
-                    h5jBytesNull=true;
+                for (int c=0;c<channelCount;c++) {
+                    byte[] data=getSingleChannelH5JData(files[c]);
+                    if (data.length!=channelSize) {
+                        throw new AbstractTextureLoadAdapter.TileLoadError("H5J channel size="+data.length+" does not match expected channel size="+channelSize);
+                    }
+                    System.arraycopy(data, 0, volumeData, c*channelSize, channelSize);
                 }
-                log.info("pixelBytes="+pixelBytes+" sx="+sx+" sy="+sy+" sz="+sz+" h5jBytesNull="+h5jBytesNull);
-                log.info("Done trying to load="+files[0].getAbsolutePath());
             } catch (Exception ex) {
                 log.error("Exception loading H5J: "+ex.toString());
                 ex.printStackTrace();
@@ -560,6 +553,28 @@ public class TileStackCacheController {
             return h5jArr;
         }
 
+    }
+
+    private static synchronized byte[] getSingleChannelH5JData(File file) throws IOException {
+        try {
+            H5JLoader h5JLoader = new H5JLoader(file.getAbsolutePath());
+            List<String> channelNames = h5JLoader.channelNames();
+            ImageStack image = h5JLoader.extract(channelNames.get(0));
+            int maxFrames = image.getNumFrames();
+            int startingFrame = 0;
+            int endingFrame = startingFrame + maxFrames;
+            int sliceSize=image.width()*image.height();
+            int dataSize=sliceSize*maxFrames;
+            byte[] result=new byte[dataSize];
+            for (int i = startingFrame; i < endingFrame; i++) {
+                int startIndex=sliceSize*i;
+                byte[] sliceData=image.interleave(i, 0, 1);
+                System.arraycopy(sliceData, 0, result, startIndex, sliceSize);
+            }
+            return result;
+        } catch (Exception ex) {
+            throw new IOException(ex);
+        }
     }
 
     private String getFileSeparator() {
