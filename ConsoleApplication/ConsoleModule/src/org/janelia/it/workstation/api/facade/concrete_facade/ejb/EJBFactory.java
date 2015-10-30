@@ -29,7 +29,7 @@ public class EJBFactory {
     private static final String REMOTE_COMPUTE_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.compute.jndi.name");
     private static final String REMOTE_ENTITY_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.entity.jndi.name");
     private static final String REMOTE_SEARCH_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.search.jndi.name");
-    private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.genome.context.jndi.name");
+//    private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.genome.context.jndi.name");
     private static final String REMOTE_JOB_CONTROL_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.job.control.jndi.name");
     private static final String REMOTE_TILED_MICROSCOPE_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.tiled.microscope.jndi.name");
     private static final String REMOTE_GEOMETRIC_SEARCH_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.geometric_search.jndi.name");
@@ -161,10 +161,10 @@ public class EJBFactory {
         return (SolrBeanRemote) getRemoteInterface(REMOTE_SOLR_JNDI_NAME);
     }
 
-    public static GenomeContextBeanRemote getRemoteGenomeContextBean() {
-        return (GenomeContextBeanRemote) getRemoteInterface(REMOTE_GENOME_CONTEXT_JNDI_NAME);
-    }
-
+//    public static GenomeContextBeanRemote getRemoteGenomeContextBean() {
+//        return (GenomeContextBeanRemote) getRemoteInterface(REMOTE_GENOME_CONTEXT_JNDI_NAME);
+//    }
+//
     public static JobControlBeanRemote getRemoteJobControlBean() {
         return (JobControlBeanRemote) getRemoteInterface(REMOTE_JOB_CONTROL_JNDI_NAME);
     }

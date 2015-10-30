@@ -24,6 +24,7 @@ import javax.swing.ImageIcon;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
+import java.util.ArrayList;
 import java.util.Vector;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
@@ -578,7 +579,8 @@ public class SkeletonActor
         neuronVertices.clear();
         neuronColors.clear();
         // first, how many vertices per neuron; then, fill the buffers (one per neuron)
-        for (Anchor anchor : skeleton.getAnchors()) {
+        Collection<Anchor> anchors = new ArrayList<>(skeleton.getAnchors()); // Avoid concurrent mod.
+        for (Anchor anchor : anchors) {
             neuronVertexCount.add(anchor.getNeuronID());
         }
         for (Long neuronID : neuronVertexCount.elementSet()) {
@@ -598,7 +600,7 @@ public class SkeletonActor
         Map<Long, Integer> neuronVertexIndex = new HashMap<>();
         int currentVertexIndex;
         NeuronStyle style;
-        for (Anchor anchor : skeleton.getAnchors()) {
+        for (Anchor anchor : anchors) {
             Long neuronID = anchor.getNeuronID();
             Vec3 xyz = anchor.getLocation();
             neuronVertices.get(neuronID).put((float) xyz.getX());
@@ -638,7 +640,7 @@ public class SkeletonActor
             neuronPointIndices.put(neuronID, tempBytes.asIntBuffer());
             neuronPointIndices.get(neuronID).rewind();
         }
-        for (Anchor anchor : skeleton.getAnchors()) {
+        for (Anchor anchor : anchors) {
             int i1 = neuronAnchorIndices.get(anchor);
             neuronPointIndices.get(anchor.getNeuronID()).put(i1);
         }
@@ -650,7 +652,7 @@ public class SkeletonActor
         //  we know where the paths are!)
         updateLines();
 
-        if (!skeleton.getAnchors().contains(getNextParent())) {
+        if (!anchors.contains(getNextParent())) {
             setNextParent(null);
         }
 

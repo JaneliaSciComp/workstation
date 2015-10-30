@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import Jama.Matrix;
+import org.janelia.it.jacs.model.util.MatrixUtilities;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -758,20 +759,22 @@ public class TileFormat
     /** Lazily initialize matrices to move between voxel and stage/micron. */
     private void establishConversionMatrices() {
         if (this.micronToVoxMatrix == null  &&  ( origin[X_OFFS] > 0.00001 )) {
-            double[][] voxToMicronArr = new double[][] {
-                {voxelMicrometers[X_OFFS], 0.0, 0.0, origin[X_OFFS] * voxelMicrometers[X_OFFS]},
-                {0.0, voxelMicrometers[Y_OFFS], 0.0, origin[Y_OFFS] * voxelMicrometers[Y_OFFS]},
-                {0.0, 0.0, voxelMicrometers[Z_OFFS], origin[Z_OFFS] * voxelMicrometers[Z_OFFS]},
-                {0.0, 0.0, 0.0, 1.0}
-            };
-            setVoxToMicronMatrix(new Matrix(voxToMicronArr));
-            double[][] micronToVoxArr = new double[][]{
-                {1.0 / voxelMicrometers[X_OFFS], 0.0, 0.0, -origin[X_OFFS]},
-                {0.0, 1.0 / voxelMicrometers[Y_OFFS], 0.0, -origin[Y_OFFS]},
-                {0.0, 0.0, 1.0 / voxelMicrometers[Z_OFFS], -origin[Z_OFFS]},
-                {0.0, 0.0, 0.0, 1.0}
-            };
-            setMicronToVoxMatrix(new Matrix(micronToVoxArr));
+            Matrix voxToMicronMatrix = MatrixUtilities.buildVoxToMicron(voxelMicrometers, origin);
+//            double[][] voxToMicronArr = new double[][] {
+//                {voxelMicrometers[X_OFFS], 0.0, 0.0, origin[X_OFFS] * voxelMicrometers[X_OFFS]},
+//                {0.0, voxelMicrometers[Y_OFFS], 0.0, origin[Y_OFFS] * voxelMicrometers[Y_OFFS]},
+//                {0.0, 0.0, voxelMicrometers[Z_OFFS], origin[Z_OFFS] * voxelMicrometers[Z_OFFS]},
+//                {0.0, 0.0, 0.0, 1.0}
+//            };
+            setVoxToMicronMatrix(voxToMicronMatrix);
+            Matrix micronToVoxMatrix = MatrixUtilities.buildMicronToVox(voxelMicrometers, origin);
+//            double[][] micronToVoxArr = new double[][]{
+//                {1.0 / voxelMicrometers[X_OFFS], 0.0, 0.0, -origin[X_OFFS]},
+//                {0.0, 1.0 / voxelMicrometers[Y_OFFS], 0.0, -origin[Y_OFFS]},
+//                {0.0, 0.0, 1.0 / voxelMicrometers[Z_OFFS], -origin[Z_OFFS]},
+//                {0.0, 0.0, 0.0, 1.0}
+//            };
+            setMicronToVoxMatrix(micronToVoxMatrix);
         }
     }
 }

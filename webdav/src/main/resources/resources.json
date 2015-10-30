@@ -5,8 +5,10 @@
             "groupattribute": "memberUid"
         },
         "scality": {
-            "url": "http://sc101-jrc:81/proxy",
-            "driver":  "bparc2"
+            "objectUrl": "http://jacs-joss:8080/jos/object",
+            "metaUrl": "http://jacs-joss:8080/jos/metadata",
+            "user": "tester",
+            "password": "jos"
         }
     },
     "authorizers": {
@@ -17,6 +19,18 @@
         "flylight": {
             "type": "ldapgroup",
             "group": "cn=flylightconf,ou=Groups,dc=hhmi,dc=org"
+        },
+        "flyfuncconn": {
+            "type": "ldapgroup",
+            "group": "cn=flyfuncconn,ou=Groups,dc=hhmi,dc=org"
+        },
+        "projtechres": {
+            "type": "ldapgroup",
+            "group": "cn=projtechres,ou=Groups,dc=hhmi,dc=org"
+        },
+        "card": {
+            "type": "ldapgroup",
+            "group": "cn=card,ou=Groups,dc=hhmi,dc=org"
         },
         "dickson": {
             "type": "ldapgroup",
@@ -29,6 +43,10 @@
         "mousebrain": {
             "type": "ldapgroup",
             "group": "cn=mousebrainmicro,ou=Groups,dc=hhmi,dc=org"
+        },
+        "rubin": {
+            "type": "ldapgroup",
+            "group": "cn=rubin,ou=Groups,dc=hhmi,dc=org"
         },
         "test": {
             "type": "user",
@@ -94,8 +112,48 @@
                 "propfind"
             ]
         },
+        "Fly Functional Connectome": {
+            "mapping": "/tier2/flyfuncconn",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "flyfuncconn",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Card Lab": {
+            "mapping": "/tier2/card/CardLabImageDatabase",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "card",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Flylight Collaborations": {
+            "mapping": "/tier2/flylight/collaborations",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "flylight",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
         "Flylight Flip": {
             "mapping": "/tier2/flylight/flip",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "flylight",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Flylight Image Test": {
+            "mapping": "/tier2/flylight/image_test",
             "type": "block",
             "path": "mirror",
             "authorizer": "flylight",
@@ -119,6 +177,16 @@
             "type": "block",
             "path": "mirror",
             "authorizer": "flylight",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Flylight SSplit Review": {
+            "mapping": "/tier2/flylight/split_screen_review",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "test",
             "permissions": [
                 "read",
                 "propfind"
@@ -169,6 +237,26 @@
             "type": "block",
             "path": "mirror",
             "authorizer": "mousebrain",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Project Technical Resources": {
+            "mapping": "/tier2/projtechres",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "projtechres",
+            "permissions": [
+                "read",
+                "propfind"
+            ]
+        },
+        "Rubin Lab": {
+            "mapping": "/tier2/rubin/data1/rubinlab/Tanya",
+            "type": "block",
+            "path": "mirror",
+            "authorizer": "rubin",
             "permissions": [
                 "read",
                 "propfind"

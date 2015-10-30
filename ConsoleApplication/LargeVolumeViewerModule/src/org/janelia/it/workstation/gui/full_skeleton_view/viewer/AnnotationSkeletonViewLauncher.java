@@ -24,22 +24,37 @@ public class AnnotationSkeletonViewLauncher {
     
     /** Always re-open the view on initial creation. */
     public AnnotationSkeletonViewLauncher() {
-        refreshView();
+        this(true);
+    }
+    
+    public AnnotationSkeletonViewLauncher(boolean refresh) {
+        if (refresh) {
+            refreshView();
+        }
     }
     
     public List<JMenuItem> getMenuItems() {
         List<JMenuItem> menuItems = new ArrayList<>();
         Action launchAction = new AbstractAction() {
             {
-                super.putValue(NAME, "Launch Annotation Landmark Viewer");
+                super.putValue(NAME, AnnotationSkeletalViewTopComponent.LABEL_TEXT.trim());
             }
             @Override
             public void actionPerformed(ActionEvent e) {
                 reopenView();
+                refreshTopComponent();
             }
         };
         menuItems.add(new JMenuItem(launchAction));
         return menuItems;
+    }
+
+    public void refreshTopComponent() {
+        AnnotationSkeletalViewTopComponent comp = getTopComponent();
+        // Coerce a redraw.
+        comp.invalidate();
+        comp.validate();
+        comp.repaint();
     }
     
     public void reopenView() {

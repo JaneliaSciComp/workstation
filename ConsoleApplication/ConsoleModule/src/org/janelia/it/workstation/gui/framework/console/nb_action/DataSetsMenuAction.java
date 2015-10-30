@@ -1,17 +1,17 @@
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
-import org.janelia.it.workstation.gui.dialogs.DataSetListDialog;
-import org.janelia.it.workstation.gui.framework.console.Browser;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.AbstractAction;
+import javax.swing.JMenuItem;
+
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.actions.Presenter;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 @ActionID(
         category = "Services",
@@ -26,9 +26,6 @@ import java.awt.event.ActionListener;
 public final class DataSetsMenuAction extends AbstractAction implements Presenter.Menu {
     
     public static final String DATA_SETS_ITEM = "Data Sets";
-
-    public DataSetsMenuAction() {
-    }
     
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -36,10 +33,8 @@ public final class DataSetsMenuAction extends AbstractAction implements Presente
 
     @Override
     public JMenuItem getMenuPresenter() {
-        Browser browser = SessionMgr.getBrowser();
-        final DataSetListDialog dataSetListDialog = browser.getDataSetListDialog();
         JMenuItem menuItem = new JMenuItem(DATA_SETS_ITEM);
-        menuItem.addActionListener( new ActionListener() {
+        menuItem.addActionListener(new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
                 SessionMgr.getBrowser().getDataSetListDialog().showDialog();
             }

@@ -48,7 +48,8 @@ public class TestMip3d {
                     // Black as of 11/7/2014.
                     //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/951/842/1742124964321951842/separate/ConsolidatedLabel.v3dpbd";
                     // Checked 7/1/2015.
-                    String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation//002/594/1763505680465002594/separate/fastLoad/ConsolidatedSignal2_25.mp4";
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation//002/594/1763505680465002594/separate/fastLoad/ConsolidatedSignal2_25.mp4";
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/itom10/Separation/961/826/2189649582885961826/separate/fastLoad/ConsolidatedSignal2_25.mp4";
                     // Flawed: has extra back-slices that are somehow (but not simply) empty.
                     //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/leetlab/Separation/265/762/2154818735297265762/separate/fastLoad/ConsolidatedSignal2_25.mp4";
                     // WORKING:
@@ -61,6 +62,7 @@ public class TestMip3d {
                     //   String fn = "/Volumes/nobackup/jacs/jacsData/filestore/leetlab/Sample/608/546/2128604592181608546/stitch/stitched-2097857285479989255.h5j";
                     //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/leetlab/Sample/613/895/2075966713928613895/stitch/stitched-2075896527250784263.h5j";
                     //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/leetlab/Sample/613//986/2136725860424613986/stitch/stitched-2136712453847777378.h5j";
+                    String fn = "/Volumes/nobackup/mousebrainmicro/h5j-2015-06-19-johan-full/default.0.h5j";
                     System.out.println("Has JavaCPP? " + System.getProperty("java.class.path").contains("javacpp"));
 
                     //String fn = guideBase + "Mask.v3dpbd";

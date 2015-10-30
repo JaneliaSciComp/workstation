@@ -37,6 +37,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
@@ -68,7 +69,8 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	protected VolumeImage3d volumeImage = sharedVolumeImage;
 	protected SliceActor sliceActor;
 	private ImageColorModel imageColorModel;
-	private BasicMouseMode pointComputer = new BasicMouseMode();
+	private final BasicMouseMode pointComputer = new BasicMouseMode();
+    private final MicronCoordsFormatter micronCoordsFormatter = new MicronCoordsFormatter( pointComputer );
 	
     private MessageListener messageListener;
     
@@ -278,17 +280,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	@Override
 	public void mouseMoved(MouseEvent event) {
 		mouseMode.mouseMoved(event);
-		Vec3 xyz = pointComputer.worldFromPixel(event.getPoint());
-		DecimalFormat fmt = new DecimalFormat("0.0");
-		String msg = "["
-				+ fmt.format(xyz.getX())
-				+ ", " + fmt.format(xyz.getY())
-				+ ", " + fmt.format(xyz.getZ())
-				+ "] \u00B5m"; // micrometers. Maybe I should use pixels (also?)?
-        if (messageListener != null) {
-            messageListener.message(msg);
-        }
-		// System.out.println(xyz);
+        sendLocationMessage(event.getPoint());
 	}
 
 	@Override
@@ -304,8 +296,9 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	}
 
 	@Override
-	public void mouseWheelMoved(MouseWheelEvent event) {
+	public void mouseWheelMoved(MouseWheelEvent event) {        
 		this.wheelMode.mouseWheelMoved(event);
+        sendLocationMessage(event.getPoint());
 	}
 	
     //------------------------IMPLEMENTS MouseWheelModeListener
@@ -468,6 +461,14 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     public void repaint()
     {
         glCanvas.repaint();
+    }
+
+    private void sendLocationMessage(Point mouseLocation) {
+        if (messageListener != null) {
+            String msg = micronCoordsFormatter.formatForPresentation(mouseLocation);
+            messageListener.message(msg);
+            log.info("Message to status {}.", msg);
+        }
     }
 
 }

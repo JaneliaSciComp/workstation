@@ -1584,6 +1584,13 @@
                 <package>org.jibx.runtime</package>
                 <package>org.jibx.runtime.impl</package>
                 <package>org.jibx.util</package>
+                <package>org.joda.time</package>
+                <package>org.joda.time.base</package>
+                <package>org.joda.time.chrono</package>
+                <package>org.joda.time.convert</package>
+                <package>org.joda.time.field</package>
+                <package>org.joda.time.format</package>
+                <package>org.joda.time.tz</package>
                 <package>org.kohsuke.rngom.ast.builder</package>
                 <package>org.kohsuke.rngom.ast.om</package>
                 <package>org.kohsuke.rngom.ast.util</package>
@@ -2079,6 +2086,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/perf4j-0.9.16-logbackonly.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/perf4j-0.9.16-logbackonly.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/joda-time-2.8.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/joda-time-2.8.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/vecmath.jar</runtime-relative-path>

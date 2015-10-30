@@ -108,6 +108,8 @@ public interface EntityFacade {
 
     public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
             double x, double y, double z, String comment) throws Exception;
+    
+    public void addLinkedGeometricAnnotations(Map<Integer, Integer> nodeParentLinkage, Map<Integer, TmGeoAnnotation> annotations) throws Exception;
 
     public void reparentGeometricAnnotation(TmGeoAnnotation annotation, Long newParentAnnotationID,
             TmNeuron neuron) throws Exception;

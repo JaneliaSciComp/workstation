@@ -11,7 +11,6 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,6 +23,8 @@ import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.tracing.VoxelPosition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -52,6 +53,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private Collection<NextParentListener> nextParentListeners = new ArrayList<>();
     private Collection<NeuronStyleChangeListener> neuronStyleChangeListeners = new ArrayList<>();
     private ViewStateListener viewStateListener;
+    
+    private Logger logger = LoggerFactory.getLogger(LargeVolumeViewerTranslator.class);
     
     public void addAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
         avpListeners.add(l);
@@ -131,9 +134,14 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
      */
     public void deleteAnnotations(List<TmGeoAnnotation> annotationList) {
         // remove all the individual annotations from 2D view
-
         for (TmGeoAnnotation ann: annotationList) {
             fireAnchorDeleted(ann);
+        }
+
+        // if first annotation in delete list has a parent, select it
+        //  (usually if you delete a point, you want to continue working there)
+        if (annotationList.size() > 0 && !annotationList.get(0).isRoot()) {
+            annotationSelected(annotationList.get(0).getParentId());
         }
     }
 
@@ -395,7 +403,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
                 @Override
                 protected void hadError(Throwable error) {
-                    ModelMgr.getModelMgr().handleException(error);
+                    logger.warn("Unable to lazy-add matrices to sample.");
                 }
                 
             };

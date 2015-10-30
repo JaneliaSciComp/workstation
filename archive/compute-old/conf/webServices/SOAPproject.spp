@@ -1,0 +1,39 @@
+<!--
+  Copyright (c) 2010-2011, J. Craig Venter Institute, Inc.
+
+  This file is part of JCVI VICS.
+
+  JCVI VICS is free software; you can redistribute it and/or modify it 
+  under the terms and conditions of the Artistic License 2.0.  For 
+  details, see the full text of the license in the file LICENSE.txt.  
+  No other rights are granted.  Any and all third party software rights 
+  to remain with the original developer.
+
+  JCVI VICS is distributed in the hope that it will be useful in 
+  bioinformatics applications, but it is provided "AS IS" and WITHOUT 
+  ANY EXPRESS OR IMPLIED WARRANTIES including but not limited to implied 
+  warranties of merchantability or fitness for any particular purpose.  
+  For details, see the full text of the license in the file LICENSE.txt.
+
+  You should have received a copy of the Artistic License 2.0 along with 
+  JCVI VICS.  If not, the license can be obtained from 
+  "http://www.perlfoundation.org/artistic_license_2_0."
+--!>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Project>
+	<Folder FolderName="XML Files" ExtStr="xml;cml;math;mtx;rdf;smil;svg;wml">
+		<File FilePath="BlastDBRequest.xml" HomeFolder="Yes"/>
+		<File FilePath="BlastNRequest.xml" HomeFolder="Yes"/>
+		<File FilePath="BlastStatusRequest.xml" HomeFolder="Yes"/>
+		<File FilePath="CreateBlastDBRequest.xml" HomeFolder="Yes"/>
+		<File FilePath="UploadFastaRequest.xml" HomeFolder="Yes"/>
+	</Folder>
+	<Folder FolderName="XSL Files" ExtStr="xsl;xslt"/>
+	<Folder FolderName="XQuery Files" ExtStr="xq;xql;xquery"/>
+	<Folder FolderName="HTML Files" ExtStr="html;htm;xhtml;asp"/>
+	<Folder FolderName="DTD/Schemas" ExtStr="dtd;dcd;xdr;biz;xsd"/>
+	<Folder FolderName="Entities" ExtStr="ent"/>
+	<File FilePath="wsdl\Echo.wsdl" HomeFolder="Yes"/>
+	<File FilePath="wsdl\Blast.wsdl" HomeFolder="Yes"/>
+</Project>

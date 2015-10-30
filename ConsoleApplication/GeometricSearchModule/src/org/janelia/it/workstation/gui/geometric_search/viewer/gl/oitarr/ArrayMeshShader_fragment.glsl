@@ -18,6 +18,10 @@ uniform int hpi_width;
 uniform int hpi_height;
 uniform int hpi_depth;
 
+uniform float edgefalloff;
+uniform float intensity;
+uniform float ambience;
+
 layout (binding = 1, r32ui) uniform uimage2D head_pointer_image;
 
 layout (std430, binding = 0) buffer FragmentArrays0 {
@@ -45,13 +49,13 @@ void main()
     float dz = 1.0 - vz;
 
     // Actual fragment shading step
-     float edgefalloff=1.0;
-     float intensity=0.2;
-     float ambient=0.05;
+     //float edgefalloff=1.0;
+     //float intensity=0.2;
+     //float ambient=0.05;
 
      float opac = dot(normalize(-N), normalize(-I));
      opac = abs(opac);
-     opac = ambient + intensity*(1.0-pow(opac, edgefalloff));
+     opac = ambience + intensity*(1.0-pow(opac, edgefalloff));
      vec4 color =  opac * Cs;
      color.a = opac;
 

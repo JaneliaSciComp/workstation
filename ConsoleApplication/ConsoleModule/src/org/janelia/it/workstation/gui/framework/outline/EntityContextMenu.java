@@ -56,6 +56,7 @@ import org.janelia.it.workstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
+import org.janelia.it.workstation.gui.framework.actions.EditLVVSamplePathActionListener;
 import org.janelia.it.workstation.gui.framework.actions.GoToRelatedEntityAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
@@ -154,8 +155,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getDeleteItem());
         add(getDeleteInBackgroundItem());
         add(getMarkForReprocessingItem());
-        // TODO: reenable this item once we have Visually Lossless samples
-        //add(getSampleCompressionTypeItem());
+        add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getVerificationMovieItem());
         
@@ -183,6 +183,7 @@ public class EntityContextMenu extends JPopupMenu {
         for ( JComponent item: getOpenForContextItems() ) {
             add(item);
         }
+        add(getEditLVVSamplePath());
         add(getWrapEntityItem());
 
         if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
@@ -418,7 +419,7 @@ public class EntityContextMenu extends JPopupMenu {
     
     public JMenuItem getWrapEntityItem() {
         if (multiple) return null;
-        return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem( rootedEntity );
+        return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem(rootedEntity);
     }
        
     private class EntityDataPath {
@@ -750,20 +751,20 @@ public class EntityContextMenu extends JPopupMenu {
         blockItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to purge "+samples.size()+" sample(s) "+
-                        "by deleting all large files associated with them, and block all future processing?",  
-                		"Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
-                
+                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to purge " + samples.size() + " sample(s) " +
+                                "by deleting all large files associated with them, and block all future processing?",
+                        "Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
+
                 if (result != 0) return;
 
                 Task task;
                 try {
                     StringBuilder sampleIdBuf = new StringBuilder();
-                    for(Entity sample : samples) {
-                        if (sampleIdBuf.length()>0) sampleIdBuf.append(",");
+                    for (Entity sample : samples) {
+                        if (sampleIdBuf.length() > 0) sampleIdBuf.append(",");
                         sampleIdBuf.append(sample.getId());
                     }
-                    
+
                     HashSet<TaskParameter> taskParameters = new HashSet<>();
                     taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
                     task = ModelMgr.getModelMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
@@ -777,14 +778,14 @@ public class EntityContextMenu extends JPopupMenu {
 
                     @Override
                     public String getName() {
-                        return "Purging and blocking "+samples.size()+" samples";
+                        return "Purging and blocking " + samples.size() + " samples";
                     }
 
                     @Override
                     protected void doStuff() throws Exception {
                         setStatus("Executing");
                         super.doStuff();
-                        for(Entity sample : samples) {
+                        for (Entity sample : samples) {
                             ModelMgr.getModelMgr().invalidateCache(sample, true);
                         }
                     }
@@ -841,8 +842,10 @@ public class EntityContextMenu extends JPopupMenu {
         vllMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 
-                final String targetCompression = EntityConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS_AND_PBD;
-                String message = "Are you sure you want to convert "+samplesText+" to Visually Lossless (h5j) format?";
+                final String targetCompression = EntityConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
+                String message = "Are you sure you want to convert "+samplesText+" to Visually Lossless (h5j) format?\n"
+                        + "This will immediately delete all Lossless v3dpbd files for this Sample and result in a large decrease in disk space usage.\n"
+                        + "Lossless files can be regenerated by reprocessing the Sample later.";
                 int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
                 
                 if (result != 0) return;
@@ -930,9 +933,7 @@ public class EntityContextMenu extends JPopupMenu {
                 if (result != 0) return;
 
                 SimpleWorker worker = new SimpleWorker() {
-                    
-                    StringBuilder sampleIdBuf = new StringBuilder();
-                        
+                                            
                     @Override
                     protected void doStuff() throws Exception {
                         for(final Entity sample : samples) {
@@ -943,7 +944,8 @@ public class EntityContextMenu extends JPopupMenu {
                     
                     @Override
                     protected void hadSuccess() {  
-                         JOptionPane.showMessageDialog(mainFrame, samplesText+" are marked for reprocessing to (v3dpbd) Lossless format",  "Marked Samples", JOptionPane.INFORMATION_MESSAGE);
+                         JOptionPane.showMessageDialog(mainFrame, samplesText+" are marked for reprocessing to Lossless (v3dpbd) format, and will be available once the pipeline is run.", 
+                                 "Marked Samples", JOptionPane.INFORMATION_MESSAGE);
                     }
                     
                     @Override
@@ -988,30 +990,30 @@ public class EntityContextMenu extends JPopupMenu {
         markItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want these "+samples.size()+" sample(s) to be reprocessed "
-                        + "during the next scheduled refresh?",  "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
-                
+                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want these " + samples.size() + " sample(s) to be reprocessed "
+                        + "during the next scheduled refresh?", "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
+
                 if (result != 0) return;
 
                 SimpleWorker worker = new SimpleWorker() {
-                    
+
                     @Override
                     protected void doStuff() throws Exception {
-                        for(final Entity sample : samples) {
+                        for (final Entity sample : samples) {
                             ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
                         }
                     }
-                    
+
                     @Override
-                    protected void hadSuccess() {   
+                    protected void hadSuccess() {
                     }
-                    
+
                     @Override
                     protected void hadError(Throwable error) {
                         SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
-                
+
                 worker.execute();
             }
         });
@@ -1044,43 +1046,43 @@ public class EntityContextMenu extends JPopupMenu {
             public void actionPerformed(ActionEvent actionEvent) {
 
                 SimpleWorker worker = new SimpleWorker() {
-                  
+
                     private Entity movie;
-                    
+
                     @Override
                     protected void doStuff() throws Exception {
                         ModelMgr.getModelMgr().loadLazyEntity(sample, false);
                         Entity alignedSample = null;
-                        for(Entity child : ModelMgrUtils.getAccessibleChildren(sample)) {
-                            if (child.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE) 
-                                    && child.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE)!=null) {
+                        for (Entity child : ModelMgrUtils.getAccessibleChildren(sample)) {
+                            if (child.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)
+                                    && child.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE) != null) {
                                 alignedSample = child;
                             }
                         }
-                        
-                        if (alignedSample==null) {
+
+                        if (alignedSample == null) {
                             alignedSample = sample;
                         }
-                        
+
                         final ModelMgrEntityLoader loader = new ModelMgrEntityLoader();
                         EntityVistationBuilder.create(loader).startAt(alignedSample)
                                 .childrenOfType(EntityConstants.TYPE_PIPELINE_RUN)
                                 .childrenOfType(EntityConstants.TYPE_ALIGNMENT_RESULT)
                                 .childrenOfType(EntityConstants.TYPE_SUPPORTING_DATA)
                                 .run(new EntityVisitor() {
-                            public void visit(Entity supportingData) throws Exception {
-                                loader.populateChildren(supportingData);
-                                for(Entity child : ModelMgrUtils.getAccessibleChildren(supportingData)) {
-                                    if (child.getName().equals("VerifyMovie.mp4") 
-                                            || child.getName().equals("AlignVerify.mp4")) {
-                                        movie = child;
-                                        break;   
+                                    public void visit(Entity supportingData) throws Exception {
+                                        loader.populateChildren(supportingData);
+                                        for (Entity child : ModelMgrUtils.getAccessibleChildren(supportingData)) {
+                                            if (child.getName().equals("VerifyMovie.mp4")
+                                                    || child.getName().equals("AlignVerify.mp4")) {
+                                                movie = child;
+                                                break;
+                                            }
+                                        }
                                     }
-                                }
-                            }
-                        });
+                                });
                     }
-                    
+
                     @Override
                     protected void hadSuccess() {
 
@@ -1091,17 +1093,17 @@ public class EntityContextMenu extends JPopupMenu {
                         }
 
                         String filepath = EntityUtils.getAnyFilePath(movie);
-                        
+
                         if (StringUtils.isEmpty(filepath)) {
                             JOptionPane.showMessageDialog(mainFrame, "Verification movie has no path",
                                     "Not Found", JOptionPane.ERROR_MESSAGE);
                             return;
                         }
-                        
+
                         OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(movie);
                         action.doAction();
                     }
-                    
+
                     @Override
                     protected void hadError(Throwable error) {
                         SessionMgr.getSessionMgr().handleException(error);
@@ -1508,7 +1510,7 @@ public class EntityContextMenu extends JPopupMenu {
                 try {
                     SetSortCriteriaDialog dialog = new SetSortCriteriaDialog();
                     dialog.showForEntity(targetEntity);
-                } 
+                }
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
                 }
@@ -1520,7 +1522,6 @@ public class EntityContextMenu extends JPopupMenu {
     
     protected JMenuItem getDownloadMenu() {
 
-        boolean allNonH5j = true;
         boolean allLsm = true;
         List<Entity> entitiesWithFilepaths = new ArrayList<>();
         for(final RootedEntity re : rootedEntityList) {
@@ -1530,9 +1531,6 @@ public class EntityContextMenu extends JPopupMenu {
                 entitiesWithFilepaths.add(entity);
                 if (!EntityConstants.TYPE_LSM_STACK.equals(entity.getEntityTypeName())) {
                     allLsm = false;
-                }
-                if (filepath.endsWith("h5j")) {
-                	allNonH5j = false;
                 }
             }
         }
@@ -1561,7 +1559,6 @@ public class EntityContextMenu extends JPopupMenu {
         }
         for(String extension : DOWNLOAD_EXTENSIONS) {
             JMenuItem downloadItem = getDownloadItem(entitiesWithFilepaths, true, extension);
-            downloadItem.setEnabled(allNonH5j);
             add(downloadMenu, downloadItem);
         }
         
@@ -1839,7 +1836,7 @@ public class EntityContextMenu extends JPopupMenu {
                         ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, null);
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
-                                + "Please choose the appropriate file path from the Tools->Configure Tools area",
+                                        + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                 "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
                 }
@@ -1861,7 +1858,7 @@ public class EntityContextMenu extends JPopupMenu {
                         ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_3D);
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
-                                + "Please choose the appropriate file path from the Tools->Configure Tools area",
+                                        + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                 "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
                 }
@@ -1975,6 +1972,19 @@ public class EntityContextMenu extends JPopupMenu {
         });
 
         return specialAnnotationSession;
+    }
+
+    protected JMenuItem getEditLVVSamplePath() {
+        if (multiple)
+            return null;
+        final String entityType = rootedEntity.getEntity().getEntityTypeName();
+        if (entityType.equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+            JMenuItem menuItem = new JMenuItem("  Edit sample path");
+            menuItem.addActionListener(new EditLVVSamplePathActionListener(rootedEntity));
+            return menuItem;
+        } else {
+            return null;
+        }
     }
 
     @Override

@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesChooser;
 import javax.media.opengl.GLContext;
-import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -56,6 +55,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     private MouseMode mouseMode;
     private MouseMode.Mode mouseModeId;
     private BasicMouseMode pointComputer = new BasicMouseMode();
+    private MicronCoordsFormatter micronCoordsFormatter = new MicronCoordsFormatter(pointComputer);
     private WheelMode wheelMode;
     private WheelMode.Mode wheelModeId;
     // Popup menu
@@ -279,21 +279,13 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     @Override
     public void mouseMoved(MouseEvent event) {
         mouseMode.mouseMoved(event);
-        Vec3 xyz = pointComputer.worldFromPixel(event.getPoint());
-        DecimalFormat fmt = new DecimalFormat("0.0");
-        String msg = "["
-                + fmt.format(xyz.getX())
-                + ", " + fmt.format(xyz.getY())
-                + ", " + fmt.format(xyz.getZ())
-                + "] \u00B5m"; // micrometers. Maybe I should use pixels (also?)?
-        if (messageListener != null) {
-            messageListener.message(msg);
-        }
+        sendLocationMessage(event.getPoint());
     }
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent event) {
         wheelMode.mouseWheelMoved(event);
+        sendLocationMessage(event.getPoint());
     }
 
     @Override
@@ -535,6 +527,14 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         if (popupPoint == null)
             return null;
         return pointComputer.worldFromPixel(popupPoint);
+    }
+
+    /** Convenience method to repeat this simple notification. */
+    private void sendLocationMessage(Point point) {
+        if (messageListener != null) {
+            String msg = micronCoordsFormatter.formatForPresentation(point);
+            messageListener.message(msg);
+        }
     }
 
 }

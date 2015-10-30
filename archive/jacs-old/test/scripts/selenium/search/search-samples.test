@@ -1,0 +1,122 @@
+<html>
+
+<!--
+  Copyright (c) 2010-2011, J. Craig Venter Institute, Inc.
+
+  This file is part of JCVI VICS.
+
+  JCVI VICS is free software; you can redistribute it and/or modify it 
+  under the terms and conditions of the Artistic License 2.0.  For 
+  details, see the full text of the license in the file LICENSE.txt.  
+  No other rights are granted.  Any and all third party software rights 
+  to remain with the original developer.
+
+  JCVI VICS is distributed in the hope that it will be useful in 
+  bioinformatics applications, but it is provided "AS IS" and WITHOUT 
+  ANY EXPRESS OR IMPLIED WARRANTIES including but not limited to implied 
+  warranties of merchantability or fitness for any particular purpose.  
+  For details, see the full text of the license in the file LICENSE.txt.
+
+  You should have received a copy of the Artistic License 2.0 along with 
+  JCVI VICS.  If not, the license can be obtained from 
+  "http://www.perlfoundation.org/artistic_license_2_0."
+-->
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>search-samples</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">search-samples</td></tr>
+</thead><tbody>
+<tr>
+	<td>open</td>
+	<td>/cameraweb/gwt/org.jcvi.camera.web.gwt.search.Search/Search.oa</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>gwt-debug-KeywordTextBox</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>gwt-debug-KeywordTextBox</td>
+	<td>Sargasso</td>
+</tr>
+<tr>
+	<td>clickAt</td>
+	<td>gwt-debug-SamplesSearchIconPanelImage</td>
+	<td>29,24</td>
+</tr>
+<tr>
+	<td>mouseDownAt</td>
+	<td>gwt-debug-SearchButton</td>
+	<td>0,0</td>
+</tr>
+<tr>
+	<td>waitForTextPresent</td>
+	<td>Samples By Project</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Samples By Project</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Reads Per Sample</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Geographic Location</td>
+	<td></td>
+</tr>
+<tr>
+	<td>storeText</td>
+	<td>gwt-debug-SamplesSearchIconPanelFooter</td>
+	<td>numMatches</td>
+</tr>
+<tr>
+	<td>clickAt</td>
+	<td>link=detail view</td>
+	<td>32,9</td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Samples By Project</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Reads Per Sample</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Geographic Location</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>All Matching Samples</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertTextPresent</td>
+	<td>Reads for Sample</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyText</td>
+	<td>gwt-debug-CategorySearchDataTable</td>
+	<td>*of ${numMatches}*</td>
+</tr>
+
+</tbody></table>
+</body>
+</html>

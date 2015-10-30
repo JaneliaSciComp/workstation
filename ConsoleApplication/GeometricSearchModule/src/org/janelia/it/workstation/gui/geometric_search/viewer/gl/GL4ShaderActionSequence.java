@@ -80,7 +80,9 @@ public class GL4ShaderActionSequence {
 //        gl.glDepthFunc(GL4.GL_LEQUAL);
 
         for (GL4SimpleActor actor: actorSequence) {
-            actor.display(gl);
+            if (actor.isVisible()) {
+                actor.display(gl);
+            }
         }
 
 //        //gl.glEnable(GL4.GL_DEPTH_TEST);
