@@ -605,7 +605,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
 
         final Map<String, Set<String>> filters = new HashMap<>();
         SearchType searchTypeAnnot = searchClass.getAnnotation(SearchType.class);
-        String searchType = searchTypeAnnot.label();
+        String searchType = searchTypeAnnot.key();
         filters.put(SOLR_TYPE_FIELD,getSingleItemMap(searchType));
         
         List<Criteria> criteriaList = filter.getCriteriaList();
