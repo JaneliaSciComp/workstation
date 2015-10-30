@@ -142,8 +142,16 @@ void far_cone_hull(mat3 frame2348, mat3 frame1567) {
 }
 
 void main() {
-    vec3 c1 = gl_PositionIn[0].xyz/gl_PositionIn[0].w; // center of smaller cone end
-    vec3 c2 = gl_PositionIn[1].xyz/gl_PositionIn[1].w; // center of larger cone end
+    // On Mac GL_EXT_geometry_shader4 is unrecognized, so must use later geometry shader syntax
+#ifdef GL_EXT_geometry_shader4
+    vec4 posIn0 = gl_PositionIn[0]; // extension syntax
+    vec4 posIn1 = gl_PositionIn[1]; // extension syntax
+#else
+    vec4 posIn0 = gl_in[0].gl_Position; // modern geometry shader syntax
+    vec4 posIn1 = gl_in[1].gl_Position; // modern geometry shader syntax
+#endif
+    vec3 c1 = posIn0.xyz/posIn0.w; // center of smaller cone end
+    vec3 c2 = posIn1.xyz/posIn1.w; // center of larger cone end
     float r1 = geomRadius[0];
     float r2 = geomRadius[1];
 

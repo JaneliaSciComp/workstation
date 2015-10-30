@@ -81,6 +81,7 @@ public class VolumeRenderPass extends RenderPass
         for (int rt = 0; rt < renderTargets.size(); ++rt) {
             targetAttachments[rt] = renderTargets.get(rt).getAttachment();
         }
+        hdrTarget.setDirty(true);
     }
     
     @Override

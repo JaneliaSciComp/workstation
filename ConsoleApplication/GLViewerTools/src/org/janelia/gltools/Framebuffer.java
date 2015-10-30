@@ -49,6 +49,7 @@ public class Framebuffer implements GL3Resource, GLEventListener {
     private final List<RenderTarget> renderTargets = new ArrayList<RenderTarget>();
     private boolean needsResize = false;
     private GLAutoDrawable target;
+    private final float[] clearColor4 = new float[] {0,0,0,0};
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public Framebuffer(GLAutoDrawable target) { 
@@ -165,6 +166,11 @@ public class Framebuffer implements GL3Resource, GLEventListener {
         gl.glDrawBuffers(drawBuffers.length, drawBuffers, 0);
         unbind(gl);
     }
+    
+    private void clear(GL3 gl) {
+        // Attempt to blank the color buffer
+        gl.glClearBufferfv(GL3.GL_COLOR, 0, clearColor4, 0);
+    }
 
     public final boolean reshape(int w, int h) {
         // System.out.println("Framebuffer.reshape(): "+w+", "+h);
@@ -220,6 +226,7 @@ public class Framebuffer implements GL3Resource, GLEventListener {
                     rt.getHandle(), 0);
             rt.unbind(gl);
         }
+        clear(gl);
         unbind(gl);
     }
     
@@ -237,9 +244,14 @@ public class Framebuffer implements GL3Resource, GLEventListener {
         @Override
         protected void allocateTextureStorage(GL3 gl, int mipmapCount) {
             //
-            int[] max_samples = {1};
+            int[] max_samples = {1, 1, 1, 1};
             gl.glGetIntegerv(GL3.GL_MAX_SAMPLES, max_samples, 0);
-            int samples = Math.min(max_samples[0] - 1, num_samples);
+            // gl.glGetIntegerv(GL3.GL_MAX_COLOR_TEXTURE_SAMPLES, max_samples, 1);
+            // gl.glGetIntegerv(GL3.GL_MAX_DEPTH_TEXTURE_SAMPLES, max_samples, 2);
+            // TODO: Smaller number for GL_MAX_INTEGER_SAMPLES
+            // is a problem for simultaneously using MSAA and integer pick buffer.
+            // gl.glGetIntegerv(GL3.GL_MAX_INTEGER_SAMPLES, max_samples, 3);
+            int samples = Math.min(max_samples[0], num_samples);
             gl.glTexImage2DMultisample(
                     textureTarget,
                     samples,

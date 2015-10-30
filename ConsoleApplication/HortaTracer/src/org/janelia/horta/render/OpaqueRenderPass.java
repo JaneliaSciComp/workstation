@@ -50,7 +50,7 @@ public class OpaqueRenderPass extends RenderPass
     // TODO - eventually use deferred shading; for now we render the whole color there...
     private final RenderTarget normalMaterialTarget; // normal in RGB, material in A
     private final RenderTarget depthTarget;
-    private final RenderTarget pickTarget;
+    // private final RenderTarget pickTarget;
     private final int targetAttachments[];
     // Clear masks for render targets
     private final float[] clearColor4 = new float[] {0,0,0,0};
@@ -76,17 +76,17 @@ public class OpaqueRenderPass extends RenderPass
             int num_samples = 8;
             normalMaterialTarget = framebuffer.addMsaaRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0, num_samples);
             depthTarget = framebuffer.addMsaaRenderTarget(GL3.GL_DEPTH_COMPONENT24, GL3.GL_DEPTH_ATTACHMENT, num_samples);
-            pickTarget = framebuffer.addMsaaRenderTarget(GL3.GL_R16UI, GL3.GL_COLOR_ATTACHMENT1, num_samples);
+            // pickTarget = framebuffer.addMsaaRenderTarget(GL3.GL_R16UI, GL3.GL_COLOR_ATTACHMENT1, num_samples);
         } else {
             normalMaterialTarget = framebuffer.addRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0);
             depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, GL3.GL_DEPTH_ATTACHMENT);
-            pickTarget = framebuffer.addRenderTarget(GL3.GL_R16UI, GL3.GL_COLOR_ATTACHMENT1);
+            // pickTarget = framebuffer.addRenderTarget(GL3.GL_R16UI, GL3.GL_COLOR_ATTACHMENT1);
         }
         
 
         // Attach render targets to renderer
         addRenderTarget(normalMaterialTarget);
-        addRenderTarget(pickTarget);
+        // addRenderTarget(pickTarget);
         targetAttachments = new int[renderTargets.size()];
         for (int rt = 0; rt < renderTargets.size(); ++rt) {
             targetAttachments[rt] = renderTargets.get(rt).getAttachment();
@@ -172,7 +172,7 @@ public class OpaqueRenderPass extends RenderPass
 
         super.renderScene(gl, localCamera);
 
-        for (RenderTarget rt : new RenderTarget[] {normalMaterialTarget, pickTarget}) 
+        for (RenderTarget rt : new RenderTarget[] {normalMaterialTarget /* , pickTarget */ }) 
         {
             rt.setHostBufferNeedsUpdate(true);
             rt.setDirty(false);

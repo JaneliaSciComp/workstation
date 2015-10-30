@@ -38,6 +38,7 @@ import java.util.Observer;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesImmutable;
+import javax.media.opengl.GLContext;
 import javax.media.opengl.GLProfile;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
@@ -114,9 +115,12 @@ public class SceneWindow implements GLJComponent, Scene {
     // immediate blocking repainting
     public boolean redrawNow() {
         GLAutoDrawable glad = getGLAutoDrawable();
-        glad.getContext().makeCurrent();
+        if (glad == null) return false;
+        GLContext context = glad.getContext();
+        if (context == null) return false;
+        context.makeCurrent();
         glad.display();
-        glad.getContext().release();
+        context.release();
         return true;
     }
     
