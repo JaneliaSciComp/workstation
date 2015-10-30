@@ -68,7 +68,8 @@ public class DomainInspectorPanel extends JPanel {
 
     private static final String PERMISSIONS_COLUMN_SUBJECT = "User";
     private static final String PERMISSIONS_COLUMN_TYPE = "Type";
-    private static final String PERMISSIONS_COLUMN_PERMS = "Permissions";
+    private static final String PERMISSIONS_COLUMN_READ = "Read";
+    private static final String PERMISSIONS_COLUMN_WRITE = "Write";
 
     public static final String TAB_NAME_ATTRIBUTES = "Attributes";
     public static final String TAB_NAME_PERMISSIONS = "Permissions";
@@ -163,7 +164,6 @@ public class DomainInspectorPanel extends JPanel {
                 if (null != dop) {
                     if (column.getName().equals(PERMISSIONS_COLUMN_SUBJECT)) {
                         return subjectMap.get(dop.getSubjectKey()).getFullName();
-//                        return dop.getSubjectKey().split(":")[1];
                     }
                     else if (column.getName().equals(PERMISSIONS_COLUMN_TYPE)) {
                         if (dop.isOwner()) {
@@ -171,13 +171,25 @@ public class DomainInspectorPanel extends JPanel {
                         }
                         return dop.getSubjectKey().split(":")[0];
                     }
-                    else if (column.getName().equals(PERMISSIONS_COLUMN_PERMS)) {
-                        return dop.getPermissions();
+                    else if (column.getName().equals(PERMISSIONS_COLUMN_READ)) {
+                        return new Boolean(dop.getPermissions().contains("r"));
+                    }
+                    else if (column.getName().equals(PERMISSIONS_COLUMN_WRITE)) {
+                        return new Boolean(dop.getPermissions().contains("w"));
                     }
                 }
                 return null;
             }
 
+            @Override
+            public Class<?> getColumnClass(int column) {
+                DynamicColumn dc = getColumns().get(column);
+                if (dc.getName().equals(PERMISSIONS_COLUMN_READ) || dc.getName().equals(PERMISSIONS_COLUMN_WRITE)) {
+                    return Boolean.class;
+                }
+                return super.getColumnClass(column);
+            }
+            
             @Override
             protected JPopupMenu createPopupMenu(MouseEvent e) {
                 JPopupMenu menu = super.createPopupMenu(e);
@@ -248,13 +260,16 @@ public class DomainInspectorPanel extends JPanel {
             @Override
             protected void rowDoubleClicked(int row) {
                 final DomainObjectPermission dop = (DomainObjectPermission) getRows().get(row).getUserObject();
-                dopDialog.showForPermission(dop);
+                if (!dop.isOwner()) {
+                    dopDialog.showForPermission(dop);
+                }
             }
         };
         permissionsTable.setAutoResizeColumns(false);
         permissionsTable.addColumn(PERMISSIONS_COLUMN_SUBJECT, PERMISSIONS_COLUMN_SUBJECT, true, false, false, true);
         permissionsTable.addColumn(PERMISSIONS_COLUMN_TYPE, PERMISSIONS_COLUMN_TYPE, true, false, false, true);
-        permissionsTable.addColumn(PERMISSIONS_COLUMN_PERMS, PERMISSIONS_COLUMN_PERMS, true, false, false, true);
+        permissionsTable.addColumn(PERMISSIONS_COLUMN_READ, PERMISSIONS_COLUMN_READ, true, false, false, true);
+        permissionsTable.addColumn(PERMISSIONS_COLUMN_WRITE, PERMISSIONS_COLUMN_WRITE, true, false, false, true);
 
         addPermissionButton = new JButton("Grant permission");
         addPermissionButton.setEnabled(false);
