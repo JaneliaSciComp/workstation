@@ -29,6 +29,7 @@
  */
 package org.janelia.horta;
 
+import org.janelia.horta.render.NeuronMPRenderer;
 import java.io.IOException;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.geometry.util.PerformanceTimer;

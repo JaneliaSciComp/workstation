@@ -17,7 +17,12 @@
 //        2) relative depth of brightest voxel in green channel
 layout(location = 0) out vec4 colorOut; 
 
+// put surface normals in eye space for isosurface projection
 uniform mat4 tcToCamera = mat4(1);
+
+// clip using depth buffer from opaque pass TODO:
+uniform sampler2D opaqueDepthTexture;
+uniform vec2 opaqueZNearFar = vec2(1e-2, 1e4);
 
 // additional render target for picking
 layout(location = 1) out ivec2 pickId;
@@ -37,7 +42,7 @@ uniform int levelOfDetail = 0; // volume texture LOD
 // Use actual voxelSize, as uniform, for more accurate occlusion
 uniform vec3 volumeMicrometers = vec3(256, 256, 200);
 // TODO - expose occluding path length to user
-uniform float canonicalOccludingPathLengthUm = 2.0; // micrometers
+uniform float canonicalOccludingPathLengthUm = 1.0; // micrometers
 
 // Homogeneous clip plane equations, in texture coordinates
 uniform vec4 nearSlabPlane; // for limiting view to a screen-parallel slab
@@ -53,7 +58,8 @@ in vec3 fragTexCoord; // texture coordinate at mesh surface of volume
 
 // Helper method for tricubic filtering
 // From http://stackoverflow.com/questions/13501081/efficient-bicubic-filtering-code-in-glsl
-vec4 cubic(float x)
+// B-spline cubic smooths out actual values...
+vec4 cubic_bspline(float x)
 {
     float x2 = x * x;
     float x3 = x2 * x;
@@ -63,6 +69,20 @@ vec4 cubic(float x)
     w.z = -3*x3 + 3*x2 + 3*x + 1;
     w.w =  x3;
     return w / 6.f;
+}
+
+// Catmull-Rom spline actually passes through control points
+vec4 cubic(float x) // cubic_catmullrom(float x)
+{
+    const float s = 0.5; // potentially adjustable parameter
+    float x2 = x * x;
+    float x3 = x2 * x;
+    vec4 w;
+    w.x =    -s*x3 +     2*s*x2 - s*x + 0;
+    w.y = (2-s)*x3 +   (s-3)*x2       + 1;
+    w.z = (s-2)*x3 + (3-2*s)*x2 + s*x + 0;
+    w.w =     s*x3 -       s*x2       + 0;
+    return w;
 }
 
 // Fast cubic interpolation using a source that is already linearly interpolated.
@@ -90,28 +110,39 @@ vec4 filterFastCubic3D(sampler3D texture, vec3 texcoord, vec3 texscale, int lod)
 
     // This is 3D version of original 2D code sample
     vec3 c0 = texcoord - vec3(0.5, 0.5, 0.5);
-    vec3 c1 = texcoord + vec3(1.5, 1.5, 1.5);
     vec3 s0 = vec3(xcubic.x + xcubic.y, ycubic.x + ycubic.y, zcubic.x + zcubic.y);
-    vec3 s1 = vec3(xcubic.z + xcubic.w, ycubic.z + ycubic.w, zcubic.z + zcubic.w);
     vec3 offset0 = c0 + vec3(xcubic.y, ycubic.y, zcubic.y) / s0;
-    vec3 offset1 = c1 + vec3(xcubic.w, ycubic.w, zcubic.w) / s1;
 
-    float sx = s0.x / (s0.x + s1.x);
-    float sy = s0.y / (s0.y + s1.y);
-    float sz = s0.z / (s0.z + s1.z);
-
+    // For performance, interleave texture fetches with arithmetic
+    // fetch...
     vec4 sample000 = textureLod(texture, vec3(offset0.x, offset0.y, offset0.z) * texscale, lod);
+    // compute...
+    vec3 c1 = texcoord + vec3(1.5, 1.5, 1.5);
+    vec3 s1 = vec3(xcubic.z + xcubic.w, ycubic.z + ycubic.w, zcubic.z + zcubic.w);
+    vec3 offset1 = c1 + vec3(xcubic.w, ycubic.w, zcubic.w) / s1;
+    // fetch...
     vec4 sample100 = textureLod(texture, vec3(offset1.x, offset0.y, offset0.z) * texscale, lod);
+    // compute...
+    float sx = s0.x / (s0.x + s1.x);
     vec4 sampleX00 = mix(sample100, sample000, sx);
+    // fetch...
     vec4 sample010 = textureLod(texture, vec3(offset0.x, offset1.y, offset0.z) * texscale, lod);
     vec4 sample110 = textureLod(texture, vec3(offset1.x, offset1.y, offset0.z) * texscale, lod);
+    // compute...
+    float sy = s0.y / (s0.y + s1.y);
     vec4 sampleX10 = mix(sample110, sample010, sx);
     vec4 sampleXY0 = mix(sampleX10, sampleX00, sy);
+    // fetch...
     vec4 sample001 = textureLod(texture, vec3(offset0.x, offset0.y, offset1.z) * texscale, lod);
     vec4 sample101 = textureLod(texture, vec3(offset1.x, offset0.y, offset1.z) * texscale, lod);
+    // compute...
     vec4 sampleX01 = mix(sample101, sample001, sx);
+    float sz = s0.z / (s0.z + s1.z);
+    // final fetch.
     vec4 sample011 = textureLod(texture, vec3(offset0.x, offset1.y, offset1.z) * texscale, lod);
     vec4 sample111 = textureLod(texture, vec3(offset1.x, offset1.y, offset1.z) * texscale, lod);
+
+    // compute.
     vec4 sampleX11 = mix(sample111, sample011, sx);
     vec4 sampleXY1 = mix(sampleX11, sampleX01, sy);
 
@@ -233,6 +264,24 @@ void main() {
     float tMaxSlab = -dot(farSlabPlane, vec4(x0,1)) / dot(farSlabPlane, vec4(x1,0));
     tMinMax.y = min(tMaxSlab, tMinMax.y);
 
+    // Clip by depth buffer from opaque render pass
+    // http://web.archive.org/web/20130416194336/http://olivers.posterous.com/linear-depth-in-glsl-for-real
+    // next line assumes that opaqueDepthTexture is the same size as the current viewport
+    vec2 depthTc = gl_FragCoord.xy / textureSize(opaqueDepthTexture, 0); // compute texture coordinate for depth lookup
+    float z_buf = texture(opaqueDepthTexture, depthTc).x; // raw depth value from z-buffer
+    float zNear = opaqueZNearFar.x;
+    float zFar = opaqueZNearFar.y;
+    float z_eye = 2*zFar*zNear / (zFar + zNear - (zFar - zNear)*(2*z_buf - 1));
+    vec4 depth_plane_eye = vec4(0, 0, 1, z_eye);
+    vec4 depth_plane_tc = transpose(tcToCamera)*depth_plane_eye; // it's complicated...
+    float tDepth = -dot(depth_plane_tc, vec4(x0,1)) / dot(depth_plane_tc, vec4(x1,0));
+    // z_buf tends to be zero when depth texture is uninitialized
+    // I hope valid zero values are uncommon...
+    // z_buf should be 1.0 where there was no opaque geometry, so skip those too.
+    if ((z_buf != 0) && (z_buf < 0.9999)) {
+        tMinMax.y = min(tDepth, tMinMax.y);
+    }
+
     // color by level-of-detail (for debugging only)
     vec3 color = vec3(1,1,1); // default color is white
     const bool colorByLod = false;
@@ -261,7 +310,10 @@ void main() {
     // Use absolute scale for occluding length parameter
     // TODO - express length parameter in micrometers...
     ivec3 finestVolumeSize = textureSize(volumeTexture, 0);
-    float micrometersPerRay = dot(volumeMicrometers, abs(x1));
+    // Precompute conversion from ray segment length to transparency exponent
+    float segmentLengthFactor = dot(volumeMicrometers, abs(x1));
+    segmentLengthFactor /= pow(2.0, float(levelOfDetail)); // Try to reduce LOD popping
+    segmentLengthFactor /= canonicalOccludingPathLengthUm;
 
     // How small a corner are we willing to precisely sample?
     // smaller value => sharper corners/slower progress
@@ -281,13 +333,13 @@ void main() {
     float previousEdge = tMinMax.x; // track upstream voxel edge
 
     #if PROJECTION_MODE == PROJECTION_ISOSURFACE
-        // vec4 opacityFunctionMid = 0.5 * (opacityFunctionMin + opacityFunctionMax);
-        vec4 isoThreshold = opacityFunctionMin;
+        vec4 isoThreshold = 0.5 * (opacityFunctionMin + opacityFunctionMax);
+        // vec4 isoThreshold = opacityFunctionMin;
         float previousThreshDist = 0;
         float previousT = previousEdge;
     #endif
 
-    // Store results of ray casting at multiple positions:
+    // TODO: store results of ray casting at multiple positions:
     float tMaxAbs = previousEdge; // ray point where intensity is at local maximum after tThreshold
     // TODO - implement these other values, if needed
     // float tThreshold = -1; // ray point where intensity first exceeds opacityFunctionMax
@@ -314,7 +366,13 @@ void main() {
                 // vec3(0.6, 0.6, 0.6); // slightly off-center is not better
     }
 
-    float maxDI = 0;
+    // variables used to find local max intensity in occluding projection
+    float maxDI = 0; // most occluding dAlpha "most visible point"
+    float bodyMaxI = 0; // brightest intensity past maxDI
+    // Store two locations, so we could center on median location of saturated values
+    float tFirstBodyMaxI; // first location of bodyMaxI
+    float tFinalBodyMaxI; // last location of bodyMaxI
+    bool inLocalBody = false;
 
     float previousDeltaT = 0;
 
@@ -353,6 +411,9 @@ void main() {
         // Next line should be unneccessary, but prevents (sporadic?) driver crash
         nextEdge = max(nextEdge, previousEdge + minStep);
 
+        // At the end of the ray, sample the very end, for best depth clipping
+        if ((nextEdge > tMinMax.y) && (previousEdge < tMinMax.y))
+            nextEdge = tMinMax.y - minStep/10;
 
         // Average between previousEdge and nextEdge only for NEAREST filtering...
         // Sample ray at voxel center (midpoint between voxel edge intersections)
@@ -372,6 +433,7 @@ void main() {
         }
 
         // Update before next iteration; AND before any shortcuts...
+        float cachedPreviousEdge = previousEdge; // for isosurface nearest neighbor surface location
         previousEdge = nextEdge;
         previousDeltaT = deltaT;
 
@@ -396,15 +458,22 @@ void main() {
         float localOpacity = maxElement(rampstep(opacityFunctionMin, opacityFunctionMax, vecLocalIntensity));
 
         // shortcut - skip sufficiently dim intensities
-        if (localOpacity <= 0) continue;
+        if (localOpacity <= 0) {
+            #if PROJECTION_MODE == PROJECTION_ISOSURFACE
+                // Update ray parameters for isosurface, even in case of shortcut
+                previousThreshDist = maxElement(vecLocalIntensity.xyz - isoThreshold.xyz); // should be negative...
+                previousT = t;
+            #endif
+            continue;
+        }
 
         // for occluding projection, incorporation path length into opacity exponent
         #if PROJECTION_MODE == PROJECTION_OCCLUDING
-            // Convert segmentLength to micrometers
-            // segmentLength = micrometersPerRay * segmentLength;
-            // float opacityExponent = canonicalOccludingPathLengthUm / segmentLength;
-            // opacityExponent = 2.0;
-            // localOpacity = pow(localOpacity, 2.0); // TODO - is this exponential slow?
+            // Convert segmentLength to micrometers, from ray parameter coordinates
+            float transparencyExponent = segmentLength * segmentLengthFactor;
+            float localTransparency = 1.0 - localOpacity;
+            localTransparency = pow(localTransparency, transparencyExponent); // TODO - is this exponential slow?
+            localOpacity = 1.0 - localTransparency;
         #endif
 
         // Compute change in intensity
@@ -443,8 +512,30 @@ void main() {
             if  (localOpacity > integratedOpacity) {
                 vecIntegratedIntensity = vecLocalIntensity;
                 integratedOpacity = localOpacity;
-                tMaxAbs = t;
+                // Prepare to follow ray to brightest spot
+                inLocalBody = true;
+                bodyMaxI = localOpacity;
+                tFirstBodyMaxI = tFinalBodyMaxI = tMaxAbs = t;
             }
+
+            // Walk to median location of saturated segments, for accurate centering
+            else if (inLocalBody) {
+                if (localOpacity == bodyMaxI) { // local maximum plateau
+                    tFinalBodyMaxI = t;
+                    tMaxAbs = 0.5 * (tFirstBodyMaxI + tFinalBodyMaxI); // median location of plateau
+                }
+                else if (localOpacity > bodyMaxI) { // new local maximum
+                    tFirstBodyMaxI = t;
+                    tFinalBodyMaxI = t;
+                    tMaxAbs = t;                    
+                    bodyMaxI = localOpacity;
+                }
+                else {
+                    inLocalBody = false; // past local maximum
+                }
+            }
+
+
         #elif PROJECTION_MODE == PROJECTION_OCCLUDING
             // vec4 c_src = mix(opacityFunctionMin, vecLocalIntensity, fade);
             vec4 c_src = vecLocalIntensity;
@@ -464,28 +555,65 @@ void main() {
 
             // Update brightest point along ray
             // TODO - click-to-center is not perfect yet...
-            float dI = localOpacity * (1.0 - a_dest/a_out);
-            if (dI > maxDI) {
+            float dI = a_src * (1.0 - a_dest/a_out); 
+            if (dI > maxDI) { // found new biggest occluder
                 maxDI = dI;
+                // Prepare to follow ray to brightest spot
+                inLocalBody = true;
+                bodyMaxI = localOpacity;
+                tFirstBodyMaxI = t;
+                tFinalBodyMaxI = t;
                 tMaxAbs = t;
             }
+
+            // Walk to median location of saturated segments, for accurate centering
+            else if (inLocalBody) {
+                if (localOpacity == bodyMaxI) { // local maximum plateau
+                    tFinalBodyMaxI = t;
+                    tMaxAbs = 0.5 * (tFirstBodyMaxI + tFinalBodyMaxI); // median location of plateau
+                }
+                else if (localOpacity > bodyMaxI) { // new local maximum
+                    tFirstBodyMaxI = t;
+                    tFinalBodyMaxI = t;
+                    tMaxAbs = t;
+                    bodyMaxI = localOpacity;
+                }
+                else {
+                    inLocalBody = false; // past local maximum
+                }
+            }
+            
         #else // isosurface
-            float threshDist = maxElement(vecLocalIntensity - isoThreshold) - 1e-6;
+            // Use only first 3 channels, since alpha is a headache when I want to see negative components.
+            float threshDist = maxElement(vecLocalIntensity.xyz - isoThreshold.xyz);
             if (threshDist > 0) // surface intersected
             {
-                vecIntegratedIntensity = vecLocalIntensity;
+                // vecIntegratedIntensity = vecLocalIntensity;
                 integratedOpacity = 1.0;
-                // TODO - trying to interpolate ray parameter causes some thread pools to die
-                float alpha = 0.5;
-                // float alpha = (-previousThreshDist) / (threshDist - previousThreshDist);
-                // if (isinf(alpha)) alpha = 1.0;
-                // if (isnan(alpha)) alpha = 1.0;
-                // alpha = clamp(alpha, 0, 1);
-                // tMaxAbs = mix(previousT, t, alpha);
-                // tMaxAbs = max(tMinMax.x, tMaxAbs);
-                // tMaxAbs = min(tMaxAbs, t);
-                tMaxAbs = mix(previousT, t, alpha);
-                break;
+
+                if (filteringOrder == 0) { // nearest neighbor
+                    tMaxAbs = cachedPreviousEdge; // retreat to voxel surface
+                    vecIntegratedIntensity = vecLocalIntensity; // using intensity of voxel center
+                }
+                else { // interpolate surface location using measured intensities, to get closer to true isosurface
+                    float alpha = (-previousThreshDist) / (threshDist - previousThreshDist);
+                    tMaxAbs = mix(previousT, t, alpha);
+                    // Resample intensity at interpolated location
+                    // (should be very close to threshold intensity...)
+                    // But not for nearest neighbor...
+                    vec3 currentTexelPos2 = (x0 + tMaxAbs*x1); 
+                    vec3 texCoord2 = currentTexelPos2 * textureScale; // converted back to normalized texture coordinates,
+                    if (filteringOrder == 3) {
+                        // slow tricubic filtering
+                        vecIntegratedIntensity = filterFastCubic3D(volumeTexture, currentTexelPos2, textureScale, levelOfDetail);
+                    }
+                    else {
+                        // fast linear or nearest-neighbor filtering
+                        vecIntegratedIntensity = textureLod(volumeTexture, texCoord2, levelOfDetail);
+                    }
+                    // vecIntegratedIntensity += vec4(0.05, 0.05, 0.05, 0); // brighten it up a little...
+                }
+                break; // stop casting! we found the surface along this ray
             }
             previousThreshDist = threshDist; // negative value
             previousT = t;
@@ -509,21 +637,24 @@ void main() {
     }
 
     // vec3 c = color*integratedIntensity;
-    #if PROJECTION_MODE == PROJECTION_ISOSURFACE
-    vec3 uvw = x0 + tMaxAbs * x1;
-    vec3 voxelMicrometers = volumeMicrometers / volumeSize;
-    vec3 normal = calculateNormalInScreenSpace(
-            volumeTexture, 
-            uvw, 
-            voxelMicrometers, 
-            textureScale);
-    // Clip normal at front of slab
-    if (tMaxAbs <= tMinSlab) normal = vec3(0, 0, 1);
-    normal = 0.5 * (normal + vec3(1, 1, 1)); // restrict to range 0-1
-    colorOut = vec4(normal.xyz, 1.0);
-    #else
-    colorOut = vec4(vecIntegratedIntensity.xyz, integratedOpacity);
-    #endif
+    // #if PROJECTION_MODE == PROJECTION_ISOSURFACE
+    // TODO - put normals in a separate frame buffer
+    if (false) {
+        vec3 uvw = x0 + tMaxAbs * x1;
+        vec3 voxelMicrometers = volumeMicrometers / volumeSize;
+        vec3 normal = calculateNormalInScreenSpace(
+                volumeTexture, 
+                uvw, 
+                voxelMicrometers, 
+                textureScale);
+        // Clip normal at front of slab
+        if (tMaxAbs <= tMinSlab) normal = vec3(0, 0, 1);
+        normal = 0.5 * (normal + vec3(1, 1, 1)); // restrict to range 0-1
+        colorOut = vec4(normal.xyz, 1.0);
+    }
+    else {
+        colorOut = vec4(vecIntegratedIntensity.xyz, integratedOpacity);
+    }
 
     // pick value to alternate render target
     float relativeDepth = (tMaxAbs - tMinSlab) / (tMaxSlab - tMinSlab);
