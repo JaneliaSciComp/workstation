@@ -25,6 +25,10 @@ public class MicronsToClipboardAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         String content = statusLabel.getText();
+        // Eliminate the trailing um symbol.
+        if ( content.endsWith("m") ) {
+            content = content.substring(0, content.length() - 2).trim();
+        }
         StringSelection selection = new StringSelection(content);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(selection, selection);

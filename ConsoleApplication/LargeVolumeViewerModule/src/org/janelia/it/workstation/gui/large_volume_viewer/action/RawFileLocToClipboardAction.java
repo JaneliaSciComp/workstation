@@ -17,19 +17,21 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 
 /**
- * Converts the text, as it is expected, in the status label, into a tile
- * location, and copies that into the clipboard, in a simple format.
+ * Converts the text, as it is expected, in the status label, into coordinates,
+ * and uses the coords to lookup the tile file at that location.
  */
-public class TileLocToClipboardAction extends AbstractAction {
+public class RawFileLocToClipboardAction extends AbstractAction {
 
     private final JLabel statusLabel;
     private final TileFormat tileFormat;
     private final BasicObservableCamera3d camera;
     private final CoordinateAxis axis;
+    private final String topFolder;
 
-    public TileLocToClipboardAction(
+    public RawFileLocToClipboardAction(
             JLabel statusLabel, 
             TileFormat tileFormat, 
+            String topFolder,
             BasicObservableCamera3d camera, 
             CoordinateAxis axis
     ) {
@@ -37,7 +39,8 @@ public class TileLocToClipboardAction extends AbstractAction {
         this.tileFormat = tileFormat;
         this.camera = camera;
         this.axis = axis;
-        putValue(Action.NAME, "Copy Octree Location to Clipboard");
+        this.topFolder = topFolder;
+        putValue(Action.NAME, "Copy Tile File Location to Clipboard");
     }
 
     @Override
@@ -49,7 +52,7 @@ public class TileLocToClipboardAction extends AbstractAction {
         
         TileIndex index = tileFormat.tileIndexForXyz(vec, tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit()), axis);
         File path = BlockTiffOctreeLoadAdapter.getOctreeFilePath(index, tileFormat, true);
-        StringSelection selection = new StringSelection(path.getAbsolutePath());
+        StringSelection selection = new StringSelection(topFolder + path.getAbsolutePath());
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(selection, selection);
     }
