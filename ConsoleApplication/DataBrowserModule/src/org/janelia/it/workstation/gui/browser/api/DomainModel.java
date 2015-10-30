@@ -296,7 +296,7 @@ public class DomainModel {
         }
         return objs;
     }
-
+    
     /**
      * Retrieve the given domain object, checking the cache first, and then falling back to the database.
      *
@@ -324,6 +324,15 @@ public class DomainModel {
     
     public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) {
         return (T)getDomainObject(new DomainObjectId(domainClass, id));
+    }
+
+    public DomainObject getDomainObject(DomainObject domainObject) {
+        DomainObjectId did = new DomainObjectId(domainObject.getClass(), domainObject.getId());
+        DomainObject canonicalObject = objectCache.getIfPresent(did);
+        if (canonicalObject==null) {
+            return putOrUpdate(loadDomainObject(did));
+        }
+        return canonicalObject;
     }
     
     public List<DomainObject> getDomainObjectsByReference(List<Reference> references) {

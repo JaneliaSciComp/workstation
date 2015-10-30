@@ -5,26 +5,35 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectPermission;
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectPermission;
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
-import org.janelia.it.workstation.gui.util.SubjectComboBoxRenderer;
 
 /**
- * A dialog for viewing, editing, or adding an EntityActorPermission.
+ * A dialog for viewing and editing permissions for a single domain object.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -37,7 +46,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
     private final JComboBox subjectCombobox;
     private final JCheckBox readCheckbox;
     private final JCheckBox writeCheckbox;
-    private final JCheckBox recursiveCheckbox;
+//    private final JCheckBox recursiveCheckbox;
 
     private DomainObjectPermission dop;
     private DomainObject domainObject;
@@ -72,11 +81,11 @@ public class DomainObjectPermissionDialog extends ModalDialog {
         writeCheckbox = new JCheckBox("Write");
         attrPanel.add(writeCheckbox, "gap para, span 2");
 
-        recursiveCheckbox = new JCheckBox("Apply permission changes to all subfolders");
-        recursiveCheckbox.setSelected(true);
-
-        addSeparator(attrPanel, "Options");
-        attrPanel.add(recursiveCheckbox, "gap para, span 2");
+//        recursiveCheckbox = new JCheckBox("Apply permission changes to all subfolders");
+//        recursiveCheckbox.setSelected(true);
+//
+//        addSeparator(attrPanel, "Options");
+//        attrPanel.add(recursiveCheckbox, "gap para, span 2");
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
@@ -147,9 +156,9 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
         readCheckbox.setSelected(dop == null || dop.isRead());
         writeCheckbox.setSelected(dop != null && dop.isWrite());
-        if (dop!=null) {
-            recursiveCheckbox.setEnabled((dop.getDomainObject() instanceof TreeNode));
-        }
+//        if (dop!=null) {
+//            recursiveCheckbox.setEnabled((dop.getDomainObject() instanceof TreeNode));
+//        }
         
         packAndShow();
     }
@@ -159,7 +168,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
         Utils.setWaitingCursor(parent);
 
         final Subject subject = (Subject) subjectCombobox.getSelectedItem();
-        final boolean recursive = recursiveCheckbox.isSelected();
+//        final boolean recursive = recursiveCheckbox.isSelected();
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
         
@@ -172,7 +181,6 @@ public class DomainObjectPermissionDialog extends ModalDialog {
                 }
                 dop.setRead(readCheckbox.isSelected());
                 dop.setWrite(writeCheckbox.isSelected());
-                // TODO: implement recursive permission changes
                 model.changePermissions(domainObject, dop.getSubjectKey(), dop.getPermissions(), true);
             }
 

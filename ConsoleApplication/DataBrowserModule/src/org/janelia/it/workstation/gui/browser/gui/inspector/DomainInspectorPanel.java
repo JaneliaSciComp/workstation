@@ -8,8 +8,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -26,10 +28,9 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -50,10 +51,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 
 
 /**
- * A panel for displaying details about the currently selected entity.
+ * A panel for displaying details about the currently selected domain object.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -64,7 +66,7 @@ public class DomainInspectorPanel extends JPanel {
     private static final String ATTRIBUTES_COLUMN_KEY = "Attribute Name";
     private static final String ATTRIBUTES_COLUMN_VALUE = "Attribute Value";
 
-    private static final String PERMISSIONS_COLUMN_SUBJECT = "Subject";
+    private static final String PERMISSIONS_COLUMN_SUBJECT = "User";
     private static final String PERMISSIONS_COLUMN_TYPE = "Type";
     private static final String PERMISSIONS_COLUMN_PERMS = "Permissions";
 
@@ -95,6 +97,7 @@ public class DomainInspectorPanel extends JPanel {
 
     private boolean firstLoad = true;
     private List<Subject> subjects;
+    private Map<String,Subject> subjectMap;
     private DomainObject domainObject;
 
     private JLabel createLoadingLabel() {
@@ -159,7 +162,8 @@ public class DomainInspectorPanel extends JPanel {
                 DomainObjectPermission dop = (DomainObjectPermission) userObject;
                 if (null != dop) {
                     if (column.getName().equals(PERMISSIONS_COLUMN_SUBJECT)) {
-                        return dop.getSubjectKey().split(":")[1];
+                        return subjectMap.get(dop.getSubjectKey()).getFullName();
+//                        return dop.getSubjectKey().split(":")[1];
                     }
                     else if (column.getName().equals(PERMISSIONS_COLUMN_TYPE)) {
                         if (dop.isOwner()) {
@@ -371,13 +375,7 @@ public class DomainInspectorPanel extends JPanel {
 
             @Override
             protected void doStuff() throws Exception {
-                subjects = ModelMgr.getModelMgr().getSubjects();
-                Collections.sort(subjects, new Comparator<Subject>() {
-                    @Override
-                    public int compare(Subject o1, Subject o2) {
-                        return ComparisonChain.start().compare(o1.getKey(), o2.getKey()).result();
-                    }
-                });
+                subjects = DomainMgr.getDomainMgr().getSubjects();
             }
 
             @Override
@@ -422,7 +420,10 @@ public class DomainInspectorPanel extends JPanel {
         Collections.sort(eaps, new Comparator<DomainObjectPermission>() {
             @Override
             public int compare(DomainObjectPermission o1, DomainObjectPermission o2) {
-                return ComparisonChain.start().compare(o1.getSubjectKey(), o2.getSubjectKey()).result();
+                ComparisonChain chain = ComparisonChain.start()
+                        .compare(o2.isOwner(), o1.isOwner(), Ordering.natural())
+                        .compare(o1.getSubjectKey(), o2.getSubjectKey(), Ordering.natural().nullsFirst());
+                return chain.result();
             }
         });
 
@@ -475,10 +476,6 @@ public class DomainInspectorPanel extends JPanel {
         annotationLoadingWorker.execute();
     }
     
-    public List<Subject> getSubjects() {
-        return subjects;
-    }
-
     /**
      * Returns the subjects which have not been granted access yet, and the 
      * currently selected subject specified by currSubjectKey. If currSubjectKey
@@ -497,15 +494,20 @@ public class DomainInspectorPanel extends JPanel {
                 filtered.add(subject);
             }
         }
-        EntityUtils.sortSubjects(filtered);
+        DomainUtils.sortSubjects(filtered);
         return filtered;
     }
 
     public void setSubjects(List<Subject> subjects) {
         this.subjects = subjects;
+        this.subjectMap = new HashMap<>();
+        for(Subject subject : subjects) {
+            subjectMap.put(subject.getKey(), subject);
+        }
     }
 
     public void refresh() {
+        this.domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(domainObject);
         loadSubjects();
         loadAttributes();
         loadAnnotations();
