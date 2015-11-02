@@ -59,7 +59,7 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriter
 import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.SetCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.ObjectSetCriteria;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.MongoMapped;
@@ -572,9 +572,9 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
 
         Reference reference = new Reference("objectSet", obj.getId());
 
-        SetCriteria criteria = new SetCriteria();
-        criteria.setSetName(obj.getName());
-        criteria.setSetReference(reference);
+        ObjectSetCriteria criteria = new ObjectSetCriteria();
+        criteria.setObjectSetName(obj.getName());
+        criteria.setObjectSetReference(reference);
         filter.addCriteria(criteria);
 
         dirty = true;   
@@ -688,11 +688,11 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                     }
 
                 }
-                else if (criteria instanceof SetCriteria) {
-                    SetCriteria sc = (SetCriteria) criteria;
-                    Reference ref = sc.getSetReference();
-                    log.info("Setting query root: {}",ref.getId());
-                    builder.setRootId(ref.getId());
+                else if (criteria instanceof ObjectSetCriteria) {
+                    ObjectSetCriteria sc = (ObjectSetCriteria) criteria;
+                    Reference ref = sc.getObjectSetReference();
+                    log.info("Setting query root: {}",ref.getTargetId());
+                    builder.setRootId(ref.getTargetId());
                 }
             }
         }
@@ -1023,12 +1023,12 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             newCriteria.setValues(new HashSet<>(source.getValues()));
             return newCriteria;
         }
-        else if (criteria instanceof SetCriteria) {
-            SetCriteria source = (SetCriteria)criteria;
-            SetCriteria newCriteria = new SetCriteria();
-            newCriteria.setSetName(source.getSetName());
-            Reference setReference = new Reference(source.getSetReference().getCollectionName(), source.getSetReference().getId());
-            newCriteria.setSetReference(setReference);
+        else if (criteria instanceof ObjectSetCriteria) {
+            ObjectSetCriteria source = (ObjectSetCriteria)criteria;
+            ObjectSetCriteria newCriteria = new ObjectSetCriteria();
+            newCriteria.setObjectSetName(source.getObjectSetName());
+            Reference setReference = new Reference(source.getObjectSetReference().getCollectionName(), source.getObjectSetReference().getTargetId());
+            newCriteria.setObjectSetReference(setReference);
             return newCriteria;
         }
         else {

@@ -32,7 +32,7 @@ public class SearchResults {
         
         ArrayListMultimap<Long, Annotation> annotationsByTarget = ArrayListMultimap.<Long, Annotation>create();
         for(Annotation annotation : annotations) {
-            annotationsByTarget.put(annotation.getTarget().getId(), annotation);
+            annotationsByTarget.put(annotation.getTarget().getTargetId(), annotation);
         }
         
         List<Annotation> pageAnnotations = new ArrayList<>();

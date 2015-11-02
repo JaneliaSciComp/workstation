@@ -387,7 +387,7 @@ public class DomainModel {
     }
     
     public DomainObject getDomainObjectByReference(Reference reference) {
-        return getDomainObject(reference.getCollectionName(), reference.getId());
+        return getDomainObject(reference.getCollectionName(), reference.getTargetId());
     }
     
     public DomainObject getDomainObject(String type, Long id) {

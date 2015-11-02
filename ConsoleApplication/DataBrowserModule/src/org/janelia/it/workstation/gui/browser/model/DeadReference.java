@@ -23,7 +23,7 @@ public class DeadReference implements DomainObject {
     }
 
     public Long getId() {
-        return reference.getId();
+        return reference.getTargetId();
     }
     
     public void setId(Long id) {

@@ -113,8 +113,8 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
             if (treeNode.hasChildren()) {
                 for(Reference reference : treeNode.getChildren()) {
                     if (reference==null) continue;
-                    DomainObject obj = map.get(reference.getId());
-                    log.trace(reference.getCollectionName()+"#"+reference.getId()+" -> "+obj);
+                    DomainObject obj = map.get(reference.getTargetId());
+                    log.trace(reference.getCollectionName()+"#"+reference.getTargetId()+" -> "+obj);
                     if (obj!=null) {
                         if (TreeNode.class.isAssignableFrom(obj.getClass())) {
                             temp.add(obj);

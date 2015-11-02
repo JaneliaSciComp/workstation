@@ -95,7 +95,7 @@ public class ClientDomainUtils {
             //log.warn("Cannot generate DomainObjectId for unrecognized target type: "+ref.getTargetType());
             return null;
         }
-        return new DomainObjectId(clazz.getName(), ref.getId());
+        return new DomainObjectId(clazz.getName(), ref.getTargetId());
     }
 
     public static Reference getReferenceForId(DomainObjectId id) {
@@ -105,7 +105,7 @@ public class ClientDomainUtils {
             throw new IllegalArgumentException("No such object class: "+id.getClassName());
         }
         ref.setCollectionName(DomainUtils.getCollectionName(objectClass));
-        ref.setId(id.getId());
+        ref.setTargetId(id.getId());
         return ref;
     }
 }
