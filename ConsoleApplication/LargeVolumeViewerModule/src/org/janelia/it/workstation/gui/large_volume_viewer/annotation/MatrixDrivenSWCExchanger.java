@@ -8,7 +8,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import Jama.Matrix;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.shared.util.ImportExportSWCExchanger;
+import org.janelia.it.jacs.shared.swc.ImportExportSWCExchanger;
 
 /**
  * Uses matrices (based on JAMA package), to convert between internal and

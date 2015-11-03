@@ -1185,6 +1185,11 @@ public final class ModelMgr {
     public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
     }
+    
+    /** Imports all the SWC files in the folder, into a new workspace belonging to owner key. */
+    public void importSWCFolder(String swcFolderLoc, String ownerKey, Long workspaceId, Long sampleId) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().importSWCFolder(swcFolderLoc, ownerKey, workspaceId, sampleId);
+    }
 
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeNeuron(workspaceId, name);

@@ -219,17 +219,23 @@ public class AnnotationPanel extends JPanel
                 "Export all neurons to SWC file");
         workspaceToolMenu.add(new JMenuItem(exportAllSWCAction));
 
-        ImportSWCAction importSWCAction = new ImportSWCAction();
+        ImportSWCAction importSWCAction = new ImportSWCAction(this, annotationModel, annotationMgr);
         importSWCAction.putValue(Action.NAME, "Import SWC Data as Single Neuron...");
         importSWCAction.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCAction));
 
-        ImportSWCAction importSWCActionMulti = new ImportSWCAction(true);
+        ImportSWCAction importSWCActionMulti = new ImportSWCAction(true, this, annotationModel, annotationMgr);
         importSWCActionMulti.putValue(Action.NAME, "Import SWC Data as Neuron-per-Root...");
         importSWCActionMulti.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCActionMulti));
+
+        ImportRemoteSWCAction importRemoteSwcAction = new ImportRemoteSWCAction(this, annotationModel);
+        importRemoteSwcAction.putValue(Action.NAME, "Import SWC Data on Server...");
+        importRemoteSwcAction.putValue(Action.SHORT_DESCRIPTION,
+                "Import one or more SWC files into the workspace");
+        workspaceToolMenu.add(new JMenuItem(importRemoteSwcAction));
 
         workspaceToolMenu.add(new JMenuItem(new AbstractAction("Save color model") {
             @Override
@@ -237,7 +243,7 @@ public class AnnotationPanel extends JPanel
                 annotationMgr.saveColorModel();
             }
         }));
-
+        
         // workspace tool menu button
         final JButton workspaceToolButton = new JButton();
         String gearIconFilename = "cog.png";
@@ -505,101 +511,5 @@ public class AnnotationPanel extends JPanel
         }
     }
 
-    class ImportSWCAction extends AbstractAction {
-        private boolean neuronPerRoot = false;
-        public ImportSWCAction(boolean neuronPerRoot) {
-            this.neuronPerRoot = neuronPerRoot;
-        }
-        
-        public ImportSWCAction() {
-            this(false);
-        }
-        
-        @Override
-        public void actionPerformed(ActionEvent e) {
-
-            // note: when it's time to add toggle and/or options, you can look into
-            //  adding an accesory view to dialog; however, not clear that it will
-            //  give enough flexibility compared to doing a custom dialog from the start
-
-            // could specify a dir to open in, but not sure what to choose
-            JFileChooser chooser = new JFileChooser();
-            chooser.setDialogTitle("Choose swc file or directory");
-            chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-            final FileFilter swcAndDirFilter = new SwcAndFileFilter();
-            chooser.setFileFilter(swcAndDirFilter);
-            int returnValue = chooser.showOpenDialog(AnnotationPanel.this);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                List<File> swcFiles = getFilesList(chooser.getSelectedFile());                
-                if (swcFiles.size() > 1) {
-                    AtomicInteger countDownSemaphor = new AtomicInteger(swcFiles.size());
-                    // Unified notification across all the (possibly many) files.
-                    CountdownBackgroundWorker progressNotificationWorker = 
-                            new CountdownBackgroundWorker( 
-                                    "Import " + chooser.getSelectedFile(), 
-                                    countDownSemaphor 
-                            );
-                    progressNotificationWorker.setAnnotationModel(annotationModel);
-                    progressNotificationWorker.executeWithEvents();
-                    for (File swc: swcFiles) {
-                        // Import all the little neurons from the file.
-                        annotationMgr.importSWCFile(swc, countDownSemaphor);
-                    }
-                }
-                else {
-                    annotationMgr.importSWCFile(swcFiles.get(0), null);
-                }
-            }
-        }
-        
-        private List<File> getFilesList(File selectedFile) {
-            List<File> rtnVal = new ArrayList<>();
-            List<File> rawFileList = new ArrayList<>();
-            if (selectedFile.isDirectory()) {
-                File[] swcFiles = selectedFile.listFiles(new SwcDirListFilter());
-                rawFileList.addAll(Arrays.asList(swcFiles));                
-            }
-            else {
-                rawFileList.add(selectedFile);
-            }
-            
-            if (neuronPerRoot) {
-                try {
-                    // Now, we traverse list above, breaking any we see as
-                    // having more than one root, into multiple input files.
-                    for (File infile : rawFileList) {
-                        rtnVal.addAll(annotationModel.breakOutByRoots(infile));
-                    }
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
-                    throw new RuntimeException(ioe);
-                }
-            }
-            else {
-                rtnVal.addAll(rawFileList);
-            }
-            return rtnVal;
-        }
-    }
-    
-    class SwcAndFileFilter extends FileFilter {
-        @Override
-        public boolean accept(File f) {
-            return f.getName().endsWith(AnnotationModel.STD_SWC_EXTENSION) || f.isDirectory();
-        }
-
-        @Override
-        public String getDescription() {
-            return "*" + AnnotationModel.STD_SWC_EXTENSION;
-        }
-    }
-    
-    class SwcDirListFilter implements java.io.FileFilter {
-        @Override
-        public boolean accept(File file) {
-            return file.isFile() && file.getName().endsWith(AnnotationModel.STD_SWC_EXTENSION);
-        }
-
-    }
 }
 

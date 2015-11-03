@@ -6,6 +6,7 @@
 
 package org.janelia.it.workstation.shared.util;
 
+import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.junit.After;

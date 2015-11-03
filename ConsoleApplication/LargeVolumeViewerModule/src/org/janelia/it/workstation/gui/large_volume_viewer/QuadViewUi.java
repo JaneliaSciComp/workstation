@@ -67,7 +67,7 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.L
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.shared.util.SWCDataConverter;
+import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 
 /** 
  * Main window for QuadView application.
