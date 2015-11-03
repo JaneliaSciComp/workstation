@@ -287,7 +287,7 @@ public class OctreeMetadataSniffer {
                 }
             }
             if (!indexOk) {
-                log.error("Bad tile index " + tileIndex);
+                log.debug("Bad tile index " + tileIndex);
                 return null;
             }
             // offset x/y/z for next deepest level

@@ -152,13 +152,12 @@ public class TileTexture
 		try {
 			textureData = loadAdapter.loadToRam(index);
 		} catch (AbstractTextureLoadAdapter.TileLoadError e) {
-			log.error(("Received TileLoadError exception for TileIndex="+index.toString()));
 			setLoadStatus(LoadStatus.LOAD_FAILED); // error
 			return false;
 		} catch (AbstractTextureLoadAdapter.MissingTileException e) { // texture correctly has no data
 			setLoadStatus(LoadStatus.MISSING);
 			return true; // because missing is a valid state
-        }
+		}
 		setLoadStatus(LoadStatus.RAM_LOADED); // Yay!
 		return true;
 	}

@@ -160,6 +160,9 @@ public class ViewTileManager {
 		
 		// 2) z or other slice axisIndex (d: depth)
 		Vec3 focus = camera.getFocus();
+
+		//log.info("ViewTileManager createLatestTiles focus="+focus.toString()+" zoomLevel="+zoom+" pixelsPerSceneUnit="+camera.getPixelsPerSceneUnit());
+
 		double fD = focus.get(xyzFromWhd[2]);
 		// Correct for bottom Y origin of Raveler tile coordinate system
 		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)

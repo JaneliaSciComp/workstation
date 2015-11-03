@@ -136,7 +136,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         else {
             try {
                 CacheController.getInstance().close();
-                tileServer.setPrefetch(false);
+                //tileServer.setPrefetch(false);
                 int standardFileLength = getFileLength();
                 //CacheFacadeI cacheManager = new MapCacheFacade(standardFileLength);
                 CacheFacadeI cacheManager = new EHCountedCacheFacade(standardFileLength);

@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.it.workstation.cache.large_volume.stack.TileStackCacheController;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,9 @@ public class TextureLoadWorker implements Runnable
 	public void run() 
 	{
 		TileIndex index = texture.getIndex();
+
+		//log.info("TextureLoadWorker run() for tileIndex="+index.toString()+" stackFile="+ TileStackCacheController.getInstance().getStackFileForTileIndex(index));
+		boolean textureRetrieved=false;
 		
 		// log.info("Loading texture "+index+"...");
 		
@@ -59,13 +63,19 @@ public class TextureLoadWorker implements Runnable
 		// Load file
 		// log.info("Loading texture "+texture.getIndex());
 		else if (texture.loadImageToRam()) {
+			textureRetrieved=true;
 			textureCache.add(texture);
             tileServer.textureLoaded(texture.getIndex());
 			// log.info("Loaded texture "+texture.getIndex());
 		}
 		else {
-			log.warn("Failed to load texture " + texture.getIndex());
+			//log.warn("Failed to load texture " + texture.getIndex());
 		}
+//		if (textureRetrieved) {
+//			//log.info("TextureLoadWorker RETRIEVED for tileIndex=" + index.toString() + " stackFile=" + TileStackCacheController.getInstance().getStackFileForTileIndex(index));
+//		} else {
+//			//log.info("TextureLoadWorker NOT RETRIEVED for tileIndex=" + index.toString() + " stackFile=" + TileStackCacheController.getInstance().getStackFileForTileIndex(index));
+//		}
 		textureCache.setLoadQueued(index, false);
 	}
 

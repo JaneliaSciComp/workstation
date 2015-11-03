@@ -37,8 +37,6 @@ implements Map<TileIndex, TileTexture>
 				boolean result = (map.size() > maxEntries);
 				if (result && ! fullReported) {
 					log.info("cache full");
-                    eldest.getValue().releaseMemory();
-                    map.remove(eldest.getKey());
 					fullReported = true;
 				}
 				if (result) {

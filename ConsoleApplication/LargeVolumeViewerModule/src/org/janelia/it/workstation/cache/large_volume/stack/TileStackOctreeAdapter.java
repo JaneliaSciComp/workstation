@@ -1,9 +1,6 @@
 package org.janelia.it.workstation.cache.large_volume.stack;
 
-import org.janelia.it.workstation.gui.large_volume_viewer.AbstractTextureLoadAdapter;
-import org.janelia.it.workstation.gui.large_volume_viewer.OctreeMetadataSniffer;
-import org.janelia.it.workstation.gui.large_volume_viewer.TextureData2dGL;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
+import org.janelia.it.workstation.gui.large_volume_viewer.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +18,9 @@ public class TileStackOctreeAdapter extends AbstractTextureLoadAdapter {
     File topFolder;
     String remoteBasePath;
     TileStackCacheController tileStackCacheController=TileStackCacheController.getInstance();
-    static AtomicInteger ltrCount=new AtomicInteger(0);
+    BlockTiffOctreeLoadAdapter blockTiffOctreeLoadAdapter = new BlockTiffOctreeLoadAdapter();
+
+    //static AtomicInteger ltrCount=new AtomicInteger(0);
 
     public TileStackOctreeAdapter(String remoteBasePath, File topFolder) throws DataSourceInitializeException {
         super();
@@ -36,6 +35,11 @@ public class TileStackOctreeAdapter extends AbstractTextureLoadAdapter {
             }
         });
 
+        if (remoteBasePath!=null) {
+            blockTiffOctreeLoadAdapter.setRemoteBasePath(remoteBasePath);
+        }
+        blockTiffOctreeLoadAdapter.setTopFolder(topFolder);
+
         tileStackCacheController.setTileFormat(tileFormat);
         tileStackCacheController.setFilesystemConfiguration(remoteBasePath, topFolder);
 
@@ -47,9 +51,20 @@ public class TileStackOctreeAdapter extends AbstractTextureLoadAdapter {
 
     @Override
     public TextureData2dGL loadToRam(TileIndex tileIndex) throws TileLoadError, MissingTileException {
-        int count=ltrCount.addAndGet(1);
-        log.info("ltrCount="+ltrCount);
-        return tileStackCacheController.loadToRam(tileIndex);
+        //int count=ltrCount.addAndGet(1);
+        //log.info("ltrCount="+count);
+
+        //log.info("loadToRam() useVolumeCache="+VolumeCache.useVolumeCache());
+
+        if (VolumeCache.useVolumeCache()) {
+            TextureData2dGL result=tileStackCacheController.loadToRam(tileIndex);
+            if (result==null && (!VolumeCache.useVolumeCache())) {
+                throw new AbstractTextureLoadAdapter.TileLoadError("VolumeCache off");
+            }
+            return result;
+        } else {
+            return blockTiffOctreeLoadAdapter.loadToRam(tileIndex);
+        }
     }
 
 }

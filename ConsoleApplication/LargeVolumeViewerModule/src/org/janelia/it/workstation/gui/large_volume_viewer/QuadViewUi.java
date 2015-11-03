@@ -37,9 +37,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -799,6 +798,22 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		buttonsPanel.add(verticalGlue);
 		
 		buttonsPanel.add(loadStatusLabel);
+
+        final JCheckBox volumeCacheCheckbox = new JCheckBox("Volume Cache");
+        volumeCacheCheckbox.setSelected(VolumeCache.useVolumeCache());
+        volumeCacheCheckbox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange()==ItemEvent.DESELECTED) {
+                    volumeCacheCheckbox.setSelected(false);
+                    VolumeCache.setVolumeCache(false);
+                } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                    volumeCacheCheckbox.setSelected(true);
+                    VolumeCache.setVolumeCache(true);
+                }
+            }
+        });
+        buttonsPanel.add(volumeCacheCheckbox);
 		
 		JButton btnClearCache = new JButton("Clear Cache");
 		btnClearCache.setAction(clearCacheAction);

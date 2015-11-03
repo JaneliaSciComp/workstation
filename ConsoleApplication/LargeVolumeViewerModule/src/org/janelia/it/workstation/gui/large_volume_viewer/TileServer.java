@@ -38,13 +38,13 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 		PREFETCH_COMPLETE, // Best textures shown, plus precache is full
 	};
 	
-	private boolean doPrefetch = false;
+	private boolean doPrefetch = true;
 	private LoadStatus loadStatus = LoadStatus.UNINITIALIZED;
 	
 	// One thread pool to load minimal representation of volume
-	private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(5);
+	private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(10);
 	// One thread pool to load current and prefetch textures
-	private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(5);
+	private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(10);
 
 	// Refactoring 6/12/2013
 	private SharedVolumeImage sharedVolumeImage;
@@ -72,10 +72,6 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
         };
         getTextureCache().setQueueDrainedListener(queueDrainedListener);
 	}
-    
-    public void setPrefetch(boolean doPrefetch) {
-        this.doPrefetch = doPrefetch;
-    }
 
     public void textureLoaded(TileIndex tileIndex) {
         for (ViewTileManager vtm: viewTileManagers) {
@@ -155,20 +151,16 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
             vtm.clear();
             vtm.setTextureCache(textureCache);
         }
-        // DEBUG startMinResPreFetch();
+        if (!VolumeCache.useVolumeCache()) {
+			startMinResPreFetch();
+		}
 	};
 	
 	public TileSet createLatestTiles() {
-		//log.info("createLatestTiles() start");
 		TileSet result = new TileSet();
 		for (ViewTileManager vtm : viewTileManagers) {
-			//log.info("Checking if vtm is showing");
-			if (vtm.getTileConsumer().isShowing()) {
-				//log.info("Yes, calling vtm.createLatestTile()");
+			if (vtm.getTileConsumer().isShowing())
 				result.addAll(vtm.createLatestTiles());
-			} else {
-				//log.info("NOT showing");
-			}
 		}
 		return result;
 	}
@@ -184,7 +176,6 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	public void setLoadStatus(LoadStatus loadStatus) {
 		if (this.loadStatus == loadStatus)
 			return; // no change
-		//log.info("Load status changed to "+loadStatus+" historyCache="+textureCache.getHistoryCache().size()+" futureCache="+textureCache.getFutureCache().size()+" persistentCache="+textureCache.getPersistentCache().size());
 		this.loadStatus = loadStatus;
         if (loadStatusListener != null) {
             loadStatusListener.updateLoadStatus(loadStatus);
@@ -245,7 +236,6 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	}
 	
 	private void rearrangeLoadQueue(TileSet currentTiles) {
-		//log.info("rearrangeLoadQueue() start");
 		for (ViewTileManager vtm : viewTileManagers) {
 			vtm.updateDisplayTiles();
 		}
@@ -271,11 +261,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 			}
 		}
 		
-		if (doPrefetch) {
-
-			//log.info("rearrangeLoadQueue() doPrefetch start");
-
-
+		if (doPrefetch && !VolumeCache.useVolumeCache()) {
 			/* TODO - LOD tiles are not working yet...
 			// Get level-of-detail tiles
 			Iterable<TileIndex> lodGen = new LodGenerator(TileServer.this);
@@ -380,8 +366,6 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 			}
 			*/
 
-			//log.info("doPrefetch end");
-
 		}			
 
 		// log.info("Number of queued textures = "+cacheableTextures.size());
@@ -418,6 +402,11 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 		// log.info("Future cache size = "+futureTileMax);
 	}
 	
+	public void setCachedSizesSmall() {
+		getTextureCache().getHistoryCache().setMaxEntries(50);
+		getTextureCache().getFutureCache().setMaxEntries(150);
+	}
+
 	public AbstractTextureLoadAdapter getLoadAdapter() {
 		return sharedVolumeImage.getLoadAdapter();
 	}
@@ -472,7 +461,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
         minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
         futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
         clearCache();
-        setCacheSizesAsFractionOfMaxHeap(0.05, 0.05); // 0.15, 0.35
+        setCacheSizesAsFractionOfMaxHeap(0.10, 0.20); // 0.15, 0.35
         refreshCurrentTileSet();
     }
 	
