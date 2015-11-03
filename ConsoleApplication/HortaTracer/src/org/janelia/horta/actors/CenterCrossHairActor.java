@@ -28,7 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta;
+package org.janelia.horta.actors;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -51,7 +51,7 @@ import org.openide.util.Exceptions;
  *
  * @author Christopher Bruns
  */
-class CenterCrossHairActor extends MeshActor {
+public class CenterCrossHairActor extends MeshActor {
     private int heightPixels = 16;
     private int widthPixels = 16;
     private final Matrix4 crossHairTransform = new Matrix4();

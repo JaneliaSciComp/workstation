@@ -1379,6 +1379,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         result.setMicrometersPerWindowHeight(
                 viewer.getViewport().getHeight()
                 / camera.getPixelsPerSceneUnit());
+        
+        // TODO neurons
+        
+        
         return result;
     }
     
@@ -1391,9 +1395,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         TileConsumer viewer = allSliceViewers.get(0);
         float zoom = (float) (viewer.getViewport().getHeight() 
                 / sampleLocation.getMicrometersPerWindowHeight());
-        
-        if (! loadedUrl.equals(url))
-            loadRender(url);
+
+        if (url != null) {
+            if (! loadedUrl.equals(url))
+                loadRender(url);
+        }
         camera.setFocus(focus);
         camera.setPixelsPerSceneUnit(zoom);
     }

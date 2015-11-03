@@ -16,6 +16,9 @@ import java.awt.event.ActionEvent;
  * this panel is only shown to me; I use it when I need to insert
  * pieces of code for testing, etc.
  *
+ * prints output to std out rather than logs; this stuff should
+ * only be run by a dev who's paying attention!
+ *
  * djo, 11/14
  */
 public class LVVDevPanel extends JPanel {
@@ -23,7 +26,6 @@ public class LVVDevPanel extends JPanel {
     private AnnotationManager annotationMgr;
     private AnnotationModel annotationModel;
     private LargeVolumeViewerTranslator largeVolumeViewerTranslator;
-
 
     public LVVDevPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
                        LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
@@ -42,13 +44,7 @@ public class LVVDevPanel extends JPanel {
         add(new JLabel("Debug functions", JLabel.CENTER));
 
 
-        // NOTE: this doesn't work! you apparently can't call modelMgr
-        //  methods from the GUI thread, where this is; I'd have to call
-        //  into some dummy function in annModel, or maybe even a new
-        //  testAnnModel class, and do it in a thread; not sure I want
-        //  to do all that, which kind of defeats the purpose of this
-        //  whole dev panel!  there are days when Java just repeatedly
-        //  gets in the way of everything I want to do, ugh
+        // remember, can't call modelMgr from GUI thread
 
         // this is for testing the "fix connectivity" feature; it
         //  grabs the current neuron and deletes one of its geo annotations
@@ -83,19 +79,19 @@ public class LVVDevPanel extends JPanel {
                         //  offense against man and God and the ethics board;
                         //  I hope Entities and EntityDatas feel no pain...
                         ModelMgr modelMgr = ModelMgr.getModelMgr();
-                            Entity neuronEntity = modelMgr.getEntityById(neuron.getId());
-                            // avoid a concurrant modification error:
-                            EntityData found = null;
-                            for (EntityData ed: neuronEntity.getEntityData()) {
-                                if (ed.getId().equals(childID)) {
-                                    found = ed;
-                                }
+                        Entity neuronEntity = modelMgr.getEntityById(neuron.getId());
+                        // avoid a concurrant modification error:
+                        EntityData found = null;
+                        for (EntityData ed : neuronEntity.getEntityData()) {
+                            if (ed.getId().equals(childID)) {
+                                found = ed;
                             }
-                            if (found != null) {
-                                modelMgr.removeEntityData(found);
-                            } else {
-                                System.out.println("couldn't find right entity data to remove");
-                            }
+                        }
+                        if (found != null) {
+                            modelMgr.removeEntityData(found);
+                        } else {
+                            System.out.println("couldn't find right entity data to remove");
+                        }
                     }
 
                     @Override
@@ -115,6 +111,77 @@ public class LVVDevPanel extends JPanel {
         });
         // disabled; testing is over
         // add(testButton1);
+
+        // this is for testing the "fix connectivity" feature (again); this
+        //  variation takes the root annotation of the current neuron and
+        //  parents it to something other than the neuron
+        JButton testButton2 = new JButton("Test 2");
+        testButton2.setAction(new AbstractAction("Root wrong parent") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        // since this is for debugging, it can be kind of sloppy;
+                        //  delete second annotation in first neurite; that's the
+                        //  first child of the root
+                        TmNeuron neuron = annotationModel.getCurrentNeuron();
+                        if (neuron == null) {
+                            System.out.println("no selected neuron");
+                            return;
+                        }
+                        if (neuron.getRootAnnotations().size() == 0) {
+                            System.out.println("no annotations");
+                            return;
+                        }
+                        TmGeoAnnotation root = neuron.getRootAnnotations().get(0);
+                        if (root.getChildIds().size() == 0) {
+                            System.out.println("root has no children");
+                            return;
+                        }
+
+                        // get the root entity data and change its value
+                        ModelMgr modelMgr = ModelMgr.getModelMgr();
+                        Entity neuronEntity = modelMgr.getEntityById(neuron.getId());
+                        // avoid a concurrant modification error:
+                        EntityData found = null;
+                        for (EntityData ed: neuronEntity.getEntityData()) {
+                            if (ed.getId().equals(root.getId())) {
+                                found = ed;
+                            }
+                        }
+                        if (found != null) {
+                            System.out.println("found entity data to edit");
+                            // put in a nonsense value for the parent
+                            String newPayload = TmGeoAnnotation.toStringFromArguments(root.getId(),
+                                12345678L, 0, root.getX(), root.getY(), root.getZ(),
+                                root.getComment());
+                            found.setValue(newPayload);
+                            modelMgr.saveOrUpdateEntityData(found);
+                        } else {
+                            System.out.println("couldn't find right entity data to edit");
+                        }
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        System.out.println("Root wrong parent had no exceptions");
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        System.out.println("Root wrong parent reported exception");
+                        error.printStackTrace();
+                    }
+                };
+                worker.execute();
+
+            }
+        });
+        // disabled; testing is over
+        // add(testButton2);
+
 
 
         /*

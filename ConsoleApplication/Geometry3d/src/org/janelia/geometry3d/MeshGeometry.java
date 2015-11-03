@@ -76,12 +76,26 @@ implements Collection<Vertex>, ObservableInterface
         return addVertex(new Vector3(x, y, z));
     }
     
+    public Vertex addVertex(float[] xyz) {
+        return addVertex(new Vector3(xyz));
+    }
+    
     public Vertex addVertex(ConstVector3 v) {
         Vertex result = new Vertex(v);
         if (add(result))
             return result;
         else
             return null;
+    }
+    
+    public int addEdge(int ix1, int ix2) {
+        return addEdge(new Edge(ix1, ix2));
+    }
+    
+    public int addEdge(Edge edge) {
+        if (edges.add(edge))
+            setChanged();
+        return edges.size() - 1;
     }
     
 //    public int addFace(Integer[] indices) {
@@ -113,9 +127,16 @@ implements Collection<Vertex>, ObservableInterface
     /**
      * Removes all vertices, faces, edges, triangles, and reset bounding box.
      */
+    @Override
     public void clear() {
-        for (Collection c : collections)
+        boolean changed = false;
+        for (Collection c : collections) {
+            if (c.size() > 0)
+                changed = true;
             c.clear();
+        }
+        if (changed)
+            setChanged();
         boundingBox.clear();
     }
     
@@ -349,20 +370,21 @@ implements Collection<Vertex>, ObservableInterface
     @Override
     public boolean add(Vertex e) {
         boolean result = vertices.add(e);
-        observable.setChanged();
+        if (result)
+            setChanged();
         return result;
     }
 
     @Override
     public boolean remove(Object o) {
         boolean result = vertices.remove(o);
-        if (result)
-            observable.setChanged();
         // Next check non-vertex items
         for (Collection coll : collections) {
             if (coll == vertices) continue;
             if (coll.remove(o)) result = true;
         }        
+        if (result)
+            observable.setChanged();
         return result;
     }
 

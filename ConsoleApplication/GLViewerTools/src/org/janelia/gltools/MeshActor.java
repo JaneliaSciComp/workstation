@@ -45,9 +45,9 @@ import java.util.Observable;
 import java.util.Observer;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.BasicVector;
 import org.janelia.geometry3d.ConstVector;
 import org.janelia.geometry3d.CompositeObject3d;
+import org.janelia.geometry3d.Edge;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.MeshFloatVbo.VertexAttribute;
 
@@ -67,18 +67,22 @@ public class MeshActor extends BasicGL3Actor
     // Vbo bookkeeping
     private int triangleIndexCount = 0;
     private int particleIndexCount = 0;
+    private int edgeIndexCount = 0;
     private int triangleAdjacencyIndexCount = 0;
     // Intermediate list of actual vbo vertex index for all triangles
-    private List<VertexIndex> triangleVertices = new ArrayList<VertexIndex>();
+    private final List<VertexIndex> triangleVertices = new ArrayList<>();
+    private final List<VertexIndex> edgeVertices = new ArrayList<>();
     private int vboTriangleIndices = 0;
     private int vboTriangleAdjacencyIndices = 0;
     private int vboParticleIndices = 0;
+    private int vboEdgeIndices = 0;
 
     private boolean useNormals = false;
 
     // TODO use this
     private boolean geometryIsDirty = true;
     private boolean particleIndicesAreDirty = true;
+    private boolean edgeIndicesAreDirty = true;
     
     public MeshActor(MeshGeometry geometry, Material material, CompositeObject3d parent) {
         super(parent);
@@ -217,6 +221,18 @@ public class MeshActor extends BasicGL3Actor
                 //     vertexBufferObject.append(v.getVector3Attribute("normal").toArray());
             }
        }
+        
+        // Edges/lines
+        edgeIndexCount = 2 * geometry.getEdges().size();
+        if (edgeVertices.size() > 0)
+            edgeIndicesAreDirty = true;
+        edgeVertices.clear();
+        for (Edge edge : geometry.getEdges()) {
+            edgeIndicesAreDirty = true;
+            for (int i : edge.asArray())
+                edgeVertices.add(new VertexIndex(i, i));
+        }
+        
         particleIndicesAreDirty = true;
         geometryIsDirty = false;
     }
@@ -271,6 +287,39 @@ public class MeshActor extends BasicGL3Actor
         gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, 0);
     }
     
+    private void initEdgeIndices(GL3 gl)
+    {
+        if (vboEdgeIndices > 0)
+            return; // already initialized
+        
+        IntBuffer vbos = IntBuffer.allocate(1);
+        vbos.rewind();
+        gl.glGenBuffers(1, vbos);
+        vboEdgeIndices = vbos.get(0);
+        
+        refreshEdgeIndices(gl);
+    }
+    
+    private void refreshEdgeIndices(GL3 gl)
+    {        
+        int edgeCount = geometry.getEdges().size();
+        if (edgeCount < 1) {
+            return;
+        }
+        IntBuffer indices = Buffers.newDirectIntBuffer(edgeVertices.size());
+        for (VertexIndex vix : edgeVertices)
+            indices.put(vix.vboIndex);
+        indices.flip();
+        gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboEdgeIndices);
+        gl.glBufferData(
+                GL3.GL_ELEMENT_ARRAY_BUFFER,
+                indices.capacity() * Buffers.SIZEOF_INT,
+                indices,
+                GL3.GL_STATIC_DRAW);
+        gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, 0);
+        edgeIndicesAreDirty = false;
+    }
+    
     private void initParticleIndices(GL3 gl)
     {
         if (vboParticleIndices > 0)
@@ -283,6 +332,7 @@ public class MeshActor extends BasicGL3Actor
         
         refreshParticleIndices(gl);
     }
+
     
     private void refreshParticleIndices(GL3 gl) {
         particleIndexCount = geometry.getVertexCount();
@@ -392,6 +442,26 @@ public class MeshActor extends BasicGL3Actor
         vertexBufferObject.unbind(gl);
     }
 
+    public void displayEdges(GL3 gl) {
+        if (vertexBufferObject == null)
+            init(gl);
+        if (vertexBufferObject == null)
+            return;
+        
+        if (vboEdgeIndices == 0)
+            initEdgeIndices(gl);
+        
+        if (edgeIndicesAreDirty)
+            refreshEdgeIndices(gl);
+        
+        vertexBufferObject.bind(gl, material.getShaderProgramHandle());
+        
+        gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboEdgeIndices);
+        gl.glDrawElements(GL3.GL_LINES, edgeIndexCount, GL3.GL_UNSIGNED_INT, 0);
+        
+        vertexBufferObject.unbind(gl);
+   }
+
     public void displayParticles(GL3 gl) {
         if (vertexBufferObject == null)
             init(gl);
@@ -415,11 +485,12 @@ public class MeshActor extends BasicGL3Actor
     @Override
     public void dispose(GL3 gl) {
         //
-        int[] vbos = {vboTriangleIndices, vboTriangleAdjacencyIndices, vboParticleIndices};
-        gl.glDeleteBuffers(3, vbos, 0);
+        int[] vbos = {vboTriangleIndices, vboTriangleAdjacencyIndices, vboParticleIndices, vboEdgeIndices};
+        gl.glDeleteBuffers(4, vbos, 0);
         vboTriangleIndices = 0;
         vboTriangleAdjacencyIndices = 0;
         vboParticleIndices = 0;
+        vboEdgeIndices = 0;
         
         if (vertexBufferObject != null)
             vertexBufferObject.dispose(gl);

@@ -43,6 +43,7 @@ import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.ShaderStep;
+import org.janelia.gltools.texture.Texture2d;
 import org.janelia.gltools.texture.Texture3d;
 import org.openide.util.Exceptions;
 
@@ -53,7 +54,9 @@ import org.openide.util.Exceptions;
 public class VolumeMipMaterial extends BasicMaterial 
 {
     private final Texture3d volumeTexture;
+    private Texture2d opaqueDepthTexture = null;
     private int volumeTextureIndex = -1;
+    private int opaqueDepthTextureIndex = -1;
     private int cameraPositionInTextureCoordinatesIndex = -1;
     private int levelOfDetailIndex = -1;
     private int nearSlabPlaneIndex = -1;
@@ -62,6 +65,9 @@ public class VolumeMipMaterial extends BasicMaterial
     private int opacityFunctionMaxIndex = -1;
     private int volumeMicrometersIndex = -1;
     private int tcToCameraIndex = -1;
+    private int opaqueZNearFarIndex = -1;
+    
+    private float[] opaqueZNearFar = {1e-2f, 1e4f};
     
     private final BrightnessModel colorMap;
     
@@ -80,6 +86,7 @@ public class VolumeMipMaterial extends BasicMaterial
     
     private boolean uniformIndicesAreDirty = true;
     private VolumeState volumeState = new VolumeState();
+    private float relativeSlabThickness = 0.5f;
     
     public VolumeMipMaterial(Texture3d volumeTexture, BrightnessModel colorMap) 
     {
@@ -114,6 +121,15 @@ public class VolumeMipMaterial extends BasicMaterial
         gl.glCullFace(GL3.GL_FRONT);
     }
     
+    public void setRelativeSlabThickness(float thickness) {
+        relativeSlabThickness = thickness;
+    }
+    
+    public float getViewSlabThickness(AbstractCamera camera) {
+        return relativeSlabThickness * camera.getVantage().getSceneUnitsPerViewportHeight();
+    }
+    
+    /*
     public static float getViewSlabThickness(AbstractCamera camera) {
         // Clip on slab, to limit depth of rendering
         float screenResolution = 
@@ -123,6 +139,7 @@ public class VolumeMipMaterial extends BasicMaterial
         slabThickness = Math.max(25.0f, slabThickness);
         return slabThickness;
     }
+    */
 
     public int getFilteringOrder() {
         return volumeState.filteringOrder;
@@ -191,6 +208,7 @@ public class VolumeMipMaterial extends BasicMaterial
             
             // Clip on slab, to limit depth of rendering
             float slabThickness = getViewSlabThickness(camera);
+            // float slabThickness = relativeSlabThickness * camera.getVantage().getSceneUnitsPerViewportHeight();
             float cameraFocusDistance = 0.0f;
             if (camera instanceof PerspectiveCamera) {
                 PerspectiveCamera pc = (PerspectiveCamera) camera;
@@ -232,7 +250,10 @@ public class VolumeMipMaterial extends BasicMaterial
             
             // for isosurface, we need to convert normals from texCoords to camera
             gl.glUniformMatrix4fv(tcToCameraIndex, 1, false, camera_X_tc.inverse().asArray(), 0);
+
+            gl.glUniform2fv(opaqueZNearFarIndex, 1, opaqueZNearFar, 0);
         }
+       
         super.displayMesh(gl, mesh, camera, modelViewMatrix);
     }
     
@@ -268,15 +289,25 @@ public class VolumeMipMaterial extends BasicMaterial
         gl.glUniform1i(filteringOrderIndex, volumeState.filteringOrder);
         // gl.glUniform1i(projectionModeIndex, projectionMode);
 
-        int textureUnit = 0;
-        volumeTexture.bind(gl, textureUnit);
-        gl.glUniform1i(volumeTextureIndex, textureUnit); // TODO - sometimes triggers GL error
-    }
+        // 3D volume texture
+        int volumeTextureUnit = 0;
+        volumeTexture.bind(gl, volumeTextureUnit);
+        gl.glUniform1i(volumeTextureIndex, volumeTextureUnit); // TODO - sometimes triggers GL error
+        
+        // 2D depth texture -- Z-buffer from opaque rendering pass
+        if (opaqueDepthTexture != null) {
+            int depthTextureUnit = 1;
+            opaqueDepthTexture.bind(gl, depthTextureUnit);
+            gl.glUniform1i(opaqueDepthTextureIndex, depthTextureUnit);
+        }
+     }
     
     @Override
     public void unload(GL3 gl) {
         super.unload(gl);
         volumeTexture.unbind(gl); // restore depth buffer writes
+        if (opaqueDepthTexture != null)
+            opaqueDepthTexture.unbind(gl);
     }
     
     @Override
@@ -298,6 +329,7 @@ public class VolumeMipMaterial extends BasicMaterial
         cameraPositionInTextureCoordinatesIndex = gl.glGetUniformLocation(s,
             "camPosInTc");
         volumeTextureIndex = gl.glGetUniformLocation(s, "volumeTexture");
+        opaqueDepthTextureIndex = gl.glGetUniformLocation(s, "opaqueDepthTexture");
         levelOfDetailIndex = gl.glGetUniformLocation(s, "levelOfDetail");
         nearSlabPlaneIndex = gl.glGetUniformLocation(s, "nearSlabPlane");
         farSlabPlaneIndex = gl.glGetUniformLocation(s, "farSlabPlane");
@@ -308,8 +340,16 @@ public class VolumeMipMaterial extends BasicMaterial
         modelViewIndex = gl.glGetUniformLocation(s, "modelViewMatrix"); // -1 means no such item
         projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
         tcToCameraIndex = gl.glGetUniformLocation(s, "tcToCamera");
+        opaqueZNearFarIndex = gl.glGetUniformLocation(s, "opaqueZNearFar");
         
         uniformIndicesAreDirty = false;
+    }
+
+    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture, float zNear, float zFar)
+    {
+        this.opaqueDepthTexture = opaqueDepthTexture;
+        opaqueZNearFar[0] = zNear;
+        opaqueZNearFar[1] = zFar;
     }
     
     private static class VolumeMipShader extends BasicShaderProgram {

@@ -45,6 +45,7 @@ implements GL3Resource
     private boolean isDirty = true;
     private boolean cacheResults = false;
     private final List<RenderPass> dependencies = new ArrayList<>();
+    private final List<RenderPass> children = new ArrayList<>();
     protected final List<RenderTarget> renderTargets = new ArrayList<>();
     protected final Framebuffer framebuffer;
     private final List<GL3Actor> actors = new ArrayList<>();
@@ -65,7 +66,14 @@ implements GL3Resource
         dependencies.add(pass);
     }
     
+    public void addChild(RenderPass pass) {
+        children.add(pass);
+    }
+    
     protected void renderScene(GL3 gl, AbstractCamera camera) {
+        for (RenderPass pass : children) {
+            renderScene(gl, camera);
+        }
         for (GL3Actor actor : actors)
             if (actor.isVisible())
                 actor.display(gl, camera, null);
@@ -78,17 +86,22 @@ implements GL3Resource
         }
         obsoleteResources.clear();
         
-        if (actors.isEmpty())
-            return;
         if (! needsRerun())
             return;
+        
+        for (RenderPass pass : children)
+            pass.display(gl, camera);
+
+        if (actors.isEmpty())
+            return;
+
         if ( (framebuffer != null) && (renderTargets.size() > 0) && (framebuffer.bind(gl)) ) 
         {
             // Don't apply anaglyph colormask during off-screen rendering...
             // TODO - avoid this hack
             byte[] savedColorMask = new byte[] {(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff};
             gl.glGetBooleanv(GL3.GL_COLOR_WRITEMASK, savedColorMask, 0);
-            gl.glColorMask(true, true, true, true);                
+            gl.glColorMask(true, true, true, true);
                 
             renderScene(gl, camera);
             framebuffer.unbind(gl);
@@ -136,6 +149,11 @@ implements GL3Resource
         actors.add(actor);
     }
     
+    public void removeActor(GL3Actor actor) {
+        if (actors.remove(actor))
+            obsoleteResources.add(actor);
+    }
+    
     public void clearActors() {
         // Save a list of old actors, so their resources can be reclaimed
         for (GL3Resource oldActor : actors) {
@@ -149,11 +167,20 @@ implements GL3Resource
     {
         for (GL3Actor actor : actors)
             actor.dispose(gl);
+        // Clean up old junk while we have an active context
+        for (GL3Resource deadActor : obsoleteResources) {
+            deadActor.dispose(gl);
+        }
+        obsoleteResources.clear();
+        for (RenderPass pass : children)
+            pass.dispose(gl);
     }
 
     @Override
     public void init(GL3 gl)
     {
+        for (RenderPass pass : children)
+            pass.init(gl);
         for (GL3Actor actor : actors)
             actor.init(gl);
     }
