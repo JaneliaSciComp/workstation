@@ -1,8 +1,13 @@
-package org.janelia.workstation.webdav;
+package org.janelia.workstation.jfs;
 
 import org.glassfish.jersey.internal.util.Base64;
-import org.janelia.workstation.webdav.exception.FileNotFoundException;
-import org.janelia.workstation.webdav.exception.PermissionsFailureException;
+import org.janelia.workstation.jfs.ServicesConfiguration;
+import org.janelia.workstation.jfs.security.BasicAuthToken;
+import org.janelia.workstation.jfs.fileshare.FileShare;
+import org.janelia.workstation.jfs.security.Token;
+import org.janelia.workstation.jfs.security.Principal;
+import org.janelia.workstation.jfs.exception.FileNotFoundException;
+import org.janelia.workstation.jfs.exception.PermissionsFailureException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -14,20 +19,25 @@ import java.util.Map;
 /**
  * Created by schauderd on 10/5/15.
  */
-public class Util {
+public class Common {
     static final String API_PATH = "/file";
     public static FileShare checkPermissions(String filepath, HttpHeaders headers, HttpServletRequest request) throws PermissionsFailureException,FileNotFoundException {
         FileShare mapping = mapResource(filepath, request);
         if (mapping.getAuthorizer()!=null) {
-            // make sure user has access to this file share
-            Token credentials = getCredentials(headers);
+            // make sure user has access to this file share; assume basic auth for now
+            BasicAuthToken credentials = (BasicAuthToken)getCredentials(headers);
             if (mapping.getAuthorizer() != null && !mapping.hasAccess(credentials)) {
                 throw new PermissionsFailureException("Not allowed to access this file share");
             }
+
+            // since the check passed, store the authorized FileShare in the session
+            HttpSession session = request.getSession();
+            session.setAttribute(mapping.getMapping(), mapping);
+
+            // store the principal in the session for metadata information
+            session.setAttribute("principal", new Principal(credentials.getUsername(), credentials));
         }
-        // since the check passed, store the authorized FileShare in the session
-        HttpSession session = request.getSession();
-        session.setAttribute(mapping.getMapping(), mapping);
+
         return mapping;
     }
 
@@ -35,7 +45,7 @@ public class Util {
         List<String> authHeaders = headers.getRequestHeader(HttpHeaders.AUTHORIZATION);
         // if no basic auth, return error
         if (authHeaders == null || authHeaders.size() < 1) {
-            throw new PermissionsFailureException("Not using basic authentication to access webdav");
+            throw new PermissionsFailureException("Not using basic authentication to access file services");
         }
 
         // assume Basic request header and scrape username from this;
@@ -46,7 +56,7 @@ public class Util {
     }
 
     public static FileShare mapResource(String filepath, HttpServletRequest request) throws FileNotFoundException {
-        Map resourceMap = WebdavContextManager.getResourcesByMapping();
+        Map resourceMap = ServicesConfiguration.getResourcesByMapping();
         Iterator mappings = resourceMap.keySet().iterator();
         FileShare mappedResource = null;
         String bestMatch = null;

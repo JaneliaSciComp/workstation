@@ -1,32 +1,52 @@
-package org.janelia.workstation.webdav;
+package org.janelia.workstation.jfs;
 
 import java.io.IOException;
 import java.util.*;
 import java.io.File;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
+
+import com.mongodb.*;
+import org.janelia.workstation.jfs.mongo.MongoConfiguration;
+import org.janelia.workstation.jfs.security.Authorizer;
+import org.janelia.workstation.jfs.security.LDAPGroupAuthorizer;
+import org.janelia.workstation.jfs.security.Permission;
+import org.janelia.workstation.jfs.security.UsersAuthorizer;
+import org.jongo.Jongo;
+import org.jongo.marshall.jackson.JacksonMapper;
+
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.jaxrs.config.BeanConfig;
 import org.apache.directory.api.ldap.model.exception.LdapInvalidDnException;
 import org.apache.directory.api.ldap.model.name.Dn;
+import org.janelia.workstation.jfs.fileshare.*;
 
 /**
  * Created by schauderd on 6/25/15.
  */
 @WebListener
-public class WebdavContextManager implements ServletContextListener  {
+public class ServicesConfiguration implements ServletContextListener  {
     private static Map<String, Provider> providers = new HashMap<>();
     private static Map<String, Authorizer> authorizers = new HashMap<>();
     private static Map<String, FileShare> resourcesByMapping = new HashMap<>();
     private static Map<String, FileShare> resourcesByLogical = new HashMap<>();
+    private static Map<String, MongoConfiguration> metaStores = new HashMap<>();
+    private ScheduledExecutorService scheduler;
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             ObjectMapper mapper = new ObjectMapper();
-            Map<String, Object> config = (Map<String,Object>)mapper.readValue(new File(classLoader.getResource("resources.json").getFile()), Map.class);
+            File configFile = new File("/opt/jfs/config.json");
+            if (!configFile.exists()) {
+                throw new ServiceConfigurationError("Configuration file not found for Janelia File Services");
+            }
+            Map<String, Object> config = (Map<String,Object>)mapper.readValue(configFile, Map.class);
 
             // load providers
             Map<String, Object> providersConfig = (Map<String,Object>)config.get("providers");
@@ -40,15 +60,59 @@ public class WebdavContextManager implements ServletContextListener  {
                     providers.put("ldap",ldap);
                 }
                 if (providersConfig.containsKey("scality")) {
-                    JOSSProvider scality = new JOSSProvider();
+                    ScalityProvider scality = new ScalityProvider();
                     Map<String, Object> scalityConfig = (Map<String,Object>)providersConfig.get("scality");
-                    scality.setObjectUrl((String)scalityConfig.get("objectUrl"));
-                    scality.setMetaUrl((String) scalityConfig.get("metaUrl"));
-                    scality.setSearchUrl((String) scalityConfig.get("searchUrl"));
-                    scality.setUser((String)scalityConfig.get("user"));
-                    scality.setPassword((String)scalityConfig.get("password"));
+                    Map<String, Object> rings = (Map<String, Object>)scalityConfig.get("rings");
+                    Iterator<String> ringIter = rings.keySet().iterator();
+                    Map<String, String> ringDefs = new HashMap<String,String>();
+                    while (ringIter.hasNext()) {
+                        String ringKey = ringIter.next();
+                        ringDefs.put(ringKey, (String)rings.get(ringKey));
+                    }
+                    scality.setRings(ringDefs);
                     scality.init();
-                    providers.put("scality",scality);
+                    providers.put("scality", scality);
+                }
+            }
+
+            // load metadata persistence stores
+            Map<String, Object> metadataConfig = (Map<String,Object>)config.get("metadata");
+            if (metadataConfig != null) {
+                Iterator<String> metaIter = metadataConfig.keySet().iterator();
+                while (metaIter.hasNext()) {
+                    String metaKey = metaIter.next();
+                    Map<String, Object> metadataPersistent = (Map<String,Object>)metadataConfig.get(metaKey);
+                    String[] members = ((String)metadataPersistent.get("host")).split(",");
+                    ServerAddress[] replicaUrls = new ServerAddress[members.length];
+                    String port = (metadataPersistent.get("port")==null)?"27017": (String)metadataPersistent.get("port");
+                    for (int i=0; i<members.length; i++) {
+                        replicaUrls[i] = new ServerAddress(members[i] + ":"+port);
+                    }
+                    String username = (String)metadataPersistent.get("username");
+                    String password = (String)metadataPersistent.get("password");
+                    String databaseName = (String)metadataPersistent.get("database");
+                    MongoClientOptions options = new MongoClientOptions.Builder()
+                            .connectionsPerHost(100).minConnectionsPerHost(100)
+                            .build();
+                    MongoClient m;
+                    if (username != null && password != null) {
+                        MongoCredential credential = MongoCredential.createMongoCRCredential(username, databaseName, password.toCharArray());
+                        m = new MongoClient(Arrays.asList(replicaUrls), Arrays.asList(credential));
+                    }
+                    else {
+                        m = new MongoClient(Arrays.asList(replicaUrls),options);
+                    }
+                    DB db = m.getDB(databaseName);
+                    Jongo jongo = new Jongo(db,
+                            new JacksonMapper.Builder()
+                                    .enable(MapperFeature.AUTO_DETECT_GETTERS)
+                                    .enable(MapperFeature.AUTO_DETECT_SETTERS)
+                                    .build());
+                    MongoConfiguration mc = new MongoConfiguration();
+                    mc.setClient(m);
+                    mc.setJongo(jongo);
+                    mc.setCollection((String)metadataPersistent.get("collection"));
+                    metaStores.put(metaKey, mc);
                 }
             }
 
@@ -84,6 +148,7 @@ public class WebdavContextManager implements ServletContextListener  {
                 while (resourceIter.hasNext()) {
                     String resourceKey = resourceIter.next();
                     Map<String,Object> resourceInfo = (Map<String,Object>)resourceConfig.get(resourceKey);
+                    System.out.println (resourceInfo);
 
                     // throw exception if required attributes not set
                     Set<String> reqAttributes = new HashSet<String>(Arrays.asList("type", "path", "mapping", "permissions"));
@@ -92,10 +157,16 @@ public class WebdavContextManager implements ServletContextListener  {
                     }
 
                     FileShare newResource;
-                    System.out.println (resourceInfo);
                     if (((String)resourceInfo.get("type")).equals("block")) {
                         newResource = new BlockFileShare();
-                    } else newResource = new ObjectFileShare();
+                    } else {
+                        newResource = new ObjectFileShare();
+                        ((ObjectFileShare)newResource).setRing((String) resourceInfo.get("ring"));
+                        MongoConfiguration metadata = metaStores.get(resourceInfo.get("metadata"));
+                        ((ObjectFileShare) newResource).setMongo(metadata);
+                        scheduler = Executors.newSingleThreadScheduledExecutor();
+                        scheduler.scheduleAtFixedRate((ObjectFileShare)newResource, 0, 6, TimeUnit.HOURS);
+                    }
                     newResource.setMapping((String) resourceInfo.get("mapping"));
                     String newPath = ((String)resourceInfo.get("path")).toUpperCase();
                     newResource.setPath(Path.valueOf(newPath));
@@ -107,8 +178,12 @@ public class WebdavContextManager implements ServletContextListener  {
                     for (String permission : permissionsList) {
                         newResource.addPermission(Permission.valueOf(permission.toUpperCase()));
                     }
+
                     resourcesByMapping.put(newResource.getMapping(), newResource);
                     resourcesByLogical.put(resourceKey, newResource);
+
+                    // initialize filestore
+                    newResource.init();
                 }
             }
         } catch (IOException e) {
@@ -121,7 +196,7 @@ public class WebdavContextManager implements ServletContextListener  {
     }
 
     public static void setProviders(Map<String, Provider> providers) {
-        WebdavContextManager.providers = providers;
+        ServicesConfiguration.providers = providers;
     }
 
     public static Map<String, Authorizer> getAuthorizers() {
@@ -129,7 +204,7 @@ public class WebdavContextManager implements ServletContextListener  {
     }
 
     public static void setAuthorizers(Map<String, Authorizer> authorizers) {
-        WebdavContextManager.authorizers = authorizers;
+        ServicesConfiguration.authorizers = authorizers;
     }
 
     public static Map<String, FileShare> getResourcesByMapping() {
@@ -137,7 +212,7 @@ public class WebdavContextManager implements ServletContextListener  {
     }
 
     public static void setResourcesByMapping(Map<String, FileShare> resourcesByMapping) {
-        WebdavContextManager.resourcesByMapping = resourcesByMapping;
+        ServicesConfiguration.resourcesByMapping = resourcesByMapping;
     }
 
     public static Map<String, FileShare> getResourcesByLogical() {
@@ -145,11 +220,19 @@ public class WebdavContextManager implements ServletContextListener  {
     }
 
     public static void setResourcesByLogical(Map<String, FileShare> resourcesByLogical) {
-        WebdavContextManager.resourcesByLogical = resourcesByLogical;
+        ServicesConfiguration.resourcesByLogical = resourcesByLogical;
+    }
+
+    public static Map<String, MongoConfiguration> getMetaStores() {
+        return metaStores;
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
-
+        Iterator<MongoConfiguration> mongos = metaStores.values().iterator();
+        while (mongos.hasNext()) {
+            mongos.next().getClient().close();
+        }
+        scheduler.shutdownNow();
     }
 }

@@ -1,22 +1,22 @@
-package org.janelia.workstation.webdav;
+package org.janelia.workstation.jfs.fileshare;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import org.janelia.workstation.webdav.exception.FileNotFoundException;
-import org.janelia.workstation.webdav.exception.FileUploadException;
-import org.janelia.workstation.webdav.propfind.Multistatus;
-import org.janelia.workstation.webdav.propfind.Prop;
-import org.janelia.workstation.webdav.propfind.PropfindResponse;
-import org.janelia.workstation.webdav.propfind.Propstat;
+import org.janelia.workstation.jfs.exception.FileNotFoundException;
+import org.janelia.workstation.jfs.exception.FileUploadException;
+import org.janelia.workstation.jfs.propfind.Multistatus;
+import org.janelia.workstation.jfs.propfind.Prop;
+import org.janelia.workstation.jfs.propfind.PropfindResponse;
+import org.janelia.workstation.jfs.propfind.Propstat;
 
 import javax.activation.MimetypesFileTypeMap;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.InputStream;
@@ -46,7 +46,7 @@ public class BlockFileShare extends FileShare {
     }
 
     @Override
-    public void putFile(InputStream binaryStream, String filepath) throws FileUploadException {
+    public void putFile(HttpServletRequest request, HttpServletResponse response, InputStream binaryStream, String filepath) throws FileUploadException {
         try {
             Files.copy(binaryStream,
                     Paths.get(filepath),
@@ -63,7 +63,7 @@ public class BlockFileShare extends FileShare {
     }
 
 
-    private PropfindResponse generatePropMetadata(java.nio.file.Path file, UriInfo uriInfo) throws IOException {
+    private PropfindResponse generatePropMetadata(java.nio.file.Path file) throws IOException {
         PropfindResponse fileMeta = new PropfindResponse();
         Propstat propstat = new Propstat();
         Prop prop = new Prop();
@@ -87,24 +87,24 @@ public class BlockFileShare extends FileShare {
     }
 
     private void discoverFiles(Multistatus container, java.nio.file.Path file,
-                               int depth, int discoveryLevel, UriInfo uriInfo) throws IOException {
+                               int depth, int discoveryLevel) throws IOException {
         if (depth<discoveryLevel) {
             if (Files.isDirectory(file)) {
                 depth++;
                 try (DirectoryStream<java.nio.file.Path> directoryStream = Files.newDirectoryStream(file)) {
                     for (java.nio.file.Path subpath : directoryStream) {
-                        discoverFiles(container, subpath, depth, discoveryLevel, uriInfo);
+                        discoverFiles(container, subpath, depth, discoveryLevel);
                     }
                 }
             }
         }
-        container.getResponse().add(generatePropMetadata(file, uriInfo));
+        container.getResponse().add(generatePropMetadata(file));
     }
 
     @Override
-    public String propFind(UriInfo uriInfo, HttpHeaders headers) throws FileNotFoundException, IOException {
-        String filepath = "/" + uriInfo.getPath();
-System.out.println (filepath);
+    public String propFind(HttpHeaders headers, String path) throws FileNotFoundException, IOException {
+        String filepath = "/" + path;
+
         // create Multistatus top level
         Multistatus propfindContainer = new Multistatus();
 
@@ -121,7 +121,7 @@ System.out.println (filepath);
                     discoveryLevel = Integer.parseInt(depthValue);
                 }
             }
-            discoverFiles(propfindContainer, fileHandle, 0, discoveryLevel, uriInfo);
+            discoverFiles(propfindContainer, fileHandle, 0, discoveryLevel);
         } else {
             throw new FileNotFoundException("File does not exist");
         }

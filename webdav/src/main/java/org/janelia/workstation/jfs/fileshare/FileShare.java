@@ -1,12 +1,18 @@
-package org.janelia.workstation.webdav;
+package org.janelia.workstation.jfs.fileshare;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import org.janelia.workstation.webdav.exception.FileNotFoundException;
-import org.janelia.workstation.webdav.exception.FileUploadException;
 
+import org.janelia.workstation.jfs.exception.FileNotFoundException;
+import org.janelia.workstation.jfs.exception.FileUploadException;
+import org.janelia.workstation.jfs.security.Authorizer;
+import org.janelia.workstation.jfs.security.Permission;
+import org.janelia.workstation.jfs.security.Token;
+
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.StreamingOutput;
@@ -17,11 +23,11 @@ import java.io.InputStream;
  * Created by schauderd on 6/26/15.
  */
 public abstract class FileShare {
-    private String mapping;
-    private Path path;
-    private Authorizer authorizer;
-    private Set<Permission> permissions = new HashSet<>();
-    private boolean isAuthorized = false;
+    protected String mapping;
+    protected Path path;
+    protected Authorizer authorizer;
+    protected Set<Permission> permissions = new HashSet<>();
+    protected boolean isAuthorized = false;
 
     public boolean hasAccess (Token credentials) {
         if (!isAuthorized && authorizer != null) {
@@ -39,15 +45,19 @@ public abstract class FileShare {
         return true;
     }
 
+    public void init() {
+
+    }
+
     public StreamingOutput getFile (HttpServletResponse respopnse, String qualifiedFilename) throws FileNotFoundException {
         return null;
     }
 
-    public String propFind (UriInfo uriInfo, HttpHeaders headers) throws FileNotFoundException, IOException {
+    public String propFind (HttpHeaders headers, String filepath) throws FileNotFoundException, IOException {
         return null;
     }
 
-    public void putFile (InputStream binaryStream, String filepath) throws FileUploadException {
+    public void putFile (HttpServletRequest request, HttpServletResponse response, InputStream binaryStream, String filepath) throws FileUploadException {
 
     }
 
@@ -56,13 +66,25 @@ public abstract class FileShare {
     }
 
     //  METADATA api
-    public StreamingOutput getInfo (HttpServletResponse respopnse, String qualifiedFilename) throws FileNotFoundException {
-        return null;
-    }
-
     public StreamingOutput searchFile (HttpServletResponse respopnse, String name) throws FileNotFoundException {
         return null;
     }
+
+    public Object getInfo (HttpServletResponse respopnse, String qualifiedFilename) throws FileNotFoundException {
+        return null;
+    }
+
+    public void registerFile (HttpServletRequest request, String filepath) throws FileNotFoundException {
+    }
+
+    public Map<String,String> registerBulkFiles(HttpServletRequest request, String filestore, List<String> objects) throws FileNotFoundException {
+        return null;
+    }
+
+    public Map<String,String> generateUsageReports (String store) throws FileNotFoundException {
+        return null;
+    }
+
 
     public String getMapping() {
         return mapping;

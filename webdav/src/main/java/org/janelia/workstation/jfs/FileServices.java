@@ -1,13 +1,15 @@
-package org.janelia.workstation.webdav;
+package org.janelia.workstation.jfs;
 
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.janelia.workstation.webdav.exception.FileNotFoundException;
-import org.janelia.workstation.webdav.exception.FileUploadException;
-import org.janelia.workstation.webdav.exception.PermissionsFailureException;
+import org.janelia.workstation.jfs.fileshare.FileShare;
+import org.janelia.workstation.jfs.security.Permission;
+import org.janelia.workstation.jfs.exception.FileNotFoundException;
+import org.janelia.workstation.jfs.exception.FileUploadException;
+import org.janelia.workstation.jfs.exception.PermissionsFailureException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,7 +28,7 @@ import javax.ws.rs.Path;
 
 @Path("file/{path: .*}")
 @Api(value = "Janelia Object File Services", description = "Services for managing files in Object Stores (Scality)")
-public class WebdavResource {
+public class FileServices {
     @Context
     HttpHeaders headers;
 
@@ -48,18 +50,17 @@ public class WebdavResource {
             @ApiResponse(code = 401, message = "Either the file share doesn't have read permissions, or the user is not authorized to access this share"),
             @ApiResponse(code = 500, message = "Unable to retrieve the file successfully from the file store")
     })
-    public StreamingOutput getFile() throws PermissionsFailureException, FileNotFoundException {
-        String filepath = "/" + Util.stripApiPath(uriInfo.getPath());
-        System.out.println ("GET "  + filepath);
+    public StreamingOutput getFile(@PathParam("path") String path) throws PermissionsFailureException, FileNotFoundException {
+        System.out.println ("GET "  + path);
 
-        FileShare mapping = Util.checkPermissions(filepath, headers, request);
+        FileShare mapping = Common.checkPermissions(path, headers, request);
         // check file share for read permissions
         if (!mapping.getPermissions().contains(Permission.READ)) {
             throw new PermissionsFailureException("Not permitted to read from this file share");
         }
 
         // delegate to FileShare to get file
-        return mapping.getFile(response, filepath);
+        return mapping.getFile(response, path);
     }
 
     @PUT
@@ -71,18 +72,17 @@ public class WebdavResource {
             @ApiResponse(code = 401, message = "Either the file share doesn't have write permissions, or the user is not authorized to access this share"),
             @ApiResponse(code = 500, message = "Unable to write the file into the file store")
     })
-    public void putFile(InputStream binaryStream) throws PermissionsFailureException,
+    public void putFile(InputStream binaryStream, @PathParam("path") String path) throws PermissionsFailureException,
             FileNotFoundException, FileUploadException {
-        String filepath = "/" + Util.stripApiPath(uriInfo.getPath());
+        System.out.println ("PUT "  + path);
 
-        System.out.println ("PUT "  + filepath);
-        FileShare mapping = Util.checkPermissions(filepath, headers, request);
+        FileShare mapping = Common.checkPermissions(path, headers, request);
         // check file share for write permissions
         if (!mapping.getPermissions().contains(Permission.WRITE)) {
             throw new PermissionsFailureException("Not permitted to write from this file share");
         }
 
-        mapping.putFile(binaryStream, filepath);
+        mapping.putFile(request, response, binaryStream, path);
     }
 
     @DELETE
@@ -93,16 +93,17 @@ public class WebdavResource {
             @ApiResponse(code = 401, message = "Either the file share doesn't have delete permissions, or the user is not authorized to access this share"),
             @ApiResponse(code = 500, message = "Unable to remove the file into the file store")
     })
-    public void deleteFile() throws PermissionsFailureException,
+    public void deleteFile(@PathParam("path") String path) throws PermissionsFailureException,
             FileNotFoundException, FileUploadException, IOException {
-        String filepath = "/" + Util.stripApiPath(uriInfo.getPath());
-        FileShare mapping = Util.checkPermissions(filepath, headers, request);
+        System.out.println ("DELETE "  + path);
+
+        FileShare mapping = Common.checkPermissions(path, headers, request);
 
         // check file share for write permissions
         if (!mapping.getPermissions().contains(Permission.DELETE)) {
             throw new PermissionsFailureException("Not permitted to delete from this file share");
         }
 
-        mapping.deleteFile(filepath);
+        mapping.deleteFile(path);
     }
 }
