@@ -152,6 +152,11 @@ public class ImageParticleMaterial extends BasicMaterial {
         specularColor[3] = color.getAlpha()/255f;
     }
 
+    public Color getColor()
+    {
+        return new Color(diffuseColor[0], diffuseColor[1], diffuseColor[2]);
+    }
+
     private static class ImageParticleShader extends BasicShaderProgram {
 
         public ImageParticleShader() {

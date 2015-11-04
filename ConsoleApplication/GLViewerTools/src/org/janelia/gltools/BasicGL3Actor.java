@@ -88,6 +88,8 @@ public class BasicGL3Actor implements GL3Actor {
 
     @Override
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
+        if (! isVisible())
+            return;
         if (! isInitialized) init(gl);
         if (getChildren() == null)
             return;

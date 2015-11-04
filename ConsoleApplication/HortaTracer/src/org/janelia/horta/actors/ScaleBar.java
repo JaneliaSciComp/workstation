@@ -28,7 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta;
+package org.janelia.horta.actors;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -234,6 +234,32 @@ public class ScaleBar extends MeshActor {
                 (oy - vh/2)/(0.5f * vh), // offset Y
                 0, 1);
         
+    }
+
+    public void setForegroundColor(Color c)
+    {
+        if (c.equals(foregroundColor)) return;
+        foregroundColor = c;
+        barColor = new float[] {
+            foregroundColor.getRed()/255f,
+            foregroundColor.getGreen()/255f,
+            foregroundColor.getBlue()/255f,
+            foregroundColor.getAlpha()/255f
+        };
+        updateLabelString(labelString);
+    }
+
+    public void setBackgroundColor(Color c)
+    {
+        if (c.equals(backgroundColor)) return;
+        backgroundColor = c;
+        borderColor = new float[] {
+            backgroundColor.getRed()/255f,
+            backgroundColor.getGreen()/255f,
+            backgroundColor.getBlue()/255f,
+            backgroundColor.getAlpha()/255f
+        };
+        updateLabelString(labelString);
     }
     
     static class ScaleBarGeometry extends MeshGeometry {

@@ -9,7 +9,9 @@ import java.awt.BorderLayout;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.ToolTipManager;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -64,7 +66,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_LargeVolumeViewerTopComponent());
         setToolTipText(Bundle.HINT_LargeVolumeViewerTopComponent());
-        establishLocationProvider();
+        establishLookups();
     }
 
     public void openLargeVolumeViewer( Long entityId ) throws Exception {
@@ -125,10 +127,19 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         // TODO read your settings according to their version
     }
 
-    protected void establishLocationProvider() {
+    protected void establishLookups() {
+        LargeVolumeViewViewer lvvv = state.getLvvv();
+        // Use Lookup to communicate sample location and camera position
+        // TODO: separate data source from current view details
         LargeVolumeViewerLocationProvider locProvider = 
-                new LargeVolumeViewerLocationProvider(state.getLvvv());
-        this.associateLookup( Lookups.singleton( locProvider ) );
+                new LargeVolumeViewerLocationProvider(lvvv);
+        // Use Lookup to communicate neuron reconstructions.
+        // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
+        NeuronSet neurons = lvvv.getNeuronSetAdapter();
+        
+        associateLookup(Lookups.fixed(
+            locProvider, 
+            neurons));
     }
     
 }

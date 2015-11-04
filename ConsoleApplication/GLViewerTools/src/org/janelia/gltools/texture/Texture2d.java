@@ -173,7 +173,7 @@ public class Texture2d extends BasicTexture implements GL3Resource
         
         // "P6"
         String magicCookie = parseToken(inStream);
-        System.out.println("#"+magicCookie+"#");
+        // System.out.println("#"+magicCookie+"#");
         if (! magicCookie.equals("P6"))
             throw new IOException( "not a PPM_RAW file" );
         
@@ -181,7 +181,7 @@ public class Texture2d extends BasicTexture implements GL3Resource
         // Skip comments
         while (field.startsWith("#")) {
             String commentLine = skipLine(inStream);
-            System.out.println("***: #"+commentLine+":***");
+            // System.out.println("***: #"+commentLine+":***");
             field = parseToken(inStream);
         }
         width = Integer.parseInt(field);
@@ -204,8 +204,8 @@ public class Texture2d extends BasicTexture implements GL3Resource
         pixels = ByteBuffer.wrap(pixelBytes);
         int numBytesRead = inStream.read(pixelBytes, 0, byteCount);
         
-        System.out.println("***:"+width+", "+height+", "+maxVal+":***");
-        System.out.println("***:"+byteCount+", "+numBytesRead+":***");
+        // System.out.println("***:"+width+", "+height+", "+maxVal+":***");
+        // System.out.println("***:"+byteCount+", "+numBytesRead+":***");
 
         pixels.rewind();
         doSwapBytes = true;

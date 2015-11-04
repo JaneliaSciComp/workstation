@@ -19,7 +19,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolume
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrivenSWCExchanger;
+import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -560,7 +560,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private void updateSWCDataConverter() {
         SWCDataConverter swcDataConverter = new SWCDataConverter();
         swcDataConverter.setSWCExchanger(
-                new MatrixDrivenSWCExchanger(tileFormat)
+                new MatrixDrivenSWCExchanger(tileFormat.getMicronToVoxMatrix(), tileFormat.getVoxToMicronMatrix())
         );
         annotationModel.setSWCDataConverter(swcDataConverter);
     }
@@ -1379,6 +1379,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         result.setMicrometersPerWindowHeight(
                 viewer.getViewport().getHeight()
                 / camera.getPixelsPerSceneUnit());
+        
+        // TODO neurons
+        
+        
         return result;
     }
     
@@ -1391,9 +1395,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         TileConsumer viewer = allSliceViewers.get(0);
         float zoom = (float) (viewer.getViewport().getHeight() 
                 / sampleLocation.getMicrometersPerWindowHeight());
-        
-        if (! loadedUrl.equals(url))
-            loadRender(url);
+
+        if (url != null) {
+            if (! loadedUrl.equals(url))
+                loadRender(url);
+        }
         camera.setFocus(focus);
         camera.setPixelsPerSceneUnit(zoom);
     }
