@@ -22,7 +22,7 @@ import org.janelia.it.workstation.shared.util.SystemInfo;
  * location, and copies that into the clipboard, in a simple format.
  */
 public class TileLocToClipboardAction extends AbstractAction {
-    private final static String FILE_SEP = System.getProperty("path.separator");
+    private final static String FILE_SEP = System.getProperty("file.separator");
     private final static String LINUX_FILE_SEP = "/";
 
     private final JLabel statusLabel;

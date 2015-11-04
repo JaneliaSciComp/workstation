@@ -10,6 +10,7 @@ import javax.swing.Action;
 import javax.swing.JLabel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
@@ -26,6 +27,9 @@ import org.slf4j.LoggerFactory;
  * and uses the coords to lookup the tile file at that location.
  */
 public class RawFileLocToClipboardAction extends AbstractAction {
+    //todo move this to common location
+    private final static String FILE_SEP = System.getProperty("file.separator");
+    private final static String LINUX_FILE_SEP = "/";
 
     private final JLabel statusLabel;
     private final TileFormat tileFormat;
@@ -66,7 +70,15 @@ public class RawFileLocToClipboardAction extends AbstractAction {
         try {
             RawFileInfo rfi = ModelMgr.getModelMgr().getNearestChannelFiles(volumeImage.getRemoteBasePath(), micronIntCoords);
             File c0File = rfi.getChannel0();
-            selection = new StringSelection(c0File.getAbsolutePath());
+            String filePathStr = c0File.toString().replace(FILE_SEP, LINUX_FILE_SEP);
+            // Not truly looking for the file path; just the legs of the path.
+            if (SystemInfo.isWindows) {
+                int colonPos = filePathStr.indexOf(":");
+                if (colonPos != -1) {
+                    filePathStr = filePathStr.substring(colonPos + 1);
+                }
+            }
+            selection = new StringSelection(filePathStr);
         } catch (Exception ex) {
             ex.printStackTrace();
             final String msg = "Failed to copy file location to clipboard.";
