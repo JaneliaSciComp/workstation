@@ -17,6 +17,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationM
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.TileStackCacheStatusPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
@@ -793,6 +794,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             CacheController.getInstance().registerForEvents(positionalStatusPanel);
             buttonsPanel.add(positionalStatusPanel);
         }
+
+        buttonsPanel.add(new TileStackCacheStatusPanel());
 
 		Component verticalGlue = Box.createVerticalGlue();
 		buttonsPanel.add(verticalGlue);

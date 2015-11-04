@@ -23,10 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.*;
 
 /**
@@ -58,6 +56,7 @@ public class TileStackCacheController {
     File focusStackFile;
     List<File> focusStackGroup=new ArrayList<>();
     List<File> neighborhoodStackFiles=new ArrayList<>();
+    Map<File,int[]> stackPositionMap=new HashMap<>();
     String fileSeparator=null;
 
     boolean filesystemMetadataInitialized=false;
@@ -114,7 +113,7 @@ public class TileStackCacheController {
         int[] volumeSize=tileFormat.getVolumeSize();
         int zoomLevels=tileFormat.getZoomLevelCount();
         cacheVolumeSize=tileSize[0]*tileSize[1]*tileSize[2]*tileFormat.getChannelCount(); // always 8-bit
-        cache=new SimpleFileCache(150);
+        cache=new SimpleFileCache(300);
         log.info("Tile size="+tileSize[0]+" "+tileSize[1]+" "+tileSize[2]);
         log.info("Volume size="+volumeSize[0]+" "+volumeSize[1]+" "+volumeSize[2]);
         log.info("zoom Levels="+zoomLevels);
@@ -136,20 +135,42 @@ public class TileStackCacheController {
             updateFocusTileIndex();
     }
 
+    public synchronized Map<File, int[]> getCacheStatusMap() {
+        Map<File, int[]> statusMap=new HashMap<>();
+        for (File file : stackPositionMap.keySet()) {
+            int[] positionArr=stackPositionMap.get(file);
+            int status=0;
+            if (FileLoader.currentFilesBeingLoaded.contains(file)) {
+                status=1;
+            }
+            ByteBuffer data=cache.getBytes(file);
+            if (data!=null && data.capacity()>3) {
+                status=2;
+            }
+            int[] statusArr=new int[] { positionArr[0], positionArr[1], positionArr[2], status };
+            statusMap.put(file, statusArr);
+        }
+        return statusMap;
+    }
+
     private synchronized void updateFocusTileIndex() {
 
         int sCount = 0;
         if (zoom!=null && focus!=null && cache!=null) {
 
+            emergencyThreadPool.getQueue().clear();
+            fileLoadThreadPool.getQueue().clear();
+
             // Update focus tile/stack
             focusTileIndex = tileFormat.tileIndexForXyz(focus, tileFormat.zoomLevelForCameraZoom(zoom), CoordinateAxis.Z);
             focusStackFile = getStackFileForTileIndex(focusTileIndex);
 
-            Set<File> previousNeighborhood=new HashSet<>();
-            previousNeighborhood.addAll(neighborhoodStackFiles);
+//            Set<File> previousNeighborhood=new HashSet<>();
+//            previousNeighborhood.addAll(neighborhoodStackFiles);
 
             // Update neighborhood
             neighborhoodStackFiles.clear();
+            stackPositionMap.clear();
 
             // Sub-groups
             focusStackGroup.clear();
@@ -164,6 +185,7 @@ public class TileStackCacheController {
             for (int yOffset=-1; yOffset<2; yOffset++) {
                 for (int xOffset=-1; xOffset<2; xOffset++) {
                     File stackFile=getStackFileByOffset(xOffset, yOffset, 0);
+                    stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, 0});
                     if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
                         focusStackGroup.add(stackFile);
                         neighborhoodStackFiles.add(stackFile);
@@ -175,7 +197,10 @@ public class TileStackCacheController {
             for (int yOffset=-1; yOffset<2; yOffset++) {
                 for (int xOffset=-1; xOffset<2; xOffset++) {
                     File stackFile=getStackFileByOffset(xOffset, yOffset, 1);
-                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) neighborhoodStackFiles.add(stackFile);
+                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
+                        stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, 1});
+                        neighborhoodStackFiles.add(stackFile);
+                    }
                 }
             }
 
@@ -183,16 +208,21 @@ public class TileStackCacheController {
             for (int yOffset=-1; yOffset<2; yOffset++) {
                 for (int xOffset=-1; xOffset<2; xOffset++) {
                     File stackFile=getStackFileByOffset(xOffset, yOffset, -1);
-                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) neighborhoodStackFiles.add(stackFile);
+                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
+                        stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, -1});
+                        neighborhoodStackFiles.add(stackFile);
+                    }
                 }
             }
 
             // Last, the large outer same-level set
-            for (int yOffset=-3; yOffset<4; yOffset++) {
-                for (int xOffset=-3; xOffset<4; xOffset++) {
+            for (int yOffset=-2; yOffset<3; yOffset++) {
+                for (int xOffset=-2; xOffset<3; xOffset++) {
                     File stackFile=getStackFileByOffset(xOffset, yOffset, 0);
-                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile))
+                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
+                        stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, 0});
                         neighborhoodStackFiles.add(stackFile);
+                    }
                 }
             }
 
@@ -200,8 +230,10 @@ public class TileStackCacheController {
             for (int yOffset=-2; yOffset<3; yOffset++) {
                 for (int xOffset=-2; xOffset<3; xOffset++) {
                     File stackFile=getStackFileByOffset(xOffset, yOffset, 1);
-                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile))
+                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
+                        stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, 1});
                         neighborhoodStackFiles.add(stackFile);
+                    }
                 }
             }
 
@@ -209,18 +241,37 @@ public class TileStackCacheController {
             for (int yOffset=-2; yOffset<3; yOffset++) {
                 for (int xOffset=-2; xOffset<3; xOffset++) {
                     File stackFile=getStackFileByOffset(xOffset, yOffset, -1);
-                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile))
+                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
+                        stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, -1});
                         neighborhoodStackFiles.add(stackFile);
+                    }
                 }
             }
+
+            // Last, the large outer same-level set
+            for (int yOffset=-3; yOffset<4; yOffset++) {
+                for (int xOffset=-3; xOffset<4; xOffset++) {
+                    File stackFile=getStackFileByOffset(xOffset, yOffset, 0);
+                    if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
+                        stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, 0});
+                        neighborhoodStackFiles.add(stackFile);
+                    }
+                }
+            }
+
 
             int nc=0;
             for (File nf : neighborhoodStackFiles) {
                 //log.info("nc "+nc+" "+nf.getAbsolutePath());
-                if (!previousNeighborhood.contains(nf)) {
+                //if (!previousNeighborhood.contains(nf)) {
                     //log.info("Neighborhood file="+nf.getAbsolutePath());
-                    if (cache.getBytes(nf) == null) {
-                        if (nf.equals(focusStackFile) || focusStackGroup.contains(nf)) {
+                ByteBuffer data=cache.getBytes(nf);
+                if (data!=null && data.capacity()<4) {
+                    data=null;
+                    try { cache.putBytes(nf, null); } catch (Exception ex) {}
+                }
+                    if (data==null) {
+                        if (focusStackGroup.contains(nf)) {
                             //log.info("Submitting emergency NEIGHBOR request for file="+nf.getAbsolutePath());
                             submitEmergencyFileLoader(new FileLoader(nf, this));
                             sCount++;
@@ -230,12 +281,12 @@ public class TileStackCacheController {
                             sCount++;
                         }
                     }
-                }
+               // }
                 nc++;
             }
 
             // Clean cache
-            cache.limitToNeighborhood(neighborhoodStackFiles);
+            //cache.limitToNeighborhood(neighborhoodStackFiles);
             log.info("Added " + sCount + " stack loads. Emergency=" + getEmergencyPoolCount() + " Normal=" + getFileLoadPoolCount() + " CacheSize="+cache.size());
         }
     }
