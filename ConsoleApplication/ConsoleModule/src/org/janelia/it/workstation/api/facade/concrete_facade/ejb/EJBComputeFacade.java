@@ -12,7 +12,6 @@ import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.util.List;
-import org.janelia.it.workstation.gui.application.ConsoleApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,6 +127,11 @@ public class EJBComputeFacade implements ComputeFacade {
         if (null!=loginEvent && null!=loginEvent.getSessionId()) {
             SessionMgr.getSessionMgr().setCurrentSessionId(loginEvent.getSessionId());
         }
+    }
+    
+    @Override
+    public void addEventToSession(UserToolEvent event) {
+        EJBFactory.getRemoteComputeBean().addEventToSession(event);
     }
     
     @Override

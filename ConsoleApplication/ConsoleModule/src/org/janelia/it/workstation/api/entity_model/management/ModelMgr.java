@@ -73,6 +73,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
+import org.janelia.it.jacs.model.user_data.UserToolEvent;
 
 public final class ModelMgr {
 
@@ -149,6 +150,22 @@ public final class ModelMgr {
         }
     }
 
+    /**
+     * This adds a session event.  It is best to use the method in the
+     * Session Manager instead, as that has more convenient 'finding' of various
+     * parts of the event.
+     * 
+     * @param event to log.
+     */
+    public void addEventToSession(UserToolEvent event) {  
+        try {
+            FacadeManager.getFacadeManager().getComputeFacade().addEventToSession(event);
+        } catch (Exception ex) {
+            log.warn("Failed to log userevent " + event);
+            ex.printStackTrace();
+        }
+    }
+    
     public void addModelMgrObserver(ModelMgrObserver mml) {
         if (null != mml && !modelMgrObservers.contains(mml)) {
             modelMgrObservers.add(mml);

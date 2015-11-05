@@ -17,20 +17,19 @@ import com.sun.media.jai.codec.FileSeekableStream;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.SeekableStream;
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
-import org.openide.util.Exceptions;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic;
 
 /*
  * Loader for large volume viewer format negotiated with Nathan Clack
@@ -46,6 +45,7 @@ public class BlockTiffOctreeLoadAdapter
 extends AbstractTextureLoadAdapter 
 {
 	private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
+    private static final CategoryString LIX_CATEGORY_STRING = new CategoryString("loadTileIndexToRam:elapsed");
 
 	// Metadata: file location required for local system as mount point.
 	private File topFolder;
@@ -156,6 +156,7 @@ extends AbstractTextureLoadAdapter
 	{
 		// Create a local load timer to measure timings just in this thread
 		LoadTimer localLoadTimer = new LoadTimer();
+        long startTime = System.nanoTime();
 		localLoadTimer.mark("starting slice load");
         final File octreeFilePath = getOctreeFilePath(tileIndex, tileFormat, zOriginNegativeShift);        
         if (octreeFilePath == null) {
@@ -182,8 +183,23 @@ extends AbstractTextureLoadAdapter
 		ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis(), true);
 		
 		// log.info(tileIndex + "" + folder + " : " + relativeSlice);
-		TextureData2dGL result = loadSlice(relativeSlice, decoders);
+		TextureData2dGL result = loadSlice(relativeSlice, decoders);        
 		localLoadTimer.mark("finished slice load");
+        
+        final double elapsedMs = (double) (System.nanoTime() - startTime) / 1000000.0;
+        if (result != null) {
+            final ActionString actionString = new ActionString(
+                    folder + ":" + relativeSlice + ":" + tileIndex.toString() + ":elapsed_ms=" + elapsedMs
+            );
+            SessionMgr.getSessionMgr().logToolEvent(
+                    LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID,
+                    LIX_CATEGORY_STRING,
+                    actionString,
+                    elapsedMs,
+                    999.0
+            );
+        }
+
 
 		loadTimer.putAll(localLoadTimer);
 		return result;

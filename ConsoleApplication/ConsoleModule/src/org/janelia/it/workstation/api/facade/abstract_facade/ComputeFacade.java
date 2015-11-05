@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.user_data.UserToolEvent;
 
 /**
  * Created by IntelliJ IDEA.
@@ -44,6 +45,8 @@ public interface ComputeFacade {
     public Subject loginSubject(String username, String password) throws Exception;
     
     public void beginSession();
+    
+    public void addEventToSession(UserToolEvent event);
     
     public void endSession();
 }
