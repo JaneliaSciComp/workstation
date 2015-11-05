@@ -85,7 +85,7 @@ public class RemapColorActor extends BasicScreenBlitActor {
     
     static protected class ColorMapMaterial extends BlitMaterial 
     {
-        private int opacityFunctionIndex = 0;
+        private int opacityFunctionIndex = -1;
         private BrightnessModel brightnessModel;
 
         public void setBrightnessModel(BrightnessModel brightnessModel) {

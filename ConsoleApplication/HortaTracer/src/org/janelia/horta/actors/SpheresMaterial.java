@@ -49,9 +49,9 @@ import org.openide.util.Exceptions;
 public class SpheresMaterial extends BasicMaterial
 {
     // shader uniform parameter handles
-    private int colorIndex = 0;
-    private int lightProbeIndex = 0;
-    private int radiusOffsetIndex = 0;
+    private int colorIndex = -1;
+    private int lightProbeIndex = -1;
+    private int radiusOffsetIndex = -1;
     
     private Texture2d lightProbeTexture;
     private final float[] color = new float[] {1, 0, 0, 1};
@@ -78,10 +78,10 @@ public class SpheresMaterial extends BasicMaterial
     @Override
     public void dispose(GL3 gl) {
         super.dispose(gl);
-        colorIndex = 0;
-        lightProbeIndex = 0;
+        colorIndex = -1;
+        lightProbeIndex = -1;
         lightProbeTexture.dispose(gl);
-        radiusOffsetIndex = 0;
+        radiusOffsetIndex = -1;
     }
     
     @Override
@@ -106,7 +106,7 @@ public class SpheresMaterial extends BasicMaterial
 
     @Override
     public void load(GL3 gl, AbstractCamera camera) {
-        if (colorIndex == 0) 
+        if (colorIndex == -1) 
             init(gl);
         super.load(gl, camera);
         lightProbeTexture.bind(gl, 0);
