@@ -78,6 +78,9 @@ public abstract class BasicTexture implements GL3Resource
     protected boolean needsUpload = false;
     protected boolean reclaimRamAfterUpload = false;
     
+    // MSAA textures are sensitive to parameters
+    protected boolean useReadParameters = true;
+    
     protected void copyParameters(BasicTexture rhs) {
         mipMapLevel = rhs.mipMapLevel;
         numberOfComponents = rhs.numberOfComponents;
@@ -234,8 +237,10 @@ public abstract class BasicTexture implements GL3Resource
         gl.glActiveTexture(GL.GL_TEXTURE0 + textureUnit);
         gl.glBindTexture(textureTarget, handle);
         // Texture filtering might vary dynamically, so set it every time...
-        gl.glTexParameteri(textureTarget, GL.GL_TEXTURE_MAG_FILTER, magFilter);
-        gl.glTexParameteri(textureTarget, GL.GL_TEXTURE_MIN_FILTER, minFilter);
+        if (useReadParameters) {
+            gl.glTexParameteri(textureTarget, GL.GL_TEXTURE_MAG_FILTER, magFilter);
+            gl.glTexParameteri(textureTarget, GL.GL_TEXTURE_MIN_FILTER, minFilter);
+        }
     }
 
     public void deallocateRam() {
@@ -338,11 +343,13 @@ public abstract class BasicTexture implements GL3Resource
         }
         gl.glBindTexture(textureTarget, handle);
         
-        gl.glTexParameteri(textureTarget, GL3.GL_TEXTURE_WRAP_S, textureWrap);
-        if (numDimensions > 1)
-            gl.glTexParameteri(textureTarget, GL3.GL_TEXTURE_WRAP_T, textureWrap);
-        if (numDimensions > 2)
-            gl.glTexParameteri(textureTarget, GL3.GL_TEXTURE_WRAP_R, textureWrap);
+        if (useReadParameters) {
+            gl.glTexParameteri(textureTarget, GL3.GL_TEXTURE_WRAP_S, textureWrap);
+            if (numDimensions > 1)
+                gl.glTexParameteri(textureTarget, GL3.GL_TEXTURE_WRAP_T, textureWrap);
+            if (numDimensions > 2)
+                gl.glTexParameteri(textureTarget, GL3.GL_TEXTURE_WRAP_R, textureWrap);
+        }
         
         gl.glPixelStorei(GL3.GL_UNPACK_ALIGNMENT, unpackAlignment);
         

@@ -115,6 +115,10 @@ implements GLEventListener
     @Override
     public void init(GLAutoDrawable glad) {
         GL3 gl = new DebugGL3(glad.getGL().getGL3());
+        // boolean test = gl.isExtensionAvailable("GL_EXT_geometry_shader4");
+        // test = gl.isExtensionAvailable("GL_EXT_geometry_shader");
+        // test = gl.isExtensionAvailable("GL_VERSION_1_5");
+        // test = gl.isExtensionAvailable("GL_VERSION_3_3");
         if (doAutoSrgb)
             gl.glEnable(GL3.GL_FRAMEBUFFER_SRGB);
         for(GL3Resource actor : resources)

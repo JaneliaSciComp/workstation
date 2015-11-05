@@ -28,7 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta;
+package org.janelia.horta.actors;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -46,8 +46,13 @@ import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.texture.Texture2d;
 import org.janelia.gltools.material.ImageParticleMaterial;
-import org.janelia.gltools.material.Material;
+import org.janelia.horta.NeuriteAnchor;
+import org.janelia.horta.NeuriteModel;
+import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -58,7 +63,9 @@ public class NeuriteActor extends BasicGL3Actor {
     private final NeuriteModel neuriteModel;
     private final MeshGeometry meshGeometry;
     private final MeshActor meshActor;
-    private ImageParticleMaterial material;
+    private final ImageParticleMaterial material;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private NeuronModel neuron = null;
     
     public NeuriteActor(CompositeObject3d parent, final NeuriteModel neuriteModel) 
     {
@@ -69,7 +76,7 @@ public class NeuriteActor extends BasicGL3Actor {
                     getClass().getResourceAsStream(
                             // "/org/janelia/gltools/material/lightprobe/"
                             //         + "ComponentSphere.png"));
-                            "/org/janelia/horta/"
+                            "/org/janelia/horta/images/"
                                     + "frame_circle.png"));
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
@@ -88,6 +95,7 @@ public class NeuriteActor extends BasicGL3Actor {
         neuriteModel.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
+                // logger.info("Neuron actor responds to neuriteModel change");
                 // System.out.println("Neurite actor update");
                 boolean geometryChanged = false;
                 if (! meshGeometry.isEmpty()) {
@@ -109,8 +117,86 @@ public class NeuriteActor extends BasicGL3Actor {
         });
     }
     
+    public NeuriteActor(final NeuronModel neuron) 
+    {
+        super(null);
+        this.neuron = neuron;
+        BufferedImage ringImage = null;
+        try {
+            ringImage = ImageIO.read(
+                    getClass().getResourceAsStream(
+                            // "/org/janelia/gltools/material/lightprobe/"
+                            //         + "ComponentSphere.png"));
+                            "/org/janelia/horta/images/"
+                                    + "frame_circle.png"));
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        Texture2d ringTexture = new Texture2d();
+        ringTexture.loadFromBufferedImage(ringImage);
+        ringTexture.setGenerateMipmaps(true);
+        ringTexture.setMinFilter(GL3.GL_LINEAR_MIPMAP_LINEAR);
+        material = new ImageParticleMaterial(ringTexture);
+        // TODO - update meshGeometry after anchor moves...
+        meshGeometry = new MeshGeometry();
+        meshActor = new MeshActor(meshGeometry, material, this);
+        this.addChild(meshActor);
+
+        this.neuriteModel = null;
+        
+        updateGeometry();
+        
+        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                setVisible(neuron.isVisible());
+            }
+        });
+        neuron.getColorChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                setColor(neuron.getColor());
+            }
+        });
+        neuron.getGeometryChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                updateGeometry();
+            }
+        });
+    }
+    
+    private void updateGeometry() {
+        // System.out.println("Neurite actor update");
+        if (! meshGeometry.isEmpty()) {
+            meshGeometry.clear();
+        }
+
+        if (! neuron.getVertexes().isEmpty()) {
+            for (NeuronVertex neuronVertex : neuron.getVertexes()) {
+                Vertex vertex = meshGeometry.addVertex(neuronVertex.getLocation());
+                vertex.setAttribute("radius", 10.0f);
+                // System.out.println("Neurite actor anchor location "+anchor.getLocationUm()+"; radius = "+anchor.getRadiusUm()); // works
+            }
+        }
+        meshGeometry.notifyObservers();        
+    }
+    
     @Override
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
+        // logger.info("display neuron anchor");
+        // Propagate any pending structure changes...
+        if (neuron != null) {
+            neuron.getVisibilityChangeObservable().notifyObservers();
+        }
+        if (! isVisible()) return;
+        if (neuron != null) {
+            neuron.getColorChangeObservable().notifyObservers();
+            neuron.getGeometryChangeObservable().notifyObservers();
+        }
         // if (meshGeometry.size() < 1) return;
         // System.out.println("Displaying anchors, geometry size = "+meshGeometry.size()); // works
         gl.glDisable(GL3.GL_DEPTH_TEST);
@@ -119,12 +205,12 @@ public class NeuriteActor extends BasicGL3Actor {
         // System.out.println("Finished display anchors");        
     }
 
-    void setColor(Color color) {
+    public void setColor(Color color) {
         material.setDiffuseColor(color);
         material.setSpecularColor(Color.BLACK);
     }
 
-    NeuriteModel getModel() {
+    public NeuriteModel getModel() {
         return neuriteModel; //To change body of generated methods, choose Tools | Templates.
     }
     

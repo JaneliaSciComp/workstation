@@ -51,7 +51,7 @@ extends ConstVector
      */
     Matrix4 asTransform();
 
-    Vector3 cross(ConstVector3 rhs);
+    ConstVector3 cross(ConstVector3 rhs);
 
     float getX();
 
