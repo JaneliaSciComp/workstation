@@ -26,15 +26,19 @@ import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.ISO8601Utils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
+import org.janelia.it.workstation.gui.framework.table.DynamicRow;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A dialog for viewing all the fly line releases that a user has access to.
@@ -43,8 +47,10 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  */
 public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable {
 
-    private static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
+    private static final Logger log = LoggerFactory.getLogger(FlyLineReleaseListDialog.class);
     
+    private static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
+
     private final JLabel loadingLabel;
     private final JPanel mainPanel;
     private final DynamicTable dynamicTable;
@@ -77,16 +83,14 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
                         return releaseEntity.getName();
                     }
                     String value = releaseEntity.getValueByAttributeName(column.getName());
-                    if (value != null) {
-                        if (EntityConstants.ATTRIBUTE_RELEASE_DATE.equals(column.getName())) {
-                            return df.format(ISO8601Utils.parse(value));
-                        }
-                        else if (EntityConstants.ATTRIBUTE_DATA_SETS.equals(column.getName())) {
-                            return value.replaceAll(",", ", ");
-                        }
-                        else {
-                            return value;
-                        }
+                    if (EntityConstants.ATTRIBUTE_RELEASE_DATE.equals(column.getName())) {
+                        return value==null?null:df.format(ISO8601Utils.parse(value));
+                    } else if (EntityConstants.ATTRIBUTE_DATA_SETS.equals(column.getName())) {
+                        return value==null?null:value.replaceAll(",", ", ");
+                    } else if (EntityConstants.ATTRIBUTE_SAGE_SYNC.equals(column.getName())) {
+                        return value != null;
+                    } else {
+                        return value;
                     }
                 }
                 return null;
@@ -119,11 +123,13 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
                         @Override
                         public void actionPerformed(ActionEvent e) {
 
-                            int result = JOptionPane.showConfirmDialog(FlyLineReleaseListDialog.this, "Are you sure you want to delete release '" + 
-                                    releaseEntity.getName() + "'? This will not remove anything already published to the web.",
+                            int result = JOptionPane.showConfirmDialog(FlyLineReleaseListDialog.this, "Are you sure you want to delete release '"
+                                    + releaseEntity.getName() + "'? This will not remove anything already published to the web.",
                                     "Delete Release", JOptionPane.OK_CANCEL_OPTION);
-                            if (result != 0) return;
-                            
+                            if (result != 0) {
+                                return;
+                            }
+
                             Utils.setWaitingCursor(FlyLineReleaseListDialog.this);
 
                             SimpleWorker worker = new SimpleWorker() {
@@ -160,11 +166,55 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
                 final Entity dataSetEntity = (Entity) getRows().get(row).getUserObject();
                 releaseDialog.showForRelease(dataSetEntity);
             }
+
+            @Override
+            public Class<?> getColumnClass(int column) {
+                DynamicColumn dc = getColumns().get(column);
+                if (dc.getName().equals(EntityConstants.ATTRIBUTE_SAGE_SYNC)) {
+                    return Boolean.class;
+                }
+                return super.getColumnClass(column);
+            }
+
+            @Override
+            protected void valueChanged(DynamicColumn dc, int row, Object data) {
+                if (dc.getName().equals(EntityConstants.ATTRIBUTE_SAGE_SYNC)) {
+                    final Boolean selected = data == null ? Boolean.FALSE : (Boolean) data;
+                    DynamicRow dr = getRows().get(row);
+                    final Entity releaseEntity = (Entity) dr.getUserObject();
+                    SimpleWorker worker = new SimpleWorker() {
+
+                        @Override
+                        protected void doStuff() throws Exception {
+                            if (selected) {
+                                ModelMgr.getModelMgr().setAttributeAsTag(releaseEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
+                            } else {
+                                EntityData sageSyncEd = releaseEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC);
+                                if (sageSyncEd != null) {
+                                    releaseEntity.getEntityData().remove(sageSyncEd);
+                                    ModelMgr.getModelMgr().removeEntityData(sageSyncEd);
+                                }
+                            }
+                        }
+
+                        @Override
+                        protected void hadSuccess() {
+                        }
+
+                        @Override
+                        protected void hadError(Throwable error) {
+                            SessionMgr.getSessionMgr().handleException(error);
+                        }
+                    };
+                    worker.execute();
+                }
+            }
         };
 
         dynamicTable.addColumn("Name");
         dynamicTable.addColumn(EntityConstants.ATTRIBUTE_RELEASE_DATE);
         dynamicTable.addColumn(EntityConstants.ATTRIBUTE_DATA_SETS);
+        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_SAGE_SYNC).setEditable(true);
 
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new fly line release definition");
@@ -209,9 +259,9 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
 
         mainPanel.removeAll();
         mainPanel.add(loadingLabel, BorderLayout.CENTER);
-        
+
         this.releases = new ArrayList<Entity>();
-        
+
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -258,5 +308,5 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
     List<Entity> getReleases() {
         return releases;
     }
-    
+
 }
