@@ -45,6 +45,7 @@ import org.janelia.gltools.MeshActor;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,9 +62,13 @@ public class ConesActor extends BasicGL3Actor
     private final NeuronModel neuron;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public ConesActor(final NeuronModel neuron, Texture2d lightProbeTexture) {
+    public ConesActor(
+            final NeuronModel neuron, 
+            Texture2d lightProbeTexture,
+            ShaderProgram conesShader) 
+    {
         super(null);
-        material = new ConesMaterial(lightProbeTexture);
+        material = new ConesMaterial(lightProbeTexture, conesShader);
         meshGeometry = new MeshGeometry();
         meshActor = new MeshActor(meshGeometry, material, this);
         this.addChild(meshActor);

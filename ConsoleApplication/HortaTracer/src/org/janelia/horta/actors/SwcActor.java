@@ -36,6 +36,7 @@ import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
 
 /**
@@ -47,10 +48,15 @@ public class SwcActor extends BasicGL3Actor
     final SpheresActor spheresActor;
     final ConesActor conesActor;
     
-    public SwcActor(final NeuronModel neuron, Texture2d lightProbeTexture) {
+    public SwcActor(
+            final NeuronModel neuron, 
+            Texture2d lightProbeTexture,
+            ShaderProgram spheresShader,
+            ShaderProgram conesShader) 
+    {
         super(null);
-        spheresActor = new SpheresActor(neuron, lightProbeTexture);
-        conesActor = new ConesActor(neuron, lightProbeTexture);
+        spheresActor = new SpheresActor(neuron, lightProbeTexture, spheresShader);
+        conesActor = new ConesActor(neuron, lightProbeTexture, conesShader);
         this.addChild(spheresActor);
         this.addChild(conesActor);
         setMinPixelRadius(1.0f);

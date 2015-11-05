@@ -58,8 +58,12 @@ public class SpheresMaterial extends BasicMaterial
     private final float[] color = new float[] {1, 0, 0, 1};
     private float minPixelRadius = 0.0f;
 
-    public SpheresMaterial(Texture2d lightProbeTexture) {
-        shaderProgram = new SpheresShader();
+    public SpheresMaterial(Texture2d lightProbeTexture, ShaderProgram spheresShader) {
+        if (spheresShader == null)
+            shaderProgram = new SpheresShader();
+        else
+            shaderProgram = spheresShader;
+        
         if (lightProbeTexture == null) {
             this.lightProbeTexture = new Texture2d();
             try {

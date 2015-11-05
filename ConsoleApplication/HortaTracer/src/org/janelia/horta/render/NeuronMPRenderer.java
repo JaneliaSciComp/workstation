@@ -77,7 +77,10 @@ extends MultipassRenderer
     private final HortaWorkspace workspace;
     private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
     private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
+    // As performance optimization, create a single instance of certain OpenGL resources:
     private final Texture2d lightProbeTexture;
+    private final ShaderProgram spheresShader = new SpheresMaterial.SpheresShader();
+    private final ShaderProgram conesShader = new ConesMaterial.ConesShader();
 
     public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel, HortaWorkspace workspace) 
     {
@@ -219,7 +222,8 @@ extends MultipassRenderer
     private void addNeuronReconstruction(NeuronModel neuron) {
         if (currentNeuronActors.containsKey(neuron))
             return;
-        SwcActor na = new SwcActor(neuron, lightProbeTexture);
+        SwcActor na = new SwcActor(neuron, lightProbeTexture,
+                spheresShader, conesShader);
         // na.setColor(Color.PINK);
         na.setVisible(true);
         currentNeuronActors.put(neuron, na);

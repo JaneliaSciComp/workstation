@@ -59,8 +59,11 @@ public class ConesMaterial extends BasicMaterial
     private final float[] color = new float[] {1, 0, 0, 1};
     private float minPixelRadius = 0.0f;
 
-    public ConesMaterial(Texture2d lightProbeTexture) {
-        shaderProgram = new ConesShader();
+    public ConesMaterial(Texture2d lightProbeTexture, ShaderProgram conesShader) {
+        if (conesShader == null)
+            shaderProgram = new ConesShader();
+        else
+            shaderProgram = conesShader;
         if (lightProbeTexture == null) {
             this.lightProbeTexture = new Texture2d();
             try {
