@@ -107,7 +107,7 @@ public class BasicScreenBlitActor implements GL3Actor
     
     static protected class BlitMaterial extends BasicMaterial 
     {
-        private int upstreamImageIndex = 0;
+        private int upstreamImageIndex = -1;
         
         @Override
         public boolean usesNormals() {
