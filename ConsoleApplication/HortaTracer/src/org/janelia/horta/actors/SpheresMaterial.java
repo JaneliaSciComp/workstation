@@ -37,6 +37,7 @@ import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
+import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.ShaderStep;
 import org.janelia.gltools.material.BasicMaterial;
 import org.janelia.gltools.texture.Texture2d;
@@ -53,20 +54,25 @@ public class SpheresMaterial extends BasicMaterial
     private int lightProbeIndex = -1;
     private int radiusOffsetIndex = -1;
     
-    private Texture2d lightProbeTexture;
+    private final Texture2d lightProbeTexture;
     private final float[] color = new float[] {1, 0, 0, 1};
     private float minPixelRadius = 0.0f;
 
-    public SpheresMaterial() {
+    public SpheresMaterial(Texture2d lightProbeTexture) {
         shaderProgram = new SpheresShader();
-        try {
-            lightProbeTexture = new Texture2d();
-            lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
-                    "/org/janelia/gltools/material/lightprobe/"
-                            + "Office1W165Both.ppm"));
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }    
+        if (lightProbeTexture == null) {
+            this.lightProbeTexture = new Texture2d();
+            try {
+                this.lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
+                        "/org/janelia/gltools/material/lightprobe/"
+                                + "Office1W165Both.ppm"));
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+        else {
+            this.lightProbeTexture = lightProbeTexture;
+        }
     }
 
     // Override displayMesh() to display something other than triangles
@@ -156,7 +162,7 @@ public class SpheresMaterial extends BasicMaterial
         this.minPixelRadius = minPixelRadius;
     }
     
-    private static class SpheresShader extends BasicShaderProgram
+    public static class SpheresShader extends BasicShaderProgram
     {
         public SpheresShader()
         {

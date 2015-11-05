@@ -55,20 +55,25 @@ public class ConesMaterial extends BasicMaterial
     private int lightProbeIndex = UNINITIALIZED_UNIFORM_INDEX;
     private int radiusOffsetIndex = UNINITIALIZED_UNIFORM_INDEX;
     
-    private Texture2d lightProbeTexture;
+    private final Texture2d lightProbeTexture;
     private final float[] color = new float[] {1, 0, 0, 1};
     private float minPixelRadius = 0.0f;
 
-    public ConesMaterial() {
-            shaderProgram = new ConesShader();
-        try {
-            lightProbeTexture = new Texture2d();
-            lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
-                    "/org/janelia/gltools/material/lightprobe/"
-                            + "Office1W165Both.ppm"));
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }    
+    public ConesMaterial(Texture2d lightProbeTexture) {
+        shaderProgram = new ConesShader();
+        if (lightProbeTexture == null) {
+            this.lightProbeTexture = new Texture2d();
+            try {
+                this.lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
+                        "/org/janelia/gltools/material/lightprobe/"
+                                + "Office1W165Both.ppm"));
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+        else {
+            this.lightProbeTexture = lightProbeTexture;
+        }
     }
 
     // Override displayMesh() to display something other than triangles

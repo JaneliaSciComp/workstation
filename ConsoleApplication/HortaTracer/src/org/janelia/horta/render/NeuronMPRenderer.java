@@ -32,6 +32,7 @@ package org.janelia.horta.render;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -54,6 +55,11 @@ import org.janelia.horta.actors.SwcActor;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.gltools.ShaderProgram;
+import org.janelia.gltools.texture.Texture2d;
+import org.janelia.horta.actors.ConesMaterial;
+import org.janelia.horta.actors.SpheresMaterial;
+import org.openide.util.Exceptions;
 
 /**
  *
@@ -71,11 +77,21 @@ extends MultipassRenderer
     private final HortaWorkspace workspace;
     private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
     private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
+    private final Texture2d lightProbeTexture;
 
     public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel, HortaWorkspace workspace) 
     {
         this.drawable = drawable;
         
+        this.lightProbeTexture = new Texture2d();
+        try {
+            this.lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
+                    "/org/janelia/gltools/material/lightprobe/"
+                            + "Office1W165Both.ppm"));
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+            
         this.workspace = workspace;
         workspace.addObserver(neuronListRefresher);
         
@@ -203,7 +219,7 @@ extends MultipassRenderer
     private void addNeuronReconstruction(NeuronModel neuron) {
         if (currentNeuronActors.containsKey(neuron))
             return;
-        SwcActor na = new SwcActor(neuron);
+        SwcActor na = new SwcActor(neuron, lightProbeTexture);
         // na.setColor(Color.PINK);
         na.setVisible(true);
         currentNeuronActors.put(neuron, na);
