@@ -52,7 +52,7 @@ public class SwcActor extends BasicGL3Actor
         conesActor = new ConesActor(neuron);
         this.addChild(spheresActor);
         this.addChild(conesActor);
-        setMinPixelRadius(0.5f);
+        setMinPixelRadius(1.0f);
     }
     
     public void setColor(Color color) {

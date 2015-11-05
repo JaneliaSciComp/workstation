@@ -37,6 +37,7 @@ import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
+import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.ShaderStep;
 import org.janelia.gltools.material.BasicMaterial;
 import org.janelia.gltools.texture.Texture2d;
@@ -48,17 +49,18 @@ import org.openide.util.Exceptions;
  */
 public class ConesMaterial extends BasicMaterial
 {
+    private static final int UNINITIALIZED_UNIFORM_INDEX = -1;
     // shader uniform parameter handles
-    private int colorIndex = 0;
-    private int lightProbeIndex = 0;
-    private int radiusOffsetIndex = 0;
+    private int colorIndex = UNINITIALIZED_UNIFORM_INDEX;
+    private int lightProbeIndex = UNINITIALIZED_UNIFORM_INDEX;
+    private int radiusOffsetIndex = UNINITIALIZED_UNIFORM_INDEX;
     
     private Texture2d lightProbeTexture;
     private final float[] color = new float[] {1, 0, 0, 1};
     private float minPixelRadius = 0.0f;
 
     public ConesMaterial() {
-        shaderProgram = new ConesShader();
+            shaderProgram = new ConesShader();
         try {
             lightProbeTexture = new Texture2d();
             lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
@@ -78,10 +80,10 @@ public class ConesMaterial extends BasicMaterial
     @Override
     public void dispose(GL3 gl) {
         super.dispose(gl);
-        colorIndex = 0;
-        lightProbeIndex = 0;
+        colorIndex = UNINITIALIZED_UNIFORM_INDEX;
+        lightProbeIndex = UNINITIALIZED_UNIFORM_INDEX;
         lightProbeTexture.dispose(gl);
-        radiusOffsetIndex = 0;
+        radiusOffsetIndex = UNINITIALIZED_UNIFORM_INDEX;
     }
     
     @Override
@@ -106,7 +108,7 @@ public class ConesMaterial extends BasicMaterial
 
     @Override
     public void load(GL3 gl, AbstractCamera camera) {
-        if (colorIndex == 0) 
+        if (colorIndex == UNINITIALIZED_UNIFORM_INDEX) 
             init(gl);
         super.load(gl, camera);
         lightProbeTexture.bind(gl, 0);
@@ -156,7 +158,7 @@ public class ConesMaterial extends BasicMaterial
         this.minPixelRadius = minPixelRadius;
     }
     
-    private static class ConesShader extends BasicShaderProgram
+    public static class ConesShader extends BasicShaderProgram
     {
         public ConesShader()
         {
