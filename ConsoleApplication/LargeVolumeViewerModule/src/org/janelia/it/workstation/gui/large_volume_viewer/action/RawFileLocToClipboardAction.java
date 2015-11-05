@@ -8,30 +8,40 @@ import java.io.File;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JLabel;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
+import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Converts the text, as it is expected, in the status label, into coordinates,
  * and uses the coords to lookup the tile file at that location.
  */
 public class RawFileLocToClipboardAction extends AbstractAction {
+    //todo move this to common location
+    private final static String FILE_SEP = System.getProperty("file.separator");
+    private final static String LINUX_FILE_SEP = "/";
 
     private final JLabel statusLabel;
     private final TileFormat tileFormat;
     private final BasicObservableCamera3d camera;
     private final CoordinateAxis axis;
-    private final String topFolder;
+    private final SharedVolumeImage volumeImage;
+    
+    private final Logger log = LoggerFactory.getLogger(RawFileLocToClipboardAction.class);
 
     public RawFileLocToClipboardAction(
             JLabel statusLabel, 
             TileFormat tileFormat, 
-            String topFolder,
+            SharedVolumeImage volumeImage,
             BasicObservableCamera3d camera, 
             CoordinateAxis axis
     ) {
@@ -39,7 +49,7 @@ public class RawFileLocToClipboardAction extends AbstractAction {
         this.tileFormat = tileFormat;
         this.camera = camera;
         this.axis = axis;
-        this.topFolder = topFolder;
+        this.volumeImage = volumeImage;
         putValue(Action.NAME, "Copy Tile File Location to Clipboard");
     }
 
@@ -51,9 +61,31 @@ public class RawFileLocToClipboardAction extends AbstractAction {
         Vec3 vec = new Vec3( micronLocation[0], micronLocation[1], micronLocation[2] );
         
         TileIndex index = tileFormat.tileIndexForXyz(vec, tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit()), axis);
-        File path = BlockTiffOctreeLoadAdapter.getOctreeFilePath(index, tileFormat, true);
-        StringSelection selection = new StringSelection(topFolder + path.getAbsolutePath());
+        int[] micronIntCoords = new int[ micronLocation.length ];
+        for (int i = 0; i < micronLocation.length; i++ ) {
+            micronIntCoords[i] = (int)micronLocation[i];
+        }
+        StringSelection selection;
+        try {
+            RawFileInfo rfi = ModelMgr.getModelMgr().getNearestChannelFiles(volumeImage.getRemoteBasePath(), micronIntCoords);
+            File c0File = rfi.getChannel0();
+            String filePathStr = c0File.toString().replace(FILE_SEP, LINUX_FILE_SEP);
+            // Not truly looking for the file path; just the legs of the path.
+            if (SystemInfo.isWindows) {
+                int colonPos = filePathStr.indexOf(":");
+                if (colonPos != -1) {
+                    filePathStr = filePathStr.substring(colonPos + 1);
+                }
+            }
+            selection = new StringSelection(filePathStr);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            final String msg = "Failed to copy file location to clipboard.";
+            selection = new StringSelection(msg);
+            log.error(msg);
+        }
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(selection, selection);
     }
 }
+
