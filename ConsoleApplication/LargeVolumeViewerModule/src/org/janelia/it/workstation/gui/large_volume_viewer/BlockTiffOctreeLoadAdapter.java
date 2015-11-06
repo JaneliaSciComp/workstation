@@ -342,6 +342,15 @@ extends AbstractTextureLoadAdapter
         } 
         catch (FileNotFoundException ex) {} 
         
+        // Raw scale must be converted to micrometers.
+        for (int i = 0; i < scale.length; i++) {
+            scale[ i] /= 1000; // nanometers to micrometers
+        }
+        // Origin must be divided by 1000, to convert to micrometers.
+        for (int i = 0; i < origin.length; i++) {
+            origin[ i] = (int) (origin[i] / (1000 * scale[i])); // nanometers to voxels
+        }
+
         return false;
     }
     
@@ -358,15 +367,7 @@ extends AbstractTextureLoadAdapter
             if (! sniffOriginAndScaleFromFolder(origin, scale))
                 throw new DataSourceInitializeException(
                         "Failed to find metadata", ex
-                );
-        }
-        // Scale must be converted to micrometers.
-        for (int i = 0; i < scale.length; i++) {
-            scale[ i] /= 1000; // nanometers to micrometers
-        }
-        // Origin must be divided by 1000, to convert to micrometers.
-        for (int i = 0; i < origin.length; i++) {
-            origin[ i] = (int) (origin[i] /(1000 * scale[i])); // nanometers to voxels
+                );            
         }
 
         tileFormat.setVoxelMicrometers(scale);
