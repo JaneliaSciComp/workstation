@@ -16,10 +16,12 @@ public class ImportRemoteSWCAction extends AbstractAction {
 
     private AnnotationPanel annotationPanel;
     private AnnotationModel annotationModel;
+    private AnnotationManager annotationManager;
 
-    public ImportRemoteSWCAction(AnnotationPanel annotationPanel, AnnotationModel annotationModel) {
+    public ImportRemoteSWCAction(AnnotationPanel annotationPanel, AnnotationModel annotationModel, AnnotationManager annotationManager) {
         this.annotationPanel = annotationPanel;
         this.annotationModel = annotationModel;
+        this.annotationManager = annotationManager;
     }
 
     @Override
@@ -31,7 +33,8 @@ public class ImportRemoteSWCAction extends AbstractAction {
             BackgroundWorker importer = new BackgroundWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.importRemoteSWCFolder(userInput);
+                    Long lvvEntityId = annotationManager.getInitialEntity().getId();
+                    annotationModel.importRemoteSWCFolder(userInput, lvvEntityId);
                 }
 
                 @Override

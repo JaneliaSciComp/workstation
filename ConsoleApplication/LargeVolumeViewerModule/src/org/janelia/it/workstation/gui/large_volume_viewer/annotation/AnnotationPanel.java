@@ -231,7 +231,7 @@ public class AnnotationPanel extends JPanel
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCActionMulti));
 
-        ImportRemoteSWCAction importRemoteSwcAction = new ImportRemoteSWCAction(this, annotationModel);
+        ImportRemoteSWCAction importRemoteSwcAction = new ImportRemoteSWCAction(this, annotationModel, this.annotationMgr);
         importRemoteSwcAction.putValue(Action.NAME, "Import SWC Data on Server...");
         importRemoteSwcAction.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");

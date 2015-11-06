@@ -394,16 +394,6 @@ public class EJBEntityFacade implements EntityFacade {
         return rtnVal;
     }
 
-	@Override
-	public RawFileInfo getNearestChannelFiles(String basePath, int[] viewerCoord) throws Exception {
-		RawFileInfo rtnVal = null;
-		final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
-		if (remoteTiledMicroscopeBean != null) {
-			rtnVal = remoteTiledMicroscopeBean.getNearestChannelFiles(basePath, viewerCoord);
-		}
-		return rtnVal;
-	}
-
     @Override
     public CoordinateToRawTransform getLvvCoordToRawTransform( String basePath ) throws Exception {
         CoordinateToRawTransform rtnVal = null;
