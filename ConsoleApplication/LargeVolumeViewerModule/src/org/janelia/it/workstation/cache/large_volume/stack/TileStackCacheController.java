@@ -58,6 +58,7 @@ public class TileStackCacheController {
     List<File> neighborhoodStackFiles=new ArrayList<>();
     Map<File,int[]> stackPositionMap=new HashMap<>();
     String fileSeparator=null;
+    Map<TileIndex, File> stackFileForTileIndexMap=new HashMap<>();
 
     boolean filesystemMetadataInitialized=false;
     boolean initialized=false;
@@ -140,7 +141,7 @@ public class TileStackCacheController {
         for (File file : stackPositionMap.keySet()) {
             int[] positionArr=stackPositionMap.get(file);
             int status=0;
-            if (FileLoader.currentFilesBeingLoaded.contains(file)) {
+            if (FileLoader.currentlyBeingLoaded(file)) {
                 status=1;
             }
             ByteBuffer data=cache.getBytes(file);
@@ -157,6 +158,8 @@ public class TileStackCacheController {
 
         int sCount = 0;
         if (zoom!=null && focus!=null && cache!=null) {
+
+            //long start=System.nanoTime();
 
             emergencyThreadPool.getQueue().clear();
             fileLoadThreadPool.getQueue().clear();
@@ -262,15 +265,13 @@ public class TileStackCacheController {
 
             int nc=0;
             for (File nf : neighborhoodStackFiles) {
-                //log.info("nc "+nc+" "+nf.getAbsolutePath());
-                //if (!previousNeighborhood.contains(nf)) {
-                    //log.info("Neighborhood file="+nf.getAbsolutePath());
                 ByteBuffer data=cache.getBytes(nf);
                 if (data!=null && data.capacity()<4) {
                     data=null;
                     try { cache.putBytes(nf, null); } catch (Exception ex) {}
                 }
-                    if (data==null) {
+                if (data==null) {
+                    if (!FileLoader.currentlyBeingLoaded(nf)) {
                         if (focusStackGroup.contains(nf)) {
                             //log.info("Submitting emergency NEIGHBOR request for file="+nf.getAbsolutePath());
                             submitEmergencyFileLoader(new FileLoader(nf, this));
@@ -281,13 +282,14 @@ public class TileStackCacheController {
                             sCount++;
                         }
                     }
-               // }
+                }
                 nc++;
             }
 
             // Clean cache
             //cache.limitToNeighborhood(neighborhoodStackFiles);
-            log.info("Added " + sCount + " stack loads. Emergency=" + getEmergencyPoolCount() + " Normal=" + getFileLoadPoolCount() + " CacheSize="+cache.size());
+            //long time = (System.nanoTime() - start)/1000000;
+            //log.info("updateFocusTileIndex: sdded " + sCount + " stack loads. Emergency=" + getEmergencyPoolCount() + " Normal=" + getFileLoadPoolCount() + " CacheSize="+cache.size()+" in "+time+" ms");
         }
     }
 
@@ -362,6 +364,7 @@ public class TileStackCacheController {
     }
 
     public TextureData2dGL loadToRam(TileIndex tileIndex) throws AbstractTextureLoadAdapter.TileLoadError, AbstractTextureLoadAdapter.MissingTileException {
+        //log.info("loadToRam() start");
         File stackFile=getStackFileForTileIndex(tileIndex);
         if (stackFile==null) {
             //log.info("loadToRam() request for tileIndex="+tileIndex.toString()+" resulted in null stackFile, calling TileLoadError to release thread");
@@ -381,45 +384,69 @@ public class TileStackCacheController {
             }
             throw new AbstractTextureLoadAdapter.TileLoadError("stackData is null");
         }
-        return createTextureData2dGLFromCacheVolume(stackData, stackSlice);
+        //long t2=System.nanoTime();
+        TextureData2dGL textureData2dGL=createTextureData2dGLFromCacheVolume(stackData, stackSlice);
+        //long t3=System.nanoTime();
+        //long report3=(t3-t2)/1000000;
+        //log.info("createTextureData2dGLFromCacheVolume ms="+report3);
+        return textureData2dGL;
 
         //return createDebugTileFromTileIndex(tileIndex);
     }
 
     public File getStackFileForTileIndex(TileIndex tileIndex) {
-        final File octreeFilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, true /*zOriginNegativeShift*/);
-        if (octreeFilePath == null) {
-            return null;
+        File stackFile=stackFileForTileIndexMap.get(tileIndex);
+        if (stackFile==null) {
+            final File octreeFilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, true /*zOriginNegativeShift*/);
+            if (octreeFilePath == null) {
+                return null;
+            }
+            stackFile = new File(topFolder, octreeFilePath.toString());
+            stackFileForTileIndexMap.put(tileIndex, stackFile);
         }
-
-        File stackFile = new File(topFolder, octreeFilePath.toString());
         return stackFile;
     }
 
     private TextureData2dGL createTextureData2dGLFromCacheVolume(ByteBuffer stackBuffer, int zSlice) {
+        //long t1=System.nanoTime();
         int[] tileSize=tileFormat.getTileSize();
-        int sliceSize=tileSize[0]*tileSize[1];
-        int channelSize=sliceSize*tileSize[2];
-        byte[] stackBytes=stackBuffer.array();
-        List<BufferedImage> imageList=new ArrayList<>();
-        for (int c=0;c<tileFormat.getChannelCount();c++) {
-            BufferedImage bufferedImage=new BufferedImage(tileSize[0], tileSize[1], BufferedImage.TYPE_USHORT_GRAY);
-            Raster imageCopy=bufferedImage.getData();
-            DataBuffer dataBuffer=imageCopy.getDataBuffer();
-            int cOffset=channelSize*c;
-            int zOffset=sliceSize*zSlice;
-            for (int y=0;y<tileSize[1];y++) {
-                int yOffset=y*tileSize[0];
-                int czyOffset=cOffset+zOffset+yOffset;
-                for (int x=0;x<tileSize[0];x++) {
-                    int stackValue = ((stackBytes[czyOffset+x]+128)*(MAX_RAW_VAL-MIN_RAW_VAL))/256 + MIN_RAW_VAL;
-                    dataBuffer.setElem(yOffset+x, stackValue);
-                }
-            }
-            bufferedImage.setData(imageCopy);
-            imageList.add(bufferedImage);
-        }
-        return getCombinedTextureData2dGLFromRenderedImages(imageList);
+        TextureData2dGL result = new TextureData2dGL();
+        result.load8bitStackSliceByteBufferTo16bitTexture(tileSize[0], tileSize[1], tileSize[2], 2, zSlice, MIN_RAW_VAL, (MAX_RAW_VAL-MIN_RAW_VAL), stackBuffer);
+        //long t2=System.nanoTime();
+        //long report2=(t2-t1)/1000000;
+        //log.info("load8bitStackSliceByteBufferTo16bitTexture ms="+report2);
+        return result;
+
+//
+//        long[] timings=new long[4];
+//        int[] tileSize=tileFormat.getTileSize();
+//        int sliceSize=tileSize[0]*tileSize[1];
+//        int channelSize=sliceSize*tileSize[2];
+//        byte[] stackBytes=stackBuffer.array();
+//        List<BufferedImage> imageList=new ArrayList<>();
+//        for (int c=0;c<tileFormat.getChannelCount();c++) {
+//            timings[2*c]=System.nanoTime();
+//            BufferedImage bufferedImage=new BufferedImage(tileSize[0], tileSize[1], BufferedImage.TYPE_USHORT_GRAY);
+//            Raster imageCopy=bufferedImage.getData();
+//            DataBuffer dataBuffer=imageCopy.getDataBuffer();
+//            timings[2*c+1]=System.nanoTime();
+//            int cOffset=channelSize*c;
+//            int zOffset=sliceSize*zSlice;
+//            for (int y=0;y<tileSize[1];y++) {
+//                int yOffset=y*tileSize[0];
+//                int czyOffset=cOffset+zOffset+yOffset;
+//                for (int x=0;x<tileSize[0];x++) {
+//                    int stackValue = ((stackBytes[czyOffset+x]+128)*(MAX_RAW_VAL-MIN_RAW_VAL))/256 + MIN_RAW_VAL;
+//                    dataBuffer.setElem(yOffset+x, stackValue);
+//                }
+//            }
+//            bufferedImage.setData(imageCopy);
+//            imageList.add(bufferedImage);
+//        }
+//        long report1=(timings[1]-timings[0])/1000000;
+//        long report2=(timings[3]-timings[2])/1000000;
+//        log.info("createTextureData2dGLFromCacheVolume() loop1="+report1+" loop2="+report2);
+//        return getCombinedTextureData2dGLFromRenderedImages(imageList);
     }
 
     private ByteBuffer getFileDataFromCache(File file) throws AbstractTextureLoadAdapter.TileLoadError, AbstractTextureLoadAdapter.MissingTileException {
@@ -499,13 +526,21 @@ public class TileStackCacheController {
         private TileStackCacheController tileStackCacheController;
         private static ConcurrentHashSet<File> currentFilesBeingLoaded=new ConcurrentHashSet<>();
 
-        public static ConcurrentHashSet<File> getCurrentFilesBeingLoaded() {
-            return currentFilesBeingLoaded;
-        }
-
         public FileLoader(File file, TileStackCacheController tileStackCacheController) {
             this.file=file;
             this.tileStackCacheController=tileStackCacheController;
+        }
+
+        public static synchronized boolean currentlyBeingLoaded(File file) {
+            return currentFilesBeingLoaded.contains(file);
+        }
+
+        public static synchronized void setCurrentFileBeingLoaded(File file, boolean status) {
+            if (status) {
+                currentFilesBeingLoaded.add(file);
+            } else {
+                currentFilesBeingLoaded.remove(file);
+            }
         }
 
         @Override
@@ -526,7 +561,7 @@ public class TileStackCacheController {
             }
 
             // Is someone else already loading this file, in which case I can just let them do it?
-            if (currentFilesBeingLoaded.contains(file)) {
+            if (currentlyBeingLoaded(file)) {
                 //log.info("***>>> FileLoader file already being loaded="+file.getAbsolutePath());
                 return;
             }
@@ -543,7 +578,7 @@ public class TileStackCacheController {
             }
 
             // Apparently not, so I will take responsibility
-            currentFilesBeingLoaded.add(file);
+            setCurrentFileBeingLoaded(file, true);
 
             //log.info("***>>> FileLoader loading file="+file.getAbsolutePath());
             long loadStart=System.currentTimeMillis();
@@ -600,12 +635,7 @@ public class TileStackCacheController {
                     }
                 }
             }
-            currentFilesBeingLoaded.remove(file);
-            if (!errorFlag) {
-                //log.info("FileLoader returning after loading file="+file.getAbsolutePath());
-            } else {
-                //log.info("FileLoader did not succeed with file="+file.getAbsolutePath());
-            }
+            setCurrentFileBeingLoaded(file, false);
             return;
         }
 

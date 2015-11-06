@@ -1,5 +1,10 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.it.workstation.cache.large_volume.stack.TileStackCacheController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -13,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class TexturePreFetcher 
 {
-	// private static final Logger log = LoggerFactory.getLogger(TexturePreFetcher.class);
+	private static final Logger log = LoggerFactory.getLogger(TexturePreFetcher.class);
 
     private static final String TEX_FETCH_THREADNAME_PREFIX = "TexturePreFetch";
 	private TextureCache textureCache; // holds texture
@@ -51,6 +56,7 @@ public class TexturePreFetcher
 	 */
 	public synchronized boolean loadDisplayedTexture(TileIndex index, TileServer tileServer)
 	{
+		//long t1=System.nanoTime();
 		if (textureCache == null)
 			return false;
 		if (loadAdapter == null)
@@ -68,8 +74,30 @@ public class TexturePreFetcher
 		if (textureCache.isLoadQueued(index))
 			return false;
 		TileTexture texture = new TileTexture(index, loadAdapter);
+		TextureLoadWorker textureLoadWorker=new TextureLoadWorker(texture, textureCache, tileServer);
+		//long t2=System.nanoTime();
+		//long report2=(t2-t1)/1000000;
+		//log.info("loadDisplayedTexture phase1 ms="+report2);
+		if (VolumeCache.useVolumeCache()) {
+			// Check if already in ram - we only want to launch a new thread if it isn't in ram
+			TileStackCacheController tileStackCacheController=TileStackCacheController.getInstance();
+			File stackFile=tileStackCacheController.getStackFileForTileIndex(index);
+			if (stackFile!=null) {
+				if (tileStackCacheController.getCache().containsFile(stackFile)) {
+					//long t4=System.nanoTime();
+					//long report4=(t4-t2)/1000000;
+					//log.info("loadDisplayedTexture phase2 ms="+report4);
+					//long t5=System.nanoTime();
+					textureLoadWorker.run();
+					//long t6=System.nanoTime();
+					//long report6=(t6-t5)/1000000;
+					//log.info("textureLoadWorker.run() in ms="+report6);
+					return false;
+				}
+			}
+		}
 		// TODO - handle MISSING textures vs. ERROR textures
-		Future<?> foo = textureLoadExecutor.submit(new TextureLoadWorker(texture, textureCache, tileServer));
+		Future<?> foo = textureLoadExecutor.submit(textureLoadWorker);
 		futures.put(foo, texture.getIndex());
 		textureCache.setLoadQueued(index, true);
 		// recentRequests.put(index, index);

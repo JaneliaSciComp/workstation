@@ -27,6 +27,14 @@ public class SimpleFileCache {
         }
     });
 
+    public boolean containsFile(File file) {
+        ByteBuffer data=cache.get(file);
+        if (data!=null && data.capacity()>3) {
+            return true;
+        }
+        return false;
+    }
+
     public SimpleFileCache(int cacheSize) {
         this.cacheSize=cacheSize;
     }
@@ -35,7 +43,7 @@ public class SimpleFileCache {
         return cache.get(file);
     }
 
-    public synchronized void putBytes(File file, ByteBuffer data) throws AbstractTextureLoadAdapter.TileLoadError {
+    public void putBytes(File file, ByteBuffer data) throws AbstractTextureLoadAdapter.TileLoadError {
             cache.put(file, data);
     }
 

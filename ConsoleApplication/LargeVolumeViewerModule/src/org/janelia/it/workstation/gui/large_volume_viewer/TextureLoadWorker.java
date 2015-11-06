@@ -62,20 +62,18 @@ public class TextureLoadWorker implements Runnable
 		}
 		// Load file
 		// log.info("Loading texture "+texture.getIndex());
-		else if (texture.loadImageToRam()) {
-			textureRetrieved=true;
-			textureCache.add(texture);
-            tileServer.textureLoaded(texture.getIndex());
-			// log.info("Loaded texture "+texture.getIndex());
-		}
 		else {
-			//log.warn("Failed to load texture " + texture.getIndex());
+			//long t1=System.nanoTime();
+			boolean loadedSuccessfully=texture.loadImageToRam();
+			//long t2=System.nanoTime();
+			//long report2=(t2-t1)/1000000;
+			//log.info("texture.loadImageToRam() ran in ms="+report2);
+			if (loadedSuccessfully) {
+				textureCache.add(texture);
+				tileServer.textureLoaded(texture.getIndex());
+			}
 		}
-//		if (textureRetrieved) {
-//			//log.info("TextureLoadWorker RETRIEVED for tileIndex=" + index.toString() + " stackFile=" + TileStackCacheController.getInstance().getStackFileForTileIndex(index));
-//		} else {
-//			//log.info("TextureLoadWorker NOT RETRIEVED for tileIndex=" + index.toString() + " stackFile=" + TileStackCacheController.getInstance().getStackFileForTileIndex(index));
-//		}
+
 		textureCache.setLoadQueued(index, false);
 	}
 

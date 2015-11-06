@@ -4,10 +4,17 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 import javax.media.opengl.GL2GL3;
 
 import com.jogamp.opengl.util.texture.TextureCoords;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class Texture2dGL 
 implements PyramidTexture
 {
+
+	private static Logger log = LoggerFactory.getLogger(Texture2dGL.class);
+
+	private int textureCreationIndex = 0;
 	private int textureId = 0;
 	private int width = 0;
 	private int height = 0;
@@ -42,6 +49,7 @@ implements PyramidTexture
 	public int getTextureId() {
 		return textureId;
 	}
+
 
 	@Override
 	public void setTexParameteri(GL2GL3 gl, int key, int value) {

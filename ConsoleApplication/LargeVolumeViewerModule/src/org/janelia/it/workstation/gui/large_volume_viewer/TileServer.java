@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.LoadStatusListener;
@@ -28,6 +29,11 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 // implements VolumeImage3d
 {
 	private static final Logger log = LoggerFactory.getLogger(TileServer.class);
+
+//	private AtomicInteger minResCount=new AtomicInteger(0);
+//	private AtomicInteger displayResCount=new AtomicInteger(0);
+//	private AtomicInteger umbrellaResCount=new AtomicInteger(0);
+//	private AtomicInteger fullResCount=new AtomicInteger(0);
 
 	// Derived from individual ViewTileManagers
 	public static enum LoadStatus {
@@ -111,6 +117,8 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
             }
         }
         for (TileIndex i : tileGenerator) {
+//			int count=minResCount.addAndGet(1);
+//			log.info("minResPreFetcher count="+count);
             minResPreFetcher.loadDisplayedTexture(i, TileServer.this);
         }
         // log.info(tileCount+" min resolution tiles queued");
@@ -236,6 +244,9 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	}
 	
 	private void rearrangeLoadQueue(TileSet currentTiles) {
+
+		//long start=System.nanoTime();
+
 		for (ViewTileManager vtm : viewTileManagers) {
 			vtm.updateDisplayTiles();
 		}
@@ -256,10 +267,21 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 				if (cacheableTextures.contains(ix))
 					continue; // already noted
 				// log.info("queue load of "+ix);
-				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
+
+				long t1=System.nanoTime();
+				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this)) {
+//					int count=displayResCount.addAndGet(1);
+//					log.info("displayResCount="+count);
 					cacheableTextures.add(ix);
+				}
+				//long t2 = (System.nanoTime() - t1)/1000000;
+				//log.info("rearrangeLoadQueue tileIndex="+ix.toString()+" in "+t2+" ms");
 			}
 		}
+
+		//long time=(System.nanoTime()-start)/1000000;
+
+		//log.info("rearrangeLoadQueue total time="+time);
 		
 		if (doPrefetch && !VolumeCache.useVolumeCache()) {
 			/* TODO - LOD tiles are not working yet...
@@ -322,8 +344,12 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 						continue;
 					if (cacheableTextures.size() >= maxCacheable)
 						break;
-					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
-						cacheableTextures.add(ix);						
+
+					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this)) {
+//						int count=umbrellaResCount.addAndGet(1);
+//						log.info("umbrellaResCount="+count);
+						cacheableTextures.add(ix);
+					}
 				}
 
 				// Load full resolution slices
@@ -332,8 +358,12 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 						continue;
 					if (cacheableTextures.size() >= maxCacheable)
 						break;
-					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
-						cacheableTextures.add(ix);						
+
+					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this)) {
+//						int count=fullResCount.addAndGet(1);
+//						log.info("fullResCount="+count);
+						cacheableTextures.add(ix);
+					}
 				}
 			}
 			
@@ -461,7 +491,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
         minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
         futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
         clearCache();
-        setCacheSizesAsFractionOfMaxHeap(0.10, 0.20); // 0.15, 0.35
+        //setCacheSizesAsFractionOfMaxHeap(0.10, 0.20); // 0.15, 0.35
         refreshCurrentTileSet();
     }
 	

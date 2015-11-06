@@ -18,7 +18,7 @@ public class TextureCache
 {
     private static final Logger log = LoggerFactory.getLogger(TextureCache.class);
 
-    private HistoryCache historyCache = new HistoryCache(1000); // textures that have been displayed, ordered by LRU
+    private HistoryCache historyCache = new HistoryCache(2000); // textures that have been displayed, ordered by LRU
     private HistoryCache futureCache = new HistoryCache(3000); // textures we predict will be displayed
     private PersistentCache persistentCache = new PersistentCache(); // lowest resolution textures for everything
     // private Set<TileIndex> queuedRequests = new HashSet<TileIndex>();
@@ -36,9 +36,9 @@ public class TextureCache
         }
         else {
             futureCache.put(index, texture);
-            if (! futureCache.containsKey(index)) {
-                log.error("Future cache insert failed.");
-            }
+//            if (! futureCache.containsKey(index)) {
+//                log.error("Future cache insert failed.");
+//            }
         }
     }
 

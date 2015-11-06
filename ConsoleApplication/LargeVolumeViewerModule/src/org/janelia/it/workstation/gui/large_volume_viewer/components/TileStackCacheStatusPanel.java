@@ -23,8 +23,8 @@ import java.util.Map;
  */
 public class TileStackCacheStatusPanel extends JPanel implements ActionListener {
 
-    private static final int Y_BORDER=10;
-    private static final int X_BORDER=10;
+    private static final int PANEL_HEIGHT=210;
+    private static final int PANEL_WIDTH=90;
     private static final int Z_OFFSET=60;
     private static final int BOX_XSIZE=7;
     private static final int BOX_YSIZE=7;
@@ -48,8 +48,15 @@ public class TileStackCacheStatusPanel extends JPanel implements ActionListener 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (VolumeCache.useVolumeCache()) {
+            if (!isVisible()) {
+                setVisible(true);
+            }
             cacheStatusMap = TileStackCacheController.getInstance().getCacheStatusMap();
             repaint();
+        } else {
+            if (isVisible()) {
+                setVisible(false);
+            }
         }
     }
 
@@ -62,8 +69,8 @@ public class TileStackCacheStatusPanel extends JPanel implements ActionListener 
 
         int y1=zLevelCenter-y;
         int x1=zLevelCenter+x;
-        y = Y_BORDER + (z+1)*Z_OFFSET + y1*(BOX_YSIZE+BOX_YBORDER);
-        x = X_BORDER + x1*(BOX_XSIZE+BOX_XBORDER);
+        y = (PANEL_HEIGHT - (Z_OFFSET*3))/2 + (z+1)*Z_OFFSET + y1*(BOX_YSIZE+BOX_YBORDER);
+        x = (PANEL_WIDTH - (BOX_YSIZE+BOX_XBORDER)*7)/2 + x1*(BOX_XSIZE+BOX_XBORDER);
 
         return new int[] { x, y };
     }
@@ -72,7 +79,7 @@ public class TileStackCacheStatusPanel extends JPanel implements ActionListener 
     public void paint(Graphics graphics) {
         if (cacheStatusMap==null)
             return;
-        BufferedImage image=new BufferedImage(100, 450, BufferedImage.TYPE_INT_RGB);
+        BufferedImage image=new BufferedImage(PANEL_WIDTH, PANEL_HEIGHT, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = image.createGraphics();
         g.setBackground(Color.BLACK);
 
