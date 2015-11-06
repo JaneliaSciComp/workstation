@@ -266,7 +266,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         List<Class<?>> searchClasses = new ArrayList<>(reflections.getTypesAnnotatedWith(SearchType.class));
                 
         for(Class<?> searchClazz : searchClasses) {
-            String searchTypeKey = searchClazz.getAnnotation(SearchType.class).label();
+            String searchTypeKey = searchClazz.getAnnotation(SearchType.class).key();
             String collectionName = null;
             Class<?> clazz = searchClazz;
             while (clazz!=null) {
@@ -392,8 +392,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         this.searchClass = searchClass;
         
         SearchType searchTypeAnnot = searchClass.getAnnotation(SearchType.class);
-        final String label = searchTypeAnnot.label();
-        typeCriteriaButton.setText("Type: " + label);
+        typeCriteriaButton.setText("Type: " + searchTypeAnnot.label());
 
         searchAttrs.clear();
         facets.clear();
@@ -812,7 +811,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 ids.add(id);
             }
             else {
-                log.warn("Unknown type has no collection mapping: "+type);
+                log.warn("Unrecognized type has no collection mapping: "+type);
             }
         }
         
