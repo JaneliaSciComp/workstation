@@ -47,7 +47,7 @@ import org.openide.util.Exceptions;
 public class IBLDiffuseMaterial extends BasicMaterial 
 {
     private Texture2d iblTexture;
-    private int diffuseLightProbeIndex = 0;
+    private int diffuseLightProbeIndex = -1;
     
     public IBLDiffuseMaterial() {
         try {

@@ -13,7 +13,6 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
 import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
@@ -89,3 +88,4 @@ public class RawFileLocToClipboardAction extends AbstractAction {
         clipboard.setContents(selection, selection);
     }
 }
+

@@ -32,6 +32,8 @@ package org.janelia.horta.render;
 
 import java.awt.Color;
 import java.awt.geom.Point2D;
+import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -54,6 +56,16 @@ import org.janelia.horta.actors.SwcActor;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Object3d;
+import org.janelia.gltools.BasicGL3Actor;
+import org.janelia.gltools.ShaderProgram;
+import org.janelia.gltools.texture.Texture2d;
+import org.janelia.horta.actors.ConesActor;
+import org.janelia.horta.actors.ConesMaterial;
+import org.janelia.horta.actors.SpheresActor;
+import org.janelia.horta.actors.SpheresMaterial;
+import org.openide.util.Exceptions;
 
 /**
  *
@@ -66,11 +78,12 @@ extends MultipassRenderer
     private final BackgroundRenderPass backgroundRenderPass;
     private final OpaqueRenderPass opaqueRenderPass;
     private final VolumeRenderPass volumeRenderPass;
-    private final Map<NeuronModel, GL3Actor> currentNeuronActors = new HashMap<>();
+    
     private final Set<NeuronSet> currentNeuronLists = new HashSet<>();
     private final HortaWorkspace workspace;
     private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
     private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
+    private final AllSwcActor allSwcActor = new AllSwcActor();
 
     public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel, HortaWorkspace workspace) 
     {
@@ -84,6 +97,7 @@ extends MultipassRenderer
         
         // CMB September 2015 begin work on opaque render pass
         opaqueRenderPass = new OpaqueRenderPass(drawable);
+        opaqueRenderPass.addActor(allSwcActor);
         add(opaqueRenderPass);
         
         volumeRenderPass = new VolumeRenderPass(drawable);
@@ -201,22 +215,13 @@ extends MultipassRenderer
     }
     
     private void addNeuronReconstruction(NeuronModel neuron) {
-        if (currentNeuronActors.containsKey(neuron))
-            return;
-        SwcActor na = new SwcActor(neuron);
-        // na.setColor(Color.PINK);
-        na.setVisible(true);
-        currentNeuronActors.put(neuron, na);
-        addOpaqueActor(na);
+        allSwcActor.addNeuronReconstruction(neuron);
+        
         neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
     
     private void removeNeuronReconstruction(NeuronModel neuron) {
-        if (! currentNeuronActors.containsKey(neuron))
-            return;
-        GL3Actor actor = currentNeuronActors.get(neuron);
-        currentNeuronActors.remove(neuron);
-        removeOpaqueActor(actor);
+        allSwcActor.removeNeuronReconstruction(neuron);
         neuron.getVisibilityChangeObservable().deleteObserver(volumeLayerExpirer);
     }
     
@@ -254,17 +259,6 @@ extends MultipassRenderer
         backgroundRenderPass.setColor(topColor, bottomColor);
     }
 
-    public void removeOpaqueActor(GL3Actor actor)
-    {
-        opaqueRenderPass.removeActor(actor);
-    }
-
-    public void addOpaqueActor(SwcActor na)
-    {
-        opaqueRenderPass.addActor(na);
-    }
-
-    
     private class VolumeLayerExpirer implements Observer
     {
 
@@ -296,7 +290,11 @@ extends MultipassRenderer
             // 2 - remove obsolete neurons
             Set<NeuronModel> obsoleteNeurons = new HashSet<>();
             // Perform two passes, to avoid concurrent modification
-            for (NeuronModel neuron : currentNeuronActors.keySet()) {
+            for (NeuronModel neuron : allSwcActor.sphereNeurons()) {
+                if (! latestNeurons.contains(neuron))
+                    obsoleteNeurons.add(neuron);
+            }
+            for (NeuronModel neuron : allSwcActor.coneNeurons()) {
                 if (! latestNeurons.contains(neuron))
                     obsoleteNeurons.add(neuron);
             }
@@ -320,6 +318,135 @@ extends MultipassRenderer
                     addNeuronReconstruction(neuron);
                 }
             }
+        }
+    }
+    
+    
+    // One primitive at a time renderer for performance efficiency
+    private static class AllSwcActor extends BasicGL3Actor 
+    {
+        // For performance efficiency, render similar primitives all at once
+        // private final Map<NeuronModel, GL3Actor> currentNeuronActors = new HashMap<>();
+        private final Map<NeuronModel, ConesActor> currentNeuronConeActors = new HashMap<>();
+        private final Map<NeuronModel, SpheresActor> currentNeuronSphereActors = new HashMap<>();
+
+        // private final Collection<SpheresActor> sphereActors = new HashSet<>();
+        // private final Collection<ConesActor> coneActors = new HashSet<>();
+        // As performance optimization, create a single instance of certain OpenGL resources:
+        private final Texture2d lightProbeTexture;
+        private final ShaderProgram spheresShader = new SpheresMaterial.SpheresShader();
+        private final ShaderProgram conesShader = new ConesMaterial.ConesShader();
+
+        public AllSwcActor()
+        {
+            super(null);
+            
+            this.lightProbeTexture = new Texture2d();
+            try {
+                this.lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
+                        "/org/janelia/gltools/material/lightprobe/"
+                                + "Office1W165Both.ppm"));
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+        
+        @Override
+        public void init(GL3 gl) {
+            super.init(gl);
+            spheresShader.init(gl);
+            conesShader.init(gl);
+            lightProbeTexture.init(gl);
+            for ( SpheresActor a : currentNeuronSphereActors.values() )
+                a.init(gl);
+            for ( ConesActor a : currentNeuronConeActors.values() )
+                a.init(gl);
+        }
+        
+        @Override
+        public void display(GL3 gl, AbstractCamera camera, Matrix4 modelViewMatrix) {
+            super.display(gl, camera, modelViewMatrix);
+            
+            float micrometersPerPixel = 
+                camera.getVantage().getSceneUnitsPerViewportHeight()
+                    / camera.getViewport().getHeightPixels();
+
+            Matrix4 projectionMatrix = camera.getProjectionMatrix();
+            if (modelViewMatrix == null)
+                modelViewMatrix = new Matrix4(camera.getViewMatrix());
+        
+            lightProbeTexture.bind(gl, 0);
+            
+            spheresShader.load(gl);
+            int s = spheresShader.getProgramHandle();
+            int colorIndex = gl.glGetUniformLocation(s, "color");
+            int lightProbeIndex = gl.glGetUniformLocation(s, "lightProbe");
+            int radiusOffsetIndex = gl.glGetUniformLocation(s, "radiusOffset");
+            int modelViewIndex = gl.glGetUniformLocation(s, "modelViewMatrix");
+            int projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
+            
+            gl.glUniformMatrix4fv(modelViewIndex, 1, false, modelViewMatrix.asArray(), 0);
+            gl.glUniformMatrix4fv(projectionIndex, 1, false, projectionMatrix.asArray(), 0); 
+            gl.glUniform1i(lightProbeIndex, 0); // use default texture unit, 0
+            
+            for ( SpheresActor a : currentNeuronSphereActors.values() ) {
+                gl.glUniform4fv(colorIndex, 1, a.getColorArray(), 0);
+                gl.glUniform1f(radiusOffsetIndex, a.getMinPixelRadius() * micrometersPerPixel);
+                if (a.isVisible()) {
+                    a.display(gl, camera, null);
+                }
+            }
+            
+            conesShader.load(gl);
+            s = conesShader.getProgramHandle();
+            colorIndex = gl.glGetUniformLocation(s, "color");
+            lightProbeIndex = gl.glGetUniformLocation(s, "lightProbe");
+            radiusOffsetIndex = gl.glGetUniformLocation(s, "radiusOffset");
+            modelViewIndex = gl.glGetUniformLocation(s, "modelViewMatrix");
+            projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
+            
+            gl.glUniformMatrix4fv(modelViewIndex, 1, false, modelViewMatrix.asArray(), 0);
+            gl.glUniformMatrix4fv(projectionIndex, 1, false, projectionMatrix.asArray(), 0); 
+            gl.glUniform1i(lightProbeIndex, 0); // use default texture unit, 0
+            for ( ConesActor a : currentNeuronConeActors.values() ) {
+                gl.glUniform4fv(colorIndex, 1, a.getColorArray(), 0);
+                gl.glUniform1f(radiusOffsetIndex, a.getMinPixelRadius() * micrometersPerPixel);
+                if (a.isVisible()) {
+                    a.display(gl, camera, null);
+                }
+            }
+            
+            conesShader.unload(gl);
+            lightProbeTexture.unbind(gl);
+        }
+
+        private void addNeuronReconstruction(NeuronModel neuron)
+        {
+            if (currentNeuronSphereActors.containsKey(neuron))
+                return;
+
+            // SwcActor na = new SwcActor(neuron, lightProbeTexture, spheresShader, conesShader);
+            SpheresActor nsa = new SpheresActor(neuron, lightProbeTexture, spheresShader);
+            nsa.setVisible(true);
+            currentNeuronSphereActors.put(neuron, nsa);
+
+            ConesActor nca = new ConesActor(neuron, lightProbeTexture, conesShader);
+            nca.setVisible(true);
+            currentNeuronConeActors.put(neuron, nca);
+        }
+
+        private void removeNeuronReconstruction(NeuronModel neuron)
+        {
+            currentNeuronSphereActors.remove(neuron);
+            currentNeuronSphereActors.remove(neuron);
+        }
+        
+        public Collection<NeuronModel> sphereNeurons() {
+            return currentNeuronSphereActors.keySet();
+        }
+
+        public Collection<NeuronModel> coneNeurons() {
+            return currentNeuronConeActors.keySet();
         }
     }
     

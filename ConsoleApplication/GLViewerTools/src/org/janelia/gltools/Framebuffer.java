@@ -164,6 +164,7 @@ public class Framebuffer implements GL3Resource, GLEventListener {
         // TODO - parameterize draw attachments
         int[] drawBuffers = new int[] {GL3.GL_COLOR_ATTACHMENT0};
         gl.glDrawBuffers(drawBuffers.length, drawBuffers, 0);
+        clear(gl); // Sometimes required on Mac to avoid fb corruption
         unbind(gl);
     }
     
