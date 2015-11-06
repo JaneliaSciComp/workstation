@@ -36,8 +36,6 @@ public class TextureLoadWorker implements Runnable
 	{
 		TileIndex index = texture.getIndex();
 		
-		// log.info("Loading texture "+index+"...");
-		
 		if (index.getSliceAxis() == CoordinateAxis.X) {
 			// System.out.println("Y");
 		}
@@ -58,14 +56,15 @@ public class TextureLoadWorker implements Runnable
 		}
 		// Load file
 		// log.info("Loading texture "+texture.getIndex());
-		else if (texture.loadImageToRam()) {
-			textureCache.add(texture);
-            tileServer.textureLoaded(texture.getIndex());
-			// log.info("Loaded texture "+texture.getIndex());
-		}
 		else {
-			log.warn("Failed to load texture " + texture.getIndex());
+			boolean loadedSuccessfully=texture.loadImageToRam();
+
+			if (loadedSuccessfully) {
+				textureCache.add(texture);
+				tileServer.textureLoaded(texture.getIndex());
+			}
 		}
+
 		textureCache.setLoadQueued(index, false);
 	}
 
