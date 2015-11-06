@@ -56,6 +56,7 @@ import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Object3d;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
@@ -372,6 +373,18 @@ extends MultipassRenderer
                 a.init(gl);
         }
         
+        @Override
+        public void dispose(GL3 gl) {
+            spheresShader.dispose(gl);
+            conesShader.dispose(gl);
+            lightProbeTexture.dispose(gl);
+            for ( SpheresActor a : currentNeuronSphereActors.values() )
+                a.dispose(gl);
+            for ( ConesActor a : currentNeuronConeActors.values() )
+                a.dispose(gl);
+            super.dispose(gl);
+        }
+    
         @Override
         public void display(GL3 gl, AbstractCamera camera, Matrix4 modelViewMatrix) {
             if (bHideAll)
