@@ -176,7 +176,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 	public void setLoadStatus(LoadStatus loadStatus) {
 		if (this.loadStatus == loadStatus)
 			return; // no change
-		log.info("Load status changed to "+loadStatus);
+		//log.info("Load status changed to "+loadStatus);
 		this.loadStatus = loadStatus;
         if (loadStatusListener != null) {
             loadStatusListener.updateLoadStatus(loadStatus);
