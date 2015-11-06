@@ -66,8 +66,6 @@ import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.janelia.it.workstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.workstation.shared.util.ThreadQueue;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1313,10 +1311,6 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getNearestChannelFiles( basePath, viewerCoord );
     }
 
-	public RawFileInfo getNearestChannelFiles(String basePath, int[] viewerCoord) throws Exception {
-		return FacadeManager.getFacadeManager().getEntityFacade().getNearestChannelFiles(basePath, viewerCoord);
-	}
-	
 	public List<List<Object>> getRootPaths(Entity entity, Set<Long> visited) throws Exception {
 
         List<List<Object>> rootPaths = new ArrayList<>();
