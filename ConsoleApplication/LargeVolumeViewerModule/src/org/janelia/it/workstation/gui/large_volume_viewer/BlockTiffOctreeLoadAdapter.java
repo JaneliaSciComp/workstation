@@ -17,11 +17,8 @@ import com.sun.media.jai.codec.FileSeekableStream;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.SeekableStream;
-import java.io.BufferedReader;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TransformFileObject;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,7 +27,6 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
-import org.openide.util.Exceptions;
 
 /*
  * Loader for large volume viewer format negotiated with Nathan Clack
@@ -304,6 +300,12 @@ extends AbstractTextureLoadAdapter
         if (! transformFile.exists())
             return false;
         try {
+//            TransformFileObject tfo = new TransformFileObject(getTopFolder(), tileFormat.getZoomLevelCount());
+//            for (int i = 0; i < 3; i++) {
+//                origin[i] = tfo.getOrigin()[i];
+//                scale[i] = tfo.getScale()[i];
+//            }
+//            
             Pattern pattern = Pattern.compile("([os][xyz]): (\\d+(\\.\\d+)?)");
             Scanner scanner = new Scanner(transformFile);
             double scaleScale = 1.0 / Math.pow(2, tileFormat.getZoomLevelCount() - 1);
@@ -340,7 +342,7 @@ extends AbstractTextureLoadAdapter
             // TODO 
             return true;
         } 
-        catch (FileNotFoundException ex) {} 
+        catch (Exception ex) {} 
         
         // Raw scale must be converted to micrometers.
         for (int i = 0; i < scale.length; i++) {
