@@ -74,6 +74,7 @@ public class ConesActor extends BasicGL3Actor
         this.addChild(meshActor);
         this.neuron = neuron;
         setColor(neuron.getColor());
+        setMinPixelRadius(0.8f);
         
         updateGeometry();
         
@@ -199,5 +200,15 @@ public class ConesActor extends BasicGL3Actor
     void setMinPixelRadius(float radius)
     {
         material.setMinPixelRadius(radius);
+    }
+
+    public float[] getColorArray()
+    {
+        return material.getColorArray();
+    }
+
+    public float getMinPixelRadius()
+    {
+        return material.getMinPixelRadius();
     }
 }

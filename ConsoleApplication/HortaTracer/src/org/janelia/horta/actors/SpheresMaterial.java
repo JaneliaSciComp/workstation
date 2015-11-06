@@ -79,6 +79,18 @@ public class SpheresMaterial extends BasicMaterial
         }
     }
 
+    // Simplified display() method, with no load/unload, nor matrix manipulation.
+    // So this can be in fast inner loop of multi-neuron render
+    @Override 
+    public void display(
+                GL3 gl, 
+                MeshActor mesh, 
+                AbstractCamera camera,
+                Matrix4 modelViewMatrix) 
+    {
+        displayMesh(gl, mesh, camera, modelViewMatrix);
+    }
+    
     // Override displayMesh() to display something other than triangles
     @Override
     protected void displayMesh(GL3 gl, MeshActor mesh, AbstractCamera camera, Matrix4 modelViewMatrix) {
@@ -114,6 +126,9 @@ public class SpheresMaterial extends BasicMaterial
             "radiusOffset");
     }
 
+    // NOTE load and unload methods are not used, due to overridden display() method.
+    // This class relies on some higher authority to set up the OpenGL state correctly.
+    // (such as NeuronMPRenderer.AllSwcActor)
     @Override
     public void load(GL3 gl, AbstractCamera camera) {
         if (colorIndex == -1) 
@@ -164,6 +179,16 @@ public class SpheresMaterial extends BasicMaterial
     public void setMinPixelRadius(float minPixelRadius)
     {
         this.minPixelRadius = minPixelRadius;
+    }
+
+    float[] getColorArray()
+    {
+        return color;
+    }
+
+    float getMinPixelRadius()
+    {
+        return minPixelRadius;
     }
     
     public static class SpheresShader extends BasicShaderProgram
