@@ -37,6 +37,7 @@ import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
+import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.ShaderStep;
 import org.janelia.gltools.material.BasicMaterial;
 import org.janelia.gltools.texture.Texture2d;
@@ -53,22 +54,43 @@ public class SpheresMaterial extends BasicMaterial
     private int lightProbeIndex = -1;
     private int radiusOffsetIndex = -1;
     
-    private Texture2d lightProbeTexture;
+    private final Texture2d lightProbeTexture;
     private final float[] color = new float[] {1, 0, 0, 1};
     private float minPixelRadius = 0.0f;
 
-    public SpheresMaterial() {
-        shaderProgram = new SpheresShader();
-        try {
-            lightProbeTexture = new Texture2d();
-            lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
-                    "/org/janelia/gltools/material/lightprobe/"
-                            + "Office1W165Both.ppm"));
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }    
+    public SpheresMaterial(Texture2d lightProbeTexture, ShaderProgram spheresShader) {
+        if (spheresShader == null)
+            shaderProgram = new SpheresShader();
+        else
+            shaderProgram = spheresShader;
+        
+        if (lightProbeTexture == null) {
+            this.lightProbeTexture = new Texture2d();
+            try {
+                this.lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
+                        "/org/janelia/gltools/material/lightprobe/"
+                                + "Office1W165Both.ppm"));
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+        else {
+            this.lightProbeTexture = lightProbeTexture;
+        }
     }
 
+    // Simplified display() method, with no load/unload, nor matrix manipulation.
+    // So this can be in fast inner loop of multi-neuron render
+    @Override 
+    public void display(
+                GL3 gl, 
+                MeshActor mesh, 
+                AbstractCamera camera,
+                Matrix4 modelViewMatrix) 
+    {
+        displayMesh(gl, mesh, camera, modelViewMatrix);
+    }
+    
     // Override displayMesh() to display something other than triangles
     @Override
     protected void displayMesh(GL3 gl, MeshActor mesh, AbstractCamera camera, Matrix4 modelViewMatrix) {
@@ -104,6 +126,9 @@ public class SpheresMaterial extends BasicMaterial
             "radiusOffset");
     }
 
+    // NOTE load and unload methods are not used, due to overridden display() method.
+    // This class relies on some higher authority to set up the OpenGL state correctly.
+    // (such as NeuronMPRenderer.AllSwcActor)
     @Override
     public void load(GL3 gl, AbstractCamera camera) {
         if (colorIndex == -1) 
@@ -155,8 +180,18 @@ public class SpheresMaterial extends BasicMaterial
     {
         this.minPixelRadius = minPixelRadius;
     }
+
+    float[] getColorArray()
+    {
+        return color;
+    }
+
+    float getMinPixelRadius()
+    {
+        return minPixelRadius;
+    }
     
-    private static class SpheresShader extends BasicShaderProgram
+    public static class SpheresShader extends BasicShaderProgram
     {
         public SpheresShader()
         {
