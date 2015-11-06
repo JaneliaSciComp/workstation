@@ -151,7 +151,9 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
             vtm.clear();
             vtm.setTextureCache(textureCache);
         }
-        startMinResPreFetch();
+        if (!VolumeCache.useVolumeCache()) {
+			startMinResPreFetch();
+		}
 	};
 	
 	public TileSet createLatestTiles() {
@@ -255,12 +257,23 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 				if (cacheableTextures.contains(ix))
 					continue; // already noted
 				// log.info("queue load of "+ix);
-				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
+
+				long t1=System.nanoTime();
+				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this)) {
+//					int count=displayResCount.addAndGet(1);
+//					log.info("displayResCount="+count);
 					cacheableTextures.add(ix);
+				}
+				//long t2 = (System.nanoTime() - t1)/1000000;
+				//log.info("rearrangeLoadQueue tileIndex="+ix.toString()+" in "+t2+" ms");
 			}
 		}
-		
-		if (doPrefetch) {
+
+		//long time=(System.nanoTime()-start)/1000000;
+
+		//log.info("rearrangeLoadQueue total time="+time);
+
+		if (doPrefetch && !VolumeCache.useVolumeCache()) {
 			/* TODO - LOD tiles are not working yet...
 			// Get level-of-detail tiles
 			Iterable<TileIndex> lodGen = new LodGenerator(TileServer.this);
@@ -321,8 +334,12 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 						continue;
 					if (cacheableTextures.size() >= maxCacheable)
 						break;
-					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
-						cacheableTextures.add(ix);						
+
+					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this)) {
+//						int count=umbrellaResCount.addAndGet(1);
+//						log.info("umbrellaResCount="+count);
+						cacheableTextures.add(ix);
+					}
 				}
 
 				// Load full resolution slices
@@ -331,8 +348,12 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 						continue;
 					if (cacheableTextures.size() >= maxCacheable)
 						break;
-					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
-						cacheableTextures.add(ix);						
+
+					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this)) {
+//						int count=fullResCount.addAndGet(1);
+//						log.info("fullResCount="+count);
+						cacheableTextures.add(ix);
+					}
 				}
 			}
 			
@@ -462,7 +483,7 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
         clearCache();
 		//DEBUG 
 		//setCachedSizesSmall();
-        setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
+        //setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
         refreshCurrentTileSet();
     }
 	
