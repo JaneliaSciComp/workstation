@@ -524,12 +524,10 @@ public final class SessionMgr {
                     boolean shouldLog = false;
                     if (elapsedMs > thresholdMs) {
                         shouldLog = true;
-                    } else {
-                        if (count % LOG_GRANULARITY == 0) {
-                            shouldLog = true;
-                        }
+                    } else if (count % LOG_GRANULARITY == 0) {
+                        shouldLog = true;
                     }
-                    categoryInstanceCount.put(category, count++);
+                    categoryInstanceCount.put(category, ++count);
 
                     if (shouldLog) {
                         ModelMgr.getModelMgr().addEventToSession(event);
