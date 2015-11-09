@@ -48,6 +48,17 @@ public class WorkspaceUtil
         this.workspace = workspace;
     }
     
+    public NeuronSet getOrCreateTemporaryNeuronSet() {
+        for (NeuronSet neuronSet : workspace.getNeuronSets()) {
+            if (neuronSet.getName().equals("TemporaryNeurons"))
+                return neuronSet;
+        }
+        NeuronSet result = new BasicNeuronSet("Temporary Neurons", new ArrayList<NeuronModel>());
+        workspace.getNeuronSets().add(result);
+        workspace.setChanged();
+        return result;
+    }
+    
     // Convenience function for use after dragging a lone SWC onto the viewer.
     public void addNeuronAndNotify(NeuronModel neuron) {
         boolean bWorkspaceChanged = false;

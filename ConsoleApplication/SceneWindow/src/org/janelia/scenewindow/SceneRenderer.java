@@ -151,6 +151,13 @@ implements GLEventListener
         if (glad.getSurfaceHeight() < 1)
             return;
 
+        // Johan sometimes sees a crash here at glClearColor() Maybe this could sidestep it?
+        // (or perhaps there was a previous error, and this is our first DebugGL3 since...)
+        if (! glad.getContext().isCurrent()) {
+            // TODO: log this undesired condition
+            return;
+        }
+        
         // Background
         // TODO - allow different background types
         gl.glClearColor(

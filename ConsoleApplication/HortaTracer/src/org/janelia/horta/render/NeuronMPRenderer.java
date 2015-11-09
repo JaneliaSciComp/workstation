@@ -41,6 +41,9 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
@@ -279,6 +282,35 @@ extends MultipassRenderer
         
     }
     
+    public void bulkAddNeuronActors(Collection<NeuronModel> neurons) {
+        if (neurons.isEmpty())
+            return;
+        ExecutorService pool = Executors.newFixedThreadPool(10);
+        for (final NeuronModel neuron : neurons) {
+            if (allSwcActor.contains(neuron)) 
+                continue;
+            Runnable actorsJob = new Runnable() {
+                @Override
+                public void run()
+                {
+                    SpheresActor sa = allSwcActor.createSpheresActor(neuron);
+                    ConesActor ca = allSwcActor.createConesActor(neuron);
+                    // this next step is synchronized but fast
+                    allSwcActor.setActors(neuron, sa, ca);
+                    neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
+                }
+            };
+            pool.submit(actorsJob);
+            // actorsJob.run();
+        }
+        pool.shutdown();
+        try {
+            if (! pool.awaitTermination(60, TimeUnit.SECONDS))
+                pool.shutdownNow();
+        } catch (InterruptedException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+    }
     
     private class NeuronListRefresher implements Observer 
     {
@@ -446,17 +478,35 @@ extends MultipassRenderer
 
         private void addNeuronReconstruction(NeuronModel neuron)
         {
-            if (currentNeuronSphereActors.containsKey(neuron))
-                return;
+            if (contains(neuron)) return;
 
-            // SwcActor na = new SwcActor(neuron, lightProbeTexture, spheresShader, conesShader);
-            SpheresActor nsa = new SpheresActor(neuron, lightProbeTexture, spheresShader);
-            nsa.setVisible(true);
-            currentNeuronSphereActors.put(neuron, nsa);
+            SpheresActor nsa = createSpheresActor(neuron);
+            ConesActor nca = createConesActor(neuron);
+            setActors(neuron, nsa, nca);
+        }
 
-            ConesActor nca = new ConesActor(neuron, lightProbeTexture, conesShader);
-            nca.setVisible(true);
-            currentNeuronConeActors.put(neuron, nca);
+        private boolean contains(NeuronModel neuron) {
+            if (currentNeuronSphereActors.containsKey(neuron)) return true;
+            if (currentNeuronConeActors.containsKey(neuron)) return true;
+            return false;
+        }
+        
+        private SpheresActor createSpheresActor(NeuronModel neuron) {
+            SpheresActor result = new SpheresActor(neuron, lightProbeTexture, spheresShader);
+            result.setVisible(true);
+            return result;
+        }
+
+        private ConesActor createConesActor(NeuronModel neuron) {
+            ConesActor result = new ConesActor(neuron, lightProbeTexture, spheresShader);
+            result.setVisible(true);
+            return result;
+        }
+        
+        private synchronized void setActors(NeuronModel neuron, SpheresActor spheres, ConesActor cones)
+        {
+            currentNeuronSphereActors.put(neuron, spheres);
+            currentNeuronConeActors.put(neuron, cones);
         }
 
         private void removeNeuronReconstruction(NeuronModel neuron)
