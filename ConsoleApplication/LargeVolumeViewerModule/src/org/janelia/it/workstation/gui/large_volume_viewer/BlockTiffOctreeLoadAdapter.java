@@ -16,9 +16,13 @@ import com.sun.media.jai.codec.FileSeekableStream;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.SeekableStream;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic;
 
 /*
  * Loader for large volume viewer format negotiated with Nathan Clack
@@ -34,6 +38,7 @@ public class BlockTiffOctreeLoadAdapter
 extends AbstractTextureLoadAdapter 
 {
 	private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
+    private static final CategoryString LIX_CATEGORY_STRING = new CategoryString("loadTileIndexToRam:elapsed");
 
 	// Metadata: file location required for local system as mount point.
 	private File topFolder;
@@ -84,6 +89,7 @@ extends AbstractTextureLoadAdapter
 	{
 		// Create a local load timer to measure timings just in this thread
 		LoadTimer localLoadTimer = new LoadTimer();
+        long startTime = System.nanoTime();
 		localLoadTimer.mark("starting slice load");
         final File octreeFilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, zOriginNegativeShift);
         if (octreeFilePath == null) {
@@ -112,6 +118,21 @@ extends AbstractTextureLoadAdapter
 		// log.info(tileIndex + "" + folder + " : " + relativeSlice);
 		TextureData2dGL result = loadSlice(relativeSlice, decoders, tileFormat.getChannelCount());
 		localLoadTimer.mark("finished slice load");
+        
+        final double elapsedMs = (double) (System.nanoTime() - startTime) / 1000000.0;
+        if (result != null) {
+            final ActionString actionString = new ActionString(
+                    folder + ":" + relativeSlice + ":" + tileIndex.toString() + ":elapsed_ms=" + elapsedMs
+            );
+            SessionMgr.getSessionMgr().logToolEvent(
+                    LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID,
+                    LIX_CATEGORY_STRING,
+                    actionString,
+                    elapsedMs,
+                    999.0
+            );
+        }
+
 
 		loadTimer.putAll(localLoadTimer);
 		return result;

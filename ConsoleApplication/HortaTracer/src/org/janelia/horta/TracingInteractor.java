@@ -73,21 +73,21 @@ public class TracingInteractor extends MouseAdapter
     
     @Override
     public void keyTyped(KeyEvent keyEvent) {
-        System.out.println("KeyTyped");
-        System.out.println(keyEvent.getKeyCode()+", "+KeyEvent.VK_ESCAPE);
+        // System.out.println("KeyTyped");
+        // System.out.println(keyEvent.getKeyCode()+", "+KeyEvent.VK_ESCAPE);
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        System.out.println("KeyPressed");
+        // System.out.println("KeyPressed");
     }
 
     @Override
     public void keyReleased(KeyEvent keyEvent) {
-        System.out.println("KeyReleased");
+        // System.out.println("KeyReleased");
         if(keyEvent.getKeyCode() == KeyEvent.VK_ESCAPE)
         {
-            System.out.println("ESCAPE");
+            // System.out.println("ESCAPE");
             setTracingModeOff();
         }
     }
