@@ -63,8 +63,16 @@ implements GLActor
 	        TextureCache tc = viewTileManager.getTextureCache();
 	        if (tc != null) {
 	            int[] txIds = tc.popObsoleteTextureIds();
-	            if (txIds.length > 0)
-	                gl.glDeleteTextures(txIds.length, txIds, 0);
+				int historySize=tc.getHistoryCache().size();
+				int futureSize=tc.getFutureCache().size();
+				//log.info("historySize="+historySize+" futureSize="+futureSize+" txIds="+txIds.length);
+	            if (txIds.length > 0) {
+					long startTime=System.nanoTime();
+					gl.glDeleteTextures(txIds.length, txIds, 0);
+					long endTime=System.nanoTime();
+					long nTime=endTime-startTime;
+					log.info("glDeleteTextures for "+txIds.length+" took "+nTime+" nano seconds");
+				}
 	        }
 	    }
 	    
@@ -160,7 +168,6 @@ implements GLActor
 
 	@Override
 	public void dispose(GLAutoDrawable glDrawable) {
-		// System.out.println("dispose RavelerTileServer");
 		TextureCache textureCache = viewTileManager.getTextureCache();
         GL2 gl = glDrawable.getGL().getGL2();
 		for (TileTexture tileTexture : textureCache.values()) {
