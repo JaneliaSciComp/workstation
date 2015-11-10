@@ -647,6 +647,155 @@ called from a  SimpleWorker thread.
         targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
 
 
+        // reparent source annotation to dest annotation:
+        System.out.println("reparenting (new): " + stopwatch);
+        modelMgr.reparentGeometricAnnotation(sourceAnnotation, targetAnnotationID, targetNeuron);
+
+
+        /*
+        // Reparent all source annotation's children to dest ann
+        System.out.println("reparenting: " + stopwatch);
+        for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
+            modelMgr.reparentGeometricAnnotation(child, targetAnnotationID, targetNeuron);
+        }
+
+        // if the source ann has a note, move it to or append it to the target ann:
+        TmStructuredTextAnnotation sourceNote = sourceNeuron.getStructuredTextAnnotationMap().get(sourceAnnotationID);
+        if (sourceNote != null) {
+            System.out.println("moving note: " + stopwatch);
+            TmStructuredTextAnnotation targetNote = targetNeuron.getStructuredTextAnnotationMap().get(targetAnnotationID);
+            String sourceNoteText = new String("");
+            JsonNode rootNode = sourceNote.getData();
+            JsonNode noteNode = rootNode.path("note");
+            if (!noteNode.isMissingNode()) {
+                sourceNoteText = noteNode.asText();
+            }
+            if (sourceNoteText.length() > 0) {
+                if (targetNote == null) {
+                    // add old note to target
+                    setNote(getGeoAnnotationFromID(targetAnnotationID), sourceNoteText);
+                } else {
+                    // merge notes
+                    String targetNoteText = new String("");
+                    rootNode = targetNote.getData();
+                    noteNode = rootNode.path("note");
+                    if (!noteNode.isMissingNode()) {
+                        targetNoteText = noteNode.asText();
+                    }
+                    if (targetNoteText.length() > 0) {
+                        setNote(getGeoAnnotationFromID(targetAnnotationID),
+                            String.format("%s %s", targetNoteText, sourceNoteText));
+                    }
+                }
+            }
+        }
+
+        // finally, delete source ann
+        if (sourceNote != null) {
+            modelMgr.deleteStructuredTextAnnotation(sourceNote.getId());
+        }
+
+        // we need a copy of this annotation from before it's deleted for a later update:
+        final List<TmGeoAnnotation> deleteList = new ArrayList<>();
+        deleteList.add(sourceAnnotation);
+
+        System.out.println("deleting moved annotation: " + stopwatch);
+        modelMgr.deleteGeometricAnnotation(sourceAnnotationID);
+        */
+
+        // update objects *again*, last time:
+        System.out.println("update 3: " + stopwatch);
+        updateCurrentWorkspace();
+
+
+        final TmWorkspace workspace = getCurrentWorkspace();
+        final TmNeuron updateTargetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
+        setCurrentNeuron(updateTargetNeuron);
+
+        // final TmGeoAnnotation targetAnnotation = getGeoAnnotationFromID(targetAnnotationID);
+
+        // trace new path:
+        if (automatedTracingEnabled()) {
+            viewStateListener.pathTraceRequested(sourceAnnotationID);
+        }
+
+        /*
+        for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
+            if (automatedTracingEnabled()) {
+                viewStateListener.pathTraceRequested(child.getId());
+            }
+        }
+        */
+
+        // see note in addChildAnnotations re: predef notes
+        // for merge, two linked annotations are affected; fortunately, the
+        //  neuron has just been refreshed
+        System.out.println("strip predef notes: " + stopwatch);
+        stripPredefNotes(updateTargetNeuron, targetAnnotationID);
+        stripPredefNotes(updateTargetNeuron, sourceAnnotationID);
+
+
+        final TmGeoAnnotation updateSourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fireNotesUpdated(workspace);
+                fireNeuronSelected(updateTargetNeuron);
+                fireWorkspaceLoaded(workspace);
+                fireAnnotationReparented(updateSourceAnnotation);
+                /*
+                for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
+                    fireAnnotationReparented(child);
+                }
+                */
+                // no longer deleted
+                // fireAnnotationsDeleted(deleteList);
+            }
+        });
+
+        System.out.println("leaving mergeNeurite(): " + stopwatch);
+        stopwatch.stop();
+
+    }
+
+    public void oldMergeNeurite(final Long sourceAnnotationID, final Long targetAnnotationID) throws Exception {
+
+         Stopwatch stopwatch = new Stopwatch();
+         stopwatch.start();
+         System.out.println("entering mergeNeurite(): " + stopwatch);
+
+        TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
+        TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
+
+        // reroot source neurite to source ann
+        System.out.println("rerooting: " + stopwatch);
+        modelMgr.rerootNeurite(sourceNeuron, sourceAnnotation);
+
+        // reload the things we just changed:
+        System.out.println("update 1: " + stopwatch);
+        updateCurrentWorkspace();
+        sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
+        sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
+        // Remove traced paths.
+        for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
+            removeAnchoredPath(child, sourceAnnotation);
+        }
+
+        // if source neurite not in same neuron as dest neurite: move it; don't
+        //  use annModel.moveNeurite() because we don't want those updates & signals yet
+        TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
+        if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
+            System.out.println("moving to same neurite: " + stopwatch);
+            modelMgr.moveNeurite(sourceAnnotation, targetNeuron);
+        }
+
+        // Refresh domain objects that we've changed and will use again.
+        System.out.println("update 2: " + stopwatch);
+        updateCurrentWorkspace();
+        sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
+        targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
+
+
         // Reparent all source annotation's children to dest ann
         System.out.println("reparenting: " + stopwatch);
         for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
