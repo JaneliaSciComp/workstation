@@ -611,9 +611,9 @@ called from a  SimpleWorker thread.
      */
     public void mergeNeurite(final Long sourceAnnotationID, final Long targetAnnotationID) throws Exception {
 
-         Stopwatch stopwatch = new Stopwatch();
-         stopwatch.start();
-         System.out.println("entering mergeNeurite(): " + stopwatch);
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.start();
+        System.out.println("entering mergeNeurite(): " + stopwatch);
 
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
@@ -627,10 +627,6 @@ called from a  SimpleWorker thread.
         updateCurrentWorkspace();
         sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
-        // Remove traced paths.
-        for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
-            removeAnchoredPath(child, sourceAnnotation);
-        }
 
         // if source neurite not in same neuron as dest neurite: move it; don't
         //  use annModel.moveNeurite() because we don't want those updates & signals yet
@@ -652,57 +648,6 @@ called from a  SimpleWorker thread.
         modelMgr.reparentGeometricAnnotation(sourceAnnotation, targetAnnotationID, targetNeuron);
 
 
-        /*
-        // Reparent all source annotation's children to dest ann
-        System.out.println("reparenting: " + stopwatch);
-        for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
-            modelMgr.reparentGeometricAnnotation(child, targetAnnotationID, targetNeuron);
-        }
-
-        // if the source ann has a note, move it to or append it to the target ann:
-        TmStructuredTextAnnotation sourceNote = sourceNeuron.getStructuredTextAnnotationMap().get(sourceAnnotationID);
-        if (sourceNote != null) {
-            System.out.println("moving note: " + stopwatch);
-            TmStructuredTextAnnotation targetNote = targetNeuron.getStructuredTextAnnotationMap().get(targetAnnotationID);
-            String sourceNoteText = new String("");
-            JsonNode rootNode = sourceNote.getData();
-            JsonNode noteNode = rootNode.path("note");
-            if (!noteNode.isMissingNode()) {
-                sourceNoteText = noteNode.asText();
-            }
-            if (sourceNoteText.length() > 0) {
-                if (targetNote == null) {
-                    // add old note to target
-                    setNote(getGeoAnnotationFromID(targetAnnotationID), sourceNoteText);
-                } else {
-                    // merge notes
-                    String targetNoteText = new String("");
-                    rootNode = targetNote.getData();
-                    noteNode = rootNode.path("note");
-                    if (!noteNode.isMissingNode()) {
-                        targetNoteText = noteNode.asText();
-                    }
-                    if (targetNoteText.length() > 0) {
-                        setNote(getGeoAnnotationFromID(targetAnnotationID),
-                            String.format("%s %s", targetNoteText, sourceNoteText));
-                    }
-                }
-            }
-        }
-
-        // finally, delete source ann
-        if (sourceNote != null) {
-            modelMgr.deleteStructuredTextAnnotation(sourceNote.getId());
-        }
-
-        // we need a copy of this annotation from before it's deleted for a later update:
-        final List<TmGeoAnnotation> deleteList = new ArrayList<>();
-        deleteList.add(sourceAnnotation);
-
-        System.out.println("deleting moved annotation: " + stopwatch);
-        modelMgr.deleteGeometricAnnotation(sourceAnnotationID);
-        */
-
         // update objects *again*, last time:
         System.out.println("update 3: " + stopwatch);
         updateCurrentWorkspace();
@@ -718,14 +663,6 @@ called from a  SimpleWorker thread.
         if (automatedTracingEnabled()) {
             viewStateListener.pathTraceRequested(sourceAnnotationID);
         }
-
-        /*
-        for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
-            if (automatedTracingEnabled()) {
-                viewStateListener.pathTraceRequested(child.getId());
-            }
-        }
-        */
 
         // see note in addChildAnnotations re: predef notes
         // for merge, two linked annotations are affected; fortunately, the
@@ -743,13 +680,6 @@ called from a  SimpleWorker thread.
                 fireNeuronSelected(updateTargetNeuron);
                 fireWorkspaceLoaded(workspace);
                 fireAnnotationReparented(updateSourceAnnotation);
-                /*
-                for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
-                    fireAnnotationReparented(child);
-                }
-                */
-                // no longer deleted
-                // fireAnnotationsDeleted(deleteList);
             }
         });
 
