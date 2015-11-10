@@ -100,86 +100,49 @@ implements VolumeImage3d
     public void setRemoteBasePath(String basePath) {
         this.remoteBasePath = basePath;
     }
-    
+
     public String getRemoteBasePath() {
         return remoteBasePath;
     }
-    
+
+
+	private AbstractTextureLoadAdapter createLoadAdapter(URL folderUrl) {
+		// Sniff which back end we need
+		AbstractTextureLoadAdapter testLoadAdapter = null;
+		URL testUrl;
+
+		try {
+			testUrl = new URL(folderUrl, "default.0.tif");
+			testUrl.openStream();
+			File fileFolder = new File(folderUrl.toURI());
+			testLoadAdapter=new TileStackOctreeLoadAdapter(remoteBasePath, fileFolder);
+		} catch (IOException | URISyntaxException | DataSourceInitializeException ex) {
+			ex.printStackTrace();
+			ModelMgr.getModelMgr().handleException(ex);
+		}
+
+		return testLoadAdapter;
+	}
+
 	@Override
 	public boolean loadURL(URL folderUrl) {
 		// Sanity check before overwriting current view
 		if (folderUrl == null)
 			return false;
 		
-		// Sniff which back end we need
-		AbstractTextureLoadAdapter testLoadAdapter = null;
-		URL testUrl;
+		loadAdapter = createLoadAdapter(folderUrl);
 
-		// Is this a PAM octree folder?
-		if (testLoadAdapter == null) {
-			try {
-				testUrl = new URL(folderUrl, "slice_00000.pam");
-				InputStream is = testUrl.openStream();
-				is.close();
-				PamOctreeLoadAdapter pola = new PamOctreeLoadAdapter();
-				pola.setTopFolder(folderUrl);
-				testLoadAdapter = pola;
-			} 
-			catch (IOException e2) {} // not a PAM folder
-			catch (AbstractTextureLoadAdapter.MissingTileException e) {}
-			catch (AbstractTextureLoadAdapter.TileLoadError e) {}
-		}
-		
-		// Is this a MP4 octree folder?
-		if (testLoadAdapter == null) {
-			try {
-				// diagnostic mp4 file
-				testUrl = new URL(folderUrl, "default.0.mp4");
-				testUrl.openStream();
-				Mp4OctreeLoadAdapter btola = new Mp4OctreeLoadAdapter();
-				btola.setTopFolder(folderUrl);
-				testLoadAdapter = btola;
-			} catch (MalformedURLException e1) {} 
-			catch (IOException e) {} 
-		}
-
-		// Is this a Block tiff octree folder?
-		if (testLoadAdapter == null) {
-			try {
-				// Look for diagnostic block tiff file
-				testUrl = new URL(folderUrl, "default.0.tif");
-				testUrl.openStream();
-				File fileFolder = new File(folderUrl.toURI());
-				BlockTiffOctreeLoadAdapter btola = new BlockTiffOctreeLoadAdapter();
-                //ORDER DEPENDENCY: set this before top folder.
-                if (remoteBasePath != null) {
-                    btola.setRemoteBasePath(remoteBasePath);
-                }
-				btola.setTopFolder(fileFolder);
-				testLoadAdapter = btola;
-            } catch (IOException | URISyntaxException | DataSourceInitializeException ex) {
-                ex.printStackTrace();
-                ModelMgr.getModelMgr().handleException(ex);
-			}
-		}
-
-		// Is this a Raveler format?
-		if (testLoadAdapter == null) {
-			try {
-				testLoadAdapter = new RavelerLoadAdapter(folderUrl);
-			} catch (IOException e) {}
-		}
-
-		// Did we identify a folder format?
-		if (testLoadAdapter == null)
-			return false; // NO
-		
-		loadAdapter = testLoadAdapter;
+		if (loadAdapter==null)
+			return false;
 		
 		// Update bounding box
 		// Compute bounding box
 		TileFormat tf = getLoadAdapter().getTileFormat();
 		BoundingBox3d newBox = tf.calcBoundingBox();
+
+		//log.info("Bounding box min Vec3="+newBox.getMin().toString());
+		//log.info("Bounding box max Vec3="+newBox.getMax().toString());
+
 		boundingBox3d.setMin(newBox.getMin());
 		boundingBox3d.setMax(newBox.getMax());
 		fireVolumeLoaded(folderUrl);

@@ -356,4 +356,67 @@ implements TextureDataI
 		return result;
 	}
 
+	// This method takes 4ms, vs 40ms for the above more general version
+	public void load8bitStackSliceByteBufferTo16bitTexture(int xSize, int ySize, int zSize, int cSize, int zSlice, int ushortOffset, int ushortRange, ByteBuffer sourceBuffer) {
+		try {
+			this.width = this.usedWidth = xSize;
+			// pad image to a multiple of 8
+			textureCoordX = 1.0f;
+			if ((this.width % 8) != 0) {
+				int dw = 8 - (this.width % 8);
+				this.width += dw;
+				textureCoordX = this.usedWidth / (float) this.width;
+			}
+			this.height = ySize;
+			this.srgb = false;
+			this.channelCount = cSize;
+			this.bitDepth = 16;
+			updateTexImageParams();
+			int pixelByteCount = channelCount * bitDepth / 8;
+			int rowByteCount = pixelByteCount * this.width;
+			int imageByteCount = this.height * rowByteCount;
+
+			ByteBuffer byteBuffer=ByteBuffer.allocateDirect(imageByteCount);
+			byteBuffer.order(ByteOrder.nativeOrder());
+			ShortBuffer shortBuffer = byteBuffer.asShortBuffer();
+			//short[] targetArray = shortBuffer.array();
+
+			int padData[] = new int[channelCount]; // color for edge padding
+			byte[] sourceArr = sourceBuffer.array();
+			int channelOffset = xSize * ySize * zSize;
+			int zOffset = xSize * ySize * zSlice;
+			int[] czOffsetArr = new int[cSize];
+			for (int c = 0; c < cSize; c++) {
+				czOffsetArr[c] = channelOffset * c + zOffset;
+			}
+			//log.info("Check1");
+			for (int y = 0; y < height; ++y) {
+				int ySourceOffset = y * usedWidth;
+				int yTargetOffset = y * width;
+				int lastX = usedWidth - 1;
+				for (int c = 0; c < cSize; c++) {
+					padData[c] = (short) (((sourceArr[czOffsetArr[c] + ySourceOffset + lastX] + 128) * ushortRange) / 256 + ushortOffset);
+				}
+				for (int x = 0; x < width; ++x) {
+					int xSourceOffset = ySourceOffset + x;
+					int xTargetOffset = yTargetOffset + x;
+					if (x < usedWidth) { // used portion of scan line
+						for (int c = 0; c < cSize; c++) {
+							/*targetArray[xTargetOffset + c] =*/ shortBuffer.put( (short) (((sourceArr[czOffsetArr[c] + xSourceOffset] + 128) * ushortRange) / 256 + ushortOffset) );
+						}
+					} else {
+						for (int c = 0; c < cSize; c++) {
+							/*targetArray[xTargetOffset + c] =*/ shortBuffer.put( (short) padData[c] );
+						}
+					}
+				}
+			}
+			//log.info("Check2");
+			pixels = byteBuffer;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return;
+	}
+
 }
