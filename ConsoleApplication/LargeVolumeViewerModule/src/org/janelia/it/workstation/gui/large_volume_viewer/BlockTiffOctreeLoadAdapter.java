@@ -5,10 +5,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Date;
 
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
-import javax.media.jai.RenderedImageAdapter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,7 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
-import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID;
 
 /*
  * Loader for large volume viewer format negotiated with Nathan Clack
@@ -40,11 +40,15 @@ extends AbstractTextureLoadAdapter
 {
 	private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
     private static final CategoryString LIX_CATEGORY_STRING = new CategoryString("loadTileIndexToRam:elapsed");
+    private static final CategoryString LVV_SESSION_CATEGORY_STRING = new CategoryString("openFolder");
 
 	// Metadata: file location required for local system as mount point.
 	private File topFolder;
     // Metadata: file location required for remote system.
     private String remoteBasePath;
+    // Metadata: different folders could be opened during a user's session.
+    private Long folderOpenTimestamp = null;
+    
 	public LoadTimer loadTimer = new LoadTimer();
     
 	public BlockTiffOctreeLoadAdapter()
@@ -70,10 +74,17 @@ extends AbstractTextureLoadAdapter
 	public void setTopFolder(File topFolder) 
 	throws DataSourceInitializeException
 	{
-		this.topFolder = topFolder;
+		this.topFolder = topFolder;        
         OctreeMetadataSniffer sniffer = new OctreeMetadataSniffer(topFolder, tileFormat);
         sniffer.setRemoteBasePath(remoteBasePath);
+        folderOpenTimestamp = new Date().getTime();
 		sniffer.sniffMetadata(topFolder);
+        
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID, 
+                LVV_SESSION_CATEGORY_STRING, 
+                new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
+        );
 		// Don't launch pre-fetch yet.
 		// That must occur AFTER volume initialized signal is sent.
 	}
@@ -123,10 +134,10 @@ extends AbstractTextureLoadAdapter
         final double elapsedMs = (double) (System.nanoTime() - startTime) / 1000000.0;
         if (result != null) {
             final ActionString actionString = new ActionString(
-                    folder + ":" + relativeSlice + ":" + tileIndex.toString() + ":elapsed_ms=" + elapsedMs
+                     folderOpenTimestamp + ":" + relativeSlice + ":" + tileIndex.toString() + ":elapsed_ms=" + elapsedMs
             );
             SessionMgr.getSessionMgr().logToolEvent(
-                    LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID,
+                    LVV_LOGSTAMP_ID,
                     LIX_CATEGORY_STRING,
                     actionString,
                     elapsedMs,

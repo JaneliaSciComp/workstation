@@ -131,7 +131,7 @@ public class EJBComputeFacade implements ComputeFacade {
     
     @Override
     public void addEventToSession(UserToolEvent event) {
-        EJBFactory.getRemoteComputeBean().addEventToSession(event);
+        EJBFactory.getRemoteComputeBean().addEventToSessionAsync(event);
     }
     
     @Override
