@@ -1195,15 +1195,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 if (ann.isEnd()) {
                     break;
                 }
-                if (ann.isBranch()) {
-                    ann = neuron.getChildrenOfOrdered(ann).get(0);
+                ann = neuron.getChildrenOfOrdered(ann).get(0);
+                if (direction == TmNeuron.AnnotationNavigationDirection.ENDWARD_STEP) {
+                    break;
                 }
                 while (!ann.isEnd() && !ann.isBranch()) {
                     ann = neuron.getChildrenOf(ann).get(0);
-                    // bit inefficient, but oh, well
-                    if (direction == TmNeuron.AnnotationNavigationDirection.ENDWARD_STEP) {
-                        break;
-                    }
                 }
                 break;
             case NEXT_PARALLEL:
