@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.awt.Color;
 
+import com.google.common.base.Stopwatch;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -610,13 +611,19 @@ called from a  SimpleWorker thread.
      */
     public void mergeNeurite(final Long sourceAnnotationID, final Long targetAnnotationID) throws Exception {
 
+         Stopwatch stopwatch = new Stopwatch();
+         stopwatch.start();
+         System.out.println("entering mergeNeurite(): " + stopwatch);
+
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
 
         // reroot source neurite to source ann
+        System.out.println("rerooting: " + stopwatch);
         modelMgr.rerootNeurite(sourceNeuron, sourceAnnotation);
 
         // reload the things we just changed:
+        System.out.println("update 1: " + stopwatch);
         updateCurrentWorkspace();
         sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
@@ -629,16 +636,19 @@ called from a  SimpleWorker thread.
         //  use annModel.moveNeurite() because we don't want those updates & signals yet
         TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
+            System.out.println("moving to same neurite: " + stopwatch);
             modelMgr.moveNeurite(sourceAnnotation, targetNeuron);
         }
 
         // Refresh domain objects that we've changed and will use again.
+        System.out.println("update 2: " + stopwatch);
         updateCurrentWorkspace();
         sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
 
 
         // Reparent all source annotation's children to dest ann
+        System.out.println("reparenting: " + stopwatch);
         for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
             modelMgr.reparentGeometricAnnotation(child, targetAnnotationID, targetNeuron);
         }
@@ -646,6 +656,7 @@ called from a  SimpleWorker thread.
         // if the source ann has a note, move it to or append it to the target ann:
         TmStructuredTextAnnotation sourceNote = sourceNeuron.getStructuredTextAnnotationMap().get(sourceAnnotationID);
         if (sourceNote != null) {
+            System.out.println("moving note: " + stopwatch);
             TmStructuredTextAnnotation targetNote = targetNeuron.getStructuredTextAnnotationMap().get(targetAnnotationID);
             String sourceNoteText = new String("");
             JsonNode rootNode = sourceNote.getData();
@@ -681,9 +692,11 @@ called from a  SimpleWorker thread.
         final List<TmGeoAnnotation> deleteList = new ArrayList<>();
         deleteList.add(sourceAnnotation);
 
+        System.out.println("deleting moved annotation: " + stopwatch);
         modelMgr.deleteGeometricAnnotation(sourceAnnotationID);
 
         // update objects *again*, last time:
+        System.out.println("update 3: " + stopwatch);
         updateCurrentWorkspace();
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron updateTargetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
@@ -699,6 +712,7 @@ called from a  SimpleWorker thread.
         // see note in addChildAnnotations re: predef notes
         // for merge, the target annotation is the one affected; fortunately, the
         //  neuron has just been refreshed
+        System.out.println("strip predef notes: " + stopwatch);
         stripPredefNotes(updateTargetNeuron, targetAnnotationID);
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -713,6 +727,9 @@ called from a  SimpleWorker thread.
                 fireAnnotationsDeleted(deleteList);
             }
         });
+
+        System.out.println("leaving mergeNeurite(): " + stopwatch);
+        stopwatch.stop();
 
     }
 
