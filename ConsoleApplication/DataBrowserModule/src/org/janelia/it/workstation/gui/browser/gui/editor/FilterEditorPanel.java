@@ -363,7 +363,12 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     
     @Override
     public void loadDomainObject(Filter filter) {
+        
+        log.debug("loadDomainObject(Filter:{})",filter.getName());
+        selectionModel.setParentObject(filter);
+        
         this.filter = filter;
+        
         try {
             setSearchClass(Class.forName(filter.getSearchType()));
         }

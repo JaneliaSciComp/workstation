@@ -52,8 +52,8 @@
   
   <!-- NG classes -->
   
-  <logger name="org.janelia.it.jacs.model.domain.support.DomainDAO" level="INFO"/>
-  <logger name="org.janelia.it.workstation.gui.browser.api.DomainModel" level="INFO"/>
+  <logger name="org.janelia.it.jacs.model.domain.support.DomainDAO" level="TRACE"/>
+  <logger name="org.janelia.it.workstation.gui.browser.api.DomainModel" level="TRACE"/>
   
   
   <!--

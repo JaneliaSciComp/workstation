@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
-import static org.janelia.it.jacs.model.domain.enums.FileType.Stack;
+import static org.janelia.it.jacs.model.domain.enums.FileType.LosslessStack;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -88,7 +88,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
 
     protected JMenuItem getOpenInFinderItem() {
         if (!OpenInFinderAction.isSupported()) return null;
-        final String path = DomainUtils.getFilepath(result, Stack);
+        final String path = DomainUtils.getFilepath(result, LosslessStack);
         if (path==null) return null;
         
         JMenuItem menuItem = getNamedActionItem(new OpenInFinderAction(path) {
@@ -105,7 +105,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
 
     protected JMenuItem getOpenWithAppItem() {
         if (!OpenWithDefaultAppAction.isSupported()) return null;
-        final String path = DomainUtils.getFilepath(result, Stack);
+        final String path = DomainUtils.getFilepath(result, LosslessStack);
         if (path==null) return null;
         OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(path) {
             @Override
@@ -189,7 +189,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
     }
         
     protected JMenuItem getVaa3dTriViewItem() {
-        final String path = DomainUtils.getFilepath(result, Stack);
+        final String path = DomainUtils.getFilepath(result, LosslessStack);
         if (path==null) return null;
         
         JMenuItem vaa3dMenuItem = new JMenuItem("  View In Vaa3D Tri-View");
@@ -208,7 +208,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getVaa3d3dViewItem() {
-        final String path = DomainUtils.getFilepath(result, Stack);
+        final String path = DomainUtils.getFilepath(result, LosslessStack);
         if (path==null) return null;
         
         JMenuItem vaa3dMenuItem = new JMenuItem("  View In Vaa3D 3D View");
@@ -227,7 +227,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getFijiViewerItem() {
-        final String path = DomainUtils.getFilepath(result, Stack);
+        final String path = DomainUtils.getFilepath(result, LosslessStack);
         if (path==null) return null;
         
         JMenuItem fijiMenuItem = new JMenuItem("  View In Fiji");
@@ -247,7 +247,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
     
     protected JMenuItem getDownloadMenu() {
 
-        final String path = DomainUtils.getFilepath(result, Stack);
+        final String path = DomainUtils.getFilepath(result, LosslessStack);
         if (path==null) return null;
 
         String[] DOWNLOAD_EXTENSIONS = {"tif", "v3draw", "v3dpbd", "mp4"};

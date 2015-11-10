@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
@@ -26,7 +27,20 @@ public interface DomainFacade {
      * @return list of Subject objects
      */
     public List<Subject> getSubjects();
-        
+
+    /**
+     * Returns the current subject's preferences.
+     * @param subjectId
+     * @return
+     */
+    public List<Preference> getPreferences();
+
+    /**
+     * Saves the given preferences.
+     * @param preference
+     */
+    public Preference savePreference(Preference preference) throws Exception;
+    
     /**
      * Returns the domain object of a given class with the given GUID. 
      * @param domainClass class of domain object
@@ -249,5 +263,6 @@ public interface DomainFacade {
      * @throws Exception something went wrong
      */
     public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception;
+
     
 }

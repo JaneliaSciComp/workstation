@@ -374,7 +374,7 @@ public class DomainModel {
             }
         }
         
-        log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedRefs.size());
+        log.debug("getDomainObjectsByReference: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedRefs.size());
         return domainObjects;
     }
     
@@ -396,6 +396,14 @@ public class DomainModel {
         List<DomainObject> objects = getDomainObjects(type, ids);
         if (objects.isEmpty()) return null;
         return objects.get(0);
+    }
+
+    public <T extends DomainObject> List<T> getDomainObjects(Class<T> clazz, List<Long> ids) {
+        List<T> objects = new ArrayList<>();
+        for(DomainObject domainObject : getDomainObjects(DomainUtils.getCollectionName(clazz), ids)) {
+            objects.add((T)domainObject);
+        }
+        return objects;
     }
     
     public List<DomainObject> getDomainObjects(String type, List<Long> ids) {

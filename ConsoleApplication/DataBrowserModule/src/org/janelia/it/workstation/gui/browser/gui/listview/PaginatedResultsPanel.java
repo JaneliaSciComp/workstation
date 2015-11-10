@@ -6,7 +6,6 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -24,6 +23,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
+import org.janelia.it.workstation.gui.browser.events.model.PreferenceChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
@@ -236,6 +236,11 @@ public abstract class PaginatedResultsPanel extends JPanel {
         endPageButton.setEnabled(currPage != numPages - 1);
     }
 
+    @Subscribe
+    public void preferenceChanged(PreferenceChangeEvent event) {
+        resultsView.preferenceChanged(event.getPreference());
+    }
+    
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
         if (event.getSource()!=resultsView) return;

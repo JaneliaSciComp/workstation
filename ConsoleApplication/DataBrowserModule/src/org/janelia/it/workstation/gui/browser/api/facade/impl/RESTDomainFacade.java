@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
@@ -417,7 +418,19 @@ public class RESTDomainFacade implements DomainFacade {
         int responseStatus = response.getStatus();
         return subjects;
     }
+    
+    @Override
+    public List<Preference> getPreferences() {
+        // TODO: implement
+        throw new UnsupportedOperationException();
+    }
 
+    @Override
+    public Preference savePreference(Preference preference) throws Exception {
+        // TODO: implement
+        throw new UnsupportedOperationException();
+    }
+    
     public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
         return null;
     }

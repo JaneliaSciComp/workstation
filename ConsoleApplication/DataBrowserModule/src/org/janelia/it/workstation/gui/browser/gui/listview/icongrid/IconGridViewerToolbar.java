@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.JButton;
 import javax.swing.JSlider;
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
@@ -13,21 +12,25 @@ import javax.swing.event.ChangeListener;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 
+import de.javasoft.swing.JYPopupMenu;
+import de.javasoft.swing.SimpleDropDownButton;
+
 /**
  * Toolbar for icon panels.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class IconDemoToolbar extends ViewerToolbar {
+public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
     protected JToggleButton showTitlesButton;
     protected JToggleButton showTagsButton;
-    protected JButton userButton;
+    protected SimpleDropDownButton defaultResultButton;
+    protected SimpleDropDownButton defaultTypeButton;
     protected JSlider imageSizeSlider;
 
     protected int currImageSize;
 
-    public IconDemoToolbar() {
+    public IconGridViewerToolbar() {
         super();
 
         showTitlesButton = new JToggleButton();
@@ -60,18 +63,26 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
 
         toolbar.addSeparator();
 
-//        userButton = new JButton("Annotations from...");
-//        userButton.setIcon(Icons.getIcon("group.png"));
-//        userButton.setFocusable(false);
-//        userButton.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                showPopupUserMenu();
-//            }
-//        });
-//        userButton.addMouseListener(new MouseForwarder(toolbar, "UserButton->JToolBar"));
-//        toolbar.add(userButton);
+        defaultResultButton = new SimpleDropDownButton();
+        JYPopupMenu popupMenu = new JYPopupMenu();
+        popupMenu.setVisibleElements(10);
+        defaultResultButton.setPopupMenu(popupMenu);
+        defaultResultButton.setIcon(Icons.getIcon("folder_open_page.png"));
+        defaultResultButton.setFocusable(false);
+        defaultResultButton.setToolTipText("Select the result to display");
+        defaultResultButton.addMouseListener(new MouseForwarder(toolbar, "DefaultResultButton->JToolBar"));
+        toolbar.add(defaultResultButton);
 
+        defaultTypeButton = new SimpleDropDownButton();
+        JYPopupMenu popupMenu2 = new JYPopupMenu();
+        popupMenu2.setVisibleElements(10);
+        defaultTypeButton.setPopupMenu(popupMenu2);
+        defaultTypeButton.setIcon(Icons.getIcon("page.png"));
+        defaultTypeButton.setFocusable(false);
+        defaultTypeButton.setToolTipText("Select the result type to display");
+        defaultTypeButton.addMouseListener(new MouseForwarder(toolbar, "DefaultTypeButton->JToolBar"));
+        toolbar.add(defaultTypeButton);
+                
         toolbar.addSeparator();
 
         imageSizeSlider = new JSlider(ImagesPanel.MIN_IMAGE_WIDTH, ImagesPanel.MAX_IMAGE_WIDTH,
@@ -118,10 +129,14 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
         return showTagsButton;
     }
 
-    public JButton getUserButton() {
-        return userButton;
+    public SimpleDropDownButton getDefaultResultButton() {
+        return defaultResultButton;
     }
 
+    public SimpleDropDownButton getDefaultTypeButton() {
+        return defaultTypeButton;
+    }
+    
     public JSlider getImageSizeSlider() {
         return imageSizeSlider;
     }

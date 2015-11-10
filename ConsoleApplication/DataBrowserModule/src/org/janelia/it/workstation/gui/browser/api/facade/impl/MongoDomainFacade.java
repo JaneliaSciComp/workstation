@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
@@ -42,6 +43,16 @@ public class MongoDomainFacade implements DomainFacade {
     @Override
     public List<Subject> getSubjects() {
         return dao.getSubjects();
+    }
+
+    @Override
+    public List<Preference> getPreferences() {
+        return dao.getPreferences(SessionMgr.getSubjectKey());
+    }
+
+    @Override
+    public Preference savePreference(Preference preference) throws Exception {
+        return dao.save(SessionMgr.getSubjectKey(), preference);
     }
     
     @Override
