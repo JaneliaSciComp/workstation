@@ -70,7 +70,7 @@ import org.janelia.horta.actors.SpheresMaterial;
 import org.openide.util.Exceptions;
 
 /**
- *
+ * Multi-pass renderer for Horta volumes and neuron models
  * @author Christopher Bruns
  */
 public class NeuronMPRenderer
@@ -110,7 +110,7 @@ extends MultipassRenderer
             @Override
             public void display(GL3 gl, AbstractCamera camera) {
                 volumeRenderPass.setOpaqueDepthTexture(
-                        opaqueRenderPass.getDepthTarget(),
+                        opaqueRenderPass.getFlatDepthTarget(),
                         opaqueRenderPass.getZNear(),
                         opaqueRenderPass.getZFar());
                 super.display(gl, camera);
@@ -172,12 +172,20 @@ extends MultipassRenderer
         super.dispose(gl);
     }
     
-    public int pickIdForScreenXy(Point2D xy) {
+    public double pickIdForScreenXy(Point2D xy) {
         return valueForScreenXy(xy, volumeRenderPass.getPickTexture().getAttachment(), 0);
     }
 
-    public int intensityForScreenXy(Point2D xy) {
-        int result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 0);
+    public double intensityForScreenXy(Point2D xy) {
+       
+        double result;
+        if (false) { // TODO: Testing depth access
+            result = opaqueDepthForScreenXy(xy);
+            // System.out.println("opaque depth intensity = "+result);
+            return result;
+        }
+        
+        result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 0);
         if (result <= 0) {
             return -1;
         }
@@ -186,7 +194,7 @@ extends MultipassRenderer
     
     public float relativeDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
         float result = 0;
-        int intensity = intensityForScreenXy(xy);
+        double intensity = intensityForScreenXy(xy);
         if (intensity == -1) {
             return result;
         }
@@ -197,7 +205,7 @@ extends MultipassRenderer
         if (intensityDepthTarget == null) {
             return result;
         }
-        int relDepth = intensityDepthTarget.getIntensity(
+        int relDepth = (int)intensityDepthTarget.getIntensity(
                 drawable,
                 (int) xy.getX(),
                 // y convention is opposite between screen and texture buffer
@@ -227,7 +235,11 @@ extends MultipassRenderer
         neuron.getVisibilityChangeObservable().deleteObserver(volumeLayerExpirer);
     }
     
-    private int valueForScreenXy(Point2D xy, int glAttachment, int channel) {
+    private double opaqueDepthForScreenXy(Point2D xy) {
+        return opaqueRenderPass.rawZDepthForScreenXy(xy, drawable);
+    }
+    
+    private double valueForScreenXy(Point2D xy, int glAttachment, int channel) {
         int result = -1;
         if (volumeRenderPass.getFramebuffer() == null) {
             return result;
@@ -236,7 +248,7 @@ extends MultipassRenderer
         if (target == null) {
             return result;
         }
-        int intensity = target.getIntensity(
+        double intensity = target.getIntensity(
                 drawable,
                 (int) Math.round(xy.getX()),
                 // y convention is opposite between screen and texture buffer
@@ -247,9 +259,15 @@ extends MultipassRenderer
     
     public void setIntensityBufferDirty() {
         for (RenderTarget rt : new RenderTarget[] {
-            volumeRenderPass.getIntensityTexture(), 
-            volumeRenderPass.getPickTexture()}) 
+                    volumeRenderPass.getIntensityTexture(), 
+                    volumeRenderPass.getPickTexture()}) 
+        {
             rt.setDirty(true);
+        }
+    }
+    
+    public void setOpaqueBufferDirty() {
+        opaqueRenderPass.setBuffersDirty();
     }
 
     public Iterable<GL3Actor> getVolumeActors()
@@ -266,8 +284,10 @@ extends MultipassRenderer
     // i.e. if calling this method might have made a difference
     public boolean setHideAll(boolean doHideAll) {
         boolean result = allSwcActor.setHideAll(doHideAll);
-        if (result)
+        if (result) {
             setIntensityBufferDirty(); // Now we can see behind the neurons, so repaint
+            setOpaqueBufferDirty();
+        }
         return result;
     }
     
@@ -310,6 +330,7 @@ extends MultipassRenderer
         } catch (InterruptedException ex) {
             Exceptions.printStackTrace(ex);
         }
+        setOpaqueBufferDirty();
     }
     
     private class NeuronListRefresher implements Observer 

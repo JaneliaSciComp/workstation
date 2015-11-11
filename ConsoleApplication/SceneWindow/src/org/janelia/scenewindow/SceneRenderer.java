@@ -51,6 +51,8 @@ import org.janelia.gltools.MultipassRenderer;
 import org.janelia.scenewindow.stereo.AnaglyphRenderer;
 import org.janelia.scenewindow.stereo.MonoscopicRenderer;
 import org.janelia.scenewindow.stereo.StereoRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -89,6 +91,7 @@ implements GLEventListener
             ;
     private boolean doAutoSrgb = true;
     private final FrameTracker frameTracker = new FrameTracker();
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public SceneRenderer(Vantage vantage, Viewport viewport, CameraType cameraType) {
         switch(cameraType) {
@@ -153,8 +156,10 @@ implements GLEventListener
 
         // Johan sometimes sees a crash here at glClearColor() Maybe this could sidestep it?
         // (or perhaps there was a previous error, and this is our first DebugGL3 since...)
+        // This is a possible workaround, without understanding the problem.
         if (! glad.getContext().isCurrent()) {
-            // TODO: log this undesired condition
+            // Log this undesired condition
+            logger.warn("Unexpectedly found invalid OpenGL context");
             return;
         }
         

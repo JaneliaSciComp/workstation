@@ -383,12 +383,12 @@ public final class NeuronTracerTopComponent extends TopComponent
             for (int y = 0; y < this.getHeight(); ++y) {
                 p.x = x;
                 p.y = y;
-                float i = this.getIntensity(p);
+                double i = this.getIntensity(p);
                 if (i <= 0) {
                     continue;
                 }
-                min = Math.min(min, i);
-                max = Math.max(max, i);
+                min = (float)Math.min(min, i);
+                max = (float)Math.max(max, i);
             }
         }
         // logger.info("Min = "+min+"; Max = "+max);
@@ -523,30 +523,33 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     // Append a message about the item under the cursor
     private void reportPickItem(StringBuilder msg, MouseEvent event) {
-        int itemId = neuronMPRenderer.pickIdForScreenXy(event.getPoint());
+        double itemId = neuronMPRenderer.pickIdForScreenXy(event.getPoint());
         msg.append("  Item index under cursor = " + itemId);
     }
 
     private void reportIntensity(StringBuilder msg, MouseEvent event) {
         // Use neuron cursor position, if available, rather than hardware mouse position.
         Vector3 worldXyz = null;
-        int intensity = 0;
+        double intensity = 0;
         NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
         if (hoverAnchor != null) {
             worldXyz = hoverAnchor.getLocationUm();
             intensity = hoverAnchor.getIntensity();
+            // System.out.println("hover intensity = "+intensity);
         } else {
             PerspectiveCamera camera = (PerspectiveCamera) sceneWindow.getCamera();
             float relDepthF = depthOffsetForScreenXy(event.getPoint(), camera);
             worldXyz = worldXyzForScreenXy(event.getPoint(), camera, relDepthF);
             intensity = neuronMPRenderer.intensityForScreenXy(event.getPoint());
+            // System.out.println("non-hover intensity = "+intensity);
         }
 
         mouseStageLocation = worldXyz;
         msg.append(String.format("[% 7.1f, % 7.1f, % 7.1f] \u00B5m",
                 worldXyz.get(0), worldXyz.get(1), worldXyz.get(2)));
-        if (intensity > 0) {
-            msg.append(String.format("  Intensity: % 5d", intensity));
+        if (intensity != -1) {
+            msg.append(String.format("  Intensity: % f", intensity));
+            // System.out.println("message intensity = "+intensity); // Why is this 0 when depth intensity is nonzero?
         }
         // TODO - print out tile X, Y, Z (voxels)
         // TODO - print out tile identifier       
@@ -607,18 +610,14 @@ public final class NeuronTracerTopComponent extends TopComponent
             @Override
             public void update(Observable o, Object arg) {
                 neuronMPRenderer.setIntensityBufferDirty();
-                /*
-                if (mprActor == null) {
-                    return;
-                }
-                neuronMPRenderer.setIntensityBufferDirty();
-                 */
+                neuronMPRenderer.setOpaqueBufferDirty();
             }
         });
         brightnessModel.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
                 neuronMPRenderer.setIntensityBufferDirty();
+                // note opaque buffer is not affected by brightness model
                 /*
                 if (mprActor == null) {
                     return;
@@ -971,6 +970,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.MONO);
                             neuronMPRenderer.setIntensityBufferDirty();
+                            neuronMPRenderer.setOpaqueBufferDirty();
                             sceneWindow.redrawNow();
                         }
                     }));
@@ -989,6 +989,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.RED_CYAN);
                             neuronMPRenderer.setIntensityBufferDirty();
+                            neuronMPRenderer.setOpaqueBufferDirty();
                             sceneWindow.redrawNow();
                         }
                     }));
@@ -1007,6 +1008,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.GREEN_MAGENTA);
                             neuronMPRenderer.setIntensityBufferDirty();
+                            neuronMPRenderer.setOpaqueBufferDirty();
                             sceneWindow.redrawNow();
                         }
                     }));
@@ -1185,7 +1187,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     @Override
-    public int getIntensity(Point2D xy) {
+    public double getIntensity(Point2D xy) {
         return neuronMPRenderer.intensityForScreenXy(xy);
     }
 
