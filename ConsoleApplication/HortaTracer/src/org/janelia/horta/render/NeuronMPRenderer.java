@@ -192,7 +192,7 @@ extends MultipassRenderer
         return result;
     }
     
-    public float relativeDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
+    private float relativeTransparentDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
         float result = 0;
         double intensity = intensityForScreenXy(xy);
         if (intensity == -1) {
@@ -213,6 +213,55 @@ extends MultipassRenderer
                 1); // channel index
         result = 2.0f * (relDepth / 65535.0f - 0.5f); // range [-1,1]
         return result;
+    }
+
+    // TODO: move to volumeRenderpass
+    private double opacityForScreenXy(Point2D xy, AbstractCamera camera) {
+        double result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 3);
+        if (result <= 0)
+            result = 0;
+        return result;
+    }
+    
+    private boolean isVisibleOpaqueAtScreenXy(Point2D xy, AbstractCamera camera) {
+        double od = opaqueRenderPass.rawZDepthForScreenXy(xy, drawable);
+        if (od >= 1.0) 
+            return false; // far clip value means no geometry there
+        double opacity = opacityForScreenXy(xy, camera) / 65535;
+        // TODO: threshold might need to be tuned
+        final double opacityThreshold = 0.5; // Always use transparent material, if it's dense enough
+        if (opacity >= opacityThreshold)
+            return false; // transparent geometry is strong here, so no, not well visible
+        return true; // I see a neuron model at this spot
+    }
+    
+    private boolean isVisibleTransparentAtScreenXy(Point2D xy, AbstractCamera camera) {
+        double opacity = opacityForScreenXy(xy, camera);
+        return (opacity > 0);
+    }
+    
+    public double depthOffsetForScreenXy(Point2D xy, AbstractCamera camera) 
+    {
+        if (isVisibleOpaqueAtScreenXy(xy, camera)) {
+            double od = opaqueRenderPass.rawZDepthForScreenXy(xy, drawable);
+            // Definitely use opaque geometry for depth at this point
+            // TODO - transform to scene units (micrometers)
+            double zNear = opaqueRenderPass.getZNear();
+            double zFar = opaqueRenderPass.getZFar();
+            double zFocus = 0.5 * (zNear + zFar);
+            double zBuf = od;
+            // code lifted from VolumeMipFrag.glsl, which wants the same depth information
+            double zEye = 2*zFar*zNear / (zFar + zNear - (zFar - zNear)*(2*zBuf - 1));
+            return zEye - zFocus;
+        }
+        else if (isVisibleTransparentAtScreenXy(xy, camera)) {
+            double z = relativeTransparentDepthOffsetForScreenXy(xy, camera);
+            z *= 0.5 * getViewSlabThickness(camera);
+            return z;
+        }
+        else { // we have neither opaque nor transparent geometry to calibrate depth
+            return 0;
+        }
     }
 
     public final void setRelativeSlabThickness(float thickness) {

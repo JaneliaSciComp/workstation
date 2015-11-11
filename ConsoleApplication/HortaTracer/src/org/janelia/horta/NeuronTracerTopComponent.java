@@ -447,13 +447,13 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                             // Use neuron cursor position, if available, rather than hardware mouse position.
                             Vector3 xyz = null;
-                            NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
-                            if (hoverAnchor == null) {
+                            // NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
+                            // if (hoverAnchor == null) {
                                 xyz = worldXyzForScreenXy(event.getPoint());
-                            } else {
-                                xyz = hoverAnchor.getLocationUm();
+                            // } else {
+                            //     xyz = hoverAnchor.getLocationUm();
                                 // logger.info("Using neuron cursor XYZ "+xyz);
-                            }
+                            // }
 
                             // logger.info(xyz);
                             previousClickTime = System.nanoTime();
@@ -479,7 +479,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                         reportIntensity(msg, event);
 
-                        reportPickItem(msg, event);
+                        // reportPickItem(msg, event);
 
                         if (msg.length() > 0) {
                             StatusDisplayer.getDefault().setStatusText(msg.toString(), 1);
@@ -538,7 +538,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             // System.out.println("hover intensity = "+intensity);
         } else {
             PerspectiveCamera camera = (PerspectiveCamera) sceneWindow.getCamera();
-            float relDepthF = depthOffsetForScreenXy(event.getPoint(), camera);
+            double relDepthF = neuronMPRenderer.depthOffsetForScreenXy(event.getPoint(), camera);
             worldXyz = worldXyzForScreenXy(event.getPoint(), camera, relDepthF);
             intensity = neuronMPRenderer.intensityForScreenXy(event.getPoint());
             // System.out.println("non-hover intensity = "+intensity);
@@ -548,20 +548,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         msg.append(String.format("[% 7.1f, % 7.1f, % 7.1f] \u00B5m",
                 worldXyz.get(0), worldXyz.get(1), worldXyz.get(2)));
         if (intensity != -1) {
-            msg.append(String.format("  Intensity: % f", intensity));
+            msg.append(String.format("  Intensity: % d", (int)intensity));
             // System.out.println("message intensity = "+intensity); // Why is this 0 when depth intensity is nonzero?
         }
         // TODO - print out tile X, Y, Z (voxels)
         // TODO - print out tile identifier       
     }
     
-    // TODO - move to NeuronMPRenderer
-    private float depthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
-        float result = neuronMPRenderer.relativeDepthOffsetForScreenXy(xy, camera);
-        result *= 0.5f * neuronMPRenderer.getViewSlabThickness(camera);
-        return result;
-    }
-
     /**
      * TODO this could be a member of PerspectiveCamera
      *
@@ -570,7 +563,7 @@ public final class NeuronTracerTopComponent extends TopComponent
      * @param depthOffset in scene units (NOT PIXELS)
      * @return
      */
-    private Vector3 worldXyzForScreenXy(Point2D xy, PerspectiveCamera camera, float depthOffset) {
+    private Vector3 worldXyzForScreenXy(Point2D xy, PerspectiveCamera camera, double depthOffset) {
         // Camera frame coordinates
         float screenResolution
                 = camera.getVantage().getSceneUnitsPerViewportHeight()
@@ -582,15 +575,15 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         // TODO Adjust cx, cy for foreshortening
         float screenDepth = camera.getCameraFocusDistance();
-        float itemDepth = screenDepth + depthOffset;
-        float foreshortening = itemDepth / screenDepth;
+        double itemDepth = screenDepth + depthOffset;
+        double foreshortening = itemDepth / screenDepth;
         cx *= foreshortening;
         cy *= foreshortening;
 
-        float cz = -itemDepth;
+        double cz = -itemDepth;
         Matrix4 modelViewMatrix = camera.getViewMatrix();
         Matrix4 camera_X_world = modelViewMatrix.inverse(); // TODO - cache this invers
-        Vector4 worldXyz = camera_X_world.multiply(new Vector4(cx, cy, cz, 1));
+        Vector4 worldXyz = camera_X_world.multiply(new Vector4(cx, cy, (float)cz, 1));
         return new Vector3(worldXyz.get(0), worldXyz.get(1), worldXyz.get(2));
     }
 
@@ -1194,7 +1187,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     @Override
     public Vector3 worldXyzForScreenXy(Point2D xy) {
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-        float depthOffset = depthOffsetForScreenXy(xy, pCam);
+        double depthOffset = neuronMPRenderer.depthOffsetForScreenXy(xy, pCam);
         Vector3 xyz = worldXyzForScreenXy(
                 xy,
                 pCam,

@@ -179,6 +179,10 @@ public class OpaqueRenderPass extends RenderPass
             rt.setHostBufferNeedsUpdate(true);
             rt.setDirty(false);
         }
+        // In case we use MSAA, mark resolved depth texture too.
+        getFlatDepthTarget().setDirty(false);
+        getFlatDepthTarget().setHostBufferNeedsUpdate(true);
+        
         gl.glDrawBuffers(1, targetAttachments, 0);
         
         if (useMsaa) {
@@ -252,6 +256,7 @@ public class OpaqueRenderPass extends RenderPass
     void setBuffersDirty()
     {
         getFlatDepthTarget().setDirty(true);
+        // depthTarget.setDirty(true);
     }
 
 }
