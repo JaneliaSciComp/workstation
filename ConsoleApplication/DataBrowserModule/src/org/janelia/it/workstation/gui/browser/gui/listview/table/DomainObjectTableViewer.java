@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.swing.JPanel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
@@ -147,6 +148,10 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
     @Override
     public void refreshDomainObject(DomainObject domainObject) {
         // TODO: refresh the table
+    }
+
+    @Override
+    public void preferenceChanged(Preference preference) {
     }
     
     @Override

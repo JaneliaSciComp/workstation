@@ -88,6 +88,7 @@ public class ClientDomainUtils {
         return objectMap;
     }
     
+    // TODO: this does not return subclasses, because references only know the collection
     public static DomainObjectId getIdForReference(Reference ref) {
         Class<? extends DomainObject> clazz = DomainUtils.getObjectClass(ref.getCollectionName());
         if (clazz==null) {

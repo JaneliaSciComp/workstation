@@ -5,6 +5,7 @@ import java.util.List;
 import javax.swing.JPanel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 
@@ -52,4 +53,10 @@ public interface AnnotatedDomainObjectListViewer {
      * @param clearAll clear the existing selection before selecting?
      */
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll);
+    
+    /**
+     * Called when a user preference changes.
+     * @param preference
+     */
+    public void preferenceChanged(Preference preference);
 }

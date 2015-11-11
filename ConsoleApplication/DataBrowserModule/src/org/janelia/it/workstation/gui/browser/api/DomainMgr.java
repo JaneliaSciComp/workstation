@@ -1,11 +1,16 @@
 package org.janelia.it.workstation.gui.browser.api;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.facade.impl.MongoDomainFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
+import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.model.PreferenceChangeEvent;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
@@ -75,5 +80,46 @@ public class DomainMgr {
         List<Subject> subjects = facade.getSubjects();
         DomainUtils.sortSubjects(subjects);
         return subjects;
+    }
+    
+    private Map<String,Preference> preferenceMap;
+    
+    /**
+     * Queries the backend and returns the list of preferences for the given subject.
+     * @param subjectId
+     * @return
+     */
+    public Preference getPreference(String category, String key) {
+        if (preferenceMap==null) {
+            preferenceMap = new HashMap<>();
+            for(Preference preference : facade.getPreferences()) {
+                preferenceMap.put(getPreferenceMapKey(preference), preference);
+            }
+            log.info("Loaded {} user preferences",preferenceMap.size());
+        }
+        String mapKey = category+":"+key;
+        return preferenceMap.get(mapKey);
+    }
+    
+    /**
+     * Saves the given preference. 
+     * @param preference
+     * @throws Exception
+     */
+    public void savePreference(Preference preference) throws Exception {
+        Preference updated = facade.savePreference(preference);
+        preferenceMap.put(getPreferenceMapKey(preference), updated);
+        notifyPreferenceChanged(updated);
+    }
+    
+    private String getPreferenceMapKey(Preference preference) {
+        return preference.getCategory()+":"+preference.getKey();
+    }
+    
+    private void notifyPreferenceChanged(Preference preference) {
+        if (log.isTraceEnabled()) {
+            log.trace("Generating PreferenceChangeEvent for {}", preference);
+        }
+        Events.getInstance().postOnEventBus(new PreferenceChangeEvent(preference));
     }
 }

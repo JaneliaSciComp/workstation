@@ -47,8 +47,10 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     
     @Override
     public void loadDomainObject(final ObjectSet objectSet) {
-        
+
         log.debug("loadDomainObject(ObjectSet:{})",objectSet.getName());
+        selectionModel.setParentObject(objectSet);
+        
         resultsPanel.showLoadingIndicator();
         
         SimpleWorker childLoadingWorker = new SimpleWorker() {

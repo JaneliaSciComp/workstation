@@ -54,7 +54,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
     // Main components
     private ImagesPanel<T,S> imagesPanel;
-    private IconDemoToolbar iconDemoToolbar;
+    private IconGridViewerToolbar iconDemoToolbar;
     
     // These members deal with the context and entities within it
     private List<T> imageObjects;
@@ -366,9 +366,9 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         return selectionModel;
     }
     
-    protected IconDemoToolbar createToolbar() {
+    protected IconGridViewerToolbar createToolbar() {
 
-        return new IconDemoToolbar() {
+        return new IconGridViewerToolbar() {
 
             @Override
             protected void refresh() {
@@ -455,7 +455,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     }
     
     public void showImageObjects(List<T> imageObjects, final Callable<Void> success) {
-
+        
         log.debug("showImageObjects(imageObjects.size={})",imageObjects.size());
         
         // Cancel previous loads
@@ -684,7 +684,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 //        return selectedEntities;
 //    }
 
-    public IconDemoToolbar getToolbar() {
+    public IconGridViewerToolbar getToolbar() {
         return iconDemoToolbar;
     }
 

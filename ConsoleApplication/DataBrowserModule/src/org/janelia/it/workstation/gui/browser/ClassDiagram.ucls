@@ -79,9 +79,10 @@
       <operations public="false" package="false" protected="false" private="false" static="false"/>    
     </display>  
   </interface>  
-  <class id="8" language="java" name="org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconDemoToolbar" 
+  <class id="8" language="java" 
+    name="org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconGridViewerToolbar" 
     project="ConsoleApplication" 
-    file="/ConsoleApplication/DataBrowserModule/src/org/janelia/it/workstation/gui/browser/gui/listview/icongrid/IconDemoToolbar.java" 
+    file="/ConsoleApplication/DataBrowserModule/src/org/janelia/it/workstation/gui/browser/gui/listview/icongrid/IconGridViewerToolbar.java" 
     binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1252" y="923"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
@@ -328,14 +329,16 @@
     file="/ConsoleApplication/DataBrowserModule/src/org/janelia/it/workstation/gui/browser/gui" binary="false" 
     corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="164" y="147"/>    
-    <display autosize="true" stereotype="true" accessors="true"/>  
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true"/>  
   </package>  
   <package id="31" language="java" name="org.janelia.it.workstation.gui.browser.components" project="ConsoleApplication" 
     
     file="/ConsoleApplication/DataBrowserModule/build/classes-generated/org/janelia/it/workstation/gui/browser/components" 
     binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="197" y="60"/>    
-    <display autosize="true" stereotype="true" accessors="true"/>  
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
+      visibility="true"/>  
   </package>  
   <dependency id="32">    
     <end type="SOURCE" refId="8"/>    
