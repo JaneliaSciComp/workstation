@@ -104,6 +104,8 @@ public interface EntityFacade {
 
     public void importSWCFolder(String swcFolderLoc, String ownerKey, Long workspaceId, Long sampleId) throws Exception;
     
+    public void submitSwcFolderImport(String swcFolderLoc, String username, Long sampleId) throws Exception;
+    
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception;
 
     public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception;

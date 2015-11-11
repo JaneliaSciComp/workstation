@@ -1428,12 +1428,17 @@ called from a  SimpleWorker thread.
             workspaceId = getCurrentWorkspace().getId();
             sampleId = getCurrentWorkspace().getSampleID();
         }
-        ModelMgr.getModelMgr().importSWCFolder(
-                swcFolderLoc,
+        ModelMgr.getModelMgr().submitSwcImportFolder(
+                swcFolderLoc, 
                 ownerKey,
-                workspaceId, 
                 sampleId
         );
+//        ModelMgr.getModelMgr().importSWCFolder(
+//                swcFolderLoc,
+//                ownerKey,
+//                workspaceId, 
+//                sampleId
+//        );
     }
     
     

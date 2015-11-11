@@ -172,7 +172,7 @@ public class EJBFactory {
     public static TiledMicroscopeBeanRemote getRemoteTiledMicroscopeBean() {
         return (TiledMicroscopeBeanRemote) getRemoteInterface(REMOTE_TILED_MICROSCOPE_JNDI_NAME);
     }
-
+    
     public static GeometricSearchBeanRemote getRemoteGeometricSearchBean() {
         return (GeometricSearchBeanRemote) getRemoteInterface(REMOTE_GEOMETRIC_SEARCH_JNDI_NAME);
     }
