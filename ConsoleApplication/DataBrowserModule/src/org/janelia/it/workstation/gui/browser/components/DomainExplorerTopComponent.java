@@ -387,6 +387,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     public void selectNodeById(Long id) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        for(Node node : DomainObjectNodeTracker.getInstance().getNodesById(id)) {
+            selectNode(node);
+            break;
+        }
     }
 }

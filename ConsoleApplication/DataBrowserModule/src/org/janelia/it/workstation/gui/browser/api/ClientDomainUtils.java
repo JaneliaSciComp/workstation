@@ -48,7 +48,7 @@ public class ClientDomainUtils {
             if (searchAttributeAnnot!=null) {
                 try {
                     Method getter = ReflectionHelper.getGetter(clazz, field.getName());
-                    DomainObjectAttribute attr = new DomainObjectAttribute(searchAttributeAnnot.key(), searchAttributeAnnot.label(), searchAttributeAnnot.facet(), searchAttributeAnnot.display(), getter);
+                    DomainObjectAttribute attr = new DomainObjectAttribute(field.getName(), searchAttributeAnnot.label(), searchAttributeAnnot.key(), searchAttributeAnnot.facet(), searchAttributeAnnot.display(), getter);
                     attrs.add(attr);
                 }
                 catch (Exception e) {
@@ -60,7 +60,8 @@ public class ClientDomainUtils {
         for (Method method : clazz.getMethods()) {
             SearchAttribute searchAttributeAnnot = method.getAnnotation(SearchAttribute.class);
             if (searchAttributeAnnot!=null) {
-                DomainObjectAttribute attr = new DomainObjectAttribute(searchAttributeAnnot.key(), searchAttributeAnnot.label(), searchAttributeAnnot.facet(), searchAttributeAnnot.display(), method);
+                String name = method.getName().substring(0, 1).toLowerCase() + method.getName().substring(1);
+                DomainObjectAttribute attr = new DomainObjectAttribute(name, searchAttributeAnnot.label(), searchAttributeAnnot.key(), searchAttributeAnnot.facet(), searchAttributeAnnot.display(), method);
                 attrs.add(attr);
             }
         }

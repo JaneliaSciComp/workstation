@@ -34,7 +34,7 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
 
     private static final String COLUMN_KEY_ANNOTATIONS = "annotations";
     
-    private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",false,true,null);
+    private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,false,true,null);
     
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
     

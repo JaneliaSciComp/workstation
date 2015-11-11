@@ -206,20 +206,23 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                                 String name = result.getName()+" ("+groupKey+")";
                                 countedResultNames.add(name);
                                 HasFiles hasFiles = hasGroups.getGroup(groupKey);
-                                for(FileType fileType : hasFiles.getFiles().keySet()) {
-                                    if (!fileType.is2dImage()) continue;
-                                    countedTypeNames.add(fileType.name());
+                                if (hasFiles.getFiles()!=null) {
+                                    for(FileType fileType : hasFiles.getFiles().keySet()) {
+                                        if (!fileType.is2dImage()) continue;
+                                        countedTypeNames.add(fileType.name());
+                                    }
                                 }
                             }
                         }
                         else {
                             String name = result.getName();
                             countedResultNames.add(name);
-                            for(FileType fileType : result.getFiles().keySet()) {
-                                if (!fileType.is2dImage()) continue;
-                                countedTypeNames.add(fileType.name());
+                            if (result.getFiles()!=null) {
+                                for(FileType fileType : result.getFiles().keySet()) {
+                                    if (!fileType.is2dImage()) continue;
+                                    countedTypeNames.add(fileType.name());
+                                }
                             }
-                            
                         }
                     }
                 }
