@@ -66,11 +66,14 @@ import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.janelia.it.workstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.workstation.shared.util.ThreadQueue;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
+import org.janelia.it.jacs.model.user_data.UserToolEvent;
 
 public final class ModelMgr {
 
@@ -147,6 +150,22 @@ public final class ModelMgr {
         }
     }
 
+    /**
+     * This adds a session event.  It is best to use the method in the
+     * Session Manager instead, as that has more convenient 'finding' of various
+     * parts of the event.
+     * 
+     * @param event to log.
+     */
+    public void addEventToSession(UserToolEvent event) {  
+        try {
+            FacadeManager.getFacadeManager().getComputeFacade().addEventToSession(event);
+        } catch (Exception ex) {
+            log.warn("Failed to log userevent " + event);
+            ex.printStackTrace();
+        }
+    }
+    
     public void addModelMgrObserver(ModelMgrObserver mml) {
         if (null != mml && !modelMgrObservers.contains(mml)) {
             modelMgrObservers.add(mml);
@@ -1306,7 +1325,11 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, dimensions);
     }
 
-    public List<List<Object>> getRootPaths(Entity entity, Set<Long> visited) throws Exception {
+	public RawFileInfo getNearestChannelFiles(String basePath, int[] viewerCoord) throws Exception {
+		return FacadeManager.getFacadeManager().getEntityFacade().getNearestChannelFiles(basePath, viewerCoord);
+	}
+	
+	public List<List<Object>> getRootPaths(Entity entity, Set<Long> visited) throws Exception {
 
         List<List<Object>> rootPaths = new ArrayList<>();
         if (!EntityConstants.TYPE_WORKSPACE.equals(entity.getEntityTypeName()) && visited.contains(entity.getId())) {

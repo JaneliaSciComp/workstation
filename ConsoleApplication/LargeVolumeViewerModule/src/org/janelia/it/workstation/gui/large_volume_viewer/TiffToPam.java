@@ -83,7 +83,7 @@ public class TiffToPam {
 		 */
 		for (int z = 0; z < sz; ++z) {
 			try {
-				TextureData2dGL tex = loadAdapter.loadSlice(z, decoder);
+				TextureData2dGL tex = loadAdapter.loadSlice(z, decoder, decoder.length);
 				// Write pam file
 				File pamFile = new File(outputFolder, "slice_"+format.format(z)+".pam");
 				// System.out.println(pamFile.getAbsolutePath());

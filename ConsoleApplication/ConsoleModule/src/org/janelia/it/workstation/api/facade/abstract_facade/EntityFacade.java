@@ -161,4 +161,5 @@ public interface EntityFacade {
 
     Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception;
 
+    RawFileInfo getNearestChannelFiles(String basePath, int[] viewerCoord) throws Exception;
 }

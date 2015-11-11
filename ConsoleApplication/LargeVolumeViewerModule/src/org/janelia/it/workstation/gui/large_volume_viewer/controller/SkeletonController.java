@@ -8,6 +8,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import javax.swing.JComponent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -21,6 +23,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.LineEnclosurePrecomputes;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
@@ -41,6 +44,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     private QuadViewController qvController;
     private NVTTableModelListener nvtTableModelListener;
     private TableModel nvtTableModel;
+    private Timer meshDrawUpdateTimer;
     
     private static SkeletonController instance = new SkeletonController();
     
@@ -61,6 +65,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         this.skeleton.setController(this);
 
         actors.clear();
+        LineEnclosurePrecomputes.clearWorkspaceRelevant();
         lvvTranslator = null;
         qvController = null;
     }
@@ -205,7 +210,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         for (SkeletonActor actor: actors) {
             actor.changeNeuronStyle(neuron, style);
         }
-        updateMeshDrawActor();
+        refreshMeshDrawUpdateTimer();
         fireComponentUpdate();
     }
 
@@ -217,7 +222,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         for (SkeletonActor actor: actors) {
             actor.updateAnchors();
         }
-        updateMeshDrawActor();
+        refreshMeshDrawUpdateTimer();
         fireComponentUpdate();
     }
 
@@ -282,6 +287,27 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         if (meshDrawActor != null) {
             meshDrawActor.refresh();
         }
+    }
+
+    /**
+     * Some events, being very numerous, cause a deluge of requests, each
+     * of which is time-consuming to honor.  Rather than honor each one,
+     * a timer/delay mechanism is in place to allow a single refresh to
+     * be carried out, after things become quiescent.
+     */
+    private void refreshMeshDrawUpdateTimer() {
+        if (meshDrawUpdateTimer != null) {
+            meshDrawUpdateTimer.cancel();
+        }
+        meshDrawUpdateTimer = new Timer();
+        TimerTask meshDrawUpdateTask = new TimerTask() {
+            @Override
+            public void run() {
+                updateMeshDrawActor();
+                fireComponentUpdate();
+            }
+        };
+        meshDrawUpdateTimer.schedule(meshDrawUpdateTask, 10000);
     }
 
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {

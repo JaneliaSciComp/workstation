@@ -31,20 +31,20 @@ public abstract class ActorRenderer
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;
 
-    private Logger logger;
+    private Logger logger = LoggerFactory.getLogger(ActorRenderer.class);
 
     // scene objects
     public ActorRenderer() {
 		// actors.add(new TeapotActor()); // solid shading is not supported right now
         this(new VolumeModel());
+        initializeCamera();
     }
-    
+
     public ActorRenderer( VolumeModel volumeModel ) {
-        logger = LoggerFactory.getLogger(ActorRenderer.class);
+        if (volumeModel.getCamera3d() == null) {
+            initializeCamera();
+        }
         this.volumeModel = volumeModel;
-        BasicObservableCamera3d camera3d = new BasicObservableCamera3d();
-        camera3d.setFocus( 0.0, 0.0, -DEFAULT_CAMERA_FOCUS_DISTANCE );
-        getVolumeModel().setCamera3d(camera3d);
     }
     
     public void centerOnPixel(Point p) {
@@ -291,6 +291,12 @@ public abstract class ActorRenderer
                 model.getVoxelMicrometers()[2]
             )
         );
+    }
+
+    private void initializeCamera() {
+        BasicObservableCamera3d camera3d = new BasicObservableCamera3d();
+        camera3d.setFocus(0.0, 0.0, -DEFAULT_CAMERA_FOCUS_DISTANCE);
+        getVolumeModel().setCamera3d(camera3d);
     }
 
     private double getMinZoom() {

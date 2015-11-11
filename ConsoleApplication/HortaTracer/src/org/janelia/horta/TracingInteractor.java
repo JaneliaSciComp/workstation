@@ -29,8 +29,10 @@
  */
 package org.janelia.horta;
 
+import org.janelia.horta.actors.NeuriteActor;
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
@@ -39,6 +41,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.AbstractAction;
+import javax.swing.JPopupMenu;
 import org.janelia.geometry3d.Vector3;
 
 /**
@@ -69,21 +73,21 @@ public class TracingInteractor extends MouseAdapter
     
     @Override
     public void keyTyped(KeyEvent keyEvent) {
-        System.out.println("KeyTyped");
-        System.out.println(keyEvent.getKeyCode()+", "+KeyEvent.VK_ESCAPE);
+        // System.out.println("KeyTyped");
+        // System.out.println(keyEvent.getKeyCode()+", "+KeyEvent.VK_ESCAPE);
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        System.out.println("KeyPressed");
+        // System.out.println("KeyPressed");
     }
 
     @Override
     public void keyReleased(KeyEvent keyEvent) {
-        System.out.println("KeyReleased");
+        // System.out.println("KeyReleased");
         if(keyEvent.getKeyCode() == KeyEvent.VK_ESCAPE)
         {
-            System.out.println("ESCAPE");
+            // System.out.println("ESCAPE");
             setTracingModeOff();
         }
     }
@@ -156,6 +160,40 @@ public class TracingInteractor extends MouseAdapter
         return result;
     }
     
+    /**
+     * 
+     * @param menu - existing menu to add tracing options to
+     */
+    public void exportMenuItems(JPopupMenu menu, NeuriteAnchor anchor) {
+        if (tracingMode == TracingMode.TRACING)
+            exportEnabledMenuItems(menu, anchor);
+        else
+            exportDisabledMenuItems(menu, anchor);
+    }
+
+    private void exportEnabledMenuItems(JPopupMenu menu, NeuriteAnchor anchor) 
+    {
+        menu.add(new AbstractAction("Exit tracing mode [ESC]") {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                setTracingModeOff();
+            }
+        });
+    }
+
+    private void exportDisabledMenuItems(JPopupMenu menu, final NeuriteAnchor anchor) {
+        /*
+        menu.add(new AbstractAction("Begin tracing at this location") {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                setTracingModeOn(anchor);
+            }
+        }); 
+                */
+    }    
+
     private boolean extendProvisionalAnchors(NeuriteAnchor anchor) {
         NeuriteAnchor sourceAnchor = previousHoverModel.getLast();
         if (sourceAnchor == null) {
@@ -164,7 +202,7 @@ public class TracingInteractor extends MouseAdapter
         boolean bChanged = false; // not whether anything changes...
         
         // Build up series of provisional points
-        float sourceD2 = sourceAnchor.distanceSquared(anchor);
+        float sourceD2 = sourceAnchor.distanceSquared(anchor.getLocationUm());
 
         // remove anchors farther from source than cursor
         NeuriteAnchor w = null;
@@ -172,7 +210,7 @@ public class TracingInteractor extends MouseAdapter
             w = provisionalModel.getLast();
         }
 
-        while ((w != null) && (sourceAnchor.distanceSquared(w) > sourceD2)) {
+        while ((w != null) && (sourceAnchor.distanceSquared(w.getLocationUm()) > sourceD2)) {
             // remove anchors farther tnan cursor from sourceAnchor
             bChanged = true;
             provisionalModel.pollLast();
@@ -190,7 +228,7 @@ public class TracingInteractor extends MouseAdapter
         // maybe append a new provisional anchor
         double min_d = 3 + anchor.getRadiusUm() + w.getRadiusUm();
         double min_d2 = min_d * min_d;
-        float localD2 = w.distanceSquared(anchor);
+        float localD2 = w.distanceSquared(anchor.getLocationUm());
         // IJ.log("d2b = "+sourceD2);
         if (localD2 > min_d2) {
             bChanged = true;
@@ -223,6 +261,7 @@ public class TracingInteractor extends MouseAdapter
 
     @Override
     public void mouseExited(MouseEvent event) {
+        // System.out.println("mouse exited");
         if (hoverModel.isEmpty()) {
             return;
         }

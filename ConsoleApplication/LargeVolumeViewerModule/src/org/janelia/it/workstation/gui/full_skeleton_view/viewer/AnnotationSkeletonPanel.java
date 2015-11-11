@@ -39,6 +39,7 @@ import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.OcclusiveViewer;
 import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer;
+import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer.OcclusiveVolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.ResetPositionerI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.AttributeManagerBufferUploader;
@@ -57,6 +58,8 @@ public class AnnotationSkeletonPanel extends JPanel {
     private final AnnotationSkeletonDataSourceI dataSource;
     private OcclusiveViewer viewer;
     private MeshViewContext context;
+    private OcclusiveRenderer.OcclusiveVolumeModel occlusiveVolumeModel;
+
     private UniqueColorSelector ucSelector;
 	private RenderedIdPicker picker;
     private SkeletonActor linesDrawActor;
@@ -64,6 +67,7 @@ public class AnnotationSkeletonPanel extends JPanel {
     private Collection<GLActor> coreActors = new ArrayList<>();
     private Collection<GLActor> fixedFunctionActors = new ArrayList<>();
     private boolean meshMode = true;
+    private boolean forceReset = true;
     
     public AnnotationSkeletonPanel(AnnotationSkeletonDataSourceI dataSource) {
         this.dataSource = dataSource;
@@ -79,7 +83,21 @@ public class AnnotationSkeletonPanel extends JPanel {
         return meshMode;
     }
     
+    /**
+     * Force a complete positional reset on the viewer.  This should definitely
+     * be done at creation of the panel.
+     * @param flag 
+     */
+    public void setForceReset(boolean flag) {
+        this.forceReset = flag;
+    }
+    
     public void establish3D() {
+        if (occlusiveVolumeModel == null) {
+            occlusiveVolumeModel = new OcclusiveVolumeModel();
+            context = occlusiveVolumeModel;
+        }
+
         if (viewer == null  &&  dataSource.getSkeleton() != null  &&  dataSource.getSkeleton().getTileFormat() != null) {
             // Establish the lines-ish version of the skele viewer.
             // This one also acts as a collector of data.
@@ -96,7 +114,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             linesDrawActor.getBoundingBox3d().setMin( boundingBox.getMin().minus( yExtender ) );
 
             // Establish the renderer.
-            OcclusiveRenderer renderer = new OcclusiveRenderer();
+            OcclusiveRenderer renderer = new OcclusiveRenderer( occlusiveVolumeModel );
             final SkeletalBoundsResetPositioner skeletalBoundsResetPositioner = new SkeletalBoundsResetPositioner(dataSource.getSkeleton());
             renderer.setResetPositioner( skeletalBoundsResetPositioner );
 
@@ -105,8 +123,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             skeletalBoundsResetPositioner.setViewer(viewer);
             skeletalBoundsResetPositioner.setRenderer(renderer);
             skeletalBoundsResetPositioner.setActor(linesDrawActor);
-            context = new MeshViewContext();            
-            viewer.setVolumeModel(context);
+            viewer.setVolumeModel(occlusiveVolumeModel);
             double[] voxelMicronD = tileFormat.getVoxelMicrometers();
             float[] voxelMicronF = new float[] {
                 (float)voxelMicronD[0], 
@@ -114,9 +131,7 @@ public class AnnotationSkeletonPanel extends JPanel {
                 (float)voxelMicronD[2]
             };
             context.setVoxelMicrometers(voxelMicronF);
-            VolumeModel volumeModel = viewer.getVolumeModel();
-            final Camera3d rendererCamera = volumeModel.getCamera3d();
-            volumeModel.setCamera3d(rendererCamera);
+            final Camera3d rendererCamera = context.getCamera3d();
 
             linesDrawActor.setSkeleton(dataSource.getSkeleton());
             linesDrawActor.setCamera(rendererCamera);
@@ -124,7 +139,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             linesDrawActor.setRenderInterpositionMethod(
                     SkeletonActor.RenderInterpositionMethod.Occlusion
             );
-            volumeModel.setBackgroundColor(new float[] {
+            context.setBackgroundColor(new float[] {
                 0.0f, 0.0f, 0.0f
             });
             // Set maximal thickness.  Z-fade is not practical for 3D rotations.
@@ -138,13 +153,16 @@ public class AnnotationSkeletonPanel extends JPanel {
                     DirectionalReferenceAxesActor.Placement.BOTTOM_LEFT                    
             );
             
-            viewer.setResetFirstRedraw(true);
+            viewer.setResetFirstRedraw( forceReset );
+            if (occlusiveVolumeModel.getCameraDepth() == null) {
+                occlusiveVolumeModel.setCameraDepth(new Vec3(0,0,0));
+            }
             final BoundingBox3d originalBoundingBox = tileFormat.calcBoundingBox();
 
             MDReturn meshDrawResults = buildMeshDrawActor( context, originalBoundingBox );
             final MeshDrawActor meshDrawActor = meshDrawResults.getActor();
             GLActor axesActor = buildOpenGLCoreAxesActor( originalBoundingBox, 1.0, context );
-            GLActor ffAxesActor = buildOpenGLFixedFunctionActor( originalBoundingBox, 1.0, volumeModel);
+            GLActor ffAxesActor = buildOpenGLFixedFunctionActor( originalBoundingBox, 1.0, context);
             
             // NOTE: refAxisActor is forcing all 'conventional' actors which
             // display after it, into the same confined corner of the screen.
@@ -161,13 +179,6 @@ public class AnnotationSkeletonPanel extends JPanel {
             fixedFunctionActors.add(refAxisActor);
             
             viewer.addMenuAction(new BackgroundPickAction(viewer));
-//            viewer.addMenuAction(
-//                new ActorSwapAction(
-//                    viewer,
-//                    coreActors, "Mesh Draw",
-//                    fixedFunctionActors, "Lines Draw"
-//                )
-//            );
             viewer.addMenuAction(
                 new ModeSwapAction(
                     this, "Mesh Draw", "Lines Draw"
@@ -196,19 +207,26 @@ public class AnnotationSkeletonPanel extends JPanel {
             // Add the initial actor list.
             if (meshMode) {
                 for (GLActor actor : coreActors) {
-                    viewer.addActor(actor);
+                    viewer.addActorContinuousView(actor);
                 }
             }
             else {
                 for (GLActor actor: fixedFunctionActors) {
-                    viewer.addActor(actor);
+                    viewer.addActorContinuousView(actor);
                 }
             }
             
             this.add(viewer, BorderLayout.CENTER);
+            // This should be done only initially.
+            if (forceReset) {
+                forceReset = false;
+                viewer.resetView();
+            }
+
             validate();
             repaint();
             controller.registerForEvents(this);
+
         }
     }
 
@@ -483,60 +501,6 @@ public class AnnotationSkeletonPanel extends JPanel {
             }
         }
         
-    }
-    
-    public static class ActorSwapAction extends AbstractAction {
-        private final static String SWAP_FORMAT = "Replace %s with %s.";
-        private final String firstLabel;
-        private final String secondLabel;
-        
-        private OcclusiveViewer viewer;
-        private boolean inCore = true;
-        
-        private Collection<GLActor> coreActors;
-        private Collection<GLActor> fixedFunctionActors;
-        
-        public ActorSwapAction(
-                OcclusiveViewer viewer, 
-                Collection<GLActor> coreActors, String firstActorLabel, 
-                Collection<GLActor> fixedFunctionActors, String secondActorLabel
-        ) {
-            this.viewer = viewer;
-            this.firstLabel = String.format( SWAP_FORMAT, firstActorLabel, secondActorLabel );
-            this.coreActors = coreActors;
-            this.secondLabel = String.format( SWAP_FORMAT, secondActorLabel, firstActorLabel );
-            this.fixedFunctionActors = fixedFunctionActors;
-            
-            putValue( Action.NAME, firstLabel );
-                   
-        }
-        
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (inCore) {
-                inCore = false;
-                for (GLActor actor: coreActors) {
-                    viewer.removeActor(actor);
-                }
-                for (GLActor actor: fixedFunctionActors) {
-                    viewer.addActor(actor);
-                }
-                putValue(Action.NAME, secondLabel);
-            }
-            else {
-                inCore = true;
-                for (GLActor actor : fixedFunctionActors) {
-                    viewer.removeActor(actor);
-                }
-                for (GLActor actor : coreActors) {
-                    viewer.addActor(actor);
-                }
-                putValue(Action.NAME, firstLabel);
-            }
-            viewer.validate();
-            viewer.repaint();
-        }
-       
     }
     
     public static class ModeSwapAction extends AbstractAction {

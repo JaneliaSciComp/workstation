@@ -31,6 +31,9 @@
 package org.janelia.console.viewerapi;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import org.janelia.console.viewerapi.model.NeuronModel;
 
 /**
  *
@@ -44,6 +47,7 @@ public class BasicSampleLocation implements SampleLocation
     private double focusZUm = 0;
     private double micrometersPerWindowHeight = 100;
     private int defaultColorChannel = 0;
+    private Collection<NeuronModel> neurons = new ArrayList<NeuronModel>();
 
     public BasicSampleLocation()
     {
@@ -125,5 +129,4 @@ public class BasicSampleLocation implements SampleLocation
     {
         defaultColorChannel = channelIndex;
     }
-
 }

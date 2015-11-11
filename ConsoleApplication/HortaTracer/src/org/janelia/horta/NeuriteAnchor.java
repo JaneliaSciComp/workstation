@@ -1,6 +1,9 @@
 package org.janelia.horta;
 
 
+import org.janelia.geometry3d.BasicVector;
+import org.janelia.geometry3d.ConstVector3;
+import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Vector3;
 
 /*
@@ -37,7 +40,8 @@ import org.janelia.geometry3d.Vector3;
  *
  * @author Christopher Bruns
  */
-public class NeuriteAnchor {
+public class NeuriteAnchor implements ImmutableNeuriteAnchor 
+{
     private final Vector3 xyzUm;
     private final int intensity;
     private float radiusUm;
@@ -48,24 +52,29 @@ public class NeuriteAnchor {
         this.radiusUm = radiusUm;
     }
 
-    public float distanceSquared(NeuriteAnchor rhs) {
-        return this.getLocationUm().distanceSquared(rhs.getLocationUm());
-    }
-    
+    @Override
     public Vector3 getLocationUm() {
         return xyzUm;
     }
 
+    @Override
     public int getIntensity() {
         return intensity;
     }
 
+    @Override
     public float getRadiusUm() {
         return radiusUm;
     }
 
     public void setRadiusUm(float radiusUm) {
         this.radiusUm = radiusUm;
+    }
+
+    @Override
+    public float distanceSquared(ConstVector3 rhs)
+    {
+        return xyzUm.distanceSquared(rhs);
     }
     
 }

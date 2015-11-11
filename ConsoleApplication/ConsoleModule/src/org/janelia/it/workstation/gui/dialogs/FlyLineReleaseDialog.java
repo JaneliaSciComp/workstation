@@ -49,9 +49,11 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 
 import de.javasoft.swing.DateComboBox;
+import javax.swing.JCheckBox;
 
 /**
- * A dialog for viewing the list of accessible fly line releases, editing them, and adding new ones.
+ * A dialog for viewing the list of accessible fly line releases, editing them,
+ * and adding new ones.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -65,6 +67,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
     private JTextField nameInput = new JTextField(30);
     private DateComboBox dateInput = new DateComboBox();
     private JTextField lagTimeInput = new JTextField(10);
+    private JCheckBox sageSyncCheckbox;
     private MembershipListPanel<Entity> dataSetPanel;
     private MembershipListPanel<Subject> annotatorsPanel;
     private MembershipListPanel<Subject> subscribersPanel;
@@ -80,7 +83,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
         setTitle("Fly Line Release Definition");
 
         lagTimeInput.setToolTipText("Number of months between release date and the completion date of any samples included in the release");
-        
+
         attrPanel = new JPanel(new MigLayout("wrap 2, ins 20"));
 
         add(attrPanel, BorderLayout.CENTER);
@@ -119,17 +122,16 @@ public class FlyLineReleaseDialog extends ModalDialog {
     public void showForRelease(final Entity releaseEntity) {
 
         this.releaseEntity = releaseEntity;
-        
-        if (releaseEntity==null) {
+
+        if (releaseEntity == null) {
             okButton.setText("Create Folder Hierarchy");
             okButton.setToolTipText("Create the release and corresponding folder hierarchy of all the lines due to be released");
-        }
-        else {
+        } else {
             okButton.setText("OK");
             okButton.setToolTipText("Close and save changes");
         }
-        
-        boolean editable = releaseEntity==null;
+
+        boolean editable = releaseEntity == null;
         String releaseOwnerKey = releaseEntity == null ? SessionMgr.getSubjectKey() : releaseEntity.getOwnerKey();
 
         attrPanel.removeAll();
@@ -146,12 +148,11 @@ public class FlyLineReleaseDialog extends ModalDialog {
         attrPanel.add(nameLabel, "gap para");
 
         nameInput.setEnabled(editable);
-        
+
         if (editable) {
             nameLabel.setLabelFor(nameInput);
             attrPanel.add(nameInput);
-        }
-        else {
+        } else if (releaseEntity != null) {
             attrPanel.add(new JLabel(releaseEntity.getName()));
         }
 
@@ -166,9 +167,12 @@ public class FlyLineReleaseDialog extends ModalDialog {
         attrPanel.add(lagTimeLabel, "gap para");
         attrPanel.add(lagTimeInput);
         lagTimeInput.setEnabled(editable);
-        
+
+        sageSyncCheckbox = new JCheckBox("Synchronize to SAGE");
+        attrPanel.add(sageSyncCheckbox, "gap para, span 2");
+
         attrPanel.add(Box.createVerticalStrut(10), "span 2");
-        
+
         JPanel bottomPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
@@ -246,48 +250,57 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
                 if (releaseEntity != null) {
                     nameInput.setText(releaseEntity.getName());
-                    
+
                     String lagTimeMonths = releaseEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_LAG_TIME_MONTHS);
                     if (lagTimeMonths != null) {
                         lagTimeInput.setText(lagTimeMonths);
                     }
-                    
+
                     String releaseDateStr = releaseEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_RELEASE_DATE);
 
                     if (releaseDateStr != null) {
                         dateInput.setDate(ISO8601Utils.parse(releaseDateStr));
                     }
 
+                    if (releaseEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC) != null) {
+                        sageSyncCheckbox.setSelected(true);
+                    }
+
                     String dataSetsStr = releaseEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SETS);
-                    if (dataSetsStr != null) {
+                    if (!StringUtils.isEmpty(dataSetsStr)) {
                         for (String identifier : dataSetsStr.split(",")) {
                             Entity dataSet = dataSetMap.get(identifier);
-                            dataSetPanel.addItemToList(dataSet);
+                            if (dataSet!=null) {
+                                dataSetPanel.addItemToList(dataSet);
+                            }
                         }
                     }
 
                     String annotatorsStr = releaseEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATORS);
-                    if (annotatorsStr != null) {
+                    if (!StringUtils.isEmpty(annotatorsStr)) {
                         for (String key : annotatorsStr.split(",")) {
                             Subject subject = subjectMap.get(key);
-                            annotatorsPanel.addItemToList(subject);
+                            if (subject!=null) {
+                                annotatorsPanel.addItemToList(subject);
+                            }
                         }
                     }
 
                     String subscribersStr = releaseEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SUBSCRIBERS);
-                    if (subscribersStr != null) {
+                    if (!StringUtils.isEmpty(subscribersStr)) {
                         for (String key : subscribersStr.split(",")) {
                             Subject subject = subjectMap.get(key);
-                            subscribersPanel.addItemToList(subject);
+                            if (subject!=null) {
+                                subscribersPanel.addItemToList(subject);
+                            }
                         }
                     }
-                }
-                else {
+                } else {
                     nameInput.setText("");
                     dateInput.setDate(new Date());
                     lagTimeInput.setText("");
                 }
-                
+
                 pack();
             }
 
@@ -298,7 +311,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
         };
 
         worker.execute();
-        
+
         packAndShow();
     }
 
@@ -312,38 +325,39 @@ public class FlyLineReleaseDialog extends ModalDialog {
     private void saveAndClose() {
 
         Utils.setWaitingCursor(FlyLineReleaseDialog.this);
-        
+
         if (StringUtils.isEmpty(nameInput.getText().trim())) {
             JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "The release name cannot be blank", "Cannot save release", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
+
         Integer lagTime = null;
         try {
             String lagTimeStr = lagTimeInput.getText().trim();
             if (!StringUtils.isEmpty(lagTimeStr)) {
                 lagTime = Integer.parseInt(lagTimeStr);
             }
-        }
-        catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "Lag time must be a number", "Cannot save release", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
-        for(Entity release : parentDialog.getReleases()) {
-            if (releaseEntity!=null && release.getName().equals(releaseEntity.getName())) {
-                JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "A release with this name already exists", "Cannot save release", JOptionPane.ERROR_MESSAGE);
-                return;
+
+        if (releaseEntity==null) {
+            for (Entity release : parentDialog.getReleases()) {
+                if (release.getName().equals(nameInput.getText())) {
+                    JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "A release with this name already exists", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
             }
         }
         
-        
         final List<String> dataSets = new ArrayList<>();
         for (Entity dataSet : dataSetPanel.getItemsInList()) {
+            if (dataSet==null) continue;
             String identifier = dataSet.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER);
             dataSets.add(identifier);
         }
-        
+
         if (dataSets.isEmpty()) {
             JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "A release must include at least one data set", "Cannot save release", JOptionPane.ERROR_MESSAGE);
             return;
@@ -351,6 +365,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
         final StringBuilder annotatorsSb = new StringBuilder();
         for (Subject subject : annotatorsPanel.getItemsInList()) {
+            if (subject==null) continue;
             if (annotatorsSb.length() > 0) {
                 annotatorsSb.append(",");
             }
@@ -359,6 +374,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
         final StringBuilder subscribersSb = new StringBuilder();
         for (Subject subject : subscribersPanel.getItemsInList()) {
+            if (subject==null) continue;
             if (subscribersSb.length() > 0) {
                 subscribersSb.append(",");
             }
@@ -368,21 +384,30 @@ public class FlyLineReleaseDialog extends ModalDialog {
         final Integer lagTimeFinal = lagTime;
         SimpleWorker worker = new SimpleWorker() {
 
+            private final ModelMgr modelMgr = ModelMgr.getModelMgr();
+
             @Override
             protected void doStuff() throws Exception {
 
                 boolean syncFolders = false;
                 if (releaseEntity == null) {
-                    releaseEntity = ModelMgr.getModelMgr().createFlyLineRelease(nameInput.getText(), dateInput.getDate(), lagTimeFinal, dataSets);
+                    releaseEntity = modelMgr.createFlyLineRelease(nameInput.getText(), dateInput.getDate(), lagTimeFinal, dataSets);
                     syncFolders = true;
                 }
 
-                EntityData ed = ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_ANNOTATORS, annotatorsSb.toString());
-                releaseEntity = ed.getParentEntity(); // Entity was invalidated by setOrUpdateValue
+                EntityData ed = modelMgr.setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_ANNOTATORS, annotatorsSb.toString());
+                releaseEntity = modelMgr.getEntityById(releaseEntity.getId());
                 
-                ModelMgr.getModelMgr().setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_SUBSCRIBERS, subscribersSb.toString());
-                releaseEntity = ed.getParentEntity(); // Entity was invalidated by setOrUpdateValue
-                
+                ed = modelMgr.setOrUpdateValue(releaseEntity, EntityConstants.ATTRIBUTE_SUBSCRIBERS, subscribersSb.toString());
+                releaseEntity = modelMgr.getEntityById(releaseEntity.getId());
+
+                if (sageSyncCheckbox.isSelected()) {
+                    modelMgr.setAttributeAsTag(releaseEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
+                } else {
+                    removeDataSetAttribute(EntityConstants.ATTRIBUTE_SAGE_SYNC);
+                }
+                releaseEntity = modelMgr.getEntityById(releaseEntity.getId());
+
                 if (syncFolders) {
                     launchSyncTask();
                 }
@@ -401,11 +426,19 @@ public class FlyLineReleaseDialog extends ModalDialog {
                 Utils.setDefaultCursor(FlyLineReleaseDialog.this);
                 setVisible(false);
             }
+
+            private void removeDataSetAttribute(String attributeType) throws Exception {
+                final EntityData typeEd = releaseEntity.getEntityDataByAttributeName(attributeType);
+                if (typeEd != null) {
+                    releaseEntity.getEntityData().remove(typeEd);
+                    modelMgr.removeEntityData(typeEd);
+                }
+            }
         };
 
         worker.execute();
     }
-    
+
     private void launchSyncTask() {
 
         Task task;
@@ -413,8 +446,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
             HashSet<TaskParameter> taskParameters = new HashSet<>();
             taskParameters.add(new TaskParameter("release entity id", releaseEntity.getId().toString(), null));
             task = ModelMgr.getModelMgr().submitJob("ConsoleSyncReleaseFolders", "Sync Release Folders", taskParameters);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
             return;
         }

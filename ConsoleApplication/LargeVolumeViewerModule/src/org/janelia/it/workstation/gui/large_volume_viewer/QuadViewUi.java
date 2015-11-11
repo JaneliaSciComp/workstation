@@ -7,6 +7,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.cache.TileStackCacheController;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer.LoadStatus;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
@@ -16,6 +17,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationM
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.TileStackCacheStatusPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
@@ -36,9 +38,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -288,16 +288,25 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         camera.addCameraListener(new CameraListener() {
             @Override
             public void zoomChanged(Double zoom) {
+                // Re-position the 3D cache.
+                //CacheController cacheController = CacheController.getInstance();
+                //cacheController.zoomChanged(zoom);
+                TileStackCacheController.getInstance().setZoom(zoom);
                 QuadViewUi.this.zoomChanged(zoom);
             }
 
             @Override
             public void focusChanged(Vec3 focus) {
-                 QuadViewUi.this.focusChanged(focus);
+                TileStackCacheController.getInstance().setFocus(focus);
+                QuadViewUi.this.focusChanged(focus);
             }
 
             @Override
             public void viewChanged() {
+                // Re-position the 3D cache.
+                //CacheController cacheController = CacheController.getInstance();
+                //cacheController.focusChanged(camera.getFocus());
+                TileStackCacheController.getInstance().setFocus(camera.getFocus());
                 tileServer.refreshCurrentTileSet();
             }            
         });
@@ -386,6 +395,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 public List<JMenuItem> getMenus(MouseEvent event) {
                     List<JMenuItem> result = new Vector<>();
                     result.add(addFileMenuItem());
+                    result.add(addCopyMicronLocMenuItem());
+                    result.add(addCopyTileLocMenuItem());
+                    result.add(addCopyTileFileLocMenuItem());
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());                    
@@ -776,11 +788,29 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         gotoLocationButton.setAction(goToLocationAction);
         buttonsPanel.add(gotoLocationButton);
 
+        buttonsPanel.add(new TileStackCacheStatusPanel());
+
 		Component verticalGlue = Box.createVerticalGlue();
 		buttonsPanel.add(verticalGlue);
 		
 		buttonsPanel.add(loadStatusLabel);
-		
+
+        final JCheckBox volumeCacheCheckbox = new JCheckBox("Volume Cache");
+        volumeCacheCheckbox.setSelected(VolumeCache.useVolumeCache());
+        volumeCacheCheckbox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange()==ItemEvent.DESELECTED) {
+                    volumeCacheCheckbox.setSelected(false);
+                    VolumeCache.setVolumeCache(false);
+                } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                    volumeCacheCheckbox.setSelected(true);
+                    VolumeCache.setVolumeCache(true);
+                }
+            }
+        });
+        buttonsPanel.add(volumeCacheCheckbox);
+
 		JButton btnClearCache = new JButton("Clear Cache");
 		btnClearCache.setAction(clearCacheAction);
 		buttonsPanel.add(btnClearCache);
@@ -1107,7 +1137,32 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         return mnFile;
     }
-
+    
+    public JMenuItem addCopyMicronLocMenuItem() {
+        JMenuItem mnCopyMicron = new JMenuItem(
+                new MicronsToClipboardAction(statusLabel)
+        );
+        return mnCopyMicron;
+    }
+    
+    public JMenuItem addCopyTileLocMenuItem() {
+        JMenuItem mnCopyTileInx = new JMenuItem(
+                new TileLocToClipboardAction(
+                        statusLabel, tileFormat, camera, CoordinateAxis.Z
+                )
+        );
+        return mnCopyTileInx;
+    }
+    
+    public JMenuItem addCopyTileFileLocMenuItem() {
+        JMenuItem mnCopyTileFileLoc = new JMenuItem(
+                new RawFileLocToClipboardAction(
+                        statusLabel, tileFormat, volumeImage, camera, CoordinateAxis.Z
+                )
+        );
+        return mnCopyTileFileLoc;
+    }
+    
     public JMenuItem addEditMenuItem() {
         JMenu mnEdit = new JMenu("Edit");
         menuBar.add(mnEdit);
@@ -1279,6 +1334,15 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     "Error opening folder " + url
                     +" \nIs the file share mounted?");
     	}
+
+        try {
+            TileStackCacheController.getInstance().init(url);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            log.error(ex.toString());
+            rtnVal=false;
+        }
+
         return rtnVal;
     }
     
@@ -1349,7 +1413,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         TileConsumer viewer = allSliceViewers.get(0);
         result.setMicrometersPerWindowHeight(
                 viewer.getViewport().getHeight()
-                / camera.getPixelsPerSceneUnit());
+                        / camera.getPixelsPerSceneUnit());
+        
+        // TODO neurons
+        
+        
         return result;
     }
     
@@ -1362,9 +1430,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         TileConsumer viewer = allSliceViewers.get(0);
         float zoom = (float) (viewer.getViewport().getHeight() 
                 / sampleLocation.getMicrometersPerWindowHeight());
-        
-        if (! loadedUrl.equals(url))
-            loadRender(url);
+
+        if (url != null) {
+            if (! loadedUrl.equals(url))
+                loadRender(url);
+        }
         camera.setFocus(focus);
         camera.setPixelsPerSceneUnit(zoom);
     }

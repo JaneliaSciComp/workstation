@@ -45,7 +45,7 @@ import org.openide.util.Exceptions;
 public class VolumeSurfaceMaterial extends BasicMaterial 
 {
     private final Texture3d volumeTexture;
-    private int volumeTextureIndex = 0;
+    private int volumeTextureIndex = -1;
     
     public VolumeSurfaceMaterial(Texture3d volumeTexture) {
         this.volumeTexture = volumeTexture;

@@ -63,20 +63,20 @@ public class BasicVector implements ConstVector
 
     // TODO unchecked size
     @Override
-    public float dot(BasicVector rhs) {
+    public float dot(ConstVector rhs) {
         float result = 0;
         for (int i = 0; i < data.length; ++i)
-            result += data[i]*rhs.data[i];
+            result += data[i]*rhs.get(i);
         return result;
     }
     
     @Override
-    public float distance(BasicVector rhs) {
+    public float distance(ConstVector rhs) {
         return (float)Math.sqrt(this.distanceSquared(rhs));
     }
 
     @Override
-    public float distanceSquared(BasicVector rhs) {
+    public float distanceSquared(ConstVector rhs) {
         BasicVector v = new BasicVector(this).sub(rhs);
         return v.dot(v);
     }
@@ -112,9 +112,9 @@ public class BasicVector implements ConstVector
         return data.length;
     }
 
-    public BasicVector sub(BasicVector rhs) {
+    public BasicVector sub(ConstVector rhs) {
         for (int i = 0; i < data.length; ++i)
-            data[i] -= rhs.data[i];
+            data[i] -= rhs.get(i);
         return this;
     }
     

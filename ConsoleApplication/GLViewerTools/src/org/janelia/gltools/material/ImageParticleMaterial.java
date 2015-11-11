@@ -49,11 +49,11 @@ import org.openide.util.Exceptions;
  */
 public class ImageParticleMaterial extends BasicMaterial {
     private Texture2d particleTexture;
-    private int sphereTextureIndex = 0;
-    private int particleScaleIndex = 0;
+    private int sphereTextureIndex = -1;
+    private int particleScaleIndex = -1;
     
-    private int diffuseColorIndex = 0;
-    private int specularColorIndex = 0;
+    private int diffuseColorIndex = -1;
+    private int specularColorIndex = -1;
     private float[] diffuseColor = new float[] {1, 0, 1, 1};
     private float[] specularColor = new float[] {0, 0, 0, 0};    
 
@@ -82,10 +82,10 @@ public class ImageParticleMaterial extends BasicMaterial {
     @Override
     public void dispose(GL3 gl) {
         super.dispose(gl);
-        sphereTextureIndex = 0;
-        particleScaleIndex = 0;
-        diffuseColorIndex = 0;
-        specularColorIndex = 0;
+        sphereTextureIndex = -1;
+        particleScaleIndex = -1;
+        diffuseColorIndex = -1;
+        specularColorIndex = -1;
         particleTexture.dispose(gl);
     }
     
@@ -150,6 +150,11 @@ public class ImageParticleMaterial extends BasicMaterial {
         specularColor[1] = color.getGreen()/255f;
         specularColor[2] = color.getBlue()/255f;
         specularColor[3] = color.getAlpha()/255f;
+    }
+
+    public Color getColor()
+    {
+        return new Color(diffuseColor[0], diffuseColor[1], diffuseColor[2]);
     }
 
     private static class ImageParticleShader extends BasicShaderProgram {
