@@ -171,8 +171,6 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
     }
 
     private void saveAndClose() {
-
-        final String annotationType = DomainUtils.getCollectionName(Annotation.class);
         
         Utils.setWaitingCursor(SessionMgr.getMainFrame());
 
@@ -189,7 +187,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
                 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 ObjectSet selectedObjects = new ObjectSet();
-                selectedObjects.setCollectionName(annotationType);
+                selectedObjects.setClassName(Annotation.class.getName());
                 for(DomainObjectId id : selected) {
                     selectedObjects.addMember(id.getId());
                 }

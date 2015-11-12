@@ -65,11 +65,11 @@ public interface DomainFacade {
     
     /**
      * Returns the domain objects of a particular type, given by the list of GUIDs. 
-     * @param collectionName collection name
+     * @param className class name
      * @param ids collection of GUIDs
      * @return list of domain objects
      */
-    public List<DomainObject> getDomainObjects(String collectionName, Collection<Long> ids);
+    public List<DomainObject> getDomainObjects(String className, Collection<Long> ids);
     
     /**
      * Returns all the annotations associated with all of the domain objects referenced by the given GUIDs. 

@@ -37,7 +37,7 @@ public class DeadReference implements DomainObject {
     }
 
     public String getType() {
-        return reference.getCollectionName();
+        return reference.getTargetClassName();
     }
     
     public String getOwnerKey() {

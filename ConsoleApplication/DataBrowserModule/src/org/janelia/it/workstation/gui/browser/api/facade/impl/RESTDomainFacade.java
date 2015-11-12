@@ -108,11 +108,11 @@ public class RESTDomainFacade implements DomainFacade {
         return domainObjs;
     }
 
-    public List<DomainObject> getDomainObjects(String collectionName, Collection<Long> ids) {
+    public List<DomainObject> getDomainObjects(String className, Collection<Long> ids) {
         DomainQuery query = new DomainQuery();
         //query.setSubjectKey(SessionMgr.getSubjectKey());
         query.setSubjectKey("group:leetlab");
-        query.setObjectType(collectionName);
+        query.setObjectType(className);
         query.setObjectIds(new ArrayList<Long>(ids));
 
         Response response = serviceEndpoints.get("domainobject")
@@ -121,33 +121,33 @@ public class RESTDomainFacade implements DomainFacade {
                 .post(Entity.json(query));
         // until we resolve adding domain object specific methods or class info into mongo collections, multi if statement
         List<?> domainObjs = null;
-        if (collectionName.endsWith("DataSet")) {
+        if (className.endsWith("DataSet")) {
             domainObjs = response.readEntity(new GenericType<List<DataSet>>(){});
-        } else if (collectionName.endsWith("Image")) {
+        } else if (className.endsWith("Image")) {
             domainObjs = response.readEntity(new GenericType<List<Image>>(){});
-        } else if (collectionName.endsWith("LSMImage")) {
+        } else if (className.endsWith("LSMImage")) {
             domainObjs = response.readEntity(new GenericType<List<LSMImage>>(){});
-        } else if (collectionName.endsWith("NeuronFragment")) {
+        } else if (className.endsWith("NeuronFragment")) {
             domainObjs = response.readEntity(new GenericType<List<NeuronFragment>>(){});
-        } else if (collectionName.endsWith("NeuronSeparation")) {
+        } else if (className.endsWith("NeuronSeparation")) {
             domainObjs = response.readEntity(new GenericType<List<NeuronSeparation>>(){});
-        } else if (collectionName.endsWith("ObjectiveSample")) {
+        } else if (className.endsWith("ObjectiveSample")) {
             domainObjs = response.readEntity(new GenericType<List<ObjectiveSample>>(){});
-        } else if (collectionName.endsWith("PipelineError")) {
+        } else if (className.endsWith("PipelineError")) {
             domainObjs = response.readEntity(new GenericType<List<PipelineError>>(){});
-        } else if (collectionName.endsWith("PipelineResult")) {
+        } else if (className.endsWith("PipelineResult")) {
             domainObjs = response.readEntity(new GenericType<List<PipelineResult>>(){});
-        } else if (collectionName.endsWith("Sample")) {
+        } else if (className.endsWith("Sample")) {
             domainObjs = response.readEntity(new GenericType<List<Sample>>(){});
-        } else if (collectionName.endsWith("SampleAlignmentResult")) {
+        } else if (className.endsWith("SampleAlignmentResult")) {
             domainObjs = response.readEntity(new GenericType<List<SampleAlignmentResult>>(){});
-        } else if (collectionName.endsWith("SampleCellCountingResult")) {
+        } else if (className.endsWith("SampleCellCountingResult")) {
             domainObjs = response.readEntity(new GenericType<List<SampleCellCountingResult>>(){});
-        } else if (collectionName.endsWith("SamplePipelineRun")) {
+        } else if (className.endsWith("SamplePipelineRun")) {
             domainObjs = response.readEntity(new GenericType<List<SamplePipelineRun>>(){});
-        } else if (collectionName.endsWith("SampleProcessingResult")) {
+        } else if (className.endsWith("SampleProcessingResult")) {
             domainObjs = response.readEntity(new GenericType<List<SampleProcessingResult>>(){});
-        } else if (collectionName.endsWith("SampleTile")) {
+        } else if (className.endsWith("SampleTile")) {
             domainObjs = response.readEntity(new GenericType<List<SampleTile>>(){});
         }
 

@@ -93,9 +93,8 @@ public class ClientDomainUtils {
         return objectMap;
     }
     
-    // TODO: this does not return subclasses, because references only know the collection
     public static DomainObjectId getIdForReference(Reference ref) {
-        Class<? extends DomainObject> clazz = DomainUtils.getObjectClass(ref.getCollectionName());
+        Class<? extends DomainObject> clazz = DomainUtils.getObjectClassByName(ref.getTargetClassName());
         if (clazz==null) {
             // TODO: reenable this warning once we clean up the database
             //log.warn("Cannot generate DomainObjectId for unrecognized target type: "+ref.getTargetType());

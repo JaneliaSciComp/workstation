@@ -64,9 +64,9 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.ObjectSetCriteria;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.MongoMapped;
 import org.janelia.it.jacs.model.domain.support.SearchAttribute;
 import org.janelia.it.jacs.model.domain.support.SearchType;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.util.ReflectionHelper;
 import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
@@ -134,7 +134,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     
     // TODO: Move somewhere and factor out of DomainObjectTableViewer
     protected static final String JANELIA_MODEL_PACKAGE = "org.janelia.it.jacs.model.domain";
-    private final Map<String,String> searchTypeToCollection = new HashMap<>();
+    private final Map<String,String> searchTypeToClassName = new HashMap<>();
         
     // Search state
     private Filter filter;    
@@ -255,22 +255,17 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         // TODO: move this kinda reflection stuff to ClientDomainUtils
         for(Class<?> searchClazz : searchClasses) {
             String searchTypeKey = searchClazz.getAnnotation(SearchType.class).key();
-            String collectionName = null;
-            Class<?> clazz = searchClazz;
-            while (clazz!=null) {
-                MongoMapped mongoMapped = clazz.getAnnotation(MongoMapped.class);
-                if (mongoMapped!=null) {
-                    collectionName = mongoMapped.collectionName();
-                    break;
-                }
-                clazz = clazz.getSuperclass();
-            }
-            if (collectionName!=null) {
-                searchTypeToCollection.put(searchTypeKey, collectionName);
-            }
-            else {
-                log.warn("Cannot find collection name for search type "+searchTypeKey);
-            }
+            // TODO: do we need to find the base class?
+//            Class<?> clazz = searchClazz;
+//            while (clazz!=null) {
+//                MongoMapped mongoMapped = clazz.getAnnotation(MongoMapped.class);
+//                if (mongoMapped!=null) {
+//                    collectionName = mongoMapped.collectionName();
+//                    break;
+//                }
+//                clazz = clazz.getSuperclass();
+//            }
+            searchTypeToClassName.put(searchTypeKey, searchClazz.getName());
         }
         
     	Collections.sort(searchClasses, new Comparator<Class<?>>() {
@@ -391,7 +386,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     
     public void dropDomainObject(DomainObject obj) {
 
-        Reference reference = new Reference("objectSet", obj.getId());
+        Reference reference = new Reference(ObjectSet.class.getName(), obj.getId());
 
         ObjectSetCriteria criteria = new ObjectSetCriteria();
         criteria.setObjectSetName(obj.getName());
@@ -855,9 +850,9 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         for(SolrDocument doc : qr.getResults()) {
             Long id = new Long(doc.get("id").toString());
             String type = (String)doc.getFieldValue(SOLR_TYPE_FIELD);
-            String collectionName = searchTypeToCollection.get(type);
-            if (collectionName!=null) {
-                refs.add(new Reference(collectionName, id));
+            String className = searchTypeToClassName.get(type);
+            if (className!=null) {
+                refs.add(new Reference(className, id));
                 ids.add(id);
             }
             else {

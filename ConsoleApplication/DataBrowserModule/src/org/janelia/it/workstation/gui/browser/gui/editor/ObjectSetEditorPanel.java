@@ -69,7 +69,7 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                domainObjects = model.getDomainObjects(objectSet.getCollectionName(), objectSet.getMembers());
+                domainObjects = model.getDomainObjects(objectSet.getClassName(), objectSet.getMembers());
                 annotations = model.getAnnotations(DomainUtils.getIdList(domainObjects));
                 log.info("Showing "+domainObjects.size()+" items");
             }

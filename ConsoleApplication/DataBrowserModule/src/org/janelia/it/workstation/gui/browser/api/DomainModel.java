@@ -284,7 +284,7 @@ public class DomainModel {
         catch (ClassNotFoundException e) {
             throw new RuntimeException("Illegal domain object class: "+id.getClassName());
         }
-        Reference ref = new Reference(DomainUtils.getCollectionName(clazz), id.getId());
+        Reference ref = new Reference(clazz.getName(), id.getId());
         return facade.getDomainObject(ref);
     }
     
@@ -387,28 +387,28 @@ public class DomainModel {
     }
     
     public DomainObject getDomainObjectByReference(Reference reference) {
-        return getDomainObject(reference.getCollectionName(), reference.getTargetId());
+        return getDomainObject(reference.getTargetClassName(), reference.getTargetId());
     }
     
-    public DomainObject getDomainObject(String type, Long id) {
+    public DomainObject getDomainObject(String className, Long id) {
         List<Long> ids = new ArrayList<>();
         ids.add(id);
-        List<DomainObject> objects = getDomainObjects(type, ids);
+        List<DomainObject> objects = getDomainObjects(className, ids);
         if (objects.isEmpty()) return null;
         return objects.get(0);
     }
 
     public <T extends DomainObject> List<T> getDomainObjects(Class<T> clazz, List<Long> ids) {
         List<T> objects = new ArrayList<>();
-        for(DomainObject domainObject : getDomainObjects(DomainUtils.getCollectionName(clazz), ids)) {
+        for(DomainObject domainObject : getDomainObjects(clazz, ids)) {
             objects.add((T)domainObject);
         }
         return objects;
     }
     
-    public List<DomainObject> getDomainObjects(String type, List<Long> ids) {
+    public List<DomainObject> getDomainObjects(String className, List<Long> ids) {
         
-        if (ids==null) return new ArrayList<>();
+        if (className==null || ids==null) return new ArrayList<>();
         
         log.debug("getDomainObjects(ids.size={})",ids.size());
         
@@ -416,7 +416,7 @@ public class DomainModel {
         List<Long> unsatisfiedIds = new ArrayList<>();
         
         for(Long id : ids) {
-            Reference ref = new Reference(type, id);
+            Reference ref = new Reference(className, id);
             DomainObjectId did = ClientDomainUtils.getIdForReference(ref);
             DomainObject domainObject = did==null?null:objectCache.getIfPresent(did);
             if (domainObject!=null) {
@@ -428,7 +428,7 @@ public class DomainModel {
         }
         
         if (!unsatisfiedIds.isEmpty()) {
-            List<DomainObject> objects = facade.getDomainObjects(type, unsatisfiedIds);
+            List<DomainObject> objects = facade.getDomainObjects(className, unsatisfiedIds);
             map.putAll(ClientDomainUtils.getMapByDomainObjectId(objects));
         }
         
@@ -436,7 +436,7 @@ public class DomainModel {
         
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Long id : ids) {
-            Reference ref = new Reference(type, id);
+            Reference ref = new Reference(className, id);
             DomainObjectId did = ClientDomainUtils.getIdForReference(ref);
             DomainObject domainObject = map.get(did);
             if (domainObject!=null) {
@@ -496,7 +496,7 @@ public class DomainModel {
     }
     
     public OntologyTerm getOntologyTermByReference(OntologyTermReference reference) {
-        Ontology ontology = (Ontology)getDomainObject("ontology", reference.getOntologyId());
+        Ontology ontology = (Ontology)getDomainObject(Ontology.class, reference.getOntologyId());
         return findTerm(ontology, reference.getOntologyTermId());
     }
     
