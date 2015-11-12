@@ -661,7 +661,7 @@ public class TileStackCacheController {
             //try {
                 int sliceSize = tileSize[0] * tileSize[1];
                 int channelSize = sliceSize * tileSize[2];
-                ImageDecoder[] decoders = BlockTiffOctreeLoadAdapter.createImageDecoders(file, CoordinateAxis.Z, true, channelCount);
+                ImageDecoder[] decoders = BlockTiffOctreeLoadAdapter.createImageDecoders(file, CoordinateAxis.Z, true, channelCount, true);
                 RenderedImage[] channels = new RenderedImage[channelCount];
                 for (int z = 0; z < tileSize[2]; z++) {
                     if (!VolumeCache.useVolumeCache()) {
