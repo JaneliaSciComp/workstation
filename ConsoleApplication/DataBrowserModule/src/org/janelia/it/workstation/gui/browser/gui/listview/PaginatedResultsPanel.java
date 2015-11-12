@@ -26,6 +26,7 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotatio
 import org.janelia.it.workstation.gui.browser.events.model.PreferenceChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
@@ -74,13 +75,15 @@ public abstract class PaginatedResultsPanel extends JPanel {
     
     // State
     protected DomainObjectSelectionModel selectionModel;
-    
+    protected SearchProvider searchProvider;
+    	
     // Hud dialog
 //    protected Hud hud;
     
-    public PaginatedResultsPanel(DomainObjectSelectionModel selectionModel) {
+    public PaginatedResultsPanel(DomainObjectSelectionModel selectionModel, SearchProvider searchProvider) {
                 
         this.selectionModel = selectionModel;
+        this.searchProvider = searchProvider;
         
         setLayout(new BorderLayout());
         
@@ -226,6 +229,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
 
     private void setViewer(AnnotatedDomainObjectListViewer viewer) {
         viewer.setSelectionModel(selectionModel);
+        viewer.setSearchProvider(searchProvider);
         this.resultsView = viewer;
     }
 
@@ -318,6 +322,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
     }
 
     private synchronized void selectAll() {
+    	// TODO: implement 
 //        for (T imageObject : allImageObjects) {
 //            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
 //        }

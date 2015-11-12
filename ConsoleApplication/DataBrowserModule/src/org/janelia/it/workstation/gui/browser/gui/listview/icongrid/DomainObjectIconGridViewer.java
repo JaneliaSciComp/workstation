@@ -27,6 +27,7 @@ import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainConstants;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
@@ -49,6 +50,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
+    private SearchProvider searchProvider; // Implement UI for sorting using the search provider
     
     private String defaultSampleResult = DomainConstants.PREFERENCE_VALUE_LATEST;
     private String defaultImageType = FileType.SignalMip.name();
@@ -130,6 +132,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         setImageModel(imageModel);
     }
 
+    @Override
+    public void setSearchProvider(SearchProvider searchProvider) {
+        this.searchProvider = searchProvider;
+    }
+    
     @Override
     public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
         super.setSelectionModel(selectionModel);

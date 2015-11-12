@@ -39,20 +39,21 @@ public class ClientDomainUtils {
     }
 
     public static List<DomainObjectAttribute> getAttributes(DomainObject domainObject) {
-
-        List<DomainObjectAttribute> attrs = new ArrayList<>();
-        Class<?> clazz = domainObject.getClass();
-        
+        return getAttributes(domainObject.getClass());
+    }
+    
+    public static List<DomainObjectAttribute> getAttributes(Class<? extends DomainObject> clazz) {
+    	List<DomainObjectAttribute> attrs = new ArrayList<>();
         for (Field field : ReflectionUtils.getAllFields(clazz)) {
             SearchAttribute searchAttributeAnnot = field.getAnnotation(SearchAttribute.class);
             if (searchAttributeAnnot!=null) {
                 try {
                     Method getter = ReflectionHelper.getGetter(clazz, field.getName());
-                    DomainObjectAttribute attr = new DomainObjectAttribute(field.getName(), searchAttributeAnnot.label(), searchAttributeAnnot.key(), searchAttributeAnnot.facet(), searchAttributeAnnot.display(), getter);
+                    DomainObjectAttribute attr = new DomainObjectAttribute(field.getName(), searchAttributeAnnot.label(), searchAttributeAnnot.key(), searchAttributeAnnot.facet(), searchAttributeAnnot.display(), true, getter);
                     attrs.add(attr);
                 }
                 catch (Exception e) {
-                    log.warn("Error getting field " + field.getName() + " on object " + domainObject, e);
+                    log.warn("Error getting field " + field.getName() + " on " + clazz.getName(), e);
                 }
             }
         }
@@ -60,8 +61,11 @@ public class ClientDomainUtils {
         for (Method method : clazz.getMethods()) {
             SearchAttribute searchAttributeAnnot = method.getAnnotation(SearchAttribute.class);
             if (searchAttributeAnnot!=null) {
-                String name = method.getName().substring(0, 1).toLowerCase() + method.getName().substring(1);
-                DomainObjectAttribute attr = new DomainObjectAttribute(name, searchAttributeAnnot.label(), searchAttributeAnnot.key(), searchAttributeAnnot.facet(), searchAttributeAnnot.display(), method);
+            	String name = method.getName();
+            	if (method.getName().startsWith("get")) {
+                    name = name.substring(3, 4).toLowerCase() + name.substring(4);
+            	}
+                DomainObjectAttribute attr = new DomainObjectAttribute(name, searchAttributeAnnot.label(), searchAttributeAnnot.key(), searchAttributeAnnot.facet(), searchAttributeAnnot.display(), true, method);
                 attrs.add(attr);
             }
         }

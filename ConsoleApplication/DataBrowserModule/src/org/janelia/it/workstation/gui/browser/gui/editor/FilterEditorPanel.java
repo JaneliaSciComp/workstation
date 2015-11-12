@@ -73,6 +73,7 @@ import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
@@ -80,6 +81,7 @@ import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelec
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.EditCriteriaDialog;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
+import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
@@ -105,7 +107,7 @@ import de.javasoft.swing.SimpleDropDownButton;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEditor<Filter> {
+public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEditor<Filter>, SearchProvider {
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
     
@@ -250,6 +252,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         Reflections reflections = new Reflections(JANELIA_MODEL_PACKAGE);
         List<Class<?>> searchClasses = new ArrayList<>(reflections.getTypesAnnotatedWith(SearchType.class));
                 
+        // TODO: move this kinda reflection stuff to ClientDomainUtils
         for(Class<?> searchClazz : searchClasses) {
             String searchTypeKey = searchClazz.getAnnotation(SearchType.class).key();
             String collectionName = null;
@@ -285,7 +288,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     dirty = true;
-                    setSearchClass(searchClazz);
+                    setSearchClass((Class<? extends DomainObject>)searchClazz);
                 }
             });
             typeGroup.add(menuItem);
@@ -312,7 +315,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
         getActionMap().put("enterAction", mySearchAction);
         
-        this.resultsPanel = new PaginatedResultsPanel(selectionModel) {
+        this.resultsPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
             protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
                 ResultPage resultPage = searchResults.getPage(page);
@@ -323,7 +326,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 return resultPage;
             }
         };
-
+        
         JPanel top = new JPanel(new BorderLayout());
         top.add(filterPanel, BorderLayout.NORTH);
         top.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.CENTER);
@@ -342,7 +345,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     public void loadNewFilter() {
         this.filter = new Filter();
         filter.setName(DEFAULT_FILTER_NAME);
-        filter.setSearchType(DEFAULT_SEARCH_CLASS.getName());
+        filter.setSearchClass(DEFAULT_SEARCH_CLASS.getName());
         loadDomainObject(filter);
     }
     
@@ -355,11 +358,11 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         this.filter = filter;
         
         try {
-            setSearchClass(Class.forName(filter.getSearchType()));
+            setSearchClass(DomainUtils.getObjectClassByName(filter.getSearchClass()));
         }
-        catch (ClassNotFoundException e) {
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
-            loadNewFilter();
+            loadNewFilter(); // TODO: fix potential for infinite recursion
         }
     }
 
@@ -399,7 +402,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         refresh();
     }
     
-    private void setSearchClass(Class<?> searchClass) {
+    private void setSearchClass(Class<? extends DomainObject> searchClass) {
         this.searchClass = searchClass;
         
         SearchType searchTypeAnnot = searchClass.getAnnotation(SearchType.class);
@@ -410,21 +413,11 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         facets.add(SOLR_TYPE_FIELD);
         facetValues.clear();
 
-        for (Field field : ReflectionUtils.getAllFields(searchClass)) {
-            SearchAttribute searchAttributeAnnot = field.getAnnotation(SearchAttribute.class);
-            if (searchAttributeAnnot != null) {
-                if (searchAttributeAnnot.facet()) {
-                    facets.add(searchAttributeAnnot.key());
-                }
-                try {
-                    Method getter = ReflectionHelper.getGetter(searchClass, field.getName());
-                    DomainObjectAttribute attr = new DomainObjectAttribute(field.getName(), searchAttributeAnnot.label(), searchAttributeAnnot.key(), searchAttributeAnnot.facet(), searchAttributeAnnot.display(), getter);
-                    searchAttrs.put(attr.getName(),attr);
-                }
-                catch (Exception e) {
-                    log.warn("Error getting field "+searchClass.getName()+"."+field.getName(), e);
-                }
+        for(DomainObjectAttribute attr : ClientDomainUtils.getAttributes(searchClass)) {
+            if (attr.isFacet()) {
+            	facets.add(attr.getSearchKey());
             }
+            searchAttrs.put(attr.getName(),attr);
         }
         
         if (filter.hasCriteria()) {
@@ -771,7 +764,15 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         
         return builder;
     }
-            
+
+	public void setSortField(String sortField) {
+		this.filter.setSort(sortField);
+	}
+	
+	public void search() {
+		performSearch(0, true);
+	}
+	
     public synchronized void performSearch(final int pageNum, final boolean showLoading) {
 
         log.debug("performSearch(pageNum={},showLoading={})", pageNum, showLoading);

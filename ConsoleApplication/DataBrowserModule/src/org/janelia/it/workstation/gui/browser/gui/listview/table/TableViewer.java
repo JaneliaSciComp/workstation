@@ -7,6 +7,7 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JTable;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -100,9 +101,16 @@ public abstract class TableViewer<T,S> extends JPanel {
         resultsTable.clearColumns();
         for(DomainObjectAttribute searchAttr : searchAttrs) {
             // TODO: control default visibility based on saved user preference
-            DynamicColumn column = resultsTable.addColumn(searchAttr.getName(), searchAttr.getLabel(), true, false, true, true);
-//            columnByName.put(attr.getName(), column);
+            resultsTable.addColumn(searchAttr.getName(), searchAttr.getLabel(), searchAttr.isDisplay(), false, true, searchAttr.isSortable());
         }
+    }
+    
+    protected DynamicTable getDynamicTable() {
+    	return resultsTable;
+    }
+    
+    protected JTable getTable() {
+    	return resultsTable.getTable();
     }
     
     protected List<DynamicRow> getRows() {
@@ -129,6 +137,5 @@ public abstract class TableViewer<T,S> extends JPanel {
     
     protected void updateTableModel() {
         resultsTable.updateTableModel();
-//        resultsTable.getTable().setRowSorter(new SearchResultsPanel.SolrRowSorter());
     }
 }
