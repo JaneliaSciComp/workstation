@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 // std lib imports
 
+import org.janelia.it.workstation.gui.large_volume_viewer.action.ImportRemoteSWCAction;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;

@@ -1,9 +1,12 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
+package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 
 /**
@@ -51,7 +54,7 @@ public class ImportRemoteSWCAction extends AbstractAction {
                     SessionMgr.getSessionMgr().handleException(error);
                 }
             };
-            importer.executeWithEvents();
+            importer.execute();
             
         }        
     }
