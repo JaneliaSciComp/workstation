@@ -89,7 +89,6 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating SWC-loaded workspace...", ""));
         worker.execute();
     }
 
@@ -116,7 +115,7 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
 
     @Override
     public String getActionLabel() {
-        return "   Load SWC file on server, and build workspace on sample.";
+        return "  Load SWC file on server, and build workspace on sample.";
     }
 
     /**
