@@ -745,10 +745,18 @@ called from a  SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.start();
+                System.out.println("calling fireNotesUpdated(): " + stopwatch);
                 fireNotesUpdated(workspace);
+                System.out.println("calling fireNeuronSelected(): " + stopwatch);
                 fireNeuronSelected(updateTargetNeuron);
+                System.out.println("calling fireWorkspaceLoaded(): " + stopwatch);
                 fireWorkspaceLoaded(workspace);
+                System.out.println("calling fireAnnotationReparented(): " + stopwatch);
                 fireAnnotationReparented(updateSourceAnnotation);
+                System.out.println("UI updates completed(): " + stopwatch);
+                stopwatch.stop();
             }
         });
 
@@ -866,13 +874,22 @@ called from a  SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.start();
+                System.out.println("calling fireNotesUpdated(): " + stopwatch);
                 fireNotesUpdated(workspace);
+                System.out.println("calling fireNeuronSelected(): " + stopwatch);
                 fireNeuronSelected(updateTargetNeuron);
+                System.out.println("calling fireWorkspaceLoaded(): " + stopwatch);
                 fireWorkspaceLoaded(workspace);
+                System.out.println("calling fireAnnotationReparented(): " + stopwatch);
                 for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
                     fireAnnotationReparented(child);
                 }
+                System.out.println("calling fireAnnotationsDeleted(): " + stopwatch);
                 fireAnnotationsDeleted(deleteList);
+                System.out.println("UI updates completed(): " + stopwatch);
+                stopwatch.stop();
             }
         });
 
