@@ -220,14 +220,14 @@ extends MultipassRenderer
         double result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 3);
         if (result <= 0)
             result = 0;
-        return result;
+        return result / 65535; // rescale to range 0-1
     }
     
     private boolean isVisibleOpaqueAtScreenXy(Point2D xy, AbstractCamera camera) {
         double od = opaqueRenderPass.rawZDepthForScreenXy(xy, drawable);
         if (od >= 1.0) 
             return false; // far clip value means no geometry there
-        double opacity = opacityForScreenXy(xy, camera) / 65535;
+        double opacity = opacityForScreenXy(xy, camera);
         // TODO: threshold might need to be tuned
         final double opacityThreshold = 0.5; // Always use transparent material, if it's dense enough
         if (opacity >= opacityThreshold)

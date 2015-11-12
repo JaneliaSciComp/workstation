@@ -58,16 +58,15 @@ public class NeuronSetAdapter
 extends BasicNeuronSet
 implements NeuronSet
 {
-    private TmWorkspace workspace = null;
+    private TmWorkspace workspace;
     private AnnotationModel annotationModel;
     private final GlobalAnnotationListener globalAnnotationListener;
     private final TmGeoAnnotationModListener annotationModListener;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public NeuronSetAdapter(TmWorkspace workspace)
+    public NeuronSetAdapter()
     {
-        super("LVV Neurons", new NeuronList(workspace));
-        this.workspace = workspace;
+        super("LVV Neurons", new NeuronList());
         globalAnnotationListener = new MyGlobalAnnotationListener();
         annotationModListener = new MyTmGeoAnnotationModListener();
     }
@@ -86,6 +85,13 @@ implements NeuronSet
         this.annotationModel = annotationModel;
         annotationModel.addGlobalAnnotationListener(globalAnnotationListener);
         annotationModel.addTmGeoAnnotationModListener(annotationModListener);
+    }
+    
+    private void sanityCheckWorkspace() {
+        TmWorkspace w = this.annotationModel.getCurrentWorkspace();
+        if (w == workspace) return; // unchanged
+        logger.info("Workspace changed");
+        setWorkspace(w);
     }
     
     // Recache edge data structures after vertices change
@@ -111,8 +117,13 @@ implements NeuronSet
             return super.getName();
     }
     
-    private void setWorkspace(TmWorkspace workspace) {
+    private boolean setWorkspace(TmWorkspace workspace) {
+        if (this.workspace == workspace)
+            return false;
         this.workspace = workspace;
+        NeuronList nl = (NeuronList) neurons;
+        nl.wrap(workspace, annotationModel);
+        return true;
     }
 
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener
@@ -122,6 +133,7 @@ implements NeuronSet
         public void annotationAdded(TmGeoAnnotation annotation)
         {
             logger.info("annotationAdded");
+            sanityCheckWorkspace();
             updateEdges();
         }
 
@@ -129,6 +141,7 @@ implements NeuronSet
         public void annotationsDeleted(List<TmGeoAnnotation> annotations)
         {
             logger.info("annotationDeleted");
+            sanityCheckWorkspace();
             updateEdges();
         }
 
@@ -155,9 +168,6 @@ implements NeuronSet
         {
             logger.info("Workspace loaded");
             setWorkspace(workspace);
-            NeuronList nl = (NeuronList) neurons;
-            // Map<Long, NeuronStyle> neuronStyleMap = annotationModel.getNeuronStyleMap();
-            nl.wrap(workspace, annotationModel);
             // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
             getMembershipChangeObservable().setChanged();
             getNameChangeObservable().setChanged();
@@ -178,13 +188,9 @@ implements NeuronSet
     private static class NeuronList implements Collection<NeuronModel>
     {
         private TmWorkspace workspace;
-        private final Map<Long, NeuronModel> cachedNeurons = new HashMap<>();
+        private final Map<Long, NeuronModelAdapter> cachedNeurons = new HashMap<>();
         private AnnotationModel annotationModel;
         // private Map<Long, NeuronStyle> neuronStyleMap;
-        
-        public NeuronList(TmWorkspace workspace) {
-            this.workspace = workspace;
-        }
         
         @Override
         public int size()
@@ -314,8 +320,24 @@ implements NeuronSet
 
         private void wrap(TmWorkspace workspace, AnnotationModel annotationModel)
         {
-            this.workspace = workspace;
+            // I assume annotation model never changes...
+            assert( (this.annotationModel == annotationModel) || (this.annotationModel == null));
             this.annotationModel = annotationModel;
+            
+            // Sadly, sometimes the workspace instance does change out from underneath us...
+            if ( (this.workspace != null) && (this.workspace != workspace) ) {
+                this.workspace = workspace;
+                // Keep our NeuronModel instances persistent, even when the underlying
+                // TmNeuron instance (annoyingly) changes
+                for (TmNeuron tmNeuron : workspace.getNeuronList()) {
+                    Long id = tmNeuron.getId();
+                    if (cachedNeurons.containsKey(id)) {
+                        NeuronModelAdapter neuron = cachedNeurons.get(id);
+                        neuron.updateWrapping(tmNeuron, annotationModel, workspace);
+                    }
+                }
+            }
+            this.workspace = workspace;
         }
         
     }

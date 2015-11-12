@@ -60,9 +60,9 @@ import org.slf4j.LoggerFactory;
  */
 public class NeuronModelAdapter implements NeuronModel
 {
-    private final TmNeuron neuron;
+    private TmNeuron neuron;
     private final Long neuronId;
-    private final Collection<NeuronVertex> vertexes;
+    private final VertexList vertexes;
     private final EdgeList edges;
     private final ObservableInterface colorChangeObservable = new ComposableObservable();
     private final ObservableInterface geometryChangeObservable = new ComposableObservable();
@@ -85,7 +85,16 @@ public class NeuronModelAdapter implements NeuronModel
         this.annotationModel = annotationModel;
         bIsVisible = true; // TODO: 
         vertexes = new VertexList(neuron.getGeoAnnotationMap(), workspace);
-        edges = new EdgeList((VertexList)vertexes);
+        edges = new EdgeList(vertexes);
+    }
+    
+    public void updateWrapping(TmNeuron neuron, AnnotationModel annotationModel, TmWorkspace workspace) {
+        if (this.neuron != neuron) {
+            this.neuron = neuron;
+            assert this.neuronId.equals(neuron.getId()); // Must use .equals() friggin java...
+        }
+        assert this.annotationModel == annotationModel; // We are not willing to update THAT far
+        this.vertexes.updateWrapping(neuron.getGeoAnnotationMap(), workspace);
     }
 
     public boolean updateEdges() {
@@ -355,14 +364,25 @@ public class NeuronModelAdapter implements NeuronModel
     // Adapter to make a Map<Long, TmGeoAnnotation> look like a Collection<NeuronVertex>
     private static class VertexList implements Collection<NeuronVertex> 
     {
-        private final Map<Long, TmGeoAnnotation> vertices;
+        private Map<Long, TmGeoAnnotation> vertices;
         private final Map<Long, NeuronVertex> cachedVertices = new HashMap<>();
-        private final TmWorkspace workspace;
+        private TmWorkspace workspace;
 
         private VertexList(Map<Long, TmGeoAnnotation> vertices, TmWorkspace workspace)
         {
             this.vertices = vertices;
             this.workspace = workspace;
+        }
+        
+        private void updateWrapping(Map<Long, TmGeoAnnotation> geoAnnotationMap, TmWorkspace workspace)
+        {
+            if (this.vertices != geoAnnotationMap) {
+                this.vertices = geoAnnotationMap;
+                cachedVertices.clear(); // just in case
+            }
+            if (this.workspace != workspace) {
+                this.workspace = workspace;
+            }
         }
         
         @Override
@@ -480,7 +500,7 @@ public class NeuronModelAdapter implements NeuronModel
             }
             return cachedVertices.get(vertexId);
         }
-        
+
     }
 
 }
