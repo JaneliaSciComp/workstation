@@ -131,7 +131,7 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
     @Override
     public String getToolTipText() {
         return ""
-                + "Middle-drag to rotate, dude";
+                + "Middle-drag to rotate";
     } 
 
     @Override
@@ -150,12 +150,16 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
         if (event.isPopupTrigger()) {
             // Do not change cursor on popup
         }
-        else if ((event.getModifiers() & InputEvent.BUTTON2_MASK) != 0) {
+        // else if ((event.getModifiers() & InputEvent.BUTTON2_MASK) != 0) {
+        else if (isRotateMode(event)) {
 			checkCursor(rotateCursor);
 		}
-        else {
+        else if (isPanMode(event)) {
 			checkCursor(grabHandCursor);
 		}
+        else {
+            checkCursor(crosshairCursor);
+        }
     }
 
     @Override
@@ -179,11 +183,11 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
             int dy = event.getPoint().y - previousPoint.y;
             if ( (dx != 0) || (dy != 0) ) {
                 // Left drag to pan
-                if (SwingUtilities.isLeftMouseButton(event)) {
+                if (isPanMode(event)) {
                     bChanged = panPixels(-dx, dy, 0);
                 }
                 // Middle drag to rotate
-                else if (SwingUtilities.isMiddleMouseButton(event)) {
+                else if (isRotateMode(event)) {
                     if (camera.getVantage().isConstrainedToUpDirection())
                         bChanged = orbitPixels(dx, -dy, 6.0f);
                     else 
@@ -205,6 +209,26 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
         // System.out.println("Mouse wheel moved");
         if (zoomMouseWheel(event, 0.15f))
             notifyObservers();
+    }
+    
+    private boolean isRotateMode(MouseEvent event) {
+        // Middle drag to rotate
+        if (SwingUtilities.isMiddleMouseButton(event))
+            return true;
+        // OR Shift left-drag to rotate
+        if (SwingUtilities.isLeftMouseButton(event) && event.isShiftDown())
+            return true;
+        return false;
+    }
+    
+    private boolean isPanMode(MouseEvent event) {
+        // Shift-drag is rotate
+        if (isRotateMode(event))
+            return false;
+        // Other left-drag is pan
+        if (SwingUtilities.isLeftMouseButton(event))
+            return true;
+        return false;
     }
 
 }

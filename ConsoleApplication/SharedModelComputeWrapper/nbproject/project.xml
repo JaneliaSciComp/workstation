@@ -69,6 +69,7 @@
                 <package>org.janelia.it.jacs.model.util</package>
                 <package>org.janelia.it.jacs.model.vo</package>
                 <package>org.janelia.it.jacs.shared.annotation</package>
+                <package>org.janelia.it.jacs.shared.annotation.metrics_logging</package>
                 <package>org.janelia.it.jacs.shared.blast</package>
                 <package>org.janelia.it.jacs.shared.blast.blastxmlparser</package>
                 <package>org.janelia.it.jacs.shared.blast.blastxmlparser.jaxb</package>

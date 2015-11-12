@@ -52,7 +52,6 @@ import org.janelia.gltools.MultipassRenderer;
 import org.janelia.gltools.RemapColorActor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
-import org.janelia.horta.actors.SwcActor;
 import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
@@ -259,6 +258,16 @@ extends MultipassRenderer
         backgroundRenderPass.setColor(topColor, bottomColor);
     }
 
+    // Quick method for hiding all neuron models - ulimately attached to "V" keystroke
+    // Returns true if status changed and there exist hideable items;
+    // i.e. if calling this method might have made a difference
+    public boolean setHideAll(boolean doHideAll) {
+        boolean result = allSwcActor.setHideAll(doHideAll);
+        if (result)
+            setIntensityBufferDirty(); // Now we can see behind the neurons, so repaint
+        return result;
+    }
+    
     private class VolumeLayerExpirer implements Observer
     {
 
@@ -321,8 +330,7 @@ extends MultipassRenderer
         }
     }
     
-    
-    // One primitive at a time renderer for performance efficiency
+    // One primitive-type at a time renderer for performance efficiency
     private static class AllSwcActor extends BasicGL3Actor 
     {
         // For performance efficiency, render similar primitives all at once
@@ -336,6 +344,8 @@ extends MultipassRenderer
         private final Texture2d lightProbeTexture;
         private final ShaderProgram spheresShader = new SpheresMaterial.SpheresShader();
         private final ShaderProgram conesShader = new ConesMaterial.ConesShader();
+        
+        private boolean bHideAll = false;
 
         public AllSwcActor()
         {
@@ -364,7 +374,21 @@ extends MultipassRenderer
         }
         
         @Override
+        public void dispose(GL3 gl) {
+            spheresShader.dispose(gl);
+            conesShader.dispose(gl);
+            lightProbeTexture.dispose(gl);
+            for ( SpheresActor a : currentNeuronSphereActors.values() )
+                a.dispose(gl);
+            for ( ConesActor a : currentNeuronConeActors.values() )
+                a.dispose(gl);
+            super.dispose(gl);
+        }
+    
+        @Override
         public void display(GL3 gl, AbstractCamera camera, Matrix4 modelViewMatrix) {
+            if (bHideAll)
+                return;
             super.display(gl, camera, modelViewMatrix);
             
             float micrometersPerPixel = 
@@ -447,6 +471,19 @@ extends MultipassRenderer
 
         public Collection<NeuronModel> coneNeurons() {
             return currentNeuronConeActors.keySet();
+        }
+        
+        public boolean isEmpty() {
+            return currentNeuronConeActors.isEmpty() && currentNeuronSphereActors.isEmpty();
+        }
+        
+        // Returns true if status changed and there exist hideable items;
+        // i.e. if calling this method might have made a difference
+        public boolean setHideAll(boolean doHideAll) {
+            if (doHideAll == bHideAll)
+                return false;
+            bHideAll = doHideAll;
+            return ! isEmpty();
         }
     }
     

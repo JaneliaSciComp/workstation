@@ -53,6 +53,8 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -75,12 +77,16 @@ import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.KeyStroke;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -223,6 +229,30 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         // Create right-click context menu
         setupContextMenu(sceneWindow.getInnerComponent());
+        
+        // Press "V" to hide all neuron models
+        InputMap inputMap = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        inputMap.put(KeyStroke.getKeyStroke("pressed V"), "hideModels");
+        inputMap.put(KeyStroke.getKeyStroke("released V"), "unhideModels");
+        ActionMap actionMap = getActionMap();
+        actionMap.put("hideModels", new AbstractAction(){
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                // System.out.println("hide models");
+                if (neuronMPRenderer.setHideAll(true))
+                    sceneWindow.getInnerComponent().repaint();
+            }
+        });
+        actionMap.put("unhideModels", new AbstractAction(){
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                // System.out.println("unhide models");
+                if (neuronMPRenderer.setHideAll(false))
+                    sceneWindow.getInnerComponent().repaint();
+            }
+        });
 
         // When the camera changes, that blows our cached cursor information
         cursorCacheDestroyer = new Observer() {
@@ -694,7 +724,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             }
         }));
     }
-
+    
     private void setupContextMenu(Component innerComponent) {
         // Context menu for window - at first just to see if it works with OpenGL
         // (A: YES, if applied to the inner component)
