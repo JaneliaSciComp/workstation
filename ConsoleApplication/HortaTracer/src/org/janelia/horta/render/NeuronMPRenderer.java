@@ -55,7 +55,6 @@ import org.janelia.gltools.MultipassRenderer;
 import org.janelia.gltools.RemapColorActor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
-import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.geometry3d.Matrix4;
@@ -67,6 +66,7 @@ import org.janelia.horta.actors.ConesActor;
 import org.janelia.horta.actors.ConesMaterial;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.SpheresMaterial;
+import org.janelia.horta.modelapi.HortaWorkspace;
 import org.openide.util.Exceptions;
 
 /**

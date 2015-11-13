@@ -35,27 +35,28 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Observer;
 import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.geometry3d.Vantage;
-import org.janelia.horta.modelapi.HortaWorkspace;
+// import org.janelia.geometry3d.Vantage;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.VantageInterface;
+import org.janelia.horta.modelapi.HortaWorkspace;
 
 /**
  * @author Christopher Bruns
  */
 public class BasicHortaWorkspace implements HortaWorkspace
 {
-    private final Vantage vantage;
+    private final VantageInterface vantage;
     private final ComposableObservable changeObservable = new ComposableObservable();
     private Color backgroundColor = new Color(0.1f, 0.1f, 0.1f, 1f);
     private final Collection<NeuronSet> neuronLists = new HashSet<>();
 
-    public BasicHortaWorkspace(Vantage vantage) {
+    public BasicHortaWorkspace(VantageInterface vantage) {
         this.vantage = vantage;
     }
 
     
     @Override
-    public Vantage getVantage()
+    public VantageInterface getVantage()
     {
         return vantage;
     }

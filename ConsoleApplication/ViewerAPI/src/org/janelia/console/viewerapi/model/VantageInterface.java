@@ -28,58 +28,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.nodes;
+package org.janelia.console.viewerapi.model;
 
-import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
-import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.horta.modelapi.HortaWorkspace;
-import org.openide.nodes.ChildFactory;
-import org.openide.nodes.Node;
+import org.janelia.console.viewerapi.ObservableInterface;
 
 /**
  *
  * @author Christopher Bruns
  */
-class HortaWorkspaceChildFactory extends ChildFactory<NeuronSet>
+public interface VantageInterface extends ObservableInterface
 {
-    private final HortaWorkspace workspace;
-    private final Observer refresher;
-
-    public HortaWorkspaceChildFactory(HortaWorkspace workspace)  {
-        this.workspace = workspace;
-        refresher = new Observer() {
-            @Override
-            public void update(Observable o, Object arg) {
-                refresh(false);
-            }
-        };
-        workspace.addObserver(refresher);
-    }
-
-    @Override
-    protected boolean createKeys(List<NeuronSet> toPopulate)
-    {
-        for (NeuronSet neuronList : workspace.getNeuronSets()) {
-            // Only show neuron lists with, you know, neurons in them.
-            neuronList.getMembershipChangeObservable().deleteObserver(refresher);
-            if (neuronList.size() == 0) {
-                // Listen for changes to empty neuron list content
-                neuronList.getMembershipChangeObservable().addObserver(refresher);
-            }
-            else {
-                toPopulate.add(neuronList);
-            }
-        }
-        return true;
-    }
+    // Zoom
+    float getSceneUnitsPerViewportHeight();
+    boolean setSceneUnitsPerViewportHeight(float zoom);
     
-    @Override
-    protected Node createNodeForKey(NeuronSet key)
-    {
-        return new NeuronSetNode(key);
-    }
+    // Center
+    boolean setFocus(float x, float y, float z);
+    float[] getFocus();
     
+    // Rotation
+    // TODO: How to best express 3D rotation in basic Java types?
 }
