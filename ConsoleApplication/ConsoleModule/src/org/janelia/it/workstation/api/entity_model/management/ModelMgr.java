@@ -1208,27 +1208,6 @@ public final class ModelMgr {
         FacadeManager.getFacadeManager().getEntityFacade().importSWCFolder(swcFolderLoc, ownerKey, workspaceId, sampleId);
     }
 
-    /**
-     * Imports all the SWC files in the folder, into a new workspace belonging
-     * to owner key.  Uses pipeline facility.
-     */
-    public Task submitSwcImportFolder(String swcFolderLoc, String ownerKey, Long sampleId) throws Exception {
-        if (ownerKey == null) {
-            throw new IllegalArgumentException("Owner key must not be null.");
-        }
-        if (swcFolderLoc == null) {
-            throw new IllegalArgumentException("Folder location must be specified.");
-        }
-        if (sampleId == null) {
-            throw new IllegalArgumentException("Sample ID must be provided.");
-        }
-        String username = ownerKey;
-        if (ownerKey.contains(":")) {
-            username = ownerKey.substring(ownerKey.indexOf(":") + 1);
-        }
-        return FacadeManager.getFacadeManager().getEntityFacade().submitSwcFolderImport(swcFolderLoc, username, sampleId);
-    }
-
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeNeuron(workspaceId, name);
     }

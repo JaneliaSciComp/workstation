@@ -256,12 +256,6 @@ public class EJBEntityFacade implements EntityFacade {
     }
     
     @Override
-    public Task submitSwcFolderImport(String swcFolderLoc, String username, Long sampleId) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().submitSwcFolderImport(swcFolderLoc, username, sampleId);
-    }
-
-    
-    @Override
     public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
                                                   double x, double y, double z, String comment) throws Exception {
         return EJBFactory.getRemoteTiledMicroscopeBean().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
