@@ -45,10 +45,12 @@
                 <package>org.janelia.it.jacs.model.tasks.fly</package>
                 <package>org.janelia.it.jacs.model.tasks.geometricSearch</package>
                 <package>org.janelia.it.jacs.model.tasks.maskSearch</package>
+                <package>org.janelia.it.jacs.model.tasks.mip</package>
                 <package>org.janelia.it.jacs.model.tasks.neuron</package>
                 <package>org.janelia.it.jacs.model.tasks.neuronSeparator</package>
                 <package>org.janelia.it.jacs.model.tasks.search</package>
                 <package>org.janelia.it.jacs.model.tasks.tic</package>
+                <package>org.janelia.it.jacs.model.tasks.tiledMicroscope</package>
                 <package>org.janelia.it.jacs.model.tasks.utility</package>
                 <package>org.janelia.it.jacs.model.tasks.validation</package>
                 <package>org.janelia.it.jacs.model.user_data</package>
@@ -58,6 +60,7 @@
                 <package>org.janelia.it.jacs.model.user_data.export</package>
                 <package>org.janelia.it.jacs.model.user_data.geometricSearch</package>
                 <package>org.janelia.it.jacs.model.user_data.maskSearch</package>
+                <package>org.janelia.it.jacs.model.user_data.mip</package>
                 <package>org.janelia.it.jacs.model.user_data.neuron</package>
                 <package>org.janelia.it.jacs.model.user_data.neuronSeparator</package>
                 <package>org.janelia.it.jacs.model.user_data.prefs</package>

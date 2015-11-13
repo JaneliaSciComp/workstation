@@ -2,16 +2,18 @@ package org.janelia.it.workstation.gui.large_volume_viewer.creation;
 
 import java.awt.Component;
 import java.io.File;
+import java.util.HashSet;
 import javax.swing.JOptionPane;
+
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.nb_action.EntityWrapperCreator;
-import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
+import org.janelia.it.jacs.model.tasks.tiledMicroscope.SwcImportTask;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.shared.workers.BackgroundWorker;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
@@ -36,53 +38,59 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
 
         SimpleWorker worker = new SimpleWorker() {
             
+            private String userInput;
+            
             @Override
             protected void doStuff() throws Exception {
                 // Simple dialog: just enter the path.  Should be a server-known path.
-                final String userInput = JOptionPane.showInputDialog(
+                userInput = JOptionPane.showInputDialog(
                         mainFrame,
                         "Enter Full Path to Input Folder", "Input Folder",
                         JOptionPane.PLAIN_MESSAGE
                 );
                 if (userInput != null) {
-                    TaskMonitoringWorker importer = new TaskMonitoringWorker() {
-                        @Override
-                        protected void doStuff() throws Exception {
-                            String ownerKey = SessionMgr.getSessionMgr().getSubject().getKey();
-                            // Expect the sample to be the 'main entity' of the LVV, if there is
-                            // no workspace.                                                        
-                            Task task = ModelMgr.getModelMgr().submitSwcImportFolder(
-                                    userInput,
-                                    ownerKey,
-                                    rootedEntity.getEntityId()
-                            );
-                            this.setTaskId(task.getObjectId());
-                        }
+                    String ownerKey = SessionMgr.getSessionMgr().getSubject().getKey();
+                    // Expect the sample to be the 'main entity' of the LVV, since there is
+                    // no workspace.                                                        
+                    try {
+                        Long sampleId = rootedEntity.getEntityId();
+                        HashSet<TaskParameter> taskParameters = new HashSet<>();
+                        taskParameters.add(new TaskParameter(SwcImportTask.PARAM_sampleId, sampleId.toString(), null));
+                        taskParameters.add(new TaskParameter(SwcImportTask.PARAM_userName, ownerKey, null));
+                        taskParameters.add(new TaskParameter(SwcImportTask.PARAM_topLevelFolderName, userInput, null));
 
-                        @Override
-                        public String getName() {
-                            if (userInput != null) {
-                                File uiFile = new File(userInput);
-                                return "import all SWCs in " + uiFile.getName();
-                            } else {
-                                return "import SWC for sample";
+                        String taskName = new File(userInput).getName();
+                        String displayName = taskName + " for 3D tiled microscope sample " + sampleId;
+                        final Task task = ModelMgr.getModelMgr().submitJob(SwcImportTask.PROCESS_NAME, displayName, taskParameters);
+
+                        // Launch another thread/worker to monitor the 
+                        // remote-running task.
+                        TaskMonitoringWorker tmw = new TaskMonitoringWorker(task.getObjectId()) {
+                            @Override
+                            public void doStuff() throws Exception {
+                                super.doStuff();
                             }
-                        }
-
-                        @Override
-                        protected void hadSuccess() {
-                        }
-
-                        @Override
-                        protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
-                        }
-                    };
-                    importer.executeWithEvents();
-
+                            @Override
+                            public String getName() {
+                                if (userInput != null) {
+                                    File uiFile = new File(userInput);
+                                    return "import all SWCs in " + uiFile.getName();
+                                } else {
+                                    return "import SWC for sample";
+                                }
+                            }
+                            
+                        };
+                        tmw.executeWithEvents();
+                        
+                    } catch (Exception e) {
+                        String errorString = "Error launching : " + e.getMessage();
+                        log.error(errorString);
+                        throw e;
+                    }
                 }
-            }
-            
+            }                         
+
             @Override
             protected void hadSuccess() {
             }
