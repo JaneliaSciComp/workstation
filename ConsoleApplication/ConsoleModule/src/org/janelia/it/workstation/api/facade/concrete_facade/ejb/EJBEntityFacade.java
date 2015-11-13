@@ -9,6 +9,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import java.util.*;
 
 import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
+import org.janelia.it.jacs.model.tasks.Task;
 
 /**
  * Created by IntelliJ IDEA.
@@ -253,12 +254,6 @@ public class EJBEntityFacade implements EntityFacade {
     public void importSWCFolder(String swcFolderLoc, String ownerKey, Long workspaceId, Long sampleId) throws Exception {
         EJBFactory.getRemoteTiledMicroscopeBean().importSWCFolder(swcFolderLoc, ownerKey, workspaceId, sampleId);
     }
-    
-    @Override
-    public void submitSwcFolderImport(String swcFolderLoc, String username, Long sampleId) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().submitSwcFolderImport(swcFolderLoc, username, sampleId);
-    }
-
     
     @Override
     public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,

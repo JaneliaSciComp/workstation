@@ -3,7 +3,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 // std lib imports
 
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ImportRemoteSWCAction;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -24,14 +23,8 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.filechooser.FileFilter;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 
@@ -231,12 +224,6 @@ public class AnnotationPanel extends JPanel
         importSWCActionMulti.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCActionMulti));
-
-        ImportRemoteSWCAction importRemoteSwcAction = new ImportRemoteSWCAction(this, annotationModel, this.annotationMgr);
-        importRemoteSwcAction.putValue(Action.NAME, "Import SWC Data on Server...");
-        importRemoteSwcAction.putValue(Action.SHORT_DESCRIPTION,
-                "Import one or more SWC files into the workspace");
-        workspaceToolMenu.add(new JMenuItem(importRemoteSwcAction));
 
         workspaceToolMenu.add(new JMenuItem(new AbstractAction("Save color model") {
             @Override

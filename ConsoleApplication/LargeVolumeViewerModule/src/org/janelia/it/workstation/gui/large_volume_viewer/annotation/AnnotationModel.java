@@ -1418,30 +1418,6 @@ called from a  SimpleWorker thread.
         }
     }
 
-    public void importRemoteSWCFolder(String swcFolderLoc, Long lvvEntityId) throws Exception {
-        String ownerKey = SessionMgr.getSessionMgr().getSubject().getKey();
-//        Long workspaceId = null;
-        // Expect the sample to be the 'main entity' of the LVV, if there is
-        // no workspace.
-        Long sampleId = lvvEntityId;
-        if (getCurrentWorkspace() != null) {
-//            workspaceId = getCurrentWorkspace().getId();
-            sampleId = getCurrentWorkspace().getSampleID();
-        }
-        ModelMgr.getModelMgr().submitSwcImportFolder(
-                swcFolderLoc, 
-                ownerKey,
-                sampleId
-        );
-//        ModelMgr.getModelMgr().importSWCFolder(
-//                swcFolderLoc,
-//                ownerKey,
-//                workspaceId, 
-//                sampleId
-//        );
-    }
-    
-    
     public void importBulkSWCData(File swcFile, SimpleWorker worker, boolean selectOnCompletion) throws Exception {
 
         // the constructor also triggers the parsing, but not the validation
