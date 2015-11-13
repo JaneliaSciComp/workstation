@@ -145,11 +145,11 @@ implements NeuronSet
                 if (neuron.getTmNeuron().getId().equals(neuronId)) {
                     neuron.addVertex(annotation);
                     neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
-                    // neuron.getGeometryChangeObservable().notifyObservers(); // update display now! TODO: Does not work.
+                    // TODO: - trigger a Horta repaint
+                    neuron.getGeometryChangeObservable().notifyObservers(); // update display now! TODO: Does not work.
+                    break;
                 }
             }
-            
-            // TODO - trigger a Horta repaint. 
         }
 
         @Override
