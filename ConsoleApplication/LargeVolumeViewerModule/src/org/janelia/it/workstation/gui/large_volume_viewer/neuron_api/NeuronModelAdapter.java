@@ -88,6 +88,19 @@ public class NeuronModelAdapter implements NeuronModel
         edges = new EdgeList(vertexes);
     }
     
+    void addVertex(TmGeoAnnotation annotation)
+    {
+        Long vertexId = annotation.getId();
+        assert(vertexes.containsKey(vertexId));
+        Long parentId = annotation.getParentId();
+        // Add edge
+        if (vertexId.equals(parentId)) 
+            return; // No parent, so no edge
+        assert(vertexes.containsKey(parentId));
+        edges.add(new NeuronEdgeAdapter(vertexes.getVertexByGuid(vertexId), vertexes.getVertexByGuid(parentId)));
+        getGeometryChangeObservable().setChanged();
+    }
+    
     public void updateWrapping(TmNeuron neuron, AnnotationModel annotationModel, TmWorkspace workspace) {
         if (this.neuron != neuron) {
             this.neuron = neuron;
@@ -231,7 +244,7 @@ public class NeuronModelAdapter implements NeuronModel
     {
         return neuron;
     }
-    
+
     
     // TODO: - implement Edges correctly
     private static class EdgeList 
@@ -383,6 +396,10 @@ public class NeuronModelAdapter implements NeuronModel
             if (this.workspace != workspace) {
                 this.workspace = workspace;
             }
+        }
+        
+        public boolean containsKey(Long neuronGuid) {
+            return vertices.containsKey(neuronGuid);
         }
         
         @Override

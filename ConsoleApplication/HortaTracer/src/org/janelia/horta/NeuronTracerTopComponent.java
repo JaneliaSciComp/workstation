@@ -1276,6 +1276,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
     }
 
+    // TODO: Use this for redraw needs
+    private void redrawNow() {
+        if (! isShowing())
+            return;
+        sceneWindow.getInnerComponent().repaint();
+    }
+
     @Override
     public void componentOpened() {
         neuronManager.onOpened();

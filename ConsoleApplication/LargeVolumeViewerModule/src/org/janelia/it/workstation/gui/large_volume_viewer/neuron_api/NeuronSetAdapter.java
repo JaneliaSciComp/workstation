@@ -87,6 +87,9 @@ implements NeuronSet
         annotationModel.addTmGeoAnnotationModListener(annotationModListener);
     }
     
+    // Sometimes the TmWorkspace instance changes, even though the semantic workspace has not changed.
+    // In this case, we need to scramble to distribute the new object instances
+    // behind our stable NeuronSet/NeuronMode/NeuronVertex facade.
     private void sanityCheckWorkspace() {
         TmWorkspace w = this.annotationModel.getCurrentWorkspace();
         if (w == workspace) return; // unchanged
@@ -132,15 +135,27 @@ implements NeuronSet
         @Override
         public void annotationAdded(TmGeoAnnotation annotation)
         {
-            logger.info("annotationAdded");
-            sanityCheckWorkspace();
-            updateEdges();
+            // logger.info("annotationAdded");
+            // sanityCheckWorkspace();
+            // updateEdges();
+            
+            Long neuronId = annotation.getNeuronId();
+            for (NeuronModel neuron0 : NeuronSetAdapter.this) {
+                NeuronModelAdapter neuron = (NeuronModelAdapter)neuron0;
+                if (neuron.getTmNeuron().getId().equals(neuronId)) {
+                    neuron.addVertex(annotation);
+                    neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
+                    // neuron.getGeometryChangeObservable().notifyObservers(); // update display now! TODO: Does not work.
+                }
+            }
+            
+            // TODO - trigger a Horta repaint. 
         }
 
         @Override
         public void annotationsDeleted(List<TmGeoAnnotation> annotations)
         {
-            logger.info("annotationDeleted");
+            // logger.info("annotationDeleted");
             sanityCheckWorkspace();
             updateEdges();
         }
