@@ -120,7 +120,7 @@ import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.horta.modelapi.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.WorkspaceUtil;

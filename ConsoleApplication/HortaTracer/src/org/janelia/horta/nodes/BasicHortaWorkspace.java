@@ -38,7 +38,7 @@ import org.janelia.console.viewerapi.ComposableObservable;
 // import org.janelia.geometry3d.Vantage;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.VantageInterface;
-import org.janelia.horta.modelapi.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaWorkspace;
 
 /**
  * @author Christopher Bruns

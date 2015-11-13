@@ -66,7 +66,7 @@ import org.janelia.horta.actors.ConesActor;
 import org.janelia.horta.actors.ConesMaterial;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.SpheresMaterial;
-import org.janelia.horta.modelapi.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.openide.util.Exceptions;
 
 /**

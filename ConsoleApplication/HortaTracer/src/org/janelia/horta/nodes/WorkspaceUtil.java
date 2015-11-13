@@ -34,7 +34,7 @@ import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import java.util.ArrayList;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.horta.modelapi.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaWorkspace;
 
 /**
  * Convenience methods I don't want to place into lean HortaWorkspace API
