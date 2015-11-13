@@ -250,6 +250,17 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
+    public void importSWCFolder(String swcFolderLoc, String ownerKey, Long workspaceId, Long sampleId) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().importSWCFolder(swcFolderLoc, ownerKey, workspaceId, sampleId);
+    }
+    
+    @Override
+    public void submitSwcFolderImport(String swcFolderLoc, String username, Long sampleId) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().submitSwcFolderImport(swcFolderLoc, username, sampleId);
+    }
+
+    
+    @Override
     public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
                                                   double x, double y, double z, String comment) throws Exception {
         return EJBFactory.getRemoteTiledMicroscopeBean().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
@@ -378,16 +389,16 @@ public class EJBEntityFacade implements EntityFacade {
         }
         return rtnVal;
     }
-
-	@Override
-	public RawFileInfo getNearestChannelFiles(String basePath, int[] viewerCoord) throws Exception {
-		RawFileInfo rtnVal = null;
-		final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
-		if (remoteTiledMicroscopeBean != null) {
-			rtnVal = remoteTiledMicroscopeBean.getNearestChannelFiles(basePath, viewerCoord);
-		}
-		return rtnVal;
-	}
+    
+    @Override
+    public RawFileInfo getNearestChannelFiles( String basePath, int[] viewerCoord ) throws Exception {
+        RawFileInfo rtnVal = null;
+        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
+        if ( remoteTiledMicroscopeBean != null ) {
+            rtnVal = remoteTiledMicroscopeBean.getNearestChannelFiles( basePath, viewerCoord );
+        }
+        return rtnVal;
+    }
 
     @Override
     public CoordinateToRawTransform getLvvCoordToRawTransform( String basePath ) throws Exception {

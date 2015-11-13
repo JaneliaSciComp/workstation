@@ -1987,6 +1987,20 @@ public class EntityContextMenu extends JPopupMenu {
         }
     }
 
+    protected JMenuItem getRemoteSWCLoad() {
+        if (multiple) {
+            return null;
+        }
+        final String entityType = rootedEntity.getEntity().getEntityTypeName();
+        if (entityType.equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+            JMenuItem menuItem = new JMenuItem("  ????");
+            menuItem.addActionListener(new EditLVVSamplePathActionListener(rootedEntity));
+            return menuItem;
+        } else {
+            return null;
+        }
+    }
+
     @Override
     public JMenuItem add(JMenuItem menuItem) {
 

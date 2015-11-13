@@ -166,7 +166,11 @@ public class TileStackCacheController {
             fileLoadThreadPool.getQueue().clear();
 
             // Update focus tile/stack
-            focusTileIndex = tileFormat.tileIndexForXyz(focus, tileFormat.zoomLevelForCameraZoom(zoom), CoordinateAxis.Z);
+            int zoomLevel=tileFormat.zoomLevelForCameraZoom(zoom);
+            TileIndex PREFIX_focusTileIndex = tileFormat.tileIndexForXyz(focus, zoomLevel, CoordinateAxis.Z);
+            // Must add zoomOutFactor back in for Z to "correct" result from this method
+            focusTileIndex=new TileIndex(PREFIX_focusTileIndex.getX(), PREFIX_focusTileIndex.getY(), ((int)(PREFIX_focusTileIndex.getZ()*Math.pow(2,zoomLevel))),
+                    zoomLevel, tileFormat.getZoomLevelCount()-1, tileFormat.getIndexStyle(), CoordinateAxis.Z);
             focusStackFile = getStackFileForTileIndex(focusTileIndex);
 
 //            Set<File> previousNeighborhood=new HashSet<>();
@@ -185,10 +189,12 @@ public class TileStackCacheController {
             neighborhoodStackFiles.add(focusStackFile);
             focusStackGroup.add(focusStackFile);
 
+            //log.info("updateFocusTileIndex="+focusTileIndex.toString()+" focusStackFile="+focusStackFile.getAbsolutePath());
+
             // Next, the inner same-z set
             for (int yOffset=-1; yOffset<2; yOffset++) {
                 for (int xOffset=-1; xOffset<2; xOffset++) {
-                    File stackFile=getStackFileByOffset(xOffset, yOffset, 0);
+                    File stackFile=getStackFileByOffset(xOffset, yOffset, 0, true);
                     stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, 0});
                     if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
                         focusStackGroup.add(stackFile);
@@ -200,7 +206,7 @@ public class TileStackCacheController {
             // Next, one level down
             for (int yOffset=-1; yOffset<2; yOffset++) {
                 for (int xOffset=-1; xOffset<2; xOffset++) {
-                    File stackFile=getStackFileByOffset(xOffset, yOffset, 1);
+                    File stackFile=getStackFileByOffset(xOffset, yOffset, 1, false);
                     if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
                         stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, 1});
                         neighborhoodStackFiles.add(stackFile);
@@ -211,7 +217,7 @@ public class TileStackCacheController {
             // Next, one level up
             for (int yOffset=-1; yOffset<2; yOffset++) {
                 for (int xOffset=-1; xOffset<2; xOffset++) {
-                    File stackFile=getStackFileByOffset(xOffset, yOffset, -1);
+                    File stackFile=getStackFileByOffset(xOffset, yOffset, -1, false);
                     if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
                         stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, -1});
                         neighborhoodStackFiles.add(stackFile);
@@ -222,7 +228,7 @@ public class TileStackCacheController {
             // Last, the large outer same-level set
             for (int yOffset=-2; yOffset<3; yOffset++) {
                 for (int xOffset=-2; xOffset<3; xOffset++) {
-                    File stackFile=getStackFileByOffset(xOffset, yOffset, 0);
+                    File stackFile=getStackFileByOffset(xOffset, yOffset, 0, false);
                     if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
                         stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, 0});
                         neighborhoodStackFiles.add(stackFile);
@@ -233,7 +239,7 @@ public class TileStackCacheController {
             // Outer, one level down
             for (int yOffset=-2; yOffset<3; yOffset++) {
                 for (int xOffset=-2; xOffset<3; xOffset++) {
-                    File stackFile=getStackFileByOffset(xOffset, yOffset, 1);
+                    File stackFile=getStackFileByOffset(xOffset, yOffset, 1, false);
                     if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
                         stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, 1});
                         neighborhoodStackFiles.add(stackFile);
@@ -244,7 +250,7 @@ public class TileStackCacheController {
             // Outer, one level up
             for (int yOffset=-2; yOffset<3; yOffset++) {
                 for (int xOffset=-2; xOffset<3; xOffset++) {
-                    File stackFile=getStackFileByOffset(xOffset, yOffset, -1);
+                    File stackFile=getStackFileByOffset(xOffset, yOffset, -1, false);
                     if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
                         stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, -1});
                         neighborhoodStackFiles.add(stackFile);
@@ -255,7 +261,7 @@ public class TileStackCacheController {
             // Last, the large outer same-level set
             for (int yOffset=-3; yOffset<4; yOffset++) {
                 for (int xOffset=-3; xOffset<4; xOffset++) {
-                    File stackFile=getStackFileByOffset(xOffset, yOffset, 0);
+                    File stackFile=getStackFileByOffset(xOffset, yOffset, 0, false);
                     if (stackFile!=null && !neighborhoodStackFiles.contains(stackFile)) {
                         stackPositionMap.put(stackFile, new int[] { xOffset, yOffset, 0});
                         neighborhoodStackFiles.add(stackFile);
@@ -294,13 +300,15 @@ public class TileStackCacheController {
         }
     }
 
-    private File getStackFileByOffset(int xOffset, int yOffset, int zOffset) {
+    private File getStackFileByOffset(int xOffset, int yOffset, int zOffset, boolean debug) {
         int zIncrement=zOffset*tileFormat.getTileSize()[2]*(int)(Math.pow(2, focusTileIndex.getZoom()));
         int zPosition=focusTileIndex.getZ()+zIncrement;
         TileIndex offsetTileIndex = new TileIndex(focusTileIndex.getX() + xOffset, focusTileIndex.getY() + yOffset, zPosition, focusTileIndex.getZoom(), focusTileIndex.getMaxZoom(),
                 focusTileIndex.getIndexStyle(), focusTileIndex.getSliceAxis());
-
         File stackFile=getStackFileForTileIndex(offsetTileIndex);
+//        if (debug) {
+//            log.info("offsetTileIndex="+offsetTileIndex.toString()+", file="+stackFile);
+//        }
         return stackFile;
     }
 
@@ -390,6 +398,7 @@ public class TileStackCacheController {
         //long t3=System.nanoTime();
         //long report3=(t3-t2)/1000000;
         //log.info("createTextureData2dGLFromCacheVolume ms="+report3);
+        //log.info("returning TextureData2dGL for TileIndex request="+tileIndex.toString());
         return textureData2dGL;
 
         //return createDebugTileFromTileIndex(tileIndex);
@@ -533,14 +542,20 @@ public class TileStackCacheController {
         }
 
         public static synchronized boolean currentlyBeingLoaded(File file) {
-            return currentFilesBeingLoaded.contains(file);
+            if (file==null) {
+                return false;
+            } else {
+                return currentFilesBeingLoaded.contains(file);
+            }
         }
 
         public static synchronized void setCurrentFileBeingLoaded(File file, boolean status) {
-            if (status) {
-                currentFilesBeingLoaded.add(file);
-            } else {
-                currentFilesBeingLoaded.remove(file);
+            if (file!=null) {
+                if (status) {
+                    currentFilesBeingLoaded.add(file);
+                } else {
+                    currentFilesBeingLoaded.remove(file);
+                }
             }
         }
 
@@ -615,6 +630,7 @@ public class TileStackCacheController {
             } catch (IOException iex) {
                 errorFlag=true;
                 log.error("***>>> FileLoader IOException");
+                iex.printStackTrace();
                 ByteBuffer errorBuffer=ByteBuffer.wrap(new byte[1]);
                 try { cache.putBytes(file, errorBuffer); } catch (Exception ex2) {}
             }
@@ -641,54 +657,60 @@ public class TileStackCacheController {
         }
 
         private void loadTiffToByteArray(File file, byte[] volumeData, int channelCount, int[] tileSize) throws AbstractTextureLoadAdapter.TileLoadError, AbstractTextureLoadAdapter.MissingTileException, IOException {
-            int sliceSize=tileSize[0]*tileSize[1];
-            int channelSize=sliceSize*tileSize[2];
-            ImageDecoder[] decoders = BlockTiffOctreeLoadAdapter.createImageDecoders(file, CoordinateAxis.Z, true, channelCount);
-            RenderedImage[] channels = new RenderedImage[channelCount];
-            for (int z=0;z<tileSize[2];z++) {
-                if (!VolumeCache.useVolumeCache()) {
-                    return;
-                }
-                // Is there an emergency?
-                if (!tileStackCacheController.focusStackGroup.contains(file)) {
-                    if (tileStackCacheController.getEmergencyPoolCount() > 0) {
-                        try {
-                            //log.info("Waiting 200ms for emergency file load");
-                            Thread.sleep(200);
-                        }
-                        catch (Exception ex) {
-                        }
+            log.info("***>>> loadTiffToByteArray() loading file="+file.getAbsolutePath());
+            //try {
+                int sliceSize = tileSize[0] * tileSize[1];
+                int channelSize = sliceSize * tileSize[2];
+                ImageDecoder[] decoders = BlockTiffOctreeLoadAdapter.createImageDecoders(file, CoordinateAxis.Z, true, channelCount, true);
+                RenderedImage[] channels = new RenderedImage[channelCount];
+                for (int z = 0; z < tileSize[2]; z++) {
+                    if (!VolumeCache.useVolumeCache()) {
+                        return;
                     }
-                }
-//                // Am I out of the neighborhood?
-                if (!inTheNeighborhood(file)) {
-                    //log.info("file="+file.getAbsolutePath()+" is not in the neighborhood, terminating load at z="+z+" of "+tileSize[2]);
-                    throw new AbstractTextureLoadAdapter.TileLoadError("Out of neighborhood");
-                }
-                //log.info("***>>> FileLoader loading zSlize="+z+" for file="+file.getAbsolutePath());
-                for (int c = 0; c < channels.length; c++) {
-                    ImageDecoder decoder = decoders[c];
-                    channels[c] = decoder.decodeAsRenderedImage(z);
-                }
-                for (int c=0;c<channels.length;c++) {
-                    DataBuffer sliceData=channels[c].getData().getDataBuffer();
-                    int zOffset=channelSize*c+z*sliceSize;
-                    for (int y=0;y<tileSize[1];y++) {
-                        int yOffset=y*tileSize[0];
-                        for (int x=0;x<tileSize[0];x++) {
-                            int zyOffset=zOffset+yOffset;
-                            int sVal=sliceData.getElem(yOffset+x);
-                            int iVal=((sVal-MIN_RAW_VAL)*256)/(MAX_RAW_VAL-MIN_RAW_VAL) - 128;
-                            if (iVal>127) {
-                                iVal=127;
-                            } else if(iVal<-128) {
-                                iVal=-128;
+                    // Is there an emergency?
+                    if (!tileStackCacheController.focusStackGroup.contains(file)) {
+                        if (tileStackCacheController.getEmergencyPoolCount() > 0) {
+                            try {
+                                //log.info("Waiting 200ms for emergency file load");
+                                Thread.sleep(200);
                             }
-                            volumeData[zyOffset+x]=(byte)iVal;
+                            catch (Exception ex) {
+                            }
+                        }
+                    }
+//                // Am I out of the neighborhood?
+                    if (!inTheNeighborhood(file)) {
+                        //log.info("file="+file.getAbsolutePath()+" is not in the neighborhood, terminating load at z="+z+" of "+tileSize[2]);
+                        throw new AbstractTextureLoadAdapter.TileLoadError("Out of neighborhood");
+                    }
+                    //log.info("***>>> FileLoader loading zSlize=" + z + " for file=" + file.getAbsolutePath());
+                    for (int c = 0; c < channels.length; c++) {
+                        ImageDecoder decoder = decoders[c];
+                        channels[c] = decoder.decodeAsRenderedImage(z);
+                    }
+                    for (int c = 0; c < channels.length; c++) {
+                        DataBuffer sliceData = channels[c].getData().getDataBuffer();
+                        int zOffset = channelSize * c + z * sliceSize;
+                        for (int y = 0; y < tileSize[1]; y++) {
+                            int yOffset = y * tileSize[0];
+                            for (int x = 0; x < tileSize[0]; x++) {
+                                int zyOffset = zOffset + yOffset;
+                                int sVal = sliceData.getElem(yOffset + x);
+                                int iVal = ((sVal - MIN_RAW_VAL) * 256) / (MAX_RAW_VAL - MIN_RAW_VAL) - 128;
+                                if (iVal > 127) {
+                                    iVal = 127;
+                                } else if (iVal < -128) {
+                                    iVal = -128;
+                                }
+                                volumeData[zyOffset + x] = (byte) iVal;
+                            }
                         }
                     }
                 }
-            }
+            //} catch (Exception ex) {
+            //    log.error("***>>> loadTiffToByteArray: Exception="+ex.toString());
+            //    ex.printStackTrace();
+            //}
         }
 
         private synchronized boolean inTheNeighborhood(File file) {

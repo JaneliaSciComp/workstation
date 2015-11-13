@@ -1,36 +1,30 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import java.awt.image.RenderedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Date;
 
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
-import javax.media.jai.RenderedImageAdapter;
 
+import com.sun.media.jai.codec.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.media.jai.codec.FileSeekableStream;
-import com.sun.media.jai.codec.ImageCodec;
-import com.sun.media.jai.codec.ImageDecoder;
-import com.sun.media.jai.codec.SeekableStream;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
-import org.openide.util.Exceptions;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID;
 
 /*
  * Loader for large volume viewer format negotiated with Nathan Clack
@@ -46,11 +40,16 @@ public class BlockTiffOctreeLoadAdapter
 extends AbstractTextureLoadAdapter 
 {
 	private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
+    private static final CategoryString LIX_CATEGORY_STRING = new CategoryString("loadTileIndexToRam:elapsed");
+    private static final CategoryString LVV_SESSION_CATEGORY_STRING = new CategoryString("openFolder");
 
 	// Metadata: file location required for local system as mount point.
 	private File topFolder;
     // Metadata: file location required for remote system.
     private String remoteBasePath;
+    // Metadata: different folders could be opened during a user's session.
+    private Long folderOpenTimestamp = null;
+    
 	public LoadTimer loadTimer = new LoadTimer();
     
 	public BlockTiffOctreeLoadAdapter()
@@ -76,10 +75,17 @@ extends AbstractTextureLoadAdapter
 	public void setTopFolder(File topFolder) 
 	throws DataSourceInitializeException
 	{
-		this.topFolder = topFolder;
+		this.topFolder = topFolder;        
         OctreeMetadataSniffer sniffer = new OctreeMetadataSniffer(topFolder, tileFormat);
         sniffer.setRemoteBasePath(remoteBasePath);
+        folderOpenTimestamp = new Date().getTime();
 		sniffer.sniffMetadata(topFolder);
+        
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID, 
+                LVV_SESSION_CATEGORY_STRING, 
+                new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
+        );
 		// Don't launch pre-fetch yet.
 		// That must occur AFTER volume initialized signal is sent.
 	}
@@ -96,6 +102,7 @@ extends AbstractTextureLoadAdapter
 	{
 		// Create a local load timer to measure timings just in this thread
 		LoadTimer localLoadTimer = new LoadTimer();
+        long startTime = System.nanoTime();
 		localLoadTimer.mark("starting slice load");
         final File octreeFilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, zOriginNegativeShift);
         if (octreeFilePath == null) {
@@ -124,13 +131,28 @@ extends AbstractTextureLoadAdapter
 		// log.info(tileIndex + "" + folder + " : " + relativeSlice);
 		TextureData2dGL result = loadSlice(relativeSlice, decoders, tileFormat.getChannelCount());
 		localLoadTimer.mark("finished slice load");
+        
+        final double elapsedMs = (double) (System.nanoTime() - startTime) / 1000000.0;
+        if (result != null) {
+            final ActionString actionString = new ActionString(
+                     folderOpenTimestamp + ":" + relativeSlice + ":" + tileIndex.toString() + ":elapsed_ms=" + elapsedMs
+            );
+            SessionMgr.getSessionMgr().logToolEvent(
+                    LVV_LOGSTAMP_ID,
+                    LIX_CATEGORY_STRING,
+                    actionString,
+                    elapsedMs,
+                    999.0
+            );
+        }
+
 
 		loadTimer.putAll(localLoadTimer);
 		return result;
 	}
 
 	public static TextureData2dGL loadSlice(int relativeZ, ImageDecoder[] decoders, int channelCount)
-	throws TileLoadError 
+	throws TileLoadError
     {
 		// 2 - decode image
 		RenderedImage channels[] = new RenderedImage[channelCount];
@@ -184,8 +206,14 @@ extends AbstractTextureLoadAdapter
 	{
 		return createImageDecoders(folder, axis, false, tileFormat.getChannelCount());
 	}
-	
-	public static ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders, int channelCount)
+
+    public static ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders, int channelCount)
+            throws MissingTileException, TileLoadError
+    {
+        return createImageDecoders(folder, axis, acceptNullDecoders, channelCount, false);
+    }
+
+    public static ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders, int channelCount, boolean fileToMemory)
 			throws MissingTileException, TileLoadError 
 	{
         String tiffBase = OctreeMetadataSniffer.getTiffBase(axis);
@@ -219,7 +247,14 @@ extends AbstractTextureLoadAdapter
                         InputStream inputStream = url.openStream();
                         decoders[c] = ImageCodec.createImageDecoder("tiff", inputStream, null);
                     } else {
-                        SeekableStream s = new FileSeekableStream(tiff);
+                        SeekableStream s=null;
+                        if (fileToMemory) {
+                            Path path = Paths.get(tiff.getAbsolutePath());
+                            byte[] data = Files.readAllBytes(path);
+                            s = new ByteArraySeekableStream(data);
+                        } else {
+                            s = new FileSeekableStream(tiff);
+                        }
                         decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
                     }
                 } catch (IOException e) {

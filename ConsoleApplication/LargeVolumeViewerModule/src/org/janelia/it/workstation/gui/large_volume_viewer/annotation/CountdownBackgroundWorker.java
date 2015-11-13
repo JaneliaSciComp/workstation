@@ -61,10 +61,12 @@ public class CountdownBackgroundWorker extends BackgroundWorker {
                         }
                     }
 
-                    if (countdownSemaphore.get() % 100 == 0) {
-                        // Need to "goose" the display, to show what it has.
-                        annotationModel.postWorkspaceUpdate();
-                    }
+                    // Updating during the import is frought with error,
+                    // such as Concurrent Modification Exceptions.
+//                    if (countdownSemaphore.get() % 100 == 0) {
+//                        // Need to "goose" the display, to show what it has.
+//                        annotationModel.postWorkspaceUpdate();
+//                    }
 
                 } catch (InterruptedException ex) {
                     logger.warn("Exception {} during countdown for {}.", ex, name);
