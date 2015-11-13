@@ -9,8 +9,10 @@ import org.janelia.it.workstation.nb_action.EntityWrapperCreator;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
+import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,17 +45,18 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
                         JOptionPane.PLAIN_MESSAGE
                 );
                 if (userInput != null) {
-                    BackgroundWorker importer = new BackgroundWorker() {
+                    TaskMonitoringWorker importer = new TaskMonitoringWorker() {
                         @Override
                         protected void doStuff() throws Exception {
                             String ownerKey = SessionMgr.getSessionMgr().getSubject().getKey();
                             // Expect the sample to be the 'main entity' of the LVV, if there is
-                            // no workspace.
-                            ModelMgr.getModelMgr().submitSwcImportFolder(
+                            // no workspace.                                                        
+                            Task task = ModelMgr.getModelMgr().submitSwcImportFolder(
                                     userInput,
                                     ownerKey,
                                     rootedEntity.getEntityId()
                             );
+                            this.setTaskId(task.getObjectId());
                         }
 
                         @Override

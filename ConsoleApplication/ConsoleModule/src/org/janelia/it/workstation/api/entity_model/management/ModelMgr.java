@@ -1212,8 +1212,7 @@ public final class ModelMgr {
      * Imports all the SWC files in the folder, into a new workspace belonging
      * to owner key.  Uses pipeline facility.
      */
-    public void submitSwcImportFolder(String swcFolderLoc, String ownerKey, Long sampleId) throws Exception {
-        HashSet<TaskParameter> taskParameters = new HashSet<>();
+    public Task submitSwcImportFolder(String swcFolderLoc, String ownerKey, Long sampleId) throws Exception {
         if (ownerKey == null) {
             throw new IllegalArgumentException("Owner key must not be null.");
         }
@@ -1227,7 +1226,7 @@ public final class ModelMgr {
         if (ownerKey.contains(":")) {
             username = ownerKey.substring(ownerKey.indexOf(":") + 1);
         }
-        FacadeManager.getFacadeManager().getEntityFacade().submitSwcFolderImport(swcFolderLoc, username, sampleId);
+        return FacadeManager.getFacadeManager().getEntityFacade().submitSwcFolderImport(swcFolderLoc, username, sampleId);
     }
 
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception {
