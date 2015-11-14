@@ -256,7 +256,7 @@ public class ApplyAnnotationAction extends NodeAction {
         annotation.setValue(valueString);
         
         Reference targetRef = new Reference();
-        targetRef.setCollectionName(DomainUtils.getCollectionName(target.getClass()));
+        targetRef.setTargetClassName(target.getClass().getName());
         targetRef.setTargetId(target.getId());
         annotation.setTarget(targetRef);
         
