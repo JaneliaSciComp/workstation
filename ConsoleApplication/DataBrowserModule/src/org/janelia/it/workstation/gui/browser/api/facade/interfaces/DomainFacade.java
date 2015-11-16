@@ -72,11 +72,11 @@ public interface DomainFacade {
     public List<DomainObject> getDomainObjects(String className, Collection<Long> ids);
     
     /**
-     * Returns all the annotations associated with all of the domain objects referenced by the given GUIDs. 
+     * Returns all the annotations associated with all of the domain objects given by the given references.
      * @param targetIds collection of GUIDs
      * @return list of annotations
      */
-    public List<Annotation> getAnnotations(Collection<Long> targetIds);
+    public List<Annotation> getAnnotations(Collection<Reference> references);
     
     /**
      * Return the current user's default workspace.

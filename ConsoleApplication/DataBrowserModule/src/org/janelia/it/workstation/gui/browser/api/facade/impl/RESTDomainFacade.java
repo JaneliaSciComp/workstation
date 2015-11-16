@@ -177,7 +177,11 @@ public class RESTDomainFacade implements DomainFacade {
     }
 
     // CRUD for annotations/ontologies
-    public List<Annotation> getAnnotations(Collection<Long> targetIds) {
+    public List<Annotation> getAnnotations(Collection<Reference> references) {
+        List<Long> targetIds = new ArrayList<>();
+        for(Reference reference : references) {
+            targetIds.add(reference.getTargetId());
+        }
         Response response = serviceEndpoints.get("annotation")
                 .queryParam("annotationIds", new ArrayList<Long>(targetIds))
                 .request("application/json")

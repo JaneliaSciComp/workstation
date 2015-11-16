@@ -20,6 +20,7 @@ import javax.swing.JSeparator;
 import javax.swing.UIManager;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
@@ -27,7 +28,6 @@ import org.janelia.it.workstation.gui.browser.events.model.PreferenceChangeEvent
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -217,7 +217,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         // Reselect the items that were selected
         List<DomainObject> selectedDomainObjects = new ArrayList<>(); 
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        for(DomainObjectId id : selectionModel.getSelectedIds()) {
+        for(Reference id : selectionModel.getSelectedIds()) {
             DomainObject domainObject = model.getDomainObject(id);
             if (domainObject!=null) {
                 selectedDomainObjects.add(domainObject);
@@ -265,7 +265,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
                     @Override
                     protected void doStuff() throws Exception {
                         DomainModel model = DomainMgr.getDomainMgr().getModel();
-                        page.updateAnnotations(domainObjectId, model.getAnnotations(domainObjectId));
+                        page.updateAnnotations(domainObjectId, model.getAnnotations(Reference.createFor(pageObject)));
                     }
 
                     @Override

@@ -14,6 +14,7 @@ import javax.swing.JRadioButtonMenuItem;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
@@ -30,7 +31,6 @@ import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObject
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainConstants;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -44,7 +44,7 @@ import com.google.common.collect.Multiset;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,DomainObjectId> implements AnnotatedDomainObjectListViewer {
+public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,Reference> implements AnnotatedDomainObjectListViewer {
     
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
     
@@ -55,11 +55,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private String defaultSampleResult = DomainConstants.PREFERENCE_VALUE_LATEST;
     private String defaultImageType = FileType.SignalMip.name();
     
-    private final ImageModel<DomainObject,DomainObjectId> imageModel = new ImageModel<DomainObject, DomainObjectId>() {
+    private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
         
         @Override
-        public DomainObjectId getImageUniqueId(DomainObject domainObject) {
-            return DomainObjectId.createFor(domainObject);
+        public Reference getImageUniqueId(DomainObject domainObject) {
+            return Reference.createFor(domainObject);
         }
 
         @Override
@@ -113,7 +113,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
         
         @Override
-        public DomainObject getImageByUniqueId(DomainObjectId id) {
+        public DomainObject getImageByUniqueId(Reference id) {
             return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
         }
         
@@ -150,9 +150,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected JPopupMenu getButtonPopupMenu() {
-        List<DomainObjectId> selectionIds = selectionModel.getSelectedIds();
+        List<Reference> selectionIds = selectionModel.getSelectedIds();
         List<DomainObject> domainObjects = new ArrayList<>();
-        for (DomainObjectId id : selectionIds) {
+        for (Reference id : selectionIds) {
             DomainObject imageObject = getImageModel().getImageByUniqueId(id);
             if (imageObject == null) {
                 log.warn("Could not locate selected entity with id {}", id);

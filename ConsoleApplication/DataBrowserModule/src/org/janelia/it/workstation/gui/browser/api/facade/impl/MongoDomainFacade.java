@@ -75,8 +75,8 @@ public class MongoDomainFacade implements DomainFacade {
     }
 
     @Override
-    public List<Annotation> getAnnotations(Collection<Long> targetIds) {
-        return dao.getAnnotations(SessionMgr.getSubjectKey(), targetIds);
+    public List<Annotation> getAnnotations(Collection<Reference> references) {
+        return dao.getAnnotations(SessionMgr.getSubjectKey(), references);
     }
 
     @Override

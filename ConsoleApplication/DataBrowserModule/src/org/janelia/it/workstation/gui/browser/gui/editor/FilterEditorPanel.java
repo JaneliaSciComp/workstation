@@ -408,7 +408,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         facets.add(SOLR_TYPE_FIELD);
         facetValues.clear();
 
-        for(DomainObjectAttribute attr : ClientDomainUtils.getAttributes(searchClass)) {
+        for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(searchClass)) {
             if (attr.isFacet()) {
             	facets.add(attr.getSearchKey());
             }
@@ -845,7 +845,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         SolrResults solrResults = ModelMgr.getModelMgr().searchSolr(query, false);
         QueryResponse qr = solrResults.getResponse();
         
-        List<Long> ids = new ArrayList<>();
         List<Reference> refs = new ArrayList<>();
         for(SolrDocument doc : qr.getResults()) {
             Long id = new Long(doc.get("id").toString());
@@ -853,7 +852,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             String className = searchTypeToClassName.get(type);
             if (className!=null) {
                 refs.add(new Reference(className, id));
-                ids.add(id);
             }
             else {
                 log.warn("Unrecognized type has no collection mapping: "+type);
@@ -861,8 +859,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         }
         
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        List<DomainObject> domainObjects = model.getDomainObjectsByReference(refs);
-        List<Annotation> annotations = model.getAnnotations(ids);
+        List<DomainObject> domainObjects = model.getDomainObjects(refs);
+        List<Annotation> annotations = model.getAnnotations(refs);
         
         int numFound = (int)qr.getResults().getNumFound();
         

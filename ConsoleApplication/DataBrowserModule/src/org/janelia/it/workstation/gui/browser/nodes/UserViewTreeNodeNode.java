@@ -99,7 +99,7 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
             log.trace("Creating children keys for {}",treeNode.getName());   
 
             DomainModel model = DomainMgr.getDomainMgr().getModel();
-            List<DomainObject> children = model.getDomainObjectsByReference(treeNode.getChildren());
+            List<DomainObject> children = model.getDomainObjects(treeNode.getChildren());
             if (children.size()!=treeNode.getNumChildren()) {
                 log.info("Got {} children but expected {}",children.size(),treeNode.getNumChildren());   
             }

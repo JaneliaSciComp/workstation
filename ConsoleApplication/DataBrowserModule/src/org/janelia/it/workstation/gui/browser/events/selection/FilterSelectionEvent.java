@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.browser.events.selection;
 
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
 
@@ -10,11 +10,11 @@ import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
  */
 public class FilterSelectionEvent extends DomainObjectSelectionEvent {
 
-    public FilterSelectionEvent(Object source, DomainObjectId identifier, boolean select, Filter filter) {
+    public FilterSelectionEvent(Object source, Reference identifier, boolean select, Filter filter) {
         super(source, identifier, filter, select, true);
     }
     
-    public FilterSelectionEvent(Object source, DomainObjectId identifier, boolean select, FilterNode filter) {
+    public FilterSelectionEvent(Object source, Reference identifier, boolean select, FilterNode filter) {
         super(source, identifier, filter, select, true);
     }
     

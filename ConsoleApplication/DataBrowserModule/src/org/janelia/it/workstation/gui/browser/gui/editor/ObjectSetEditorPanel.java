@@ -70,7 +70,7 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 domainObjects = model.getDomainObjects(objectSet.getClassName(), objectSet.getMembers());
-                annotations = model.getAnnotations(DomainUtils.getIdList(domainObjects));
+                annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));
                 log.info("Showing "+domainObjects.size()+" items");
             }
 

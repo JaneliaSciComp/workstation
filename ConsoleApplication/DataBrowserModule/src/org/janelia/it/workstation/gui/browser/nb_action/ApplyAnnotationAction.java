@@ -17,14 +17,12 @@ import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.ontology.Text;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -117,7 +115,7 @@ public class ApplyAnnotationAction extends NodeAction {
         DomainObjectSelectionModel selectionModel = listView.getEditor().getSelectionModel();
         if (selectionModel==null) return;
         
-        List<DomainObjectId> selectedIds = selectionModel.getSelectedIds();
+        List<Reference> selectedIds = selectionModel.getSelectedIds();
         
         if (selectedIds.isEmpty()) {
             // Cannot annotate nothing
@@ -125,12 +123,12 @@ public class ApplyAnnotationAction extends NodeAction {
             return;
         }
         
-        for(DomainObjectId id : selectedIds) {
+        for(Reference id : selectedIds) {
             log.debug("Selected: "+id);
         }
         
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        final List<DomainObject> selectedDomainObjects = model.getDomainObjectsByDomainObjectId(selectedIds);
+        final List<DomainObject> selectedDomainObjects = model.getDomainObjects(selectedIds);
 
         // Get the input value, if required
 

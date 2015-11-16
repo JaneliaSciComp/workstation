@@ -28,6 +28,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -38,7 +39,6 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainObjectPermission
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationView;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectPermission;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
@@ -92,7 +92,7 @@ public class DomainInspectorPanel extends JPanel {
 
     private final JLabel annotationsLoadingLabel;
     private final JPanel annotationsPanel;
-    private final AnnotationView<DomainObject, DomainObjectId> annotationsView;
+    private final AnnotationView<DomainObject, Reference> annotationsView;
 
     private final DomainObjectPermissionDialog dopDialog;
 
@@ -356,7 +356,7 @@ public class DomainInspectorPanel extends JPanel {
         // Update the attribute table
         attributesTable.removeAllRows();
 
-        List<DomainObjectAttribute> searchAttrs = ClientDomainUtils.getAttributes(domainObject);
+        List<DomainObjectAttribute> searchAttrs = ClientDomainUtils.getSearchAttributes(domainObject.getClass());
                 
         Collections.sort(searchAttrs, new Comparator<DomainObjectAttribute>() {
             @Override
@@ -469,7 +469,7 @@ public class DomainInspectorPanel extends JPanel {
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                annotations.addAll(model.getAnnotations(domainObject.getId()));
+                annotations.addAll(model.getAnnotations(Reference.createFor(domainObject)));
             }
 
             @Override

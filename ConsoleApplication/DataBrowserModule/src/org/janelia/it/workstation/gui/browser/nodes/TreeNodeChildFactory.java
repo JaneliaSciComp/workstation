@@ -12,7 +12,6 @@ import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.model.DeadReference;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -44,7 +43,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         log.debug("Creating children keys for {}",treeNode.getName());
 
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        List<DomainObject> children = model.getDomainObjectsByReference(treeNode.getChildren());
+        List<DomainObject> children = model.getDomainObjects(treeNode.getChildren());
         if (children.size()!=treeNode.getNumChildren()) {
             log.info("Got {} children but expected {}",children.size(),treeNode.getNumChildren());   
         }
@@ -150,11 +149,6 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         log.info("Removing child '{}' from '{}'", domainObject.getName(), treeNode.getName());
 
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        if (domainObject instanceof DeadReference) {
-            model.removeReference(treeNode, ((DeadReference) domainObject).getReference());
-        }
-        else {
-            model.removeChild(treeNode, domainObject);
-        }
+        model.removeChild(treeNode, domainObject);
     }
 }

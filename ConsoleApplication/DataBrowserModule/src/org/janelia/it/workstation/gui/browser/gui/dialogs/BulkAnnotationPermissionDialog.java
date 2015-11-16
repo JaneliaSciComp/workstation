@@ -22,9 +22,9 @@ import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
 
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -32,7 +32,6 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -62,7 +61,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
     private final JCheckBox readCheckbox;
     private final JCheckBox writeCheckbox;
 
-    private final List<DomainObjectId> selected = new ArrayList<>();
+    private final List<Reference> selected = new ArrayList<>();
 
     public BulkAnnotationPermissionDialog() {
 
@@ -186,13 +185,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
             protected void doStuff() throws Exception {
                 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                ObjectSet selectedObjects = new ObjectSet();
-                selectedObjects.setClassName(Annotation.class.getName());
-                for(DomainObjectId id : selected) {
-                    selectedObjects.addMember(id.getId());
-                }
-                
-                for(Annotation annotation : model.getAnnotations(selectedObjects.getMembers())) {
+                for(Annotation annotation : model.getAnnotations(selected)) {
                     
                     // Must be owner to grant access
                     if (!ClientDomainUtils.isOwner(annotation)) continue;

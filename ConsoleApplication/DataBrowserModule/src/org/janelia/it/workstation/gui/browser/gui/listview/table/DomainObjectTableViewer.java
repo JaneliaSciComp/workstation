@@ -15,6 +15,7 @@ import javax.swing.table.TableModel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
@@ -22,7 +23,6 @@ import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObject
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicRow;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObjectId> implements AnnotatedDomainObjectListViewer {
+public class DomainObjectTableViewer extends TableViewer<DomainObject,Reference> implements AnnotatedDomainObjectListViewer {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectTableViewer.class);
 
@@ -74,7 +74,7 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,DomainObje
         attrs.add(annotationAttr);
         
         for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
-            for(DomainObjectAttribute attr : ClientDomainUtils.getAttributes(domainObject)) {
+            for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(domainObject.getClass())) {
                 if (attr.isDisplay()) {
                     attrs.add(attr);
                 }

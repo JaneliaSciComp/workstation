@@ -3,18 +3,13 @@ package org.janelia.it.workstation.gui.browser.api;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.SearchAttribute;
 import org.janelia.it.jacs.model.util.ReflectionHelper;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.reflections.ReflectionUtils;
 import org.slf4j.Logger;
@@ -29,20 +24,41 @@ import org.slf4j.LoggerFactory;
 public class ClientDomainUtils {
 
     private static final Logger log = LoggerFactory.getLogger(DomainUtils.class);
+
+    /**
+     * Returns true if the current user owns the given domain object.
+     * @param domainObject
+     * @return
+     */
+    public static boolean isOwner(DomainObject domainObject) {
+        return DomainUtils.isOwner(domainObject, SessionMgr.getSubjectKey());
+    } 
     
+    /**
+     * Returns true if the current user has read access to the given domain object.
+     * @param domainObject
+     * @return
+     */
+    public static boolean hasReadAccess(DomainObject domainObject) {
+        return DomainUtils.hasReadAccess(domainObject, SessionMgr.getSubjectKey());
+    }
+    
+    /**
+     * Returns true if the current user has write access to the given domain object.
+     * @param domainObject
+     * @return
+     */
     public static boolean hasWriteAccess(DomainObject domainObject) {
         return DomainUtils.hasWriteAccess(domainObject, SessionMgr.getSubjectKey());
     }
-    
-    public static boolean isOwner(DomainObject domainObject) {
-        return DomainUtils.isOwner(domainObject, SessionMgr.getSubjectKey());
-    }
 
-    public static List<DomainObjectAttribute> getAttributes(DomainObject domainObject) {
-        return getAttributes(domainObject.getClass());
-    }
-    
-    public static List<DomainObjectAttribute> getAttributes(Class<? extends DomainObject> clazz) {
+    /**
+     * Generate a list of DomainObjectAttributes for the given domain object class. DomainObjectAttributes are
+     * generated for all fields and methods marked with a @SearchAttribute annotation. 
+     * @param clazz a class which extends DomainObject
+     * @return a list of DomainObjectAttributes
+     */
+    public static List<DomainObjectAttribute> getSearchAttributes(Class<? extends DomainObject> clazz) {
     	List<DomainObjectAttribute> attrs = new ArrayList<>();
         for (Field field : ReflectionUtils.getAllFields(clazz)) {
             SearchAttribute searchAttributeAnnot = field.getAnnotation(SearchAttribute.class);
@@ -71,42 +87,5 @@ public class ClientDomainUtils {
         }
 
         return attrs;
-    }
-    
-    public static List<DomainObjectId> getDomainObjectIdList(Collection<DomainObject> objects) {
-        List<DomainObjectId> list = new ArrayList<>();
-        for(DomainObject domainObject : objects) {
-            if (domainObject!=null) {
-                list.add(DomainObjectId.createFor(domainObject));
-            }
-        }
-        return list;
-    }
-
-    public static Map<DomainObjectId, DomainObject> getMapByDomainObjectId(Collection<DomainObject> objects) {
-        Map<DomainObjectId, DomainObject> objectMap = new HashMap<>();
-        for (DomainObject domainObject : objects) {
-            if (domainObject != null) {
-                objectMap.put(DomainObjectId.createFor(domainObject), domainObject);
-            }
-        }
-        return objectMap;
-    }
-    
-    public static DomainObjectId getIdForReference(Reference ref) {
-        Class<? extends DomainObject> clazz = DomainUtils.getObjectClassByName(ref.getTargetClassName());
-        if (clazz==null) return null;
-        return new DomainObjectId(clazz.getName(), ref.getTargetId());
-    }
-
-    public static Reference getReferenceForId(DomainObjectId id) {
-        Reference ref = new Reference();
-        Class<? extends DomainObject> objectClass = DomainUtils.getObjectClassByName(id.getClassName());
-        if (objectClass==null) {
-            throw new IllegalArgumentException("No such object class: "+id.getClassName());
-        }
-        ref.setTargetClassName(objectClass.getName());
-        ref.setTargetId(id.getId());
-        return ref;
     }
 }
