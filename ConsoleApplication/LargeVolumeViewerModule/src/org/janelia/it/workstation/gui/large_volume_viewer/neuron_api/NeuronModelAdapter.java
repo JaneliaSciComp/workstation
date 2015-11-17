@@ -31,15 +31,12 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
 import java.awt.Color;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Observable;
-import java.util.Observer;
 import java.util.Set;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
@@ -95,10 +92,13 @@ public class NeuronModelAdapter implements NeuronModel
         Long parentId = annotation.getParentId();
         // Add edge
         if (vertexId.equals(parentId)) 
-            return; // No parent, so no edge
+            return; // Self parent, so no edge. TODO: maybe this never happens
+        // comment from TmGeoAnnotation.java: "parentID is the neuron (if root annotation) or another TmGeoAnn"
+        if (annotation.getNeuronId().equals(parentId))
+            return; // It appears parentId==neuronId for (parentless) root/seed points
         assert(vertexes.containsKey(parentId));
         edges.add(new NeuronEdgeAdapter(vertexes.getVertexByGuid(vertexId), vertexes.getVertexByGuid(parentId)));
-        getGeometryChangeObservable().setChanged();
+        getGeometryChangeObservable().setChanged(); // mark dirty, but don't sweep (notifyObservers) yet
     }
     
     public void updateWrapping(TmNeuron neuron, AnnotationModel annotationModel, TmWorkspace workspace) {
