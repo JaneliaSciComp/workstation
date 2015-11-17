@@ -32,6 +32,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdate
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class AnnotationModel
@@ -87,6 +89,9 @@ called from a  SimpleWorker thread.
     private Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
 
     private LoadTimer addTimer = new LoadTimer();
+
+    private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
+
 
     // ----- constants
     // name of entity that holds our workspaces
@@ -611,9 +616,10 @@ called from a  SimpleWorker thread.
      */
     public void mergeNeurite(final Long sourceAnnotationID, final Long targetAnnotationID) throws Exception {
 
-        // Stopwatch stopwatch = new Stopwatch();
-        // stopwatch.start();
-        // System.out.println("entering mergeNeurite(): " + stopwatch);
+        // temporary logging for Jayaram:
+        log.info("beginning mergeNeurite()");
+         Stopwatch stopwatch = new Stopwatch();
+         stopwatch.start();
 
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
@@ -738,15 +744,20 @@ called from a  SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                log.info("beginning UI update for mergeNeurite()");
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.start();
                 fireNotesUpdated(workspace);
                 fireNeuronSelected(updateTargetNeuron);
                 fireWorkspaceLoaded(workspace);
                 fireAnnotationReparented(updateSourceAnnotation);
+                log.info("ending UI update for mergeNeurite(); elapsed = " + stopwatch);
+                stopwatch.stop();
             }
         });
 
-        // System.out.println("leaving mergeNeurite(): " + stopwatch);
-        // stopwatch.stop();
+        log.info("ending mergeNeurite(); elapsed = " + stopwatch);
+         stopwatch.stop();
 
     }
 
