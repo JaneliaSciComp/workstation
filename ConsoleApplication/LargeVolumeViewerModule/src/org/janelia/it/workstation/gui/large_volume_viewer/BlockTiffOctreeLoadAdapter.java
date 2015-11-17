@@ -1,36 +1,30 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import java.awt.image.RenderedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Date;
 
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
-import javax.media.jai.RenderedImageAdapter;
 
+import com.sun.media.jai.codec.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.media.jai.codec.FileSeekableStream;
-import com.sun.media.jai.codec.ImageCodec;
-import com.sun.media.jai.codec.ImageDecoder;
-import com.sun.media.jai.codec.SeekableStream;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
-import org.openide.util.Exceptions;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID;
 
 /*
  * Loader for large volume viewer format negotiated with Nathan Clack
@@ -46,11 +40,16 @@ public class BlockTiffOctreeLoadAdapter
 extends AbstractTextureLoadAdapter 
 {
 	private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
+    private static final CategoryString LIX_CATEGORY_STRING = new CategoryString("loadTileIndexToRam:elapsed");
+    private static final CategoryString LVV_SESSION_CATEGORY_STRING = new CategoryString("openFolder");
 
 	// Metadata: file location required for local system as mount point.
 	private File topFolder;
     // Metadata: file location required for remote system.
     private String remoteBasePath;
+    // Metadata: different folders could be opened during a user's session.
+    private Long folderOpenTimestamp = null;
+    
 	public LoadTimer loadTimer = new LoadTimer();
     
 	public BlockTiffOctreeLoadAdapter()
@@ -76,74 +75,21 @@ extends AbstractTextureLoadAdapter
 	public void setTopFolder(File topFolder) 
 	throws DataSourceInitializeException
 	{
-		this.topFolder = topFolder;
-		sniffMetadata(topFolder);
+		this.topFolder = topFolder;        
+        OctreeMetadataSniffer sniffer = new OctreeMetadataSniffer(topFolder, tileFormat);
+        sniffer.setRemoteBasePath(remoteBasePath);
+        folderOpenTimestamp = new Date().getTime();
+		sniffer.sniffMetadata(topFolder);
+        
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID, 
+                LVV_SESSION_CATEGORY_STRING, 
+                new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
+        );
 		// Don't launch pre-fetch yet.
 		// That must occur AFTER volume initialized signal is sent.
 	}
-    
-	/*
-	 * Return path to tiff file containing a particular slice
-	 */
-	public static File getOctreeFilePath(TileIndex tileIndex, TileFormat tileFormat, boolean zOriginNegativeShift) 
-	{
-		int axIx = tileIndex.getSliceAxis().index();
-        
-		File path = new File("");
-		int octreeDepth = tileFormat.getZoomLevelCount();
-		int depth = computeDepth(octreeDepth, tileIndex);
-        if (depth < 0 || depth > octreeDepth) {
-            // This situation can happen in production, owing to missing tiles.
-            return null;
-        }
-        int[] xyz = null;
-		xyz = new int[] {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ()};
-        
-		// ***NOTE Raveler Z is slice count, not tile count***
-        // so divide by tile Z dimension, to make z act like x and y
-        xyz[axIx] = xyz[axIx] / tileFormat.getTileSize()[axIx];
-        // and divide by zoom scale
-        xyz[axIx] = xyz[axIx] / (int) Math.pow(2, tileIndex.getZoom());
 
-        // start at lowest zoom to build up octree coordinates
-		for (int d = 0; d < (depth - 1); ++d) {
-			// How many Raveler tiles per octant at this zoom?
-			int scale = (int)(Math.pow(2, depth - 2 - d)+0.1);
-			int ds[] = {
-					xyz[0]/scale,
-					xyz[1]/scale,
-					xyz[2]/scale};
-
-            // Each dimension makes a binary contribution to the 
-			// octree index.
-			// Watch for illegal values
-			// int ds[] = {dx, dy, dz};
-			boolean indexOk = true;
-			for (int index : ds) {
-				if (index < 0)
-					indexOk = false;
-				if (index > 1)
-					indexOk = false;
-			}
-			if (! indexOk) {
-				log.error("Bad tile index "+tileIndex);
-				return null;
-			}
-			// offset x/y/z for next deepest level
-			for (int i = 0; i < 3; ++i)
-				xyz[i] = xyz[i] % scale;
-
-            // Octree coordinates are in z-order
-			int octreeCoord = 1 + ds[0]
-					// TODO - investigate possible ragged edge problems
-					+ 2*(1 - ds[1]) // Raveler Y is at bottom; octree Y is at top
-					+ 4*ds[2];
-
-			path = new File(path, ""+octreeCoord);
-		}
-		return path;
-	}
-	
 	@Override
 	public TextureData2dGL loadToRam(TileIndex tileIndex)
 			throws TileLoadError, MissingTileException 
@@ -156,8 +102,9 @@ extends AbstractTextureLoadAdapter
 	{
 		// Create a local load timer to measure timings just in this thread
 		LoadTimer localLoadTimer = new LoadTimer();
+        long startTime = System.nanoTime();
 		localLoadTimer.mark("starting slice load");
-        final File octreeFilePath = getOctreeFilePath(tileIndex, tileFormat, zOriginNegativeShift);        
+        final File octreeFilePath = OctreeMetadataSniffer.getOctreeFilePath(tileIndex, tileFormat, zOriginNegativeShift);
         if (octreeFilePath == null) {
             return null;
         }
@@ -179,24 +126,38 @@ extends AbstractTextureLoadAdapter
 		
         // Calling this with "true" means I, the caller, accept that the array
         // returned may have one or more nulls in it.
-		ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis(), true);
+		ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis(), true, tileFormat.getChannelCount());
 		
 		// log.info(tileIndex + "" + folder + " : " + relativeSlice);
-		TextureData2dGL result = loadSlice(relativeSlice, decoders);
+		TextureData2dGL result = loadSlice(relativeSlice, decoders, tileFormat.getChannelCount());
 		localLoadTimer.mark("finished slice load");
+        
+        final double elapsedMs = (double) (System.nanoTime() - startTime) / 1000000.0;
+        if (result != null) {
+            final ActionString actionString = new ActionString(
+                     folderOpenTimestamp + ":" + relativeSlice + ":" + tileIndex.toString() + ":elapsed_ms=" + elapsedMs
+            );
+            SessionMgr.getSessionMgr().logToolEvent(
+                    LVV_LOGSTAMP_ID,
+                    LIX_CATEGORY_STRING,
+                    actionString,
+                    elapsedMs,
+                    999.0
+            );
+        }
+
 
 		loadTimer.putAll(localLoadTimer);
 		return result;
 	}
 
-	public TextureData2dGL loadSlice(int relativeZ, ImageDecoder[] decoders) 
-	throws TileLoadError 
+	public static TextureData2dGL loadSlice(int relativeZ, ImageDecoder[] decoders, int channelCount)
+	throws TileLoadError
     {
-		int sc = tileFormat.getChannelCount();
 		// 2 - decode image
-		RenderedImage channels[] = new RenderedImage[sc];
+		RenderedImage channels[] = new RenderedImage[channelCount];
         boolean emptyChannel = false;
-        for (int c = 0; c < sc; ++c) {
+        for (int c = 0; c < channelCount; ++c) {
             if (decoders[c] == null)
                 emptyChannel = true;
         }
@@ -204,7 +165,7 @@ extends AbstractTextureLoadAdapter
             return null;
         }
         else {
-            for (int c = 0; c < sc; ++c) {
+            for (int c = 0; c < channelCount; ++c) {
                 try {
                     ImageDecoder decoder = decoders[c];
                     assert (relativeZ < decoder.getNumPages());
@@ -216,10 +177,10 @@ extends AbstractTextureLoadAdapter
             }
             // Combine channels into one image
             RenderedImage composite = channels[0];
-            if (sc > 1) {
+            if (channelCount > 1) {
                 try {
                 ParameterBlockJAI pb = new ParameterBlockJAI("bandmerge");
-                for (int c = 0; c < sc; ++c) {
+                for (int c = 0; c < channelCount; ++c) {
                     pb.addSource(channels[c]);
                 }
                 composite = JAI.create("bandmerge", pb);
@@ -241,25 +202,27 @@ extends AbstractTextureLoadAdapter
 
 	// TODO - cache decoders if folder has not changed
 	public ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis)
-			throws MissingTileException, TileLoadError 
+			throws MissingTileException, TileLoadError
 	{
-		return createImageDecoders(folder, axis, false);
+		return createImageDecoders(folder, axis, false, tileFormat.getChannelCount());
 	}
-	
-	public ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders)
+
+    public static ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders, int channelCount)
+            throws MissingTileException, TileLoadError
+    {
+        return createImageDecoders(folder, axis, acceptNullDecoders, channelCount, false);
+    }
+
+    public static ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders, int channelCount, boolean fileToMemory)
 			throws MissingTileException, TileLoadError 
 	{
-		String tiffBase = "default"; // Z-view; XY plane
-		if (axis == CoordinateAxis.Y)
-			tiffBase = "ZX";
-		else if (axis == CoordinateAxis.X)
-			tiffBase = "YZ";
-		int sc = tileFormat.getChannelCount();
-		ImageDecoder decoders[] = new ImageDecoder[sc];
+        String tiffBase = OctreeMetadataSniffer.getTiffBase(axis);
+		ImageDecoder decoders[] = new ImageDecoder[channelCount];
         StringBuilder missingTiffs = new StringBuilder();
         StringBuilder requestedTiffs = new StringBuilder();
-		for (int c = 0; c < sc; ++c) {
-			File tiff = new File(folder, tiffBase+"."+c+".tif");
+
+		for (int c = 0; c < channelCount; ++c) {
+			File tiff = new File(folder, OctreeMetadataSniffer.getFilenameForChannel(tiffBase, c));
             if ( requestedTiffs.length() > 0 ) {
                 requestedTiffs.append("; ");
             }
@@ -284,7 +247,14 @@ extends AbstractTextureLoadAdapter
                         InputStream inputStream = url.openStream();
                         decoders[c] = ImageCodec.createImageDecoder("tiff", inputStream, null);
                     } else {
-                        SeekableStream s = new FileSeekableStream(tiff);
+                        SeekableStream s=null;
+                        if (fileToMemory) {
+                            Path path = Paths.get(tiff.getAbsolutePath());
+                            byte[] data = Files.readAllBytes(path);
+                            s = new ByteArraySeekableStream(data);
+                        } else {
+                            s = new FileSeekableStream(tiff);
+                        }
                         decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
                     }
                 } catch (IOException e) {
@@ -298,183 +268,5 @@ extends AbstractTextureLoadAdapter
         }
 		return decoders;
 	}
-    
-    private boolean sniffOriginAndScaleFromFolder(int [] origin, double [] scale) {
-        File transformFile = new File(getTopFolder(), "transform.txt");
-        if (! transformFile.exists())
-            return false;
-        try {
-            Pattern pattern = Pattern.compile("([os][xyz]): (\\d+(\\.\\d+)?)");
-            Scanner scanner = new Scanner(transformFile);
-            double scaleScale = 1.0 / Math.pow(2, tileFormat.getZoomLevelCount() - 1);
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                Matcher m = pattern.matcher(line);
-                if (m.matches()) {
-                    String key = m.group(1);
-                    String value = m.group(2);
-                    switch (key) {
-                        case "ox":
-                            origin[0] = Integer.parseInt(value);
-                            break;
-                        case "oy":
-                            origin[1] = Integer.parseInt(value);
-                            break;
-                        case "oz":
-                            origin[2] = Integer.parseInt(value);
-                            break;
-                        case "sx":
-                            scale[0] = Double.parseDouble(value) * scaleScale;
-                            break;
-                        case "sy":
-                            scale[1] = Double.parseDouble(value) * scaleScale;
-                            break;
-                        case "sz":
-                            scale[2] = Double.parseDouble(value) * scaleScale;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-            // TODO 
-            return true;
-        } 
-        catch (FileNotFoundException ex) {} 
-        
-        return false;
-    }
-    
-    // Workaround for loading origin and scale without web services
-    private void sniffOriginAndScale() throws DataSourceInitializeException {
-        int [] origin = new int [3];
-        double [] scale = new double [3];
-        try {
-            CoordinateToRawTransform transform
-                    = ModelMgr.getModelMgr().getCoordToRawTransform(remoteBasePath);
-            origin = transform.getOrigin();
-            scale = transform.getScale();
-        } catch ( Exception ex ) {
-            if (! sniffOriginAndScaleFromFolder(origin, scale))
-                throw new DataSourceInitializeException(
-                        "Failed to find metadata", ex
-                );
-        }
-        // Scale must be converted to micrometers.
-        for (int i = 0; i < scale.length; i++) {
-            scale[ i] /= 1000; // nanometers to micrometers
-        }
-        // Origin must be divided by 1000, to convert to micrometers.
-        for (int i = 0; i < origin.length; i++) {
-            origin[ i] = (int) (origin[i] /(1000 * scale[i])); // nanometers to voxels
-        }
 
-        tileFormat.setVoxelMicrometers(scale);
-        // Shifting everything by ten voxels to the right.
-        int[] mockOrigin = new int[]{
-            0,//origin[0],
-            origin[1],
-            origin[2]
-        };
-        // tileFormat.setOrigin(mockOrigin);
-        tileFormat.setOrigin(origin);
-    }
-    
-	protected void sniffMetadata(File topFolderParam) 
-	throws DataSourceInitializeException {
-        try {
-
-            // Set some default parameters, to be replaced my measured parameters
-            tileFormat.setDefaultParameters();
-
-            // Count color channels by counting channel files
-            tileFormat.setChannelCount(0);
-            int channelCount = 0;
-            while (true) {
-                File tiff = new File(topFolderParam, "default." + channelCount + ".tif");
-                if (!tiff.exists()) {
-                    break;
-                }
-                channelCount += 1;
-            }
-            tileFormat.setChannelCount(channelCount);
-            if (channelCount < 1) {
-                return;
-            }
-
-            // X and Y slices?
-            tileFormat.setHasXSlices(new File(topFolderParam, "YZ.0.tif").exists());
-            tileFormat.setHasYSlices(new File(topFolderParam, "ZX.0.tif").exists());
-            tileFormat.setHasZSlices(new File(topFolderParam, "default.0.tif").exists());
-
-            // Deduce octree depth from directory structure depth
-            int octreeDepth = 0;
-            File deepFolder = topFolderParam;
-            File deepFile = new File(topFolderParam, "default.0.tif");
-            while (deepFile.exists()) {
-                octreeDepth += 1;
-                File parentFolder = deepFolder;
-                // Check all possible children: some might be empty
-                for (int branch = 1; branch <= 8; ++branch) {
-                    deepFolder = new File(parentFolder, "" + branch);
-                    deepFile = new File(deepFolder, "default.0.tif");
-                    if (deepFile.exists()) {
-                        break; // found a deeper branch
-                    }
-                }
-            }
-            int zoomFactor = (int) Math.pow(2, octreeDepth - 1);
-            tileFormat.setZoomLevelCount(octreeDepth);
-
-            // Deduce other parameters from first image file contents
-            File tiff = new File(topFolderParam, "default.0.tif");
-            SeekableStream s = new FileSeekableStream(tiff);
-            ImageDecoder decoder = ImageCodec.createImageDecoder("tiff", s, null);
-            // Z dimension is related to number of tiff pages
-            int sz = decoder.getNumPages();
-
-            // Get X/Y dimensions from first image
-            RenderedImageAdapter ria = new RenderedImageAdapter(
-                    decoder.decodeAsRenderedImage(0));
-            int sx = ria.getWidth();
-            int sy = ria.getHeight();
-            // Full volume could be much larger than this downsampled tile
-            int[] tileSize = new int[3];
-            tileSize[2] = sz;
-            if (sz < 1) {
-                return;
-            }
-            tileSize[0] = sx;
-            tileSize[1] = sy;
-            tileFormat.setTileSize( tileSize );
-
-            int[] volumeSize = new int[3];
-            volumeSize[2] = zoomFactor * sz;
-            volumeSize[0] = zoomFactor * sx;
-            volumeSize[1] = zoomFactor * sy;
-            tileFormat.setVolumeSize( volumeSize );
-
-            int bitDepth = ria.getColorModel().getPixelSize();
-            tileFormat.setBitDepth(bitDepth);
-            tileFormat.setIntensityMax((int)Math.pow(2, bitDepth) - 1);
-
-            tileFormat.setSrgb(ria.getColorModel().getColorSpace().isCS_sRGB());
-
-            // Setup the origin and the scale.
-            if (remoteBasePath != null) {
-                sniffOriginAndScale();
-            }
-    		// TODO - actual max intensity
-        
-        } catch ( Exception ex ) {
-            throw new DataSourceInitializeException(
-                    "Failed to find metadata", ex
-            );
-        }
-	}
-
-    private static int computeDepth(int octreeDepth, TileIndex tileIndex) {
-        return octreeDepth - tileIndex.getZoom();
-    }
-	
 }

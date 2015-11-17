@@ -7,6 +7,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
 import javax.swing.SwingUtilities;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
@@ -26,6 +27,7 @@ import org.slf4j.LoggerFactory;
  */
 public class LargeVolumeViewerTopComponentDynamic {
     public static final String LVV_PREFERRED_ID = "LargeVolumeViewerTopComponent";
+    public static final ToolString LVV_LOGSTAMP_ID = new ToolString("LargeVolumeViewer");
 
     protected static final String ACTION = "CTL_LargeVolumeViewerAction=Large Volume Viewer";
     protected static final String WINDOW_NAMER = "CTL_LargeVolumeViewerTopComponent=Large Volume Viewer";

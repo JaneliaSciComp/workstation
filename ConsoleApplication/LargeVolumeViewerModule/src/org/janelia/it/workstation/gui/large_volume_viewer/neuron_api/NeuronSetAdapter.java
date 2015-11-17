@@ -37,8 +37,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
+import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
@@ -46,6 +48,10 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationM
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.openide.util.Lookup;
+import org.openide.util.LookupEvent;
+import org.openide.util.LookupListener;
+import org.openide.util.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,20 +62,22 @@ import org.slf4j.LoggerFactory;
  */
 public class NeuronSetAdapter
 extends BasicNeuronSet
-implements NeuronSet
+implements NeuronSet, LookupListener
 {
-    private TmWorkspace workspace = null;
+    private TmWorkspace workspace; // LVV workspace, as opposed to Horta workspace
     private AnnotationModel annotationModel;
     private final GlobalAnnotationListener globalAnnotationListener;
     private final TmGeoAnnotationModListener annotationModListener;
+    private HortaWorkspace cachedHortaWorkspace = null;
+    private Lookup.Result<HortaWorkspace> hortaWorkspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaWorkspace.class);
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public NeuronSetAdapter(TmWorkspace workspace)
+    public NeuronSetAdapter()
     {
-        super("LVV Neurons", new NeuronList(workspace));
-        this.workspace = workspace;
+        super("LVV Neurons", new NeuronList());
         globalAnnotationListener = new MyGlobalAnnotationListener();
         annotationModListener = new MyTmGeoAnnotationModListener();
+        hortaWorkspaceResult.addLookupListener(this);
     }
     
     public void observe(AnnotationModel annotationModel)
@@ -86,6 +94,16 @@ implements NeuronSet
         this.annotationModel = annotationModel;
         annotationModel.addGlobalAnnotationListener(globalAnnotationListener);
         annotationModel.addTmGeoAnnotationModListener(annotationModListener);
+    }
+    
+    // Sometimes the TmWorkspace instance changes, even though the semantic workspace has not changed.
+    // In this case, we need to scramble to distribute the new object instances
+    // behind our stable NeuronSet/NeuronMode/NeuronVertex facade.
+    private void sanityCheckWorkspace() {
+        TmWorkspace w = this.annotationModel.getCurrentWorkspace();
+        if (w == workspace) return; // unchanged
+        logger.info("Workspace changed");
+        setWorkspace(w);
     }
     
     // Recache edge data structures after vertices change
@@ -111,8 +129,25 @@ implements NeuronSet
             return super.getName();
     }
     
-    private void setWorkspace(TmWorkspace workspace) {
+    private boolean setWorkspace(TmWorkspace workspace) {
+        if (this.workspace == workspace)
+            return false;
         this.workspace = workspace;
+        NeuronList nl = (NeuronList) neurons;
+        nl.wrap(workspace, annotationModel);
+        return true;
+    }
+
+    @Override
+    public void resultChanged(LookupEvent lookupEvent)
+    {
+        Collection<? extends HortaWorkspace> allWorkspaces = hortaWorkspaceResult.allInstances();
+        if (allWorkspaces.isEmpty())
+            return;
+        HortaWorkspace workspace = allWorkspaces.iterator().next();
+        if (workspace != cachedHortaWorkspace) {
+            cachedHortaWorkspace = workspace;
+        }
     }
 
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener
@@ -121,15 +156,55 @@ implements NeuronSet
         @Override
         public void annotationAdded(TmGeoAnnotation annotation)
         {
-            logger.info("annotationAdded");
-            updateEdges();
+            // logger.info("annotationAdded");
+            sanityCheckWorkspace(); // beware of shifting sands beneath us...
+            // updateEdges(); // Brute force approach reanalyzes all edges            
+            // Surgical approach only adds the one new edge
+            // (vertex is added implicitly)
+            Long neuronId = annotation.getNeuronId();
+            for (NeuronModel neuron0 : NeuronSetAdapter.this) {
+                NeuronModelAdapter neuron = (NeuronModelAdapter)neuron0;
+                if (neuron.getTmNeuron().getId().equals(neuronId)) {
+                    neuron.addVertex(annotation);
+                    neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
+                    // Trigger a Horta repaint  for instant GUI feedback
+                    // NOTE - assumes this callback is only invoked from one-at-a-time manual addition
+                    if (cachedHortaWorkspace != null) 
+                    {
+                        // 1) recenter on annotation location in Horta, just like in LVV
+                        // Use a temporary NeuronVertexAdapter, just to get the location in micrometer units
+                        NeuronVertex nv = new NeuronVertexAdapter(annotation, workspace);
+                        float recenter[] = nv.getLocation();
+                        cachedHortaWorkspace.getVantage().setFocus(recenter[0], recenter[1], recenter[2]);
+                        cachedHortaWorkspace.getVantage().setChanged();
+
+                        // 2) repaint Horta now, to update view without further user interaction
+                        cachedHortaWorkspace.getVantage().notifyObservers();
+                        // Below is the way to trigger a repaint, without changing the viewpoint
+                        // cachedHortaWorkspace.setChanged();
+                        // cachedHortaWorkspace.notifyObservers();
+                    }
+                    break;
+                }
+            }
         }
 
         @Override
         public void annotationsDeleted(List<TmGeoAnnotation> annotations)
         {
-            logger.info("annotationDeleted");
-            updateEdges();
+            // logger.info("annotationDeleted");
+            sanityCheckWorkspace(); // beware of shifting sands beneath us...
+            
+            // TODO - surgically remove only edges related to these particular vertices
+            updateEdges(); // Brute force approach reanalyzes all edges
+            
+            if (cachedHortaWorkspace != null) 
+            {
+                // Repaint Horta now, to update view without further user interaction
+                // (but do not recenter, as LVV does not recenter in this situation either)
+                cachedHortaWorkspace.setChanged();
+                cachedHortaWorkspace.notifyObservers();
+            }
         }
 
         @Override
@@ -155,9 +230,6 @@ implements NeuronSet
         {
             logger.info("Workspace loaded");
             setWorkspace(workspace);
-            NeuronList nl = (NeuronList) neurons;
-            // Map<Long, NeuronStyle> neuronStyleMap = annotationModel.getNeuronStyleMap();
-            nl.wrap(workspace, annotationModel);
             // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
             getMembershipChangeObservable().setChanged();
             getNameChangeObservable().setChanged();
@@ -178,13 +250,9 @@ implements NeuronSet
     private static class NeuronList implements Collection<NeuronModel>
     {
         private TmWorkspace workspace;
-        private final Map<Long, NeuronModel> cachedNeurons = new HashMap<>();
+        private final Map<Long, NeuronModelAdapter> cachedNeurons = new HashMap<>();
         private AnnotationModel annotationModel;
         // private Map<Long, NeuronStyle> neuronStyleMap;
-        
-        public NeuronList(TmWorkspace workspace) {
-            this.workspace = workspace;
-        }
         
         @Override
         public int size()
@@ -314,8 +382,24 @@ implements NeuronSet
 
         private void wrap(TmWorkspace workspace, AnnotationModel annotationModel)
         {
-            this.workspace = workspace;
+            // I assume annotation model never changes...
+            assert( (this.annotationModel == annotationModel) || (this.annotationModel == null));
             this.annotationModel = annotationModel;
+            
+            // Sadly, sometimes the workspace instance does change out from underneath us...
+            if ( (this.workspace != null) && (this.workspace != workspace) ) {
+                this.workspace = workspace;
+                // Keep our NeuronModel instances persistent, even when the underlying
+                // TmNeuron instance (annoyingly) changes
+                for (TmNeuron tmNeuron : workspace.getNeuronList()) {
+                    Long id = tmNeuron.getId();
+                    if (cachedNeurons.containsKey(id)) {
+                        NeuronModelAdapter neuron = cachedNeurons.get(id);
+                        neuron.updateWrapping(tmNeuron, annotationModel, workspace);
+                    }
+                }
+            }
+            this.workspace = workspace;
         }
         
     }

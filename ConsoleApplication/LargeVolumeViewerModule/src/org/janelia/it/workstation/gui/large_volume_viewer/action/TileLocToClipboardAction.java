@@ -10,17 +10,17 @@ import javax.swing.Action;
 import javax.swing.JLabel;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
-import org.janelia.it.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
+import org.janelia.it.workstation.gui.large_volume_viewer.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 
 /**
  * Converts the text, as it is expected, in the status label, into a tile
  * location, and copies that into the clipboard, in a simple format.
  */
 public class TileLocToClipboardAction extends AbstractAction {
+    private final static String FILE_SEP = System.getProperty("file.separator");
+    private final static String LINUX_FILE_SEP = "/";
 
     private final JLabel statusLabel;
     private final TileFormat tileFormat;
@@ -48,8 +48,16 @@ public class TileLocToClipboardAction extends AbstractAction {
         Vec3 vec = new Vec3( micronLocation[0], micronLocation[1], micronLocation[2] );
         
         TileIndex index = tileFormat.tileIndexForXyz(vec, tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit()), axis);
-        File path = BlockTiffOctreeLoadAdapter.getOctreeFilePath(index, tileFormat, true);
-        StringSelection selection = new StringSelection(path.getAbsolutePath());
+        File path = OctreeMetadataSniffer.getOctreeFilePath(index, tileFormat, true);
+        String filePathStr = path.toString().replace(FILE_SEP, LINUX_FILE_SEP);
+        // Not truly looking for the file path; just the legs of the path.
+        if (SystemInfo.isWindows) {
+            int colonPos = filePathStr.indexOf(":");
+            if (colonPos != -1) {
+                filePathStr = filePathStr.substring(colonPos+1);
+            }
+        }
+        StringSelection selection = new StringSelection(filePathStr);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(selection, selection);
     }

@@ -30,12 +30,12 @@
 
 package org.janelia.horta.nodes;
 
-import org.janelia.horta.modelapi.HortaWorkspace;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 

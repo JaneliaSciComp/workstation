@@ -43,10 +43,10 @@ import org.janelia.geometry3d.Vector3;
 public class NeuriteAnchor implements ImmutableNeuriteAnchor 
 {
     private final Vector3 xyzUm;
-    private final int intensity;
+    private final double intensity;
     private float radiusUm;
     
-    public NeuriteAnchor(Vector3 locationUm, int intensity, float radiusUm) {
+    public NeuriteAnchor(Vector3 locationUm, double intensity, float radiusUm) {
         this.xyzUm = locationUm;
         this.intensity = intensity;
         this.radiusUm = radiusUm;
@@ -58,7 +58,7 @@ public class NeuriteAnchor implements ImmutableNeuriteAnchor
     }
 
     @Override
-    public int getIntensity() {
+    public double getIntensity() {
         return intensity;
     }
 

@@ -1,11 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +14,6 @@ implements Map<TileIndex, TileTexture>
 	private Set<Integer> obsoleteGlTextures = new HashSet<Integer>();
 	private Set<Integer> removedOpenGLTexturesSinceClear = new HashSet<Integer>();
 	// Flag to help report when cache has filled.
-	private boolean fullReported = false;
 	// To allow lookup by index
 	private Map<TileIndex, TileTexture> map;
 	private int maxEntries;
@@ -28,27 +22,18 @@ implements Map<TileIndex, TileTexture>
 		this.maxEntries = maxSize;
 		// Create a synchronized, least-recently-used map container, with a size limit.
 		// Use synchronizedMap() to generate thread-safe container.
-		map = Collections.synchronizedMap(new LinkedHashMap<TileIndex, TileTexture>(
-				maxSize, 0.75f, true) { // "true" for access-order, based on get()/add() calls
+		//map = Collections.synchronizedMap(new LinkedHashMap<TileIndex, TileTexture>(
+				map = new LinkedHashMap<TileIndex, TileTexture>(
+
+						maxSize, 0.75f, true) { // "true" for access-order, based on get()/add() calls
 			private static final long serialVersionUID = 1L;
 			@Override
 			// Fix size of LRU cache
-			protected boolean removeEldestEntry(Map.Entry<TileIndex, TileTexture> eldest) {				
-				boolean result = (map.size() > maxEntries);
-				if (result && ! fullReported) {
-					log.info("cache full");
-					fullReported = true;
-				}
-				if (result) {
-					if (eldest.getValue() != null  &&
-					    eldest.getValue().getTexture() != null) {
-						final int eldestTextureId = eldest.getValue().getTexture().getTextureId();					
-						obsoleteGlTextures.add(eldestTextureId);					
-					}
-				}
-				return result;
+			protected boolean removeEldestEntry(Map.Entry<TileIndex, TileTexture> eldest) {
+				return false; // because we are handling removal ourselves
 			}
-		});
+
+		};
 	}
 
 	@Override
@@ -66,20 +51,18 @@ implements Map<TileIndex, TileTexture>
 		}
 		obsoleteGlTextures.addAll(removedOpenGLTexturesSinceClear);
 		map.clear();
-		fullReported = false;
 	}
 
 	public Set<Integer> popObsoleteGlTextures() {
-		if (log.isTraceEnabled()  &&  obsoleteGlTextures.size() > 0) {
-			log.trace("Popping obsolete textures.  Size {}.", obsoleteGlTextures.size());
-        }
+		if (obsoleteGlTextures.size() > 0)
+			log.info("Popping obsolete textures.  Size {}.", obsoleteGlTextures.size());
 		Set<Integer> result = obsoleteGlTextures;
 		obsoleteGlTextures = new HashSet<Integer>();
 		return result;
 	}
 	
 	@Override
-	public TileTexture remove(Object item) {
+	public synchronized TileTexture remove(Object item) {
         if (! (item instanceof TileIndex)) {
             throw new IllegalArgumentException("Wrong type of key used in remove operation.");
         }
@@ -97,12 +80,12 @@ implements Map<TileIndex, TileTexture>
 	}
 
 	@Override
-	public boolean containsKey(Object key) {
+	public synchronized boolean containsKey(Object key) {
 		return map.containsKey(key);
 	}
 
 	@Override
-	public boolean containsValue(Object value) {
+	public synchronized boolean containsValue(Object value) {
 		return map.containsValue(value);
 	}
 
@@ -150,12 +133,46 @@ implements Map<TileIndex, TileTexture>
 	 * @return
 	 */
 	@Override
-	public TileTexture put(TileIndex key, TileTexture value) {
+	public synchronized TileTexture put(TileIndex key, TileTexture value) {
+
+		int mapSize=map.size();
+		//log.info("put() mapSize="+mapSize+" maxEntries="+maxEntries);
+		boolean result = (map.size() > (maxEntries - 1));
+		int i=0;
+
+		if (result) {
+			try {
+
+				// We will iterate over all members, and remove the earlier 50%.
+				// This will avoid constant calls to glDeleteTextureIds once we
+				// hit the ceiling.
+				int cutoff = mapSize / 2;
+				List<TileIndex> keyList=new ArrayList<>();
+				Iterator<TileIndex> it = map.keySet().iterator();
+				while (it.hasNext()) {
+					keyList.add(it.next());
+				}
+				//log.info("keyList has "+keyList.size()+" entries, cutoff="+cutoff);
+				for (;(i<cutoff && i<keyList.size());i++) {
+					TileIndex tileIndex=keyList.get(i);
+					TileTexture tileTexture = map.get(tileIndex);
+					if (tileTexture.getTexture() != null) {
+						final int textureId = tileTexture.getTexture().getTextureId();
+						obsoleteGlTextures.add(textureId);
+					}
+					map.remove(tileIndex);
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+			//log.info("Removed " + i + " TileTextures and tagged " + obsoleteGlTextures.size() + " textureIds as obsolete");
+		}
+
 		return map.put(key, value);
 	}
 
 	@Override
-	public void putAll(Map<? extends TileIndex, ? extends TileTexture> m) {
+	public synchronized void putAll(Map<? extends TileIndex, ? extends TileTexture> m) {
 		map.putAll(m);
 	}
 

@@ -53,6 +53,8 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -65,22 +67,31 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.KeyStroke;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -107,9 +118,9 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
-import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.WorkspaceUtil;
@@ -127,6 +138,7 @@ import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.RequestProcessor;
 import org.openide.util.Utilities;
 import org.openide.util.lookup.Lookups;
 import org.openide.windows.WindowManager;
@@ -223,6 +235,30 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         // Create right-click context menu
         setupContextMenu(sceneWindow.getInnerComponent());
+        
+        // Press "V" to hide all neuron models
+        InputMap inputMap = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        inputMap.put(KeyStroke.getKeyStroke("pressed V"), "hideModels");
+        inputMap.put(KeyStroke.getKeyStroke("released V"), "unhideModels");
+        ActionMap actionMap = getActionMap();
+        actionMap.put("hideModels", new AbstractAction(){
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                // System.out.println("hide models");
+                if (neuronMPRenderer.setHideAll(true))
+                    sceneWindow.getInnerComponent().repaint();
+            }
+        });
+        actionMap.put("unhideModels", new AbstractAction(){
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                // System.out.println("unhide models");
+                if (neuronMPRenderer.setHideAll(false))
+                    sceneWindow.getInnerComponent().repaint();
+            }
+        });
 
         // When the camera changes, that blows our cached cursor information
         cursorCacheDestroyer = new Observer() {
@@ -347,12 +383,12 @@ public final class NeuronTracerTopComponent extends TopComponent
             for (int y = 0; y < this.getHeight(); ++y) {
                 p.x = x;
                 p.y = y;
-                float i = this.getIntensity(p);
+                double i = this.getIntensity(p);
                 if (i <= 0) {
                     continue;
                 }
-                min = Math.min(min, i);
-                max = Math.max(max, i);
+                min = (float)Math.min(min, i);
+                max = (float)Math.max(max, i);
             }
         }
         // logger.info("Min = "+min+"; Max = "+max);
@@ -411,13 +447,13 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                             // Use neuron cursor position, if available, rather than hardware mouse position.
                             Vector3 xyz = null;
-                            NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
-                            if (hoverAnchor == null) {
+                            // NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
+                            // if (hoverAnchor == null) {
                                 xyz = worldXyzForScreenXy(event.getPoint());
-                            } else {
-                                xyz = hoverAnchor.getLocationUm();
+                            // } else {
+                            //     xyz = hoverAnchor.getLocationUm();
                                 // logger.info("Using neuron cursor XYZ "+xyz);
-                            }
+                            // }
 
                             // logger.info(xyz);
                             previousClickTime = System.nanoTime();
@@ -443,7 +479,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                         reportIntensity(msg, event);
 
-                        reportPickItem(msg, event);
+                        // reportPickItem(msg, event);
 
                         if (msg.length() > 0) {
                             StatusDisplayer.getDefault().setStatusText(msg.toString(), 1);
@@ -487,42 +523,38 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     // Append a message about the item under the cursor
     private void reportPickItem(StringBuilder msg, MouseEvent event) {
-        int itemId = neuronMPRenderer.pickIdForScreenXy(event.getPoint());
+        double itemId = neuronMPRenderer.pickIdForScreenXy(event.getPoint());
         msg.append("  Item index under cursor = " + itemId);
     }
 
     private void reportIntensity(StringBuilder msg, MouseEvent event) {
         // Use neuron cursor position, if available, rather than hardware mouse position.
         Vector3 worldXyz = null;
-        int intensity = 0;
+        double intensity = 0;
         NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
         if (hoverAnchor != null) {
             worldXyz = hoverAnchor.getLocationUm();
             intensity = hoverAnchor.getIntensity();
+            // System.out.println("hover intensity = "+intensity);
         } else {
             PerspectiveCamera camera = (PerspectiveCamera) sceneWindow.getCamera();
-            float relDepthF = depthOffsetForScreenXy(event.getPoint(), camera);
+            double relDepthF = neuronMPRenderer.depthOffsetForScreenXy(event.getPoint(), camera);
             worldXyz = worldXyzForScreenXy(event.getPoint(), camera, relDepthF);
             intensity = neuronMPRenderer.intensityForScreenXy(event.getPoint());
+            // System.out.println("non-hover intensity = "+intensity);
         }
 
         mouseStageLocation = worldXyz;
         msg.append(String.format("[% 7.1f, % 7.1f, % 7.1f] \u00B5m",
                 worldXyz.get(0), worldXyz.get(1), worldXyz.get(2)));
-        if (intensity > 0) {
-            msg.append(String.format("  Intensity: % 5d", intensity));
+        if (intensity != -1) {
+            msg.append(String.format("  Intensity: % d", (int)intensity));
+            // System.out.println("message intensity = "+intensity); // Why is this 0 when depth intensity is nonzero?
         }
         // TODO - print out tile X, Y, Z (voxels)
         // TODO - print out tile identifier       
     }
     
-    // TODO - move to NeuronMPRenderer
-    private float depthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
-        float result = neuronMPRenderer.relativeDepthOffsetForScreenXy(xy, camera);
-        result *= 0.5f * neuronMPRenderer.getViewSlabThickness(camera);
-        return result;
-    }
-
     /**
      * TODO this could be a member of PerspectiveCamera
      *
@@ -531,7 +563,7 @@ public final class NeuronTracerTopComponent extends TopComponent
      * @param depthOffset in scene units (NOT PIXELS)
      * @return
      */
-    private Vector3 worldXyzForScreenXy(Point2D xy, PerspectiveCamera camera, float depthOffset) {
+    private Vector3 worldXyzForScreenXy(Point2D xy, PerspectiveCamera camera, double depthOffset) {
         // Camera frame coordinates
         float screenResolution
                 = camera.getVantage().getSceneUnitsPerViewportHeight()
@@ -543,15 +575,15 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         // TODO Adjust cx, cy for foreshortening
         float screenDepth = camera.getCameraFocusDistance();
-        float itemDepth = screenDepth + depthOffset;
-        float foreshortening = itemDepth / screenDepth;
+        double itemDepth = screenDepth + depthOffset;
+        double foreshortening = itemDepth / screenDepth;
         cx *= foreshortening;
         cy *= foreshortening;
 
-        float cz = -itemDepth;
+        double cz = -itemDepth;
         Matrix4 modelViewMatrix = camera.getViewMatrix();
         Matrix4 camera_X_world = modelViewMatrix.inverse(); // TODO - cache this invers
-        Vector4 worldXyz = camera_X_world.multiply(new Vector4(cx, cy, cz, 1));
+        Vector4 worldXyz = camera_X_world.multiply(new Vector4(cx, cy, (float)cz, 1));
         return new Vector3(worldXyz.get(0), worldXyz.get(1), worldXyz.get(2));
     }
 
@@ -571,18 +603,14 @@ public final class NeuronTracerTopComponent extends TopComponent
             @Override
             public void update(Observable o, Object arg) {
                 neuronMPRenderer.setIntensityBufferDirty();
-                /*
-                if (mprActor == null) {
-                    return;
-                }
-                neuronMPRenderer.setIntensityBufferDirty();
-                 */
+                neuronMPRenderer.setOpaqueBufferDirty();
             }
         });
         brightnessModel.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
                 neuronMPRenderer.setIntensityBufferDirty();
+                // note opaque buffer is not affected by brightness model
                 /*
                 if (mprActor == null) {
                     return;
@@ -660,18 +688,17 @@ public final class NeuronTracerTopComponent extends TopComponent
                 dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
                 Transferable t = dtde.getTransferable();
                 
-                ProgressHandle progress
+                final ProgressHandle progress
                         = ProgressHandleFactory.createHandle("Loading File...");
                 try {
                     List<File> fileList = (List) t.getTransferData(DataFlavor.javaFileListFlavor);
+                    final List<File> neuronFileList = new ArrayList<>();
                     // Drop could be YAML and/or SWC
                     for (File f : fileList) {
                         String extension = FilenameUtils.getExtension(f.getName()).toUpperCase();
                         switch (extension) {
                             case "SWC":
-                                NeuronModel neuron = new BasicNeuronModel(f);
-                                new WorkspaceUtil(workspace).addNeuronAndNotify(neuron);
-                                logger.info("dragged SWC file loaded!");
+                                neuronFileList.add(f);
                                 break;
                             case "YML":
                             case "YAML":
@@ -684,6 +711,15 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 break;
                         }
                     }
+                    // Show progress for loading large numbers of swc files
+                    Runnable swcLoadTask = new Runnable() {
+                        @Override
+                        public void run() {
+                            loadNeuronFiles(neuronFileList);                    
+                        }
+                    };
+                    RequestProcessor.getDefault().post(swcLoadTask);
+                    
                 } catch (UnsupportedFlavorException | IOException | ParseException ex) {
                     JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading dragged file");
                     Exceptions.printStackTrace(ex);
@@ -694,7 +730,73 @@ public final class NeuronTracerTopComponent extends TopComponent
             }
         }));
     }
+    
+    private void loadNeuronFiles(List<File> neuronFileList)
+    {
+        // TODO: load neurons multithreaded
+        if (neuronFileList.isEmpty()) return;
+        final ProgressHandle progress
+                = ProgressHandleFactory.createHandle("Loading SWC Files...");
+        progress.start();
+        WorkspaceUtil ws = new WorkspaceUtil(workspace);
+        final NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
+        final AtomicInteger loadedCount = new AtomicInteger(0);
+        final int fileCount = neuronFileList.size();
+        progress.switchToDeterminate(fileCount);
+        progress.progress(0);
+        ExecutorService pool = Executors.newFixedThreadPool(10);
+        final Collection<NeuronModel> newNeurons = new ArrayList<>();
+        for (final File f : neuronFileList) {
+            Runnable loadJob = new Runnable() {
+                @Override
+                public void run()
+                {
+                    try {
+                        NeuronModel neuron = new BasicNeuronModel(f);
+                        // TODO: safe multithreaded access to NeuronSet ns
+                        synchronized(newNeurons) {
+                            newNeurons.add(neuron);
+                        }
+                        synchronized(progress) {
+                            progress.progress(loadedCount.getAndIncrement());
+                        }
+                    } catch (IOException ex) {
+                        Exceptions.printStackTrace(ex);
+                    }
+                }
+            };
+            // loadJob.run();
+            pool.submit(loadJob);
+        }
+        pool.shutdown();
+        try {
+            if (! pool.awaitTermination(60, TimeUnit.SECONDS))
+                pool.shutdownNow();
+        } catch (InterruptedException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        progress.finish();
 
+        final ProgressHandle progress2
+                = ProgressHandleFactory.createHandle("Creating neuron models...");
+        progress2.start();
+        progress2.switchToDeterminate(newNeurons.size());
+        // Parallel construction of neuron actors...
+        neuronMPRenderer.bulkAddNeuronActors(newNeurons);
+        int ix = 0;
+        for (NeuronModel neuron : newNeurons) {
+            if (ns.add(neuron))
+                ns.getMembershipChangeObservable().setChanged();
+            progress2.progress(ix);
+            ix += 1;
+        }
+        progress2.finish();
+       
+        // TODO: the slow part follows:
+        workspace.notifyObservers();
+        ns.getMembershipChangeObservable().notifyObservers();        
+    }
+    
     private void setupContextMenu(Component innerComponent) {
         // Context menu for window - at first just to see if it works with OpenGL
         // (A: YES, if applied to the inner component)
@@ -861,6 +963,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.MONO);
                             neuronMPRenderer.setIntensityBufferDirty();
+                            neuronMPRenderer.setOpaqueBufferDirty();
                             sceneWindow.redrawNow();
                         }
                     }));
@@ -879,6 +982,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.RED_CYAN);
                             neuronMPRenderer.setIntensityBufferDirty();
+                            neuronMPRenderer.setOpaqueBufferDirty();
                             sceneWindow.redrawNow();
                         }
                     }));
@@ -897,6 +1001,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.GREEN_MAGENTA);
                             neuronMPRenderer.setIntensityBufferDirty();
+                            neuronMPRenderer.setOpaqueBufferDirty();
                             sceneWindow.redrawNow();
                         }
                     }));
@@ -1075,14 +1180,14 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     @Override
-    public int getIntensity(Point2D xy) {
+    public double getIntensity(Point2D xy) {
         return neuronMPRenderer.intensityForScreenXy(xy);
     }
 
     @Override
     public Vector3 worldXyzForScreenXy(Point2D xy) {
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-        float depthOffset = depthOffsetForScreenXy(xy, pCam);
+        double depthOffset = neuronMPRenderer.depthOffsetForScreenXy(xy, pCam);
         Vector3 xyz = worldXyzForScreenXy(
                 xy,
                 pCam,
@@ -1169,6 +1274,13 @@ public final class NeuronTracerTopComponent extends TopComponent
             scaleBar.setForegroundColor(Color.white);
             scaleBar.setBackgroundColor(new Color(0, 0, 0, 50));                    
         }
+    }
+
+    // TODO: Use this for redraw needs
+    private void redrawNow() {
+        if (! isShowing())
+            return;
+        sceneWindow.getInnerComponent().repaint();
     }
 
     @Override

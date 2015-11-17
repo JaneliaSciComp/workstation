@@ -40,7 +40,7 @@ import org.janelia.geometry3d.Vector3;
  */
 public interface VolumeProjection {
     public Component getMouseableComponent();
-    public int getIntensity(Point2D xy);
+    public double getIntensity(Point2D xy);
     public Vector3 worldXyzForScreenXy(Point2D xy);
     public float getPixelsPerSceneUnit();
 }

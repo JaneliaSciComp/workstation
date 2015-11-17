@@ -46,8 +46,8 @@ public abstract class BasicMaterial implements Material
     protected boolean isInitialized = false;
     protected boolean cullFaces = true;
     // Uniform transforms
-    protected int modelViewIndex = 0;
-    protected int projectionIndex = 0;
+    protected int modelViewIndex = -1;
+    protected int projectionIndex = -1;
 
 
     public void BasicMaterial() {}

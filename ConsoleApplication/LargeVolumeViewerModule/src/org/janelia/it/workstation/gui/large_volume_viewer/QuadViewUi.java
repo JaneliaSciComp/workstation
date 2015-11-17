@@ -7,6 +7,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.cache.TileStackCacheController;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer.LoadStatus;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
@@ -16,10 +17,11 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationM
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.TileStackCacheStatusPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrivenSWCExchanger;
+import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -36,9 +38,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -67,7 +67,7 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.L
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.shared.util.SWCDataConverter;
+import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 
 /** 
  * Main window for QuadView application.
@@ -288,16 +288,25 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         camera.addCameraListener(new CameraListener() {
             @Override
             public void zoomChanged(Double zoom) {
+                // Re-position the 3D cache.
+                //CacheController cacheController = CacheController.getInstance();
+                //cacheController.zoomChanged(zoom);
+                TileStackCacheController.getInstance().setZoom(zoom);
                 QuadViewUi.this.zoomChanged(zoom);
             }
 
             @Override
             public void focusChanged(Vec3 focus) {
-                 QuadViewUi.this.focusChanged(focus);
+                TileStackCacheController.getInstance().setFocus(focus);
+                QuadViewUi.this.focusChanged(focus);
             }
 
             @Override
             public void viewChanged() {
+                // Re-position the 3D cache.
+                //CacheController cacheController = CacheController.getInstance();
+                //cacheController.focusChanged(camera.getFocus());
+                TileStackCacheController.getInstance().setFocus(camera.getFocus());
                 tileServer.refreshCurrentTileSet();
             }            
         });
@@ -560,7 +569,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private void updateSWCDataConverter() {
         SWCDataConverter swcDataConverter = new SWCDataConverter();
         swcDataConverter.setSWCExchanger(
-                new MatrixDrivenSWCExchanger(tileFormat)
+                new MatrixDrivenSWCExchanger(tileFormat.getMicronToVoxMatrix(), tileFormat.getVoxToMicronMatrix())
         );
         annotationModel.setSWCDataConverter(swcDataConverter);
     }
@@ -779,11 +788,29 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         gotoLocationButton.setAction(goToLocationAction);
         buttonsPanel.add(gotoLocationButton);
 
+        buttonsPanel.add(new TileStackCacheStatusPanel());
+
 		Component verticalGlue = Box.createVerticalGlue();
 		buttonsPanel.add(verticalGlue);
 		
 		buttonsPanel.add(loadStatusLabel);
-		
+
+        final JCheckBox volumeCacheCheckbox = new JCheckBox("Volume Cache");
+        volumeCacheCheckbox.setSelected(VolumeCache.useVolumeCache());
+        volumeCacheCheckbox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange()==ItemEvent.DESELECTED) {
+                    volumeCacheCheckbox.setSelected(false);
+                    VolumeCache.setVolumeCache(false);
+                } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                    volumeCacheCheckbox.setSelected(true);
+                    VolumeCache.setVolumeCache(true);
+                }
+            }
+        });
+        buttonsPanel.add(volumeCacheCheckbox);
+
 		JButton btnClearCache = new JButton("Clear Cache");
 		btnClearCache.setAction(clearCacheAction);
 		buttonsPanel.add(btnClearCache);
@@ -1128,10 +1155,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
     
     public JMenuItem addCopyTileFileLocMenuItem() {
-        String topFolder = this.loadedUrl.getFile();
         JMenuItem mnCopyTileFileLoc = new JMenuItem(
                 new RawFileLocToClipboardAction(
-                        statusLabel, tileFormat, topFolder, camera, CoordinateAxis.Z
+                        statusLabel, tileFormat, volumeImage, camera, CoordinateAxis.Z
                 )
         );
         return mnCopyTileFileLoc;
@@ -1308,6 +1334,15 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     "Error opening folder " + url
                     +" \nIs the file share mounted?");
     	}
+
+        try {
+            TileStackCacheController.getInstance().init(url);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            log.error(ex.toString());
+            rtnVal=false;
+        }
+
         return rtnVal;
     }
     
@@ -1378,7 +1413,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         TileConsumer viewer = allSliceViewers.get(0);
         result.setMicrometersPerWindowHeight(
                 viewer.getViewport().getHeight()
-                / camera.getPixelsPerSceneUnit());
+                        / camera.getPixelsPerSceneUnit());
         
         // TODO neurons
         

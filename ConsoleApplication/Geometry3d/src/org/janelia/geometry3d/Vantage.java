@@ -33,6 +33,7 @@ import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.ComposableObservable;
 import java.util.Collection;
 import java.util.Observer;
+import org.janelia.console.viewerapi.model.VantageInterface;
 
 /**
  * Viewport-independent, camera-type-independent camera representation,
@@ -41,7 +42,7 @@ import java.util.Observer;
  * @author cmbruns
  */
 public class Vantage 
-implements CompositeObject3d, ObservableInterface
+implements CompositeObject3d, ObservableInterface, VantageInterface
 {
     private float sceneUnitsPerViewportHeight; // Zoom level
     private final Vector3 focusPosition = new Vector3(0,0,0); // Location of subject in GL units
@@ -323,6 +324,18 @@ implements CompositeObject3d, ObservableInterface
         rotationInGround.multiply(correction);
         changeObservable.setChanged();
         return true;
+    }
+
+    @Override
+    public boolean setFocus(float x, float y, float z)
+    {
+        return setFocusPosition(new Vector3(x, y, z));
+    }
+
+    @Override
+    public float[] getFocus()
+    {
+        return getFocusPosition().toArray();
     }
     
 }

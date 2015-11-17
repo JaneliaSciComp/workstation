@@ -28,48 +28,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.actors;
+package org.janelia.console.viewerapi.model;
 
-import java.awt.Color;
-import javax.media.opengl.GL3;
-import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.Matrix4;
-import org.janelia.gltools.BasicGL3Actor;
-import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.ObservableInterface;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class SwcActor extends BasicGL3Actor
+public interface VantageInterface extends ObservableInterface
 {
-    final SpheresActor spheresActor;
-    final ConesActor conesActor;
+    // Zoom
+    float getSceneUnitsPerViewportHeight();
+    boolean setSceneUnitsPerViewportHeight(float zoom);
     
-    public SwcActor(final NeuronModel neuron) {
-        super(null);
-        spheresActor = new SpheresActor(neuron);
-        conesActor = new ConesActor(neuron);
-        this.addChild(spheresActor);
-        this.addChild(conesActor);
-        setMinPixelRadius(0.5f);
-    }
+    // Center
+    boolean setFocus(float x, float y, float z);
+    float[] getFocus();
     
-    public void setColor(Color color) {
-        spheresActor.setColor(color);
-        conesActor.setColor(color);
-    }
-    
-    // A minimum size added to each neuron caliber, 
-    // so even very thin neurites will show up on the screen
-    public final void setMinPixelRadius(float radius) {
-        spheresActor.setMinPixelRadius(radius);
-        conesActor.setMinPixelRadius(radius);
-    }
-    
-    @Override
-    public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
-        if (! isVisible()) return;
-        super.display(gl, camera, parentModelViewMatrix);       
-    }
+    // Rotation
+    // TODO: How to best express 3D rotation in basic Java types?
 }

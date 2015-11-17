@@ -13,9 +13,9 @@ import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.it.workstation.shared.util.SWCDataConverter;
-import org.janelia.it.workstation.shared.util.SWCNode;
-import org.janelia.it.workstation.shared.util.SWCData;
+import org.janelia.it.jacs.shared.swc.SWCDataConverter;
+import org.janelia.it.jacs.shared.swc.SWCNode;
+import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -1464,100 +1464,6 @@ called from a  SimpleWorker thread.
         }
     }
 
-    public void importSWCData(File swcFile) throws Exception {
-        importSWCData(swcFile, null);
-    }
-
-    public void importSWCData(File swcFile, SimpleWorker worker) throws Exception {
-
-        // the constructor also triggers the parsing, but not the validation
-        SWCData swcData = SWCData.read(swcFile);
-        if (!swcData.isValid()) {
-            throw new Exception(String.format("invalid SWC file %s; reason: %s",
-                    swcFile.getName(), swcData.getInvalidReason()));
-        }
-
-        // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
-        //  so he added an OFFSET header and recentered on zero when exporting
-        // therefore, if that header is present, respect it
-        double[] externalOffset = swcData.parseOffset();        
-
-        // create one neuron for the file; take name from the filename (strip extension)
-        String neuronName = swcData.parseName();
-        if (neuronName == null)
-            neuronName = swcFile.getName();
-        if (neuronName.endsWith(SWCData.STD_SWC_EXTENSION)) {
-            neuronName = neuronName.substring(0, neuronName.length() - SWCData.STD_SWC_EXTENSION.length());
-        }
-        final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
-
-        // let's go with brute force for now; loop over nodes and
-        //  insert into db sequentially, since we have no bulk update
-        //  for annotations right now
-
-        // and as long as we're doing brute force, we can update progress
-        //  granularly (if we have a worker); start with 5% increments (1/20)
-        int totalLength = swcData.getNodeList().size();
-        int updateFrequency = totalLength / 20;
-        if (updateFrequency == 0) {
-            updateFrequency = 1;
-        }
-        if (worker != null) {
-            worker.setProgress(0L, totalLength);
-        }
-
-        Map<Integer, TmGeoAnnotation> annotations = new HashMap<>();
-        TmGeoAnnotation annotation;
-        for (SWCNode node: swcData.getNodeList()) {
-            // Internal points, as seen in annotations, are same as external
-            // points in SWC: represented as voxels. --LLF
-            double[] internalPoint = swcDataConverter.internalFromExternal(
-                new double[] {
-                        node.getX() + externalOffset[0],
-                        node.getY() + externalOffset[1],
-                        node.getZ() + externalOffset[2],
-                }
-            );
-            if (node.getParentIndex() == -1) {
-                annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                    null, 0, 
-                    internalPoint[0], internalPoint[1], internalPoint[2],
-                    "");
-            } else {
-                annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                    annotations.get(node.getParentIndex()).getId(),
-                    0, 
-                    internalPoint[0], internalPoint[1], internalPoint[2],
-                    "");
-            }
-            annotations.put(node.getIndex(), annotation);
-            if (worker != null && (node.getIndex() % updateFrequency) == 0) {
-                worker.setProgress(node.getIndex(), totalLength);
-            }
-        }
-        updateNeuronColor(swcData, neuron);
-        
-        // update workspace; update and select new neuron; this will draw points as well
-        updateCurrentWorkspace();
-        final TmWorkspace workspace = getCurrentWorkspace();
-        setCurrentNeuron(neuron);
-        final TmNeuron updateNeuron = getCurrentNeuron();
-
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireWorkspaceLoaded(workspace);
-                fireNeuronSelected(updateNeuron);                
-            }
-        });
-
-
-        // normally if automatic tracing is enabled, we'd do that here, but
-        //  for bulk import, I don't think this is a good idea right now,
-        //  as we have no mechanism for managing the jobs
-
-    }
-
     public void importBulkSWCData(File swcFile, SimpleWorker worker, boolean selectOnCompletion) throws Exception {
 
         // the constructor also triggers the parsing, but not the validation
@@ -1623,7 +1529,7 @@ called from a  SimpleWorker thread.
         }
 
         // Fire off the bulk update.  The "un-serialized" or
-        // db-unknown annoations could be swapped for "blessed" versions.
+        // db-unknown annotations could be swapped for "blessed" versions.
         modelMgr.addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
 
         updateNeuronColor(swcData, neuron);

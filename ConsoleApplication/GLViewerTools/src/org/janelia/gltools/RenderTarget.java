@@ -33,6 +33,8 @@ import org.janelia.gltools.texture.Texture2d;
 import com.jogamp.common.nio.Buffers;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import javax.media.opengl.DebugGL3;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
@@ -83,7 +85,7 @@ public class RenderTarget extends Texture2d
      * @param channel
      * @return -1 on failure, otherwise intensity
      */
-    public synchronized int getIntensity(GLAutoDrawable glad, int x, int y, int channel) {
+    public synchronized double getIntensity(GLAutoDrawable glad, int x, int y, int channel) {
         // System.out.println("pick x = "+x+"; pick y = "+y+"; width = "+width+"("+paddedWidth+"); height = "+height);
         if (handle == 0) return -1; // This texture is not even initialized.
         if (hostBufferNeedsUpdate && glad == null) // stale and no source of pixels
@@ -96,7 +98,7 @@ public class RenderTarget extends Texture2d
         if (channel >= numberOfComponents) return -1;
         if (channel < 0) return -1;
         
-        int result = -1;
+        double result = -1;
 
         int totalBytes = width*height*bytesPerIntensity*numberOfComponents + height*widthPadInBytes;
         if ( (hostTextureBuffer != null) && (hostTextureBuffer.capacity() < totalBytes) ) {
@@ -132,7 +134,10 @@ public class RenderTarget extends Texture2d
         int sx = numberOfComponents*sc;
         int sy = width*sx + widthPadInBytes/bytesPerIntensity;
         int offset = sx*x + sy*y + sc*channel;
-        if (bytesPerIntensity == 4)
+        if (format == GL3.GL_DEPTH_COMPONENT) {
+            result = hostTextureBuffer.asFloatBuffer().get(offset);
+        }
+        else if (bytesPerIntensity == 4)
             result = hostTextureBuffer.asIntBuffer().get(offset);
         else if (bytesPerIntensity == 2)
             result = hostTextureBuffer.asShortBuffer().get(offset) & 0xffff;
