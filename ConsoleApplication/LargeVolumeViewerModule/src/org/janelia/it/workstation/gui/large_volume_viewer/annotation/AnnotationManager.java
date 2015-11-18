@@ -483,6 +483,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(anchorID);
         TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(annotationID);
 
+        // is the target neuron visible?
+        if (!getNeuronStyle(annotationModel.getNeuronFromNeuronID(targetAnnotation.getNeuronId())).isVisible()) {
+            return false;
+        }
+
         // distance: close enough?
         double dx = anchorLocation.getX() - targetAnnotation.getX();
         double dy = anchorLocation.getY() - targetAnnotation.getY();
