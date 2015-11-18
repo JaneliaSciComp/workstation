@@ -6,6 +6,7 @@ of adapter.
 -->
 <project name="run-console-build" default="build">
     <property environment="env"/>
+    <property file="../buildprocess/config/${user.name}.properties" />
     <target name="build" description="Build using ant target" depends="prop-copy,internal-jar-copy">
         <echoproperties/>
         <ant antfile="build.xml" target="build">
@@ -20,6 +21,32 @@ of adapter.
             <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
             <property name="nbplatform.default.harness.dir" value="${basedir}/harness" />
         </ant>
+    </target>
+
+    <target name="deploy-nbms-staging">
+        <property name="ssh.common.params" value="jacs@jacs-webdav"/>
+        <property name="scp.common.params" value=""/>
+        <echo message="Testing connection" />
+        <echo message="SSH Common Params ${ssh.common.params} for ${ssh}"/>
+        <exec executable="${ssh}" description="Testing connection"
+              outputproperty="exec.output" failonerror="true">
+            <arg line="${ssh.common.params} ls -ld /tmp"/>
+        </exec>
+
+        <!--clean out old modules -->
+        <echo message="Removing remote Staging modules" />
+        <exec executable="${ssh}" description="Removing Staging modules">
+            <arg line="${ssh.common.params} rm -fr /var/www/html/staging/*"/>
+        </exec>
+
+        <!--copy new modules -->
+        <echo message="Copying new modules to Staging" />
+        <echo message="SCP Common Params ${scp.common.params} for ${scp}"/>
+        <exec executable="bash" description="Copying new modules to Staging">
+            <arg line="-c '${scp} -r ${basedir}/build/updates/* jacs@jacs-webdav:/var/www/html/staging/.'"/>
+        </exec>
+        <echo message="Done : ${exec.output}"  />
+        <echo message="Done : ${exec.error}"  />
     </target>
 
     <target name="create-platform" description="Target to build platform locally">

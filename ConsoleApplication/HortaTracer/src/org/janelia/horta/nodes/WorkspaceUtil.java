@@ -34,7 +34,7 @@ import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import java.util.ArrayList;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.horta.modelapi.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaWorkspace;
 
 /**
  * Convenience methods I don't want to place into lean HortaWorkspace API
@@ -46,6 +46,17 @@ public class WorkspaceUtil
 
     public WorkspaceUtil(HortaWorkspace workspace) {
         this.workspace = workspace;
+    }
+    
+    public NeuronSet getOrCreateTemporaryNeuronSet() {
+        for (NeuronSet neuronSet : workspace.getNeuronSets()) {
+            if (neuronSet.getName().equals("TemporaryNeurons"))
+                return neuronSet;
+        }
+        NeuronSet result = new BasicNeuronSet("Temporary Neurons", new ArrayList<NeuronModel>());
+        workspace.getNeuronSets().add(result);
+        workspace.setChanged();
+        return result;
     }
     
     // Convenience function for use after dragging a lone SWC onto the viewer.

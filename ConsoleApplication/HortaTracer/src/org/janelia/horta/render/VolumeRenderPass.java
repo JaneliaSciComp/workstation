@@ -48,10 +48,10 @@ public class VolumeRenderPass extends RenderPass
 {
     private final RenderTarget hdrTarget;
     private final RenderTarget pickBuffer;
-    private final RenderTarget depthTarget;
+    // private final RenderTarget depthTarget;
     private final float[] clearColor4 = new float[] {0,0,0,0};
     private final int[] clearColor4i = new int[] {0,0,0,0};
-    private final float[] depthOne = new float[] {1};
+    // private final float[] depthOne = new float[] {1};
     private final int targetAttachments[];
     private Texture2d cachedDepthTexture = null;
     private float cachedOpaqueZNear = 1e-2f;
@@ -65,12 +65,12 @@ public class VolumeRenderPass extends RenderPass
         // Create render targets
         // Create G-Buffer for deferred rendering
         final int hdrAttachment = GL3.GL_COLOR_ATTACHMENT0;
-        final int depthAttachment = GL3.GL_DEPTH_ATTACHMENT;
+        // final int depthAttachment = GL3.GL_DEPTH_ATTACHMENT;
         final int pickAttachment = GL3.GL_COLOR_ATTACHMENT1;
         hdrTarget = framebuffer.addRenderTarget(GL3.GL_RGBA16,
                 hdrAttachment);
-        depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, // 16? 24? 32? // 16 does not work; unspecified does not work
-                depthAttachment);
+        // depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, // 16? 24? 32? // 16 does not work; unspecified does not work
+        //         depthAttachment);
         pickBuffer = framebuffer.addRenderTarget(GL3.GL_RG16UI,
                 pickAttachment);
         
@@ -106,7 +106,7 @@ public class VolumeRenderPass extends RenderPass
         gl.glDrawBuffers(targetAttachments.length, targetAttachments, 0);
 
         gl.glClearBufferfv(GL3.GL_COLOR, 0, clearColor4, 0);
-        gl.glClearBufferfv(GL3.GL_DEPTH, 0, depthOne, 0);
+        // gl.glClearBufferfv(GL3.GL_DEPTH, 0, depthOne, 0);
         gl.glClearBufferuiv(GL3.GL_COLOR, 1, clearColor4i, 0); // pick buffer...
 
         // Blend intensity channel, but not pick channel

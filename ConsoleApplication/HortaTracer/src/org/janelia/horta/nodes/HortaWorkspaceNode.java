@@ -41,10 +41,11 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.geometry3d.Vantage;
-import org.janelia.horta.modelapi.HortaWorkspace;
+// import org.janelia.geometry3d.Vantage;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.VantageInterface;
+import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
@@ -86,7 +87,7 @@ public class HortaWorkspaceNode extends AbstractNode
         setDisplayName("Scene"); //  (" + workspace.getNeuronSets().size() + " neurons)");
     }
     
-    public Vantage getVantage() {
+    public VantageInterface getVantage() {
         return workspace.getVantage();
     }
     

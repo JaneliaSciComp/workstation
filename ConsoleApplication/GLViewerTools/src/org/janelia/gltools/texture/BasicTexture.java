@@ -225,6 +225,14 @@ public abstract class BasicTexture implements GL3Resource
             else
                 format = GL3.GL_RGBA;
         }
+        
+        // TODO: Hard coding depth situation for the moment
+        if (internalFormat == GL3.GL_DEPTH_COMPONENT32) {
+            format = GL3.GL_DEPTH_COMPONENT;
+            type = GL3.GL_FLOAT;
+            bytesPerIntensity = 4; // TODO: 3?
+            numberOfComponents = 1;
+        }
     }
     
     public void bind(GL3 gl) {

@@ -38,10 +38,11 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import org.janelia.geometry3d.Box3;
-import org.janelia.geometry3d.Vantage;
+// import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.VantageInterface;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
@@ -78,7 +79,7 @@ public class NeuronModelNode extends AbstractNode
         return getIcon(i);
     }
     
-    private Vantage getVantage() {
+    private VantageInterface getVantage() {
         Node node = this;
         while (node != null) {
             node = node.getParentNode();
@@ -94,7 +95,7 @@ public class NeuronModelNode extends AbstractNode
         List<Action> result = new ArrayList<>();
         // Maybe expose "center on" action
         // 0 - is there a camera to actually center on?
-        final Vantage vantage = getVantage();
+        final VantageInterface vantage = getVantage();
         if ((vantage != null) && neuron.getVertexes().size() > 0) {
             result.add(new CenterOnNeuronAction(neuron, vantage));
         }
@@ -157,9 +158,9 @@ public class NeuronModelNode extends AbstractNode
     private static class CenterOnNeuronAction extends AbstractAction
     {
         private final NeuronModel neuron;
-        private final Vantage vantage;
+        private final VantageInterface vantage;
         
-        public CenterOnNeuronAction(NeuronModel neuron, Vantage vantage)
+        public CenterOnNeuronAction(NeuronModel neuron, VantageInterface vantage)
         {
             putValue(NAME, "Center on this neuron");
             this.neuron = neuron;
@@ -186,7 +187,7 @@ public class NeuronModelNode extends AbstractNode
             }
             // 3 - center on that vertex
             Vector3 center = new Vector3(closestVertex.getLocation());
-            vantage.setFocusPosition(center);
+            vantage.setFocus(center.getX(), center.getY(), center.getZ());
             // 4 - adjust scale
             float maxScale = 5.0f;
             for (int i = 0; i < 3; ++i) {
