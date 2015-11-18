@@ -49,6 +49,32 @@ of adapter.
         <echo message="Done : ${exec.error}"  />
     </target>
 
+    <target name="deploy-nbms-production">
+        <property name="ssh.common.params" value="jacs@jacs-webdav"/>
+        <property name="scp.common.params" value=""/>
+        <echo message="Testing connection" />
+        <echo message="SSH Common Params ${ssh.common.params} for ${ssh}"/>
+        <exec executable="${ssh}" description="Testing connection"
+              outputproperty="exec.output" failonerror="true">
+            <arg line="${ssh.common.params} ls -ld /tmp"/>
+        </exec>
+
+        <!--clean out old modules -->
+        <echo message="Removing remote Production modules" />
+        <exec executable="${ssh}" description="Removing Production modules">
+            <arg line="${ssh.common.params} rm -fr /var/www/html/workstation/*"/>
+        </exec>
+
+        <!--copy new modules -->
+        <echo message="Copying new modules to Production" />
+        <echo message="SCP Common Params ${scp.common.params} for ${scp}"/>
+        <exec executable="bash" description="Copying new modules to Production">
+            <arg line="-c '${scp} -r ${basedir}/build/updates/* jacs@jacs-webdav:/var/www/html/workstation/.'"/>
+        </exec>
+        <echo message="Done : ${exec.output}"  />
+        <echo message="Done : ${exec.error}"  />
+    </target>
+
     <target name="create-platform" description="Target to build platform locally">
         <!--<echoproperties/>-->
         <ant antfile="build.xml" target="create-platform">
