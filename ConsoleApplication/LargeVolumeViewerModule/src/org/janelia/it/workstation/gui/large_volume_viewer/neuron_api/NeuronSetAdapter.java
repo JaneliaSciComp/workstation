@@ -169,20 +169,24 @@ implements NeuronSet, LookupListener
                     neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
                     // Trigger a Horta repaint  for instant GUI feedback
                     // NOTE - assumes this callback is only invoked from one-at-a-time manual addition
-                    if (cachedHortaWorkspace != null) 
+                    final boolean doRecenterHorta = false;
+                    if (doRecenterHorta) 
                     {
-                        // 1) recenter on annotation location in Horta, just like in LVV
-                        // Use a temporary NeuronVertexAdapter, just to get the location in micrometer units
-                        NeuronVertex nv = new NeuronVertexAdapter(annotation, workspace);
-                        float recenter[] = nv.getLocation();
-                        cachedHortaWorkspace.getVantage().setFocus(recenter[0], recenter[1], recenter[2]);
-                        cachedHortaWorkspace.getVantage().setChanged();
+                        if (cachedHortaWorkspace != null) 
+                        {
+                            // 1) recenter on annotation location in Horta, just like in LVV
+                            // Use a temporary NeuronVertexAdapter, just to get the location in micrometer units
+                            NeuronVertex nv = new NeuronVertexAdapter(annotation, workspace);
+                            float recenter[] = nv.getLocation();
+                            cachedHortaWorkspace.getVantage().setFocus(recenter[0], recenter[1], recenter[2]);
+                            cachedHortaWorkspace.getVantage().setChanged();
 
-                        // 2) repaint Horta now, to update view without further user interaction
-                        cachedHortaWorkspace.getVantage().notifyObservers();
-                        // Below is the way to trigger a repaint, without changing the viewpoint
-                        // cachedHortaWorkspace.setChanged();
-                        // cachedHortaWorkspace.notifyObservers();
+                            // 2) repaint Horta now, to update view without further user interaction
+                            cachedHortaWorkspace.getVantage().notifyObservers();
+                            // Below is the way to trigger a repaint, without changing the viewpoint
+                            // cachedHortaWorkspace.setChanged();
+                            // cachedHortaWorkspace.notifyObservers();
+                        }
                     }
                     break;
                 }
