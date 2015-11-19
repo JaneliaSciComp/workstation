@@ -40,7 +40,7 @@ public class BlockTiffOctreeLoadAdapter
 extends AbstractTextureLoadAdapter 
 {
 	private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
-    private static final CategoryString LIX_CATEGORY_STRING = new CategoryString("loadTileIndexToRam:elapsed");
+    private static final CategoryString LIX_CATEGORY_STRING = new CategoryString("loadTileIndexToRam");
     private static final CategoryString LVV_SESSION_CATEGORY_STRING = new CategoryString("openFolder");
 
 	// Metadata: file location required for local system as mount point.
