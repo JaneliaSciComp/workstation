@@ -27,6 +27,10 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID;
 
 /**
  * Created by murphys on 10/22/2015.
@@ -43,6 +47,8 @@ public class TileStackCacheController {
     public static int FILE_DATA_POLL_INTERVAL_MS=100;
     public static final int MIN_RAW_VAL=10000;
     public static final int MAX_RAW_VAL=23000;
+
+    private static final CategoryString LTT_CATEGORY_STRING = new CategoryString("loadTileTiffToRam");
 
     private String remoteBasePath;
     private File topFolder;
@@ -659,6 +665,7 @@ public class TileStackCacheController {
         private void loadTiffToByteArray(File file, byte[] volumeData, int channelCount, int[] tileSize) throws AbstractTextureLoadAdapter.TileLoadError, AbstractTextureLoadAdapter.MissingTileException, IOException {
             log.info("***>>> loadTiffToByteArray() loading file="+file.getAbsolutePath());
             //try {
+                Long startingTime = System.currentTimeMillis();
                 int sliceSize = tileSize[0] * tileSize[1];
                 int channelSize = sliceSize * tileSize[2];
                 ImageDecoder[] decoders = BlockTiffOctreeLoadAdapter.createImageDecoders(file, CoordinateAxis.Z, true, channelCount, true);
@@ -707,6 +714,19 @@ public class TileStackCacheController {
                         }
                     }
                 }
+                
+                Long finalTime = System.currentTimeMillis();
+                final long elapsedMs = finalTime - startingTime;
+                //    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, double elapsedMs, double thresholdMs) {
+                SessionMgr.getSessionMgr().logToolEvent(
+                        LVV_LOGSTAMP_ID, 
+                        LTT_CATEGORY_STRING, 
+                        new ActionString(
+                                file.toString() + ":elapsed_ms=" + elapsedMs
+                        ),
+                        elapsedMs, 
+                        999
+                );
             //} catch (Exception ex) {
             //    log.error("***>>> loadTiffToByteArray: Exception="+ex.toString());
             //    ex.printStackTrace();
