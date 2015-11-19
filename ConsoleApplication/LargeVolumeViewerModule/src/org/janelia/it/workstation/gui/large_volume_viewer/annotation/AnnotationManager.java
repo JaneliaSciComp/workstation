@@ -483,6 +483,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(anchorID);
         TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(annotationID);
 
+        // is the target neuron visible?
+        if (!getNeuronStyle(annotationModel.getNeuronFromNeuronID(targetAnnotation.getNeuronId())).isVisible()) {
+            return false;
+        }
+
         // distance: close enough?
         double dx = anchorLocation.getX() - targetAnnotation.getX();
         double dy = anchorLocation.getY() - targetAnnotation.getY();
@@ -1404,6 +1409,26 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         //  Jan. 2014, that monitor's window repositions itself and comes to front on every
         //  new task, so it's far too intrusive to be used for our purpose; see FW-2191
         // worker.executeWithEvents();
+    }
+
+    public void showWorkspaceInfoDialog() {
+        // implementation note; this is sloppy; in Raveler, I have a SessionInfoDialog class
+        //  that has a nice table layout and methods for adding new lines to that table
+        //  (including using blank lines as dividers); next time we need to add info
+        //  to this dialog, refactor and do it right
+
+        // you can also look to the Raveler dialog to see what kinds of info we could add
+        //  eg,  move sample name, path to here
+
+        int nneurons = annotationModel.getCurrentWorkspace().getNeuronList().size();
+        int nannotations = 0;
+        for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+            nannotations += neuron.getGeoAnnotationMap().size();
+        }
+        JOptionPane.showMessageDialog(quadViewUi,
+                "# neurons = " + nneurons + "\n# annotations (total) = " + nannotations + "\n",
+                "Info",
+                JOptionPane.PLAIN_MESSAGE);
     }
 
     public void exportAllNeuronsAsSWC(final File swcFile, final int downsampleModulo) {
