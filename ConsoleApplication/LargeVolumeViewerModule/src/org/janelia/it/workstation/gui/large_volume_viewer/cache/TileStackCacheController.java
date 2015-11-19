@@ -718,14 +718,14 @@ public class TileStackCacheController {
                 Long finalTime = System.currentTimeMillis();
                 final long elapsedMs = finalTime - startingTime;
                 //    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, double elapsedMs, double thresholdMs) {
+                // Alwoys logging these.  Far less often issued than single
+                // slice loads.
                 SessionMgr.getSessionMgr().logToolEvent(
                         LVV_LOGSTAMP_ID, 
                         LTT_CATEGORY_STRING, 
                         new ActionString(
                                 file.toString() + ":elapsed_ms=" + elapsedMs
-                        ),
-                        elapsedMs, 
-                        999
+                        )
                 );
             //} catch (Exception ex) {
             //    log.error("***>>> loadTiffToByteArray: Exception="+ex.toString());
