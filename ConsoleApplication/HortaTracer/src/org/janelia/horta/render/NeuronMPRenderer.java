@@ -582,7 +582,7 @@ extends MultipassRenderer
         private void removeNeuronReconstruction(NeuronModel neuron)
         {
             currentNeuronSphereActors.remove(neuron);
-            currentNeuronSphereActors.remove(neuron);
+            currentNeuronConeActors.remove(neuron);
         }
         
         public Collection<NeuronModel> sphereNeurons() {
