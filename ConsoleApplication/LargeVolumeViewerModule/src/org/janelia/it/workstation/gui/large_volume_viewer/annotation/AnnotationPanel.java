@@ -231,7 +231,14 @@ public class AnnotationPanel extends JPanel
                 annotationMgr.saveColorModel();
             }
         }));
-        
+
+        workspaceToolMenu.add(new JMenuItem((new AbstractAction("Show workspace info...") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                annotationMgr.showWorkspaceInfoDialog();
+            }
+        })));
+
         // workspace tool menu button
         final JButton workspaceToolButton = new JButton();
         String gearIconFilename = "cog.png";
