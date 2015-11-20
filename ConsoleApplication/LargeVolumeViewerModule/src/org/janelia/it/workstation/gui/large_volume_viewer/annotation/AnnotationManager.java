@@ -1424,15 +1424,17 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         // you can also look to the Raveler dialog to see what kinds of info we could add
         //  eg,  move sample name, path to here
 
-        int nneurons = annotationModel.getCurrentWorkspace().getNeuronList().size();
-        int nannotations = 0;
-        for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
-            nannotations += neuron.getGeoAnnotationMap().size();
+        if (annotationModel.getCurrentWorkspace() != null) {
+            int nneurons = annotationModel.getCurrentWorkspace().getNeuronList().size();
+            int nannotations = 0;
+            for (TmNeuron neuron : annotationModel.getCurrentWorkspace().getNeuronList()) {
+                nannotations += neuron.getGeoAnnotationMap().size();
+            }
+            JOptionPane.showMessageDialog(quadViewUi,
+                    "# neurons = " + nneurons + "\n# annotations (total) = " + nannotations + "\n",
+                    "Info",
+                    JOptionPane.PLAIN_MESSAGE);
         }
-        JOptionPane.showMessageDialog(quadViewUi,
-                "# neurons = " + nneurons + "\n# annotations (total) = " + nannotations + "\n",
-                "Info",
-                JOptionPane.PLAIN_MESSAGE);
     }
 
     public void exportAllNeuronsAsSWC(final File swcFile, final int downsampleModulo) {
