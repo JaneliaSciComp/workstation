@@ -33,9 +33,11 @@ package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -69,7 +71,7 @@ implements NeuronSet, LookupListener
     private final GlobalAnnotationListener globalAnnotationListener;
     private final TmGeoAnnotationModListener annotationModListener;
     private HortaWorkspace cachedHortaWorkspace = null;
-    private Lookup.Result<HortaWorkspace> hortaWorkspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaWorkspace.class);
+    private final Lookup.Result<HortaWorkspace> hortaWorkspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaWorkspace.class);
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public NeuronSetAdapter()
@@ -132,9 +134,12 @@ implements NeuronSet, LookupListener
     private boolean setWorkspace(TmWorkspace workspace) {
         if (this.workspace == workspace)
             return false;
+        if (! workspace.getName().equals(getName()))
+            getNameChangeObservable().setChanged();
         this.workspace = workspace;
         NeuronList nl = (NeuronList) neurons;
-        nl.wrap(workspace, annotationModel);
+        if (nl.wrap(workspace, annotationModel))
+            getMembershipChangeObservable().setChanged();
         return true;
     }
 
@@ -169,17 +174,23 @@ implements NeuronSet, LookupListener
                     neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
                     // Trigger a Horta repaint  for instant GUI feedback
                     // NOTE - assumes this callback is only invoked from one-at-a-time manual addition
+                    final boolean doRecenterHorta = false;
                     if (cachedHortaWorkspace != null) 
                     {
-                        // 1) recenter on annotation location in Horta, just like in LVV
-                        // Use a temporary NeuronVertexAdapter, just to get the location in micrometer units
-                        NeuronVertex nv = new NeuronVertexAdapter(annotation, workspace);
-                        float recenter[] = nv.getLocation();
-                        cachedHortaWorkspace.getVantage().setFocus(recenter[0], recenter[1], recenter[2]);
-                        cachedHortaWorkspace.getVantage().setChanged();
+                        if (doRecenterHorta) 
+                        {
+                            // 1) recenter on annotation location in Horta, just like in LVV
+                            // Use a temporary NeuronVertexAdapter, just to get the location in micrometer units
+                            NeuronVertex nv = new NeuronVertexAdapter(annotation, workspace);
+                            float recenter[] = nv.getLocation();
+                            cachedHortaWorkspace.getVantage().setFocus(recenter[0], recenter[1], recenter[2]);
+                            cachedHortaWorkspace.getVantage().setChanged();
+                            cachedHortaWorkspace.getVantage().notifyObservers();
+                        }
 
                         // 2) repaint Horta now, to update view without further user interaction
-                        cachedHortaWorkspace.getVantage().notifyObservers();
+                        cachedHortaWorkspace.setChanged();
+                        cachedHortaWorkspace.notifyObservers();
                         // Below is the way to trigger a repaint, without changing the viewpoint
                         // cachedHortaWorkspace.setChanged();
                         // cachedHortaWorkspace.notifyObservers();
@@ -252,7 +263,6 @@ implements NeuronSet, LookupListener
         private TmWorkspace workspace;
         private final Map<Long, NeuronModelAdapter> cachedNeurons = new HashMap<>();
         private AnnotationModel annotationModel;
-        // private Map<Long, NeuronStyle> neuronStyleMap;
         
         @Override
         public int size()
@@ -380,27 +390,46 @@ implements NeuronSet, LookupListener
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
-        private void wrap(TmWorkspace workspace, AnnotationModel annotationModel)
+        private boolean wrap(TmWorkspace workspace, AnnotationModel annotationModel)
         {
-            // I assume annotation model never changes...
-            assert( (this.annotationModel == annotationModel) || (this.annotationModel == null));
-            this.annotationModel = annotationModel;
+            if ( (annotationModel == this.annotationModel) && (workspace == this.workspace) )
+                return false; // short circuit -- nothing changed
             
-            // Sadly, sometimes the workspace instance does change out from underneath us...
-            if ( (this.workspace != null) && (this.workspace != workspace) ) {
-                this.workspace = workspace;
+            this.annotationModel = annotationModel;
+            this.workspace = workspace;
+            
+            // If we get this far, either the annotationModel or the workspace changed,
+            // so we should refresh our persistent cached NeuronModelAdapter objects
+            
+            Set<Long> oldNeurons = new HashSet<>(cachedNeurons.keySet());
+            Set<Long> newNeurons = new HashSet<>();
+            boolean neuronMembershipChanged = false;
+            boolean neuronsWereRefreshed = false;
+            for (TmNeuron tmNeuron : workspace.getNeuronList()) 
+            {
+                Long newId = tmNeuron.getId();
+                newNeurons.add(newId);
                 // Keep our NeuronModel instances persistent, even when the underlying
                 // TmNeuron instance (annoyingly) changes
-                for (TmNeuron tmNeuron : workspace.getNeuronList()) {
-                    Long id = tmNeuron.getId();
-                    if (cachedNeurons.containsKey(id)) {
-                        NeuronModelAdapter neuron = cachedNeurons.get(id);
-                        neuron.updateWrapping(tmNeuron, annotationModel, workspace);
-                    }
+                if (oldNeurons.contains(newId)) { // we saw this neuron before!
+                    NeuronModelAdapter neuron = cachedNeurons.get(newId);
+                    neuron.updateWrapping(tmNeuron, annotationModel, workspace);
+                    neuronsWereRefreshed = true;
+                }
+                else {
+                    neuronMembershipChanged = true;
                 }
             }
-            this.workspace = workspace;
+
+            // identify obsolete neurons AFTER identifying refreshable neurons
+            oldNeurons.removeAll(newNeurons); // just the obsolete neurons
+            for (Long obsoleteId : oldNeurons) {
+                cachedNeurons.remove(obsoleteId);
+                neuronMembershipChanged = true;
+            }
+            
+            return neuronMembershipChanged; //  || neuronsWereRefreshed;
         }
-        
+
     }
 }
