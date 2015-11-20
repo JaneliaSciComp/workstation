@@ -22,6 +22,8 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -34,6 +36,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.AxesActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.NeuronTraceVtxAttribMgr;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
@@ -193,6 +196,23 @@ public class AnnotationSkeletonPanel extends JPanel {
                     long selectedAnnotation = select(me.getX(), me.getY());
                     if (selectedAnnotation > 0) {
                         positionForSelection(selectedAnnotation);
+                        
+                        SessionMgr.getSessionMgr().logGenericToolEvent(
+                                LVV_LOGSTAMP_ID,
+                                new CategoryString("SelectFromLandmarkView"),
+                                new ActionString(
+                                        "Annotation:" + selectedAnnotation
+                                )
+                        );
+                    }
+                    else {
+                        SessionMgr.getSessionMgr().logGenericToolEvent(
+                                LVV_LOGSTAMP_ID,
+                                new CategoryString("FailedSelectFromLandmarkView"),
+                                new ActionString(
+                                        "Annotation:" + selectedAnnotation
+                                )
+                        );
                     }
                 }
             });
@@ -362,11 +382,14 @@ public class AnnotationSkeletonPanel extends JPanel {
      * @param mouseY mouse pos y.
      */
     private long select(int mouseX, int mouseY) {
-        long rtnVal = -1L;
+        long rtnVal = 1;
         if (context != null) {            
 			picker.setPickCoords(mouseX, mouseY);
             this.validate();
             this.repaint();
+        }
+        else {
+            rtnVal = -1;
         }
         return rtnVal;
     }
@@ -464,6 +487,14 @@ public class AnnotationSkeletonPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            SessionMgr.getSessionMgr().logGenericToolEvent(
+                    LVV_LOGSTAMP_ID, 
+                    new CategoryString("ToggleSphereSize"),                     
+                    new ActionString(
+                            (attributeManager.getAnnoRadius() == NeuronTraceVtxAttribMgr.ANNO_RADIUS ? "to small" : "to normal")
+                    )
+            );
+
             if (attributeManager.getAnnoRadius() == NeuronTraceVtxAttribMgr.ANNO_RADIUS) {
                 attributeManager.setAnnoRadius(NeuronTraceVtxAttribMgr.ANNO_RADIUS / 2.0);
                 attributeManager.setCurrentSelectionRadius(attributeManager.getAnnoRadius() * 2.0);
@@ -530,6 +561,14 @@ public class AnnotationSkeletonPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            SessionMgr.getSessionMgr().logGenericToolEvent(
+                    LVV_LOGSTAMP_ID, 
+                    new CategoryString("SwapAnnoSkelPanelMode"),                     
+                    new ActionString(
+                            "TargetMode:" + (inCore ? "Lines" : "Mesh")
+                    )
+            );
+
             if (inCore) {
                 inCore = false;
                 putValue(Action.NAME, secondLabel);
