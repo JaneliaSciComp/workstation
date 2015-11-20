@@ -1,0 +1,50 @@
+apply plugin: 'java'
+
+// set general info and version
+sourceCompatibility = 1.7
+version = '1.0'
+
+// dependency repo
+repositories {
+    mavenCentral()
+}
+
+task commandLineJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'JFS commandline',
+                'Implementation-Version': version,
+                'Main-Class': 'org.janelia.workstation.jfs.CommandLineApplication'
+    }
+    baseName = 'jfs'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+dependencies {
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.1'
+    compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet', version: '2.22'
+    compile group: 'org.apache.directory.api', name: 'api-all', version: '1.0.0-M30'
+    compile group: 'org.apache.commons', name: 'commons-compress', version: '1.5'
+    compile group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+    compile group: 'io.swagger', name: 'swagger-jersey2-jaxrs', version: '1.5.0'
+    compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet', version: '1.5.0'
+    compile group: 'org.glassfish.jersey.media', name: 'jersey-media-json-jackson', version: '2.22.1'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.5.1'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.5.1'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.5.1'
+    compile group: 'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-json-provider', version: '2.5.1'
+    compile group: 'org.mongodb', name: 'mongo-java-driver', version: '2.12.5'
+    compile group: 'org.jongo', name: 'jongo', version: '1.1'
+}
+
+artifacts {
+    archives commandLineJar
+}
+
+uploadArchives {
+    repositories {
+        flatDir {
+            dirs 'build/jars'
+        }
+    }
+}

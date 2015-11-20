@@ -91,6 +91,29 @@ public class Common {
         }
     }
 
+    public static FileShare mapResource(String filepath) {
+        Map resourceMap = ServicesConfiguration.getResourcesByMapping();
+        Iterator mappings = resourceMap.keySet().iterator();
+        FileShare mappedResource = null;
+        String bestMatch = "";
+
+        String session = null;
+        while (mappings.hasNext()) {
+            session = (String) mappings.next();
+            if (filepath.startsWith(session)) {
+                if (session.length() > bestMatch.length()) {
+                    bestMatch = session;
+                }
+            }
+        }
+
+        if (bestMatch.length()>0) {
+            mappedResource = (FileShare)resourceMap.get(bestMatch);
+            return (FileShare)mappedResource.clone();
+        }
+        return null;
+    }
+
     public static BasicAuthToken getBasicAuthUser(String basicRequestHeader) {
         String base64Credentials = basicRequestHeader.substring("Basic".length()).trim();
         String credentials = new String(Base64.decodeAsString(base64Credentials));

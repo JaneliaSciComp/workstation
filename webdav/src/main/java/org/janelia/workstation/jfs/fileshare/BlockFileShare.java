@@ -46,7 +46,7 @@ public class BlockFileShare extends FileShare {
     }
 
     @Override
-    public void putFile(HttpServletRequest request, HttpServletResponse response, InputStream binaryStream, String filepath) throws FileUploadException {
+    public void putFile(HttpServletRequest request, InputStream binaryStream, String filepath, boolean checksum, boolean local) throws FileUploadException {
         try {
             Files.copy(binaryStream,
                     Paths.get(filepath),
@@ -58,7 +58,7 @@ public class BlockFileShare extends FileShare {
     }
 
     @Override
-    public void deleteFile(String qualifiedFilename) throws IOException {
+    public void deleteFile(String qualifiedFilename, boolean local) throws IOException {
         Files.delete(Paths.get(qualifiedFilename));
     }
 

@@ -64,6 +64,7 @@ public class MetadataServices {
 
     @GET
     @Path("/info/{path:.+}")
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Retrieve metadata information (path, status, size) for a filename in the object store",
             notes = "Path returns the metadata in JSON format.  Path Syntax is [Filestore]/[File_Name]. Example: {path}=DATA1/somefile.ext")
     @ApiResponses(value = {
@@ -82,6 +83,35 @@ public class MetadataServices {
         }
 
         return mapping.getInfo(response, path);
+    }
+
+    @PUT
+    @Path("/register/upload")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Takes a json map of metadata information about a file in the object store, checks whether it exists in Scality, and then stores the metadata in the fileservice's persistence store.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully registered object metadata in fileservice persistence store"),
+            @ApiResponse(code = 400, message = "File metadata doesn't contain minimum parameters (fileservice, key)"),
+            @ApiResponse(code = 404, message = "File Key not found in object store"),
+            @ApiResponse(code = 500, message = "Internal Server Exception")
+    })
+    public void uploadMetadataInfo(Map<String, String> metadata) throws PermissionsFailureException,
+            FileNotFoundException, FileUploadException, IOException {
+        System.out.println("UPLOAD FILE META " + metadata);
+
+        if (metadata==null || !metadata.containsKey("key") || !metadata.containsKey("fileservice")) {
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+
+        FileShare mapping = Common.checkPermissions((String)metadata.get("fileservice"), headers, request);
+
+        // check file share for info permissions
+        if (!mapping.getPermissions().contains(Permission.WRITE)) {
+            throw new PermissionsFailureException("Not permitted to register information for this file share");
+        }
+
+        mapping.uploadMetadata(request, metadata);
     }
 
     @POST
@@ -106,12 +136,12 @@ public class MetadataServices {
         mapping.registerFile(request, path);
     }
 
-    @POST
+    @PUT
     @Path("/register/bulk")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Takes a json array of file paths and generates (path, status, size) for all the files",
-            notes = "Path looks up the object keys listed in the and generates metadata in mongodb.  JSON payload is {\"filestore\":<filestoreId>,\n\"objects\":[<comma-separated list of paths (not including file store key)]}")
+            notes = "Path looks up the object keys listed in the and generates metadata in mongodb.  JSON payload is \"filestore\":<filestoreId>,\n\"objects\":array of paths (not including file store key)")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully processed files and generated success report"),
             @ApiResponse(code = 404, message = "Either the file share doesn't have register permissions, or the file doesn't exist"),

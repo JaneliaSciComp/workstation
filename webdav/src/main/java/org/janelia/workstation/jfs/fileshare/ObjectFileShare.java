@@ -75,7 +75,7 @@ public class ObjectFileShare extends FileShare implements Runnable {
 
     @Override
     public void run() {
-        MongoCursor<JOSObject> cursor = mongo.getObjectCollection().find("{deleted:#}",true).as(JOSObject.class);
+       /* MongoCursor<JOSObject> cursor = mongo.getObjectCollection().find("{deleted:#}",true).as(JOSObject.class);
         List<String> paths = new ArrayList<>();
         for (JOSObject obj : cursor) {
             if (obj.getPath()!=null) {
@@ -93,7 +93,7 @@ public class ObjectFileShare extends FileShare implements Runnable {
 
         if (c>0) {
             //log.info("Purged {} objects marked for deletion",c);
-        }
+        }*/
     }
 
     @Override
@@ -135,12 +135,13 @@ public class ObjectFileShare extends FileShare implements Runnable {
 
     @Override
     public StreamingOutput getFile (HttpServletResponse response, String path) throws FileNotFoundException {
-        final JOSObject obj = getObject(path, false);
+        String adjustedPath = calculatePath(path);
+        System.out.println(adjustedPath);
+        final JOSObject obj = getObject(adjustedPath, false);
 
-        Map<String,String> headerMap = scality.head(path, ring);
         // for now assume not bzipped
         // final boolean bzipped = decompress==null?obj.isBzipped():decompress;
-        final InputStream input = scality.get(path, obj.getNumBytes(), ring);
+        final InputStream input = scality.get(adjustedPath, ring, false);
 
         StreamingOutput output = new StreamingOutput() {
             public void write(OutputStream output) throws IOException, WebApplicationException {
@@ -156,7 +157,8 @@ public class ObjectFileShare extends FileShare implements Runnable {
         };
 
       /* settle on whether headers are important first before restoring this code
-        Response.ResponseBuilder rb = Response.ok(output);
+                Map<String,String> headerMap = scality.head(adjustedPath, ring);
+            Response.ResponseBuilder rb = Response.ok(output);
 
        // rb.header(JOSS_NAME, obj.getName());
         //rb.header(JOSS_OWNER, obj.getOwner());
@@ -168,17 +170,47 @@ public class ObjectFileShare extends FileShare implements Runnable {
         return output;
     }
 
-    public void deleteFile (String path) throws IOException {
-        JOSObject obj = getObject(path, false);
+    @Override
+    public Response.Status readFileToStream (String path, OutputStream output, boolean local)  {
+        Response.Status status;
+        String adjustedPath = calculatePath(path);
+        final JOSObject obj = getObject(adjustedPath, false);
 
-        WriteResult wr = mongo.getObjectCollection().update("{path:#}",path).with("{$set:{deleted:#}}", true);
+        try {
+            InputStream input = scality.get(adjustedPath, ring, local);
+            CountingOutputStream counted = new CountingOutputStream(output);
+            IOUtils.copy(input, counted);
+            counted.flush();
+
+            if (counted.getByteCount()!=obj.getNumBytes()) {
+                return Response.Status.PARTIAL_CONTENT;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Response.Status.INTERNAL_SERVER_ERROR;
+        } catch (WebApplicationException e) {
+            e.printStackTrace();
+            return Response.Status.NOT_FOUND;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.Status.INTERNAL_SERVER_ERROR;
+        }
+        return Response.Status.CREATED;
+    }
+
+    @Override
+    public void deleteFile (String path, boolean local) throws IOException {
+        String adjustedPath = calculatePath(path);
+        JOSObject obj = getObject(adjustedPath, false);
+
+        WriteResult wr = mongo.getObjectCollection().update("{path:#}",adjustedPath).with("{$set:{deleted:#}}", true);
         if (wr.getN()<1) {
             throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
         }
 
         if (syncDelete) {
-            if (scality.delete(path, ring)) {
-                mongo.getObjectCollection().remove("{path:#}",path);
+            if (scality.delete(adjustedPath, ring, local)) {
+                mongo.getObjectCollection().remove("{path:#}",adjustedPath);
             }
         }
         else {
@@ -187,31 +219,43 @@ public class ObjectFileShare extends FileShare implements Runnable {
     }
 
     @Override
-    public void putFile(HttpServletRequest request, HttpServletResponse response, InputStream binaryStream, String path) throws FileUploadException, WebApplicationException {
+    public void putFile(HttpServletRequest request,  InputStream binaryStream, String path, boolean checksum, boolean local) throws FileUploadException, WebApplicationException {
         boolean compress = false;
         try {
             boolean bzipped = compress;
-
-            JOSObject obj = getObject(path, true);
-            long contentLength = scality.put(binaryStream, path, getRing());
+            String adjustedPath = calculatePath(path);
+            JOSObject obj = getObject(adjustedPath, true);
+            long contentLength = scality.put(binaryStream, adjustedPath, getRing(), local);
             if (contentLength==0) {
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
 
             if (obj==null) obj = new JOSObject();
 
-            File file = new File(path);
+            File file = new File(adjustedPath);
             String name = file.getName();
-            String extension = name.substring(name.lastIndexOf('.')+1);
             obj.setName(name);
-            obj.setPath(path);
-            obj.setParentPath(file.getParent());
-            obj.setFileType(extension);
-            Principal owner = (Principal)request.getSession().getAttribute("principal");
+            obj.setPath(adjustedPath);
+            if (name.indexOf('.')!=-1) {
+                String extension = name.substring(name.lastIndexOf('.')+1);
+                if (!this.getPath().equals(Path.KEY)) {
+                    obj.setParentPath(file.getParent());
+                }
+                obj.setFileType(extension);
+            }
+
+            Principal owner = null;
+            if (request!=null) {
+                owner = (Principal)request.getSession().getAttribute("principal");
+            }
             if (owner!=null)
                 obj.setOwner(owner.getUsername());
             obj.setNumBytes(contentLength);
             obj.setBzipped(bzipped);
+            if (checksum) {
+                String calcMD5 = generateChecksum(scality.get(adjustedPath, ring, false), adjustedPath);
+                obj.setChecksum(calcMD5);
+            }
             mongo.getObjectCollection().save(obj);
         } catch (Exception e) {
             e.printStackTrace();
@@ -222,15 +266,19 @@ public class ObjectFileShare extends FileShare implements Runnable {
 
     @Override
     public Object getInfo (HttpServletResponse response, String path) throws FileNotFoundException {
-        final String finalPath = getFormattedPath(path);
-        JOSObject obj = mongo.getObjectCollection().findOne("{path:#}",finalPath).as(JOSObject.class);
+        final String adjustedPath = calculatePath(path);
+        JOSObject obj = mongo.getObjectCollection().findOne("{path:#}", adjustedPath).as(JOSObject.class);
+        if (obj!=null) {
+            obj.setId(null);
+        }
         return obj;
     }
 
     @Override
     public StreamingOutput searchFile (HttpServletResponse response, String path) throws FileNotFoundException {
+         String adjustedPath = calculatePath(path);
          ScalityProvider provider = (ScalityProvider) ServicesConfiguration.getProviders().get("scality");
-         final String name = path;
+         final String name = adjustedPath;
          return new StreamingOutput() {
             public void write(OutputStream os) throws IOException, WebApplicationException {
                 MongoCursor<JOSObject> cursor = mongo.getObjectCollection().find("{name:#}",name).as(JOSObject.class);
@@ -255,21 +303,75 @@ public class ObjectFileShare extends FileShare implements Runnable {
     }
 
     @Override
+    public void uploadMetadata (HttpServletRequest request, Map<String,String> metadata) throws FileNotFoundException {
+        // check scality for file
+        String key = metadata.get("key");
+        try {
+            if (this.getPath().equals(Path.MIRROR)) {
+                key = metadata.get("fileservice") + "/" + key;
+            }
+            scality.head(key, ring, false);
+        } catch (WebApplicationException e) {
+            throw new FileNotFoundException("Key: " + key + "not found in Scality Ring: " + ring);
+        }
+        JOSObject obj = getObject(key, true);
+        if (obj==null) {
+            obj = new JOSObject();
+        }
+        obj.setName(metadata.get("key"));
+        String[] extension = obj.getName().split(".");
+        if (extension.length==2) {
+            obj.setFileType(extension[1]);
+        }
+        metadata.remove("key");
+        metadata.remove("fileservice");
+        obj.setChecksum(metadata.get("checksum"));
+        metadata.remove("checksum");
+        obj.setPathType(this.getPath().toString());
+        obj.setNumBytes(Long.parseLong(metadata.get("numBytes")));
+        metadata.remove("numBytes");
+        if (metadata.containsKey("path")) {
+            obj.setPath(metadata.get("path"));
+            metadata.remove("path");
+        } else {
+            obj.setPath(key);
+        }
+        if (metadata.containsKey("parent")) {
+            obj.setParentPath(metadata.get("parent"));
+            metadata.remove("parent");
+        }
+        if (metadata.containsKey("owner")) {
+            obj.setOwner(metadata.get("owner"));
+            metadata.remove("owner");
+        } else {
+            Principal owner = (Principal) request.getSession().getAttribute("principal");
+            if (owner != null) {
+                obj.setOwner(owner.getUsername());
+            } else {
+                obj.setOwner(this.getAdminUser());
+            }
+        }
+        obj.setAdditionalInfo(metadata);
+        mongo.getObjectCollection().save(obj);
+    }
+
+    @Override
     public void registerFile(HttpServletRequest request, String path) throws FileNotFoundException {
         try {
-            JOSObject existingObj = getObject(path, true);
+            String adjustedPath = calculatePath(path);
+            JOSObject existingObj = getObject(adjustedPath, true);
 
-            System.out.println ("Registering path " + path + " in scality");
-            Map<String,String> headerMap = scality.head(path, ring);
+            System.out.println ("Registering path " + adjustedPath + " in scality");
+            Map<String,String> headerMap = scality.head(adjustedPath, ring, false);
 
             if (headerMap==null) {
                 throw new WebApplicationException(Response.Status.INTERNAL_SERVER_ERROR);
             }
 
             JOSObject obj = existingObj==null ? new JOSObject() : existingObj;
-            File file = new File(path);
+            File file = new File(adjustedPath);
             String name = file.getName();
-            String extension = name.substring(name.lastIndexOf('.')+1);
+            String extension = name.substring(name.lastIndexOf('.') + 1);
 
             String contentLengthStr = headerMap.get(org.apache.http.HttpHeaders.CONTENT_LENGTH);
             if (contentLengthStr!=null) {
@@ -282,12 +384,12 @@ public class ObjectFileShare extends FileShare implements Runnable {
 
             String checksum = headerMap.get("X-Scal-Usermd");
             if (checksum == null || checksum.trim().length()==0) {
-                checksum = generateChecksum(scality.get(path, obj.getNumBytes(), ring), path);
+                checksum = generateChecksum(scality.get(adjustedPath, ring, false), adjustedPath);
             }
 
             obj.setChecksum(checksum);
             obj.setName(name);
-            obj.setPath(path);
+            obj.setPath(adjustedPath);
             obj.setParentPath(file.getParent());
             obj.setFileType(extension);
             Principal owner = (Principal)request.getSession().getAttribute("principal");
@@ -322,6 +424,14 @@ public class ObjectFileShare extends FileShare implements Runnable {
     private String getFormattedPath(String path) {
         String formattedPath = path.endsWith("/") ? path.substring(0, path.length()-1) : path;
         return formattedPath;
+    }
+
+    private String calculatePath (String path) {
+        // if pathtype is KEY, strip out the fileservice namespace
+        if (this.getPath().equals(Path.KEY)) {
+            return (path.substring(this.getMapping().length()+1));
+        }
+        return path;
     }
 
     private String generateChecksum (InputStream is, String filepath) throws NoSuchAlgorithmException, IOException {

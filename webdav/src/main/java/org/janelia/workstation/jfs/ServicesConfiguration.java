@@ -148,7 +148,6 @@ public class ServicesConfiguration implements ServletContextListener  {
                 while (resourceIter.hasNext()) {
                     String resourceKey = resourceIter.next();
                     Map<String,Object> resourceInfo = (Map<String,Object>)resourceConfig.get(resourceKey);
-                    System.out.println (resourceInfo);
 
                     // throw exception if required attributes not set
                     Set<String> reqAttributes = new HashSet<String>(Arrays.asList("type", "path", "mapping", "permissions"));
@@ -166,6 +165,10 @@ public class ServicesConfiguration implements ServletContextListener  {
                         ((ObjectFileShare) newResource).setMongo(metadata);
                         scheduler = Executors.newSingleThreadScheduledExecutor();
                         scheduler.scheduleAtFixedRate((ObjectFileShare)newResource, 0, 6, TimeUnit.HOURS);
+                    }
+                    // default admin user
+                    if ((String)resourceInfo.get("adminUser") != null) {
+                        newResource.setAdminUser((String)resourceInfo.get("adminUser"));
                     }
                     newResource.setMapping((String) resourceInfo.get("mapping"));
                     String newPath = ((String)resourceInfo.get("path")).toUpperCase();
