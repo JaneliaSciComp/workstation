@@ -339,6 +339,16 @@ extends MultipassRenderer
         }
         return result;
     }
+
+    public boolean isNeuronModelAt(Point2D xy, AbstractCamera camera)
+    {
+        return isVisibleOpaqueAtScreenXy(xy, camera);
+    }
+
+    public boolean isVolumeDensityAt(Point2D xy, AbstractCamera camera)
+    {
+        return isVisibleTransparentAtScreenXy(xy, camera);
+    }
     
     private class VolumeLayerExpirer implements Observer
     {

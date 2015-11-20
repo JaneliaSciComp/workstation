@@ -178,6 +178,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor interactor;
     private HortaWorkspace workspace;
+    private final NeuronVertexIndex neuronVertexIndex;
     
     // private MultipassVolumeActor mprActor;
     // private VolumeMipMaterial volumeMipMaterial;
@@ -225,6 +226,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         // Insert a specialized SceneWindow into the component
         initialize3DViewer(); // initializes workspace
         neuronManager = new NeuronManager(workspace);
+        neuronVertexIndex = new NeuronVertexIndex(workspace);
 
         // Change default rotation to Y-down, like large-volume viewer
         sceneWindow.getVantage().setDefaultRotation(new Rotation().setFromAxisAngle(
@@ -724,7 +726,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading dragged file");
                     Exceptions.printStackTrace(ex);
                 } finally {
-                    progress.finish();
+                    // progress.finish();
                 }
                 
             }
@@ -1291,6 +1293,26 @@ public final class NeuronTracerTopComponent extends TopComponent
     @Override
     public void componentClosed() {
         neuronManager.onClosed();
+    }
+
+    @Override
+    public boolean isNeuronModelAt(Point2D xy)
+    {
+        return neuronMPRenderer.isNeuronModelAt(xy, 
+                sceneWindow.getCamera());
+    }
+
+    @Override
+    public boolean isVolumeDensityAt(Point2D xy)
+    {
+        return neuronMPRenderer.isVolumeDensityAt(xy,
+                sceneWindow.getCamera());
+    }
+
+    @Override
+    public NeuronVertexIndex getVertexIndex()
+    {
+        return neuronVertexIndex;
     }
     
 }

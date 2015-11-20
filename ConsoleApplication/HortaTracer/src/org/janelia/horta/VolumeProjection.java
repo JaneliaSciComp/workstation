@@ -43,4 +43,7 @@ public interface VolumeProjection {
     public double getIntensity(Point2D xy);
     public Vector3 worldXyzForScreenXy(Point2D xy);
     public float getPixelsPerSceneUnit();
+    public boolean isNeuronModelAt(Point2D xy);
+    public boolean isVolumeDensityAt(Point2D xy);
+    public NeuronVertexIndex getVertexIndex();
 }

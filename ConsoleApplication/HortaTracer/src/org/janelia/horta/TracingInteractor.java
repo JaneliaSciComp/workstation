@@ -43,7 +43,10 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JPopupMenu;
+import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.geometry3d.Vector3;
+import org.openide.awt.StatusDisplayer;
 
 /**
  * Adapted from C:\Users\brunsc\Documents\Fiji_Plugins\Auto_Trace\Semi_Trace.java
@@ -70,6 +73,7 @@ public class TracingInteractor extends MouseAdapter
     RadiusEstimator radiusEstimator = 
             new TwoDimensionalRadiusEstimator();
             // new ConstantRadiusEstimator(5.0f);
+    private StatusDisplayer.Message lastMessage;
     
     @Override
     public void keyTyped(KeyEvent keyEvent) {
@@ -277,8 +281,32 @@ public class TracingInteractor extends MouseAdapter
     }
 
     @Override
-    public void mouseMoved(MouseEvent event) {
-        moveHoverCursor(event.getPoint());
+    public void mouseMoved(MouseEvent event) 
+    {
+        // TODO: highlight annotation vertex
+        Point hoverPoint = event.getPoint();
+        if (volumeProjection.isNeuronModelAt(hoverPoint)) {
+            Vector3 xyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
+            NeuronVertexIndex vix = volumeProjection.getVertexIndex();
+            NeuronVertex nearestVertex = vix.getNearest(xyz);
+            if (nearestVertex != null) {
+                float loc[] = nearestVertex.getLocation();
+                NeuronModel neuron = vix.neuronForVertex(nearestVertex);
+                if (neuron != null) {
+                    lastMessage = StatusDisplayer.getDefault().setStatusText(neuron.getName(), 2);            
+                }
+            }
+            // StatusDisplayer.getDefault().setStatusText("Neuron!", 2);
+        }
+        else {
+            if (lastMessage != null) {
+                lastMessage.clear(2);
+                lastMessage = null;
+            }
+        }
+
+        // TODO: update old provisional tracing behavior
+        moveHoverCursor(hoverPoint);
         if (hoverModel.isEmpty())
             return;
         if (getTracingMode() != TracingMode.TRACING)
