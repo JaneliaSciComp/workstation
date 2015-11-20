@@ -81,7 +81,7 @@ extends AbstractTextureLoadAdapter
         folderOpenTimestamp = new Date().getTime();
 		sniffer.sniffMetadata(topFolder);
         
-        SessionMgr.getSessionMgr().logToolEvent(
+        SessionMgr.getSessionMgr().logGenericToolEvent(
                 LVV_LOGSTAMP_ID, 
                 LVV_SESSION_CATEGORY_STRING, 
                 new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
@@ -142,7 +142,8 @@ extends AbstractTextureLoadAdapter
                     LIX_CATEGORY_STRING,
                     actionString,
                     elapsedMs,
-                    999.0
+                    999.0,
+                    false
             );
         }
 

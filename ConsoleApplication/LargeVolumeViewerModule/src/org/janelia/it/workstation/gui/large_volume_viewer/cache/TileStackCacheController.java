@@ -133,7 +133,7 @@ public class TileStackCacheController {
         log.info("zoom Levels="+zoomLevels);
         filesystemMetadataInitialized=true;
         folderOpenTimestamp = new Date().getTime();
-        SessionMgr.getSessionMgr().logToolEvent(
+        SessionMgr.getSessionMgr().logGenericToolEvent(
                 LVV_LOGSTAMP_ID, 
                 LTT_SESSION_CATEGORY_STRING, 
                 new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
@@ -729,7 +729,6 @@ public class TileStackCacheController {
                 
                 Long finalTime = System.currentTimeMillis();
                 final long elapsedMs = finalTime - startingTime;
-                //    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, double elapsedMs, double thresholdMs) {
                 // Alwoys logging these.  Far less often issued than single
                 // slice loads.
                 File topFolder = tileStackCacheController.getTopFolder();
@@ -739,7 +738,8 @@ public class TileStackCacheController {
                         LTT_CATEGORY_STRING, 
                         new ActionString(
                                 tileStackCacheController.getFolderOpenTimestamp() + ":" + specificPart + ":elapsed_ms=" + elapsedMs
-                        )
+                        ),
+                        false
                 );
             //} catch (Exception ex) {
             //    log.error("***>>> loadTiffToByteArray: Exception="+ex.toString());
