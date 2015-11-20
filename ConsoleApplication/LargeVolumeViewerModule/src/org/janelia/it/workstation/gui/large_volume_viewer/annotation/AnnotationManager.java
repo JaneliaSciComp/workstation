@@ -872,6 +872,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return annotationModel.getNote(annotationID);
     }
 
+    public String getNote(Long annotationID, TmNeuron neuron) {
+        return annotationModel.getNote(annotationID, neuron);
+    }
+
     public void setNote(final Long annotationID, final String noteText) {
         SimpleWorker setter = new SimpleWorker() {
             @Override
