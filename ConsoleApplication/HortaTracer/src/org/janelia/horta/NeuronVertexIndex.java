@@ -79,7 +79,13 @@ public class NeuronVertexIndex implements Collection<NeuronVertex>
 
     public NeuronVertex getNearest(double location[]) throws KeySizeException 
     {
-        return index.nearest(location);
+        try {
+            return index.nearest(location);
+        }
+        // KDTree sometimes raises an exception here...
+        catch (java.lang.ArrayIndexOutOfBoundsException ex) {
+            return null;
+        }
     }
     
     public NeuronVertex getNearest(Vector3 xyz)
