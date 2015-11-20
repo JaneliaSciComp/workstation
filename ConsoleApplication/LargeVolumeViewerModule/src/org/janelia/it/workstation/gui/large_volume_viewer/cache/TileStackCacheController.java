@@ -49,8 +49,10 @@ public class TileStackCacheController {
     public static final int MAX_RAW_VAL=23000;
 
     private static final CategoryString LTT_CATEGORY_STRING = new CategoryString("loadTileTiffToRam");
+    private static final CategoryString LTT_SESSION_CATEGORY_STRING = new CategoryString("openWholeTifFolder");
 
     private String remoteBasePath;
+    private Long folderOpenTimestamp;
     private File topFolder;
     private URL initUrl;
     private int cacheVolumeSize;
@@ -108,6 +110,10 @@ public class TileStackCacheController {
     public File getTopFolder() {
         return topFolder;
     }
+    
+    public Long getFolderOpenTimestamp() {
+        return folderOpenTimestamp;
+    }
 
     public boolean isInitialized() { return initialized; }
 
@@ -126,6 +132,12 @@ public class TileStackCacheController {
         log.info("Volume size="+volumeSize[0]+" "+volumeSize[1]+" "+volumeSize[2]);
         log.info("zoom Levels="+zoomLevels);
         filesystemMetadataInitialized=true;
+        folderOpenTimestamp = new Date().getTime();
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID, 
+                LTT_SESSION_CATEGORY_STRING, 
+                new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
+        );
     }
 
 
@@ -720,11 +732,13 @@ public class TileStackCacheController {
                 //    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, double elapsedMs, double thresholdMs) {
                 // Alwoys logging these.  Far less often issued than single
                 // slice loads.
+                File topFolder = tileStackCacheController.getTopFolder();
+                String specificPart = file.toString().substring(topFolder.toString().length());
                 SessionMgr.getSessionMgr().logToolEvent(
                         LVV_LOGSTAMP_ID, 
                         LTT_CATEGORY_STRING, 
                         new ActionString(
-                                file.toString() + ":elapsed_ms=" + elapsedMs
+                                tileStackCacheController.getFolderOpenTimestamp() + ":" + specificPart + ":elapsed_ms=" + elapsedMs
                         )
                 );
             //} catch (Exception ex) {
