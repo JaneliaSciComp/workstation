@@ -36,13 +36,14 @@ public class ServicesConfiguration implements ServletContextListener  {
     private static Map<String, FileShare> resourcesByLogical = new HashMap<>();
     private static Map<String, MongoConfiguration> metaStores = new HashMap<>();
     private ScheduledExecutorService scheduler;
+    private static String configurationLoc = "config.json";
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             ObjectMapper mapper = new ObjectMapper();
-            File configFile = new File("/opt/jfs/config.json");
+            File configFile = new File(configurationLoc);
             if (!configFile.exists()) {
                 throw new ServiceConfigurationError("Configuration file not found for Janelia File Services");
             }
@@ -228,6 +229,14 @@ public class ServicesConfiguration implements ServletContextListener  {
 
     public static Map<String, MongoConfiguration> getMetaStores() {
         return metaStores;
+    }
+
+    public static String getConfigurationLoc() {
+        return configurationLoc;
+    }
+
+    public static void setConfigurationLoc(String configurationLoc) {
+        ServicesConfiguration.configurationLoc = configurationLoc;
     }
 
     @Override

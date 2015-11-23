@@ -34,6 +34,8 @@ public class CommandLineApplication {
     File diskFile;
     String key;
     String fileservice;
+    String path;
+    String configLoc;
     Command command;
 
     public Command getCommand() {
@@ -92,6 +94,23 @@ public class CommandLineApplication {
         this.fileservice = fileservice;
     }
 
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getConfigLoc() {
+        return configLoc;
+    }
+
+    public void setConfigLoc(String configLoc) {
+        this.configLoc = configLoc;
+    }
+
+
     public enum Command {
         read, write, delete;
     }
@@ -107,7 +126,7 @@ public class CommandLineApplication {
             if (args[i].startsWith("-fileservice")) {
                 String service = args[i+1];
                 if (service==null) {
-                    System.out.println ("fileservice needs an argument");
+                    System.err.println ("fileservice needs an argument");
                     System.exit(1);
                 }
                 cl.setFileservice(service);
@@ -119,7 +138,7 @@ public class CommandLineApplication {
                         cl.setDiskFile(diskFile);
                     }
                 } catch (Exception e) {
-                    System.out.println ("Problem creating/reading from disk file");
+                    System.err.println ("Problem creating/reading from disk file");
                     System.exit(1);
                 }
             } else if (args[i].startsWith("-checksum")) {
@@ -128,29 +147,43 @@ public class CommandLineApplication {
                 cl.setCompress(true);
             } else if (args[i].startsWith("-validate")) {
                 cl.setValidate(true);
-            } else if (args[i].startsWith("-key")) {
+            } else if (args[i].startsWith("-config")) {
+                String config = args[i+1];
+                if (config==null) {
+                    System.err.println ("config location needs an argument");
+                    System.exit(1);
+                }
+                cl.setConfigLoc(config);
+            }else if (args[i].startsWith("-key")) {
                 String key = args[i+1];
                 if (key==null) {
-                    System.out.println ("key needs an argument");
+                    System.err.println ("key needs an argument");
                     System.exit(1);
                 }
                 cl.setKey(key);
+            }  else if (args[i].startsWith("-path")) {
+                String path = args[i+1];
+                if (path==null) {
+                    System.err.println ("key needs an argument");
+                    System.exit(1);
+                }
+                cl.setPath(path);
             }  else if (args[i].startsWith("-command")) {
                 String command = args[i+1];
                 if (command==null) {
-                    System.out.println ("command needs an argument");
+                    System.err.println ("command needs an argument");
                     System.exit(1);
                 }
                 cl.setCommand(valueOf(command));
             }
         }
 
-        if (cl.getCommand()==null || cl.getFileservice()==null || cl.getKey()==null) {
-            System.out.println ("Both Key and Fileservice are required parameters");
+        if (cl.getCommand()==null || ((cl.getFileservice()==null || cl.getKey()==null) && cl.getPath()==null)) {
+            System.err.println ("You need to provide command (read/write/delete) and either Fileservice/Key or Path as required parameters");
             System.exit(1);
         } else {
             if (cl.getCommand()!= delete && cl.getDiskFile()==null) {
-                System.out.println ("File is required parameter for read/write operations");
+                System.err.println ("File is required parameter for read/write operations");
                 System.exit(1);
             }
         }
@@ -172,63 +205,68 @@ public class CommandLineApplication {
 
     public int processCommand() {
         // find the Mapping
-        FileShare mapping = Common.mapResource(this.getFileservice());
+        String path = this.getPath();
+        if (this.getFileservice()!=null) {
+            path = this.getFileservice() + "/" + this.getKey();
+        }
+
+        FileShare mapping = Common.mapResource(path);
         if (mapping==null) {
-            System.out.println ("This fileservice was not found in the directory of services.");
+            System.err.println ("This fileservice was not found in the directory of services.");
             return 1;
         }
 
         switch (command) {
             case read:
                 if (!mapping.getPermissions().contains(Permission.READ)) {
-                    System.out.println("not allowed to read from this fileservice");
+                    System.err.println("not allowed to read from this fileservice");
                     return 1;
                 }
                 try {
-                    Response.Status status = mapping.readFileToStream(this.getFileservice() + "/" + this.getKey(), new FileOutputStream(this.getDiskFile()), true);
+                    Response.Status status = mapping.readFileToStream(path, new FileOutputStream(this.getDiskFile()), true);
                     if (status != Response.Status.CREATED) {
                         return 1;
                     }
-                    System.out.println("Successfully got file " + getKey() + " and wrote to " + this.getDiskFile());
+                    System.out.println("Successfully got file " + path + " and wrote to " + this.getDiskFile());
                 }
                 catch (java.io.FileNotFoundException e) {
                     e.printStackTrace();
-                    System.out.println("Unable to create local file to write to.");
+                    System.err.println("Unable to create local file to write to.");
                     return 1;
                 }
                 break;
             case write:
                 if (!mapping.getPermissions().contains(Permission.WRITE)) {
-                    System.out.println("not allowed to write from this fileservice");
+                    System.err.println("not allowed to write from this fileservice");
                     return 1;
                 }
                 try {
-                    mapping.putFile(null, new FileInputStream(this.getDiskFile()), this.getFileservice() + "/" + this.getKey(), isChecksum(), true);
-                    System.out.println("Successfully wrote file " + getKey() + " to fileservice " + getFileservice());
+                    mapping.putFile(null, new FileInputStream(this.getDiskFile()), path, isChecksum(), true);
+                    System.out.println("Successfully wrote file " + path + " to fileservice");
                 }
                 catch (FileUploadException e) {
                     e.printStackTrace();
-                    System.out.println("Internal error trying to upload the file into this fileservice");
+                    System.err.println("Internal error trying to upload the file into this fileservice");
                     return 1;
                 }
                 catch (java.io.FileNotFoundException e) {
                     e.printStackTrace();
-                    System.out.println("Unable to find local file to read from.");
+                    System.err.println("Unable to find local file to read from.");
                     return 1;
                 }
                 break;
             case delete:
                 if (!mapping.getPermissions().contains(Permission.DELETE)) {
-                    System.out.println("not allowed to delete from this fileservice");
+                    System.err.println("not allowed to delete from this fileservice");
                     return 1;
                 }
                 try {
-                    mapping.deleteFile(this.getFileservice() + "/" + this.getKey(), true);
-                    System.out.println("Successfully deleted file " + getKey() + " from fileservice " + getFileservice());
+                    mapping.deleteFile(path, true);
+                    System.out.println("Successfully deleted file " + path);
                 }
                 catch (IOException e) {
                     e.printStackTrace();
-                    System.out.println("Problem deleting file from this fileservice");
+                    System.err.println("Problem deleting file from this fileservice");
                     return 1;
                 }
                 break;
