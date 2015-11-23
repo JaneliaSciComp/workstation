@@ -136,7 +136,6 @@ public class ObjectFileShare extends FileShare implements Runnable {
     @Override
     public StreamingOutput getFile (HttpServletResponse response, String path) throws FileNotFoundException {
         String adjustedPath = calculatePath(path);
-        System.out.println(adjustedPath);
         final JOSObject obj = getObject(adjustedPath, false);
 
         // for now assume not bzipped
