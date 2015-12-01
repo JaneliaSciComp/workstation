@@ -1,9 +1,12 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import com.google.common.eventbus.Subscribe;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
+
 import javax.swing.JComponent;
+
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.sample.Sample;
@@ -151,7 +154,7 @@ public final class DomainViewerTopComponent extends TopComponent {
         setName(editor.getName());
     }
     
-    public DomainObjectEditor getEditor() {
+    public DomainObjectEditor<?> getEditor() {
         return editor;
     }
     
@@ -184,7 +187,8 @@ public final class DomainViewerTopComponent extends TopComponent {
 //        requestVisible();
         loadDomainObject(event.getDomainObject());
     }
-    
+
+    @SuppressWarnings("rawtypes")
     public void loadDomainObject(DomainObject domainObject) {
         // Do we already have the given node loaded?
         if (!setCurrent(domainObject)) {
@@ -219,7 +223,9 @@ public final class DomainViewerTopComponent extends TopComponent {
         return false;
     }
 
+    @SuppressWarnings("rawtypes")
     private Class<? extends DomainObjectEditor> getEditorClass(DomainObject domainObject) {
+        // TODO: editor implementations should be discovered somehow, perhaps using annotations
         if (domainObject instanceof Sample) {
             return SampleEditorPanel.class;
         }
