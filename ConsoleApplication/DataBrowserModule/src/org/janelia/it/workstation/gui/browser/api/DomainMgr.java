@@ -48,9 +48,8 @@ public class DomainMgr {
         SessionModelListener sessionModelListener = new SessionModelAdapter() {
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
-                log.info("modelPropertyChanged "+key+" newValue: "+newValue);
                 if (key == "RunAs" || key == "console.serverLogin") {
-                    log.info("Resetting model");
+                    log.info("User changed, resetting model");
                     model.invalidateAll();
                 }
             }

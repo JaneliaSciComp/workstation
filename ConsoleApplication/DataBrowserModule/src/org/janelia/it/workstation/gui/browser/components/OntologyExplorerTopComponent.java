@@ -239,6 +239,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
 
             @Override
             protected void hadError(Throwable error) {
+                showNothing();
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
@@ -543,9 +544,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     }
     
     private void loadOntologies() throws Exception {
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
         ontologies.clear();
-        ontologies.addAll(model.getOntologies());
+        ontologies.addAll(DomainMgr.getDomainMgr().getModel().getOntologies());
     }
     
     public KeyBindDialog getKeyBindDialog() {
