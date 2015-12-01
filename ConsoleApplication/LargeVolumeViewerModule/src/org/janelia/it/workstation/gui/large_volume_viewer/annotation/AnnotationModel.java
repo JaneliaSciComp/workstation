@@ -7,14 +7,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.awt.Color;
 
+import com.google.common.base.Stopwatch;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.it.workstation.shared.util.SWCDataConverter;
-import org.janelia.it.workstation.shared.util.SWCNode;
-import org.janelia.it.workstation.shared.util.SWCData;
+import org.janelia.it.jacs.shared.swc.SWCDataConverter;
+import org.janelia.it.jacs.shared.swc.SWCNode;
+import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -31,6 +32,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdate
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class AnnotationModel
@@ -86,6 +89,9 @@ called from a  SimpleWorker thread.
     private Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
 
     private LoadTimer addTimer = new LoadTimer();
+
+    private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
+
 
     // ----- constants
     // name of entity that holds our workspaces
@@ -610,111 +616,151 @@ called from a  SimpleWorker thread.
      */
     public void mergeNeurite(final Long sourceAnnotationID, final Long targetAnnotationID) throws Exception {
 
+        // temporary logging for Jayaram:
+        log.info("beginning mergeNeurite()");
+         Stopwatch stopwatch = new Stopwatch();
+         stopwatch.start();
+
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
 
         // reroot source neurite to source ann
-        modelMgr.rerootNeurite(sourceNeuron, sourceAnnotation);
+        if (!sourceAnnotation.isRoot()) {
+            modelMgr.rerootNeurite(sourceNeuron, sourceAnnotation);
 
-        // reload the things we just changed:
-        updateCurrentWorkspace();
-        sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
-        sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
-        // Remove traced paths.
-        for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
-            removeAnchoredPath(child, sourceAnnotation);
+            // update domain object
+
+            // find the list of annotations up to the old root:
+            List<TmGeoAnnotation> rerootAnnotationList = new ArrayList<>();
+            rerootAnnotationList.add(sourceAnnotation);
+            TmGeoAnnotation nextParent = getGeoAnnotationFromID(sourceAnnotation.getParentId());
+            while (!nextParent.isRoot()) {
+                rerootAnnotationList.add(nextParent);
+                nextParent = getGeoAnnotationFromID(nextParent.getParentId());
+            }
+            TmGeoAnnotation oldRoot = nextParent;
+            rerootAnnotationList.add(nextParent);
+
+            // go through the list and invert the parent/child relationship for each annotation
+            // first element is different (the new root):
+            sourceAnnotation.getChildIds().add(sourceAnnotation.getParentId());
+            sourceAnnotation.setParentId(sourceNeuron.getId());
+            sourceNeuron.getRootAnnotations().remove(oldRoot);
+            sourceNeuron.getRootAnnotations().add(sourceAnnotation);
+
+            for (int i = 1; i < rerootAnnotationList.size(); i++) {
+                TmGeoAnnotation ann = rerootAnnotationList.get(i);
+                Long oldParentID = ann.getParentId();
+                // the old root has the neuron as its parent, and that shouldn't
+                //  become a child
+                if (!oldParentID.equals(sourceNeuron.getId())) {
+                    ann.getChildIds().add(oldParentID);
+                }
+                Long newParentID = rerootAnnotationList.get(i - 1).getId();
+                ann.getChildIds().remove(newParentID);
+                ann.setParentId(newParentID);
+            }
         }
+
 
         // if source neurite not in same neuron as dest neurite: move it; don't
         //  use annModel.moveNeurite() because we don't want those updates & signals yet
         TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
             modelMgr.moveNeurite(sourceAnnotation, targetNeuron);
-        }
-
-        // Refresh domain objects that we've changed and will use again.
-        updateCurrentWorkspace();
-        sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
-        targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
 
 
-        // Reparent all source annotation's children to dest ann
-        for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
-            modelMgr.reparentGeometricAnnotation(child, targetAnnotationID, targetNeuron);
-        }
+            // Refresh domain objects that we've changed and will use again.
 
-        // if the source ann has a note, move it to or append it to the target ann:
-        TmStructuredTextAnnotation sourceNote = sourceNeuron.getStructuredTextAnnotationMap().get(sourceAnnotationID);
-        if (sourceNote != null) {
-            TmStructuredTextAnnotation targetNote = targetNeuron.getStructuredTextAnnotationMap().get(targetAnnotationID);
-            String sourceNoteText = new String("");
-            JsonNode rootNode = sourceNote.getData();
-            JsonNode noteNode = rootNode.path("note");
-            if (!noteNode.isMissingNode()) {
-                sourceNoteText = noteNode.asText();
-            }
-            if (sourceNoteText.length() > 0) {
-                if (targetNote == null) {
-                    // add old note to target
-                    setNote(getGeoAnnotationFromID(targetAnnotationID), sourceNoteText);
-                } else {
-                    // merge notes
-                    String targetNoteText = new String("");
-                    rootNode = targetNote.getData();
-                    noteNode = rootNode.path("note");
-                    if (!noteNode.isMissingNode()) {
-                        targetNoteText = noteNode.asText();
-                    }
-                    if (targetNoteText.length() > 0) {
-                        setNote(getGeoAnnotationFromID(targetAnnotationID),
-                            String.format("%s %s", targetNoteText, sourceNoteText));
-                    }
+            // all the annotations have to migrate from one map to the other;
+            //  also, any attached anchored paths and text notes
+            List<TmGeoAnnotation> movedList = sourceNeuron.getSubTreeList(sourceAnnotation);
+            for (TmGeoAnnotation ann: movedList) {
+                sourceNeuron.getGeoAnnotationMap().remove(ann.getId());
+                targetNeuron.getGeoAnnotationMap().put(ann.getId(), ann);
+                ann.setNeuronId(targetNeuron.getId());
+
+                // notes
+                if (sourceNeuron.getStructuredTextAnnotationMap().containsKey(ann.getId())) {
+                    TmStructuredTextAnnotation note = sourceNeuron.getStructuredTextAnnotationMap().get(ann.getId());
+                    sourceNeuron.getStructuredTextAnnotationMap().remove(ann.getId());
+                    targetNeuron.getStructuredTextAnnotationMap().put(ann.getId(), note);
                 }
             }
+
+            // paths are indexed by pairs; easier to iterate through the pairs and
+            //  move any paths that have a moved endpoint
+            Set<Long> movedIDSet = new HashSet<>();
+            for (TmGeoAnnotation ann: movedList) {
+                movedIDSet.add(ann.getId());
+            }
+            for (TmAnchoredPathEndpoints pair: new ArrayList<>(sourceNeuron.getAnchoredPathMap().keySet())) {
+                // doesn't matter which ID in endpoint pair we test
+                if (movedIDSet.contains(pair.getAnnotationID1())) {
+                    TmAnchoredPath path = sourceNeuron.getAnchoredPathMap().get(pair);
+                    sourceNeuron.getAnchoredPathMap().remove(pair);
+                    targetNeuron.getAnchoredPathMap().put(pair, path);
+                }
+            }
+
+            // plus update the root stuff
+            sourceAnnotation.setParentId(targetNeuron.getId());
+            sourceAnnotation.setNeuronId(targetNeuron.getId());
+            sourceNeuron.getRootAnnotations().remove(sourceAnnotation);
+            targetNeuron.getRootAnnotations().add(sourceAnnotation);
         }
 
-        // finally, delete source ann
-        if (sourceNote != null) {
-            modelMgr.deleteStructuredTextAnnotation(sourceNote.getId());
-        }
-        // we need a copy of this annotation from before it's deleted for a later update:
-        final List<TmGeoAnnotation> deleteList = new ArrayList<>();
-        deleteList.add(sourceAnnotation);
 
-        modelMgr.deleteGeometricAnnotation(sourceAnnotationID);
+        // reparent source annotation to dest annotation:
+        modelMgr.reparentGeometricAnnotation(sourceAnnotation, targetAnnotationID, targetNeuron);
+
+
 
         // update objects *again*, last time:
-        updateCurrentWorkspace();
+
+        targetNeuron.getRootAnnotations().remove(sourceAnnotation);
+        sourceAnnotation.setParentId(targetAnnotationID);
+        TmGeoAnnotation targetAnnotation = getGeoAnnotationFromID(targetAnnotationID);
+        targetAnnotation.addChild(sourceAnnotation);
+
+
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron updateTargetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         setCurrentNeuron(updateTargetNeuron);
 
-        final TmGeoAnnotation targetAnnotation = getGeoAnnotationFromID(targetAnnotationID);
-        for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
-            if (automatedTracingEnabled()) {
-                viewStateListener.pathTraceRequested(child.getId());
-            }
+        // trace new path:
+        if (automatedTracingEnabled()) {
+            viewStateListener.pathTraceRequested(sourceAnnotationID);
         }
 
         // see note in addChildAnnotations re: predef notes
-        // for merge, the target annotation is the one affected; fortunately, the
+        // for merge, two linked annotations are affected; fortunately, the
         //  neuron has just been refreshed
         stripPredefNotes(updateTargetNeuron, targetAnnotationID);
+        stripPredefNotes(updateTargetNeuron, sourceAnnotationID);
 
+
+        final TmGeoAnnotation updateSourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                log.info("beginning UI update for mergeNeurite()");
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.start();
                 fireNotesUpdated(workspace);
                 fireNeuronSelected(updateTargetNeuron);
                 fireWorkspaceLoaded(workspace);
-                for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
-                    fireAnnotationReparented(child);
-                }
-                fireAnnotationsDeleted(deleteList);
+                fireAnnotationReparented(updateSourceAnnotation);
+                log.info("ending UI update for mergeNeurite(); elapsed = " + stopwatch);
+                stopwatch.stop();
             }
         });
 
+        log.info("ending mergeNeurite(); elapsed = " + stopwatch);
+         stopwatch.stop();
+
     }
+
 
     /**
      * move the neurite containing the input annotation to the given neuron
@@ -1418,100 +1464,6 @@ called from a  SimpleWorker thread.
         }
     }
 
-    public void importSWCData(File swcFile) throws Exception {
-        importSWCData(swcFile, null);
-    }
-
-    public void importSWCData(File swcFile, SimpleWorker worker) throws Exception {
-
-        // the constructor also triggers the parsing, but not the validation
-        SWCData swcData = SWCData.read(swcFile);
-        if (!swcData.isValid()) {
-            throw new Exception(String.format("invalid SWC file %s; reason: %s",
-                    swcFile.getName(), swcData.getInvalidReason()));
-        }
-
-        // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
-        //  so he added an OFFSET header and recentered on zero when exporting
-        // therefore, if that header is present, respect it
-        double[] externalOffset = swcData.parseOffset();        
-
-        // create one neuron for the file; take name from the filename (strip extension)
-        String neuronName = swcData.parseName();
-        if (neuronName == null)
-            neuronName = swcFile.getName();
-        if (neuronName.endsWith(SWCData.STD_SWC_EXTENSION)) {
-            neuronName = neuronName.substring(0, neuronName.length() - SWCData.STD_SWC_EXTENSION.length());
-        }
-        final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
-
-        // let's go with brute force for now; loop over nodes and
-        //  insert into db sequentially, since we have no bulk update
-        //  for annotations right now
-
-        // and as long as we're doing brute force, we can update progress
-        //  granularly (if we have a worker); start with 5% increments (1/20)
-        int totalLength = swcData.getNodeList().size();
-        int updateFrequency = totalLength / 20;
-        if (updateFrequency == 0) {
-            updateFrequency = 1;
-        }
-        if (worker != null) {
-            worker.setProgress(0L, totalLength);
-        }
-
-        Map<Integer, TmGeoAnnotation> annotations = new HashMap<>();
-        TmGeoAnnotation annotation;
-        for (SWCNode node: swcData.getNodeList()) {
-            // Internal points, as seen in annotations, are same as external
-            // points in SWC: represented as voxels. --LLF
-            double[] internalPoint = swcDataConverter.internalFromExternal(
-                new double[] {
-                        node.getX() + externalOffset[0],
-                        node.getY() + externalOffset[1],
-                        node.getZ() + externalOffset[2],
-                }
-            );
-            if (node.getParentIndex() == -1) {
-                annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                    null, 0, 
-                    internalPoint[0], internalPoint[1], internalPoint[2],
-                    "");
-            } else {
-                annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                    annotations.get(node.getParentIndex()).getId(),
-                    0, 
-                    internalPoint[0], internalPoint[1], internalPoint[2],
-                    "");
-            }
-            annotations.put(node.getIndex(), annotation);
-            if (worker != null && (node.getIndex() % updateFrequency) == 0) {
-                worker.setProgress(node.getIndex(), totalLength);
-            }
-        }
-        updateNeuronColor(swcData, neuron);
-        
-        // update workspace; update and select new neuron; this will draw points as well
-        updateCurrentWorkspace();
-        final TmWorkspace workspace = getCurrentWorkspace();
-        setCurrentNeuron(neuron);
-        final TmNeuron updateNeuron = getCurrentNeuron();
-
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireWorkspaceLoaded(workspace);
-                fireNeuronSelected(updateNeuron);                
-            }
-        });
-
-
-        // normally if automatic tracing is enabled, we'd do that here, but
-        //  for bulk import, I don't think this is a good idea right now,
-        //  as we have no mechanism for managing the jobs
-
-    }
-
     public void importBulkSWCData(File swcFile, SimpleWorker worker, boolean selectOnCompletion) throws Exception {
 
         // the constructor also triggers the parsing, but not the validation
@@ -1577,7 +1529,7 @@ called from a  SimpleWorker thread.
         }
 
         // Fire off the bulk update.  The "un-serialized" or
-        // db-unknown annoations could be swapped for "blessed" versions.
+        // db-unknown annotations could be swapped for "blessed" versions.
         modelMgr.addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
 
         updateNeuronColor(swcData, neuron);

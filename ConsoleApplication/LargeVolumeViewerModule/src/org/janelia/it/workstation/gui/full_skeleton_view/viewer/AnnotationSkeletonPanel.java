@@ -47,6 +47,8 @@ import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
 import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
 import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This panel holds all relevant components for showing the skeleton of
@@ -549,6 +551,8 @@ public class AnnotationSkeletonPanel extends JPanel {
         private OcclusiveViewer viewer;
         private OcclusiveRenderer renderer;
         private SkeletonActor actor;
+        private final Logger logger = LoggerFactory.getLogger(AnnotationSkeletonPanel.class);
+        
         public SkeletalBoundsResetPositioner( Skeleton skeleton ) {
             this.skeleton = skeleton;
         }
@@ -577,6 +581,12 @@ public class AnnotationSkeletonPanel extends JPanel {
         private BoundingBox3d getInclusiveBox() {
             Vec3 minimum = null;
             Vec3 maximum = null;
+            Long maxXId = null;
+            Long maxYId = null;
+            Long maxZId = null;
+            Long minXId = null;
+            Long minYId = null;
+            Long minZId = null;
             for (Anchor anchor : skeleton.getAnchors()) {
                 if (minimum == null) {
                     minimum = anchor.getLocation().clone();
@@ -584,6 +594,17 @@ public class AnnotationSkeletonPanel extends JPanel {
                     minimum.setX(Math.min(minimum.getX(), anchor.getLocation().getX()));
                     minimum.setY(Math.min(minimum.getY(), anchor.getLocation().getY()));
                     minimum.setZ(Math.min(minimum.getZ(), anchor.getLocation().getZ()));
+                    if (logger.isDebugEnabled()) {
+                        if (minimum.getX() == anchor.getLocation().getX()) {
+                            minXId = anchor.getGuid();
+                        }
+                        if (minimum.getY() == anchor.getLocation().getY()) {
+                            minYId = anchor.getGuid();
+                        }
+                        if (minimum.getZ() == anchor.getLocation().getZ()) {
+                            minZId = anchor.getGuid();
+                        }
+                    }
                 }
 
                 if (maximum == null) {
@@ -592,12 +613,30 @@ public class AnnotationSkeletonPanel extends JPanel {
                     maximum.setX(Math.max(maximum.getX(), anchor.getLocation().getX()));
                     maximum.setY(Math.max(maximum.getY(), anchor.getLocation().getY()));
                     maximum.setZ(Math.max(maximum.getZ(), anchor.getLocation().getZ()));
+                    if (logger.isDebugEnabled()) {
+                        if (maximum.getX() == anchor.getLocation().getX()) {
+                            maxXId = anchor.getGuid();
+                        }
+                        if (maximum.getY() == anchor.getLocation().getY()) {
+                            maxYId = anchor.getGuid();
+                        }
+                        if (maximum.getZ() == anchor.getLocation().getZ()) {
+                            maxZId = anchor.getGuid();
+                        }
+                    }
                 }
             }
             BoundingBox3d box = new BoundingBox3d();
             if (minimum != null  &&  maximum != null) {
                 box.include(minimum);
                 box.include(maximum);
+            }
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Min X/Y/Z IDs: {}/{}/{}.", minXId, minYId, minZId);
+                logger.debug("Max X/Y/Z IDs: {}/{}/{}.", maxXId, maxYId, maxZId);
+                logger.debug("Min X,Y,Z: {}.", minimum);
+                logger.debug("Max X,Y,Z: {}.", maximum);
             }
             return box;
         }

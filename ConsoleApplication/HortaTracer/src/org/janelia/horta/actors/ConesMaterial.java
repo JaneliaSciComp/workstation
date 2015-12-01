@@ -56,6 +56,7 @@ public class ConesMaterial extends BasicMaterial
     private int radiusOffsetIndex = UNINITIALIZED_UNIFORM_INDEX;
     
     private final Texture2d lightProbeTexture;
+    private final boolean manageLightProbeTexture;
     private final float[] color = new float[] {1, 0, 0, 1};
     private float minPixelRadius = 0.0f;
 
@@ -65,6 +66,7 @@ public class ConesMaterial extends BasicMaterial
         else
             shaderProgram = conesShader;
         if (lightProbeTexture == null) {
+            manageLightProbeTexture = true;
             this.lightProbeTexture = new Texture2d();
             try {
                 this.lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
@@ -75,6 +77,7 @@ public class ConesMaterial extends BasicMaterial
             }
         }
         else {
+            manageLightProbeTexture = false;
             this.lightProbeTexture = lightProbeTexture;
         }
     }
@@ -102,7 +105,8 @@ public class ConesMaterial extends BasicMaterial
         super.dispose(gl);
         colorIndex = UNINITIALIZED_UNIFORM_INDEX;
         lightProbeIndex = UNINITIALIZED_UNIFORM_INDEX;
-        lightProbeTexture.dispose(gl);
+        if (manageLightProbeTexture)
+            lightProbeTexture.dispose(gl);
         radiusOffsetIndex = UNINITIALIZED_UNIFORM_INDEX;
     }
     
@@ -120,7 +124,8 @@ public class ConesMaterial extends BasicMaterial
         lightProbeIndex = gl.glGetUniformLocation(
             shaderProgram.getProgramHandle(),
             "lightProbe");
-        lightProbeTexture.init(gl);
+        if (manageLightProbeTexture)
+            lightProbeTexture.init(gl);
         radiusOffsetIndex = gl.glGetUniformLocation(
             shaderProgram.getProgramHandle(),
             "radiusOffset");
@@ -134,7 +139,8 @@ public class ConesMaterial extends BasicMaterial
         if (colorIndex == UNINITIALIZED_UNIFORM_INDEX) 
             init(gl);
         super.load(gl, camera);
-        lightProbeTexture.bind(gl, 0);
+        if (manageLightProbeTexture)
+            lightProbeTexture.bind(gl, 0);
         gl.glUniform4fv(colorIndex, 1, color, 0);
         gl.glUniform1i(lightProbeIndex, 0); // use default texture unit, 0
         // radius offset depends on current zoom
@@ -148,7 +154,8 @@ public class ConesMaterial extends BasicMaterial
     @Override
     public void unload(GL3 gl) {
         super.unload(gl);
-        lightProbeTexture.unbind(gl);
+        if (manageLightProbeTexture)
+            lightProbeTexture.unbind(gl);
     }
     
     @Override

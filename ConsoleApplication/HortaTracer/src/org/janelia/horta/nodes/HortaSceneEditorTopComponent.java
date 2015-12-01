@@ -30,10 +30,9 @@
 
 package org.janelia.horta.nodes;
 
-import org.janelia.horta.modelapi.HortaWorkspace;
 import java.awt.BorderLayout;
 import java.util.Collection;
-import org.netbeans.swing.outline.Outline;
+import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;

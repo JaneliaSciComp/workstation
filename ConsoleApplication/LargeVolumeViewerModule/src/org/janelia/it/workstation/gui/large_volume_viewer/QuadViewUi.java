@@ -21,7 +21,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.components.TileStackCa
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrivenSWCExchanger;
+import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -67,7 +67,7 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.L
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.shared.util.SWCDataConverter;
+import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 
 /** 
  * Main window for QuadView application.
@@ -569,7 +569,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     private void updateSWCDataConverter() {
         SWCDataConverter swcDataConverter = new SWCDataConverter();
         swcDataConverter.setSWCExchanger(
-                new MatrixDrivenSWCExchanger(tileFormat)
+                new MatrixDrivenSWCExchanger(tileFormat.getMicronToVoxMatrix(), tileFormat.getVoxToMicronMatrix())
         );
         annotationModel.setSWCDataConverter(swcDataConverter);
     }

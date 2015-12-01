@@ -6,6 +6,8 @@
 
 package org.janelia.it.workstation.shared.util;
 
+import org.janelia.it.jacs.shared.swc.SWCNode;
+import org.janelia.it.jacs.shared.swc.SWCData;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
