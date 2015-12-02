@@ -79,7 +79,7 @@ public final class NewFilterAction implements ActionListener {
             protected void doStuff() throws Exception {
                 filter = new Filter();
                 filter.setName(name);
-                filter.setSearchClass(FilterEditorPanel.DEFAULT_SEARCH_CLASS.getName());
+                filter.setSearchType(FilterEditorPanel.DEFAULT_SEARCH_CLASS.getName());
                 filter = model.save(filter);
                 TreeNode parentFolder = parentNode.getTreeNode();
                 model.addChild(parentFolder, filter);

@@ -2157,6 +2157,10 @@
                 <binary-origin>release/modules/ext/ome-io.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/jaxb-xjc-2.1.7.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jaxb-xjc-2.1.7.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/axis2-java2wsdl-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-java2wsdl-1.5.5.jar</binary-origin>
             </class-path-extension>

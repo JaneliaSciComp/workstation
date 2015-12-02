@@ -1,10 +1,10 @@
 package org.janelia.it.workstation.gui.browser.events.selection;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 
 /**
  * A selection model implementation which tracks the selection of domain objects, including
@@ -12,7 +12,7 @@ import org.janelia.it.workstation.gui.browser.events.Events;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectSelectionModel extends SelectionModel<DomainObject,Reference> {
+public class DomainObjectSelectionModel extends SelectionModel<DomainObject,DomainObjectId> {
 
     private IsParent parentObject;
     
@@ -25,7 +25,7 @@ public class DomainObjectSelectionModel extends SelectionModel<DomainObject,Refe
     }
 
     @Override
-    protected void notify(DomainObject domainObject, Reference id, boolean select, boolean clearAll) {
+    protected void notify(DomainObject domainObject, DomainObjectId id, boolean select, boolean clearAll) {
         if (domainObject instanceof ObjectSet) {
             ObjectSet objectSet = (ObjectSet)domainObject;
             Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), id, select, objectSet));
@@ -36,7 +36,7 @@ public class DomainObjectSelectionModel extends SelectionModel<DomainObject,Refe
     }
     
     @Override
-    public Reference getId(DomainObject domainObject) {
-        return Reference.createFor(domainObject);
+    public DomainObjectId getId(DomainObject domainObject) {
+        return DomainObjectId.createFor(domainObject);
     }
 }

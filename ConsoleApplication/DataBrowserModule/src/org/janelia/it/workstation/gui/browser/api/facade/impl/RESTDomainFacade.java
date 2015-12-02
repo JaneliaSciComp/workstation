@@ -108,11 +108,11 @@ public class RESTDomainFacade implements DomainFacade {
         return domainObjs;
     }
 
-    public List<DomainObject> getDomainObjects(String className, Collection<Long> ids) {
+    public List<DomainObject> getDomainObjects(String collectionName, Collection<Long> ids) {
         DomainQuery query = new DomainQuery();
         //query.setSubjectKey(SessionMgr.getSubjectKey());
         query.setSubjectKey("group:leetlab");
-        query.setObjectType(className);
+        query.setObjectType(collectionName);
         query.setObjectIds(new ArrayList<Long>(ids));
 
         Response response = serviceEndpoints.get("domainobject")
@@ -121,33 +121,33 @@ public class RESTDomainFacade implements DomainFacade {
                 .post(Entity.json(query));
         // until we resolve adding domain object specific methods or class info into mongo collections, multi if statement
         List<?> domainObjs = null;
-        if (className.endsWith("DataSet")) {
+        if (collectionName.endsWith("DataSet")) {
             domainObjs = response.readEntity(new GenericType<List<DataSet>>(){});
-        } else if (className.endsWith("Image")) {
+        } else if (collectionName.endsWith("Image")) {
             domainObjs = response.readEntity(new GenericType<List<Image>>(){});
-        } else if (className.endsWith("LSMImage")) {
+        } else if (collectionName.endsWith("LSMImage")) {
             domainObjs = response.readEntity(new GenericType<List<LSMImage>>(){});
-        } else if (className.endsWith("NeuronFragment")) {
+        } else if (collectionName.endsWith("NeuronFragment")) {
             domainObjs = response.readEntity(new GenericType<List<NeuronFragment>>(){});
-        } else if (className.endsWith("NeuronSeparation")) {
+        } else if (collectionName.endsWith("NeuronSeparation")) {
             domainObjs = response.readEntity(new GenericType<List<NeuronSeparation>>(){});
-        } else if (className.endsWith("ObjectiveSample")) {
+        } else if (collectionName.endsWith("ObjectiveSample")) {
             domainObjs = response.readEntity(new GenericType<List<ObjectiveSample>>(){});
-        } else if (className.endsWith("PipelineError")) {
+        } else if (collectionName.endsWith("PipelineError")) {
             domainObjs = response.readEntity(new GenericType<List<PipelineError>>(){});
-        } else if (className.endsWith("PipelineResult")) {
+        } else if (collectionName.endsWith("PipelineResult")) {
             domainObjs = response.readEntity(new GenericType<List<PipelineResult>>(){});
-        } else if (className.endsWith("Sample")) {
+        } else if (collectionName.endsWith("Sample")) {
             domainObjs = response.readEntity(new GenericType<List<Sample>>(){});
-        } else if (className.endsWith("SampleAlignmentResult")) {
+        } else if (collectionName.endsWith("SampleAlignmentResult")) {
             domainObjs = response.readEntity(new GenericType<List<SampleAlignmentResult>>(){});
-        } else if (className.endsWith("SampleCellCountingResult")) {
+        } else if (collectionName.endsWith("SampleCellCountingResult")) {
             domainObjs = response.readEntity(new GenericType<List<SampleCellCountingResult>>(){});
-        } else if (className.endsWith("SamplePipelineRun")) {
+        } else if (collectionName.endsWith("SamplePipelineRun")) {
             domainObjs = response.readEntity(new GenericType<List<SamplePipelineRun>>(){});
-        } else if (className.endsWith("SampleProcessingResult")) {
+        } else if (collectionName.endsWith("SampleProcessingResult")) {
             domainObjs = response.readEntity(new GenericType<List<SampleProcessingResult>>(){});
-        } else if (className.endsWith("SampleTile")) {
+        } else if (collectionName.endsWith("SampleTile")) {
             domainObjs = response.readEntity(new GenericType<List<SampleTile>>(){});
         }
 
@@ -177,11 +177,7 @@ public class RESTDomainFacade implements DomainFacade {
     }
 
     // CRUD for annotations/ontologies
-    public List<Annotation> getAnnotations(Collection<Reference> references) {
-        List<Long> targetIds = new ArrayList<>();
-        for(Reference reference : references) {
-            targetIds.add(reference.getTargetId());
-        }
+    public List<Annotation> getAnnotations(Collection<Long> targetIds) {
         Response response = serviceEndpoints.get("annotation")
                 .queryParam("annotationIds", new ArrayList<Long>(targetIds))
                 .request("application/json")

@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.browser.events.selection;
 
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 
 /**
@@ -12,13 +12,13 @@ import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 public class DomainObjectSelectionEvent {
 
     private final Object source;
-    private final Reference identifier;
+    private final DomainObjectId identifier;
     private final DomainObjectNode domainObjectNode;
     private final DomainObject domainObject;
     private final boolean select;
     private final boolean clearAll;
 
-    public DomainObjectSelectionEvent(Object source, Reference identifier, DomainObjectNode domainObjectNode, boolean select, boolean clearAll) {
+    public DomainObjectSelectionEvent(Object source, DomainObjectId identifier, DomainObjectNode domainObjectNode, boolean select, boolean clearAll) {
         this.source = source;
         this.identifier = identifier;
         this.domainObjectNode = domainObjectNode;
@@ -27,7 +27,7 @@ public class DomainObjectSelectionEvent {
         this.clearAll = clearAll;
     }
     
-    public DomainObjectSelectionEvent(Object source, Reference identifier, DomainObject domainObject, boolean select, boolean clearAll) {
+    public DomainObjectSelectionEvent(Object source, DomainObjectId identifier, DomainObject domainObject, boolean select, boolean clearAll) {
         this.source = source;
         this.identifier = identifier;
         this.domainObjectNode = null;
@@ -40,7 +40,7 @@ public class DomainObjectSelectionEvent {
         return source;
     }
     
-    public Reference getIdentifier() {
+    public DomainObjectId getIdentifier() {
         return identifier;
     }
     

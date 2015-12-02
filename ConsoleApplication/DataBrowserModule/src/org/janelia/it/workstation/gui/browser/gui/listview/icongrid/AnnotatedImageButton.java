@@ -20,11 +20,11 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.TransferHandler;
-
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
@@ -90,7 +90,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
             this.source = new DragSource();
             source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);
             // TODO: this class should not know about DomainObjects
-            setTransferHandler(new DomainObjectTransferHandler((ImageModel<DomainObject,Reference>)imageModel, (DomainObjectSelectionModel)selectionModel) {
+            setTransferHandler(new DomainObjectTransferHandler((ImageModel<DomainObject,DomainObjectId>)imageModel, (DomainObjectSelectionModel)selectionModel) {
                 @Override
                 public JComponent getDropTargetComponent() {
                     return AnnotatedImageButton.this;
