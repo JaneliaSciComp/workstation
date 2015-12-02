@@ -7,6 +7,7 @@ import javax.swing.JPanel;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 
 /**
@@ -34,6 +35,11 @@ public interface AnnotatedDomainObjectListViewer {
      */
     public JPanel getPanel();
 
+    /**
+     * Configure the search provider for re-sorting, etc. 
+     */
+    public void setSearchProvider(SearchProvider searchProvider);
+    
     /**
      * Configure the selection model to use in the list viewer. 
      * @param selectionModel selection model

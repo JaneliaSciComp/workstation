@@ -19,7 +19,6 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
-import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconGridViewerPanel;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
@@ -28,12 +27,9 @@ import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNodeTracker;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.RootNode;
 import org.janelia.it.workstation.gui.browser.nodes.WorkspaceNode;
-import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -131,14 +127,34 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         add(treePanel, BorderLayout.CENTER);
 
         showLoadingIndicator();
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                // Attempt to load stuff into the cache, which the RootNode will query from the EDT
+                DomainMgr.getDomainMgr().getModel().getWorkspaces();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                selectRoot();
+                // Expand the top-level workspace nodes
+                for(Node node : root.getChildren().getNodes()) {
+                    beanTreeView.expandNode(node);
+                    break; // For now, we'll only expand the user's default workspace
+                }
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showNothing();
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
         
-        selectRoot();
+        worker.execute();
         
-        // Expand the top-level workspace nodes
-        for(Node node : root.getChildren().getNodes()) {
-            beanTreeView.expandNode(node);
-            break; // For now, we'll only expand the user's default workspace
-        }
     }
     
 //    private void bindKeys() {
@@ -387,6 +403,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     public void selectNodeById(Long id) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        for(Node node : DomainObjectNodeTracker.getInstance().getNodesById(id)) {
+            selectNode(node);
+            break;
+        }
     }
 }

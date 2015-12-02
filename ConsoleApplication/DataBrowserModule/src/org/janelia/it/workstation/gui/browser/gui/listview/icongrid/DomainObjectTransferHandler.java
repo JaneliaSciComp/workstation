@@ -1,15 +1,18 @@
 package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 
+import java.awt.datatransfer.Transferable;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JComponent;
+import javax.swing.TransferHandler;
+
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.datatransfer.Transferable;
-import java.util.*;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 
 /**
  * Support for dragging domain objects and dropping them onto the Explorer.
@@ -22,10 +25,10 @@ public abstract class DomainObjectTransferHandler extends TransferHandler {
 
 //    protected boolean moveWhenReordering = true;
 
-    private final ImageModel<DomainObject,DomainObjectId> imageModel;
+    private final ImageModel<DomainObject,Reference> imageModel;
     private final DomainObjectSelectionModel selectionModel;
     
-    public DomainObjectTransferHandler(ImageModel<DomainObject,DomainObjectId> imageModel, DomainObjectSelectionModel selectionModel) {
+    public DomainObjectTransferHandler(ImageModel<DomainObject,Reference> imageModel, DomainObjectSelectionModel selectionModel) {
         this.imageModel = imageModel;
         this.selectionModel = selectionModel;
     }
@@ -40,7 +43,7 @@ public abstract class DomainObjectTransferHandler extends TransferHandler {
         if (sourceComponent instanceof AnnotatedImageButton) {
             
             List<DomainObject> domainObjects = new ArrayList<>();
-            for(DomainObjectId id : selectionModel.getSelectedIds()) {
+            for(Reference id : selectionModel.getSelectedIds()) {
                 domainObjects.add(imageModel.getImageByUniqueId(id));
             }
 

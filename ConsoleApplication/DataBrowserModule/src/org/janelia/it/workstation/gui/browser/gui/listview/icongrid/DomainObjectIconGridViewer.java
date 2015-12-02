@@ -14,6 +14,7 @@ import javax.swing.JRadioButtonMenuItem;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
@@ -27,9 +28,9 @@ import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainConstants;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -43,21 +44,23 @@ import com.google.common.collect.Multiset;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,DomainObjectId> implements AnnotatedDomainObjectListViewer {
+public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,Reference> implements AnnotatedDomainObjectListViewer {
     
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
     
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
+    private SearchProvider searchProvider; // Implement UI for sorting using the search provider
     
-    private String defaultSampleResult = DomainConstants.PREFERENCE_VALUE_LATEST;
+    private DefaultResult defaultResult = new DefaultResult(DomainConstants.PREFERENCE_VALUE_LATEST);
     private String defaultImageType = FileType.SignalMip.name();
     
-    private final ImageModel<DomainObject,DomainObjectId> imageModel = new ImageModel<DomainObject, DomainObjectId>() {
+    
+    private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
         
         @Override
-        public DomainObjectId getImageUniqueId(DomainObject domainObject) {
-            return DomainObjectId.createFor(domainObject);
+        public Reference getImageUniqueId(DomainObject domainObject) {
+            return Reference.createFor(domainObject);
         }
 
         @Override
@@ -65,33 +68,45 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
                 List<String> objectives = sample.getOrderedObjectives();
-                if (objectives==null) return null;
-                ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size()-1));
-                if (objSample==null) return null;
-                SamplePipelineRun run = objSample.getLatestRun();
-                if (run==null) return null;
+                if (objectives==null || objectives.isEmpty()) return null;
+                
                 HasFiles chosenResult = null;
-                if (DomainConstants.PREFERENCE_VALUE_LATEST.equals(defaultSampleResult)) {
+                if (DomainConstants.PREFERENCE_VALUE_LATEST.equals(defaultResult.getResultKey())) {
+                    ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size()-1));
+                    if (objSample==null) return null;
+                    SamplePipelineRun run = objSample.getLatestRun();
+                    if (run==null) return null;
                     chosenResult = run.getLatestResult();
+
+                    if (chosenResult instanceof HasFileGroups) {
+                        HasFileGroups hasGroups = (HasFileGroups)chosenResult;
+                        // Pick the first group, since there is no way to tell which is latest
+                        for(String groupKey : hasGroups.getGroupKeys()) {
+                            chosenResult = hasGroups.getGroup(groupKey);
+                            break;
+                        }
+                    }
                 }
                 else {
-                    Pattern p = Pattern.compile("(.*?) \\((.*?)\\)");
-                    Matcher m = p.matcher(defaultSampleResult);
-                    String wantedResultName = m.matches()?m.group(1):null;
-                    String wantedResultGroup = m.matches()?m.group(2):null;
-                    if (run.getResults()!=null) {
+                    for(String objective : objectives) {
+                        if (!objective.equals(defaultResult.getObjective())) continue;
+                        ObjectiveSample objSample = sample.getObjectiveSample(objective);
+                        if (objSample==null) continue;
+                        SamplePipelineRun run = objSample.getLatestRun();
+                        if (run==null || run.getResults()==null) continue;
+                        
                         for(PipelineResult result : run.getResults()) {
                             if (result instanceof HasFileGroups) {
                                 HasFileGroups hasGroups = (HasFileGroups)result;
                                 for(String groupKey : hasGroups.getGroupKeys()) {
-                                    if (result.getName().equals(wantedResultName) && groupKey.equals(wantedResultGroup)) {
+                                    if (result.getName().equals(defaultResult.getResultNamePrefix()) && groupKey.equals(defaultResult.getGroupName())) {
                                         chosenResult = hasGroups.getGroup(groupKey);
                                         break;
                                     }
                                 }
                             }
                             else {
-                                if (defaultSampleResult.equals(result.getName())) {
+                                if (result.getName().equals(defaultResult.getResultName())) {
                                     chosenResult = result;
                                     break;
                                 }
@@ -100,8 +115,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     }
                 }
                 
-                if (chosenResult==null) return null;
-                return DomainUtils.getFilepath(chosenResult, defaultImageType);
+                return chosenResult==null? null : DomainUtils.getFilepath(chosenResult, defaultImageType);
             }
             else if (domainObject instanceof HasFiles) {
                 HasFiles hasFiles = (HasFiles)domainObject;
@@ -111,7 +125,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
         
         @Override
-        public DomainObject getImageByUniqueId(DomainObjectId id) {
+        public DomainObject getImageByUniqueId(Reference id) {
             return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
         }
         
@@ -131,6 +145,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
+    public void setSearchProvider(SearchProvider searchProvider) {
+        this.searchProvider = searchProvider;
+    }
+    
+    @Override
     public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
         super.setSelectionModel(selectionModel);
         this.selectionModel = selectionModel;
@@ -143,9 +162,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected JPopupMenu getButtonPopupMenu() {
-        List<DomainObjectId> selectionIds = selectionModel.getSelectedIds();
+        List<Reference> selectionIds = selectionModel.getSelectedIds();
         List<DomainObject> domainObjects = new ArrayList<>();
-        for (DomainObjectId id : selectionIds) {
+        for (Reference id : selectionIds) {
             DomainObject imageObject = getImageModel().getImageByUniqueId(id);
             if (imageObject == null) {
                 log.warn("Could not locate selected entity with id {}", id);
@@ -168,16 +187,18 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     protected void buttonDrillDown(DomainObject domainObject) {
     }
     
+    
     @Override
     public void showDomainObjects(AnnotatedDomainObjectList objects) {
 
         this.domainObjectList = objects;
+        log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
         
         final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
         if (parentObject!=null && parentObject.getId()!=null) {
             Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_DEFAULT_SAMPLE_RESULT, parentObject.getId().toString());
             if (preference!=null) {
-                this.defaultSampleResult = preference.getValue();
+                this.defaultResult = new DefaultResult(preference.getValue());
             }
             Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_DEFAULT_IMAGE_TYPE, parentObject.getId().toString());
             if (preference2!=null) {
@@ -203,23 +224,26 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                         if (result instanceof HasFileGroups) {
                             HasFileGroups hasGroups = (HasFileGroups)result;
                             for(String groupKey : hasGroups.getGroupKeys()) {
-                                String name = result.getName()+" ("+groupKey+")";
+                                String name = objective+" "+result.getName()+" ("+groupKey+")";
                                 countedResultNames.add(name);
                                 HasFiles hasFiles = hasGroups.getGroup(groupKey);
-                                for(FileType fileType : hasFiles.getFiles().keySet()) {
-                                    if (!fileType.is2dImage()) continue;
-                                    countedTypeNames.add(fileType.name());
+                                if (hasFiles.getFiles()!=null) {
+                                    for(FileType fileType : hasFiles.getFiles().keySet()) {
+                                        if (!fileType.is2dImage()) continue;
+                                        countedTypeNames.add(fileType.name());
+                                    }
                                 }
                             }
                         }
                         else {
-                            String name = result.getName();
+                            String name = objective+" "+result.getName();
                             countedResultNames.add(name);
-                            for(FileType fileType : result.getFiles().keySet()) {
-                                if (!fileType.is2dImage()) continue;
-                                countedTypeNames.add(fileType.name());
+                            if (result.getFiles()!=null) {
+                                for(FileType fileType : result.getFiles().keySet()) {
+                                    if (!fileType.is2dImage()) continue;
+                                    countedTypeNames.add(fileType.name());
+                                }
                             }
-                            
                         }
                     }
                 }
@@ -237,11 +261,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         
         for(final String resultName : countedResultNames.elementSet()) {
             if (countedResultNames.count(resultName)>1) {
-                JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(defaultSampleResult));
+                JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(defaultResult.getResultKey()));
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
 
-                        defaultSampleResult = resultName;
+                        defaultResult = new DefaultResult(resultName);
                         
                         SimpleWorker worker = new SimpleWorker() {
 
@@ -319,10 +343,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
         }        
         
-        
-        
-        
-        
         showImageObjects(domainObjectList.getDomainObjects());
     }
 
@@ -355,5 +375,63 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     public JPanel getPanel() {
         return this;
+    }
+    
+    /**
+     * The purpose of this class is to parse the default result key and cache 
+     * the resulting tokens for use within speed-sensitive UI rendering methods.
+     */
+    private class DefaultResult {
+
+        private final String resultKey;
+        private final String objective;
+        private final String resultName;
+        private final String resultNamePrefix;
+        private final String groupName;
+
+        private DefaultResult(String resultKey) {
+            this.resultKey = resultKey;
+            if (!DomainConstants.PREFERENCE_VALUE_LATEST.equals(resultKey)) {
+                String[] parts = resultKey.split(" ",2);
+                this.objective = parts[0];
+                this.resultName = parts[1];
+
+                Pattern p = Pattern.compile("(.*?)\\s*(\\((.*?)\\))?");
+                Matcher m = p.matcher(resultName);
+                if (!m.matches()) {
+                    throw new IllegalStateException("Result name cannot be parsed: "+parts[1]);
+                }
+                else {
+                    this.resultNamePrefix = m.matches()?m.group(1):null;
+                    this.groupName = m.matches()?m.group(3):null;
+                }
+            }
+            else {
+                this.objective = null;
+                this.resultName = null;
+                this.resultNamePrefix = null;
+                this.groupName = null;
+            }
+        }
+
+        public String getResultKey() {
+            return resultKey;
+        }
+
+        public String getObjective() {
+            return objective;
+        }
+
+        public String getResultName() {
+            return resultName;
+        }
+
+        public String getResultNamePrefix() {
+            return resultNamePrefix;
+        }
+
+        public String getGroupName() {
+            return groupName;
+        }
     }
 }

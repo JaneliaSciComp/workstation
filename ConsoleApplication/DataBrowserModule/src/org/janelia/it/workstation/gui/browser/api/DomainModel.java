@@ -30,7 +30,6 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEve
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectComparator;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,16 +67,16 @@ public class DomainModel {
     private static final Logger log = LoggerFactory.getLogger(DomainModel.class);
     
     private final DomainFacade facade;
-    private final Cache<DomainObjectId, DomainObject> objectCache;
-    private final Map<DomainObjectId, Workspace> workspaceCache;
+    private final Cache<Reference, DomainObject> objectCache;
+    private final Map<Reference, Workspace> workspaceCache;
     
     public DomainModel(DomainFacade facade) {
         this.facade = facade;
-        this.objectCache = CacheBuilder.newBuilder().softValues().removalListener(new RemovalListener<DomainObjectId, DomainObject>() {
+        this.objectCache = CacheBuilder.newBuilder().softValues().removalListener(new RemovalListener<Reference, DomainObject>() {
             @Override
-            public void onRemoval(RemovalNotification<DomainObjectId, DomainObject> notification) {
+            public void onRemoval(RemovalNotification<Reference, DomainObject> notification) {
                 synchronized (DomainModel.this) {
-                    DomainObjectId id = notification.getKey();
+                    Reference id = notification.getKey();
                     log.trace("removed key from cache: {}",id);
                     if (workspaceCache.containsKey(id)) {
                         workspaceCache.clear();
@@ -93,8 +92,8 @@ public class DomainModel {
      *
      * @param domainObject
      */
-    private DomainObjectId checkIfCanonicalDomainObject(DomainObject domainObject) {
-        DomainObjectId id = DomainObjectId.createFor(domainObject);
+    private Reference checkIfCanonicalDomainObject(DomainObject domainObject) {
+        Reference id = Reference.createFor(domainObject);
         try {
             DomainObject presentObject = objectCache.getIfPresent(id);
             if (presentObject == null) {
@@ -126,7 +125,7 @@ public class DomainModel {
             return null;
         }
         synchronized (this) {
-            DomainObjectId id = DomainObjectId.createFor(domainObject);
+            Reference id = Reference.createFor(domainObject);
             DomainObject canonicalObject = objectCache.getIfPresent(id);
             if (canonicalObject != null) {
                 if (canonicalObject!=domainObject) {
@@ -203,7 +202,7 @@ public class DomainModel {
         if (SwingUtilities.isEventDispatchThread()) {
             throw new IllegalStateException("DomainModel illegally called from EDT!");
         }
-        DomainObjectId id = checkIfCanonicalDomainObject(domainObject);
+        Reference id = checkIfCanonicalDomainObject(domainObject);
         log.debug("Invalidating cached instance {}", DomainUtils.identify(domainObject));
 
         objectCache.invalidate(id);
@@ -226,6 +225,16 @@ public class DomainModel {
     }
 
     /**
+     * Load an object from the database. 
+     * @param id
+     * @return
+     */
+    private DomainObject loadDomainObject(Reference ref) {
+        log.debug("loadDomainObject({})",ref);
+        return facade.getDomainObject(ref);
+    }
+    
+    /**
      * Reload the given domain object from the database, and update the cache.
      *
      * @param domainObject
@@ -233,7 +242,21 @@ public class DomainModel {
      * @throws Exception
      */
     public DomainObject reload(DomainObject domainObject) throws Exception {
-        return reloadById(DomainObjectId.createFor(domainObject));
+        return reloadById(Reference.createFor(domainObject));
+    }
+
+    /**
+     * Reload the given domain object from the database, and update the cache.
+     *
+     * @param Reference
+     * @return canonical domain object instance
+     * @throws Exception
+     */
+    public DomainObject reloadById(Reference Reference) throws Exception {
+        synchronized (this) {
+            DomainObject domainobject = loadDomainObject(Reference);
+            return putOrUpdate(domainobject);
+        }
     }
 
     /**
@@ -244,111 +267,67 @@ public class DomainModel {
      * @throws Exception
      */
     public List<DomainObject> reload(Collection<DomainObject> objects) throws Exception {
-        return reloadById(ClientDomainUtils.getDomainObjectIdList(objects));
-    }
-
-    /**
-     * Reload the given domain object from the database, and update the cache.
-     *
-     * @param domainObjectId
-     * @return canonical domain object instance
-     * @throws Exception
-     */
-    public DomainObject reloadById(DomainObjectId domainObjectId) throws Exception {
-        synchronized (this) {
-            DomainObject domainobject = loadDomainObject(domainObjectId);
-            return putOrUpdate(domainobject);
-        }
+        return reloadById(DomainUtils.getReferences(objects));
     }
 
     /**
      * Reload all the entities in the given collection, and update the cache.
      *
-     * @param domainObjectId
+     * @param Reference
      * @return canonical domain object instances
      * @throws Exception
      */
-    public List<DomainObject> reloadById(List<DomainObjectId> domainObjectIds) throws Exception {
+    public List<DomainObject> reloadById(Collection<Reference> refs) throws Exception {
         synchronized (this) {
-            List<DomainObject> objects = loadDomainObjects(domainObjectIds);
-            return putOrUpdateAll(objects);
+            List<DomainObject> objs = new ArrayList<>();
+            for(Reference id : refs) {
+                DomainObject domainObject = loadDomainObject(id);
+                if (domainObject!=null) objs.add(domainObject);
+            }
+            return putOrUpdateAll(objs);
         }
     }
-    
-    private DomainObject loadDomainObject(DomainObjectId id) {
-        log.debug("loadDomainObject({})",id);
-        Class<?> clazz;
-        try {
-            clazz = Class.forName(id.getClassName());
-        }
-        catch (ClassNotFoundException e) {
-            throw new RuntimeException("Illegal domain object class: "+id.getClassName());
-        }
-        Reference ref = new Reference(DomainUtils.getCollectionName(clazz), id.getId());
-        return facade.getDomainObject(ref);
-    }
-    
-    private List<DomainObject> loadDomainObjects(Collection<DomainObjectId> ids) {
-        List<DomainObject> objs = new ArrayList<>();
-        for(DomainObjectId id : ids) {
-            DomainObject domainObject = loadDomainObject(id);
-            if (domainObject!=null) objs.add(domainObject);
-        }
-        return objs;
+
+    /**
+     * Retrieve the given domain object, checking the cache first and then the database.
+     * @param domainObject
+     * @return canonical domain object instance
+     */
+    public DomainObject getDomainObject(DomainObject domainObject) {
+        return getDomainObject(Reference.createFor(domainObject));
     }
     
     /**
-     * Retrieve the given domain object, checking the cache first, and then falling back to the database.
-     *
-     * @param id
+     * Retrieve the given domain object, checking the cache first and then the database.
+     * @param ref
      * @return canonical domain object instance
      * @throws Exception
      */
-    public DomainObject getDomainObject(DomainObjectId id) {
-        log.debug("getDomainObjectByDomainObjectId({})",id);
-        // This is sort of a hack to allow users to get objects by their superclass. 
-        // TODO: Maybe instead of doing all this extra work, we could just key the cache by GUID. 
-        for(Class<?> clazz : DomainUtils.getObjectClasses(DomainUtils.getObjectClassByName(id.getClassName()))) {
-            DomainObjectId did = new DomainObjectId(clazz, id.getId());
-            DomainObject domainObject = objectCache.getIfPresent(did);
-            if (domainObject != null) {
-                log.debug("getEntityById: returning cached domain object {}", DomainUtils.identify(domainObject));
-                return domainObject;
-            }
+    public DomainObject getDomainObject(Reference ref) {
+        log.debug("getDomainObjectByReference({})",ref);
+        DomainObject domainObject = objectCache.getIfPresent(ref);
+        if (domainObject != null) {
+            log.debug("getEntityById: returning cached domain object {}", DomainUtils.identify(domainObject));
+            return domainObject;
         }
-        
         synchronized (this) {
-            return putOrUpdate(loadDomainObject(id));
+            return putOrUpdate(loadDomainObject(ref));
         }
-    }
-    
-    public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) {
-        return (T)getDomainObject(new DomainObjectId(domainClass, id));
     }
 
-    public DomainObject getDomainObject(DomainObject domainObject) {
-        DomainObjectId did = new DomainObjectId(domainObject.getClass(), domainObject.getId());
-        DomainObject canonicalObject = objectCache.getIfPresent(did);
-        if (canonicalObject==null) {
-            return putOrUpdate(loadDomainObject(did));
-        }
-        return canonicalObject;
-    }
-    
-    public List<DomainObject> getDomainObjectsByReference(List<Reference> references) {
+    public List<DomainObject> getDomainObjects(List<Reference> references) {
                 
         if (references==null) return new ArrayList<>();
         
         log.debug("getDomainObjects(references.size={})",references.size());
         
-        Map<DomainObjectId,DomainObject> map = new HashMap<>();
+        Map<Reference,DomainObject> map = new HashMap<>();
         List<Reference> unsatisfiedRefs = new ArrayList<>();
         
         for(Reference ref : references) {
-            DomainObjectId did = ClientDomainUtils.getIdForReference(ref);
-            DomainObject domainObject = did==null?null:objectCache.getIfPresent(did);
+            DomainObject domainObject = ref==null?null:objectCache.getIfPresent(ref);
             if (domainObject!=null) {
-                map.put(did, domainObject);
+                map.put(ref, domainObject);
             }
             else {
                 unsatisfiedRefs.add(ref);
@@ -357,15 +336,14 @@ public class DomainModel {
         
         if (!unsatisfiedRefs.isEmpty()) {
             List<DomainObject> objects = facade.getDomainObjects(unsatisfiedRefs);
-            map.putAll(ClientDomainUtils.getMapByDomainObjectId(objects));
+            map.putAll(DomainUtils.getMapByReference(objects));
         }
         
         unsatisfiedRefs.clear();
         
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Reference ref : references) {
-            DomainObjectId did = ClientDomainUtils.getIdForReference(ref);
-            DomainObject domainObject = map.get(did);
+            DomainObject domainObject = map.get(ref);
             if (domainObject!=null) {
                 domainObjects.add(putOrUpdate(domainObject));
             }
@@ -377,50 +355,39 @@ public class DomainModel {
         log.debug("getDomainObjectsByReference: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedRefs.size());
         return domainObjects;
     }
-    
-    public List<DomainObject> getDomainObjectsByDomainObjectId(List<DomainObjectId> domainObjectIds) {
-        List<Reference> references = new ArrayList<>();
-        for(DomainObjectId id : domainObjectIds) {
-            references.add(ClientDomainUtils.getReferenceForId(id));
-        }
-        return getDomainObjectsByReference(references);
-    }
-    
-    public DomainObject getDomainObjectByReference(Reference reference) {
-        return getDomainObject(reference.getCollectionName(), reference.getTargetId());
-    }
-    
-    public DomainObject getDomainObject(String type, Long id) {
-        List<Long> ids = new ArrayList<>();
-        ids.add(id);
-        List<DomainObject> objects = getDomainObjects(type, ids);
-        if (objects.isEmpty()) return null;
-        return objects.get(0);
-    }
 
+    public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) {
+        List<T> list = getDomainObjects(domainClass, Arrays.asList(id));
+        return list.isEmpty() ? null : list.get(0);
+    }
+    
     public <T extends DomainObject> List<T> getDomainObjects(Class<T> clazz, List<Long> ids) {
         List<T> objects = new ArrayList<>();
-        for(DomainObject domainObject : getDomainObjects(DomainUtils.getCollectionName(clazz), ids)) {
+        for(DomainObject domainObject : getDomainObjects(clazz.getName(), ids)) {
             objects.add((T)domainObject);
         }
         return objects;
     }
+
+    public DomainObject getDomainObject(String className, Long id) {
+        List<DomainObject> objects = getDomainObjects(className, Arrays.asList(id));
+        return objects.isEmpty() ? null : objects.get(0);
+    }
     
-    public List<DomainObject> getDomainObjects(String type, List<Long> ids) {
+    public List<DomainObject> getDomainObjects(String className, List<Long> ids) {
         
-        if (ids==null) return new ArrayList<>();
+        if (className==null || ids==null) return new ArrayList<>();
         
         log.debug("getDomainObjects(ids.size={})",ids.size());
         
-        Map<DomainObjectId,DomainObject> map = new HashMap<>();
+        Map<Reference,DomainObject> map = new HashMap<>();
         List<Long> unsatisfiedIds = new ArrayList<>();
         
         for(Long id : ids) {
-            Reference ref = new Reference(type, id);
-            DomainObjectId did = ClientDomainUtils.getIdForReference(ref);
-            DomainObject domainObject = did==null?null:objectCache.getIfPresent(did);
+            Reference ref = new Reference(className, id);
+            DomainObject domainObject = ref==null?null:objectCache.getIfPresent(ref);
             if (domainObject!=null) {
-                map.put(did, domainObject);
+                map.put(ref, domainObject);
             }
             else {
                 unsatisfiedIds.add(id);
@@ -428,17 +395,16 @@ public class DomainModel {
         }
         
         if (!unsatisfiedIds.isEmpty()) {
-            List<DomainObject> objects = facade.getDomainObjects(type, unsatisfiedIds);
-            map.putAll(ClientDomainUtils.getMapByDomainObjectId(objects));
+            List<DomainObject> objects = facade.getDomainObjects(className, unsatisfiedIds);
+            map.putAll(DomainUtils.getMapByReference(objects));
         }
         
         unsatisfiedIds.clear();
         
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Long id : ids) {
-            Reference ref = new Reference(type, id);
-            DomainObjectId did = ClientDomainUtils.getIdForReference(ref);
-            DomainObject domainObject = map.get(did);
+            Reference ref = new Reference(className, id);
+            DomainObject domainObject = map.get(ref);
             if (domainObject!=null) {
                 domainObjects.add(putOrUpdate(domainObject));
             }
@@ -451,17 +417,15 @@ public class DomainModel {
         return domainObjects;
     }
     
-    public List<Annotation> getAnnotations(Long targetId) {
+    public List<Annotation> getAnnotations(Reference reference) {
         // TODO: cache these?
-        return facade.getAnnotations(Arrays.asList(targetId));
+        return facade.getAnnotations(Arrays.asList(reference));
     }
     
-    public List<Annotation> getAnnotations(Collection<Long> targetIds) {
-        
-        if (targetIds==null) return new ArrayList<>();
-        
+    public List<Annotation> getAnnotations(Collection<Reference> references) {
+        if (references==null) return new ArrayList<>();
         // TODO: cache these?
-        return facade.getAnnotations(targetIds);
+        return facade.getAnnotations(references);
     }
     
     public Collection<Workspace> getWorkspaces() {
@@ -471,7 +435,7 @@ public class DomainModel {
                 for (Workspace workspace : facade.getWorkspaces()) {
                     Workspace cachedRoot = (Workspace)putOrUpdate(workspace);
                     if (cachedRoot instanceof Workspace) {
-                        workspaceCache.put(DomainObjectId.createFor(cachedRoot), cachedRoot);
+                        workspaceCache.put(Reference.createFor(cachedRoot), cachedRoot);
                     }
                 }
             }
@@ -496,7 +460,7 @@ public class DomainModel {
     }
     
     public OntologyTerm getOntologyTermByReference(OntologyTermReference reference) {
-        Ontology ontology = (Ontology)getDomainObject("ontology", reference.getOntologyId());
+        Ontology ontology = (Ontology)getDomainObject(Ontology.class, reference.getOntologyId());
         return findTerm(ontology, reference.getOntologyTermId());
     }
     
@@ -599,7 +563,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = (Annotation)putOrUpdate(facade.create(annotation));
         }
-        notifyAnnotationsChanged(getDomainObjectByReference(annotation.getTarget()));
+        notifyAnnotationsChanged(getDomainObject(annotation.getTarget()));
         return canonicalObject;
     }
     
@@ -614,7 +578,7 @@ public class DomainModel {
     
     public void remove(Annotation annotation) throws Exception {
         facade.remove(annotation);
-        notifyAnnotationsChanged(getDomainObjectByReference(annotation.getTarget()));
+        notifyAnnotationsChanged(getDomainObject(annotation.getTarget()));
     }
     
     public void reorderChildren(TreeNode treeNode, int[] order) throws Exception {

@@ -167,7 +167,7 @@ public class TreeNodeNode extends DomainObjectNode {
                 return null;
             }
             log.trace("  Single drop - {} with parent {}",node.getDisplayName(),node.getParentNode().getDisplayName());
-            return new TreeNodePasteType(Arrays.asList((DomainObjectNode)node), this, index);
+            return new TreeNodePasteType(Arrays.asList(node), this, index);
         }
         else if (t.isDataFlavorSupported(ExTransferable.multiFlavor)) {
             MultiTransferObject multi;
@@ -188,7 +188,7 @@ public class TreeNodeNode extends DomainObjectNode {
                         continue;
                     }   
                     log.trace("  Multi drop #{} - {} with parent {}",i,node.getDisplayName(),node.getParentNode().getDisplayName());
-                    nodes.add((DomainObjectNode)node);
+                    nodes.add(node);
                 }
                 else {
                     log.trace("Multi-transferable is expected to support DomainObjectNodeFlavor.");
