@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory;
 import de.javasoft.swing.SimpleDropDownButton;
 
 /**
- * A viewer for Samples. 
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -180,7 +179,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
                 
         this.sample = sample;
 
-        log.info("Loading {}",sample.getName());
+        log.info("loadDomainObject(Sample:{})",sample.getName());
         
         lips.clear();
         resultPanels.clear();
@@ -195,36 +194,28 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
         Set<String> areaSet = new LinkedHashSet<>();
         
         for(String objective : objectives) {
-
-            log.info("  Objective {}",objective);
             
             boolean diplayObjective = true;
             
-            if (!currObjective.equals(ALL_VALUE) && !areEqualOrEmpty(currObjective,objective)) {
+            if (!currObjective.equals(ALL_VALUE) && !currObjective.equals(objective)) {
                 diplayObjective = false;
             }
             
             ObjectiveSample objSample = sample.getObjectiveSample(objective);
-            if (objSample==null) {
-                log.info("    Objective sample not found");
-                continue;
-            }
+            if (objSample==null) continue;
             SamplePipelineRun run = objSample.getLatestRun();
-            if (run==null) {
-                log.info("    Pipeline run not found");
-                continue;
-            }
+            if (run==null) continue;
             
             SampleProcessingResult spr = run.getLatestProcessingResult();
             if (spr!=null) {
                 String area = spr.getAnatomicalArea();
-                log.info("    {} (area={})",spr.getName(),area);
                 if (area==null) area = "";
                 areaSet.add(area);
                 
                 boolean display = diplayObjective;
-                if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
-                    display = false;
+                if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, objective)) {
+                    // TODO: reenable this when it's correctly populated in the database
+//                    display = false;
                 }
                 
                 if (display) {
@@ -239,20 +230,17 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
                     dataPanel.add(resultPanel);
                 }
             }
-            else {
-                log.info("    Sample processing result not found");
-            }
             
             SampleAlignmentResult ar = run.getLatestAlignmentResult();
             if (ar!=null) {
                 String area = ar.getAnatomicalArea();
-                log.info("    {} (area={})",ar.getName(),area);
                 if (area==null) area = "";
                 areaSet.add(area);
                                 
                 boolean display = diplayObjective;
-                if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
-                    display = false;
+                if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, objective)) {
+                    // TODO: reenable this when it's correctly populated in the database
+//                    display = false;
                 }
                 
                 if (display) {
@@ -266,9 +254,6 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
                     resultPanels.add(resultPanel);
                     dataPanel.add(resultPanel);
                 }
-            }
-            else {
-                log.info("    Alignment result not found");
             }
         }
         
