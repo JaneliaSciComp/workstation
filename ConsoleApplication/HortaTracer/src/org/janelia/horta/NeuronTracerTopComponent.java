@@ -58,10 +58,16 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -78,6 +84,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
@@ -92,6 +99,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -642,7 +651,99 @@ public final class NeuronTracerTopComponent extends TopComponent
         this.add(sceneWindow.getOuterComponent(), BorderLayout.CENTER);
 
     }
-
+    
+    private void loadOneDroppedFile(File file, Collection<File> neuronFileList, ProgressHandle progress) 
+            throws FileNotFoundException, IOException, ParseException 
+    {
+        String extension = FilenameUtils.getExtension(file.getName()).toUpperCase();
+        InputStream inputStream;
+        switch (extension) {
+            case "SWC":
+                neuronFileList.add(file);
+                break;
+            case "YML":
+            case "YAML":
+                inputStream = new FileInputStream(file);
+                currentSource = Utilities.toURI(file).toURL().toString();
+                loadOneDroppedFileStream(inputStream, file.getName(), progress);
+                logger.info("dragged Yaml file loaded!");
+                break;
+            case "GZ":
+                logger.info("gzipped file dropped");
+                inputStream = new FileInputStream(file);
+                // BufferedInputStream really helps, especially on network disks.
+                inputStream = new java.util.zip.GZIPInputStream(new BufferedInputStream(inputStream));
+                String truncatedName = FilenameUtils.removeExtension(file.getName());
+                loadOneDroppedFileStream(inputStream, truncatedName, progress);
+                inputStream.close();
+                break;
+        }
+    }
+    
+    private void loadOneDroppedFileStream(InputStream inputStream, String fileName, ProgressHandle progress) 
+            throws IOException, ParseException 
+    {
+        String extension = FilenameUtils.getExtension(fileName).toUpperCase();
+        switch (extension) {
+            case "YML":
+            case "YAML":
+                volumeSource = loadYaml(inputStream, loader, progress);
+                inputStream.close();
+                loader.loadTileAtCurrentFocus(volumeSource);
+                logger.info("dragged Yaml file loaded!");
+                break;
+            case "GZ":
+                logger.info("gzipped file dropped");
+                inputStream = new java.util.zip.GZIPInputStream(inputStream);
+                String truncatedName = FilenameUtils.removeExtension(fileName);
+                // TODO:
+                inputStream.close();
+                break;
+            case "TAR":
+                long start = System.nanoTime();
+                WorkspaceUtil ws = new WorkspaceUtil(workspace);
+                final NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
+                BulkSwcLoader swcLoader = new BulkSwcLoader(ns);
+                TarArchiveInputStream tarStream = new TarArchiveInputStream(inputStream);
+                TarArchiveEntry entry = null;
+                int swcCount = 0;
+                // int vertexCount = 0;
+                Pattern vtxPattern = Pattern.compile("^[0-9]");
+                while ( (entry = tarStream.getNextTarEntry()) != null) 
+                {
+                    String entryExtension = FilenameUtils.getExtension(entry.getName()).toUpperCase();
+                    if (! entryExtension.equals("SWC"))
+                        continue;
+                    int size = (int)entry.getSize();
+                    byte[] content = new byte[size];
+                    tarStream.read(content, 0, size);
+                    InputStream is = new ByteArrayInputStream(content);
+                    swcLoader.addSwcStream(is, FilenameUtils.getName(entry.getName()));
+                    // is.close();
+                    swcCount += 1;
+                    // TODO: short circuit for testing/debugging only
+                    if (swcCount > 10000)
+                        break;
+                }
+                swcLoader.shutdown(new Runnable() {
+                    @Override
+                    public void run()
+                    {
+                        // TODO: the slow part follows:
+                        workspace.notifyObservers();
+                        ns.getMembershipChangeObservable().notifyObservers();                          
+                        logger.info("Swc loading complete");
+                    }
+                });
+                long finish = System.nanoTime();
+                logger.info(swcCount + " neurons found in tar file in " 
+                        + (finish-start) / 1e9 + " seconds; with "
+                        // + vertexCount + " vertices"
+                );
+                break;
+        }
+    }
+    
     private void setupDragAndDropYml() {
         // Allow user to drop tilebase.cache.yml on this window
         setDropTarget(new DropTarget(this, new DropTargetListener() {
@@ -695,21 +796,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     final List<File> neuronFileList = new ArrayList<>();
                     // Drop could be YAML and/or SWC
                     for (File f : fileList) {
-                        String extension = FilenameUtils.getExtension(f.getName()).toUpperCase();
-                        switch (extension) {
-                            case "SWC":
-                                neuronFileList.add(f);
-                                break;
-                            case "YML":
-                            case "YAML":
-                                InputStream sourceYamlStream = new FileInputStream(f);
-                                currentSource = Utilities.toURI(f).toURL().toString();
-                                volumeSource = loadYaml(sourceYamlStream, loader, progress);
-                                sourceYamlStream.close();
-                                loader.loadTileAtCurrentFocus(volumeSource);
-                                logger.info("dragged Yaml file loaded!");
-                                break;
-                        }
+                        loadOneDroppedFile(f, neuronFileList, progress);
                     }
                     // Show progress for loading large numbers of swc files
                     Runnable swcLoadTask = new Runnable() {
@@ -724,7 +811,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading dragged file");
                     Exceptions.printStackTrace(ex);
                 } finally {
-                    progress.finish();
+                    // progress.finish();
                 }
                 
             }
