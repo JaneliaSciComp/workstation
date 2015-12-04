@@ -722,8 +722,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     // is.close();
                     swcCount += 1;
                     // TODO: short circuit for testing/debugging only
-                    if (swcCount > 10000)
-                        break;
+                    if (swcCount > 20000) break;
                 }
                 swcLoader.shutdown(new Runnable() {
                     @Override
@@ -873,7 +872,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         int ix = 0;
         for (NeuronModel neuron : newNeurons) {
             if (ns.add(neuron))
-                ns.getMembershipChangeObservable().setChanged();
+                ns.getMembershipChangeObservable().setChanged(); // should be unnecessary for BasicNeuronSet
             progress2.progress(ix);
             ix += 1;
         }

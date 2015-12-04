@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -437,8 +438,8 @@ extends MultipassRenderer
     {
         // For performance efficiency, render similar primitives all at once
         // private final Map<NeuronModel, GL3Actor> currentNeuronActors = new HashMap<>();
-        private final Map<NeuronModel, ConesActor> currentNeuronConeActors = new HashMap<>();
-        private final Map<NeuronModel, SpheresActor> currentNeuronSphereActors = new HashMap<>();
+        private final Map<NeuronModel, ConesActor> currentNeuronConeActors = new ConcurrentHashMap<>();
+        private final Map<NeuronModel, SpheresActor> currentNeuronSphereActors = new ConcurrentHashMap<>();
 
         // private final Collection<SpheresActor> sphereActors = new HashSet<>();
         // private final Collection<ConesActor> coneActors = new HashSet<>();
