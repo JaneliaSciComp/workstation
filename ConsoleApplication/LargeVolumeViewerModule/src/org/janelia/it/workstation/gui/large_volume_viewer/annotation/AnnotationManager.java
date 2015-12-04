@@ -245,28 +245,29 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // if it's a bare sample, we don't have anything to do
 
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+            final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading annotations...");
             SimpleWorker loader = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
                     // Must make known to user that things are happening,
                     // even if slowly.
-                    final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading annotations...");
                     progress.start();
                     progress.setDisplayName("Loading annotations");
                     progress.switchToIndeterminate();
                     TmWorkspace workspace = modelMgr.loadWorkspace(initialEntity.getId());
                     // at this point, we know the entity is a workspace, so:
                     annotationModel.loadWorkspace(workspace);
-                    progress.finish();
                 }
 
                 @Override
                 protected void hadSuccess() {
                     // no hadSuccess(); signals will be emitted in the loadWorkspace() call
+                    progress.finish();
                 }
 
                 @Override
                 protected void hadError(Throwable error) {
+                    progress.finish();
                     SessionMgr.getSessionMgr().handleException(error);
                 }
             };
