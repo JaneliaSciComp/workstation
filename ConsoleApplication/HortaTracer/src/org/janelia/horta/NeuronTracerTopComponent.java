@@ -130,6 +130,12 @@ import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.horta.loader.DroppedFileHandler;
+import org.janelia.horta.loader.GZIPFileLoader;
+import org.janelia.horta.loader.HortaSwcLoader;
+import org.janelia.horta.loader.TarFileLoader;
+import org.janelia.horta.loader.TgzFileLoader;
+import org.janelia.horta.loader.TilebaseYamlLoader;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.WorkspaceUtil;
@@ -228,11 +234,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         setToolTipText(Bundle.HINT_NeuronTracerTopComponent());
 
         // Below is custom methods by me CMB
+        
+        // Insert a specialized SceneWindow into the component
+        initialize3DViewer(); // initializes workspace
+
         // Drag a YML tilebase file to put some data in the viewer
         setupDragAndDropYml();
 
-        // Insert a specialized SceneWindow into the component
-        initialize3DViewer(); // initializes workspace
         neuronManager = new NeuronManager(workspace);
 
         // Change default rotation to Y-down, like large-volume viewer
@@ -652,6 +660,13 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     }
     
+    public void loadDroppedYaml(InputStream yamlStream) throws IOException, ParseException
+    {
+        // currentSource = Utilities.toURI(file).toURL().toString();
+        volumeSource = loadYaml(yamlStream, loader, null);
+        loader.loadTileAtCurrentFocus(volumeSource);
+    }
+    
     private void loadOneDroppedFile(File file, Collection<File> neuronFileList, ProgressHandle progress) 
             throws FileNotFoundException, IOException, ParseException 
     {
@@ -743,7 +758,19 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
     }
     
-    private void setupDragAndDropYml() {
+    private void setupDragAndDropYml() 
+    {
+        final DroppedFileHandler droppedFileHandler = new DroppedFileHandler();
+        droppedFileHandler.addLoader(new GZIPFileLoader());
+        droppedFileHandler.addLoader(new TarFileLoader());
+        droppedFileHandler.addLoader(new TgzFileLoader());
+        droppedFileHandler.addLoader(new TilebaseYamlLoader(this));
+        // Put dropped neuron models into "Temporary neurons"
+        WorkspaceUtil ws = new WorkspaceUtil(workspace);
+        NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
+        final HortaSwcLoader swcLoader = new HortaSwcLoader(ns, neuronMPRenderer);
+        droppedFileHandler.addLoader(swcLoader);
+        
         // Allow user to drop tilebase.cache.yml on this window
         setDropTarget(new DropTarget(this, new DropTargetListener() {
 
@@ -792,21 +819,47 @@ public final class NeuronTracerTopComponent extends TopComponent
                         = ProgressHandleFactory.createHandle("Loading File...");
                 try {
                     List<File> fileList = (List) t.getTransferData(DataFlavor.javaFileListFlavor);
-                    final List<File> neuronFileList = new ArrayList<>();
+                    // final List<File> neuronFileList = new ArrayList<>();
                     // Drop could be YAML and/or SWC
                     for (File f : fileList) {
-                        loadOneDroppedFile(f, neuronFileList, progress);
+                        droppedFileHandler.handleFile(f);
+                        // loadOneDroppedFile(f, neuronFileList, progress);
                     }
-                    // Show progress for loading large numbers of swc files
-                    Runnable swcLoadTask = new Runnable() {
+
+                    // Update after asynchronous load completes
+                    swcLoader.runAfterLoad(new Runnable() {
                         @Override
-                        public void run() {
-                            loadNeuronFiles(neuronFileList);                    
+                        public void run()
+                        {
+                            // Update models after drop.
+                            WorkspaceUtil ws = new WorkspaceUtil(workspace);
+                            NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
+                            workspace.setChanged(); // TODO this is voodoo
+                            workspace.notifyObservers();
+                            ns.getMembershipChangeObservable().setChanged(); // TODO this is voodoo
+                            ns.getMembershipChangeObservable().notifyObservers();
                         }
-                    };
-                    RequestProcessor.getDefault().post(swcLoadTask);
+                    });
                     
-                } catch (UnsupportedFlavorException | IOException | ParseException ex) {
+                    // TODO - we need to update after final asynchronous loading has competed.
+                    if (false) {
+                        // Update models after drop.
+                        WorkspaceUtil ws = new WorkspaceUtil(workspace);
+                        final NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
+                        workspace.notifyObservers();
+                        ns.getMembershipChangeObservable().notifyObservers();
+                    }
+
+                    // Show progress for loading large numbers of swc files
+                    // Runnable swcLoadTask = new Runnable() {
+                    //     @Override
+                    //     public void run() {
+                    //         loadNeuronFiles(neuronFileList);                    
+                    //     }
+                    // };
+                    // RequestProcessor.getDefault().post(swcLoadTask);
+                    
+                } catch (UnsupportedFlavorException | IOException ex) {
                     JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading dragged file");
                     Exceptions.printStackTrace(ex);
                 } finally {

@@ -352,6 +352,16 @@ extends MultipassRenderer
         
     }
     
+    public void addNeuronActors(NeuronModel neuron) {
+        if (allSwcActor.contains(neuron)) 
+            return;
+        SpheresActor sa = allSwcActor.createSpheresActor(neuron);
+        ConesActor ca = allSwcActor.createConesActor(neuron);
+        // this next step is synchronized but fast
+        allSwcActor.setActors(neuron, sa, ca);
+        neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
+    }
+    
     public void bulkAddNeuronActors(Collection<NeuronModel> neurons) {
         if (neurons.isEmpty())
             return;
@@ -363,11 +373,7 @@ extends MultipassRenderer
                 @Override
                 public void run()
                 {
-                    SpheresActor sa = allSwcActor.createSpheresActor(neuron);
-                    ConesActor ca = allSwcActor.createConesActor(neuron);
-                    // this next step is synchronized but fast
-                    allSwcActor.setActors(neuron, sa, ca);
-                    neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
+                    addNeuronActors(neuron);
                 }
             };
             pool.submit(actorsJob);
