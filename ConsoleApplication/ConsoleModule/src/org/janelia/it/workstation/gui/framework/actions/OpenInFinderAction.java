@@ -5,6 +5,9 @@ import java.io.File;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.DesktopApi;
@@ -50,6 +53,10 @@ public class OpenInFinderAction implements Action {
     public void doAction() {
         try {
             final String filePath = EntityUtils.getAnyFilePath(entity);
+            SessionMgr.getSessionMgr().logGenericToolEvent(
+                    new ToolString("Finder"), 
+                    new CategoryString("OpenInFinder"), 
+                    new ActionString(filePath));
             if (filePath == null) {
                 throw new Exception("Entity has no file path");
             }
@@ -74,4 +81,5 @@ public class OpenInFinderAction implements Action {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
+
 }

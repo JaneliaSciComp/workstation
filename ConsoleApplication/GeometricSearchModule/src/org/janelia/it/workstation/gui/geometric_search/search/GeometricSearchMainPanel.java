@@ -6,6 +6,10 @@ import javax.swing.*;
 
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerController;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerMainPanel;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +58,10 @@ public class GeometricSearchMainPanel extends JPanel implements Refreshable {
     public void createVoxelViewer() {
         viewerMain = new VoxelViewerMainPanel();
         try {
+            SessionMgr.getSessionMgr().logGenericToolEvent(
+                    new ToolString("GeometricSearch"), 
+                    new CategoryString("OpenPanel"), 
+                    new ActionString(""));
             viewerController = viewerMain.getController(searchData);
         } catch (Exception ex) {
             ex.printStackTrace();
