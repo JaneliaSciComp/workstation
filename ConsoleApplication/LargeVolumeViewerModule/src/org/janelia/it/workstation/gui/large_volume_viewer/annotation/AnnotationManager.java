@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 
 public class AnnotationManager implements UpdateAnchorListener, PathTraceListener, VolumeLoadListener
 /**
@@ -246,9 +248,16 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             SimpleWorker loader = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    // at this point, we know the entity is a workspace, so:
+                    // Must make known to user that things are happening,
+                    // even if slowly.
+                    final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading annotations...");
+                    progress.start();
+                    progress.setDisplayName("Loading annotations");
+                    progress.switchToIndeterminate();
                     TmWorkspace workspace = modelMgr.loadWorkspace(initialEntity.getId());
+                    // at this point, we know the entity is a workspace, so:
                     annotationModel.loadWorkspace(workspace);
+                    progress.finish();
                 }
 
                 @Override
