@@ -3,8 +3,8 @@ package org.janelia.it.workstation.api.facade.abstract_facade;
 import java.util.List;
 
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.user_data.ComplexUserToolEvent;
 import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.model.user_data.UserToolEvent;
 
 /**
  * Created by IntelliJ IDEA.
@@ -46,7 +46,7 @@ public interface ComputeFacade {
     
     public void beginSession();
     
-    public void addEventToSession(UserToolEvent event);
+    public void addEventToSession(ComplexUserToolEvent event);
     
     public void endSession();
 }

@@ -66,7 +66,7 @@ public class RemoveEntityAction implements Action {
         for (RootedEntity rootedEntity : rootedEntityList) {
             toDelete.add(rootedEntity.getEntityData());
         }
-        SessionMgr.getSessionMgr().logGenericToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 new ToolString("EntityCRUD"), 
                 new CategoryString("Remove"), 
                 new ActionString(toDelete.size() + " entities, starting with " + (toDelete.isEmpty() ? "?nothing?" : toDelete.iterator().next().getId())));

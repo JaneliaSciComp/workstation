@@ -197,7 +197,7 @@ public class AnnotationSkeletonPanel extends JPanel {
                     if (selectedAnnotation > 0) {
                         positionForSelection(selectedAnnotation);
                         
-                        SessionMgr.getSessionMgr().logGenericToolEvent(
+                        SessionMgr.getSessionMgr().logToolEvent(
                                 LVV_LOGSTAMP_ID,
                                 new CategoryString("SelectFromLandmarkView"),
                                 new ActionString(
@@ -206,7 +206,7 @@ public class AnnotationSkeletonPanel extends JPanel {
                         );
                     }
                     else {
-                        SessionMgr.getSessionMgr().logGenericToolEvent(
+                        SessionMgr.getSessionMgr().logToolEvent(
                                 LVV_LOGSTAMP_ID,
                                 new CategoryString("FailedSelectFromLandmarkView"),
                                 new ActionString(
@@ -487,7 +487,7 @@ public class AnnotationSkeletonPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            SessionMgr.getSessionMgr().logGenericToolEvent(
+            SessionMgr.getSessionMgr().logToolEvent(
                     LVV_LOGSTAMP_ID, 
                     new CategoryString("ToggleSphereSize"),                     
                     new ActionString(
@@ -561,7 +561,7 @@ public class AnnotationSkeletonPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            SessionMgr.getSessionMgr().logGenericToolEvent(
+            SessionMgr.getSessionMgr().logToolEvent(
                     LVV_LOGSTAMP_ID, 
                     new CategoryString("SwapAnnoSkelPanelMode"),                     
                     new ActionString(

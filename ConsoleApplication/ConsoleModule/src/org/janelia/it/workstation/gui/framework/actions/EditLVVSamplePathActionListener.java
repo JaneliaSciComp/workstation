@@ -46,8 +46,7 @@ public class EditLVVSamplePathActionListener implements ActionListener {
                     SessionMgr.getSessionMgr().logToolEvent(
                             new ToolString("Lvv"),
                             new CategoryString("ChangeSamplePath"),
-                            new ActionString(oldPath + " to " + editedPath.toString()), 
-                            true);
+                            new ActionString(oldPath + " to " + editedPath.toString()));
                     sampleEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH, editedPath);
                     ModelMgr.getModelMgr().saveOrUpdateEntity(sampleEntity);
                 }

@@ -53,7 +53,7 @@ public class OpenInFinderAction implements Action {
     public void doAction() {
         try {
             final String filePath = EntityUtils.getAnyFilePath(entity);
-            SessionMgr.getSessionMgr().logGenericToolEvent(
+            SessionMgr.getSessionMgr().logToolEvent(
                     new ToolString("Finder"), 
                     new CategoryString("OpenInFinder"), 
                     new ActionString(filePath));

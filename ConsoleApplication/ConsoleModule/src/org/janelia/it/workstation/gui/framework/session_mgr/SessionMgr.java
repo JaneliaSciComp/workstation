@@ -6,8 +6,6 @@ import org.janelia.it.jacs.model.user_data.Group;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
-import org.janelia.it.jacs.model.user_data.UserToolEvent;
-import org.janelia.it.jacs.model.user_data.GenericUserToolEvent;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
@@ -33,6 +31,7 @@ import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.workstation.web.EmbeddedWebServer;
 import org.janelia.it.workstation.ws.EmbeddedAxisServer;
 import org.janelia.it.workstation.ws.ExternalClient;
+import static org.janelia.it.jacs.shared.annotation.metrics_logging.MetricsLoggingConstants.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,12 +47,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
+import org.janelia.it.jacs.model.user_data.ComplexUserToolEvent;
 
 public final class SessionMgr {
 
@@ -107,6 +108,7 @@ public final class SessionMgr {
     private WebDavClient webDavClient;
     private LocalFileCache localFileCache;
     private Map<CategoryString, Long> categoryInstanceCount = new HashMap<>();
+    private Map<CategoryString, Double> categoryLogThreshold = new HashMap<>();
 
     private SessionMgr() {
         log.info("Initializing Session Manager");
@@ -496,10 +498,6 @@ public final class SessionMgr {
         }
     }
 
-    public void logGenericToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
-        logToolEvent(toolName, category, action, timestamp, elapsedMs, thresholdMs, true);
-    }
-
     /**
      * Send an event described by the information given as parameters, to the
      * logging apparatus. Apply the criteria of:
@@ -510,36 +508,21 @@ public final class SessionMgr {
      * @param category for namespacing.
      * @param action what happened.
      * @param timestamp when it happened.
-     * @param elapsedMs how much time passed to carry this out?
-     * @param thresholdMs beyond this time, force log issue.
-     * @param generic no special handling.
+     * @param extraInfo if applicable.
      */
-    public void logToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs, boolean generic) {
+    public void logToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, Map<String,String> extraInfo) {
         String userLogin = null;
 
         try {
             userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
-            final UserToolEvent event = generic ?
-                    new GenericUserToolEvent(getCurrentSessionId(), userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp)) :
-                    new UserToolEvent(getCurrentSessionId(), userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
+            final ComplexUserToolEvent event = 
+                    new ComplexUserToolEvent(getCurrentSessionId(), userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
+            event.setExtraInfo(extraInfo);
+            
             Callable<Void> callable = new Callable<Void>() {
                 @Override
                 public Void call() {
-                    Long count = categoryInstanceCount.get(category);
-                    if (count == null) {
-                        count = new Long(0);
-                    }
-                    boolean shouldLog = false;
-                    if (elapsedMs > thresholdMs) {
-                        shouldLog = true;
-                    } else if (count % LOG_GRANULARITY == 0) {
-                        shouldLog = true;
-                    }
-                    categoryInstanceCount.put(category, ++count);
-
-                    if (shouldLog) {
-                        ModelMgr.getModelMgr().addEventToSession(event);
-                    }
+                    ModelMgr.getModelMgr().addEventToSession(event);
                     return null;
                 }
             };
@@ -553,37 +536,50 @@ public final class SessionMgr {
             ex.printStackTrace();
         }
     }
-
-    public void logGenericToolEvent(ToolString toolName, CategoryString category, ActionString action) {
-        // Force logging, by setting elapsed > threshold.
-        logToolEvent(toolName, category, action, new Date().getTime(), 1.0, 0.0, true);
-    }
-
-    /**
-     * Log a tool event, always.  No criteria will be checked.
-     * 
-     * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long) 
-     */
-    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, boolean generic) {
-        // Force logging, by setting elapsed > threshold.
-        logToolEvent(toolName, category, action, new Date().getTime(), 1.0, 0.0, generic);
-    }
-
-    /**
-     * Log-tool-event override, which includes elapsed/threshold comparison
-     * values.  If the elapsed time (expected milliseconds) exceeds the
-     * threshold, definitely log.  Also, will check number-of-issues against
-     * a granularity map.  Only issue the message at a preset
-     * granularity.
-     * 
-     * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long, double, double) 
-     * @param elapsedMs
-     * @param thresholdMs 
-     */
-    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, double elapsedMs, double thresholdMs, boolean generic) {
-        logToolEvent(toolName, category, action, new Date().getTime(), elapsedMs, thresholdMs, generic);
+    
+    public void logToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, Map<String,String> extraInfo) {
+        logToolEvent(toolName, category, action, new Date().getTime(), extraInfo);
     }
     
+    /**
+     * Log tool event, generically: no extra info.
+     */
+    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action) {
+        logToolEvent(toolName, category, action, new Date().getTime(), Collections.EMPTY_MAP);
+    }
+
+    /**
+     * Call this prior to any "should-log" calls if a threshold need be applied.
+     * 
+     * @param category what to log
+     * @param thresholdMs when to say: not high enough.
+     */
+    public void setLogThreshold(CategoryString category, double thresholdMs) {
+        categoryLogThreshold.put(category, thresholdMs);
+    }
+
+    /**
+     * Applies criteria for log call.
+     * @param category look up this for criteria.
+     * @param elapsedMs use this in criteria test.
+     * @return T: should log now.
+     */
+    public boolean shouldLog(CategoryString category, double elapsedMs) {
+        Double thresholdMs = categoryLogThreshold.get(category);
+        Long count = categoryInstanceCount.get(category);
+        if (count == null) {
+            count = new Long(0);
+        }
+        boolean shouldLog = false;
+        if (thresholdMs != null  &&  elapsedMs > thresholdMs) {
+            shouldLog = true;
+        } else if (count % LOG_GRANULARITY == 0) {
+            shouldLog = true;
+        }
+        categoryInstanceCount.put(category, ++count);
+        return shouldLog;
+    }
+
     public void handleException(Throwable throwable) {
         modelManager.handleException(throwable);
     }

@@ -201,7 +201,7 @@ public class Snapshot3DLauncher {
             }
             final String labelText = labelTextForRaw3d( dimensions );
             final String frameTitle = "Fetching raw data";
-            SessionMgr.getSessionMgr().logGenericToolEvent(
+            SessionMgr.getSessionMgr().logToolEvent(
                     LVV_LOGSTAMP_ID, 
                     RAW_VOL_CATEGORY, 
                     new ActionString(
@@ -236,7 +236,7 @@ public class Snapshot3DLauncher {
                     dataUrl
             );            
 
-            SessionMgr.getSessionMgr().logGenericToolEvent(
+            SessionMgr.getSessionMgr().logToolEvent(
                     LVV_LOGSTAMP_ID,
                     RENDERED_VOL_CATEGORY,
                     new ActionString(

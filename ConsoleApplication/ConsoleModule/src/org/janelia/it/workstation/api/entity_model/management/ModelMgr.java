@@ -72,7 +72,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
-import org.janelia.it.jacs.model.user_data.UserToolEvent;
+import org.janelia.it.jacs.model.user_data.ComplexUserToolEvent;
 
 public final class ModelMgr {
 
@@ -156,7 +156,7 @@ public final class ModelMgr {
      * 
      * @param event to log.
      */
-    public void addEventToSession(UserToolEvent event) {  
+    public void addEventToSession(ComplexUserToolEvent event) {  
         try {
             FacadeManager.getFacadeManager().getComputeFacade().addEventToSession(event);
         } catch (Exception ex) {

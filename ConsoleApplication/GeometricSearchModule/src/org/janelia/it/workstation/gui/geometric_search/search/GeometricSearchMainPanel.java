@@ -58,10 +58,10 @@ public class GeometricSearchMainPanel extends JPanel implements Refreshable {
     public void createVoxelViewer() {
         viewerMain = new VoxelViewerMainPanel();
         try {
-            SessionMgr.getSessionMgr().logGenericToolEvent(
+            SessionMgr.getSessionMgr().logToolEvent(
                     new ToolString("GeometricSearch"), 
                     new CategoryString("OpenPanel"), 
-                    new ActionString(""));
+                    new ActionString("Creating voxel viewer"));
             viewerController = viewerMain.getController(searchData);
         } catch (Exception ex) {
             ex.printStackTrace();

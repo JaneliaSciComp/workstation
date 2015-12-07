@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import static org.janelia.it.jacs.shared.annotation.metrics_logging.MetricsLoggingConstants.ELAPSED_MS_KEY;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID;
 
@@ -133,7 +134,7 @@ public class TileStackCacheController {
         log.info("zoom Levels="+zoomLevels);
         filesystemMetadataInitialized=true;
         folderOpenTimestamp = new Date().getTime();
-        SessionMgr.getSessionMgr().logGenericToolEvent(
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID, 
                 LTT_SESSION_CATEGORY_STRING, 
                 new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
@@ -733,13 +734,15 @@ public class TileStackCacheController {
                 // slice loads.
                 File topFolder = tileStackCacheController.getTopFolder();
                 String specificPart = file.toString().substring(topFolder.toString().length());
+                Map<String,String> extraInfo = new HashMap<>();
+                extraInfo.put(ELAPSED_MS_KEY, new Double(elapsedMs).toString());
                 SessionMgr.getSessionMgr().logToolEvent(
                         LVV_LOGSTAMP_ID, 
                         LTT_CATEGORY_STRING, 
                         new ActionString(
-                                tileStackCacheController.getFolderOpenTimestamp() + ":" + specificPart + ":elapsed_ms=" + elapsedMs
+                                tileStackCacheController.getFolderOpenTimestamp() + ":" + specificPart
                         ),
-                        false
+                        extraInfo
                 );
             //} catch (Exception ex) {
             //    log.error("***>>> loadTiffToByteArray: Exception="+ex.toString());
