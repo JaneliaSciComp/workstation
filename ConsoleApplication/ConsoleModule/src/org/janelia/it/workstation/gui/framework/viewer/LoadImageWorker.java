@@ -87,7 +87,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
             }
             if (maxSizeImage != null) {
                 SessionMgr.getBrowser().getImageCache().put(imageFilename, maxSizeImage);
-                if (TIMER) {
+                if (TIMER) {        
                     stopWatch.lap("putInCache");
                 }
             }
