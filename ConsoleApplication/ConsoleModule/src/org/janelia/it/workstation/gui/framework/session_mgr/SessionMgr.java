@@ -6,6 +6,11 @@ import org.janelia.it.jacs.model.user_data.Group;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
+import org.janelia.it.jacs.model.user_data.UserToolEvent;
+import org.janelia.it.jacs.model.user_data.GenericUserToolEvent;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
@@ -49,10 +54,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
-import org.janelia.it.jacs.model.user_data.UserToolEvent;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 
 public final class SessionMgr {
 
@@ -495,6 +496,10 @@ public final class SessionMgr {
         }
     }
 
+    public void logGenericToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
+        logToolEvent(toolName, category, action, timestamp, elapsedMs, thresholdMs, true);
+    }
+
     /**
      * Send an event described by the information given as parameters, to the
      * logging apparatus. Apply the criteria of:
@@ -507,13 +512,16 @@ public final class SessionMgr {
      * @param timestamp when it happened.
      * @param elapsedMs how much time passed to carry this out?
      * @param thresholdMs beyond this time, force log issue.
+     * @param generic no special handling.
      */
-    public void logToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
+    public void logToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs, boolean generic) {
         String userLogin = null;
 
         try {
             userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
-            final UserToolEvent event = new UserToolEvent(getCurrentSessionId(), userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
+            final UserToolEvent event = generic ?
+                    new GenericUserToolEvent(getCurrentSessionId(), userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp)) :
+                    new UserToolEvent(getCurrentSessionId(), userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
             Callable<Void> callable = new Callable<Void>() {
                 @Override
                 public Void call() {
@@ -546,14 +554,19 @@ public final class SessionMgr {
         }
     }
 
+    public void logGenericToolEvent(ToolString toolName, CategoryString category, ActionString action) {
+        // Force logging, by setting elapsed > threshold.
+        logToolEvent(toolName, category, action, new Date().getTime(), 1.0, 0.0, true);
+    }
+
     /**
      * Log a tool event, always.  No criteria will be checked.
      * 
      * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long) 
      */
-    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action) {
+    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, boolean generic) {
         // Force logging, by setting elapsed > threshold.
-        logToolEvent(toolName, category, action, new Date().getTime(), 1.0, 0.0);
+        logToolEvent(toolName, category, action, new Date().getTime(), 1.0, 0.0, generic);
     }
 
     /**
@@ -567,8 +580,8 @@ public final class SessionMgr {
      * @param elapsedMs
      * @param thresholdMs 
      */
-    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, double elapsedMs, double thresholdMs) {
-        logToolEvent(toolName, category, action, new Date().getTime(), elapsedMs, thresholdMs);
+    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, double elapsedMs, double thresholdMs, boolean generic) {
+        logToolEvent(toolName, category, action, new Date().getTime(), elapsedMs, thresholdMs, generic);
     }
     
     public void handleException(Throwable throwable) {

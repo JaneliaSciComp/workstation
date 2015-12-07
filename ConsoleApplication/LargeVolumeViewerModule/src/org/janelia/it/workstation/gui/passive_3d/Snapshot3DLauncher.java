@@ -25,6 +25,9 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationsConstants;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
@@ -39,6 +42,11 @@ import org.slf4j.LoggerFactory;
 public class Snapshot3DLauncher {
     private static final String RENDERED_VOLUME_TEXT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  %4$dx%5$dx%6$d.  Rendered Data.";
     private final static String RAW_VOLUME_TEXT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  %4$dx%5$dx%6$d.  Raw Data.";
+    private static final String RAW_DATA_LOG_FMT = "Raw Data Fetch:%s:%s:%d,%d,%d";
+    private static final String RENDERED_DATA_LOG_FMT = "Rendered Data Fetch:%s:%s:%d,%d,%d";
+    
+    private final static CategoryString RENDERED_VOL_CATEGORY = new CategoryString("snapshot3DRendered");
+    private final static CategoryString RAW_VOL_CATEGORY = new CategoryString("snapshot3DRaw");
 
     private CoordinateAxis sliceAxis;
     private TileServer tileServer;
@@ -193,6 +201,13 @@ public class Snapshot3DLauncher {
             }
             final String labelText = labelTextForRaw3d( dimensions );
             final String frameTitle = "Fetching raw data";
+            SessionMgr.getSessionMgr().logGenericToolEvent(
+                    LVV_LOGSTAMP_ID, 
+                    RAW_VOL_CATEGORY, 
+                    new ActionString(
+                            String.format(RAW_DATA_LOG_FMT, basePath, camera.getFocus(), dimensions[0], dimensions[1], dimensions[2])
+                    )
+            );
             makeAndLaunch(frameTitle, collector, labelText);
 
         } catch ( Exception ex ) {
@@ -221,6 +236,13 @@ public class Snapshot3DLauncher {
                     dataUrl
             );            
 
+            SessionMgr.getSessionMgr().logGenericToolEvent(
+                    LVV_LOGSTAMP_ID,
+                    RENDERED_VOL_CATEGORY,
+                    new ActionString(
+                            String.format(RENDERED_DATA_LOG_FMT, basePath, camera.getFocus().toString(), dimensions[0], dimensions[1], dimensions[2])
+                    )
+            );
             makeAndLaunch(frameTitle, collector, labelText);
 
         } catch ( Exception ex ) {

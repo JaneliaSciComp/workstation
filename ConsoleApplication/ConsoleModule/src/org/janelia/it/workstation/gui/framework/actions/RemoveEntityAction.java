@@ -23,6 +23,9 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Callable;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 
 /**
  * This action removes an entity from some parent. If the entity becomes an orphan, then it is completely deleted.
@@ -63,6 +66,10 @@ public class RemoveEntityAction implements Action {
         for (RootedEntity rootedEntity : rootedEntityList) {
             toDelete.add(rootedEntity.getEntityData());
         }
+        SessionMgr.getSessionMgr().logGenericToolEvent(
+                new ToolString("EntityCRUD"), 
+                new CategoryString("Remove"), 
+                new ActionString(toDelete.size() + " entities, starting with " + (toDelete.isEmpty() ? "?nothing?" : toDelete.iterator().next().getId())));
 
         SimpleWorker verifyTask = new SimpleWorker() {
 

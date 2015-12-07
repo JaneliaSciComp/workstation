@@ -10,6 +10,9 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 
 /**
  * let the user edit the path attached to an LVV sample
@@ -23,15 +26,15 @@ public class EditLVVSamplePathActionListener implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        final String oldPath = rootedEntity.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH) // input value
+                ;
         final String editedPath = (String) JOptionPane.showInputDialog(
                 SessionMgr.getMainFrame(),
                 "New Linux path to sample:",
                 "Edit sample path",
                 JOptionPane.PLAIN_MESSAGE,
                 null, // icon
-                null, // choice list
-                rootedEntity.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH) // input value
-        );
+                null, oldPath);
         if (editedPath == null || editedPath.length() == 0) {
             // canceled
             return;
@@ -40,6 +43,11 @@ public class EditLVVSamplePathActionListener implements ActionListener {
             SimpleWorker saver = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
+                    SessionMgr.getSessionMgr().logToolEvent(
+                            new ToolString("Lvv"),
+                            new CategoryString("ChangeSamplePath"),
+                            new ActionString(oldPath + " to " + editedPath.toString()), 
+                            true);
                     sampleEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH, editedPath);
                     ModelMgr.getModelMgr().saveOrUpdateEntity(sampleEntity);
                 }
