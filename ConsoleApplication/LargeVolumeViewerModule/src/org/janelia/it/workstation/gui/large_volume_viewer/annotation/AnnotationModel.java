@@ -1185,8 +1185,7 @@ called from a  SimpleWorker thread.
         }        
     }
 
-    public String getNote(Long annotationID) {
-        TmNeuron neuron = getNeuronFromAnnotationID(annotationID);
+    public String getNote(Long annotationID, TmNeuron neuron) {
         final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
         if (textAnnotation != null) {
             JsonNode rootNode = textAnnotation.getData();
@@ -1196,6 +1195,11 @@ called from a  SimpleWorker thread.
             }
         }
         return "";
+    }
+
+    public String getNote(Long annotationID) {
+        TmNeuron neuron = getNeuronFromAnnotationID(annotationID);
+        return getNote(annotationID, neuron);
     }
 
     /**
@@ -1386,7 +1390,7 @@ called from a  SimpleWorker thread.
      * are no longer valid
      */
     private void stripPredefNotes(TmNeuron neuron, Long annID) throws Exception {
-        String noteText = getNote(annID);
+        String noteText = getNote(annID, neuron);
         boolean modified = false;
         if (noteText.length() > 0) {
             List<PredefinedNote> predefList = PredefinedNote.findNotes(noteText);

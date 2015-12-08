@@ -251,8 +251,8 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public void importSWCFolder(String swcFolderLoc, String ownerKey, Long workspaceId, Long sampleId) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().importSWCFolder(swcFolderLoc, ownerKey, workspaceId, sampleId);
+    public void importSWCFolder(String swcFolderLoc, String ownerKey, Long sampleId) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().importSWCFolder(swcFolderLoc, ownerKey, sampleId);
     }
     
     @Override
