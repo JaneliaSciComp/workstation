@@ -175,9 +175,8 @@ public class FilteredAnnotationList extends JPanel {
         for (TmNeuron neuron: currentWorkspace.getNeuronList()) {
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                 for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
-                    if (annotationMgr.getNote(ann.getId()).length() > 0) {
-                        note = annotationMgr.getNote(ann.getId());
-                    } else {
+                    note = annotationMgr.getNote(ann.getId(), neuron);
+                    if (note.length() == 0) {
                         note = "";
                     }
                     InterestingAnnotation maybeInteresting =
