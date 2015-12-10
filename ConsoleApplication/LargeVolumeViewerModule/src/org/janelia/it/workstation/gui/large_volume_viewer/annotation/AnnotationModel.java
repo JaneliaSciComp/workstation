@@ -1069,8 +1069,12 @@ called from a  SimpleWorker thread.
         removeAnchoredPath(newRoot, newRootParent);
         modelMgr.splitNeurite(neuron, newRoot);
 
-        // update and notify
-        updateCurrentWorkspaceAndNeuron();
+        // update domain objects and notify
+        newRoot.setParentId(newRoot.getNeuronId());
+        newRootParent.getChildIds().remove(newRootID);
+        neuron.getRootAnnotations().add(newRoot);
+
+
         final TmNeuron updateNeuron = getNeuronFromAnnotationID(newRootID);
 
         SwingUtilities.invokeLater(new Runnable() {
