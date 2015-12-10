@@ -188,7 +188,6 @@
                 <package>com.fasterxml.jackson.annotation</package>
                 <package>com.fasterxml.jackson.core</package>
                 <package>com.fasterxml.jackson.core.base</package>
-                <package>com.fasterxml.jackson.core.format</package>
                 <package>com.fasterxml.jackson.core.io</package>
                 <package>com.fasterxml.jackson.core.json</package>
                 <package>com.fasterxml.jackson.core.sym</package>
@@ -214,6 +213,9 @@
                 <package>com.fasterxml.jackson.databind.ser.std</package>
                 <package>com.fasterxml.jackson.databind.type</package>
                 <package>com.fasterxml.jackson.databind.util</package>
+                <package>com.fasterxml.jackson.jaxrs.json</package>
+                <package>com.fasterxml.jackson.jaxrs.base</package>
+                <package>com.fasterxml.jackson.module.jaxb</package>
                 <package>com.google.common.annotations</package>
                 <package>com.google.common.base</package>
                 <package>com.google.common.base.internal</package>
@@ -601,6 +603,7 @@
                 <package>javax.annotation.concurrent</package>
                 <package>javax.annotation.meta</package>
                 <package>javax.annotation.security</package>
+                <package>javax.inject.Singleton</package>
                 <package>javax.jws</package>
                 <package>javax.jws.soap</package>
                 <package>javax.mail</package>
@@ -656,6 +659,7 @@
                 <package>javax.xml.ws.soap</package>
                 <package>javax.xml.ws.spi</package>
                 <package>javax.xml.ws.wsaddressing</package>
+                <package>jersey.repackaged.com.google.common.base</package>
                 <package>jline</package>
                 <package>jnr.netdb</package>
                 <package>jogamp.common</package>
@@ -1459,6 +1463,8 @@
                 <package>org.eclipse.jetty.util.ssl</package>
                 <package>org.eclipse.jetty.util.statistic</package>
                 <package>org.eclipse.jetty.util.thread</package>
+                <package>org.glassfish.hk2.utilities.binding</package>
+                <package>org.glassfish.hk2.utilities.reflection</package>
                 <package>org.glassfish.jersey</package>
                 <package>org.glassfish.jersey.client</package>
                 <package>org.glassfish.jersey.client.authentication</package>
@@ -1476,6 +1482,7 @@
                 <package>org.glassfish.jersey.jackson.internal</package>
                 <package>org.glassfish.jersey.jaxb.internal</package>
                 <package>org.glassfish.jersey.message</package>
+                <package>org.glassfish.jersey.message.filtering</package>
                 <package>org.glassfish.jersey.message.internal</package>
                 <package>org.glassfish.jersey.model</package>
                 <package>org.glassfish.jersey.model.internal</package>
@@ -2619,6 +2626,50 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jetty-servlet-8.1.8.v20121106.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jetty-servlet-8.1.8.v20121106.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/javax.ws.rs-api-2.0.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javax.ws.rs-api-2.0.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/hk2-api-2.4.0-b31.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/hk2-api-2.4.0-b31.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/hk2-utils-2.4.0-b31.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/hk2-utils-2.4.0-b31.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/hk2-locator-2.4.0-b31.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/hk2-locator-2.4.0-b31.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-guava-2.22.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-guava-2.22.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-entity-filtering-2.22.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-entity-filtering-2.22.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/javax.inject-2.4.0-b31.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javax.inject-2.4.0-b31.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/javax.annotation-api-1.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javax.annotation-api-1.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackson-jaxrs-json-provider-2.5.4.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-jaxrs-json-provider-2.5.4.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackson-jaxrs-base-2.5.4.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-jaxrs-base-2.5.4.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackson-module-jaxb-annotations-2.5.4.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-module-jaxb-annotations-2.5.4.jar</binary-origin>
             </class-path-extension>
         </data>
     </configuration>

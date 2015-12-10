@@ -43,6 +43,8 @@ import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of the DomainFacade using secure RESTful connection
@@ -50,6 +52,8 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
  * @author <a href="mailto:schauderd@janelia.hhmi.org">David Schauder</a>
  */
 public class RESTDomainFacade implements DomainFacade {
+    private static final Logger log = LoggerFactory.getLogger(RESTDomainFacade.class);
+
     Client client;
     Map<String, WebTarget> serviceEndpoints;
     String serverUrl;
@@ -103,9 +107,11 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("details")
                 .request("application/json")
                 .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server" + refList)) {
+            return null;
+        }
         List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {
         });
-        int responseStatus = response.getStatus();
         return domainObjs;
     }
 
@@ -114,16 +120,16 @@ public class RESTDomainFacade implements DomainFacade {
         query.setSubjectKey(SessionMgr.getSubjectKey());
         query.setObjectType(className);
         query.setObjectIds(new ArrayList<Long>(ids));
-        System.out.println(query);
 
         Response response = serviceEndpoints.get("domainobject")
                 .path("details")
                 .request("application/json")
                 .post(Entity.json(query));
-
+        if (checkBadResponse(response.getStatus(), "problem making request getDomainObjectd from server" + ids)) {
+            return null;
+        }
         List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {
         });
-
         return domainObjs;
     }
 
@@ -139,8 +145,10 @@ public class RESTDomainFacade implements DomainFacade {
         Response response = serviceEndpoints.get("domainobject")
                 .request("application/json")
                 .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request updateProperty from server" + propName + "," + propValue)) {
+            return null;
+        }
         DomainObject domainObj = response.readEntity(DomainObject.class);
-        int responseStatus = response.getStatus();
         return domainObj;
     }
 
@@ -153,8 +161,11 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("details")
                 .request("application/json")
                 .post(Entity.json(query));
-        List<Annotation> annotations = response.readEntity(new GenericType<List<Annotation>>(){});
-        int responseStatus = response.getStatus();
+        if (checkBadResponse(response.getStatus(), "problem making request getAnnotations from server" + references)) {
+            return null;
+        }
+        List<Annotation> annotations = response.readEntity(new GenericType<List<Annotation>>() {
+        });
         return annotations;
     }
 
@@ -165,8 +176,10 @@ public class RESTDomainFacade implements DomainFacade {
         Response response = serviceEndpoints.get("annotation")
                 .request("application/json")
                 .put(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request createAnnotation from server" + annotation)) {
+            return null;
+        }
         Annotation newAnnotation = response.readEntity(Annotation.class);
-        int responseStatus = response.getStatus();
         return newAnnotation;
     }
 
@@ -178,8 +191,10 @@ public class RESTDomainFacade implements DomainFacade {
         Response response = serviceEndpoints.get("annotation")
                 .request("application/json")
                 .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request updateAnnotation from server" + annotation)) {
+            return null;
+        }
         Annotation newAnnotation = response.readEntity(Annotation.class);
-        int responseStatus = response.getStatus();
         return newAnnotation;
     }
     
@@ -189,7 +204,7 @@ public class RESTDomainFacade implements DomainFacade {
                 .queryParam("subjectKey", SessionMgr.getSubjectKey())
                 .request("application/json")
                 .delete();
-        int responseStatus = response.getStatus();
+        checkBadResponse(response.getStatus(), "problem making request removeAnnotation from server" + annotation);
     }
 
     public Workspace getDefaultWorkspace() {
@@ -197,9 +212,10 @@ public class RESTDomainFacade implements DomainFacade {
                 .queryParam("subjectKey", SessionMgr.getSubjectKey())
                 .request("application/json")
                 .get();
+        if (checkBadResponse(response.getStatus(), "problem making request getDefaultWorkspace from server")) {
+            return null;
+        }
         Workspace workspace = response.readEntity(Workspace.class);
-        int responseStatus = response.getStatus();
-
         return workspace;
     }
 
@@ -208,11 +224,13 @@ public class RESTDomainFacade implements DomainFacade {
                 .queryParam("subjectKey", SessionMgr.getSubjectKey())
                 .request("application/json")
                 .get();
-        int responseStatus = response.getStatus();
-        if (responseStatus==200) {
-            return response.readEntity(new GenericType<List<Workspace>>() {});
+        if (checkBadResponse(response.getStatus(), "problem making request getWorkspaces from server")) {
+            return null;
         }
-        return null;
+
+        Collection<Workspace> foo = response.readEntity(new GenericType<List<Workspace>>() {});
+        System.out.println (foo);
+        return foo;
     }
 
     public Collection<Ontology> getOntologies() {
@@ -220,11 +238,10 @@ public class RESTDomainFacade implements DomainFacade {
                 .queryParam("subjectKey", SessionMgr.getSubjectKey())
                 .request("application/json")
                 .get();
-        int responseStatus = response.getStatus();
-        if (responseStatus == 200) {
-            return response.readEntity(new GenericType<List<Ontology>>() {});
+        if (checkBadResponse(response.getStatus(), "problem making request getOntologies from server")) {
+            return null;
         }
-        return null;
+        return response.readEntity(new GenericType<List<Ontology>>() {});
     }
 
     @Override
@@ -235,8 +252,10 @@ public class RESTDomainFacade implements DomainFacade {
         Response response = serviceEndpoints.get("ontology")
                 .request("application/json")
                 .put(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request createOntology from server")) {
+            return null;
+        }
         Ontology newOntology = response.readEntity(Ontology.class);
-        int responseStatus = response.getStatus();
         return newOntology;
     }
 
@@ -257,8 +276,10 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("terms")
                 .request("application/json")
                 .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request reorderOntologyTerms to server" + ontologyId + "," + parentTermId + "," + order)) {
+            return null;
+        }
         Ontology newOntology = response.readEntity(Ontology.class);
-        int responseStatus = response.getStatus();
         return newOntology;
     }
 
@@ -278,9 +299,10 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("terms")
                 .request("application/json")
                 .put(Entity.json(query));
-        System.out.println (response.getStatus());
+        if (checkBadResponse(response.getStatus(), "problem making request addOntologyTerms to server" + ontologyId + "," + parentTermId + "," + terms)) {
+            return null;
+        }
         Ontology newOntology = response.readEntity(Ontology.class);
-        int responseStatus = response.getStatus();
         return newOntology;
     }
     
@@ -294,8 +316,10 @@ public class RESTDomainFacade implements DomainFacade {
                 .queryParam("subjectKey", SessionMgr.getSubjectKey())
                 .request("application/json")
                 .delete();
+        if (checkBadResponse(response.getStatus(), "problem making request removeOntologyTerms to server" + ontologyId + "," + parentTermId + "," + termId)) {
+            return null;
+        }
         Ontology newOntology = response.readEntity(Ontology.class);
-        int responseStatus = response.getStatus();
         return newOntology;
     }
     
@@ -306,6 +330,7 @@ public class RESTDomainFacade implements DomainFacade {
                 .queryParam("subjectKey", SessionMgr.getSubjectKey())
                 .request("application/json")
                 .delete();
+        checkBadResponse(response.getStatus(), "problem making request removeOntology to server" + ontologyId);
     }
 
     public Filter create(Filter filter) throws Exception {
@@ -315,8 +340,10 @@ public class RESTDomainFacade implements DomainFacade {
         Response response = serviceEndpoints.get("filter")
                 .request("application/json")
                 .put(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request createFilter to server" + filter)) {
+            return null;
+        }
         Filter newFilter = response.readEntity(Filter.class);
-        int responseStatus = response.getStatus();
         return newFilter;
     }
 
@@ -327,8 +354,10 @@ public class RESTDomainFacade implements DomainFacade {
         Response response = serviceEndpoints.get("filter")
                 .request("application/json")
                 .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request updateFilter to server" + filter)) {
+            return null;
+        }
         Filter newFilter = response.readEntity(Filter.class);
-        int responseStatus = response.getStatus();
         return newFilter;
     }
 
@@ -339,9 +368,10 @@ public class RESTDomainFacade implements DomainFacade {
         Response response = serviceEndpoints.get("treenode")
                 .request("application/json")
                 .put(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request createTreeNode to server" + treeNode)) {
+            return null;
+        }
         TreeNode newTreeNode = response.readEntity(TreeNode.class);
-        int responseStatus = response.getStatus();
-
         return newTreeNode;
     }
 
@@ -358,9 +388,10 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("reorder")
                 .request("application/json")
                 .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request reorderChildrenInTreeNode to server" + treeNode + "," + order)) {
+            return null;
+        }
         TreeNode sortedTreeNode = response.readEntity(TreeNode.class);
-        int responseStatus = response.getStatus();
-
         return sortedTreeNode;
     }
 
@@ -373,9 +404,10 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("children")
                 .request("application/json")
                 .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request removeChildrenFromTreeNode to server" + treeNode + "," + references)) {
+            return null;
+        }
         TreeNode updatedTreeNode = response.readEntity(TreeNode.class);
-        int responseStatus = response.getStatus();
-
         return updatedTreeNode;
     }
 
@@ -390,6 +422,9 @@ public class RESTDomainFacade implements DomainFacade {
                 .request("application/json")
                 .put(Entity.json(query));
         TreeNode updatedTreeNode = response.readEntity(TreeNode.class);
+        if (checkBadResponse(response.getStatus(), "problem making request addChildrenToTreeNode to server" + treeNode + "," + references)) {
+            return null;
+        }
         return updatedTreeNode;
     }
     
@@ -400,10 +435,10 @@ public class RESTDomainFacade implements DomainFacade {
         Response response = serviceEndpoints.get("objectset")
                 .request("application/json")
                 .put(Entity.json(query));
-        ObjectSet newObjectSet = response.readEntity(ObjectSet.class);
-        int responseStatus = response.getStatus();
-
-        return newObjectSet;
+        if (checkBadResponse(response.getStatus(), "problem making request createObjectset to server")) {
+            return null;
+        }
+        return response.readEntity(ObjectSet.class);
     }
 
     public ObjectSet addMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
@@ -415,9 +450,10 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("member")
                 .request("application/json")
                 .put(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request addMembersToObjectSet to server" + objectSet + "," + references)) {
+            return null;
+        }
         ObjectSet updatedObjectSet = response.readEntity(ObjectSet.class);
-        int responseStatus = response.getStatus();
-
         return updatedObjectSet;
     }
 
@@ -430,9 +466,10 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("member")
                 .request("application/json")
                 .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request removeMembersFromObjectSet to server" + objectSet + "," + references)) {
+            return null;
+        }
         ObjectSet updatedObjectSet = response.readEntity(ObjectSet.class);
-        int responseStatus = response.getStatus();
-
         return updatedObjectSet;
     }
 
@@ -442,8 +479,11 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("subjects")
                 .request("application/json")
                 .get();
-        List<Subject> subjects = response.readEntity(new GenericType<List<Subject>>(){});
-        int responseStatus = response.getStatus();
+        if (checkBadResponse(response.getStatus(), "problem making request getSubjects to server")) {
+            return null;
+        }
+        List<Subject> subjects = response.readEntity(new GenericType<List<Subject>>() {
+        });
         return subjects;
     }
     
@@ -454,8 +494,10 @@ public class RESTDomainFacade implements DomainFacade {
                 .queryParam("subjectKey", SessionMgr.getSubjectKey())
                 .request("application/json")
                 .get();
+        if (checkBadResponse(response.getStatus(), "problem making request getPreferences to server")) {
+            return null;
+        }
         List<Preference> preferences = response.readEntity(new GenericType<List<Preference>>(){});
-        int responseStatus = response.getStatus();
         return preferences;
     }
 
@@ -468,14 +510,16 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("preferences")
                 .request("application/json")
                 .put(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making saving request savePreferences to server " + preference)) {
+            return null;
+        }
         Preference newPref = response.readEntity(Preference.class);
-        int responseStatus = response.getStatus();
         return newPref;
     }
 
     @Override
     public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
-        Map<String,Object> params = new HashMap<String,Object>();
+        Map<String, Object> params = new HashMap<String, Object>();
         params.put("subjectKey", SessionMgr.getSubjectKey());
         params.put("targetClass", domainObject.getClass().getName());
         params.put("targetId", domainObject.getId());
@@ -486,7 +530,18 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("permissions")
                 .request("application/json")
                 .put(Entity.json(params));
+        if (checkBadResponse(response.getStatus(), "problem making request changePermissions to server " + domainObject + "," + granteeKey + "," + rights + "," + grant)) {
+            return null;
+        }
         return this.getDomainObject(new Reference(domainObject.getClass().getName(), domainObject.getId()));
+    }
+
+    private boolean checkBadResponse (int responseStatus, String failureError) {
+        if (responseStatus!=200) {
+            log.error(failureError);
+            return true;
+        }
+        return false;
     }
 
     public static void main(String[] args) throws Exception {

@@ -7,7 +7,7 @@ import java.util.Map;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.MongoDomainFacade;
+import org.janelia.it.workstation.gui.browser.api.facade.impl.*;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.PreferenceChangeEvent;
@@ -39,9 +39,12 @@ public class DomainMgr {
     
     private DomainMgr() {
         try {
-            this.facade = new MongoDomainFacade();
+            //this.facade = new MongoDomainFacade();
+            this.facade = new RESTDomainFacade("http://schauderd-ws1.janelia.priv:8080/compute/");
         }
         catch (Exception e) {
+            e.printStackTrace();
+            System.out.println (e);
             SessionMgr.getSessionMgr().handleException(e);
         }
 
