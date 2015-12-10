@@ -72,6 +72,13 @@ public class SkeletonActor
             }
         }
     }
+
+    private class ElementDataOffset {
+        public ElementDataOffset(Long id, int size, long offset) { this.id=id; this.size=size; this.offset=offset; }
+        public Long id;
+        public int size;
+        public long offset;
+    }
     
     private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
 
@@ -88,13 +95,15 @@ public class SkeletonActor
     private Map<Long, FloatBuffer> neuronVertices = new HashMap<>();
     private Map<Long, FloatBuffer> neuronColors = new HashMap<>();
 
+    List<ElementDataOffset> vertexOffsets=new ArrayList<>();
+    List<ElementDataOffset> colorOffsets=new ArrayList<>();
+    List<ElementDataOffset> lineOffsets=new ArrayList<>();
+
     private int vbo = -1;
     private int lineIbo = -1;
     private int pointIbo = -1;
     private int colorBo = -1;
 
-    // not currently used:
-    private boolean linesNeedCopy = false;
     private boolean verticesNeedCopy = false;
 
     // Vertex buffer objects need indices
@@ -173,6 +182,175 @@ public class SkeletonActor
         parentAnchorImageName = image.toString();
     }
 
+    private synchronized void displayLines2(GLAutoDrawable glDrawable) {
+        if (neuronLineIndices.isEmpty()) {
+            return;
+        }
+
+        GL2GL3 gl = glDrawable.getGL().getGL2GL3();
+        GL2 gl2 = gl.getGL2();
+        transparencyDepthMode(gl, true);
+
+        int n=0;
+
+        //log.info("displayLines2 Check0");
+
+        if (verticesNeedCopy) {
+
+            vertexOffsets.clear();
+            colorOffsets.clear();
+            lineOffsets.clear();
+
+            int cummulativeVertexOffset=0;
+            int cummulativeColorOffset=0;
+            int cummulativeLineOffset=0;
+
+            List<Long> neuronOrderList=new ArrayList<>();
+
+            //log.info("displayLines2 Check1");
+
+            for (Long neuronID : neuronVertices.keySet()) {
+
+                if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible()) {
+                    continue;
+                }
+
+                if (!neuronLineIndices.containsKey(neuronID)) {
+                    continue;
+                }
+
+                neuronOrderList.add(neuronID);
+
+                int vertexBufferSize=neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT;
+                int colorBufferSize=neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT;
+                int lineBufferSize=neuronLineIndices.get(neuronID).capacity() * INT_BYTE_COUNT;
+
+                vertexOffsets.add(new ElementDataOffset(neuronID, vertexBufferSize, cummulativeVertexOffset));
+                colorOffsets.add(new ElementDataOffset(neuronID, colorBufferSize, cummulativeColorOffset));
+                lineOffsets.add(new ElementDataOffset(neuronID, lineBufferSize, cummulativeLineOffset));
+
+                cummulativeVertexOffset+=vertexBufferSize;
+                cummulativeColorOffset+=colorBufferSize;
+                cummulativeLineOffset+=lineBufferSize;
+            }
+
+            //log.info("displayLines2 Check1.5");
+
+            ByteBuffer vertexByteBuffer=ByteBuffer.allocateDirect(cummulativeVertexOffset);
+            FloatBuffer vertexBuffer = vertexByteBuffer.order(ByteOrder.nativeOrder()).asFloatBuffer();
+            n=0;
+            for (Long neuronID : neuronOrderList) {
+                //log.info("start n="+n);
+                ElementDataOffset elementDataOffset = vertexOffsets.get(n);
+                FloatBuffer neuronVertexBuffer=neuronVertices.get(elementDataOffset.id);
+                neuronVertexBuffer.rewind();
+                vertexBuffer.put(neuronVertexBuffer);
+                //log.info("end n="+n);
+                n++;
+            }
+            //log.info("displayLines2 Check1.5.5");
+            gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vbo);
+            //log.info("displayLines2 Check1.5.6");
+            vertexBuffer.rewind();
+            gl.glBufferData(GL.GL_ARRAY_BUFFER, cummulativeVertexOffset, vertexBuffer, GL.GL_DYNAMIC_DRAW);
+            //log.info("displayLines2 Check1.5.7");
+
+            //log.info("displayLines2 Check1.6");
+
+            n=0;
+            ByteBuffer colorByteBuffer=ByteBuffer.allocateDirect(cummulativeColorOffset);
+            FloatBuffer colorBuffer=colorByteBuffer.order(ByteOrder.nativeOrder()).asFloatBuffer();
+            for (Long neuronID : neuronOrderList) {
+                ElementDataOffset elementDataOffset = colorOffsets.get(n);
+                FloatBuffer neuronColorBuffer=neuronColors.get(elementDataOffset.id);
+                neuronColorBuffer.rewind();
+                colorBuffer.put(neuronColorBuffer);
+                n++;
+            }
+            gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colorBo);
+            colorBuffer.rewind();
+            gl.glBufferData(GL.GL_ARRAY_BUFFER, cummulativeColorOffset, colorBuffer, GL.GL_DYNAMIC_DRAW);
+
+            //log.info("displayLines2 Check1.7");
+
+            n=0;
+            ByteBuffer lineByteBuffer=ByteBuffer.allocateDirect(cummulativeLineOffset);
+            IntBuffer lineBuffer=lineByteBuffer.order(ByteOrder.nativeOrder()).asIntBuffer();
+            for (Long neuronID : neuronOrderList) {
+                ElementDataOffset elementDataOffset = lineOffsets.get(n);
+                IntBuffer neuronLineBuffer=neuronLineIndices.get(elementDataOffset.id);
+                lineBuffer.put(neuronLineBuffer);
+                n++;
+            }
+            gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
+            lineBuffer.rewind();
+            gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, cummulativeLineOffset, lineBuffer, GL.GL_DYNAMIC_DRAW);
+
+            verticesNeedCopy = false;
+        }
+
+        //log.info("displayLines2 Check2");
+
+        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+        lineShader.load(gl2);
+        lineShader.setUniform(gl, "zThickness", zThicknessInPixels);
+        float focus[] = {
+                (float) camera.getFocus().getX(),
+                (float) camera.getFocus().getY(),
+                (float) camera.getFocus().getZ()};
+        lineShader.setUniform3v(gl, "focus", 1, focus);
+        gl.glEnable(GL2.GL_LINE_SMOOTH);
+        gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
+        gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+
+        //log.info("displayLines2 Check3");
+
+        n=0;
+        for (ElementDataOffset lineElementOffset : lineOffsets) {
+            ElementDataOffset vertexElementOffset = vertexOffsets.get(n);
+            ElementDataOffset colorElementOffset = colorOffsets.get(n);
+            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
+            gl2.glVertexPointer(VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, vertexElementOffset.offset);
+            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+            gl2.glColorPointer(COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, colorElementOffset.offset);
+            gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
+
+            // 1st pass : wider black line
+            gl.glLineWidth(3.5f);
+            lineShader.setUniform3v(gl, "baseColor", 1, blackColor);
+            gl.glDrawElements(GL2.GL_LINES,
+                    lineElementOffset.size/INT_BYTE_COUNT,
+                    GL2.GL_UNSIGNED_INT,
+                    lineElementOffset.offset);
+            lineOffset(gl, true);
+
+            // 2nd pass : colored line
+            gl.glLineWidth(1.5f);
+            NeuronStyle style;
+            if (neuronStyles.containsKey(lineElementOffset.id)) {
+                style = neuronStyles.get(lineElementOffset.id);
+            } else {
+                style = NeuronStyle.getStyleForNeuron(lineElementOffset.id);
+            }
+            lineShader.setUniform3v(gl, "baseColor", 1, style.getColorAsFloatArray());
+            gl.glDrawElements(GL2.GL_LINES,
+                    lineElementOffset.size/INT_BYTE_COUNT,
+                    GL2.GL_UNSIGNED_INT,
+                    lineElementOffset.offset);
+            lineOffset(gl, false);
+            n++;
+        }
+
+        //log.info("displayLines2 Check4");
+
+        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+        gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, 0);
+        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
+        transparencyDepthMode(gl, false);
+        lineShader.unload(gl2);
+    }
+
     private synchronized void displayLines(GLAutoDrawable glDrawable) {
         if (neuronLineIndices.isEmpty()) {
             return;
@@ -216,7 +394,7 @@ public class SkeletonActor
                 gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER,
                         neuronLineIndices.get(neuronID).capacity() * INT_BYTE_COUNT,
                         neuronLineIndices.get(neuronID), GL.GL_DYNAMIC_DRAW);
-                linesNeedCopy = false;
+                //linesNeedCopy = false;
             }
             gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
             gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
@@ -422,7 +600,7 @@ public class SkeletonActor
             gl.glDepthFunc(GL2GL3.GL_LESS);
         }
 
-        displayLines(glDrawable);
+        displayLines2(glDrawable);
         displayTracedSegments(glDrawable);
 
         if (isAnchorsVisible()) {
@@ -710,7 +888,6 @@ public class SkeletonActor
             neuronLineIndices.get(neuronID).rewind();
         }
 
-        linesNeedCopy = true;
         verticesNeedCopy = true;
     }
 
@@ -915,7 +1092,6 @@ public class SkeletonActor
         colorBo = ix[3];
         //
         PassThroughTextureShader.checkGlError(gl, "load anchor texture");
-        linesNeedCopy = true;
         verticesNeedCopy = true;
         transparencyDepthMode(gl, true);
 
