@@ -841,7 +841,29 @@ called from a  SimpleWorker thread.
         // if segment to parent had a trace, remove it
         removeAnchoredPath(link, parent);
 
-        updateCurrentWorkspaceAndNeuron();
+        // update domain object; update child/parent relationships
+        parent.getChildIds().remove(link.getId());
+        if (child != null) {
+            link.getChildIds().remove(child.getId());
+            child.setParentId(parent.getId());
+            parent.getChildIds().add(child.getId());
+        }
+
+        // remove anchored paths and notes, if any
+        for (TmAnchoredPathEndpoints pair: new ArrayList<>(neuron.getAnchoredPathMap().keySet())) {
+            // doesn't matter which ID in endpoint pair we test
+            if (link.getId().equals(pair.getAnnotationID1())) {
+                neuron.getAnchoredPathMap().remove(pair);
+            }
+        }
+
+        if (neuron.getStructuredTextAnnotationMap().containsKey(link.getId())) {
+            neuron.getStructuredTextAnnotationMap().remove(link.getId());
+        }
+        // ...and finally get rid of the thing itself
+        neuron.getGeoAnnotationMap().remove(link.getId());
+
+
         final TmWorkspace workspace = getCurrentWorkspace();
 
         final TmGeoAnnotation updateChild;
