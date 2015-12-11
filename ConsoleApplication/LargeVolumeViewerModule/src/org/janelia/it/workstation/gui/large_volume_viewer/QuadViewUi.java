@@ -327,10 +327,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         annotationModel.setViewStateListener(quadViewController);
         
         // Toggle skeleton actor with v key
-        InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        // see note in interceptModeChangeGestures() regarding which input map
+        InputMap inputMap = viewerPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, 0, false), "vKeyPressed");
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, 0, true), "vKeyReleased");
-        ActionMap actionMap = getActionMap();
+        ActionMap actionMap = viewerPanel.getActionMap();
         actionMap.put("vKeyPressed", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -902,7 +903,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         for (Action action : modeActions) {
         	KeyStroke accelerator = (KeyStroke)action.getValue(Action.ACCELERATOR_KEY);
         	String actionName = (String)action.getValue(Action.NAME);
-        	inputMap.put(accelerator, actionName);
+            inputMap.put(accelerator, actionName);
         	viewerPanel.getActionMap().put(actionName, action);
         }
 	}
