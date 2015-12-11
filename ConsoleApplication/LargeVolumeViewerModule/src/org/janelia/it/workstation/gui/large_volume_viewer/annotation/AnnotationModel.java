@@ -367,10 +367,10 @@ called from a  SimpleWorker thread.
     public void createNeuron(String name) throws Exception {
         final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
 
-        updateCurrentWorkspace();
-        setCurrentNeuron(neuron);
-
+        // update domain object
         final TmWorkspace workspace = getCurrentWorkspace();
+        workspace.getNeuronList().add(neuron);
+        setCurrentNeuron(neuron);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
