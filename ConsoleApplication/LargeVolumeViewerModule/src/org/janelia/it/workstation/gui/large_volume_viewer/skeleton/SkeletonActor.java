@@ -390,89 +390,6 @@ public class SkeletonActor
         GL2 gl = glDrawable.getGL().getGL2();
         setupAnchorShaders(gl);
 
-        for (Long neuronID : neuronVertices.keySet()) {
-            if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible()) {
-                continue;
-            }
-
-            // setup per-neuron anchor shader settings (used to be in setupAnchorShader)
-            int tempIndex;
-            Anchor hoverAnchor = skeleton.getHoverAnchor();
-            if (hoverAnchor != null && hoverAnchor.getNeuronID().equals(neuronID)) {
-                tempIndex = getIndexForAnchor(hoverAnchor);
-            } else {
-                tempIndex = -1;
-            }
-            anchorShader.setUniform(gl, "highlightAnchorIndex", tempIndex);
-            Anchor nextParent = skeleton.getNextParent();
-            if (nextParent != null && nextParent.getNeuronID().equals(neuronID)) {
-                tempIndex = getIndexForAnchor(nextParent);
-            } else {
-                tempIndex = -1;
-            }
-            anchorShader.setUniform(gl, "parentAnchorIndex", tempIndex);
-            anchorShader.setUniform(gl, "isDiscardNonParent", discardNonParent);
-
-            // TODO - crashes unless glBufferData called every time.
-            // if (verticesNeedCopy) {
-            if (true) {
-                // vertices
-                neuronVertices.get(neuronID).rewind();
-                gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
-                gl.glBufferData(GL2.GL_ARRAY_BUFFER,
-                        neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT,
-                        neuronVertices.get(neuronID), GL2.GL_DYNAMIC_DRAW);
-
-                // colors
-                neuronColors.get(neuronID).rewind();
-                gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
-                gl.glBufferData(GL2.GL_ARRAY_BUFFER,
-                        neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT,
-                        neuronColors.get(neuronID),
-                        GL2.GL_DYNAMIC_DRAW);
-
-                verticesNeedCopy = false;
-                // point indices
-                neuronPointIndices.get(neuronID).rewind();
-                gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
-                gl.glBufferData(GL2.GL_ELEMENT_ARRAY_BUFFER,
-                        neuronPointIndices.get(neuronID).capacity() * INT_BYTE_COUNT,
-                        neuronPointIndices.get(neuronID), GL2.GL_DYNAMIC_DRAW);
-            }
-            gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
-            gl.glVertexPointer(VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
-            gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
-            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
-            gl.glColorPointer(COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
-            gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
-            PassThroughTextureShader.checkGlError(gl, "paint anchors 1");
-            gl.glDrawElements(GL2.GL_POINTS,
-                    neuronPointIndices.get(neuronID).capacity(),
-                    GL2.GL_UNSIGNED_INT,
-                    0L);
-            // tear down
-            gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
-            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, 0);
-            gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-            gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
-        }
-
-        tearDownAnchorShaders(gl);
-    }
-
-    private synchronized void displayAnchors2(GLAutoDrawable glDrawable) {
-        // Paint anchors as point sprites
-        if (neuronPointIndices == null) {
-            return;
-        }
-        if (neuronPointIndices.size() < 1) {
-            return;
-        }
-
-        GL2 gl = glDrawable.getGL().getGL2();
-        setupAnchorShaders(gl);
-
         int n=0;
 
         if (pointIndicesNeedCopy) {
@@ -627,8 +544,7 @@ public class SkeletonActor
         displayTracedSegments(glDrawable);
 
         if (isAnchorsVisible()) {
-            //displayAnchors(glDrawable);
-            displayAnchors2(glDrawable);
+            displayAnchors(glDrawable);
         }
 
         if (rim == RenderInterpositionMethod.Occlusion) {
