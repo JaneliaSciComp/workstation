@@ -1350,7 +1350,6 @@ called from a  SimpleWorker thread.
         //  changes rarely, cache the parsed version; use the string to check for
         //  change since the pref doesn't store its modification time
         if (cachedNeuronStyleMapString != null && cachedNeuronStyleMapString.equals(stylePref)) {
-            System.out.println("returning cached neuron style map");
             return cachedNeuronStyleMap;
         } else {
             ObjectMapper mapper = new ObjectMapper();
@@ -1373,7 +1372,6 @@ called from a  SimpleWorker thread.
             }
             cachedNeuronStyleMapString = stylePref;
             cachedNeuronStyleMap = neuronStyleMap;
-            System.out.println("returning newly parsed neuron style map");
             return neuronStyleMap;
         }
     }
