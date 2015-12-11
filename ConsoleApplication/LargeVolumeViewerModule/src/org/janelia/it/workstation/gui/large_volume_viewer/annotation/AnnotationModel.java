@@ -88,6 +88,9 @@ called from a  SimpleWorker thread.
     private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
     private Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
 
+    private String cachedNeuronStyleMapString;
+    private Map<Long, NeuronStyle> cachedNeuronStyleMap;
+
     private LoadTimer addTimer = new LoadTimer();
 
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
@@ -1343,25 +1346,36 @@ called from a  SimpleWorker thread.
             return neuronStyleMap;
         }
 
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode rootNode = null;
-        try {
-            rootNode = (ObjectNode) mapper.readTree(stylePref);
-        } catch (IOException e) {
-            // can't parse, return the empty map
-            // debated what to do here, but this should never happen,
-            //  so I'll be lazy about it
+        // json parsing is kind of expensive, and we pull this map often; since it
+        //  changes rarely, cache the parsed version; use the string to check for
+        //  change since the pref doesn't store its modification time
+        if (cachedNeuronStyleMapString != null && cachedNeuronStyleMapString.equals(stylePref)) {
+            System.out.println("returning cached neuron style map");
+            return cachedNeuronStyleMap;
+        } else {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode rootNode = null;
+            try {
+                rootNode = (ObjectNode) mapper.readTree(stylePref);
+            } catch (IOException e) {
+                // can't parse, return the empty map
+                // debated what to do here, but this should never happen,
+                //  so I'll be lazy about it
+                cachedNeuronStyleMapString = null;
+                return neuronStyleMap;
+            }
+
+            // I can't believe you can't use a regular for loop for this...
+            Iterator<Map.Entry<String, JsonNode>> nodeIterator = rootNode.fields();
+            while (nodeIterator.hasNext()) {
+                Map.Entry<String, JsonNode> entry = nodeIterator.next();
+                neuronStyleMap.put(Long.parseLong(entry.getKey()), NeuronStyle.fromJSON((ObjectNode) entry.getValue()));
+            }
+            cachedNeuronStyleMapString = stylePref;
+            cachedNeuronStyleMap = neuronStyleMap;
+            System.out.println("returning newly parsed neuron style map");
             return neuronStyleMap;
         }
-
-        // I can't believe you can't use a regular for loop for this...
-        Iterator<Map.Entry<String, JsonNode>> nodeIterator = rootNode.fields();
-        while (nodeIterator.hasNext()) {
-            Map.Entry<String, JsonNode> entry = nodeIterator.next();
-            neuronStyleMap.put(Long.parseLong(entry.getKey()), NeuronStyle.fromJSON((ObjectNode) entry.getValue()));
-        }
-
-        return  neuronStyleMap;
     }
 
     /**
