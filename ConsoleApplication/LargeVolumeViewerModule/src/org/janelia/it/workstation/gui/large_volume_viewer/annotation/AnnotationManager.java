@@ -245,28 +245,29 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // if it's a bare sample, we don't have anything to do
 
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+            final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading annotations...");
             SimpleWorker loader = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
                     // Must make known to user that things are happening,
                     // even if slowly.
-                    final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading annotations...");
                     progress.start();
                     progress.setDisplayName("Loading annotations");
                     progress.switchToIndeterminate();
                     TmWorkspace workspace = modelMgr.loadWorkspace(initialEntity.getId());
                     // at this point, we know the entity is a workspace, so:
                     annotationModel.loadWorkspace(workspace);
-                    progress.finish();
                 }
 
                 @Override
                 protected void hadSuccess() {
                     // no hadSuccess(); signals will be emitted in the loadWorkspace() call
+                    progress.finish();
                 }
 
                 @Override
                 protected void hadError(Throwable error) {
+                    progress.finish();
                     SessionMgr.getSessionMgr().handleException(error);
                 }
             };
@@ -881,6 +882,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return annotationModel.getNote(annotationID);
     }
 
+    public String getNote(Long annotationID, TmNeuron neuron) {
+        return annotationModel.getNote(annotationID, neuron);
+    }
+
     public void setNote(final Long annotationID, final String noteText) {
         SimpleWorker setter = new SimpleWorker() {
             @Override
@@ -1429,15 +1434,17 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         // you can also look to the Raveler dialog to see what kinds of info we could add
         //  eg,  move sample name, path to here
 
-        int nneurons = annotationModel.getCurrentWorkspace().getNeuronList().size();
-        int nannotations = 0;
-        for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
-            nannotations += neuron.getGeoAnnotationMap().size();
+        if (annotationModel.getCurrentWorkspace() != null) {
+            int nneurons = annotationModel.getCurrentWorkspace().getNeuronList().size();
+            int nannotations = 0;
+            for (TmNeuron neuron : annotationModel.getCurrentWorkspace().getNeuronList()) {
+                nannotations += neuron.getGeoAnnotationMap().size();
+            }
+            JOptionPane.showMessageDialog(quadViewUi,
+                    "# neurons = " + nneurons + "\n# annotations (total) = " + nannotations + "\n",
+                    "Info",
+                    JOptionPane.PLAIN_MESSAGE);
         }
-        JOptionPane.showMessageDialog(quadViewUi,
-                "# neurons = " + nneurons + "\n# annotations (total) = " + nannotations + "\n",
-                "Info",
-                JOptionPane.PLAIN_MESSAGE);
     }
 
     public void exportAllNeuronsAsSWC(final File swcFile, final int downsampleModulo) {
