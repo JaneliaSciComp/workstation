@@ -123,9 +123,11 @@ public class NeuronSetNode extends AbstractNode
                     @Override
                     public void run()
                     {
+                        if (! neuronList.getMembershipChangeObservable().hasChanged())
+                            return;
                         // Update models after drop.
                         neuronList.getMembershipChangeObservable().notifyObservers();
-                        // TODO force repaint - just once per drop action though.
+                        // force repaint - just once per drop action though.
                         triggerRepaint();
                     }
                 });
