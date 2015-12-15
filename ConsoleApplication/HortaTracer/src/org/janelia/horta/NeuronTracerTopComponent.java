@@ -53,38 +53,21 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
@@ -99,14 +82,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.horta.volume.MouseLightYamlBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
-import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -127,7 +106,6 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
-import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.janelia.horta.loader.DroppedFileHandler;
@@ -137,7 +115,6 @@ import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
 import org.janelia.horta.loader.TilebaseYamlLoader;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
-import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
 import org.netbeans.api.progress.ProgressHandle;
@@ -148,13 +125,8 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.MouseUtils;
 import org.openide.awt.StatusDisplayer;
 import org.openide.util.Exceptions;
-import org.openide.util.Lookup;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.RequestProcessor;
-import org.openide.util.Utilities;
 import org.openide.util.lookup.Lookups;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
@@ -724,16 +696,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
                 dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
                 Transferable t = dtde.getTransferable();
-                
-                final ProgressHandle progress
-                        = ProgressHandleFactory.createHandle("Loading File...");
+
                 try {
                     List<File> fileList = (List) t.getTransferData(DataFlavor.javaFileListFlavor);
-                    // final List<File> neuronFileList = new ArrayList<>();
                     // Drop could be YAML and/or SWC
                     for (File f : fileList) {
                         droppedFileHandler.handleFile(f);
-                        // loadOneDroppedFile(f, neuronFileList, progress);
                     }
 
                     // Update after asynchronous load completes
@@ -753,91 +721,14 @@ public final class NeuronTracerTopComponent extends TopComponent
                             workspace.notifyObservers();
                         }
                     });
-
-                    // Show progress for loading large numbers of swc files
-                    // Runnable swcLoadTask = new Runnable() {
-                    //     @Override
-                    //     public void run() {
-                    //         loadNeuronFiles(neuronFileList);                    
-                    //     }
-                    // };
-                    // RequestProcessor.getDefault().post(swcLoadTask);
                     
                 } catch (UnsupportedFlavorException | IOException ex) {
                     JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading dragged file");
                     Exceptions.printStackTrace(ex);
-                } finally {
-                    // progress.finish();
-                }
+                } 
                 
             }
         }));
-    }
-    
-    private void loadNeuronFiles(List<File> neuronFileList)
-    {
-        // TODO: load neurons multithreaded
-        if (neuronFileList.isEmpty()) return;
-        final ProgressHandle progress
-                = ProgressHandleFactory.createHandle("Loading SWC Files...");
-        progress.start();
-        WorkspaceUtil ws = new WorkspaceUtil(workspace);
-        final NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
-        final AtomicInteger loadedCount = new AtomicInteger(0);
-        final int fileCount = neuronFileList.size();
-        progress.switchToDeterminate(fileCount);
-        progress.progress(0);
-        ExecutorService pool = Executors.newFixedThreadPool(10);
-        final Collection<NeuronModel> newNeurons = new ArrayList<>();
-        for (final File f : neuronFileList) {
-            Runnable loadJob = new Runnable() {
-                @Override
-                public void run()
-                {
-                    try {
-                        NeuronModel neuron = new BasicNeuronModel(f);
-                        // TODO: safe multithreaded access to NeuronSet ns
-                        synchronized(newNeurons) {
-                            newNeurons.add(neuron);
-                        }
-                        synchronized(progress) {
-                            progress.progress(loadedCount.getAndIncrement());
-                        }
-                    } catch (IOException ex) {
-                        Exceptions.printStackTrace(ex);
-                    }
-                }
-            };
-            // loadJob.run();
-            pool.submit(loadJob);
-        }
-        pool.shutdown();
-        try {
-            if (! pool.awaitTermination(60, TimeUnit.SECONDS))
-                pool.shutdownNow();
-        } catch (InterruptedException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        progress.finish();
-
-        final ProgressHandle progress2
-                = ProgressHandleFactory.createHandle("Creating neuron models...");
-        progress2.start();
-        progress2.switchToDeterminate(newNeurons.size());
-        // Parallel construction of neuron actors...
-        neuronMPRenderer.bulkAddNeuronActors(newNeurons);
-        int ix = 0;
-        for (NeuronModel neuron : newNeurons) {
-            if (ns.add(neuron))
-                ns.getMembershipChangeObservable().setChanged(); // should be unnecessary for BasicNeuronSet
-            progress2.progress(ix);
-            ix += 1;
-        }
-        progress2.finish();
-       
-        // TODO: the slow part follows:
-        workspace.notifyObservers();
-        ns.getMembershipChangeObservable().notifyObservers();        
     }
     
     private void setupContextMenu(Component innerComponent) {

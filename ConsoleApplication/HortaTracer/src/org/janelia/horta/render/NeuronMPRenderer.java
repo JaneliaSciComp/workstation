@@ -362,33 +362,6 @@ extends MultipassRenderer
         neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
     
-    public void bulkAddNeuronActors(Collection<NeuronModel> neurons) {
-        if (neurons.isEmpty())
-            return;
-        ExecutorService pool = Executors.newFixedThreadPool(10);
-        for (final NeuronModel neuron : neurons) {
-            if (allSwcActor.contains(neuron)) 
-                continue;
-            Runnable actorsJob = new Runnable() {
-                @Override
-                public void run()
-                {
-                    addNeuronActors(neuron);
-                }
-            };
-            pool.submit(actorsJob);
-            // actorsJob.run();
-        }
-        pool.shutdown();
-        try {
-            if (! pool.awaitTermination(60, TimeUnit.SECONDS))
-                pool.shutdownNow();
-        } catch (InterruptedException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        setOpaqueBufferDirty();
-    }
-    
     private class NeuronListRefresher implements Observer 
     {
 
