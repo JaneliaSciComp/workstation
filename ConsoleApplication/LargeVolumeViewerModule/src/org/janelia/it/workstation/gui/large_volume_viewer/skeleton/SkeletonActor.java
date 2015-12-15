@@ -1103,6 +1103,7 @@ public class SkeletonActor
         for (int i = 0; i < 3; ++i) {
             neuronVertices.get(dragAnchor.getNeuronID()).put(offset + i, (float) (double) location.get(i));
         }
+        updateLines();
         updater.update();
     }
 
