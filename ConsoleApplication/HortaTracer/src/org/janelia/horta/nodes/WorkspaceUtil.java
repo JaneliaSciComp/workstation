@@ -49,11 +49,12 @@ public class WorkspaceUtil
     }
     
     public NeuronSet getOrCreateTemporaryNeuronSet() {
+        final String nameOfSet = "Temporary Neurons";
         for (NeuronSet neuronSet : workspace.getNeuronSets()) {
-            if (neuronSet.getName().equals("TemporaryNeurons"))
+            if (neuronSet.getName().equals(nameOfSet))
                 return neuronSet;
         }
-        NeuronSet result = new BasicNeuronSet("Temporary Neurons", new ArrayList<NeuronModel>());
+        NeuronSet result = new BasicNeuronSet(nameOfSet, new ArrayList<NeuronModel>());
         workspace.getNeuronSets().add(result);
         workspace.setChanged();
         return result;
