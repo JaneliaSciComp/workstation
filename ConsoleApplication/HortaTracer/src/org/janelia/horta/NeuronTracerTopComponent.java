@@ -667,96 +667,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         loader.loadTileAtCurrentFocus(volumeSource);
     }
     
-    private void loadOneDroppedFile(File file, Collection<File> neuronFileList, ProgressHandle progress) 
-            throws FileNotFoundException, IOException, ParseException 
-    {
-        String extension = FilenameUtils.getExtension(file.getName()).toUpperCase();
-        InputStream inputStream;
-        switch (extension) {
-            case "SWC":
-                neuronFileList.add(file);
-                break;
-            case "YML":
-            case "YAML":
-                inputStream = new FileInputStream(file);
-                currentSource = Utilities.toURI(file).toURL().toString();
-                loadOneDroppedFileStream(inputStream, file.getName(), progress);
-                logger.info("dragged Yaml file loaded!");
-                break;
-            case "GZ":
-                logger.info("gzipped file dropped");
-                inputStream = new FileInputStream(file);
-                // BufferedInputStream really helps, especially on network disks.
-                inputStream = new java.util.zip.GZIPInputStream(new BufferedInputStream(inputStream));
-                String truncatedName = FilenameUtils.removeExtension(file.getName());
-                loadOneDroppedFileStream(inputStream, truncatedName, progress);
-                inputStream.close();
-                break;
-        }
-    }
-    
-    private void loadOneDroppedFileStream(InputStream inputStream, String fileName, ProgressHandle progress) 
-            throws IOException, ParseException 
-    {
-        String extension = FilenameUtils.getExtension(fileName).toUpperCase();
-        switch (extension) {
-            case "YML":
-            case "YAML":
-                volumeSource = loadYaml(inputStream, loader, progress);
-                inputStream.close();
-                loader.loadTileAtCurrentFocus(volumeSource);
-                logger.info("dragged Yaml file loaded!");
-                break;
-            case "GZ":
-                logger.info("gzipped file dropped");
-                inputStream = new java.util.zip.GZIPInputStream(inputStream);
-                String truncatedName = FilenameUtils.removeExtension(fileName);
-                // TODO:
-                inputStream.close();
-                break;
-            case "TAR":
-                long start = System.nanoTime();
-                WorkspaceUtil ws = new WorkspaceUtil(workspace);
-                final NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
-                BulkSwcLoader swcLoader = new BulkSwcLoader(ns);
-                TarArchiveInputStream tarStream = new TarArchiveInputStream(inputStream);
-                TarArchiveEntry entry = null;
-                int swcCount = 0;
-                // int vertexCount = 0;
-                Pattern vtxPattern = Pattern.compile("^[0-9]");
-                while ( (entry = tarStream.getNextTarEntry()) != null) 
-                {
-                    String entryExtension = FilenameUtils.getExtension(entry.getName()).toUpperCase();
-                    if (! entryExtension.equals("SWC"))
-                        continue;
-                    int size = (int)entry.getSize();
-                    byte[] content = new byte[size];
-                    tarStream.read(content, 0, size);
-                    InputStream is = new ByteArrayInputStream(content);
-                    swcLoader.addSwcStream(is, FilenameUtils.getName(entry.getName()));
-                    // is.close();
-                    swcCount += 1;
-                    // TODO: short circuit for testing/debugging only
-                    if (swcCount > 20000) break;
-                }
-                swcLoader.shutdown(new Runnable() {
-                    @Override
-                    public void run()
-                    {
-                        // TODO: the slow part follows:
-                        workspace.notifyObservers();
-                        ns.getMembershipChangeObservable().notifyObservers();                          
-                        logger.info("Swc loading complete");
-                    }
-                });
-                long finish = System.nanoTime();
-                logger.info(swcCount + " neurons found in tar file in " 
-                        + (finish-start) / 1e9 + " seconds; with "
-                        // + vertexCount + " vertices"
-                );
-                break;
-        }
-    }
     
     private void setupDragAndDropYml() 
     {
@@ -832,23 +742,17 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void run()
                         {
                             // Update models after drop.
+                            if (workspace == null) return;
                             WorkspaceUtil ws = new WorkspaceUtil(workspace);
-                            NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
-                            workspace.setChanged(); // TODO this is voodoo
-                            workspace.notifyObservers();
-                            ns.getMembershipChangeObservable().setChanged(); // TODO this is voodoo
+                            NeuronSet ns = ws.getTemporaryNeuronSetOrNull();
+                            if (ns == null) return;
+                            if (! ns.getMembershipChangeObservable().hasChanged()) return;
                             ns.getMembershipChangeObservable().notifyObservers();
+                            // force repaint - just once per drop action though.
+                            workspace.setChanged();
+                            workspace.notifyObservers();
                         }
                     });
-                    
-                    // TODO - we need to update after final asynchronous loading has competed.
-                    if (false) {
-                        // Update models after drop.
-                        WorkspaceUtil ws = new WorkspaceUtil(workspace);
-                        final NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
-                        workspace.notifyObservers();
-                        ns.getMembershipChangeObservable().notifyObservers();
-                    }
 
                     // Show progress for loading large numbers of swc files
                     // Runnable swcLoadTask = new Runnable() {

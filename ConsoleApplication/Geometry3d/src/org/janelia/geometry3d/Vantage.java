@@ -337,5 +337,11 @@ implements CompositeObject3d, ObservableInterface, VantageInterface
     {
         return getFocusPosition().toArray();
     }
+
+    @Override
+    public boolean hasChanged()
+    {
+        return changeObservable.hasChanged();
+    }
     
 }
