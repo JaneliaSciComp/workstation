@@ -156,6 +156,11 @@ public abstract class AbstractCamera implements ObservableInterface
         changeObservable.deleteObservers();
     }
     
+    @Override
+    public boolean hasChanged() {
+        return changeObservable.hasChanged();
+    }
+    
     protected abstract void updateProjectionMatrix();
     
     protected abstract void updateViewMatrix();

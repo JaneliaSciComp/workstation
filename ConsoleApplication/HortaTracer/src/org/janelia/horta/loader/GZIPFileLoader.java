@@ -28,88 +28,39 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.geometry3d;
+package org.janelia.horta.loader;
 
-import java.util.Observer;
-import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.console.viewerapi.Copyable;
-import org.janelia.console.viewerapi.ObservableInterface;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
+import org.apache.commons.io.FilenameUtils;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class BrightnessModel 
-implements Copyable<BrightnessModel>, ObservableInterface
+public class GZIPFileLoader implements FileTypeLoader
 {
-    private float minimum = 0; // range 0-1
-    private float maximum = 1; // range 0-1
-    private final ComposableObservable changeObservable = new ComposableObservable();
-
-    public BrightnessModel() {}
-
-    public BrightnessModel(BrightnessModel rhs) {
-        copy(rhs);
-    }
 
     @Override
-    public final void copy(BrightnessModel rhs) {
-        setMinimum(rhs.minimum);
-        setMaximum(rhs.maximum);        
-    }
-    
-    public float getMaximum() {
-        return maximum;
-    }
-
-    public float getMinimum() {
-        return minimum;
-    }
-
-    public final void setMinimum(float minimum) {
-        if (minimum == this.minimum)
-            return;
-        // System.out.println("Min changed!");
-        changeObservable.setChanged();
-        this.minimum = minimum;
-    }
-
-    public final void setMaximum(float maximum) {
-        if (maximum == this.maximum)
-            return;
-        changeObservable.setChanged();
-        this.maximum = maximum;
-    }
-
-    @Override
-    public void setChanged() {
-        changeObservable.setChanged();
-    }
-
-    @Override
-    public void notifyObservers() {
-        changeObservable.notifyObservers();
-    }
-
-    @Override
-    public void addObserver(Observer observer) {
-        changeObservable.addObserver(observer);
-    }
-
-    @Override
-    public void deleteObserver(Observer observer) {
-        changeObservable.deleteObserver(observer);
-    }
-
-    @Override
-    public void deleteObservers() {
-        changeObservable.deleteObservers();
-    }
-
-    @Override
-    public boolean hasChanged()
+    public boolean supports(DataSource source)
     {
-        return changeObservable.hasChanged();
+        String ext = FilenameUtils.getExtension(source.getFileName()).toUpperCase();
+        if (ext.equals("GZ"))
+            return true;
+        if (ext.equals("Z"))
+            return true;
+        return false;
+    }
+
+    @Override
+    public boolean load(DataSource source, FileHandler handler) throws IOException
+    {
+        // Delegate to uncompressed datasource
+        InputStream uncompressedStream = new GZIPInputStream(source.getInputStream());
+        String uncompressedName = FilenameUtils.getBaseName(source.getFileName());
+        DataSource uncompressed = new BasicDataSource(uncompressedStream, uncompressedName);
+        return handler.handleDataSource(uncompressed);
     }
     
 }

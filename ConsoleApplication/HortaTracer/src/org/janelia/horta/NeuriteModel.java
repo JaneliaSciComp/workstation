@@ -262,4 +262,10 @@ implements Deque<NeuriteAnchor>, ObservableInterface
     public void setChanged() {
         observable.setChanged();
     }
+
+    @Override
+    public boolean hasChanged()
+    {
+        return observable.hasChanged();
+    }
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
  * Copyright (c) 2014, Howard Hughes Medical Institute, All rights reserved.
@@ -27,48 +27,54 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.janelia.console.viewerapi;
 
-import java.util.Observable;
+package org.janelia.horta.loader;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
- * Exposes protected methods, so Observable can be used
- * via composition, in addition to use by inheritance.
- * Efficient implementations should implement bulk updates by automatically
- * calling setChanged() many times, and then manually calling 
- * notifyObservers() once, after
- * all the relevant changes have been registered.
+ * Helper class used when user drags-and-drops a file onto HortaWorkspaceNode or 
+ * onto NeuronTracerTopComponent.
  * 
- * @author cmbruns
+ * @author Christopher Bruns
  */
-public class ComposableObservable extends Observable 
-implements ObservableInterface
+public class DroppedFileHandler implements FileHandler
 {
-    /**
-     * Potentially slow notification of all listeners. For efficiency,
-     * notifyObservers() only notifies listeners IF setChanged() has been
-     * called since the previous call to notifyObservers().
-     */
-    @Override
-    public void notifyObservers() {
-        super.notifyObservers();
+    private final Collection<FileTypeLoader> typeLoaders = new ArrayList<>();
+    
+    public void addLoader(FileTypeLoader loader) {
+        typeLoaders.add(loader);
     }
-
-    /**
-     * Exposes setChanged() publicly, so we can use Observable by composition, not just by inheritance.
-     * setChanged() is a fast inexpensive operation that marks the Observable as "dirty",
-     * but does NOT automatically notify listeners. 
-     * It should be OK to call "setChanged()" whenever the Observable is known to have
-     * changes to its internal state. 
-     */
-    @Override
-    public void setChanged() {
-        super.setChanged();
-    }
-
-    @Override
-    public boolean hasChanged()
+    
+    public boolean handleFile(File f) 
+            throws FileNotFoundException, IOException 
     {
-        return super.hasChanged();
+        DataSource source = new FileDataSource(f);
+        return handleDataSource(source);
+    }
+    
+    public boolean handleStream(InputStream stream, String fileName) 
+            throws IOException 
+    {
+        DataSource source = new BasicDataSource(stream, fileName);
+        return handleDataSource(source);
+    }
+    
+    @Override
+    public boolean handleDataSource(DataSource source) 
+            throws IOException 
+    {
+        for (FileTypeLoader loader : typeLoaders) {
+            if (loader.supports(source)) {
+                if (loader.load(source, this))
+                    return true;
+            }
+        }
+        return false;
     }
 }

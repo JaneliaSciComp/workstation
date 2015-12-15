@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
  * Copyright (c) 2014, Howard Hughes Medical Institute, All rights reserved.
@@ -27,48 +27,38 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.janelia.console.viewerapi;
 
-import java.util.Observable;
+package org.janelia.horta.loader;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
+import org.apache.commons.io.FilenameUtils;
 
 /**
- * Exposes protected methods, so Observable can be used
- * via composition, in addition to use by inheritance.
- * Efficient implementations should implement bulk updates by automatically
- * calling setChanged() many times, and then manually calling 
- * notifyObservers() once, after
- * all the relevant changes have been registered.
- * 
- * @author cmbruns
+ * Delegates contents of tarred, gzipped file as individual file loads.
+ * @author Christopher Bruns
  */
-public class ComposableObservable extends Observable 
-implements ObservableInterface
+public class TgzFileLoader implements FileTypeLoader
 {
-    /**
-     * Potentially slow notification of all listeners. For efficiency,
-     * notifyObservers() only notifies listeners IF setChanged() has been
-     * called since the previous call to notifyObservers().
-     */
-    @Override
-    public void notifyObservers() {
-        super.notifyObservers();
-    }
-
-    /**
-     * Exposes setChanged() publicly, so we can use Observable by composition, not just by inheritance.
-     * setChanged() is a fast inexpensive operation that marks the Observable as "dirty",
-     * but does NOT automatically notify listeners. 
-     * It should be OK to call "setChanged()" whenever the Observable is known to have
-     * changes to its internal state. 
-     */
-    @Override
-    public void setChanged() {
-        super.setChanged();
-    }
 
     @Override
-    public boolean hasChanged()
+    public boolean supports(DataSource source)
     {
-        return super.hasChanged();
+        String ext = FilenameUtils.getExtension(source.getFileName()).toUpperCase();
+        if (ext.equals("TGZ"))
+            return true;
+        return false;    }
+
+    @Override
+    public boolean load(DataSource source, FileHandler handler) throws IOException
+    {
+        // Delegate to uncompressed datasource
+        InputStream uncompressedStream = new GZIPInputStream(source.getInputStream());
+        // Create extension ".tar", so next delegated layer knows to handle this as a tar file
+        String uncompressedName = FilenameUtils.getBaseName(source.getFileName()) + ".tar";
+        DataSource uncompressed = new BasicDataSource(uncompressedStream, uncompressedName);
+        return handler.handleDataSource(uncompressed);
     }
+    
 }

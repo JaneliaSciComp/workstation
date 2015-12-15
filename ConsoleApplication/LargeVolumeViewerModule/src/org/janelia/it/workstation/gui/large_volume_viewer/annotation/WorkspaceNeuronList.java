@@ -14,6 +14,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
+import java.util.List;
 
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -279,9 +280,7 @@ public class WorkspaceNeuronList extends JPanel {
     private void updateModel(TmWorkspace workspace) {
         neuronTableModel.clear();
         if (workspace != null) {
-            for (TmNeuron neuron: workspace.getNeuronList()) {
-                neuronTableModel.addNeuron(neuron);
-            }
+            neuronTableModel.addNeurons(workspace.getNeuronList());
         }
     }
 
@@ -333,6 +332,11 @@ class NeuronTableModel extends AbstractTableModel {
 
     public void addNeuron(TmNeuron neuron) {
         neurons.add(neuron);
+        fireTableDataChanged();
+    }
+
+    public void addNeurons(List<TmNeuron> neuronList) {
+        neurons.addAll(neuronList);
         fireTableDataChanged();
     }
 
