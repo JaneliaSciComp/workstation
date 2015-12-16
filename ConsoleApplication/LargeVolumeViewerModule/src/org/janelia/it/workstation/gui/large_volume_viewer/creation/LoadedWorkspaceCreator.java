@@ -1,9 +1,22 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.creation;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.File;
 import java.util.HashSet;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
@@ -13,6 +26,9 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.tiledMicroscope.SwcImportTask;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.openide.util.lookup.ServiceProvider;
@@ -34,7 +50,7 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
     
     public void execute() {
 
-        final Component mainFrame = SessionMgr.getMainFrame();
+        final JFrame mainFrame = SessionMgr.getMainFrame();
 
         SimpleWorker worker = new SimpleWorker() {
             
@@ -43,11 +59,75 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
             @Override
             protected void doStuff() throws Exception {
                 // Simple dialog: just enter the path.  Should be a server-known path.
-                userInput = JOptionPane.showInputDialog(
-                        mainFrame,
-                        "Enter Full Path to Input Folder", "Input Folder",
-                        JOptionPane.PLAIN_MESSAGE
-                );
+                final JDialog inputDialog = new JDialog(mainFrame, true);
+                final JTextField pathTextField = new JTextField();
+                final JLabel errorLabel = new JLabel("   ");
+                errorLabel.setForeground(Color.red);
+                pathTextField.addKeyListener(new PathCorrectionKeyListener(pathTextField));
+                pathTextField.setToolTipText("Backslashes will be converted to /.");
+                inputDialog.setTitle("Input Folder");
+                inputDialog.setLayout(new GridLayout(4, 1));
+                inputDialog.add(new JLabel("Enter Full Path to Input Folder"));
+                inputDialog.add(pathTextField);
+                JPanel buttonPanel = new JPanel();
+                buttonPanel.setLayout(new BorderLayout());
+                JButton cancelButton = new JButton("Cancel");
+                cancelButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        userInput = null;
+                        inputDialog.setVisible(false);
+                    }
+                });
+                buttonPanel.add(cancelButton, SystemInfo.isMac ? BorderLayout.LINE_START : BorderLayout.LINE_END);
+                inputDialog.add(buttonPanel);
+                inputDialog.add(errorLabel);
+                final ComputeFacade cf = FacadeManager.getFacadeManager().getComputeFacade();
+
+                JButton okButton = new JButton("OK");
+                okButton.setToolTipText("Send path to linux.");
+                okButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        errorLabel.setText("");
+                        String temp = pathTextField.getText().trim();
+                        temp = temp.replace("\\", "/");
+                        pathTextField.setText(temp); //Show user what we try
+                        StringBuilder bldr = new StringBuilder();
+                        for (int i = 0; i < temp.length(); i++) {
+                            final char nextChar = temp.charAt(i);
+                            switch (nextChar) {
+                                case '\\': 
+                                    bldr.append('/');
+                                    break;
+                                case '\n':
+                                case '\r':
+                                    break;
+                                default :
+                                    // Most characters are just fine.
+                                    bldr.append(nextChar);
+                                    break;
+                            }
+                            
+                        }
+                        userInput = bldr.toString();
+                        if (! cf.isServerPathAvailable(userInput, true) ) {
+                            errorLabel.setText(userInput + " not found on server. Please Try again.");
+                        }
+                        else {
+                            inputDialog.setVisible(false);
+                        }
+                    }
+                });
+                buttonPanel.add(okButton, SystemInfo.isMac ? BorderLayout.LINE_END : BorderLayout.LINE_START);
+                
+                inputDialog.setSize(500, 180);
+                inputDialog.setLocationRelativeTo(mainFrame);
+                inputDialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                inputDialog.setVisible(true);
+                
+                log.info("Processing " + userInput);
+                                
                 if (userInput != null) {
                     String ownerKey = SessionMgr.getSessionMgr().getSubject().getKey();
                     // Expect the sample to be the 'main entity' of the LVV, since there is
@@ -126,7 +206,7 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
 
     @Override
     public String getActionLabel() {
-        return "  Load SWC file on server, and build workspace on sample.";
+        return "  Load Linux SWC Folder into New Workspace on Sample";
     }
 
     /**
@@ -141,6 +221,34 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
      */
     private RootedEntity getRootedEntity() {
         return rootedEntity;
+    }
+
+    private static class PathCorrectionKeyListener implements KeyListener {
+        private JTextField pathTextField;
+        public PathCorrectionKeyListener(JTextField pathTextField) {
+            this.pathTextField = pathTextField;
+        }
+
+        @Override
+        public void keyTyped(KeyEvent e) {
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+            char keyChar = e.getKeyChar();
+            if (keyChar == '\\') {
+                // Trim the backslash off the end, and add back
+                // a front-slash.
+                pathTextField.setText(
+                        pathTextField.getText().substring(0, pathTextField.getText().length() - 1) + '/'
+                );
+            }
+        }
+
     }
 
 }

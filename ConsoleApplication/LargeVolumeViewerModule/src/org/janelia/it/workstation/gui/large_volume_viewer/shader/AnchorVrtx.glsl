@@ -36,11 +36,13 @@ void main(void)
     // Larger shape when mouse is over anchor
     if (highlightAnchorIndex == gl_VertexID)
         gl_PointSize = 1.3 * gl_PointSize;
-        
+
     // Different graphic for current parent anchor node
     isParent = 0;
-    if (parentAnchorIndex == gl_VertexID)
+    if (parentAnchorIndex == gl_VertexID) {
         isParent = 1;
+        gl_PointSize = 1.7 * gl_PointSize;
+        }
 
     // Can setup to discard anything that is not a parent.
     if (isParent == 0 && isDiscardNonParent >= 1)

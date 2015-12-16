@@ -42,6 +42,8 @@ public interface ComputeFacade {
 
     public void stopContinuousExecution(Long taskId) throws Exception;
 
+    boolean isServerPathAvailable(String serverPath, boolean directoryOnly);
+            
     public Subject loginSubject(String username, String password) throws Exception;
     
     public void beginSession();

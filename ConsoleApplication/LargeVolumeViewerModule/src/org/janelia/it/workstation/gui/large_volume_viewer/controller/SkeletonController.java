@@ -6,10 +6,7 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import javax.swing.JComponent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -209,6 +206,17 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
         for (SkeletonActor actor: actors) {
             actor.changeNeuronStyle(neuron, style);
+        }
+        refreshMeshDrawUpdateTimer();
+        fireComponentUpdate();
+    }
+
+    @Override
+    public void neuronStylesChanged(Map<TmNeuron, NeuronStyle> neuronStyleMap) {
+        for (TmNeuron neuron: neuronStyleMap.keySet()) {
+            for (SkeletonActor actor: actors) {
+                actor.changeNeuronStyle(neuron, neuronStyleMap.get(neuron));
+            }
         }
         refreshMeshDrawUpdateTimer();
         fireComponentUpdate();
