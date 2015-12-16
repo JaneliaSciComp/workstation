@@ -433,10 +433,8 @@ public class DomainModel {
             if (workspaceCache.isEmpty()) {
                 log.debug("Getting workspaces from database");
                 for (Workspace workspace : facade.getWorkspaces()) {
-                    Workspace cachedRoot = (Workspace)putOrUpdate(workspace);
-                    if (cachedRoot instanceof Workspace) {
-                        workspaceCache.put(Reference.createFor(cachedRoot), cachedRoot);
-                    }
+                    Workspace cachedRoot = putOrUpdate(workspace);
+                    workspaceCache.put(Reference.createFor(cachedRoot), cachedRoot);
                 }
             }
         }
@@ -460,7 +458,7 @@ public class DomainModel {
     }
     
     public OntologyTerm getOntologyTermByReference(OntologyTermReference reference) {
-        Ontology ontology = (Ontology)getDomainObject(Ontology.class, reference.getOntologyId());
+        Ontology ontology = getDomainObject(Ontology.class, reference.getOntologyId());
         return findTerm(ontology, reference.getOntologyTermId());
     }
     
@@ -482,7 +480,7 @@ public class DomainModel {
     public Ontology create(Ontology ontology) throws Exception {
         Ontology canonicalObject;
         synchronized (this) {
-            canonicalObject = (Ontology)putOrUpdate(facade.create(ontology));
+            canonicalObject = putOrUpdate(facade.create(ontology));
         }
         notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;
@@ -491,7 +489,7 @@ public class DomainModel {
     public Ontology reorderOntologyTerms(Long ontologyId, Long parentTermId, int[] order) throws Exception {
         Ontology canonicalObject;
         synchronized (this) {
-            canonicalObject = (Ontology)putOrUpdate(facade.reorderTerms(ontologyId, parentTermId, order));
+            canonicalObject = putOrUpdate(facade.reorderTerms(ontologyId, parentTermId, order));
         }
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
@@ -508,7 +506,7 @@ public class DomainModel {
     public Ontology addOntologyTerms(Long ontologyId, Long parentTermId, Collection<OntologyTerm> terms, Integer index) throws Exception {
         Ontology canonicalObject;
         synchronized (this) {
-            canonicalObject = (Ontology)putOrUpdate(facade.addTerms(ontologyId, parentTermId, terms, index));
+            canonicalObject = putOrUpdate(facade.addTerms(ontologyId, parentTermId, terms, index));
         }
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
@@ -517,7 +515,7 @@ public class DomainModel {
     public Ontology removeOntologyTerm(Long ontologyId, Long parentTermId, Long termId) throws Exception {
         Ontology canonicalObject;
         synchronized (this) {
-            canonicalObject = (Ontology)putOrUpdate(facade.removeTerm(ontologyId, parentTermId, termId));
+            canonicalObject = putOrUpdate(facade.removeTerm(ontologyId, parentTermId, termId));
         }
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
@@ -534,7 +532,7 @@ public class DomainModel {
     public TreeNode create(TreeNode treeNode) throws Exception {
         TreeNode canonicalObject;
         synchronized (this) {
-            canonicalObject = (TreeNode)putOrUpdate(facade.create(treeNode));
+            canonicalObject = putOrUpdate(facade.create(treeNode));
         }
         notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;
@@ -543,7 +541,7 @@ public class DomainModel {
     public Filter save(Filter filter) throws Exception {
         Filter canonicalObject;
         synchronized (this) {
-            canonicalObject = (Filter)putOrUpdate(filter.getId()==null ? facade.create(filter) : facade.update(filter));
+            canonicalObject = putOrUpdate(filter.getId()==null ? facade.create(filter) : facade.update(filter));
         }
         notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;
@@ -552,7 +550,7 @@ public class DomainModel {
     public ObjectSet create(ObjectSet objectSet) throws Exception {
         ObjectSet canonicalObject;
         synchronized (this) {
-            canonicalObject = (ObjectSet)putOrUpdate(facade.create(objectSet));
+            canonicalObject = putOrUpdate(facade.create(objectSet));
         }
         notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;
@@ -561,7 +559,7 @@ public class DomainModel {
     public Annotation create(Annotation annotation) throws Exception {
         Annotation canonicalObject;
         synchronized (this) {
-            canonicalObject = (Annotation)putOrUpdate(facade.create(annotation));
+            canonicalObject = putOrUpdate(facade.create(annotation));
         }
         notifyAnnotationsChanged(getDomainObject(annotation.getTarget()));
         return canonicalObject;
@@ -570,7 +568,7 @@ public class DomainModel {
     public Annotation save(Annotation annotation) throws Exception {
         Annotation canonicalObject;
         synchronized (this) {
-            canonicalObject = (Annotation)putOrUpdate(annotation.getId()==null ? facade.create(annotation) : facade.update(annotation));
+            canonicalObject = putOrUpdate(annotation.getId()==null ? facade.create(annotation) : facade.update(annotation));
         }
         notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;

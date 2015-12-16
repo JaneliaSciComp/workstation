@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.browser.events.selection;
 
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-
 /**
  * An ontology was selected by the user.
  * 

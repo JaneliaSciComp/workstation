@@ -8,7 +8,7 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 
 /**
- * TBD
+ * Remove the same annotation from multiple domain objects.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

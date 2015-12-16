@@ -197,7 +197,9 @@ public class SampleResultContextMenu extends PopupContextMenu {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
                     ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, null);
-                } catch (Exception e) {
+                } 
+                catch (Exception e) {
+                	log.error("Error launching tool", e);
                     JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
                             + "Please choose the appropriate file path from the Tools->Configure Tools area",
                             "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
@@ -216,7 +218,9 @@ public class SampleResultContextMenu extends PopupContextMenu {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
                     ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_3D);
-                } catch (Exception e) {
+                } 
+                catch (Exception e) {
+                	log.error("Error launching tool", e);
                     JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
                             + "Please choose the appropriate file path from the Tools->Configure Tools area",
                             "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
@@ -235,7 +239,9 @@ public class SampleResultContextMenu extends PopupContextMenu {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
                     ToolMgr.openFile(ToolMgr.TOOL_FIJI, path, null);
-                } catch (Exception e) {
+                } 
+                catch (Exception e) {
+                	log.error("Error launching tool", e);
                     JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
                                     + "Please choose the appropriate file path from the Tools->Configure Tools area",
                             "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);

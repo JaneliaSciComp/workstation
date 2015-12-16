@@ -548,7 +548,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
 
         int fullWidth = getSize().width - getVerticalScrollBar().getWidth();
 
-        int numCols = (int) Math.max(Math.floor((double) fullWidth / maxButtonWidth), 1);
+        int numCols = (int) Math.max(Math.floor(fullWidth / maxButtonWidth), 1);
         if (buttonsPanel.getColumns() != numCols) {
             buttonsPanel.setColumns(numCols);
             repaintButtons();

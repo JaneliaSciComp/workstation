@@ -184,7 +184,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
 
     public void setTitle(String title, int maxWidth) {
         // Subtle font size scaling 
-        int fontSize = (int) Math.round((double) maxWidth * 0.005) + 10;
+        int fontSize = (int) Math.round(maxWidth * 0.005) + 10;
         Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
         titleLabel.setFont(titleLabelFont);
         titleLabel.setPreferredSize(new Dimension(maxWidth, titleLabel.getFontMetrics(titleLabelFont).getHeight()));
@@ -198,7 +198,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
             return;
         }
         // Subtle font size scaling 
-        int fontSize = (int) Math.round((double) maxWidth * 0.003) + 10;
+        int fontSize = (int) Math.round(maxWidth * 0.003) + 10;
         Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
         subtitleLabel.setFont(titleLabelFont);
         subtitleLabel.setPreferredSize(new Dimension(maxWidth, subtitleLabel.getFontMetrics(titleLabelFont).getHeight()));

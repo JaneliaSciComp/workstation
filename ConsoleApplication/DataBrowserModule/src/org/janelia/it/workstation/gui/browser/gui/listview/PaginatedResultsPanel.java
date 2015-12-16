@@ -300,7 +300,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         if (currPage < 0) {
             currPage = 0;
         }
-        showPage(currPage);
+        showCurrPage();
     }
 
     private synchronized void goNextPage() {
@@ -308,17 +308,17 @@ public abstract class PaginatedResultsPanel extends JPanel {
         if (currPage >= numPages) {
             currPage = numPages-1;
         }
-        showPage(currPage);
+        showCurrPage();
     }
 
     private synchronized void goStartPage() {
         this.currPage = 0;
-        showPage(currPage);
+        showCurrPage();
     }
 
     private synchronized void goEndPage() {
         this.currPage = numPages - 1;
-        showPage(currPage);
+        showCurrPage();
     }
 
     private synchronized void selectAll() {
@@ -358,10 +358,10 @@ public abstract class PaginatedResultsPanel extends JPanel {
         this.searchResults = searchResults;
         numPages = searchResults.getNumTotalPages();
         this.currPage = 0;
-        showPage(currPage);
+        showCurrPage();
     }
     
-    protected void showPage(int page) {
+    protected void showCurrPage() {
 
         updatePagingStatus();
         showLoadingIndicator();

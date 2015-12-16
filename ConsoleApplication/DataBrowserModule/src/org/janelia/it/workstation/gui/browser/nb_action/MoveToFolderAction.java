@@ -147,42 +147,35 @@ public class MoveToFolderAction extends NodePresenterAction {
                 if (returnVal != NodeChooser.CHOOSE_OPTION) return;
                 if (nodeChooser.getChosenElements().isEmpty()) return;
                 final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
+                final TreeNode folder = selectedNode.getTreeNode();
+                SimpleWorker worker = new SimpleWorker() {
 
-                if (selectedNode instanceof UserViewTreeNodeNode) {
-                    final TreeNode folder = selectedNode.getTreeNode();
-                    SimpleWorker worker = new SimpleWorker() {
+                    private Long[] idPath;
+                
+                    @Override
+                    protected void doStuff() throws Exception {
+                        idPath = NodeUtils.createIdPath(selectedNode);
+                        moveSelectedObjectsToFolder(folder, idPath);
+                    }
 
-                        private Long[] idPath;
-                    
-                        @Override
-                        protected void doStuff() throws Exception {
-                            idPath = NodeUtils.createIdPath(selectedNode);
-                            moveSelectedObjectsToFolder(folder, idPath);
-                        }
+                    @Override
+                    protected void hadSuccess() {
+                        log.info("Added to folder {}",folder.getId());
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                explorer.expand(idPath);
+                                explorer.select(idPath);
+                            }
+                        });
+                    }
 
-                        @Override
-                        protected void hadSuccess() {
-                            log.info("Added to folder {}",folder.getId());
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    explorer.expand(idPath);
-                                    explorer.select(idPath);
-                                }
-                            });
-                        }
-
-                        @Override
-                        protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
-                        }
-                    };
-                    worker.execute();
-                }
-                else {
-                    JOptionPane.showMessageDialog(mainFrame, "You must select a folder to add items",
-                            "Invalid folder", JOptionPane.INFORMATION_MESSAGE);
-                }
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                worker.execute();
             }
         });
 

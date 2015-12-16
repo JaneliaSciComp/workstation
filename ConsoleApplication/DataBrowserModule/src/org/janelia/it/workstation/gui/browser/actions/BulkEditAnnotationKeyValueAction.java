@@ -1,13 +1,13 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import java.util.List;
+
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
- * TBD
+ * Change the annotation value on a single type of annotation, across multiple objects.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
