@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import java.awt.image.RenderedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -137,12 +136,13 @@ extends AbstractTextureLoadAdapter
             final ActionString actionString = new ActionString(
                      folderOpenTimestamp + ":" + relativeSlice + ":" + tileIndex.toString() + ":elapsed_ms=" + elapsedMs
             );
+            // Use the by-category granularity for these.
             SessionMgr.getSessionMgr().logToolEvent(
                     LVV_LOGSTAMP_ID,
                     LIX_CATEGORY_STRING,
                     actionString,
                     elapsedMs,
-                    999.0
+                    Double.MAX_VALUE
             );
         }
 
