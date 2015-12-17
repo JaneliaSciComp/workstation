@@ -51,6 +51,7 @@ public class RESTDomainFacade implements DomainFacade {
 
     public RESTDomainFacade(String serverUrl) {
         this.serverUrl = serverUrl;
+        log.info("Using server URL: {}",serverUrl);
         client = ClientBuilder.newClient();
         client.register(JacksonFeature.class);
         registerRestUris();

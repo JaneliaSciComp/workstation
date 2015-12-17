@@ -14,6 +14,7 @@ import org.janelia.it.workstation.gui.browser.events.model.PreferenceChangeEvent
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,8 @@ import org.slf4j.LoggerFactory;
 public class DomainMgr {
 
     private static final Logger log = LoggerFactory.getLogger(DomainMgr.class);
+
+    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("compute.api.url");
     
     // Singleton
     private static final DomainMgr instance = new DomainMgr();
@@ -40,7 +43,7 @@ public class DomainMgr {
     private DomainMgr() {
         try {
             //this.facade = new MongoDomainFacade();
-            this.facade = new RESTDomainFacade("http://schauderd-ws1.janelia.priv:8080/compute/");
+            this.facade = new RESTDomainFacade(REMOTE_API_URL);
         }
         catch (Exception e) {
             e.printStackTrace();
