@@ -76,6 +76,8 @@ public final class DomainListViewTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_DomainListViewTopComponent());
         associateLookup(new AbstractLookup(content));
+        // Init the viewer manager, so that clicks in this viewer are handled
+        DomainViewerManager.getInstance();
     }
     
     /**

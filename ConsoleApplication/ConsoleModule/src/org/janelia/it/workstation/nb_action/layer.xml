@@ -132,6 +132,7 @@
         <folder name="Modes">
             <file name="explorer.wsmode" url="Modes/explorer.wsmode"/>
             <file name="appExplorerBtm.wsmode" url="Modes/appExplorerBtm.wsmode"/>
+            <file name="editor2.wsmode" url="Modes/editor2.wsmode"/>
         </folder>
     </folder>
 </filesystem>
