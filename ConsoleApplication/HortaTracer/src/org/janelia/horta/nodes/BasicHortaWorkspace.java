@@ -110,4 +110,10 @@ public class BasicHortaWorkspace implements HortaWorkspace
     {
         return neuronLists;
     }
+
+    @Override
+    public boolean hasChanged()
+    {
+        return changeObservable.hasChanged();
+    }
 }
