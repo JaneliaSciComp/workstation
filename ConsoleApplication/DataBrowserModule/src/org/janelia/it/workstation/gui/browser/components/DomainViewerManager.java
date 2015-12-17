@@ -5,7 +5,6 @@ import java.awt.Component;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.openide.windows.Mode;
-import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +12,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 
 /**
- * 
+ * Manages the life cycle of domain viewers based on user generated selected events. This manager
+ * either reuses existing viewers, or creates them as needed and docks them in the appropriate place.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
