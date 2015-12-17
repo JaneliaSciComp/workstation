@@ -53,10 +53,11 @@ public class WorkspaceInfoPanel extends JPanel
      */
     private void updateMetaData(final TmWorkspace workspace) {
         if (workspace == null) {
-            workspaceNameLabel.setText("Name: (no workspace)");
-            sampleNameLabel.setText("Sample:");
+            setWorkspaceName("(no workspace)");
+            // sampleNameLabel.setText("Sample:");
+            setSampleName("");
         } else {
-            workspaceNameLabel.setText("Name: " + workspace.getName());
+            setWorkspaceName(workspace.getName());
 
             SimpleWorker labelFiller = new SimpleWorker() {
                 String sampleName;
@@ -68,7 +69,8 @@ public class WorkspaceInfoPanel extends JPanel
 
                 @Override
                 protected void hadSuccess() {
-                    sampleNameLabel.setText("Sample: " + sampleName);
+                    // sampleNameLabel.setText("Sample: " + sampleName);
+                    setSampleName(sampleName);
                 }
 
                 @Override
@@ -79,5 +81,24 @@ public class WorkspaceInfoPanel extends JPanel
             labelFiller.execute();
         }
     }
+
+    private void setSampleName(String name) {
+        // if name is too wide, it messes up our panel width; tooltip has full name
+        sampleNameLabel.setToolTipText(name);
+        if (name.length() > 22) {
+            name = name.substring(0, 20) + "...";
+        }
+        sampleNameLabel.setText("Sample: " + name);
+    }
+
+    private void setWorkspaceName(String name) {
+        // if name is too wide, it messes up our panel width; tooltip has full name
+        workspaceNameLabel.setToolTipText(name);
+        if (name.length() > 24) {
+            name = name.substring(0, 22) + "...";
+        }
+        workspaceNameLabel.setText("Name: " + name);
+    }
+
 }
 

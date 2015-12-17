@@ -650,7 +650,7 @@ public class Utils {
             int estimatedCompressionFactor = 1;
             if (standardPath.endsWith(EXTENSION_BZ2) &&
                     (! destination.getName().endsWith(EXTENSION_BZ2))) {
-                input = new BZip2CompressorInputStream(input);
+                input = new BZip2CompressorInputStream(input, true);
                 estimatedCompressionFactor = 3;
             }
 

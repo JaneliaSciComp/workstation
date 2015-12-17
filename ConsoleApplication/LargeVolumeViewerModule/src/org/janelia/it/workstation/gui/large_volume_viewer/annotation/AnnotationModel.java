@@ -88,6 +88,9 @@ called from a  SimpleWorker thread.
     private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
     private Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
 
+    private String cachedNeuronStyleMapString;
+    private Map<Long, NeuronStyle> cachedNeuronStyleMap;
+
     private LoadTimer addTimer = new LoadTimer();
 
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
@@ -367,10 +370,10 @@ called from a  SimpleWorker thread.
     public void createNeuron(String name) throws Exception {
         final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
 
-        updateCurrentWorkspace();
-        setCurrentNeuron(neuron);
-
+        // update domain object
         final TmWorkspace workspace = getCurrentWorkspace();
+        workspace.getNeuronList().add(neuron);
+        setCurrentNeuron(neuron);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -841,7 +844,29 @@ called from a  SimpleWorker thread.
         // if segment to parent had a trace, remove it
         removeAnchoredPath(link, parent);
 
-        updateCurrentWorkspaceAndNeuron();
+        // update domain object; update child/parent relationships
+        parent.getChildIds().remove(link.getId());
+        if (child != null) {
+            link.getChildIds().remove(child.getId());
+            child.setParentId(parent.getId());
+            parent.getChildIds().add(child.getId());
+        }
+
+        // remove anchored paths and notes, if any
+        for (TmAnchoredPathEndpoints pair: new ArrayList<>(neuron.getAnchoredPathMap().keySet())) {
+            // doesn't matter which ID in endpoint pair we test
+            if (link.getId().equals(pair.getAnnotationID1())) {
+                neuron.getAnchoredPathMap().remove(pair);
+            }
+        }
+
+        if (neuron.getStructuredTextAnnotationMap().containsKey(link.getId())) {
+            neuron.getStructuredTextAnnotationMap().remove(link.getId());
+        }
+        // ...and finally get rid of the thing itself
+        neuron.getGeoAnnotationMap().remove(link.getId());
+
+
         final TmWorkspace workspace = getCurrentWorkspace();
 
         final TmGeoAnnotation updateChild;
@@ -1069,8 +1094,12 @@ called from a  SimpleWorker thread.
         removeAnchoredPath(newRoot, newRootParent);
         modelMgr.splitNeurite(neuron, newRoot);
 
-        // update and notify
-        updateCurrentWorkspaceAndNeuron();
+        // update domain objects and notify
+        newRoot.setParentId(newRoot.getNeuronId());
+        newRootParent.getChildIds().remove(newRootID);
+        neuron.getRootAnnotations().add(newRoot);
+
+
         final TmNeuron updateNeuron = getNeuronFromAnnotationID(newRootID);
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -1185,8 +1214,7 @@ called from a  SimpleWorker thread.
         }        
     }
 
-    public String getNote(Long annotationID) {
-        TmNeuron neuron = getNeuronFromAnnotationID(annotationID);
+    public String getNote(Long annotationID, TmNeuron neuron) {
         final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
         if (textAnnotation != null) {
             JsonNode rootNode = textAnnotation.getData();
@@ -1196,6 +1224,11 @@ called from a  SimpleWorker thread.
             }
         }
         return "";
+    }
+
+    public String getNote(Long annotationID) {
+        TmNeuron neuron = getNeuronFromAnnotationID(annotationID);
+        return getNote(annotationID, neuron);
     }
 
     /**
@@ -1313,25 +1346,34 @@ called from a  SimpleWorker thread.
             return neuronStyleMap;
         }
 
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode rootNode = null;
-        try {
-            rootNode = (ObjectNode) mapper.readTree(stylePref);
-        } catch (IOException e) {
-            // can't parse, return the empty map
-            // debated what to do here, but this should never happen,
-            //  so I'll be lazy about it
+        // json parsing is kind of expensive, and we pull this map often; since it
+        //  changes rarely, cache the parsed version; use the string to check for
+        //  change since the pref doesn't store its modification time
+        if (cachedNeuronStyleMapString != null && cachedNeuronStyleMapString.equals(stylePref)) {
+            return cachedNeuronStyleMap;
+        } else {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode rootNode = null;
+            try {
+                rootNode = (ObjectNode) mapper.readTree(stylePref);
+            } catch (IOException e) {
+                // can't parse, return the empty map
+                // debated what to do here, but this should never happen,
+                //  so I'll be lazy about it
+                cachedNeuronStyleMapString = null;
+                return neuronStyleMap;
+            }
+
+            // I can't believe you can't use a regular for loop for this...
+            Iterator<Map.Entry<String, JsonNode>> nodeIterator = rootNode.fields();
+            while (nodeIterator.hasNext()) {
+                Map.Entry<String, JsonNode> entry = nodeIterator.next();
+                neuronStyleMap.put(Long.parseLong(entry.getKey()), NeuronStyle.fromJSON((ObjectNode) entry.getValue()));
+            }
+            cachedNeuronStyleMapString = stylePref;
+            cachedNeuronStyleMap = neuronStyleMap;
             return neuronStyleMap;
         }
-
-        // I can't believe you can't use a regular for loop for this...
-        Iterator<Map.Entry<String, JsonNode>> nodeIterator = rootNode.fields();
-        while (nodeIterator.hasNext()) {
-            Map.Entry<String, JsonNode> entry = nodeIterator.next();
-            neuronStyleMap.put(Long.parseLong(entry.getKey()), NeuronStyle.fromJSON((ObjectNode) entry.getValue()));
-        }
-
-        return  neuronStyleMap;
     }
 
     /**
@@ -1386,7 +1428,7 @@ called from a  SimpleWorker thread.
      * are no longer valid
      */
     private void stripPredefNotes(TmNeuron neuron, Long annID) throws Exception {
-        String noteText = getNote(annID);
+        String noteText = getNote(annID, neuron);
         boolean modified = false;
         if (noteText.length() > 0) {
             List<PredefinedNote> predefList = PredefinedNote.findNotes(noteText);
