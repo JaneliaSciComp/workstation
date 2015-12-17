@@ -34,6 +34,7 @@ import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,12 +44,19 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:schauderd@janelia.hhmi.org">David Schauder</a>
  */
 public class RESTDomainFacade implements DomainFacade {
+
     private static final Logger log = LoggerFactory.getLogger(RESTDomainFacade.class);
 
+    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
+    
     Client client;
     Map<String, WebTarget> serviceEndpoints;
     String serverUrl;
 
+    public RESTDomainFacade() {
+        this(REMOTE_API_URL);
+    }
+    
     public RESTDomainFacade(String serverUrl) {
         this.serverUrl = serverUrl;
         log.info("Using server URL: {}",serverUrl);

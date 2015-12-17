@@ -29,7 +29,7 @@ public class DomainMgr {
 
     private static final Logger log = LoggerFactory.getLogger(DomainMgr.class);
 
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("compute.api.url");
+    private static final String DOMAIN_FACADE_CLASS_NAME = ConsoleProperties.getInstance().getProperty("domain.facade.class");
     
     // Singleton
     private static final DomainMgr instance = new DomainMgr();
@@ -42,12 +42,9 @@ public class DomainMgr {
     
     private DomainMgr() {
         try {
-            //this.facade = new MongoDomainFacade();
-            this.facade = new RESTDomainFacade(REMOTE_API_URL);
+            this.facade = (DomainFacade)Class.forName(DOMAIN_FACADE_CLASS_NAME).newInstance();
         }
         catch (Exception e) {
-            e.printStackTrace();
-            System.out.println (e);
             SessionMgr.getSessionMgr().handleException(e);
         }
 
