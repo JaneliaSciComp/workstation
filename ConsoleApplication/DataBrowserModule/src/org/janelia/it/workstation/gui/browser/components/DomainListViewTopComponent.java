@@ -1,30 +1,29 @@
 package org.janelia.it.workstation.gui.browser.components;
 
-import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
+
 import javax.swing.JComponent;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectSelectionEditor;
 import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.ObjectSetEditorPanel;
-import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
-import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectSelectionEditor;
-import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
+import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Top component which displays children of domain objects.
+ * Top component which displays lists of domain objects.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -50,22 +49,9 @@ import org.slf4j.LoggerFactory;
 })
 public final class DomainListViewTopComponent extends TopComponent {
 
-    private final static Logger log = LoggerFactory.getLogger(DomainListViewTopComponent.class);
+    private static final Logger log = LoggerFactory.getLogger(DomainListViewTopComponent.class);
     
     public static final String TC_NAME = "DomainListViewTopComponent";
-    
-    /* Manage the active instance of this top component */
-    
-    private static DomainListViewTopComponent activeInstance;
-    private static void activate(DomainListViewTopComponent instance) {
-        activeInstance = instance;
-    }
-    private static boolean isActive(DomainListViewTopComponent instance) {
-        return activeInstance == instance;
-    }
-    public static DomainListViewTopComponent getActiveInstance() {
-        return activeInstance;
-    }
     
     /* Instance variables */
     
@@ -76,7 +62,7 @@ public final class DomainListViewTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_DomainListViewTopComponent());
         associateLookup(new AbstractLookup(content));
-        // Init the viewer manager, so that clicks in this viewer are handled
+        // Init the viewer manager
         DomainViewerManager.getInstance();
     }
     
@@ -97,39 +83,35 @@ public final class DomainListViewTopComponent extends TopComponent {
 
     @Override
     public void componentOpened() {
-        Events.getInstance().registerOnEventBus(this);
-        activate(this);
+        DomainListViewManager.getInstance().activate(this);
     }
     
     @Override
     public void componentClosed() {
-        Events.getInstance().unregisterOnEventBus(this);
     }
 
     @Override
     protected void componentActivated() {
-        activate(this);
-        DomainObjectNode domainObjectNode = getCurrent();
-        DomainExplorerTopComponent.getInstance().selectNode(domainObjectNode);
+        DomainListViewManager.getInstance().activate(this);
     }
     
     @Override
     protected void componentDeactivated() {
     }
     
-    private DomainObjectNode getCurrent() {
-        return getLookup().lookup(DomainObjectNode.class);
+    private DomainObject getCurrent() {
+        return getLookup().lookup(DomainObject.class);
     }
 
-    private boolean setCurrent(DomainObjectNode domainObjectNode) {
-        DomainObjectNode curr = getCurrent();
-        if (curr==domainObjectNode) {
+    private boolean setCurrent(DomainObject domainObject) {
+        DomainObject curr = getCurrent();
+        if (curr==domainObject) {
             return false;
         }
         if (curr!=null) {
             content.remove(curr);
         }
-        content.add(domainObjectNode);
+        content.add(domainObject);
         return true;
     }
     
@@ -152,40 +134,14 @@ public final class DomainListViewTopComponent extends TopComponent {
     public DomainObjectSelectionEditor getEditor() {
         return editor;
     }
+    
+    public void loadDomainObject(DomainObject domainObject) {
         
-    @Subscribe
-    public void loadDomainObject(DomainObjectSelectionEvent event) {
-        
-        log.debug("loadDomainObject({})",event.getDomainObject().getName());
-        
-        // We only care about events if we're active
-        if (!isActive(this)) {
-            log.debug("Browser is not active");
-            return;
-        }
-        
-        // We only care about events generated by the explorer
-        if (event.getSource()!=DomainExplorerTopComponent.getInstance()) {
-            log.debug("Event source is not explorer: {}",event);
-            return;
-        }
-        
-        // We only care about selection events
-        if (!event.isSelect()) {
-            log.debug("Event is not selection: {}",event);
-            return;
-        }
-        
-        requestVisible();
-        
-        DomainObjectNode domainObjectNode = event.getDomainObjectNode();
-
         // Do we already have the given node loaded?
-        if (!setCurrent(domainObjectNode)) {
+        if (!setCurrent(domainObject)) {
             return;
         }
         
-        final DomainObject domainObject = domainObjectNode.getDomainObject();
         final Class<? extends DomainObjectSelectionEditor> editorClass = getEditorClass(domainObject);
         if (editorClass==null) {
             return;

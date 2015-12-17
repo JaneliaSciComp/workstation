@@ -3,14 +3,17 @@ package org.janelia.it.workstation.gui.browser.nb_action;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.editor.ObjectSetEditorPanel;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
@@ -104,7 +107,7 @@ public final class NewSetAction implements ActionListener {
     }
     
     private DomainListViewTopComponent initView() {
-        DomainListViewTopComponent browser = DomainListViewTopComponent.getActiveInstance();
+        DomainListViewTopComponent browser = DomainListViewManager.getInstance().getActiveViewer();
         if (browser==null) {
             browser = new DomainListViewTopComponent();
             browser.open();

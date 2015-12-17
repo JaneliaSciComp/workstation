@@ -138,6 +138,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
             @Override
             protected void hadSuccess() {
+                // Init the list viewer manager
+                DomainListViewManager.getInstance();
+                // Select the root node
                 selectRoot();
                 // Expand the top-level workspace nodes
                 for(Node node : root.getChildren().getNodes()) {
@@ -148,6 +151,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
             @Override
             protected void hadError(Throwable error) {
+                // Init the list viewer manager
+                DomainListViewManager.getInstance();
                 showNothing();
                 SessionMgr.getSessionMgr().handleException(error);
             }

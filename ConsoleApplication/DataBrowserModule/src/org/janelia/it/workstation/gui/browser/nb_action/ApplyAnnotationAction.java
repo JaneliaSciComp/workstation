@@ -21,6 +21,7 @@ import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
@@ -109,7 +110,7 @@ public class ApplyAnnotationAction extends NodeAction {
         
         log.info("Will annotate all selected objects with: {} ({})",keyTermValue,keyTermId);
         
-        DomainListViewTopComponent listView = DomainListViewTopComponent.getActiveInstance();
+        DomainListViewTopComponent listView = DomainListViewManager.getInstance().getActiveViewer();
         if (listView==null || listView.getEditor()==null) return;
         
         DomainObjectSelectionModel selectionModel = listView.getEditor().getSelectionModel();

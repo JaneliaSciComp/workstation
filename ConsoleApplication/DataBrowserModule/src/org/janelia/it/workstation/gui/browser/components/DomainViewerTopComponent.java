@@ -1,24 +1,23 @@
 package org.janelia.it.workstation.gui.browser.components;
 
-import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
-import java.awt.Component;
+
 import javax.swing.JComponent;
+
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleEditorPanel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
+import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,23 +49,10 @@ import org.slf4j.LoggerFactory;
 })
 public final class DomainViewerTopComponent extends TopComponent {
 
-    private final static Logger log = LoggerFactory.getLogger(DomainViewerTopComponent.class);
+    private static final Logger log = LoggerFactory.getLogger(DomainViewerTopComponent.class);
     
     public static final String TC_NAME = "DomainViewerTopComponent";
-    
-    /* Manage the active instance of this top component */
-    
-    private static DomainViewerTopComponent activeInstance;
-    private static void activate(DomainViewerTopComponent instance) {
-        activeInstance = instance;
-    }
-    private static boolean isActive(DomainViewerTopComponent instance) {
-        return activeInstance == instance;
-    }
-    public static DomainViewerTopComponent getActiveInstance() {
-        return activeInstance;
-    }
-    
+        
     /* Instance variables */
     
     private final InstanceContent content = new InstanceContent();
@@ -96,7 +82,7 @@ public final class DomainViewerTopComponent extends TopComponent {
     
     @Override
     public void componentOpened() {
-        activate(this);
+        DomainViewerManager.getInstance().activate(this);
     }
 
     @Override
@@ -105,10 +91,7 @@ public final class DomainViewerTopComponent extends TopComponent {
     
     @Override
     protected void componentActivated() {
-        activate(this);
-        // TODO: reselect in parent browser?
-//        DomainObjectNode domainObjectNode = getCurrent();
-//        DomainExplorerTopComponent.getInstance().selectNode(domainObjectNode);
+        DomainViewerManager.getInstance().activate(this);
     }
     
     @Override
@@ -149,7 +132,7 @@ public final class DomainViewerTopComponent extends TopComponent {
         setName(editor.getName());
     }
     
-    public DomainObjectEditor getEditor() {
+    public DomainObjectEditor<? extends DomainObject> getEditor() {
         return editor;
     }
         

@@ -26,6 +26,7 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
@@ -133,7 +134,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
     }
     public void showForSelectedDomainObjects() {
 
-        DomainListViewTopComponent listView = DomainListViewTopComponent.getActiveInstance();
+        DomainListViewTopComponent listView = DomainListViewManager.getInstance().getActiveViewer();
         if (listView==null || listView.getEditor()==null) {
             showSelectionMessage();
             return;
