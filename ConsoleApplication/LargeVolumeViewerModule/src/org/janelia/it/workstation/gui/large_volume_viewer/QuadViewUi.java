@@ -119,6 +119,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	// TODO obsolete zViewerPanel in favor of OrthogonalPanel
 	JPanel zViewerPanel = new JPanel();
 	JComponent seViewer = zViewerPanel; // should be same as Z...
+    JPanel viewerPanel = new JPanel();
 
 	// Group orthogonal viewers for use in action constructors
 	List<TileConsumer> allSliceViewers = Arrays.asList(new TileConsumer[] {
@@ -326,10 +327,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         annotationModel.setViewStateListener(quadViewController);
         
         // Toggle skeleton actor with v key
-        InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        // see note in interceptModeChangeGestures() regarding which input map
+        InputMap inputMap = viewerPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, 0, false), "vKeyPressed");
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, 0, true), "vKeyReleased");
-        ActionMap actionMap = getActionMap();
+        ActionMap actionMap = viewerPanel.getActionMap();
         actionMap.put("vKeyPressed", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -635,7 +637,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         viewerPlusPanel.setLayout(new BoxLayout(viewerPlusPanel, BoxLayout.X_AXIS));
 		splitPane_1.setLeftComponent(viewerPlusPanel);
 
-		JPanel viewerPanel = new JPanel();
         viewerPlusPanel.add(viewerPanel);
 		viewerPanel.setLayout(new GridBagLayout());
 
@@ -896,12 +897,14 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         		previousZSliceAction,
                 goToLocationAction
         		};
-        InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        // input map for viewer area, not all of QuadViewUi or anything that has
+        //  text entry fields, or we'll trigger actions while typing in them!
+        InputMap inputMap = viewerPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         for (Action action : modeActions) {
         	KeyStroke accelerator = (KeyStroke)action.getValue(Action.ACCELERATOR_KEY);
         	String actionName = (String)action.getValue(Action.NAME);
-        	inputMap.put(accelerator, actionName);
-        	getActionMap().put(actionName, action);
+            inputMap.put(accelerator, actionName);
+        	viewerPanel.getActionMap().put(actionName, action);
         }
 	}
 
@@ -913,12 +916,13 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 centerNextParentAction,
                 backtrackNeuronAction
         };
-        InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        /// see note in interceptModeChangeGestures() re: which input map
+        InputMap inputMap = viewerPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         for (Action action : modeActions) {
             KeyStroke accelerator = (KeyStroke)action.getValue(Action.ACCELERATOR_KEY);
             String actionName = (String)action.getValue(Action.NAME);
             inputMap.put(accelerator, actionName);
-            getActionMap().put(actionName, action);
+            viewerPanel.getActionMap().put(actionName, action);
         }
 
     }

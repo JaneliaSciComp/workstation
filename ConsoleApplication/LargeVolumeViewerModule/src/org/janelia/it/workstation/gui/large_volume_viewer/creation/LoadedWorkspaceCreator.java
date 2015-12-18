@@ -61,11 +61,16 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
                 // Simple dialog: just enter the path.  Should be a server-known path.
                 final JDialog inputDialog = new JDialog(mainFrame, true);
                 final JTextField pathTextField = new JTextField();
-                final JTextField errorTextField = new JTextField("   ");
-                errorTextField.setForeground(Color.red);
+                final JLabel errorLabel = new JLabel("   ");
+                errorLabel.setForeground(Color.red);
                 pathTextField.addKeyListener(new PathCorrectionKeyListener(pathTextField));
+                pathTextField.setToolTipText("Backslashes will be converted to /.");
+                final JLabel workspaceNameLabel = new JLabel("Workspace Name");
+                final JTextField workspaceNameTextField = new JTextField();
                 inputDialog.setTitle("Input Folder");
-                inputDialog.setLayout(new GridLayout(4, 1));
+                inputDialog.setLayout(new GridLayout(6, 1));
+                inputDialog.add(workspaceNameLabel);
+                inputDialog.add(workspaceNameTextField);
                 inputDialog.add(new JLabel("Enter Full Path to Input Folder"));
                 inputDialog.add(pathTextField);
                 JPanel buttonPanel = new JPanel();
@@ -80,15 +85,18 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
                 });
                 buttonPanel.add(cancelButton, SystemInfo.isMac ? BorderLayout.LINE_START : BorderLayout.LINE_END);
                 inputDialog.add(buttonPanel);
-                inputDialog.add(errorTextField);
+                inputDialog.add(errorLabel);
                 final ComputeFacade cf = FacadeManager.getFacadeManager().getComputeFacade();
 
                 JButton okButton = new JButton("OK");
+                okButton.setToolTipText("Send path to linux.");
                 okButton.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent ae) {
-                        errorTextField.setText("");
+                        errorLabel.setText("");
                         String temp = pathTextField.getText().trim();
+                        temp = temp.replace("\\", "/");
+                        pathTextField.setText(temp); //Show user what we try
                         StringBuilder bldr = new StringBuilder();
                         for (int i = 0; i < temp.length(); i++) {
                             final char nextChar = temp.charAt(i);
@@ -108,7 +116,7 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
                         }
                         userInput = bldr.toString();
                         if (! cf.isServerPathAvailable(userInput, true) ) {
-                            errorTextField.setText(userInput + " not found on server. Please Try again.");
+                            errorLabel.setText(userInput + " not found on server. Please Try again.");
                         }
                         else {
                             inputDialog.setVisible(false);
@@ -133,6 +141,7 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
                         HashSet<TaskParameter> taskParameters = new HashSet<>();
                         taskParameters.add(new TaskParameter(SwcImportTask.PARAM_sampleId, sampleId.toString(), null));
                         taskParameters.add(new TaskParameter(SwcImportTask.PARAM_userName, ownerKey, null));
+                        taskParameters.add(new TaskParameter(SwcImportTask.PARAM_workspaceName, workspaceNameTextField.getText().trim(), null));
                         taskParameters.add(new TaskParameter(SwcImportTask.PARAM_topLevelFolderName, userInput, null));
 
                         String taskName = new File(userInput).getName();
