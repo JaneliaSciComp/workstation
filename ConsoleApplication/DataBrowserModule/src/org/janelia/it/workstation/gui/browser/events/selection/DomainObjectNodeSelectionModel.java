@@ -17,14 +17,14 @@ public class DomainObjectNodeSelectionModel extends SelectionModel<DomainObjectN
     protected void notify(DomainObjectNode domainObjectNode, Reference id, boolean select, boolean clearAll) {
         if (domainObjectNode instanceof ObjectSetNode) {
             ObjectSetNode objectSetNode = (ObjectSetNode)domainObjectNode;
-            Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), id, select, objectSetNode));
+            Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), select, objectSetNode));
         }
         else if (domainObjectNode instanceof FilterNode) {
             FilterNode filterNode = (FilterNode)domainObjectNode;
-            Events.getInstance().postOnEventBus(new FilterSelectionEvent(getSource(), id, select, filterNode));
+            Events.getInstance().postOnEventBus(new FilterSelectionEvent(getSource(), select, filterNode));
         }
         else {
-            Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), id, domainObjectNode, select, clearAll));
+            Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), domainObjectNode, select, clearAll));
         }
     }
     

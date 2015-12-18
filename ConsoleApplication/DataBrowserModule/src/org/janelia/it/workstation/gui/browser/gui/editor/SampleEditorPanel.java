@@ -41,6 +41,8 @@ import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
@@ -144,6 +146,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
         }
         resultPanel.setSelected(true);
         resultPanel.requestFocus();
+        Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, sample, resultPanel.getResult()));
     }
     
     private PipelineResultPanel getResultPanelAncestor(Component component) {

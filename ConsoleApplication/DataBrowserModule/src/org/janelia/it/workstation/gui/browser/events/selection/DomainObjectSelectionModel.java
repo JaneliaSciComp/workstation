@@ -28,10 +28,10 @@ public class DomainObjectSelectionModel extends SelectionModel<DomainObject,Refe
     protected void notify(DomainObject domainObject, Reference id, boolean select, boolean clearAll) {
         if (domainObject instanceof ObjectSet) {
             ObjectSet objectSet = (ObjectSet)domainObject;
-            Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), id, select, objectSet));
+            Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), select, objectSet));
         }
         else {
-            Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), id, domainObject, select, clearAll));
+            Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), domainObject, select, clearAll));
         }
     }
     
