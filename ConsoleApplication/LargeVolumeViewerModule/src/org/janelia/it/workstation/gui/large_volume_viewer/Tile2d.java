@@ -203,6 +203,10 @@ implements GLActor
 	        int cornerOrder[] = {0, 1, 2, 3};
 	        for (int c : cornerOrder) {
 		        gl.glTexCoord2d(texCoords[c].getX(), texCoords[c].getY());
+//				double xc=corners[c].getX();
+//				double yc=corners[c].getY();
+//				double zc=corners[c].getZ();
+//				log.info("glVertex3d : "+xc + " " + yc + " " + zc);
 		        gl.glVertex3d(corners[c].getX(), corners[c].getY(), corners[c].getZ());
 	        }
 	        
@@ -359,7 +363,7 @@ implements GLActor
         double z0 = getBoundingBox3d().getMin().get(whdToXyz[2]);
         double z1 = getBoundingBox3d().getMax().get(whdToXyz[2]);
         double z = 0.5 * (z0 + z1); // Center in depth
-        if (camera != null)
+		if (camera != null)
         	z = camera.getFocus().get(whdToXyz[2]);
         double x0 = getBoundingBox3d().getMin().get(whdToXyz[0]);
         double x1 = getBoundingBox3d().getMax().get(whdToXyz[0]);

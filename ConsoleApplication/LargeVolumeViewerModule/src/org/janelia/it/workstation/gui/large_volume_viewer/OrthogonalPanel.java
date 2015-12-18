@@ -23,6 +23,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageList
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * GUI widget combining a large volume viewer with a slice slider.
@@ -31,7 +33,9 @@ import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 public class OrthogonalPanel 
 extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 {
-    private JPanel scanPanel = new JPanel();
+	private static final Logger log = LoggerFactory.getLogger(OrthogonalPanel.class);
+
+	private JPanel scanPanel = new JPanel();
 	private JSlider slider = new JSlider();
 	private JSpinner spinner = new JSpinner();
     private SpinnerCalculationValue spinnerValue = new SpinnerCalculationValue(spinner);
@@ -78,7 +82,7 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
     
 	private void init() {
 		viewTileManager = new ViewTileManager(viewer);
-		viewer.setSliceActor(new SliceActor(viewTileManager));
+		viewer.setSliceActor(new SliceActor(viewTileManager, tileServer));
 		spinner.setModel(spinnerNumberModel);
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		add(viewer.getComponent());
@@ -144,7 +148,7 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 		tileServer.addViewTileManager(viewTileManager);
 		//
 		viewer.setTileServer(tileServer);
-		viewer.setTileServer(tileServer);
+		viewer.getSliceActor().setTileServer(tileServer);
 	}
 	
 	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator)

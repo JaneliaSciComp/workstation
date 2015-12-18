@@ -137,7 +137,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		viewTileManager.setVolumeImage(tileServer.getSharedVolumeImage());
 		viewTileManager.setTextureCache(tileServer.getTextureCache());
 		tileServer.addViewTileManager(viewTileManager);
-		sliceActor = new SliceActor(viewTileManager);
+		sliceActor = new SliceActor(viewTileManager, tileServer);
 		//
 		// gray background for testing
 		// this.renderer.setBackgroundColor(new Color(0.5f, 0.5f, 0.5f, 0.0f));

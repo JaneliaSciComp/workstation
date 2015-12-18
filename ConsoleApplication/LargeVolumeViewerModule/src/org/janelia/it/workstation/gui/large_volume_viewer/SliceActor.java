@@ -1,9 +1,8 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.io.File;
+import java.util.*;
+
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
@@ -12,6 +11,7 @@ import javax.media.opengl.GLAutoDrawable;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.cache.TileStackCacheController;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.NumeralShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.OutlineShader;
@@ -35,6 +35,7 @@ implements GLActor
 	private static final Logger log = LoggerFactory.getLogger(SliceActor.class);
 
 	private ViewTileManager viewTileManager;
+	private TileServer tileServer;
 	
 	private boolean needsGlDisposal = false; // flag for deferred OpenGL data reset
 	private boolean needsTextureCacheClear = false; // flag for deferred clear of texture cache
@@ -44,9 +45,14 @@ implements GLActor
 	private NumeralShader numeralShader = new NumeralShader();
 	private OutlineShader outlineShader = new OutlineShader();
 	
-	public SliceActor(ViewTileManager viewTileManager)
+	public SliceActor(ViewTileManager viewTileManager, TileServer tileServer)
 	{
 		this.viewTileManager = viewTileManager;
+		this.tileServer = tileServer;
+	}
+
+	public void setTileServer(TileServer tileServer) {
+		this.tileServer=tileServer;
 	}
 
 	@Override
@@ -58,6 +64,12 @@ implements GLActor
 	public void display(GLAutoDrawable glDrawable, TileSet tiles)
 	{
 	    GL gl = glDrawable.getGL();
+
+		Map<Tile2d,List<Tile2d>> depthViewMap=null;
+		if (VolumeCache.useVolumeCache()) {
+			depthViewMap=new HashMap<>();
+		}
+
 	    // Manage opengl garbage collection, while we have a valid context
 	    if (viewTileManager != null) {
 	        TextureCache tc = viewTileManager.getTextureCache();
@@ -81,11 +93,50 @@ implements GLActor
 		
 		if (! tiles.canDisplay())
 			return;
-		
-        // upload textures to video card, if needed
-        for (Tile2d tile: tiles) {
-            tile.init(glDrawable);
-        }
+
+		// upload textures to video card, if needed
+		TileStackCacheController tileStackCacheController=TileStackCacheController.getInstance();
+		if (depthViewMap==null) {
+			for (Tile2d tile : tiles) {
+				tile.init(glDrawable);
+			}
+		} else {
+			for (Tile2d tile: tiles) {
+				tile.init(glDrawable);
+				depthViewMap.clear();
+				List<Tile2d> depthList=new ArrayList<>();
+				depthViewMap.put(tile, depthList);
+				if (tileServer==null) {
+					log.error("tileServer is null");
+				}
+				TextureCache textureCache = tileServer.getTextureCache();
+				AbstractTextureLoadAdapter loadAdapter=tileServer.getLoadAdapter();
+				if (loadAdapter==null) {
+					log.error("loadAdapter is null");
+				}
+				TileFormat tileFormat = loadAdapter.getTileFormat();
+				for (int depth = -5; depth < 0; depth++) {
+					TileIndex tileIndex = tile.getIndex();
+					TileIndex depthIndex = new TileIndex(tileIndex.getX(), tileIndex.getY(), tileIndex.getZ() + depth,
+							tileIndex.getZoom(), tileIndex.getMaxZoom(), tileIndex.getIndexStyle(), tileIndex.getSliceAxis());
+					TileTexture d2=textureCache.get(depthIndex);
+					if (d2==null) {
+						File stackFile = tileStackCacheController.getStackFileForTileIndex(depthIndex);
+						if (stackFile != null) {
+							TileTexture depthTexture = new TileTexture(depthIndex, tileServer.getLoadAdapter());
+							TextureLoadWorker textureLoadWorker = new TextureLoadWorker(depthTexture, textureCache, tileServer);
+							textureLoadWorker.run();
+							d2 = textureCache.get(depthIndex);
+						}
+					}
+					if (d2 != null) {
+						Tile2d depthTile = new Tile2d(depthIndex, tileFormat);
+						depthList.add(depthTile);
+					}
+				}
+			}
+		}
+
         
 		// Render tile textures.
 		// Pixelate at high zoom.
@@ -100,6 +151,16 @@ implements GLActor
         GL2 gl2 = glDrawable.getGL().getGL2();
 		shader.load(gl2);
 		for (Tile2d tile: tiles) {
+			if (depthViewMap!=null) {
+				List<Tile2d> depthTileList=depthViewMap.get(tile);
+				if (depthTileList!=null) {
+					log.info("Rendering "+depthTileList.size()+" depth tiles");
+					for (Tile2d depthTile : depthTileList) {
+						depthTile.setFilter(filter);
+						tile.display(glDrawable, camera);
+					}
+				}
+			}
 			tile.setFilter(filter);
 			tile.display(glDrawable, camera);
 		}
