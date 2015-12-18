@@ -58,7 +58,7 @@ public class DomainListViewManager implements ViewerManager<DomainListViewTopCom
     }
 
     @Subscribe
-    public void loadDomainObject(DomainObjectSelectionEvent event) {
+    public void handleDomainObjectSelection(DomainObjectSelectionEvent event) {
 
         // We only care about selection events
         if (!event.isSelect()) {

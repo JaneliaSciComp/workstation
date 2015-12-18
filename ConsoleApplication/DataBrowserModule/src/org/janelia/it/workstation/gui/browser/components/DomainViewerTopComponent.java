@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = false)
+@TopComponent.Registration(mode = "editor2", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(

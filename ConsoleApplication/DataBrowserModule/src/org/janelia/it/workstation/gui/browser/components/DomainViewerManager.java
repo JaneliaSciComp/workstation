@@ -58,7 +58,7 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
     }
 
     @Subscribe
-    public void loadDomainObject(DomainObjectSelectionEvent event) {
+    public void handleDomainObjectSelection(DomainObjectSelectionEvent event) {
 
         // We only care about selection events
         if (!event.isSelect()) {
@@ -79,7 +79,9 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
 
         log.info("loadDomainObject({})",event.getDomainObject());
         
-        DomainViewerTopComponent targetViewer = ViewerUtils.provisionViewer(DomainViewerManager.getInstance(), "editor2");
-        targetViewer.loadDomainObject(event.getDomainObject());
+        DomainViewerTopComponent targetViewer = DomainViewerManager.getInstance().getActiveViewer();
+        if (targetViewer!=null) {
+            targetViewer.loadDomainObject(event.getDomainObject());
+        }
     }
 }

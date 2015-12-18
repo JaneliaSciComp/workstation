@@ -832,30 +832,4 @@ public class Utils {
         }
         return false;
     }
-    
-    public static TopComponent getTopComponent(String name, String preferredModeName) {        
-
-        Mode preferredMode = WindowManager.getDefault().findMode(preferredModeName);
-        
-//        for(TopComponent tc : preferredMode.getTopComponents()) {
-//            if (tc.getName().equals(name)) {
-//                tc.requestVisible();
-//                log.info("Found tc {} in mode {}",name,preferredModeName);
-//                return tc;
-//            }
-//        }
-        
-        TopComponent tc = WindowManager.getDefault().findTopComponent(name);
-        if (!tc.isOpened()) {
-            log.info("Opening tc {} in mode {}",name,preferredModeName);
-            tc.open();
-            tc.requestActive();
-            preferredMode.dockInto(tc);
-        }
-        else {
-            log.info("Found tc {}, requesting active",name);
-            tc.requestActive();
-        }
-        return tc;
-    }
 }

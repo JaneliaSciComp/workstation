@@ -12,8 +12,13 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.JMenuItem;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
+import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
+import org.janelia.it.workstation.gui.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
+import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -166,8 +171,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                DomainViewerTopComponent viewer = new DomainViewerTopComponent();
-                viewer.open();
+                DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
                 viewer.requestActive();
                 viewer.loadDomainObject(domainObject);
             }
