@@ -140,7 +140,7 @@ public class DynamicImagePanel extends JPanel {
      */
     public synchronized void setViewable(final boolean wantViewable, final Callable success) {
         
-        log.debug("setViewable({},{})",wantViewable,imageFilename);
+        log.debug("setViewable({}->{},{})",viewable,wantViewable,imageFilename);
         
         if (imageFilename != null) {
             if (wantViewable) {
@@ -198,7 +198,6 @@ public class DynamicImagePanel extends JPanel {
                     };
                     
                     loadWorker.executeInImagePool();
-
                 }
             }
             else {

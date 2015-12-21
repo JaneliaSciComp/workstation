@@ -42,9 +42,10 @@ import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
+import org.janelia.it.workstation.gui.browser.events.selection.SampleResultSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
+import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.slf4j.Logger;
@@ -68,7 +69,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
     private final JPanel dataPanel;
     private final SimpleDropDownButton objectiveButton;
     private final SimpleDropDownButton areaButton;
-    private final Set<PipelineResultPanel> resultPanels = new HashSet<>();
+    private final List<PipelineResultPanel> resultPanels = new ArrayList<>();
     private final Set<LoadedImagePanel> lips = new HashSet<>();
         
     // State
@@ -86,7 +87,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
             }
             PipelineResultPanel resultPanel = getResultPanelAncestor(e.getComponent());
             // Select the button first
-            resultPanelSelection(resultPanel);
+            resultPanelSelection(resultPanel, true);
             getButtonPopupMenu(resultPanel.getResult()).show(e.getComponent(), e.getX(), e.getY());
             e.consume();
         }
@@ -101,7 +102,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
             if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
                 return;
             }
-            resultPanelSelection(resultPanel);
+            resultPanelSelection(resultPanel, true);
         }
     };
     
@@ -138,7 +139,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
         });
     }
     
-    private void resultPanelSelection(PipelineResultPanel resultPanel) {
+    private void resultPanelSelection(PipelineResultPanel resultPanel, boolean isUserDriven) {
         for(PipelineResultPanel otherResultPanel : resultPanels) {
             if (resultPanel != otherResultPanel) {
                 otherResultPanel.setSelected(false);
@@ -146,7 +147,8 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
         }
         resultPanel.setSelected(true);
         resultPanel.requestFocus();
-        Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, sample, resultPanel.getResult()));
+        SampleResult sampleResult = new SampleResult(sample, resultPanel.getResult());
+        Events.getInstance().postOnEventBus(new SampleResultSelectionEvent(this, sampleResult, isUserDriven));
     }
     
     private PipelineResultPanel getResultPanelAncestor(Component component) {
@@ -217,8 +219,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
                 
                 boolean display = diplayObjective;
                 if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, objective)) {
-                    // TODO: reenable this when it's correctly populated in the database
-//                    display = false;
+                    display = false;
                 }
                 
                 if (display) {
@@ -242,8 +243,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
                                 
                 boolean display = diplayObjective;
                 if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, objective)) {
-                    // TODO: reenable this when it's correctly populated in the database
-//                    display = false;
+                    display = false;
                 }
                 
                 if (display) {
@@ -267,31 +267,12 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
         areas.add(0, ALL_VALUE);
         populateAreaButton(areas);
         
-        
-//        SimpleWorker childLoadingWorker = new SimpleWorker() {
-//
-//            @Override
-//            protected void doStuff() throws Exception {
-//                // TODO: get neurons, etc
-//            }
-//
-//            @Override
-//            protected void hadSuccess() {
-//                
-//            }
-//
-//            @Override
-//            protected void hadError(Throwable error) {
-//                SessionMgr.getSessionMgr().handleException(error);
-//            }
-//        };
-//
-//        childLoadingWorker.execute();
-
-        if (resultPanels.isEmpty()) {
-            // Force update
-            updateUI();
+        if (!resultPanels.isEmpty()) {
+            resultPanelSelection(resultPanels.get(0), false);
         }
+        
+        // Force update
+        updateUI();
     }
 
     private void populateObjectiveButton(List<String> objectives) {

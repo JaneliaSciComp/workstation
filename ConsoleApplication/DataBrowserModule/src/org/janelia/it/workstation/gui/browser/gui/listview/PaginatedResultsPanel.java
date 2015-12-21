@@ -6,7 +6,9 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -212,7 +214,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
             setViewer(null);
         }
         
-        updateResultsView();
+        updateResultsView(true);
         
         // Reselect the items that were selected
         List<DomainObject> selectedDomainObjects = new ArrayList<>(); 
@@ -354,14 +356,18 @@ public abstract class PaginatedResultsPanel extends JPanel {
         updateUI();
     }
     
-    public void showSearchResults(SearchResults searchResults) {
+    public void showSearchResults(SearchResults searchResults, boolean isUserDriven) {
         this.searchResults = searchResults;
         numPages = searchResults.getNumTotalPages();
         this.currPage = 0;
-        showCurrPage();
+        showCurrPage(isUserDriven);
+    }
+
+    protected void showCurrPage() {
+        showCurrPage(true);
     }
     
-    protected void showCurrPage() {
+    protected void showCurrPage(final boolean isUserDriven) {
 
         updatePagingStatus();
         showLoadingIndicator();
@@ -379,7 +385,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
 
             @Override
             protected void hadSuccess() {
-                updateResultsView();
+                updateResultsView(isUserDriven);
             }
 
             @Override
@@ -392,9 +398,29 @@ public abstract class PaginatedResultsPanel extends JPanel {
         worker.execute();
     }
     
-    private void updateResultsView() {
+    private void updateResultsView(final boolean isUserDriven) {
         if (resultPage!=null) {
-            resultsView.showDomainObjects(resultPage);
+            resultsView.showDomainObjects(resultPage, new Callable<Void>() {   
+                @Override
+                public Void call() throws Exception {
+                    if (isUserDriven) {
+                        //
+                        // If and only if this is a user driven selection, we should automatically select the first item.
+                        //
+                        // This behavior is disabled for auto-generated events, in order to enable the browsing behavior where a user 
+                        // walks through a list of domain objects (e.g. Samples) with the object set viewer, and each one triggers a 
+                        // load in the domain object viewer, which automatically selects its first result, which in turn triggers another 
+                        // load (of, say, Neuron Fragments). If we selected the first Neuron Fragment, then it would generate a selection 
+                        // event that would overwrite the Sample in the Data Inspector.
+                        //
+                        List<DomainObject> objects = resultPage.getDomainObjects();
+                        if (!objects.isEmpty()) {
+                            resultsView.selectDomainObjects(Arrays.asList(objects.get(0)), true, true);
+                        }
+                    }
+                    return null;
+                }
+            });
             showResultsView();
         }
         else {

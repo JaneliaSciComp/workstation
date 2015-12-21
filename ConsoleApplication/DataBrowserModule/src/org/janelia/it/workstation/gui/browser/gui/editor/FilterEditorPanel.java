@@ -802,7 +802,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             @Override
             protected void hadSuccess() {
                 try {
-                    resultsPanel.showSearchResults(searchResults);
+                    resultsPanel.showSearchResults(searchResults, true);
                     updateFilterView();
                     if (showLoading) {
                         resultsPanel.showResultsView();

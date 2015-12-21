@@ -7,6 +7,7 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -74,6 +75,11 @@ public class MongoDomainFacade implements DomainFacade {
         return dao.getDomainObjects(SessionMgr.getSubjectKey(), className, ids);
     }
 
+    @Override
+    public List<DomainObject> getDomainObjects(ReverseReference reference) {
+        return dao.getDomainObjects(SessionMgr.getSubjectKey(), reference);
+    }
+    
     @Override
     public List<Annotation> getAnnotations(Collection<Reference> references) {
         return dao.getAnnotations(SessionMgr.getSubjectKey(), references);

@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.browser.gui.listview;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
@@ -21,7 +22,7 @@ public interface AnnotatedDomainObjectListViewer {
      * Show the objects in the list in the viewer, along with their annotations. 
      * @param domainObjectList 
      */
-    public void showDomainObjects(AnnotatedDomainObjectList domainObjectList);
+    public void showDomainObjects(AnnotatedDomainObjectList domainObjectList, final Callable<Void> success);
 
     /**
      * Refresh the given domain object.

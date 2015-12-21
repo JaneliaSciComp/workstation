@@ -143,7 +143,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
 
     public void setScrollLoadingEnabled(boolean enabled) {
         if (enabled) {
-            // Reset scrollbar and re-add the listener
+            // Reset scroll bar and re-add the listener
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
@@ -155,13 +155,14 @@ public class ImagesPanel<T,S> extends JScrollPane {
         else {
             // Remove the scroll listener so that we don't get a bunch of bogus events as things are added to the imagesPanel
             getVerticalScrollBar().removeAdjustmentListener(scrollListener);
+            getVerticalScrollBar().setValue(0);
         }
     }
 
     public void cancelAllLoads() {
         for (AnnotatedImageButton<T,S> button : buttons.values()) {
             if (button instanceof DynamicImageButton) {
-                ((DynamicImageButton) button).cancelLoad();
+                ((DynamicImageButton<T,S>) button).cancelLoad();
             }
         }
     }
@@ -170,7 +171,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
      * Create the image buttons, but leave the images unloaded for now.
      */
     public void setImageObjects(List<T> imageObjects) {
-
+        
         buttons.clear();
         for (Component component : buttonsPanel.getComponents()) {
             if (component instanceof AnnotatedImageButton) {
@@ -399,8 +400,6 @@ public class ImagesPanel<T,S> extends JScrollPane {
     public synchronized void registerAspectRatio(Double aspectRatio) {
         if (lowestAspectRatio == null || aspectRatio < lowestAspectRatio) {
             this.lowestAspectRatio = aspectRatio;
-            // Is this needed? Doesn't seem to be...
-            //setMaxImageWidth(maxImageWidth);
         }
     }
 
@@ -424,13 +423,13 @@ public class ImagesPanel<T,S> extends JScrollPane {
                 if (button.getAnnotationView() instanceof AnnotationTablePanel) {
                     return;
                 }
-                button.setAnnotationView(new AnnotationTablePanel());
+                button.setAnnotationView(new AnnotationTablePanel<T,S>());
             }
             else {
                 if (button.getAnnotationView() instanceof AnnotationTagCloudPanel) {
                     return;
                 }
-                button.setAnnotationView(new AnnotationTagCloudPanel() {
+                button.setAnnotationView(new AnnotationTagCloudPanel<T,S>() {
                     @Override
                     protected void moreDoubleClicked(MouseEvent e) {
                         // TODO: show more annotations
@@ -574,6 +573,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
                 loadUnloadImagesInterrupt.set(false);
                 final JViewport viewPort = getViewport();
                 Rectangle viewRect = viewPort.getViewRect();
+                log.trace("viewRect: {}",viewRect);
                 if (buttonsPanel.getColumns() == 1) {
                     viewRect.setSize(viewRect.width, viewRect.height + 100);
                 }
@@ -583,7 +583,9 @@ public class ImagesPanel<T,S> extends JScrollPane {
                         return;
                     }
                     try {
-                        button.setViewable(viewRect.intersects(button.getBounds()));
+                        boolean wantViewable = viewRect.intersects(button.getBounds());
+                        log.trace("viewRect.intersects(({}) = {}",button.getBounds(),wantViewable);
+                        button.setViewable(wantViewable);
                     }
                     catch (Exception e) {
                         SessionMgr.getSessionMgr().handleException(e);

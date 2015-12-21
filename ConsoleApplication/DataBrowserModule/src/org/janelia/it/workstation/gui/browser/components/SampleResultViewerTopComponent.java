@@ -4,12 +4,10 @@ import java.awt.BorderLayout;
 
 import javax.swing.JComponent;
 
-import org.apache.commons.lang3.StringUtils;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectEditor;
-import org.janelia.it.workstation.gui.browser.gui.editor.SampleEditorPanel;
+import org.janelia.it.workstation.gui.browser.gui.editor.NeuronSeparationEditorPanel;
+import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultEditor;
+import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -22,49 +20,48 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Top component which displays domain object viewers. 
+ * Top component which displays neuron separations for a single result. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ConvertAsProperties(
-        dtd = "-//org.janelia.it.workstation.gui.browser.components//DomainViewer//EN",
+        dtd = "-//org.janelia.it.workstation.gui.browser.components//SampleResultViewer//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = DomainViewerTopComponent.TC_NAME,
+        preferredID = SampleResultViewerTopComponent.TC_NAME,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor2", openAtStartup = false)
-@ActionID(category = "Window", id = "org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent")
+@TopComponent.Registration(mode = "editor3", openAtStartup = false)
+@ActionID(category = "Window", id = "org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
-        displayName = "#CTL_DomainViewerAction",
-        preferredID = DomainViewerTopComponent.TC_NAME
+        displayName = "#CTL_SampleResultViewerAction",
+        preferredID = SampleResultViewerTopComponent.TC_NAME
 )
 @Messages({
-    "CTL_DomainViewerAction=Domain Object Viewer",
-    "CTL_DomainViewerTopComponent=Domain Object Viewer",
-    "HINT_DomainViewerTopComponent=Domain Object Viewer"
+    "CTL_SampleResultViewerAction=Sample Result Viewer",
+    "CTL_SampleResultViewerTopComponent=Sample Result Viewer",
+    "HINT_SampleResultViewerTopComponent=Sample Result Viewer"
 })
-public final class DomainViewerTopComponent extends TopComponent {
+public final class SampleResultViewerTopComponent extends TopComponent {
 
-    private static final Logger log = LoggerFactory.getLogger(DomainViewerTopComponent.class);
+    private static final Logger log = LoggerFactory.getLogger(SampleResultViewerTopComponent.class);
     
-    public static final String TC_NAME = "DomainViewerTopComponent";
+    public static final String TC_NAME = "SampleResultViewerTopComponent";
         
     /* Instance variables */
     
     private final InstanceContent content = new InstanceContent();
-    private DomainObjectEditor<DomainObject> editor;
+    private SampleResultEditor editor;
     
-    public DomainViewerTopComponent() {
+    public SampleResultViewerTopComponent() {
         initComponents();
-        setName(Bundle.CTL_DomainViewerTopComponent());
-        setToolTipText(Bundle.HINT_DomainViewerTopComponent());
+        setName(Bundle.CTL_SampleResultViewerTopComponent());
+        setToolTipText(Bundle.HINT_SampleResultViewerTopComponent());
         associateLookup(new AbstractLookup(content));
-        // Init the viewer manager
-        SampleResultViewerManager.getInstance();
+        setEditorClass(NeuronSeparationEditorPanel.class);
     }
 
     /**
@@ -81,10 +78,9 @@ public final class DomainViewerTopComponent extends TopComponent {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
-    
     @Override
     public void componentOpened() {
-        DomainViewerManager.getInstance().activate(this);
+        SampleResultViewerManager.getInstance().activate(this);
     }
 
     @Override
@@ -93,30 +89,30 @@ public final class DomainViewerTopComponent extends TopComponent {
     
     @Override
     protected void componentActivated() {
-        DomainViewerManager.getInstance().activate(this);
+        SampleResultViewerManager.getInstance().activate(this);
     }
     
     @Override
     protected void componentDeactivated() {
     }
 
-    private DomainObject getCurrent() {
-        return getLookup().lookup(DomainObject.class);
+    private SampleResult getCurrent() {
+        return getLookup().lookup(SampleResult.class);
     }
 
-    private boolean setCurrent(DomainObject domainObject) {
-        DomainObject curr = getCurrent();
-        if (domainObject.equals(curr)) {
+    private boolean setCurrent(SampleResult sampleResult) {
+        SampleResult curr = getCurrent();
+        if (sampleResult.equals(curr)) {
             return false;
         }
         if (curr!=null) {
             content.remove(curr);
         }
-        content.add(domainObject);
+        content.add(sampleResult);
         return true;
     }
-    
-    public void setEditorClass(Class<? extends DomainObjectEditor> editorClass) {
+
+    public void setEditorClass(Class<? extends SampleResultEditor> editorClass) {
         try {
             if (editor!=null) {
                 remove((JComponent)editor);
@@ -125,8 +121,6 @@ public final class DomainViewerTopComponent extends TopComponent {
             editor = editorClass.newInstance();
             add((JComponent)editor, BorderLayout.CENTER);
             Events.getInstance().registerOnEventBus(editor.getEventBusListener());
-            revalidate();
-            repaint();
         }
         catch (InstantiationException | IllegalAccessException e) {
             SessionMgr.getSessionMgr().handleException(e);
@@ -134,35 +128,18 @@ public final class DomainViewerTopComponent extends TopComponent {
         setName(editor.getName());
     }
     
-    public DomainObjectEditor<? extends DomainObject> getEditor() {
+    public SampleResultEditor getEditor() {
         return editor;
     }
-        
-    public void loadDomainObject(DomainObject domainObject) {
-        // Do we already have the given node loaded?
-        if (!setCurrent(domainObject)) {
-            return;
-        }
-        
-        final Class<? extends DomainObjectEditor> editorClass = getEditorClass(domainObject);
-        if (editorClass==null) {
-            // TODO: comment this exception back in after initial development is complete
-            //throw new IllegalStateException("No viewer defined for domain object of type "+domainObject.getClass().getName());
-            log.info("No viewer defined for domain object of type {}",domainObject.getClass().getName());
-            return;
-        }
-        if (editor==null || !editor.getClass().equals(editorClass)) {
-            setEditorClass(editorClass);
-        }
-        editor.loadDomainObject(domainObject);
-        setName(StringUtils.abbreviate(domainObject.getName(), 30));
-    }
 
-    private Class<? extends DomainObjectEditor> getEditorClass(DomainObject domainObject) {
-        if (domainObject instanceof Sample) {
-            return SampleEditorPanel.class;
+    public void loadSampleResult(SampleResult sampleResult, boolean isUserDriven) {
+        
+        // Do we already have the given node loaded?
+        if (!setCurrent(sampleResult)) {
+            return;
         }
-        return null;
+        
+        editor.loadSampleResult(sampleResult, isUserDriven);
     }
     
     void writeProperties(java.util.Properties p) {

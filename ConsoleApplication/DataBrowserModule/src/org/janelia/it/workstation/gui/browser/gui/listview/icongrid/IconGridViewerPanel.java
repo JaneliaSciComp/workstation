@@ -161,7 +161,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
                 if (imageObj != null) {
                     S id = getImageModel().getImageUniqueId(imageObj);
-                    AnnotatedImageButton button = imagesPanel.getButtonById(id);
+                    AnnotatedImageButton<T,S> button = imagesPanel.getButtonById(id);
                     if (button != null) {
                         selectImageObject(imageObj, clearAll);
                         imagesPanel.scrollObjectToCenter(imageObj);
@@ -230,7 +230,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
      */
     protected abstract void buttonDrillDown(DomainObject domainObject);
 
-    protected void buttonSelection(AnnotatedImageButton button, boolean multiSelect, boolean rangeSelect) {
+    protected void buttonSelection(AnnotatedImageButton<T,S> button, boolean multiSelect, boolean rangeSelect) {
         
         final T imageObject = (T)button.getImageObject();
         final S uniqueId = getImageModel().getImageUniqueId(imageObject);
@@ -450,11 +450,11 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 //        }
 //    }
     
-    public void showImageObjects(List<T> imageObjects) {
-        showImageObjects(imageObjects, null);
-    }
+//    public void showImageObjects(List<T> imageObjects) {
+//        showImageObjects(imageObjects, null);
+//    }
     
-    public void showImageObjects(List<T> imageObjects, final Callable<Void> success) {
+    public void showImageObjects(final List<T> imageObjects, final Callable<Void> success) {
         
         log.debug("showImageObjects(imageObjects.size={})",imageObjects.size());
         
@@ -464,18 +464,8 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         // Temporarily disable scroll loading
         imagesPanel.setScrollLoadingEnabled(false);
 
+        // Set state
         setImageObjects(imageObjects);
-        imageObjectsLoadDone(success);
-    }
-    
-    public void refreshImageObject(T imageObject) {
-        S uniqueId = imageModel.getImageUniqueId(imageObject);
-        for(AnnotatedImageButton<T,S> button : imagesPanel.getButtonsByUniqueId(uniqueId)) {
-            button.refresh(imageObject);
-        }
-    }
-    
-    private synchronized void imageObjectsLoadDone(final Callable<Void> success) {
         
         // Create the image buttons
         imagesPanel.setImageObjects(imageObjects);
@@ -491,11 +481,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         imagesPanel.setTagVisbility(iconDemoToolbar.areTagsVisible());
         imagesPanel.setTitleVisbility(iconDemoToolbar.areTitlesVisible());
 
-        // Since the images are not loaded yet, this will just resize the empty
-        // buttons so that we can calculate the grid correctly
-        imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
-        imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
-
         // Actually display everything
         showImagePanel();
 
@@ -503,15 +488,23 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                imagesPanel.recalculateGrid();
+                imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
+                imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
                 imagesPanel.setScrollLoadingEnabled(true);
-
+                
                 // Finally, we're done, we can call the success callback
                 ConcurrentUtils.invokeAndHandleExceptions(success);
             }
         });
     }
 
+    public void refreshImageObject(T imageObject) {
+        S uniqueId = imageModel.getImageUniqueId(imageObject);
+        for(AnnotatedImageButton<T,S> button : imagesPanel.getButtonsByUniqueId(uniqueId)) {
+            button.refresh(imageObject);
+        }
+    }
+    
     public void refresh() {
         refresh(false, null);
     }

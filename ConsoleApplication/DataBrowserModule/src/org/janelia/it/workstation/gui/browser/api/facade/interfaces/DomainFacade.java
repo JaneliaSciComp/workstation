@@ -6,6 +6,7 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -62,6 +63,13 @@ public interface DomainFacade {
      * @return list of domain objects
      */
     public List<DomainObject> getDomainObjects(List<Reference> references);
+
+    /**
+     * Returns the domain objects specified by the given reverse reference. 
+     * @param reference reverse reference
+     * @return list of domain objects
+     */
+    public List<DomainObject> getDomainObjects(ReverseReference reference);
     
     /**
      * Returns the domain objects of a particular type, given by the list of GUIDs. 

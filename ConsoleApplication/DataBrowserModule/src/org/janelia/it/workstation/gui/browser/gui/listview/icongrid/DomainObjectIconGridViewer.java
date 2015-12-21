@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -189,7 +190,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     
     @Override
-    public void showDomainObjects(AnnotatedDomainObjectList objects) {
+    public void showDomainObjects(AnnotatedDomainObjectList objects, final Callable<Void> success) {
 
         this.domainObjectList = objects;
         log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
@@ -283,7 +284,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
                             @Override
                             protected void hadSuccess() {
-                                showDomainObjects(domainObjectList);
+                                showDomainObjects(domainObjectList, null);
                             }
 
                             @Override
@@ -327,7 +328,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
                             @Override
                             protected void hadSuccess() {
-                                showDomainObjects(domainObjectList);
+                                showDomainObjects(domainObjectList, null);
                             }
 
                             @Override
@@ -343,7 +344,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
         }        
         
-        showImageObjects(domainObjectList.getDomainObjects());
+        showImageObjects(domainObjectList.getDomainObjects(), success);
     }
 
     @Override

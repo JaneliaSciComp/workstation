@@ -17,6 +17,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
@@ -133,6 +134,12 @@ public class RESTDomainFacade implements DomainFacade {
         return domainObjs;
     }
 
+    @Override
+    public List<DomainObject> getDomainObjects(ReverseReference reference) {
+        // TODO: implement
+        throw new UnsupportedOperationException();
+    }
+    
     public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(SessionMgr.getSubjectKey());

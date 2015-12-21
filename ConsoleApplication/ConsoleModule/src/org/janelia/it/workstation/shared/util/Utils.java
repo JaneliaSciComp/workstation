@@ -60,8 +60,6 @@ import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.openide.windows.Mode;
-import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;

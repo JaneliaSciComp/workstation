@@ -21,7 +21,11 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenWithDefaultAppAction;
+import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
+import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
+import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.workstation.ws.ExternalClient;
@@ -57,6 +61,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         add(getCopyNameToClipboardItem());
         
         setNextAddRequiresSeparator(true);
+        add(getOpenInSeparationNewViewer());
         add(getOpenInFinderItem());
         add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
@@ -86,6 +91,19 @@ public class SampleResultContextMenu extends PopupContextMenu {
         return copyMenuItem;
     }
 
+    protected JMenuItem getOpenInSeparationNewViewer() {
+        JMenuItem copyMenuItem = new JMenuItem("  View Neuron Fragments");
+        copyMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SampleResult sampleResult = new SampleResult(sample, result);
+                SampleResultViewerTopComponent targetViewer = ViewerUtils.provisionViewer(SampleResultViewerManager.getInstance(), "editor3"); 
+                targetViewer.loadSampleResult(sampleResult, true);
+            }
+        });
+        return copyMenuItem;
+    }
+    
     protected JMenuItem getOpenInFinderItem() {
         if (!OpenInFinderAction.isSupported()) return null;
         final String path = DomainUtils.getFilepath(result, LosslessStack);

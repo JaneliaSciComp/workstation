@@ -45,7 +45,12 @@ public class ViewerUtils {
         log.info("Docking new instance of {} into {}",viewer.getName(),modeName);
 
         Mode mode = WindowManager.getDefault().findMode(modeName);
-        mode.dockInto(viewer);
+        if (mode!=null) {
+            mode.dockInto(viewer);
+        }
+        else {
+            log.warn("No such mode found: "+modeName);
+        }
         // Against all reason, dockInto may cause the component to close after docking. 
         // So, unintuitively, this open() has to happen at the end. Thanks, NetBeans.
         viewer.open();

@@ -13,6 +13,7 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
@@ -415,6 +416,12 @@ public class DomainModel {
         
         log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedIds.size());
         return domainObjects;
+    }
+
+
+    public List<DomainObject> getDomainObjects(ReverseReference reverseReference) {
+        // TODO: cache these?
+        return facade.getDomainObjects(reverseReference);
     }
     
     public List<Annotation> getAnnotations(Reference reference) {

@@ -105,7 +105,7 @@ public final class DomainListViewTopComponent extends TopComponent {
 
     private boolean setCurrent(DomainObject domainObject) {
         DomainObject curr = getCurrent();
-        if (curr==domainObject) {
+        if (domainObject.equals(curr)) {
             return false;
         }
         if (curr!=null) {

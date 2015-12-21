@@ -77,11 +77,11 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
             return;
         }
 
-        log.info("loadDomainObject({})",event.getDomainObject());
+        log.info("handleDomainObjectSelection({})",event.getDomainObject());
         
-        DomainViewerTopComponent targetViewer = DomainViewerManager.getInstance().getActiveViewer();
-        if (targetViewer!=null) {
-            targetViewer.loadDomainObject(event.getDomainObject());
+        DomainViewerTopComponent viewer = DomainViewerManager.getInstance().getActiveViewer();
+        if (viewer!=null) {
+            viewer.loadDomainObject(event.getDomainObject());
         }
     }
 }

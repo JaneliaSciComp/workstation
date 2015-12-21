@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 import javax.swing.RowSorter;
@@ -66,7 +67,7 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,Reference>
     }
     
     @Override
-    public void showDomainObjects(AnnotatedDomainObjectList domainObjectList) {
+    public void showDomainObjects(AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
         
         this.domainObjectList = domainObjectList;
         
