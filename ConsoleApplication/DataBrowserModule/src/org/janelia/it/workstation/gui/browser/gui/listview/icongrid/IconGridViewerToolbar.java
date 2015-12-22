@@ -16,7 +16,7 @@ import de.javasoft.swing.JYPopupMenu;
 import de.javasoft.swing.SimpleDropDownButton;
 
 /**
- * Toolbar for icon panels.
+ * Tool bar for icon panels.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

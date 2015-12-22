@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
@@ -34,12 +33,12 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
 
+import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
-import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.SampleResultSelectionEvent;
@@ -51,24 +50,21 @@ import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.javasoft.swing.SimpleDropDownButton;
-
 /**
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor<Sample> {
+public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Sample> {
 
     private final static Logger log = LoggerFactory.getLogger(SampleEditorPanel.class);
     
     private final static String ALL_VALUE = "all";
     
     // UI Components
+    private final SampleEditorToolbar toolbar;
     private final JPanel mainPanel;
-    private final JPanel filterPanel;
+    private final JScrollPane scrollPane;
     private final JPanel dataPanel;
-    private final SimpleDropDownButton objectiveButton;
-    private final SimpleDropDownButton areaButton;
     private final List<PipelineResultPanel> resultPanels = new ArrayList<>();
     private final Set<LoadedImagePanel> lips = new HashSet<>();
         
@@ -108,25 +104,23 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
     
     public SampleEditorPanel() {
         
+        setLayout(new BorderLayout());
+        
         // TODO: load filter from user prefs
-        
-        objectiveButton = new SimpleDropDownButton("Objective: "+currObjective);
-        areaButton = new SimpleDropDownButton("Area: "+currArea);
-        
-        filterPanel = new JPanel();
-        filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.LINE_AXIS));
-        filterPanel.add(objectiveButton);
-        filterPanel.add(areaButton);
-        filterPanel.add(Box.createHorizontalGlue());
+        toolbar = new SampleEditorToolbar();
+        toolbar.getObjectiveButton().setText("Objective: "+currObjective);
+        toolbar.getAreaButton().setText("Area: "+currArea);
+        add(toolbar, BorderLayout.NORTH);
         
         dataPanel = new JPanel();
         dataPanel.setLayout(new BoxLayout(dataPanel, BoxLayout.PAGE_AXIS));
-        
+
         mainPanel = new ScrollablePanel();
-        mainPanel.add(filterPanel, BorderLayout.NORTH);
         mainPanel.add(dataPanel, BorderLayout.CENTER);
-        
-        setViewportView(mainPanel);
+
+        scrollPane = new JScrollPane(); 
+        scrollPane.setViewportView(mainPanel);
+        add(scrollPane, BorderLayout.CENTER);
         
         this.addComponentListener(new ComponentAdapter() {
             @Override
@@ -211,14 +205,18 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
             SamplePipelineRun run = objSample.getLatestRun();
             if (run==null) continue;
             
-            SampleProcessingResult spr = run.getLatestProcessingResult();
-            if (spr!=null) {
-                String area = spr.getAnatomicalArea();
+            for(PipelineResult result : run.getResults()) {
+
+                String area = null;
+                if (result instanceof HasAnatomicalArea) {
+                    area = ((HasAnatomicalArea)result).getAnatomicalArea();
+                }
+                
                 if (area==null) area = "";
                 areaSet.add(area);
                 
                 boolean display = diplayObjective;
-                if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, objective)) {
+                if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
                     display = false;
                 }
                 
@@ -229,31 +227,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
                     c.anchor = GridBagConstraints.PAGE_START;
                     c.weightx = 1;
                     c.weighty = 0.9;
-                    PipelineResultPanel resultPanel = new PipelineResultPanel(objective, spr);
-                    resultPanels.add(resultPanel);
-                    dataPanel.add(resultPanel);
-                }
-            }
-            
-            SampleAlignmentResult ar = run.getLatestAlignmentResult();
-            if (ar!=null) {
-                String area = ar.getAnatomicalArea();
-                if (area==null) area = "";
-                areaSet.add(area);
-                                
-                boolean display = diplayObjective;
-                if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, objective)) {
-                    display = false;
-                }
-                
-                if (display) {
-                    c.gridx = 0;
-                    c.gridy = y++;
-                    c.fill = GridBagConstraints.BOTH;
-                    c.anchor = GridBagConstraints.PAGE_START;
-                    c.weightx = 1;
-                    c.weighty = 0.9;
-                    PipelineResultPanel resultPanel = new PipelineResultPanel(objective, ar);
+                    PipelineResultPanel resultPanel = new PipelineResultPanel(objective, result);
                     resultPanels.add(resultPanel);
                     dataPanel.add(resultPanel);
                 }
@@ -276,8 +250,9 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
     }
 
     private void populateObjectiveButton(List<String> objectives) {
-        objectiveButton.setText("Objective: "+currObjective);
-        objectiveButton.getPopupMenu().removeAll();
+        toolbar.getObjectiveButton().setText("Objective: "+currObjective);
+        JPopupMenu popupMenu = toolbar.getObjectiveButton().getPopupMenu();
+        popupMenu.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String objective : objectives) {
             JMenuItem menuItem = new JRadioButtonMenuItem(objective, objective.equals(currObjective));
@@ -287,7 +262,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
                 }
             });
             group.add(menuItem);
-            objectiveButton.getPopupMenu().add(menuItem);
+            popupMenu.add(menuItem);
         }
     }
     
@@ -297,8 +272,9 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
     }
     
     private void populateAreaButton(List<String> areas) {
-        areaButton.setText("Area: "+currArea);
-        areaButton.getPopupMenu().removeAll();
+        toolbar.getAreaButton().setText("Area: "+currArea);
+        JPopupMenu popupMenu = toolbar.getAreaButton().getPopupMenu();
+        popupMenu.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String area : areas) {
             JMenuItem menuItem = new JRadioButtonMenuItem(area, area.equals(currArea));
@@ -308,7 +284,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
                 }
             });
             group.add(menuItem);
-            areaButton.getPopupMenu().add(menuItem);
+            popupMenu.add(menuItem);
         }
     }
     
@@ -330,7 +306,7 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
     private void rescaleImage(LoadedImagePanel image) {
         double width = image.getParent()==null?0:image.getParent().getSize().getWidth();
         if (width==0) {
-            width = getViewport().getSize().getWidth() - 20;
+            width = scrollPane.getViewport().getSize().getWidth() - 20;
         }
         if (width==0) {
             log.warn("Could not get width from parent or viewport");
@@ -375,8 +351,9 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
     private class PipelineResultPanel extends SelectablePanel {
 
         private final PipelineResult result;
+        private JLabel label = new JLabel();
         
-        private PipelineResultPanel(PipelineResult result, String label) {
+        private PipelineResultPanel(PipelineResult result) {
             
             this.result = result;
             
@@ -395,18 +372,21 @@ public class SampleEditorPanel extends JScrollPane implements DomainObjectEditor
             imagePanel.add(getImagePanel(signalMip));
             imagePanel.add(getImagePanel(refMip));
 
-            add(new JLabel(label), BorderLayout.NORTH);
+            add(label, BorderLayout.NORTH);
             add(imagePanel, BorderLayout.CENTER);
 
             addMouseListener(resultMouseListener);
         }
         
-        public PipelineResultPanel(String objective, SampleProcessingResult result) {
-            this(result, objective+" "+result.getName());
-        }
-
-        public PipelineResultPanel(String objective, SampleAlignmentResult result) {
-            this(result, objective+" "+result.getName()+" ("+result.getAlignmentSpace()+")");
+        public PipelineResultPanel(String objective, PipelineResult result) {
+            this(result);
+            if (result instanceof SampleAlignmentResult) {
+                SampleAlignmentResult sar = (SampleAlignmentResult)result;
+                label.setText(objective+" "+result.getName()+" ("+sar.getAlignmentSpace()+")");
+            }
+            else {
+                label.setText(objective+" "+result.getName());
+            }
         }
 
         public PipelineResult getResult() {

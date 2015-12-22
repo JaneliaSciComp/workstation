@@ -213,7 +213,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         countedResultNames.add(DomainConstants.PREFERENCE_VALUE_LATEST);
         countedResultNames.add(DomainConstants.PREFERENCE_VALUE_LATEST);
         
-        boolean allSamples = true;
         for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
             if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
@@ -249,14 +248,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     }
                 }
             }
-            else {
-                allSamples = false;
-                break;
-            }
         }
         
-        getToolbar().getDefaultResultButton().setVisible(allSamples);
-
+        getToolbar().getDefaultResultButton().setVisible(countedResultNames.size()>2);
         JPopupMenu popupMenu = getToolbar().getDefaultResultButton().getPopupMenu();
         popupMenu.removeAll();
         
@@ -300,6 +294,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
         }        
 
+        getToolbar().getDefaultTypeButton().setVisible(!countedTypeNames.isEmpty());
         JPopupMenu popupMenu2 = getToolbar().getDefaultTypeButton().getPopupMenu();
         popupMenu2.removeAll();
 
