@@ -9,7 +9,6 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import java.util.*;
 
 import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
-import org.janelia.it.jacs.model.tasks.Task;
 
 /**
  * Created by IntelliJ IDEA.
@@ -36,6 +35,11 @@ public class EJBEntityFacade implements EntityFacade {
     @Override
     public List<Entity> getEntitiesById(List<Long> entityIds) throws Exception {
         return EJBFactory.getRemoteEntityBean().getEntitiesById(SessionMgr.getSubjectKey(), entityIds);
+    }
+
+    @Override
+    public List<byte[]> getB64DecodedEntityDataValues(Long entityId, String entityDataType) throws Exception {
+        return EJBFactory.getRemoteEntityBean().getB64DecodedEntityDataValues(entityId, entityDataType);
     }
     
     @Override

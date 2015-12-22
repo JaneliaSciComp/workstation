@@ -29,6 +29,8 @@ public interface EntityFacade {
 
     public Entity getEntityAndChildren(Long entityId) throws Exception;
 
+    public List<byte[]> getB64DecodedEntityDataValues(Long entityId, String entityDataType) throws Exception;
+
     public Entity getEntityTree(Long entityId) throws Exception;
 
     public List<Entity> getEntitiesByName(String entityName) throws Exception;

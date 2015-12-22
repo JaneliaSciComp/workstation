@@ -487,6 +487,10 @@ public class EntityModel {
         return result;
     }
 
+    public List<byte[]> getB64DecodedEntityDataValues(Long entityId, String entityDataType) throws Exception {
+        return entityFacade.getB64DecodedEntityDataValues(entityId, entityDataType);
+    }
+    
     /**
      * Retrieve an entire entity tree from the database, and cache all the entities.
      *

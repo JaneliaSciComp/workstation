@@ -816,6 +816,10 @@ public final class ModelMgr {
     public Entity getEntityAndChildren(long entityId) throws Exception {
         return entityModel.getEntityAndChildren(entityId);
     }
+    
+    public List<byte[]> getB64DecodedEntityDataValues(Long entityId, String entityDataType) throws Exception {
+        return entityModel.getB64DecodedEntityDataValues(entityId, entityDataType);
+    }
 
     public Entity getEntityTree(long entityId) throws Exception {
         return entityModel.getEntityTree(entityId);
