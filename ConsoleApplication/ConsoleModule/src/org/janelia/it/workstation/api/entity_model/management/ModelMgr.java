@@ -1247,6 +1247,7 @@ public final class ModelMgr {
         FacadeManager.getFacadeManager().getEntityFacade().moveNeurite(annotation, newNeuron);
     }
 
+    /** @deprecated unused, and replaced by neuron-as-entity-data. */
     public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
             int index, double x, double y, double z, String comment) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);
@@ -1276,6 +1277,7 @@ public final class ModelMgr {
         FacadeManager.getFacadeManager().getEntityFacade().deleteWorkspace(ownerKey, workspaceId);
     }
 
+    /** @deprecated */
     public void deleteGeometricAnnotation(Long geoId) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().deleteGeometricAnnotation(geoId);
     }
@@ -1315,6 +1317,7 @@ public final class ModelMgr {
         FacadeManager.getFacadeManager().getEntityFacade().updateStructuredTextAnnotation(textAnnotation, data);
     }
 
+    /** @deprecated */
     public void deleteStructuredTextAnnotation(Long annID) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().deleteStructuredTextAnnotation(annID);
     }
