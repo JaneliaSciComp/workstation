@@ -19,6 +19,7 @@ import java.net.MalformedURLException;
 import java.util.concurrent.Callable;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.janelia.it.workstation.gui.util.WindowLocator;
@@ -84,23 +85,51 @@ public class LargeVolumeViewViewer extends JPanel {
                 if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
                     sliceSample = initialEntity;
                 } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
-                    String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
-                    try {
-                        sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    // Which version of workspace?  Can it be handled, here?
+                    boolean usableVersion = false;
+                    String versionNameValue = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PROPERTY);
+                    if (versionNameValue != null) {
+                        String[] nameValue = versionNameValue.split("=");
+                        if (nameValue.length >= 2  &&  TmWorkspace.WS_VERSION_PROP.equals(nameValue[0])) {
+                            TmWorkspace.Version version = TmWorkspace.Version.valueOf(nameValue[1]);
+                            if (version == TmWorkspace.Version.PB_1) {
+                                usableVersion = true;
+                            }
+                        }
                     }
-                    if (sliceSample == null) {
+                    
+                    if (! usableVersion) {
                         SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {
-                                JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
-                                        "Could not find sample entity for this workspace!",
-                                        "Could not open workspace",
-                                        JOptionPane.ERROR_MESSAGE);
+                                JOptionPane.showMessageDialog(
+                                    LargeVolumeViewViewer.this,
+                                    "The workspace version is not compatible with this version of Large Volume Viewer.",
+                                    "Could not open workspace",
+                                    JOptionPane.ERROR_MESSAGE
+                                );
                             }
                         });
                     }
+                    else {
+                        String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
+                        try {
+                            sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        if (sliceSample == null) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
+                                            "Could not find sample entity for this workspace!",
+                                            "Could not open workspace",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            });
+                        }
+                    }                    
                 }
             }
 
