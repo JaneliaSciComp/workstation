@@ -3,7 +3,6 @@ package org.janelia.it.workstation.api.facade.abstract_facade;
 import java.util.Collection;
 
 import org.janelia.it.jacs.compute.api.support.MappedId;
-import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
@@ -30,6 +29,8 @@ public interface EntityFacade {
     public Entity getEntityAndChildren(Long entityId) throws Exception;
 
     public List<byte[]> getB64DecodedEntityDataValues(Long entityId, String entityDataType) throws Exception;
+
+    byte[] getB64DecodedEntityDataValue(Long entityId, Long entityDataId, String entityDataType) throws Exception;
 
     public Entity getEntityTree(Long entityId) throws Exception;
 

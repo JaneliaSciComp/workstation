@@ -23,6 +23,7 @@ import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufE
 import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
+import sun.misc.BASE64Encoder;
 
 /**
  * When invoked to fetch exchange neurons, this implementation will do so
@@ -92,7 +93,11 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         entityData.setCreationDate(neuron.getCreationDate());
         entityData.setOwnerKey(neuron.getOwnerKey());
         entityData.setUpdatedDate(new Date());
-        entityData.setValue(new String(serializableBytes));
+        // Encoding on the client side for convenience: the save-or-update
+        // method already exists.  We expect to see this carried out one
+        // neuron (or two) at a time, not wholesale.
+        BASE64Encoder encoder = new BASE64Encoder();
+        entityData.setValue(encoder.encode(serializableBytes));
         entityData.setEntityAttrName(EntityConstants.ATTRIBUTE_PROTOBUF_NEURON);
         ModelMgr.getModelMgr().saveOrUpdateEntityData(entityData);
     }
@@ -100,15 +105,27 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
     @Override
     public TmNeuron refreshFromEntityData(TmNeuron neuron) throws Exception {
         Long workspaceId = neuron.getWorkspaceId();
-        Entity workspaceEntity = ensureWorkspaceEntity(workspaceId);
-        // NOTE: just fetching a single entity data is not yet done.
-        // see also loadNeurons.
-        return null;
+        Long neuronId = neuron.getId();
+        ensureWorkspaceEntity(workspaceId);
+        byte[] rawBuffer = 
+            ModelMgr
+                .getModelMgr()
+                .getB64DecodedEntityDataValue(
+                        workspaceId, 
+                        neuronId, 
+                        EntityConstants.ATTRIBUTE_PROTOBUF_NEURON
+                );
+        return exchanger.deserializeNeuron(rawBuffer);
     }
 
     @Override
-    public void deleteEntityData(Long entityId) throws Exception {
-        ModelMgr.getModelMgr().deleteBulkEntityData(null, null);
+    public void deleteEntityData(TmNeuron neuron) throws Exception {
+        // The lower levels of the hierarchy require an Entity Data to delete
+        // but they use only its id and owner key.
+        EntityData ed = new EntityData();
+        ed.setId(neuron.getId());
+        ed.setOwnerKey(neuron.getOwnerKey());
+        ModelMgr.getModelMgr().removeEntityData(ed);
     }
     
     private Entity ensureWorkspaceEntity(Long workspaceId) throws Exception {

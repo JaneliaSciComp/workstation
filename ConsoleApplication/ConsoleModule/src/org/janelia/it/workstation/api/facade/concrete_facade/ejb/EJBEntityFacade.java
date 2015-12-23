@@ -43,6 +43,11 @@ public class EJBEntityFacade implements EntityFacade {
     }
     
     @Override
+    public byte[] getB64DecodedEntityDataValue(Long entityId, Long entityDataId, String entityDataType) throws Exception {
+        return EJBFactory.getRemoteEntityBean().getB64DecodedEntityDataValue(entityId, entityDataId, entityDataType);
+    }
+
+    @Override
     public Entity getEntityTree(Long entityId) throws Exception {
         return EJBFactory.getRemoteEntityBean().getEntityTree(SessionMgr.getSubjectKey(), entityId);
     }
