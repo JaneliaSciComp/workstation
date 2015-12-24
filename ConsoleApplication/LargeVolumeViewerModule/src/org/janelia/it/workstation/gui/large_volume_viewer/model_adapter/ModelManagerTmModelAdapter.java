@@ -87,19 +87,20 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         
         // Must now push a new enity data
         EntityData entityData = new EntityData();
-        entityData.setId(neuron.getId());
-        entityData.setParentEntity(workspaceEntity);
-        entityData.setOrderIndex(0);
-        entityData.setCreationDate(neuron.getCreationDate());
         entityData.setOwnerKey(neuron.getOwnerKey());
-        entityData.setUpdatedDate(new Date());
+        entityData.setCreationDate(neuron.getCreationDate());
+        entityData.setId(neuron.getId());  // May have been seeded as null.
+        entityData.setParentEntity(workspaceEntity);
         // Encoding on the client side for convenience: the save-or-update
         // method already exists.  We expect to see this carried out one
         // neuron (or two) at a time, not wholesale.
         BASE64Encoder encoder = new BASE64Encoder();
         entityData.setValue(encoder.encode(serializableBytes));
         entityData.setEntityAttrName(EntityConstants.ATTRIBUTE_PROTOBUF_NEURON);
-        ModelMgr.getModelMgr().saveOrUpdateEntityData(entityData);
+        workspaceEntity.getEntityData().add(entityData);
+        EntityData savedEntityData = ModelMgr.getModelMgr().saveOrUpdateEntityData(entityData);
+        neuron.setId(savedEntityData.getId());
+        //ModelMgr.getModelMgr().saveOrUpdateEntity(workspaceEntity);
     }
 
     @Override

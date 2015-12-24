@@ -490,9 +490,10 @@ called from a  SimpleWorker thread.
      */
     public void addRootAnnotation(final TmNeuron neuron, Vec3 xyz) throws Exception {
         // the null  in this call means "this is a root annotation" (would otherwise
-        //  be the parent)
+        //  be the parent).  Updates to neuron's collections are done in the 
+        //  as well.
         final TmGeoAnnotation annotation = neuronManager.addGeometricAnnotation(
-                neuron, null, 0, xyz.x(), xyz.y(), xyz.z(), "");
+                neuron, neuron.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
