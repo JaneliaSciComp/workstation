@@ -261,14 +261,8 @@
                 <package>com.kenai.jffi</package>
                 <package>com.sun.activation.registries</package>
                 <package>com.sun.activation.viewers</package>
-                <package>com.sun.codemodel</package>
-                <package>com.sun.codemodel.fmt</package>
-                <package>com.sun.codemodel.util</package>
-                <package>com.sun.codemodel.writer</package>
-                <package>com.sun.dtdparser</package>
                 <package>com.sun.istack</package>
                 <package>com.sun.istack.localization</package>
-                <package>com.sun.istack.tools</package>
                 <package>com.sun.jna</package>
                 <package>com.sun.jna.platform</package>
                 <package>com.sun.jna.platform.dnd</package>
@@ -297,14 +291,6 @@
                 <package>com.sun.media.jai.tilecodec</package>
                 <package>com.sun.media.jai.util</package>
                 <package>com.sun.media.jai.widget</package>
-                <package>com.sun.org.apache.xml.internal.resolver</package>
-                <package>com.sun.org.apache.xml.internal.resolver.helpers</package>
-                <package>com.sun.org.apache.xml.internal.resolver.readers</package>
-                <package>com.sun.org.apache.xml.internal.resolver.tools</package>
-                <package>com.sun.tools.jxc</package>
-                <package>com.sun.tools.jxc.apt</package>
-                <package>com.sun.tools.jxc.gen.config</package>
-                <package>com.sun.tools.jxc.model.nav</package>
                 <package>com.sun.xml.bind</package>
                 <package>com.sun.xml.bind.annotation</package>
                 <package>com.sun.xml.bind.api</package>
@@ -329,7 +315,6 @@
                 <package>com.sun.xml.bind.v2.schemagen.episode</package>
                 <package>com.sun.xml.bind.v2.schemagen.xmlschema</package>
                 <package>com.sun.xml.bind.v2.util</package>
-                <package>com.sun.xml.dtdparser</package>
                 <package>com.sun.xml.messaging.saaj</package>
                 <package>com.sun.xml.messaging.saaj.client.p2p</package>
                 <package>com.sun.xml.messaging.saaj.packaging.mime</package>
@@ -346,15 +331,6 @@
                 <package>com.sun.xml.txw2</package>
                 <package>com.sun.xml.txw2.annotation</package>
                 <package>com.sun.xml.txw2.output</package>
-                <package>com.sun.xml.xsom</package>
-                <package>com.sun.xml.xsom.impl</package>
-                <package>com.sun.xml.xsom.impl.parser</package>
-                <package>com.sun.xml.xsom.impl.parser.state</package>
-                <package>com.sun.xml.xsom.impl.scd</package>
-                <package>com.sun.xml.xsom.impl.util</package>
-                <package>com.sun.xml.xsom.parser</package>
-                <package>com.sun.xml.xsom.util</package>
-                <package>com.sun.xml.xsom.visitor</package>
                 <package>com.xhaus.modjy</package>
                 <package>com.xuggle.ferry</package>
                 <package>com.xuggle.mediatool</package>
@@ -506,6 +482,10 @@
                 <package>ij.text</package>
                 <package>ij.util</package>
                 <package>inference</package>
+                <package>io.protostuff</package>
+                <package>io.protostuff.compiler</package>
+                <package>io.protostuff.parser</package>
+                <package>io.protostuff.runtime</package>
                 <package>java_cup.runtime</package>
                 <package>javassist</package>
                 <package>javassist.bytecode</package>
@@ -1560,22 +1540,6 @@
                 <package>org.joda.time.field</package>
                 <package>org.joda.time.format</package>
                 <package>org.joda.time.tz</package>
-                <package>org.kohsuke.rngom.ast.builder</package>
-                <package>org.kohsuke.rngom.ast.om</package>
-                <package>org.kohsuke.rngom.ast.util</package>
-                <package>org.kohsuke.rngom.binary</package>
-                <package>org.kohsuke.rngom.binary.visitor</package>
-                <package>org.kohsuke.rngom.digested</package>
-                <package>org.kohsuke.rngom.dt</package>
-                <package>org.kohsuke.rngom.dt.builtin</package>
-                <package>org.kohsuke.rngom.nc</package>
-                <package>org.kohsuke.rngom.parse</package>
-                <package>org.kohsuke.rngom.parse.compact</package>
-                <package>org.kohsuke.rngom.parse.host</package>
-                <package>org.kohsuke.rngom.parse.xml</package>
-                <package>org.kohsuke.rngom.util</package>
-                <package>org.kohsuke.rngom.xml.sax</package>
-                <package>org.kohsuke.rngom.xml.util</package>
                 <package>org.netbeans.swing.etable</package>
                 <package>org.netbeans.swing.outline</package>
                 <package>org.objectweb.asm</package>
@@ -1691,8 +1655,6 @@
                 <package>org.python.tests.multihidden</package>
                 <package>org.python.tests.props</package>
                 <package>org.python.util</package>
-                <package>org.relaxng.datatype</package>
-                <package>org.relaxng.datatype.helpers</package>
                 <package>org.semanticweb.owlapi</package>
                 <package>org.semanticweb.owlapi.apibinding</package>
                 <package>org.semanticweb.owlapi.debugging</package>
@@ -1801,6 +1763,10 @@
                 <binary-origin>release/modules/ext/jibx-bind-1.2.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/protostuff-runtime-registry-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-runtime-registry-1.3.9-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/gluegen-rt-natives-macosx-universal.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/gluegen-rt-natives-macosx-universal.jar</binary-origin>
             </class-path-extension>
@@ -1863,6 +1829,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/tribes-6.0.16.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/tribes-6.0.16.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-compiler-1.3.9-SNAPSHOT-jar-with-dependencies.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-compiler-1.3.9-SNAPSHOT-jar-with-dependencies.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-jibx-1.5.5.jar</runtime-relative-path>
@@ -1973,6 +1943,10 @@
                 <binary-origin>release/modules/ext/syntheticaAluOxide.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/protostuff-runtime-view-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-runtime-view-1.3.9-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</binary-origin>
             </class-path-extension>
@@ -1997,6 +1971,10 @@
                 <binary-origin>release/modules/ext/jaxb-api-2.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/protostuff-it-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-it-1.3.9-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaOrangeMetallic.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaOrangeMetallic.jar</binary-origin>
             </class-path-extension>
@@ -2005,8 +1983,16 @@
                 <binary-origin>release/modules/ext/ome_plugins.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/protostuff-core-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-core-1.3.9-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/wsdl4j-1.6.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/wsdl4j-1.6.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-collectionschema-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-collectionschema-1.3.9-SNAPSHOT.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/sis-jhdf5-batteries_included.jar</runtime-relative-path>
@@ -2097,6 +2083,10 @@
                 <binary-origin>release/modules/ext/woden-impl-dom-1.0M8.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/protostuff-runtime-md-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-runtime-md-1.3.9-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/vlcj-1.3.0-b1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/vlcj-1.3.0-b1.jar</binary-origin>
             </class-path-extension>
@@ -2131,6 +2121,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/snappy-java-1.0.5-M3.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/snappy-java-1.0.5-M3.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-runtime-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-runtime-1.3.9-SNAPSHOT.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/ffmpeg-windows-x86_64.jar</runtime-relative-path>
@@ -2213,6 +2207,10 @@
                 <binary-origin>release/modules/ext/regexp-1.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/protostuff-compiler-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-compiler-1.3.9-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/kd.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/kd.jar</binary-origin>
             </class-path-extension>
@@ -2223,6 +2221,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-transport-local-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-transport-local-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-parser-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-parser-1.3.9-SNAPSHOT.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jywidgets.jar</runtime-relative-path>
@@ -2317,6 +2319,10 @@
                 <binary-origin>release/modules/ext/loci-common.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/protostuff-api-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-api-1.3.9-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/slf4j-api-1.7.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/slf4j-api-1.7.5.jar</binary-origin>
             </class-path-extension>
@@ -2343,6 +2349,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-adb-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-adb-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/protostuff-xml-1.3.9-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/protostuff-xml-1.3.9-SNAPSHOT.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/activation-1.1.jar</runtime-relative-path>
