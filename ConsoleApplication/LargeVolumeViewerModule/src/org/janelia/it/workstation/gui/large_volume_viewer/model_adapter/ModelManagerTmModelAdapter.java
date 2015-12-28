@@ -70,6 +70,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         
         // Await completion.
         ThreadUtils.followUpExecution(executor, fates, MAX_WAIT_MIN);
+		workspace.setNeuronList(neurons);
     }
 
     /**

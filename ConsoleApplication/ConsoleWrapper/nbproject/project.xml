@@ -689,6 +689,13 @@
                 <package>ome.xml.model.enums.handlers</package>
                 <package>ome.xml.model.primitives</package>
                 <package>ome.xml.r2003fc.ome</package>
+                <package>org.antlr.runtime</package>
+                <package>org.antlr.runtime.debug</package>
+                <package>org.antlr.runtime.misc</package>
+                <package>org.antlr.runtime.tree</package>
+                <package>org.antlr.stringtemplate</package>
+                <package>org.antlr.stringtemplate.language</package>
+                <package>org.antlr.stringtemplate.misc</package>
                 <package>org.apache.axiom.attachments</package>
                 <package>org.apache.axiom.attachments.impl</package>
                 <package>org.apache.axiom.attachments.lifecycle</package>

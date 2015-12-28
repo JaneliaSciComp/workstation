@@ -194,6 +194,14 @@ called from a  SimpleWorker thread.
     public void loadWorkspace(TmWorkspace workspace) {
         if (workspace != null) {
             currentWorkspace = workspace;
+			// Neurons need to be loaded en masse from raw data from server.
+			try {
+				neuronManager.loadWorkspaceNeurons(workspace);
+			} catch (Exception ex) {
+                log.error(ex.getMessage());
+                SessionMgr.getSessionMgr().handleException(ex);
+			}
+			
         } else {
             currentWorkspace = null;
         }
