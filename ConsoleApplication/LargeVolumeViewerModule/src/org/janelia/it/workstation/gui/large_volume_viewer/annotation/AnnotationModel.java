@@ -1044,7 +1044,7 @@ called from a  SimpleWorker thread.
 
         // create the new annotation, child of original parent; then
         //  reparent existing annotation to new annotation
-        final TmGeoAnnotation newAnnotation = modelMgr.addGeometricAnnotation(neuron.getId(),
+        final TmGeoAnnotation newAnnotation = neuronManager.addGeometricAnnotation(neuron,
                 annotation2.getId(), 0, newPoint.x(), newPoint.y(), newPoint.z(), "");
 
         //refresh neuron, then again, for updates

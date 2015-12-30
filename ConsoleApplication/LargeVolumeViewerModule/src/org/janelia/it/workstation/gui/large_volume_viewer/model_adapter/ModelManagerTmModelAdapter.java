@@ -102,7 +102,6 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         workspaceEntity.getEntityData().add(entityData);
         EntityData savedEntityData = ModelMgr.getModelMgr().saveOrUpdateEntityData(entityData);
         neuron.setId(savedEntityData.getId());
-        //ModelMgr.getModelMgr().saveOrUpdateEntity(workspaceEntity);
     }
 
     @Override
