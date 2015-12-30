@@ -95,6 +95,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         // Encoding on the client side for convenience: the save-or-update
         // method already exists.  We expect to see this carried out one
         // neuron (or two) at a time, not wholesale.
+		// @todo is there real danger of this being removed?
         BASE64Encoder encoder = new BASE64Encoder();
         entityData.setValue(encoder.encode(serializableBytes));
         entityData.setEntityAttrName(EntityConstants.ATTRIBUTE_PROTOBUF_NEURON);

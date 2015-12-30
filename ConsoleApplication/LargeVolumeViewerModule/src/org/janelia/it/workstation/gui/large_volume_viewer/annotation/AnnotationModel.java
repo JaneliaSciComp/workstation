@@ -1279,19 +1279,19 @@ called from a  SimpleWorker thread.
             if (noteString.length() > 0) {
                 ((ObjectNode) rootNode).put("note", noteString);
                 jsonString = mapper.writeValueAsString(rootNode);
-                modelMgr.updateStructuredTextAnnotation(textAnnotation, jsonString);
+                neuronManager.updateStructuredTextAnnotation(neuron, textAnnotation, jsonString);
             } else {
                 // there is a note attached, but we want it gone; if it's the only thing there,
                 //  delete the whole structured text annotation
                 ((ObjectNode) rootNode).remove("note");
                 if (rootNode.size() > 0) {
                     jsonString = mapper.writeValueAsString(rootNode);
-                    modelMgr.updateStructuredTextAnnotation(textAnnotation, jsonString);
+                    neuronManager.updateStructuredTextAnnotation(neuron, textAnnotation, jsonString);
                 } else {
                     // otherwise, there's something left, so persist it (note: as of this
                     //  writing, there aren't any other structured text annotations besides
                     //  note, but no need to get sloppy!)
-                    modelMgr.deleteStructuredTextAnnotation(textAnnotation.getId());
+                    neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getId());
                 }
             }
 
@@ -1302,12 +1302,13 @@ called from a  SimpleWorker thread.
                 rootNode.put("note", noteString);
 
                 jsonString = mapper.writeValueAsString(rootNode);
-                textAnnotation = modelMgr.addStructuredTextAnnotation(neuron.getId(), geoAnnotation.getId(),
+                textAnnotation = neuronManager.addStructuredTextAnnotation(neuron, geoAnnotation.getId(),
                         TmStructuredTextAnnotation.GEOMETRIC_ANNOTATION, TmStructuredTextAnnotation.FORMAT_VERSION,
                         jsonString);
             }
         }
 
+		/*
         // update domain object; similar logic to above
         // if it's empty string, delete note object from neuron
         if (noteString.length() == 0) {
@@ -1323,7 +1324,10 @@ called from a  SimpleWorker thread.
                 neuron.getStructuredTextAnnotationMap().put(geoAnnotation.getId(), textAnnotation);
             }
         }
-
+		*/
+		
+		// Send the data back to the server to save.
+		neuronManager.saveNeuronData(neuron);
 
         final TmWorkspace workspace = getCurrentWorkspace();
         SwingUtilities.invokeLater(new Runnable() {
@@ -1341,7 +1345,7 @@ called from a  SimpleWorker thread.
         // updates
         final TmWorkspace workspace = getCurrentWorkspace();
         TmNeuron neuron = getNeuronFromAnnotationID(textAnnotation.getParentId());
-        neuron.getStructuredTextAnnotationMap().remove(textAnnotation.getParentId());        
+		neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getId());
         neuronManager.saveNeuronData(neuron);
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -1537,6 +1541,10 @@ called from a  SimpleWorker thread.
         }
     }
 
+	/**
+	 * @todo decide if this needs to exist. 
+	 * @deprecated may not implement on client in future.
+	 */
     public void importBulkSWCData(File swcFile, SimpleWorker worker, boolean selectOnCompletion) throws Exception {
 
         // the constructor also triggers the parsing, but not the validation
@@ -1559,7 +1567,7 @@ called from a  SimpleWorker thread.
         if (neuronName.endsWith(SWCData.STD_SWC_EXTENSION)) {
             neuronName = neuronName.substring(0, neuronName.length() - SWCData.STD_SWC_EXTENSION.length());
         }
-        final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
+        final TmNeuron neuron = neuronManager.createTiledMicroscopeNeuron(getCurrentWorkspace(), neuronName);
 
         // Bulk update in play.
         // and as long as we're doing brute force, we can update progress

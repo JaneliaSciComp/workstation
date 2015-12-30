@@ -1211,6 +1211,7 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
     }
     
+	/** @deprecated */
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeNeuron(workspaceId, name);
     }
@@ -1221,28 +1222,34 @@ public final class ModelMgr {
         return sample;
     }
 
+	/** @deprecated */
     public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
             double x, double y, double z, String comment) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
     }
     
+	/** @deprecated */
     public void addLinkedGeometricAnnotations(Map<Integer, Integer> nodeParentLinkage, Map<Integer, TmGeoAnnotation> annotations) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
     }
 
+	/** @deprecated */
     public void reparentGeometricAnnotation(TmGeoAnnotation annotation, Long newParentAnnotationID,
             TmNeuron neuron) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().reparentGeometricAnnotation(annotation, newParentAnnotationID, neuron);
     }
 
+	/** @deprecated */
     public void rerootNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().rerootNeurite(neuron, newRoot);
     }
 
+	/** @deprecated */
     public void splitNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().splitNeurite(neuron, newRoot);
     }
 
+	/** @deprecated */
     public void moveNeurite(TmGeoAnnotation annotation, TmNeuron newNeuron) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().moveNeurite(annotation, newNeuron);
     }
@@ -1257,6 +1264,7 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getWorkspacesForBrainSample(brainSampleId, ownerKey);
     }
 
+	/** @deprecated */
     public List<TmNeuronDescriptor> getNeuronsForWorkspace(Long workspaceId, String ownerKey) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getNeuronsForWorkspace(workspaceId, ownerKey);
     }
@@ -1269,6 +1277,7 @@ public final class ModelMgr {
         FacadeManager.getFacadeManager().getEntityFacade().createOrUpdateWorkspacePreference(workspaceId, key, value);
     }
 
+	/** @deprecated */
     public void deleteNeuron(String ownerKey, Long neuronId) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().deleteNeuron(ownerKey, neuronId);
     }
@@ -1286,32 +1295,38 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().loadWorkspace(workspaceId);
     }
 
+	/** @deprecated */
     public TmNeuron loadNeuron(Long neuronId) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().loadNeuron(neuronId);
     }
 
+	/** @deprecated */
     public TmAnchoredPath addAnchoredPath(Long neuronID, Long annotationID1, Long annotationID2,
             List<List<Integer>> pointlist) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().addAnchoredPath(neuronID, annotationID1,
                 annotationID2, pointlist);
     }
 
+	/** @deprecated */
     public void updateAnchoredPath(TmAnchoredPath anchoredPath, Long annotationID1, Long annotationID2,
             List<List<Integer>> pointList) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().updateAnchoredPath(anchoredPath, annotationID1,
                 annotationID2, pointList);
     }
 
+	/** @deprecated */
     public void deleteAnchoredPath(Long pathID) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().deleteAnchoredPath(pathID);
     }
 
+	/** @deprecated */
     public TmStructuredTextAnnotation addStructuredTextAnnotation(Long neuronID,
         Long parentID, int parentType, int formatVersion, String data) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().addStructuredTextAnnotation(neuronID,
             parentID, parentType, formatVersion, data);
     }
 
+	/** @deprecated */
     public void updateStructuredTextAnnotation(TmStructuredTextAnnotation textAnnotation,
         String data) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().updateStructuredTextAnnotation(textAnnotation, data);
