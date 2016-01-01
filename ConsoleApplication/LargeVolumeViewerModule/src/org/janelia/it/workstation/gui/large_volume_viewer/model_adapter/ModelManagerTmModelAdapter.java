@@ -117,7 +117,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
                         neuronId, 
                         EntityConstants.ATTRIBUTE_PROTOBUF_NEURON
                 );
-        return exchanger.deserializeNeuron(rawBuffer);
+        return exchanger.deserializeNeuron(rawBuffer, neuron);
     }
 
     @Override
