@@ -25,7 +25,7 @@ public class DomainObjectSelectionModel extends SelectionModel<DomainObject,Refe
     }
 
     @Override
-    protected void notify(DomainObject domainObject, Reference id, boolean select, boolean clearAll) {
+    protected void selectionChanged(DomainObject domainObject, Reference id, boolean select, boolean clearAll) {
         if (domainObject instanceof ObjectSet) {
             ObjectSet objectSet = (ObjectSet)domainObject;
             Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), select, objectSet));

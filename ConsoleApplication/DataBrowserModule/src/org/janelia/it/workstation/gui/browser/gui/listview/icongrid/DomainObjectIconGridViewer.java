@@ -51,7 +51,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
-    private SearchProvider searchProvider; // Implement UI for sorting using the search provider
     
     private DefaultResult defaultResult = new DefaultResult(DomainConstants.PREFERENCE_VALUE_LATEST);
     private String defaultImageType = FileType.SignalMip.name();
@@ -147,7 +146,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public void setSearchProvider(SearchProvider searchProvider) {
-        this.searchProvider = searchProvider;
+        super.setSearchProvider(searchProvider);
     }
     
     @Override

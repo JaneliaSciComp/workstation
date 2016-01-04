@@ -768,14 +768,21 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         return builder;
     }
 
+    @Override
 	public void setSortField(String sortField) {
 		this.filter.setSort(sortField);
 	}
-	
+
+    @Override
 	public void search() {
 		performSearch(0, true);
 	}
-	
+
+    @Override
+    public void userRequestedSelectAll() {
+        resultsPanel.setSelectAllVisible(true);
+    }
+    
     public synchronized void performSearch(final int pageNum, final boolean showLoading) {
 
         log.debug("performSearch(pageNum={},showLoading={})", pageNum, showLoading);

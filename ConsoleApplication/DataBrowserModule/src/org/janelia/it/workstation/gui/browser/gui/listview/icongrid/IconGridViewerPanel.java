@@ -25,6 +25,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -57,11 +58,12 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     private IconGridViewerToolbar iconDemoToolbar;
     
     // These members deal with the context and entities within it
-    private List<T> imageObjects;
+    private List<T> objectList;
     private Map<S,T> imageObjectMap;
     private int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
     private ImageModel<T,S> imageModel;
     private SelectionModel<T,S> selectionModel;
+    private SearchProvider searchProvider;
 
     // Listeners
     private final SessionModelListener sessionModelListener;
@@ -86,14 +88,11 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 // Ctrl-A or Meta-A to select all
                 if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
                     boolean clearAll = true;
-                    for (T imageObject : imageObjects) {
+                    for (T imageObject : objectList) {
                         selectImageObject(imageObject, clearAll);
                         clearAll = false;
                     }
-                    // TODO: notify our pagination container
-//                    if (imageObjects.size() < allRootedEntities.size()) {
-//                        selectionButtonContainer.setVisible(true);
-//                    }
+                    searchProvider.userRequestedSelectAll();
                     return;
                 }
 
@@ -254,7 +253,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             if (rangeSelect && lastSelectedId != null) {
                 // Walk through the buttons and select everything between the last and current selections
                 boolean selecting = false;
-                for (T otherImageObject : imageObjects) {
+                for (T otherImageObject : objectList) {
                     final S otherUniqueId = getImageModel().getImageUniqueId(otherImageObject);
                     log.trace("Consider "+otherUniqueId);
                     if (otherUniqueId.equals(lastSelectedId) || otherUniqueId.equals(uniqueId)) {
@@ -347,6 +346,10 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
     }
 
+    public void setSearchProvider(SearchProvider searchProvider) {
+        this.searchProvider = searchProvider;
+    }
+    
     protected ImageModel<T, S> getImageModel() {
         return imageModel;
     }
@@ -412,16 +415,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         imagesPanel.setSelectionByUniqueId(id, false, false);
         selectionModel.deselect(imageObject);
     }
-
-//    private void updateStatusBar() {
-//        if (imageObjects == null) {
-//            return;
-//        }
-//        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
-//        int s = esm.getSelectedEntitiesIds(getSelectionCategory()).size();
-//        statusLabel.setText(s + " of " + allImageObjects.size() + " selected");
-//        statusLabel.setText("Selection changed");
-//    }
 
     /**
      * This should be called by any handler that wishes to show/unshow the HUD.
@@ -600,7 +593,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     }
 
     public synchronized void clear() {
-        this.imageObjects = null;
+        this.objectList = null;
         removeAll();
         revalidate();
         repaint();
@@ -623,36 +616,27 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     }
 
     public T getPreviousObject() {
-        if (imageObjects == null) {
+        if (objectList == null) {
             return null;
         }
-        int i = imageObjects.indexOf(getLastSelectedObject());
+        int i = objectList.indexOf(getLastSelectedObject());
         if (i < 1) {
             // Already at the beginning
             return null;
         }
-        return imageObjects.get(i - 1);
+        return objectList.get(i - 1);
     }
 
     public T getNextObject() {
-        if (imageObjects == null) {
+        if (objectList == null) {
             return null;
         }
-        int i = imageObjects.indexOf(getLastSelectedObject());
-        if (i > imageObjects.size() - 2) {
+        int i = objectList.indexOf(getLastSelectedObject());
+        if (i > objectList.size() - 2) {
             // Already at the end
             return null;
         }
-        return imageObjects.get(i + 1);
-    }
-    
-    private synchronized void setImageObjects(List<T> imageObjects) {
-        log.debug("Setting {} image objects",imageObjects.size());
-        this.imageObjects = imageObjects;
-        this.imageObjectMap = new HashMap<>();
-        for(T imageObject : imageObjects) {
-            imageObjectMap.put(getImageModel().getImageUniqueId(imageObject), imageObject);
-        }
+        return objectList.get(i + 1);
     }
 
     public synchronized T getLastSelectedObject() {
@@ -662,6 +646,16 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         }
         return imageObjectMap.get(uniqueId);
     }
+    
+    private synchronized void setImageObjects(List<T> objectList) {
+        log.debug("Setting {} image objects",objectList.size());
+        this.objectList = objectList;
+        this.imageObjectMap = new HashMap<>();
+        for(T imageObject : objectList) {
+            imageObjectMap.put(getImageModel().getImageUniqueId(imageObject), imageObject);
+        }
+    }
+
 //
 //    public List<RootedEntity> getSelectedEntities() {
 //        List<RootedEntity> selectedEntities = new ArrayList<RootedEntity>();
@@ -680,7 +674,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     public IconGridViewerToolbar getToolbar() {
         return iconDemoToolbar;
     }
-
+    
 //    public Hud getHud() {
 //        return hud;
 //    }

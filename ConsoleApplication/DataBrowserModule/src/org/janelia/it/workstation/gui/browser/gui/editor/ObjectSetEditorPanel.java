@@ -89,6 +89,7 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
         childLoadingWorker.execute();
     }
 
+    @Override
 	public void setSortField(final String sortCriteria) {
 
         resultsPanel.showLoadingIndicator();
@@ -141,11 +142,17 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
         SearchResults searchResults = SearchResults.paginate(domainObjects, annotations);
         resultsPanel.showSearchResults(searchResults, true);
 	}
-	
+
+    @Override
 	public void search() {
 		// Nothing needs to be done here, because results were updated by setSortField()
 	}
-	
+
+    @Override
+    public void userRequestedSelectAll() {
+        resultsPanel.setSelectAllVisible(true);
+    }
+    
     @Override
     public String getName() {
         return "Object Set Editor";

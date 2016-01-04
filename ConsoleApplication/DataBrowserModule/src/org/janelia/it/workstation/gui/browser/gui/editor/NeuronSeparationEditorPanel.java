@@ -103,6 +103,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         childLoadingWorker.execute();
     }
 
+    @Override
     public void setSortField(final String sortCriteria) {
 
         resultsPanel.showLoadingIndicator();
@@ -155,9 +156,15 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         SearchResults searchResults = SearchResults.paginate(domainObjects, annotations);
         resultsPanel.showSearchResults(searchResults, isUserDriven);
     }
-    
+
+    @Override
     public void search() {
         // Nothing needs to be done here, because results were updated by setSortField()
+    }
+
+    @Override
+    public void userRequestedSelectAll() {
+        resultsPanel.setSelectAllVisible(true);
     }
     
     @Override

@@ -19,8 +19,10 @@ import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
@@ -34,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectTableViewer extends TableViewer<DomainObject,Reference> implements AnnotatedDomainObjectListViewer {
+public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Reference> implements AnnotatedDomainObjectListViewer {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectTableViewer.class);
 
@@ -45,14 +47,46 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,Reference>
     private AnnotatedDomainObjectList domainObjectList;
     
     private DomainObjectSelectionModel selectionModel;
-    private SearchProvider searchProvider;
         
     private String sortField;
     private boolean ascending = true;
 
+    // TODO: this is mostly copy and pasted from DomainObjectIconGridViewer, and should be refactored later
+    private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
+        
+        @Override
+        public Reference getImageUniqueId(DomainObject domainObject) {
+            return Reference.createFor(domainObject);
+        }
+
+        @Override
+        public String getImageFilepath(DomainObject domainObject) {
+            return null;
+        }
+        
+        @Override
+        public DomainObject getImageByUniqueId(Reference id) {
+            return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
+        }
+        
+        @Override
+        public Object getImageLabel(DomainObject domainObject) {
+            return domainObject.getName();
+        }
+        
+        @Override
+        public List<Annotation> getAnnotations(DomainObject domainObject) {
+            return domainObjectList.getAnnotations(domainObject.getId());
+        }
+    };
+    
+    public DomainObjectTableViewer() {
+        setImageModel(imageModel);
+    }
+
     @Override
     public void setSearchProvider(SearchProvider searchProvider) {
-        this.searchProvider = searchProvider;
+        super.setSearchProvider(searchProvider);
     }
     
     @Override
@@ -234,8 +268,8 @@ public class DomainObjectTableViewer extends TableViewer<DomainObject,Reference>
             sortField = column.getName();
             ascending = (newOrder != SortOrder.DESCENDING);
             String prefix = ascending ? "+":"-";
-            searchProvider.setSortField(prefix + sortField);
-            searchProvider.search();
+            getSearchProvider().setSortField(prefix + sortField);
+            getSearchProvider().search();
         }
 
         @Override

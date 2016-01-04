@@ -140,7 +140,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             }
         }
         resultPanel.setSelected(true);
-        resultPanel.requestFocus();
         SampleResult sampleResult = new SampleResult(sample, resultPanel.getResult());
         Events.getInstance().postOnEventBus(new SampleResultSelectionEvent(this, sampleResult, isUserDriven));
     }

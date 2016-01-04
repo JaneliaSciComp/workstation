@@ -81,11 +81,15 @@ public final class DomainInspectorTopComponent extends TopComponent {
     }
 
     @Subscribe
-    public void loadDomainObject(DomainObjectSelectionEvent event) {
+    public void domainObjectSelected(DomainObjectSelectionEvent event) {
         
-        // We only care about selection events
         if (!event.isSelect()) {
             log.debug("Event is not selection: {}",event);
+            return;
+        }
+
+        if (!event.isClearAll()) {
+            log.debug("Event is not clear all: {}",event);
             return;
         }
         

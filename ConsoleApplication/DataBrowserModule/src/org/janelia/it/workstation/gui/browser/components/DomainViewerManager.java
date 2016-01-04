@@ -58,7 +58,7 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
     }
 
     @Subscribe
-    public void handleDomainObjectSelection(DomainObjectSelectionEvent event) {
+    public void domainObjectSelected(DomainObjectSelectionEvent event) {
 
         // We only care about selection events
         if (!event.isSelect()) {

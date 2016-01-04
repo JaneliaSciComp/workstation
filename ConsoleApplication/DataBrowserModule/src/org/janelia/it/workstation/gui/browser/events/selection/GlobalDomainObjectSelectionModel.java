@@ -27,7 +27,7 @@ public class GlobalDomainObjectSelectionModel extends SelectionModel<DomainObjec
     }
 
     @Subscribe
-    public void handleDomainObjectSelection(DomainObjectSelectionEvent event) {
+    public void domainObjectSelected(DomainObjectSelectionEvent event) {
         if (event.isSelect()) {
             select(event.getDomainObject(), event.isClearAll());
         }
@@ -37,7 +37,7 @@ public class GlobalDomainObjectSelectionModel extends SelectionModel<DomainObjec
     }
     
     @Override
-    protected void notify(DomainObject domainObject, Reference id, boolean select, boolean clearAll) {
+    protected void selectionChanged(DomainObject domainObject, Reference id, boolean select, boolean clearAll) {
         // Since this is a meta-model, the relevant events were already on the bus, so this method 
         // does not need to do any additional work.
     }

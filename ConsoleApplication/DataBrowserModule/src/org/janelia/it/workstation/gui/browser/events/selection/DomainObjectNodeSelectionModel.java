@@ -8,13 +8,14 @@ import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
 import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
 
 /**
+ * A selection model implementation which tracks the selection of domain object nodes.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DomainObjectNodeSelectionModel extends SelectionModel<DomainObjectNode,Reference> {
 
     @Override
-    protected void notify(DomainObjectNode domainObjectNode, Reference id, boolean select, boolean clearAll) {
+    protected void selectionChanged(DomainObjectNode domainObjectNode, Reference id, boolean select, boolean clearAll) {
         if (domainObjectNode instanceof ObjectSetNode) {
             ObjectSetNode objectSetNode = (ObjectSetNode)domainObjectNode;
             Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), select, objectSetNode));

@@ -34,6 +34,7 @@ import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -293,8 +294,11 @@ public abstract class PaginatedResultsPanel extends JPanel {
             statusLabel.setText("");
         }
         else {
-            statusLabel.setText(s + " of " + resultPage.getNumPageResults() + " selected");
+            int pn = resultPage.getNumPageResults();
+            int total = s>pn?resultPage.getNumTotalResults():pn;
+            statusLabel.setText(s + " of " + total + " selected");
         }
+        setSelectAllVisible(false);
     }
     
     private synchronized void goPrevPage() {
@@ -324,13 +328,22 @@ public abstract class PaginatedResultsPanel extends JPanel {
     }
 
     private synchronized void selectAll() {
-    	// TODO: implement 
-//        for (T imageObject : allImageObjects) {
-//            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
-//        }
-        selectionButtonContainer.setVisible(false);
+        Utils.setWaitingCursor(this);
+        boolean clearAll = true;
+        for(ResultPage page : searchResults.getPages()) {
+            for(DomainObject domainObject : page.getDomainObjects()) {
+                selectionModel.select(domainObject, clearAll);
+                clearAll = false;
+            }
+        }
+        setSelectAllVisible(false);
+        Utils.setDefaultCursor(this);
     }
     
+    public void setSelectAllVisible(boolean visible) {
+        selectionButtonContainer.setVisible(visible);
+    }
+
     public void showLoadingIndicator() {
         removeAll();
         add(new JLabel(Icons.getLoadingIcon()));
@@ -344,7 +357,12 @@ public abstract class PaginatedResultsPanel extends JPanel {
         }
         removeAll();
         add(resultsView.getPanel(), BorderLayout.CENTER);
-        pagingStatusLabel.setText("Page " + (currPage + 1) + " of " + numPages);
+        if (numPages==0) {
+            pagingStatusLabel.setText("Page 0 of 0");    
+        }
+        else {
+            pagingStatusLabel.setText("Page " + (currPage + 1) + " of " + numPages);
+        }
         updateStatusBar();
         add(statusBar, BorderLayout.SOUTH);
         updateUI();
@@ -358,6 +376,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
     
     public void showSearchResults(SearchResults searchResults, boolean isUserDriven) {
         this.searchResults = searchResults;
+        selectionModel.reset();
         numPages = searchResults.getNumTotalPages();
         this.currPage = 0;
         showCurrPage(isUserDriven);

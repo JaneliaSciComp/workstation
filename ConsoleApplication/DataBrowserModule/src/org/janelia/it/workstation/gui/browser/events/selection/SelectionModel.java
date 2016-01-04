@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.events.selection;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,15 +18,28 @@ public abstract class SelectionModel<T,S> {
     private final List<S> selected = new ArrayList<>();
     private Object source;
     
-    public Object getSource() {
+    /**
+     * Returns the source component that is generating selections.
+     * @return
+     */
+    public final Object getSource() {
         return source;
     }
     
-    public void setSource(Object source) {
+    /**
+     * Set the source component that is generating selections.
+     * @param source
+     */
+    public final void setSource(Object source) {
         this.source = source;
     }
     
-    public void select(T object, boolean clearAll) {
+    /**
+     * Select the given object, optionally clearing all other selections first. 
+     * @param object
+     * @param clearAll
+     */
+    public final void select(T object, boolean clearAll) {
         log.debug("select {}, clear={}",object,clearAll);
         S id = getId(object);
         if (clearAll && selected.contains(id) && selected.size()==1) {
@@ -40,33 +54,79 @@ public abstract class SelectionModel<T,S> {
             selected.clear();
         }
         selected.add(id);
-        notify(object, id, true, clearAll);
+        selectionChanged(object, id, true, clearAll);
         
     }
 
-    public void deselect(T object) {
+    /**
+     * De-select the given object.
+     * @param object
+     */
+    public final void deselect(T object) {
         log.debug("deselect {}",object);
         S id = getId(object);
         if (!selected.contains(id)) {
             return;
         }
         selected.remove(id);
-        notify(object, id, false, false);
+        selectionChanged(object, id, false, false);
     }
 
-    protected abstract void notify(T object, S id, boolean select, boolean clearAll);
+    /**
+     * Clear all objects from the model. This resets the model, but does NOT call selectionChanged, since it
+     * is assumed that no one cares at this point.
+     */
+    public void reset() {
+        selected.clear();
+    }
     
+    /**
+     * Sub-classes can implement this method to do something when an object's selection changes. 
+     * @param object
+     * @param id
+     * @param select
+     * @param clearAll
+     */
+    protected abstract void selectionChanged(T object, S id, boolean select, boolean clearAll);
+    
+    /**
+     * Sub-classes must implement this method to return an identifier for the given object.
+     * @param object a object of the generic type T
+     * @return unique identifier of type S for the given object
+     */
     public abstract S getId(T object);
     
-    public List<S> getSelectedIds() {
+    /**
+     * Returns a list of currently selected ids, in the other they were selected. 
+     * @return
+     */
+    public final List<S> getSelectedIds() {
         return selected;
     }
     
-    public boolean isSelected(S id) {
+    /**
+     * Returns true if the given object is currently selected in this model.
+     * @param id
+     * @return
+     */
+    public final boolean isSelected(S id) {
         return selected.contains(id);
     }
+
+    /**
+     * Returns true if the given object is currently selected in this model.
+     * @param id
+     * @return
+     */
+    public final boolean isObjectSelected(T object) {
+        return selected.contains(getId(object));
+    }
     
-    public S getLastSelectedId() {
+    /**
+     * Returns the last item that was selected, not null if nothing is currently selected.
+     * @return
+     */
+    public final S getLastSelectedId() {
         if (selected.isEmpty()) return null;
         return selected.get(selected.size()-1);
     }
