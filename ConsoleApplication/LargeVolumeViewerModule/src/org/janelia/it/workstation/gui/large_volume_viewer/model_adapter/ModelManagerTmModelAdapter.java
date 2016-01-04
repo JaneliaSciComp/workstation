@@ -23,6 +23,8 @@ import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufE
 import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sun.misc.BASE64Encoder;
 
 /**
@@ -40,6 +42,8 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
     private final Map<Long,Entity> wsIdToEntity = new HashMap<>();
 
     private final TmProtobufExchanger exchanger = new TmProtobufExchanger();
+    
+    private Logger log = LoggerFactory.getLogger(ModelManagerTmModelAdapter.class);
     
     @Override
     public void loadNeurons(TmWorkspace workspace) throws Exception {
@@ -86,7 +90,17 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         // Need to make serializable version of the data.
         byte[] serializableBytes = exchanger.serializeNeuron(neuron);
         
-        // Must now push a new enity data
+        // May need to exchange this entity-data for existing one on workspace
+        EntityData preExistingEntityData = null;
+        for (EntityData edata: workspaceEntity.getEntityData()) {
+            log.info("Comparing neuron {} to entity data {}.", neuron.getId(), edata.getId());
+            if (edata.getId().equals(neuron.getId())) {
+                preExistingEntityData = edata;
+                break;
+            }
+        }
+
+        // Must now push a new entity data
         EntityData entityData = new EntityData();
         entityData.setOwnerKey(neuron.getOwnerKey());
         entityData.setCreationDate(neuron.getCreationDate());
@@ -99,8 +113,11 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         BASE64Encoder encoder = new BASE64Encoder();
         entityData.setValue(encoder.encode(serializableBytes));
         entityData.setEntityAttrName(EntityConstants.ATTRIBUTE_PROTOBUF_NEURON);
-        workspaceEntity.getEntityData().add(entityData);
         EntityData savedEntityData = ModelMgr.getModelMgr().saveOrUpdateEntityData(entityData);
+        if (preExistingEntityData != null) {
+            workspaceEntity.getEntityData().remove(preExistingEntityData);
+        }
+        workspaceEntity.getEntityData().add(entityData);
         neuron.setId(savedEntityData.getId());
     }
 
