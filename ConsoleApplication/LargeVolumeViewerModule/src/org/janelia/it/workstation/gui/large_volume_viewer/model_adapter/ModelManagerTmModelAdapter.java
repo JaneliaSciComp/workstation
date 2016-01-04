@@ -93,7 +93,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         // May need to exchange this entity-data for existing one on workspace
         EntityData preExistingEntityData = null;
         for (EntityData edata: workspaceEntity.getEntityData()) {
-            log.info("Comparing neuron {} to entity data {}.", neuron.getId(), edata.getId());
+            log.debug("Comparing neuron {} to entity data {}.", neuron.getId(), edata.getId());
             if (edata.getId().equals(neuron.getId())) {
                 preExistingEntityData = edata;
                 break;
