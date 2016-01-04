@@ -149,6 +149,10 @@ implements GLActor
 		if (pixelsPerVoxel > 5.0)
 			filter = GL2.GL_NEAREST; // distinct voxels at high zoom
         GL2 gl2 = glDrawable.getGL().getGL2();
+
+		gl2.glDepthMask(false);
+		gl2.glEnable(GL2.GL_BLEND);
+		//gl2.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
 		shader.load(gl2);
 		for (Tile2d tile: tiles) {
 			if (depthViewMap!=null) {
@@ -165,6 +169,8 @@ implements GLActor
 			tile.display(glDrawable, camera);
 		}
 		shader.unload(gl2);
+		gl2.glDisable(GL2.GL_BLEND);
+		gl2.glDepthMask(true);
 
 		// Numeral display at high zoom			
 		if (pixelsPerVoxel > 40.0) {

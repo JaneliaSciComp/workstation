@@ -12,7 +12,8 @@ uniform vec4 sign_op = vec4(1, -1, 0, 0);
 vec4 getSrgb(vec3 out_color)
 {
     // Final sRGB color correction, because JOGL 2.1 won't do it.
-    return vec4(pow(out_color.r, 0.46), pow(out_color.g, 0.46), pow(out_color.b, 0.46),1);
+    //return vec4(pow(out_color.r, 0.46), pow(out_color.g, 0.46), pow(out_color.b, 0.46),1);
+    return vec4(pow(out_color.r, 0.46), pow(out_color.g, 0.46), pow(out_color.b, 0.46),0.2);
 }
 
 float getIntensity(vec4 in_color, int c)
