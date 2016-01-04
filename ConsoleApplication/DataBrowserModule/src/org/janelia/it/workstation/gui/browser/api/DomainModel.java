@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import javax.swing.SwingUtilities;
 
@@ -23,6 +24,8 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
@@ -455,6 +458,11 @@ public class DomainModel {
         return getWorkspaces().iterator().next();
     }
     
+    /**
+     * Returns all of the ontologies that a user has access to view. 
+     * @return collection of ontologies
+     * @throws Exception
+     */
     public Collection<Ontology> getOntologies() throws Exception {
         List<Ontology> ontologies = new ArrayList<>();
         for (Ontology ontology : facade.getOntologies()) {
@@ -463,7 +471,29 @@ public class DomainModel {
         Collections.sort(ontologies, new DomainObjectComparator());
         return ontologies;
     }
+
+    /**
+     * Returns an ordered set of all the unique terms in an ontology tree, rooted at the given term.  
+     * @param ontologyTerm root of an ontology tree or sub-tree. 
+     * @return ordered set of ontology term names
+     */
+    public TreeSet<String> getOntologyTermSet(OntologyTerm ontologyTerm) {
+        TreeSet<String> terms = new TreeSet<>();
+        if (ontologyTerm.hasChildren()) {
+            for (OntologyTerm childTerm : ontologyTerm.getTerms()) {
+                terms.add(childTerm.getName());
+                terms.addAll(getOntologyTermSet(childTerm));
+            }
+        }
+        return terms;
+    }
     
+    /**
+     * Returns the ontology term specified by the given reference, by looking up the relevant ontology 
+     * and recursively walking it to find the term. 
+     * @param reference a reference to an ontology term
+     * @return the ontology term 
+     */
     public OntologyTerm getOntologyTermByReference(OntologyTermReference reference) {
         Ontology ontology = getDomainObject(Ontology.class, reference.getOntologyId());
         return findTerm(ontology, reference.getOntologyTermId());
@@ -577,7 +607,7 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(annotation.getId()==null ? facade.create(annotation) : facade.update(annotation));
         }
-        notifyDomainObjectCreated(canonicalObject);
+        notifyAnnotationsChanged(getDomainObject(annotation.getTarget()));
         return canonicalObject;
     }
     

@@ -1,13 +1,16 @@
 package org.janelia.it.workstation.gui.browser.model.search;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
+
+import com.google.common.collect.ListMultimap;
 
 /**
  * One page of annotated results, treated as a unit for performance reasons.
@@ -17,7 +20,7 @@ import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 public class ResultPage implements AnnotatedDomainObjectList {
 
     private final List<DomainObject> domainObjects = new ArrayList<>();
-    private final ListMultimap<Long,Annotation> annotationsByDomainObjectId = ArrayListMultimap.<Long,Annotation>create();
+    private final ListMultimap<Long,Annotation> annotationsByDomainObjectId;
     private final int numTotalResults;
     
     // TODO: might want to use References here for consistency, even if it's less efficient
@@ -32,9 +35,7 @@ public class ResultPage implements AnnotatedDomainObjectList {
             }
         }
         
-        for(Annotation annotation : annotations) {
-            annotationsByDomainObjectId.put(annotation.getTarget().getTargetId(), annotation);
-        }
+        this.annotationsByDomainObjectId = DomainUtils.getAnnotationsByDomainObjectId(annotations);
         this.numTotalResults = totalNumResults;
     }
 

@@ -21,11 +21,9 @@ import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
-import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
-import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.nodes.Node;
@@ -70,7 +68,7 @@ public class ApplyAnnotationAction extends NodeAction {
     }
     
     @Override
-    protected boolean enable (Node[] activatedNodes) {
+    protected boolean enable(Node[] activatedNodes) {
         selected.clear();
         for(Node node : activatedNodes) {
             if (node instanceof OntologyTermNode) {
@@ -110,13 +108,7 @@ public class ApplyAnnotationAction extends NodeAction {
         
         log.info("Will annotate all selected objects with: {} ({})",keyTermValue,keyTermId);
         
-        DomainListViewTopComponent listView = DomainListViewManager.getInstance().getActiveViewer();
-        if (listView==null || listView.getEditor()==null) return;
-        
-        DomainObjectSelectionModel selectionModel = listView.getEditor().getSelectionModel();
-        if (selectionModel==null) return;
-        
-        List<Reference> selectedIds = selectionModel.getSelectedIds();
+        List<Reference> selectedIds = GlobalDomainObjectSelectionModel.getInstance().getSelectedIds();
         
         if (selectedIds.isEmpty()) {
             // Cannot annotate nothing
@@ -204,7 +196,7 @@ public class ApplyAnnotationAction extends NodeAction {
 
             @Override
             protected void hadSuccess() {
-                //ConcurrentUtils.invokeAndHandleExceptions(doSuccess);
+                // UI will be updated by events
             }
 
             @Override
@@ -278,5 +270,4 @@ public class ApplyAnnotationAction extends NodeAction {
             log.info("Auto-shared annotation with " + template.getSubjectKey());
         }
     }
-    
 }

@@ -41,6 +41,7 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEve
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.OntologySelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.AutoAnnotationPermissionDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.BulkAnnotationPermissionDialog;
@@ -62,6 +63,7 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.JScrollPopupMenu;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -402,33 +404,9 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     beanTreeView.selectPaths(selected);
                 }
             });
-                            
-//            Ontology changed = (Ontology)domainObject;
-//            
-//            log.debug("Updating changed ontology: {}",changed.getName());
-//            
-//            int i = 0;
-//            for(Ontology ontology : ontologies) {
-//                if (ontology.getId().equals(changed.getId())) {
-//                    ontologies.set(i, changed);
-//                    break;
-//                }
-//                i++;
-//            }
-//            
-//            final List<Long[]> expanded = beanTreeView.getExpandedPaths();
-//            final List<Long[]> selected = beanTreeView.getSelectedPaths();
-//            showOntology(changed, true);
-//            SwingUtilities.invokeLater(new Runnable() {
-//                @Override
-//                public void run() {
-//                    beanTreeView.expand(expanded);
-//                    beanTreeView.selectPaths(selected);
-//                }
-//            });
         }
     }
-
+    
     private void selectOntology(Long ontologyId, boolean expandAll) {
         if (ontologyId==null) {
             showOntology(null, expandAll);

@@ -19,6 +19,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
+import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
@@ -140,6 +141,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             protected void hadSuccess() {
                 // Init the list viewer manager
                 DomainListViewManager.getInstance();
+                // Init the global selection model
+                GlobalDomainObjectSelectionModel.getInstance();
                 // Select the root node
                 selectRoot();
                 // Expand the top-level workspace nodes
