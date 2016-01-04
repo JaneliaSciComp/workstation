@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.browser.gui.dialogs;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Date;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -79,25 +80,43 @@ public class EditCriteriaDialog extends ModalDialog {
         if (criteria instanceof DateRangeCriteria) {
 
             JPanel inputPanel = new JPanel();
+            inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.LINE_AXIS));
             startDatePicker = new DateComboBox();
+            
             inputPanel.add(startDatePicker);
-            inputPanel.add(new JLabel("to"));
+            inputPanel.add(new JLabel(" to "));
             endDatePicker = new DateComboBox();
             inputPanel.add(endDatePicker);
             
-            attrPanel.add(new JLabel(label),"gap para");
+            JLabel dateLabel = new JLabel(label);
+            dateLabel.setLabelFor(inputPanel);
+            attrPanel.add(dateLabel,"gap para");
             attrPanel.add(inputPanel,"gap para");
             
+            Date now = new Date();
             DateRangeCriteria drc = (DateRangeCriteria)criteria;
-            startDatePicker.setDate(drc.getStartDate());
-            endDatePicker.setDate(drc.getEndDate());
+            if (drc.getStartDate()==null) {
+                startDatePicker.setDate(now);    
+            }
+            else {
+                startDatePicker.setDate(drc.getStartDate());
+            }
+
+            if (drc.getEndDate()==null) {
+                endDatePicker.setDate(now);    
+            }
+            else {
+                endDatePicker.setDate(drc.getEndDate());
+            }
         }
         else if (criteria instanceof AttributeValueCriteria) {
 
             textField = new JTextField();
-            textField.setColumns(10);
-            
-            attrPanel.add(new JLabel(label),"gap para");
+            textField.setColumns(25);
+
+            JLabel attrLabel = new JLabel(label);
+            attrLabel.setLabelFor(textField);
+            attrPanel.add(attrLabel,"gap para");
             attrPanel.add(textField,"gap para");
             
             AttributeValueCriteria avc = (AttributeValueCriteria)criteria;
@@ -117,9 +136,12 @@ public class EditCriteriaDialog extends ModalDialog {
             this.save = true;
         }
         else if (criteria instanceof AttributeValueCriteria) {
-            AttributeValueCriteria avc = (AttributeValueCriteria)criteria;
-            avc.setValue(textField.getText());
-            this.save = true;
+            String text = textField.getText().trim();
+            if (!text.isEmpty()) {
+                AttributeValueCriteria avc = (AttributeValueCriteria)criteria;
+                avc.setValue(text);
+                this.save = true;
+            }
         }
         
         setVisible(false);

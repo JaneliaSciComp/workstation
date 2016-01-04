@@ -16,6 +16,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -105,7 +107,8 @@ import de.javasoft.swing.SimpleDropDownButton;
 public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEditor<Filter>, SearchProvider {
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
-    
+
+    private static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
     private static final String SOLR_TYPE_FIELD = "type";
     public static final String DEFAULT_FILTER_NAME = "Unsaved Filter";
     public static final Class<?> DEFAULT_SEARCH_CLASS = Sample.class;
@@ -501,10 +504,18 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     
-                    AttributeValueCriteria criteria = new AttributeValueCriteria();
+                    AttributeCriteria criteria;
+                    Class<?> attrClass = attr.getGetter().getReturnType();
+                    if (attrClass.equals(Date.class)) {
+                        criteria = new DateRangeCriteria();
+                    }
+                    else {
+                        criteria = new AttributeValueCriteria();
+                    }
+                    
                     criteria.setAttributeName(attr.getName());
                     EditCriteriaDialog dialog = new EditCriteriaDialog();
-                    criteria = (AttributeValueCriteria)dialog.showForCriteria(criteria, attr.getLabel());
+                    criteria = (AttributeCriteria)dialog.showForCriteria(criteria, attr.getLabel());
                     
                     if (criteria!=null) {
                         filter.addCriteria(criteria);
@@ -532,7 +543,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         }
         else if (criteria instanceof DateRangeCriteria) {
             DateRangeCriteria drc = (DateRangeCriteria)criteria;
-            label = attr.getLabel()+": "+drc.getStartDate()+"-"+drc.getEndDate();
+            label = attr.getLabel()+": "+df.format(drc.getStartDate())+" - "+df.format(drc.getEndDate());
         }
         else {
             return null;
@@ -646,11 +657,13 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 }
                 else if (criteria instanceof AttributeCriteria) {
                     AttributeCriteria ac = (AttributeCriteria) criteria;
+                    // TODO: allow user to select operator
                     CriteriaOperator operator = CriteriaOperator.CONTAINS;
                     String value1 = null;
                     String value2 = null;
 
                     if (criteria instanceof DateRangeCriteria) {
+                        operator = CriteriaOperator.BETWEEN;
                         DateRangeCriteria drc = (DateRangeCriteria) criteria;
                         Date startCal = drc.getStartDate();
                         Date endCal = drc.getEndDate();

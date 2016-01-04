@@ -266,14 +266,17 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
                             @Override
                             protected void doStuff() throws Exception {
-                                Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_DEFAULT_SAMPLE_RESULT,parentObject.getId().toString());
-                                if (preference==null) {
-                                    preference = new Preference(SessionMgr.getSubjectKey(), DomainConstants.PREFERENCE_CATEGORY_DEFAULT_SAMPLE_RESULT, parentObject.getId().toString(), resultName);
+                                if (parentObject.getId()!=null) {
+                                    Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_DEFAULT_SAMPLE_RESULT,parentObject.getId().toString());
+                                    if (preference==null) {
+                                        preference = new Preference(SessionMgr.getSubjectKey(), DomainConstants.PREFERENCE_CATEGORY_DEFAULT_SAMPLE_RESULT, parentObject.getId().toString(), resultName);
+                                    }
+                                    else {
+                                        preference.setValue(resultName);
+                                    }
+                                    DomainMgr.getDomainMgr().savePreference(preference);
                                 }
-                                else {
-                                    preference.setValue(resultName);
-                                }
-                                DomainMgr.getDomainMgr().savePreference(preference);
+                                // TODO: If the parent object has not been persisted, the preferences will not get saved here. They should be saved if ncessary when the object is persisted. 
                             }
 
                             @Override
@@ -311,14 +314,16 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
                             @Override
                             protected void doStuff() throws Exception {
-                                Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_DEFAULT_IMAGE_TYPE,parentObject.getId().toString());
-                                if (preference==null) {
-                                    preference = new Preference(SessionMgr.getSubjectKey(), DomainConstants.PREFERENCE_CATEGORY_DEFAULT_IMAGE_TYPE, parentObject.getId().toString(), typeName);
+                                if (parentObject.getId()!=null) {
+                                    Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_DEFAULT_IMAGE_TYPE,parentObject.getId().toString());
+                                    if (preference==null) {
+                                        preference = new Preference(SessionMgr.getSubjectKey(), DomainConstants.PREFERENCE_CATEGORY_DEFAULT_IMAGE_TYPE, parentObject.getId().toString(), typeName);
+                                    }
+                                    else {
+                                        preference.setValue(typeName);
+                                    }
+                                    DomainMgr.getDomainMgr().savePreference(preference);
                                 }
-                                else {
-                                    preference.setValue(typeName);
-                                }
-                                DomainMgr.getDomainMgr().savePreference(preference);
                             }
 
                             @Override
