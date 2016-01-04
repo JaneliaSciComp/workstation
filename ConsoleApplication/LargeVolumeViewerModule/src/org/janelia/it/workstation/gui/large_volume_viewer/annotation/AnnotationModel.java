@@ -565,7 +565,7 @@ called from a  SimpleWorker thread.
      */
     public void moveAnnotation(final Long annotationID, Vec3 location) throws Exception {
         final TmNeuron neuron = this.getNeuronFromAnnotationID(annotationID);
-        TmGeoAnnotation annotation = getGeoAnnotationFromID(annotationID);
+        TmGeoAnnotation annotation = getGeoAnnotationFromID(neuron, annotationID);
 
         // find each connecting annotation; if there's a traced path to it,
         //  remove it (refresh annotation!)
@@ -857,7 +857,7 @@ called from a  SimpleWorker thread.
             //  Database deletion handled at serialization of Neuron.
             //modelMgr.deleteStructuredTextAnnotation(note.getId());
         }
-        neuron.getGeoAnnotationMap().remove(link.getId());
+
         //  Database deletion handled at serialization of Neuron.
         //modelMgr.deleteGeometricAnnotation(link.getId());
 
@@ -1633,6 +1633,17 @@ called from a  SimpleWorker thread.
 
     }
     
+    /**
+     * given the ID of an annotation, return an object wrapping it (or null)
+     */
+    private TmGeoAnnotation getGeoAnnotationFromID(TmNeuron foundNeuron, Long annotationID) {
+        if (foundNeuron != null) {
+            return foundNeuron.getGeoAnnotationMap().get(annotationID);
+        } else {
+            return null;
+        }
+    }
+
     public List<File> breakOutByRoots(File infile) throws IOException {
         return new SWCData().breakOutByRoots(infile);
     }
