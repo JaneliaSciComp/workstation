@@ -58,6 +58,7 @@ public class FilteredAnnotationList extends JPanel {
     private AnnotationManager annotationMgr;
     private AnnotationModel annotationModel;
     private FilteredAnnotationModel model;
+    private List<InterestingAnnotation> uninterestingAnnotations = new ArrayList<>();
 
     private Map<String, AnnotationFilter> filters = new HashMap<>();
     private AnnotationFilter currentFilter;
@@ -170,6 +171,7 @@ public class FilteredAnnotationList extends JPanel {
         // loop over neurons, roots in neuron, annotations per root;
         //  put all the "interesting" annotations in a list
         model.clear();
+        uninterestingAnnotations.clear();
         AnnotationFilter filter = getCurrentFilter();
         String note;
         for (TmNeuron neuron: currentWorkspace.getNeuronList()) {
@@ -187,6 +189,8 @@ public class FilteredAnnotationList extends JPanel {
                             note);
                     if (filter.isInteresting(maybeInteresting)) {
                         model.addAnnotation(maybeInteresting);
+                    } else {
+                        uninterestingAnnotations.add(maybeInteresting);
                     }
                 }
             }
