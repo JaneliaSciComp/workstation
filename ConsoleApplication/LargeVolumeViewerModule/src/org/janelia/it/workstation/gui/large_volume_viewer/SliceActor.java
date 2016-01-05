@@ -159,9 +159,12 @@ implements GLActor
 				List<Tile2d> depthTileList=depthViewMap.get(tile);
 				if (depthTileList!=null) {
 					log.info("Rendering "+depthTileList.size()+" depth tiles");
+					double zOffset=0.0;
+					double zOffsetIncrement=-0.90/(depthTileList.size()*1.0);
 					for (Tile2d depthTile : depthTileList) {
 						depthTile.setFilter(filter);
-						tile.display(glDrawable, camera);
+						tile.display(glDrawable, camera, zOffset);
+						zOffset+=zOffsetIncrement;
 					}
 				}
 			}

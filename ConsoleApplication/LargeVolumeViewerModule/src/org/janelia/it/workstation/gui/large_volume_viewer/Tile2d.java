@@ -168,8 +168,12 @@ implements GLActor
 	public void display(GLAutoDrawable glDrawable) {
 		display(glDrawable, null);
 	}
-	
+
 	public void display(GLAutoDrawable glDrawable, Camera3d camera) {
+		display(glDrawable, camera, 0.0);
+	}
+
+	public void display(GLAutoDrawable glDrawable, Camera3d camera, double zOffset) {
 		if (bestTexture == null) {
 			log.info("tile with no texture "+getIndex());
 			return;
@@ -207,7 +211,7 @@ implements GLActor
 //				double yc=corners[c].getY();
 //				double zc=corners[c].getZ();
 //				log.info("glVertex3d : "+xc + " " + yc + " " + zc);
-		        gl.glVertex3d(corners[c].getX(), corners[c].getY(), corners[c].getZ());
+		        gl.glVertex3d(corners[c].getX(), corners[c].getY(), corners[c].getZ() + zOffset);
 	        }
 	        
 		gl.glEnd();
