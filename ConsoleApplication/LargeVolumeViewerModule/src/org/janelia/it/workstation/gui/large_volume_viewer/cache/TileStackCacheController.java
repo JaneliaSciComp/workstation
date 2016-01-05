@@ -27,6 +27,10 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID;
 
 /**
  * Created by murphys on 10/22/2015.
@@ -35,7 +39,9 @@ public class TileStackCacheController {
 
     private static Logger log = LoggerFactory.getLogger(TileStackCacheController.class);
     private static TileStackCacheController theInstance=new TileStackCacheController();
-
+    private static final CategoryString LTT_CATEGORY_STRING = new CategoryString("loadTileTiffToRam");
+    private static final CategoryString LTT_SESSION_CATEGORY_STRING = new CategoryString("openWholeTifFolder");
+    
     private static ScheduledThreadPoolExecutor emergencyThreadPool = new ScheduledThreadPoolExecutor(4);
     private static ScheduledThreadPoolExecutor fileLoadThreadPool = new ScheduledThreadPoolExecutor(4);
 
@@ -46,6 +52,7 @@ public class TileStackCacheController {
 
     private String remoteBasePath;
     private File topFolder;
+    private long folderOpenTimestamp;
     private URL initUrl;
     private int cacheVolumeSize;
     private int sliceSize = -1;
@@ -111,6 +118,12 @@ public class TileStackCacheController {
         octreeMetadataSniffer.sniffMetadata(topFolder);
         sliceSize = octreeMetadataSniffer.getSliceSize(); // maybe 16-bit
         log.info("initFilesystemMetadata()");
+        folderOpenTimestamp = new Date().getTime();
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LTT_SESSION_CATEGORY_STRING,
+                new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
+        );
         int[] tileSize=tileFormat.getTileSize();
         int[] volumeSize=tileFormat.getVolumeSize();
         int zoomLevels=tileFormat.getZoomLevelCount();
@@ -358,6 +371,20 @@ public class TileStackCacheController {
 
     public TileFormat getTileFormat() {
         return tileFormat;
+    }
+
+    /**
+     * @return the folderOpenTimestamp
+     */
+    public long getFolderOpenTimestamp() {
+        return folderOpenTimestamp;
+    }
+
+    /**
+     * @param folderOpenTimestamp the folderOpenTimestamp to set
+     */
+    public void setFolderOpenTimestamp(long folderOpenTimestamp) {
+        this.folderOpenTimestamp = folderOpenTimestamp;
     }
 
     private int getStackSliceFromTileIndex(TileIndex tileIndex) {
@@ -658,6 +685,7 @@ public class TileStackCacheController {
 
         private void loadTiffToByteArray(File file, byte[] volumeData, int channelCount, int[] tileSize) throws AbstractTextureLoadAdapter.TileLoadError, AbstractTextureLoadAdapter.MissingTileException, IOException {
             log.info("***>>> loadTiffToByteArray() loading file="+file.getAbsolutePath());
+            Long startingTime = System.currentTimeMillis();
             //try {
                 int sliceSize = tileSize[0] * tileSize[1];
                 int channelSize = sliceSize * tileSize[2];
@@ -711,6 +739,19 @@ public class TileStackCacheController {
             //    log.error("***>>> loadTiffToByteArray: Exception="+ex.toString());
             //    ex.printStackTrace();
             //}
+                Long finalTime = System.currentTimeMillis();
+                final long elapsedMs = finalTime - startingTime;
+                // Alwoys logging these.  Far less often issued than single
+                // slice loads.
+                File topFolder = tileStackCacheController.getTopFolder();
+                String specificPart = file.toString().substring(topFolder.toString().length());
+                SessionMgr.getSessionMgr().logToolEvent(
+                    LVV_LOGSTAMP_ID,
+                    LTT_CATEGORY_STRING,
+                    new ActionString(
+                            tileStackCacheController.getFolderOpenTimestamp() + ":" + specificPart + ":elapsed_ms="+elapsedMs
+                    )
+            );
         }
 
         private synchronized boolean inTheNeighborhood(File file) {

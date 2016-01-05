@@ -103,7 +103,7 @@ public interface EntityFacade {
 
     public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception;
 
-    public void importSWCFolder(String swcFolderLoc, String ownerKey, Long sampleId) throws Exception;
+    public void importSWCFolder(String swcFolderLoc, String ownerKey, Long sampleId, String workspaceName) throws Exception;
     
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception;
 
