@@ -89,9 +89,9 @@ public class ImagesPanel<T,S> extends JScrollPane {
                         return;
                     }
                     currViewRect = viewRect;
-//                    if (!e.getValueIsAdjusting()) {
+                    if (!e.getValueIsAdjusting()) {
                         loadUnloadImages();
-//                    }
+                    }
 
                     if (timer != null) {
                         timer.cancel();
@@ -561,8 +561,6 @@ public class ImagesPanel<T,S> extends JScrollPane {
 
     private Date lastQueueDate = new Date();
 
-    private Rectangle lastViewRect;
-    
     public void loadUnloadImages() {
         loadUnloadImagesInterrupt.set(true);
         final Date queueDate = new Date();
@@ -577,11 +575,6 @@ public class ImagesPanel<T,S> extends JScrollPane {
                 loadUnloadImagesInterrupt.set(false);
                 final JViewport viewPort = getViewport();
                 Rectangle viewRect = viewPort.getViewRect();
-                if (lastViewRect!=null && lastViewRect.equals(viewRect)) {
-                    log.trace("Ignoring redundant loadUnloadImages request");
-                    return;
-                }
-                lastViewRect = viewRect;
                 log.trace("Running loadUnloadImages (viewRect: {})",viewRect);
                 if (buttonsPanel.getColumns() == 1) {
                     viewRect.setSize(viewRect.width, viewRect.height + 100);
