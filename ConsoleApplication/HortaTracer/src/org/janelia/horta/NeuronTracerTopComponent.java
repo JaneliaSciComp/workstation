@@ -357,10 +357,16 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
             }
-            else if (tracingActor instanceof SpheresActor)
+            else if (tracingActor instanceof SpheresActor) // highlight hover actor
             {
                 SpheresActor spheresActor = (SpheresActor)tracingActor;
                 spheresActor.getNeuron().getMembersAddedObservable().addObserver(new Observer() {
+                    @Override
+                    public void update(Observable o, Object arg) {
+                        redrawNow();
+                    }
+                });
+                spheresActor.getNeuron().getMembersRemovedObservable().addObserver(new Observer() {
                     @Override
                     public void update(Observable o, Object arg) {
                         redrawNow();

@@ -421,6 +421,10 @@ public class TracingInteractor extends MouseAdapter
             // StatusDisplayer.getDefault().setStatusText("Neuron!", 2);
         }
         else {
+            // Stop displaying highlight when cursor moves off neuron
+            if (clearHighlightHoverVertex()) {
+                highlightHoverModel.getMembersRemovedObservable().notifyObservers(); // repaint
+            }
             // Clear previous vertex message, if necessary
             if (previousHoverMessage != null) {
                 previousHoverMessage.clear(2);
