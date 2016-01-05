@@ -14,8 +14,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
-import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;

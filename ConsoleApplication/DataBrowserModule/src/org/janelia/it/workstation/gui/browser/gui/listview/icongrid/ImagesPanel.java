@@ -89,9 +89,9 @@ public class ImagesPanel<T,S> extends JScrollPane {
                         return;
                     }
                     currViewRect = viewRect;
-                    if (!e.getValueIsAdjusting()) {
+//                    if (!e.getValueIsAdjusting()) {
                         loadUnloadImages();
-                    }
+//                    }
 
                     if (timer != null) {
                         timer.cancel();
@@ -224,7 +224,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
     public List<AnnotatedImageButton<T,S>> getButtonsByUniqueId(S uniqueId) {
         List<AnnotatedImageButton<T,S>> imageButtons = new ArrayList<>();
         for (AnnotatedImageButton<T,S> button : buttons.values()) {
-            S imageId = imageModel.getImageUniqueId(button.getImageObject());
+            S imageId = imageModel.getImageUniqueId(button.getUserObject());
             if (imageId.equals(uniqueId)) {
                 imageButtons.add(button);
             }
@@ -326,14 +326,16 @@ public class ImagesPanel<T,S> extends JScrollPane {
             return;
         }
 
-	    // This rectangle is relative to the table where the
+        // This rectangle is relative to the table where the
         // northwest corner of cell (0,0) is always (0,0).
         Rectangle rect = button.getBounds();
-
+        log.trace("Button rect: {}",rect);
+        
         // The location of the view relative to the table
         Rectangle viewRect = viewport.getViewRect();
-
-	    // Translate the cell location so that it is relative
+        log.trace("View rect: {}",viewRect);
+        
+        // Translate the cell location so that it is relative
         // to the view, assuming the northwest corner of the
         // view is (0,0).
         rect.setLocation(rect.x - viewRect.x, rect.y - viewRect.y);
@@ -342,7 +344,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
         int centerX = (viewRect.width - rect.width) / 2;
         int centerY = (viewRect.height - rect.height) / 2;
 
-	    // Fake the location of the cell so that scrollRectToVisible
+        // Fake the location of the cell so that scrollRectToVisible
         // will move the cell to the center
         if (rect.x < centerX) {
             centerX = -centerX;
@@ -351,8 +353,9 @@ public class ImagesPanel<T,S> extends JScrollPane {
             centerY = -centerY;
         }
         rect.translate(centerX, centerY);
-
+        
         // Scroll the area into view.
+        log.trace("Scroll to visible: {}",rect);
         viewport.scrollRectToVisible(rect);
     }
 
@@ -451,7 +454,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
     public void setSelection(T selectedObject, boolean selection, boolean clearAll) {
         if (clearAll) {
             for (AnnotatedImageButton<T,S> button : buttons.values()) {
-                T imageObject = button.getImageObject();
+                T imageObject = button.getUserObject();
                 if (imageObject.equals(selectedObject)) {
                     setSelection(button, true);
                 }
@@ -471,7 +474,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
     
     public void setSelectedObjects(Set<T> selectedObjects) {
         for (AnnotatedImageButton<T,S> button : buttons.values()) {
-            T imageObject = button.getImageObject();
+            T imageObject = button.getUserObject();
             if (selectedObjects.contains(imageObject)) {
                 setSelection(button, true);
             }
@@ -484,7 +487,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
     public void setSelectionByUniqueId(S selectedId, boolean selection, boolean clearAll) {
         if (clearAll) {
             for (AnnotatedImageButton<T,S> button : buttons.values()) {
-                T imageObject = button.getImageObject();
+                T imageObject = button.getUserObject();
                 S imageId = imageModel.getImageUniqueId(imageObject);
                 if (imageId.equals(selectedId)) {
                     setSelection(button, true);
@@ -558,6 +561,8 @@ public class ImagesPanel<T,S> extends JScrollPane {
 
     private Date lastQueueDate = new Date();
 
+    private Rectangle lastViewRect;
+    
     public void loadUnloadImages() {
         loadUnloadImagesInterrupt.set(true);
         final Date queueDate = new Date();
@@ -569,11 +574,15 @@ public class ImagesPanel<T,S> extends JScrollPane {
                     log.trace("Ignoring duplicate loadUnloadImages request");
                     return;
                 }
-                log.trace("Running loadUnloadImages");
                 loadUnloadImagesInterrupt.set(false);
                 final JViewport viewPort = getViewport();
                 Rectangle viewRect = viewPort.getViewRect();
-                log.trace("viewRect: {}",viewRect);
+                if (lastViewRect!=null && lastViewRect.equals(viewRect)) {
+                    log.trace("Ignoring redundant loadUnloadImages request");
+                    return;
+                }
+                lastViewRect = viewRect;
+                log.trace("Running loadUnloadImages (viewRect: {})",viewRect);
                 if (buttonsPanel.getColumns() == 1) {
                     viewRect.setSize(viewRect.width, viewRect.height + 100);
                 }

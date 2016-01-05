@@ -6,7 +6,6 @@ import java.util.concurrent.Callable;
 import javax.swing.JPanel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
@@ -18,18 +17,6 @@ import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
  */
 public interface AnnotatedDomainObjectListViewer {
 
-    /**
-     * Show the objects in the list in the viewer, along with their annotations. 
-     * @param domainObjectList 
-     */
-    public void showDomainObjects(AnnotatedDomainObjectList domainObjectList, final Callable<Void> success);
-
-    /**
-     * Refresh the given domain object.
-     * @param domainObject updated domain object
-     */
-    public void refreshDomainObject(DomainObject domainObject);
-    
     /**
      * Returns the actual GUI panel which implements the list viewer functionality.
      * @return a JPanel that can be added to a container for displaying the list
@@ -52,7 +39,7 @@ public interface AnnotatedDomainObjectListViewer {
      * @return selection model
      */
     public DomainObjectSelectionModel getSelectionModel();
-    
+
     /**
      * Tell the viewer that the selection should change.
      * @param domainObjects list of domain objects for which to change selection
@@ -62,8 +49,15 @@ public interface AnnotatedDomainObjectListViewer {
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll);
     
     /**
-     * Called when a user preference changes.
-     * @param preference
+     * Show the objects in the list in the viewer, along with their annotations. 
+     * @param domainObjectList 
      */
-    public void preferenceChanged(Preference preference);
+    public void showDomainObjects(AnnotatedDomainObjectList domainObjectList, final Callable<Void> success);
+
+    /**
+     * Refresh the given domain object.
+     * @param domainObject updated domain object
+     */
+    public void refreshDomainObject(DomainObject domainObject);
+    
 }

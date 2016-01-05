@@ -177,7 +177,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 
         this.sample = sample;
 
-        log.info("loadDomainObject(Sample:{})",sample.getName());
+        log.info("loadDomainObject({})",sample.getName());
         
         lips.clear();
         resultPanels.clear();

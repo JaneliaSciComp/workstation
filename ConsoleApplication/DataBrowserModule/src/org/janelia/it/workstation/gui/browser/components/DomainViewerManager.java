@@ -2,6 +2,8 @@ package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.Component;
 
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -77,7 +79,7 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
             return;
         }
 
-        log.info("handleDomainObjectSelection({})",event.getDomainObject());
+        log.info("domainObjectSelected({})",Reference.createFor(event.getDomainObject()));
         
         DomainViewerTopComponent viewer = DomainViewerManager.getInstance().getActiveViewer();
         if (viewer!=null) {
