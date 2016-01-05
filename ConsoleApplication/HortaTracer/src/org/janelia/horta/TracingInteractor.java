@@ -167,7 +167,9 @@ public class TracingInteractor extends MouseAdapter
         result.add(new NeuriteActor(null, provisionalModel));
         result.add(new NeuriteActor(null, previousHoverModel));
         // result.add(new NeuriteActor(null, hoverModel));
-        result.add(new SpheresActor(highlightHoverModel));
+        SpheresActor highlightActor = new SpheresActor(highlightHoverModel);
+        highlightActor.setMinPixelRadius(5.0f);
+        result.add(highlightActor);
         
         // Colors 
         ((NeuriteActor)result.get(0)).setColor(Color.WHITE);
@@ -324,20 +326,20 @@ public class TracingInteractor extends MouseAdapter
 
             // Create a modified vertex to represent the enlarged, highlighted actor
             BasicSwcVertex highlightVertex = new BasicSwcVertex(loc[0], loc[1], loc[2]); // same center location as real vertex
-            // Set highlight actor radius 10% larger than true vertex radius, and at least 2 pixels larger
+            // Set highlight actor radius X% larger than true vertex radius, and at least 2 pixels larger
             float startRadius = 1.0f;
             if (vertex.hasRadius())
                 startRadius = vertex.getRadius();
-            float highlightRadius = startRadius * 1.10f;
+            float highlightRadius = startRadius * 1.50f;
             // TODO: and at least 2 pixels bigger - need camera info?
             highlightVertex.setRadius(highlightRadius);
             // blend neuron color with pale yellow highlight color
             float highlightColor[] = {1.0f, 1.0f, 0.8f, 0.5f}; // pale yellow and transparent
-            float neuronColor[] = highlightColor;
+            float neuronColor[] = {1.0f, 0.0f, 1.0f, 1.0f};
             if (neuron != null) {
                 neuronColor = neuron.getColor().getColorComponents(neuronColor);
             }
-            float highlightBlend = 0.5f;
+            float highlightBlend = 0.75f;
             Color blendedColor = new Color(
                     neuronColor[0] - highlightBlend * (neuronColor[0] - highlightColor[0]),
                     neuronColor[1] - highlightBlend * (neuronColor[1] - highlightColor[1]),
@@ -346,9 +348,13 @@ public class TracingInteractor extends MouseAdapter
                     );
             highlightHoverModel.setVisible(true);
             highlightHoverModel.setColor(blendedColor);
+            // highlightHoverModel.setColor(Color.MAGENTA); // for debugging
+            
             highlightHoverModel.getVertexes().add(highlightVertex);
             highlightHoverModel.getMembersAddedObservable().setChanged();
+            
             highlightHoverModel.getMembersAddedObservable().notifyObservers();     
+            highlightHoverModel.getColorChangeObservable().notifyObservers();
         }
         
         return true;

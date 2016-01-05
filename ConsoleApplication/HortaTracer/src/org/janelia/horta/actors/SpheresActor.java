@@ -63,7 +63,7 @@ public class SpheresActor extends BasicGL3Actor
     
     // Simpler constructor creates its own image and shader resources
     public SpheresActor(NeuronModel neuron) {
-        this(neuron, new DefaultLightProbeTexture(), new SpheresMaterial.SpheresShader());
+        this(neuron, null, new SpheresMaterial.SpheresShader());
     }
     
     // For scaling efficiency, alternate constructor takes shared resources as argument
@@ -146,7 +146,7 @@ public class SpheresActor extends BasicGL3Actor
         material.setColor(color);
     }
 
-    void setMinPixelRadius(float radius)
+    public void setMinPixelRadius(float radius)
     {
         material.setMinPixelRadius(radius);
     }
@@ -159,19 +159,6 @@ public class SpheresActor extends BasicGL3Actor
     public float getMinPixelRadius()
     {
         return material.getMinPixelRadius();
-    }
-    
-    private static class DefaultLightProbeTexture extends Texture2d
-    {
-        DefaultLightProbeTexture() {
-            try {
-                loadFromPpm(getClass().getResourceAsStream(
-                        "/org/janelia/gltools/material/lightprobe/"
-                                + "Office1W165Both.ppm"));
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
-            }
-        }
     }
 
     public NeuronModel getNeuron() {
