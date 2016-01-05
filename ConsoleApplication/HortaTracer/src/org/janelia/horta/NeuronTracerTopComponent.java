@@ -344,14 +344,19 @@ public final class NeuronTracerTopComponent extends TopComponent
         renderers.add(neuronMPRenderer0);
                 
         // 3) Neurite model
-        for (NeuriteActor tracingActor : tracingInteractor.createActors()) {
+        for (GL3Actor tracingActor : tracingInteractor.createActors()) {
             sceneWindow.getRenderer().addActor(tracingActor);
-            tracingActor.getModel().addObserver(new Observer() {
-                @Override
-                public void update(Observable o, Object arg) {
-                    sceneWindow.getInnerComponent().repaint();
-                }
-            });
+            if (tracingActor instanceof NeuriteActor) // TODO: deprecate NeuriteActor
+            {
+                NeuriteActor neuriteActor = (NeuriteActor)tracingActor;
+                neuriteActor.getModel().addObserver(new Observer() {
+                    @Override
+                    public void update(Observable o, Object arg) {
+                        sceneWindow.getInnerComponent().repaint();
+                    }
+                });
+            }
+            // TODO: update that fourth actor, which uses a NeuronModel
         }
 
         // 4) Scale bar

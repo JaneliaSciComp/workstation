@@ -76,6 +76,15 @@ public class BasicNeuronModel implements NeuronModel
     private boolean visible = true;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    
+    /*
+     * Creates an empty neuron model
+    */
+    public BasicNeuronModel(String modelName)    
+    {
+        this.name = modelName;
+    }
+    
     public BasicNeuronModel(File swcFile) throws FileNotFoundException, IOException
     {
         this(new BufferedInputStream(new FileInputStream(swcFile)), swcFile.getName());

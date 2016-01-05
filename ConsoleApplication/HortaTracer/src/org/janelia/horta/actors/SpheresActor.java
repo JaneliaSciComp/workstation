@@ -31,6 +31,7 @@
 package org.janelia.horta.actors;
 
 import java.awt.Color;
+import java.io.IOException;
 import java.util.Observable;
 import java.util.Observer;
 import javax.media.opengl.GL3;
@@ -44,6 +45,7 @@ import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
+import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +61,12 @@ public class SpheresActor extends BasicGL3Actor
     private final NeuronModel neuron;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
+    // Simpler constructor creates its own image and shader resources
+    public SpheresActor(NeuronModel neuron) {
+        this(neuron, new DefaultLightProbeTexture(), new SpheresMaterial.SpheresShader());
+    }
+    
+    // For scaling efficiency, alternate constructor takes shared resources as argument
     public SpheresActor(
             final NeuronModel neuron, 
             Texture2d lightProbeTexture,
@@ -144,5 +152,18 @@ public class SpheresActor extends BasicGL3Actor
     public float getMinPixelRadius()
     {
         return material.getMinPixelRadius();
+    }
+    
+    private static class DefaultLightProbeTexture extends Texture2d
+    {
+        DefaultLightProbeTexture() {
+            try {
+                loadFromPpm(getClass().getResourceAsStream(
+                        "/org/janelia/gltools/material/lightprobe/"
+                                + "Office1W165Both.ppm"));
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
     }
 }

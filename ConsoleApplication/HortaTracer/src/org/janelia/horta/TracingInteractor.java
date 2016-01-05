@@ -46,6 +46,9 @@ import javax.swing.JPopupMenu;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.geometry3d.Vector3;
+import org.janelia.gltools.GL3Actor;
+import org.janelia.horta.actors.SpheresActor;
+import org.janelia.horta.nodes.BasicNeuronModel;
 import org.openide.awt.StatusDisplayer;
 
 /**
@@ -62,10 +65,18 @@ public class TracingInteractor extends MouseAdapter
     // private final List<NeuriteAnchor> persistedModel = new ArrayList<>();
     private final int max_tol = 5; // pixels
     
-    private NeuriteAnchor cachedHoverLocation = null;
+    private NeuriteAnchor cachedHoverLocation = null; // TODO: - refactor as SELECTED vertex
     private TracingMode tracingMode = TracingMode.NAVIGATING;
 
-    private final NeuriteModel hoverModel = new NeuriteModel();
+    // private final NeuriteModel hoverModel = new NeuriteModel(); // TODO - deprecate in favor of below
+    // For GUI feedback on existing model, contains zero or one vertex.
+    private final NeuronModel highlightHoverModel = new BasicNeuronModel("Hover highlight");
+    
+    private final NeuronModel neuronCursorModel = new BasicNeuronModel("Neuron tracing cursor"); // TODO: end point of auto tracing
+    
+    // For Tracing
+    private final NeuronModel persistedParentModel = new BasicNeuronModel("Selected parent vertex"); // TODO: begin point of auto tracing
+    
     private final NeuriteModel provisionalModel = new NeuriteModel();
     private final NeuriteModel previousHoverModel = new NeuriteModel();
     private final NeuriteModel persistedModel = new NeuriteModel();  
@@ -73,7 +84,7 @@ public class TracingInteractor extends MouseAdapter
     RadiusEstimator radiusEstimator = 
             new TwoDimensionalRadiusEstimator();
             // new ConstantRadiusEstimator(5.0f);
-    private StatusDisplayer.Message lastMessage;
+    private StatusDisplayer.Message previousHoverMessage;
     
     @Override
     public void keyTyped(KeyEvent keyEvent) {
@@ -145,21 +156,22 @@ public class TracingInteractor extends MouseAdapter
         volumeProjection.getMouseableComponent().addKeyListener(this);
     }
     
-    public List<NeuriteActor> createActors() {
-        List<NeuriteActor> result = new ArrayList<>();
+    public List<GL3Actor> createActors() {
+        List<GL3Actor> result = new ArrayList<>();
 
         // Create actors in the order that they should be rendered;
         NeuriteActor nextActor = new NeuriteActor(null, persistedModel);
         result.add(nextActor);
         result.add(new NeuriteActor(null, provisionalModel));
         result.add(new NeuriteActor(null, previousHoverModel));
-        result.add(new NeuriteActor(null, hoverModel));
+        // result.add(new NeuriteActor(null, hoverModel));
+        result.add(new SpheresActor(highlightHoverModel));
         
         // Colors 
-        result.get(0).setColor(Color.WHITE);
-        result.get(1).setColor(new Color(0.6f, 0.6f, 0.1f));
-        result.get(2).setColor(new Color(0.2f, 0.6f, 0.1f));
-        result.get(3).setColor(new Color(1.0f, 1.0f, 0.1f));
+        ((NeuriteActor)result.get(0)).setColor(Color.WHITE);
+        ((NeuriteActor)result.get(1)).setColor(new Color(0.6f, 0.6f, 0.1f));
+        ((NeuriteActor)result.get(2)).setColor(new Color(0.2f, 0.6f, 0.1f));
+        ((SpheresActor)result.get(3)).setColor(new Color(1.0f, 1.0f, 0.1f));
         
         return result;
     }
@@ -259,60 +271,74 @@ public class TracingInteractor extends MouseAdapter
                 return;
 
             // In tracing mode, clicking causes provisional anchors to be persisted.
-            persistProvisionalAnchors();
+            // persistProvisionalAnchors();
         }
     }
 
     @Override
     public void mouseExited(MouseEvent event) {
         // System.out.println("mouse exited");
-        if (hoverModel.isEmpty()) {
-            return;
-        }
+        
+        // keep showing hover highlight cursor, if dragging, even when mouse exits
         int buttonsDownMask = MouseEvent.BUTTON1_DOWN_MASK 
                 | MouseEvent.BUTTON2_DOWN_MASK 
                 | MouseEvent.BUTTON3_DOWN_MASK;
         if ( (event.getModifiersEx() & buttonsDownMask) != 0 )
-            return; // keep showing cursor, if dragging, even when mouse exits
-        hoverModel.clear();
-        cachedHoverLocation = null;
-        hoverModel.notifyObservers();
-        previousHoverPoint = null;
+            return;
+        
+        // Stop displaying hover highlight when cursor exits the viewport
+        if (clearHighlightHoverVertex()) {
+            highlightHoverModel.getMembersRemovedObservable().notifyObservers(); // repaint
+        }
+
     }
 
+    // GUI feedback for hovering existing vertex under cursor
+    private boolean highlightHoverVertex(NeuronVertex vertex) 
+    {
+        NeuronVertexIndex vix = volumeProjection.getVertexIndex();
+        float loc[] = vertex.getLocation();
+        NeuronModel neuron = vix.neuronForVertex(vertex);
+        
+        boolean doShowStatusMessage = true;
+        if (doShowStatusMessage) {
+            String message = "";
+            if (neuron != null) {
+                message += neuron.getName() + ": ";
+            }
+            message += " XYZ = [" + loc[0] + ", " + loc[1] + ", " + loc[2] + "]";
+            message += "; Vertex Object ID = " + System.identityHashCode(vertex);
+            if (message.length() > 0)
+                previousHoverMessage = StatusDisplayer.getDefault().setStatusText(message, 2);            
+        }
+        
+        boolean doShowVertexActor = true;
+        if (doShowVertexActor) {
+            // TODO: update and display actor        
+        }
+        
+        return true;
+    }
+    
+    // Clear display of existing vertex highlight
+    private boolean clearHighlightHoverVertex() 
+    {
+        if (highlightHoverModel.getVertexes().isEmpty()) {
+            return false;
+        }
+        highlightHoverModel.getVertexes().clear();
+        highlightHoverModel.getEdges().clear();
+        highlightHoverModel.getMembersRemovedObservable().setChanged();
+        cachedHoverLocation = null;
+        previousHoverPoint = null;
+        return true;
+    }
+    
     @Override
     public void mouseMoved(MouseEvent event) 
     {
-        // TODO: highlight annotation vertex
-        Point hoverPoint = event.getPoint();
-        if (volumeProjection.isNeuronModelAt(hoverPoint)) {
-            Vector3 xyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
-            NeuronVertexIndex vix = volumeProjection.getVertexIndex();
-            NeuronVertex nearestVertex = vix.getNearest(xyz);
-            if (nearestVertex != null) {
-                float loc[] = nearestVertex.getLocation();
-                NeuronModel neuron = vix.neuronForVertex(nearestVertex);
-                if (neuron != null) {
-                    lastMessage = StatusDisplayer.getDefault().setStatusText(neuron.getName(), 2);            
-                }
-            }
-            // StatusDisplayer.getDefault().setStatusText("Neuron!", 2);
-        }
-        else {
-            if (lastMessage != null) {
-                lastMessage.clear(2);
-                lastMessage = null;
-            }
-        }
-
         // TODO: update old provisional tracing behavior
-        moveHoverCursor(hoverPoint);
-        if (hoverModel.isEmpty())
-            return;
-        if (getTracingMode() != TracingMode.TRACING)
-            return;
-        if (extendProvisionalAnchors(hoverModel.getLast()))
-            provisionalModel.notifyObservers();
+        moveHoverCursor(event.getPoint());
     }
 
     private NeuriteAnchor anchorForScreenPoint(Point screenPoint) {
@@ -331,23 +357,36 @@ public class TracingInteractor extends MouseAdapter
     // Show provisional Anchor radius and position for current mouse location
     private Point previousHoverPoint = null;
     public void moveHoverCursor(Point screenPoint) {
-        // Find nearby brightest point
-        // screenPoint = optimizePosition(screenPoint); // TODO: disabling optimization for now
-        
         if (screenPoint == previousHoverPoint)
             return; // no change from last time
         previousHoverPoint = screenPoint;
         
-        hoverModel.clear();
-        cachedHoverLocation = null;
-
-        NeuriteAnchor anchor = anchorForScreenPoint(screenPoint);
-        if (anchor != null) {            
-            hoverModel.add(anchor);
-            cachedHoverLocation = anchor;
-        }
+        // Find nearby brightest point
+        // screenPoint = optimizePosition(screenPoint); // TODO: disabling optimization for now
         
-        hoverModel.notifyObservers();
+        // Highlight annotation vertex
+        Point hoverPoint = screenPoint;
+        if (volumeProjection.isNeuronModelAt(hoverPoint)) { // found an existing annotation model under the cursor
+            Vector3 xyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
+            NeuronVertexIndex vix = volumeProjection.getVertexIndex();
+            NeuronVertex nearestVertex = vix.getNearest(xyz);
+            if (nearestVertex == null) { // TODO - this should not happen?
+                if (clearHighlightHoverVertex()) {
+                    highlightHoverModel.getMembersRemovedObservable().notifyObservers(); // repaint
+                }
+            }
+            else {
+                highlightHoverVertex(nearestVertex);
+            }
+            // StatusDisplayer.getDefault().setStatusText("Neuron!", 2);
+        }
+        else {
+            // Clear previous vertex message, if necessary
+            if (previousHoverMessage != null) {
+                previousHoverMessage.clear(2);
+                previousHoverMessage = null;
+            }
+        }
     }
 
     private Point optimizePosition(Point screenPoint) {
@@ -414,24 +453,5 @@ public class TracingInteractor extends MouseAdapter
             return new Point(point.x + best_t * dx, point.y + best_t * dy);
         }
     }
-    
-    protected boolean persistProvisionalAnchors() {
-        if (provisionalModel.isEmpty() && (hoverModel.isEmpty()))
-            return false;
-        persistedModel.addAll(provisionalModel);
-        provisionalModel.clear();
-        NeuriteAnchor latest = hoverModel.getLast();
-        if (latest != null) {
-            persistedModel.add(latest);
-            // Set up new source anchor
-            previousHoverModel.clear();
-            previousHoverModel.add(latest);
-            hoverModel.clear();
-            previousHoverPoint = null;
-        }
-        provisionalModel.notifyObservers();
-        persistedModel.notifyObservers();
-        previousHoverModel.notifyObservers();
-        return true;
-    }
+
 }
