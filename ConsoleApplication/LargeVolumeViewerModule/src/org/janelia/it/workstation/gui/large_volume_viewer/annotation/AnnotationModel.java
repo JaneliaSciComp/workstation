@@ -1131,9 +1131,10 @@ called from a  SimpleWorker thread.
         neuronManager.splitNeurite(neuron, newRoot);
 
         // update domain objects and database, and notify
-        newRoot.setParentId(newRoot.getNeuronId());
-        newRootParent.getChildIds().remove(newRootID);
-        neuron.getRootAnnotations().add(newRoot);
+        // Now down in the neuron manager.
+        //newRoot.setParentId(newRoot.getNeuronId());
+        //newRootParent.getChildIds().remove(newRootID);
+        //neuron.getRootAnnotations().add(newRoot);
         neuronManager.saveNeuronData(neuron);
 
         final TmNeuron updateNeuron = getNeuronFromAnnotationID(newRootID);
