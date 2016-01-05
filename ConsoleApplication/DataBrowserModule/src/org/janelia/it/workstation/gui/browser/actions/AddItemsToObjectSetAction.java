@@ -1,9 +1,10 @@
-package org.janelia.it.workstation.gui.browser.nb_action;
+package org.janelia.it.workstation.gui.browser.actions;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.swing.JMenu;
@@ -12,7 +13,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
@@ -21,100 +21,80 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.support.NodeChooser;
-import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
-import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.browser.nodes.UserViewConfiguration;
+import org.janelia.it.workstation.gui.browser.nodes.UserViewObjectSetNode;
 import org.janelia.it.workstation.gui.browser.nodes.UserViewRootNode;
-import org.janelia.it.workstation.gui.browser.nodes.UserViewTreeNodeNode;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-
 /**
- *
+ * Add items to an object set.
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class MoveToFolderAction extends NodePresenterAction {
+public class AddItemsToObjectSetAction implements NamedAction {
 
-    private final static Logger log = LoggerFactory.getLogger(MoveToFolderAction.class);
-    
+    private final static Logger log = LoggerFactory.getLogger(AddItemsToObjectSetAction.class);
+
     private static final int MAX_ADD_TO_ROOT_HISTORY = 5;
-    
-    protected final Component mainFrame = SessionMgr.getMainFrame();
+    private final Component mainFrame = SessionMgr.getMainFrame();
+    private final Collection<DomainObject> domainObjects;
 
-    private final static MoveToFolderAction singleton = new MoveToFolderAction();
-    public static MoveToFolderAction get() {
-        return singleton;
+    public AddItemsToObjectSetAction(Collection<DomainObject> domainObjects) {
+        this.domainObjects = domainObjects;
     }
-    
-    private MoveToFolderAction() {
-    }
-    
+
     @Override
-    public JMenuItem getPopupPresenter() {
+    public String getName() {
+        return domainObjects.size() > 1 ? "Add \"" + domainObjects.size() + "\" Items To Set" : "  Add Item To Set";
+    }
 
-        List<Node> selectedNodes = getSelectedNodes();
-        assert !selectedNodes.isEmpty() : "No nodes are selected";
+    @Override
+    public void doAction() {
+    }
+    
+    public JMenuItem getPopupPresenter() {
         
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
-        int numOwned = 0;
-        for(Node node : selectedNodes) {
-            DomainObjectNode domainNode = (DomainObjectNode)node;
-            if (ClientDomainUtils.isOwner(domainNode.getDomainObject())) {
-                numOwned++;
-            }
-        }
-        
-        boolean owned = numOwned>0;
-        JMenu newFolderMenu = new JMenu(owned ? "Move To Folder" : "Create Shortcut In Folder");
-        
-        if (owned && numOwned<selectedNodes.size()) {
-            // Not everything is owned, so let's just disable the item to eliminate confusion as to what happens in this case
-            newFolderMenu.setEnabled(false);
-            return newFolderMenu;
-        }
-        
-        JMenuItem createNewItem = new JMenuItem("Create New Folder...");
+        JMenu newSetMenu = new JMenu(getName());
+        JMenuItem createNewItem = new JMenuItem("Create New Set...");
         
         createNewItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
                 // Add button clicked
-                final String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Folder Name:\n",
-                        "Create new folder in workspace", JOptionPane.PLAIN_MESSAGE, null, null, null);
-                if ((folderName == null) || (folderName.length() <= 0)) {
+                final String setName = (String) JOptionPane.showInputDialog(mainFrame, "Set Name:\n",
+                        "Create new set in workspace", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                if ((setName == null) || (setName.length() <= 0)) {
                     return;
                 }
 
                 SimpleWorker worker = new SimpleWorker() {
                     
-                    private TreeNode folder;
+                    private ObjectSet objectSet;
                     private Long[] idPath;
 
                     @Override
                     protected void doStuff() throws Exception {
-                        folder = new TreeNode();
-                        folder.setName(folderName);
-                        folder = model.create(folder);
+                        objectSet = new ObjectSet();
+                        objectSet.setName(setName);
+                        objectSet = model.create(objectSet);
                         Workspace workspace = model.getDefaultWorkspace();
-                        idPath = NodeUtils.createIdPath(workspace, folder);
-                        model.addChild(workspace, folder);
-                        moveSelectedObjectsToFolder(folder, idPath);
+                        idPath = NodeUtils.createIdPath(workspace, objectSet);
+                        model.addChild(workspace, objectSet);
+                        addObjectsToSet(objectSet, idPath);
                     }
 
                     @Override
                     protected void hadSuccess() {
-                        log.debug("Added to folder {}",folder.getId());
+                        log.debug("Added to set {}",objectSet.getId());
                         SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {
@@ -130,26 +110,27 @@ public class MoveToFolderAction extends NodePresenterAction {
                     }
                 };
                 
-                worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating folder...", ""));
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating set...", ""));
                 worker.execute();
             }
         });
 
-        newFolderMenu.add(createNewItem);
+        newSetMenu.add(createNewItem);
 
-        JMenuItem chooseItem = new JMenuItem("Choose Folder...");
+        JMenuItem chooseItem = new JMenuItem("Choose Set...");
 
         chooseItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                NodeChooser nodeChooser = new NodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class)), "Choose folder to add to");
+                // TODO: we should only display object sets of a particular type (the type of the selected domain objects)
+                NodeChooser nodeChooser = new NodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class, ObjectSet.class)), "Choose set to add to");
                 nodeChooser.setRootVisible(false);
                 
                 int returnVal = nodeChooser.showDialog(explorer);
                 if (returnVal != NodeChooser.CHOOSE_OPTION) return;
                 if (nodeChooser.getChosenElements().isEmpty()) return;
-                final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
-                final TreeNode folder = selectedNode.getTreeNode();
+                final UserViewObjectSetNode selectedNode = (UserViewObjectSetNode)nodeChooser.getChosenElements().get(0);
+                final ObjectSet objectSet = selectedNode.getObjectSet();
                 SimpleWorker worker = new SimpleWorker() {
 
                     private Long[] idPath;
@@ -157,12 +138,12 @@ public class MoveToFolderAction extends NodePresenterAction {
                     @Override
                     protected void doStuff() throws Exception {
                         idPath = NodeUtils.createIdPath(selectedNode);
-                        moveSelectedObjectsToFolder(folder, idPath);
+                        addObjectsToSet(objectSet, idPath);
                     }
 
                     @Override
                     protected void hadSuccess() {
-                        log.info("Added to folder {}",folder.getId());
+                        log.info("Added to set {}",objectSet.getId());
                         SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {
@@ -181,46 +162,48 @@ public class MoveToFolderAction extends NodePresenterAction {
             }
         });
 
-        newFolderMenu.add(chooseItem);
-        newFolderMenu.addSeparator();
+        newSetMenu.add(chooseItem);
+        newSetMenu.addSeparator();
 
-        List<String> addHistory = (List<String>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_FOLDER_HISTORY);
+        List<String> addHistory = (List<String>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_SET_HISTORY);
         if (addHistory!=null && !addHistory.isEmpty()) {
 
+            // TODO: we should only display object sets of a particular type (the type of the selected domain objects)
+            
             JMenuItem item = new JMenuItem("Recent:");
             item.setEnabled(false);
-            newFolderMenu.add(item);
+            newSetMenu.add(item);
 
             for (String path : addHistory) {
 
                 final Long[] idPath = NodeUtils.createIdPath(path);
-                final Long folderId = idPath[idPath.length-1];
+                final Long setId = idPath[idPath.length-1];
                 
-                TreeNode folder;
+                ObjectSet objectSet;
                 try {
-                    folder = model.getDomainObject(TreeNode.class, folderId);
-                    if (folder == null) continue;
+                    objectSet = model.getDomainObject(ObjectSet.class, setId);
+                    if (objectSet == null) continue;
                 }
                 catch (Exception e) {
-                    log.error("Error getting recent folder with id "+folderId,e);
+                    log.error("Error getting recent set with id "+setId,e);
                     continue;
                 }
 
-                final TreeNode finalFolder = folder;
+                final ObjectSet finalSet = objectSet;
 
-                JMenuItem commonRootItem = new JMenuItem(folder.getName());
+                JMenuItem commonRootItem = new JMenuItem(finalSet.getName());
                 commonRootItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
 
                         SimpleWorker worker = new SimpleWorker() {
                             @Override
                             protected void doStuff() throws Exception {
-                                moveSelectedObjectsToFolder(finalFolder, idPath);
+                                addObjectsToSet(finalSet, idPath);
                             }
 
                             @Override
                             protected void hadSuccess() {
-                                log.info("Added to folder {}",finalFolder.getId());
+                                log.info("Added to set {}",finalSet.getId());
                                 SwingUtilities.invokeLater(new Runnable() {
                                     @Override
                                     public void run() {
@@ -239,52 +222,27 @@ public class MoveToFolderAction extends NodePresenterAction {
                     }
                 });
 
-                commonRootItem.setEnabled(ClientDomainUtils.hasWriteAccess(finalFolder));
-                newFolderMenu.add(commonRootItem);
+                commonRootItem.setEnabled(ClientDomainUtils.hasWriteAccess(finalSet));
+                newSetMenu.add(commonRootItem);
             }
         }
 
-        return newFolderMenu;
+        return newSetMenu;
     }
     
-    private void moveSelectedObjectsToFolder(TreeNode folder, Long[] idPath) throws Exception {
-        List<Node> selectedNodes = getSelectedNodes();
+    private void addObjectsToSet(ObjectSet objectSet, Long[] idPath) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         
-        // Build list of things to remove
-        Multimap<TreeNode,DomainObject> removeMap = ArrayListMultimap.create();
-        List<DomainObject> domainObjects = new ArrayList<>();
-        for(Node node : selectedNodes) {
-            log.info("Moving selected node '{}' to folder '{}'",node.getDisplayName(),folder.getName());
-            DomainObjectNode selectedNode = (DomainObjectNode)node;
-            TreeNodeNode parentNode = (TreeNodeNode)node.getParentNode();
-            DomainObject domainObject = selectedNode.getDomainObject();
-            if (DomainUtils.hasChild(folder, domainObject)) {
-                log.debug("Folder {} already has child {}",folder.getId(),domainObject.getId());
-            }
-            else {
-                domainObjects.add(domainObject);
-            }
-            if (ClientDomainUtils.isOwner(parentNode.getTreeNode())) {
-                removeMap.put(parentNode.getTreeNode(), selectedNode.getDomainObject());
-            }
-        }
-        
-        // Add them to the given folder
-        model.addChildren(folder, domainObjects);
-        
-        // Remove from existing folders
-        for(TreeNode treeNode : removeMap.keys()) {
-            model.removeChildren(treeNode, removeMap.get(treeNode));
-        }
+        // Add them to the given set
+        model.addMembers(objectSet, domainObjects);
         
         // Update history
-        updateAddToFolderHistory(idPath);                
+        updateAddToSetHistory(idPath);                
     }
     
-    private void updateAddToFolderHistory(Long[] idPath) {
+    private void updateAddToSetHistory(Long[] idPath) {
         String pathString = NodeUtils.createPathString(idPath);
-        List<String> addHistory = (List<String>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_FOLDER_HISTORY);
+        List<String> addHistory = (List<String>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_SET_HISTORY);
         if (addHistory==null) {
             addHistory = new ArrayList<>();
         }
@@ -295,6 +253,6 @@ public class MoveToFolderAction extends NodePresenterAction {
             addHistory.remove(addHistory.size()-1);
         }
         addHistory.add(0, pathString);
-        SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_FOLDER_HISTORY, addHistory);
+        SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_SET_HISTORY, addHistory);
     }
 }

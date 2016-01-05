@@ -158,7 +158,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     protected JPopupMenu getContextualPopupMenu() {
         List<Reference> ids = selectionModel.getSelectedIds();
         List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
-        JPopupMenu popupMenu = new DomainObjectContextMenu(selected);
+        JPopupMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), selected);
         ((DomainObjectContextMenu) popupMenu).addMenuItems();
         return popupMenu;
     }

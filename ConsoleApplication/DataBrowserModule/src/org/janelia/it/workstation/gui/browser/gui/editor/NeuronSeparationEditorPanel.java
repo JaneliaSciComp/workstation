@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
@@ -22,6 +23,7 @@ import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +70,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         
         final NeuronSeparation separation = sampleResult.getResult().getLatestSeparationResult();
 
+        // TODO: Should Samples be parents of neurons?
 //        selectionModel.setParentObject(sampleResult.getSample());
         
         resultsPanel.showLoadingIndicator();
@@ -90,7 +93,13 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
             @Override
             protected void hadSuccess() {
-                showResults(isUserDriven);
+                sort("number", new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        showResults(isUserDriven);
+                        return null;
+                    }
+                });
             }
 
             @Override
@@ -103,10 +112,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         childLoadingWorker.execute();
     }
 
-    @Override
-    public void setSortField(final String sortCriteria) {
-
-        resultsPanel.showLoadingIndicator();
+    private void sort(final String sortCriteria, final Callable<Void> success) {
 
         SimpleWorker worker = new SimpleWorker() {
         
@@ -138,7 +144,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
             @Override
             protected void hadSuccess() {
-                showResults(true);
+                ConcurrentUtils.invokeAndHandleExceptions(success);
             }
 
             @Override
@@ -149,7 +155,17 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         };
         
         worker.execute();
-        
+    }
+    
+    @Override
+    public void setSortField(final String sortCriteria) {
+        sort(sortCriteria, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                showResults(true);
+                return null;
+            }
+        });
     }
     
     public void showResults(boolean isUserDriven) {
