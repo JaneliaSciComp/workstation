@@ -1007,7 +1007,9 @@ called from a  SimpleWorker thread.
             return;
         }
 
+        //refresh neuron
         TmNeuron neuron = getNeuronFromAnnotationID(annotation.getId());
+        neuron = neuronManager.refreshFromData(neuron);
 
         // ann1 is the child of ann2 in both cases; if reverse, place the new point
         //  near ann2 instead of ann1
@@ -1050,18 +1052,15 @@ called from a  SimpleWorker thread.
         Vec3 newPoint = pLine.getPoint(t);
 
         // create the new annotation, child of original parent; then
-        //  reparent existing annotation to new annotation
         final TmGeoAnnotation newAnnotation = neuronManager.addGeometricAnnotation(neuron,
                 annotation2.getId(), 0, newPoint.x(), newPoint.y(), newPoint.z(), "");
 
-        //refresh neuron, then again, for updates
-        neuron = neuronManager.refreshFromData(neuron);
-        //neuron = modelMgr.loadNeuron(neuron.getId());
+        //  reparent existing annotation to new annotation
         neuronManager.reparentGeometricAnnotation(annotation1, newAnnotation.getId(), neuron);
-        neuron = neuronManager.refreshFromData(neuron);
 
         // if that segment had a trace, remove it
         removeAnchoredPath(annotation1, annotation2);
+        neuronManager.saveNeuronData(neuron);
 
         // updates:
         // Q: redundant?
