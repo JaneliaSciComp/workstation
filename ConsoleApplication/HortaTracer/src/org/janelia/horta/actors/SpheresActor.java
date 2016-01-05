@@ -104,6 +104,13 @@ public class SpheresActor extends BasicGL3Actor
                 updateGeometry();
             }
         });
+        neuron.getMembersAddedObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg)
+            {
+                updateGeometry();
+            }
+        });
     }
     
     private void updateGeometry() {
@@ -166,4 +173,9 @@ public class SpheresActor extends BasicGL3Actor
             }
         }
     }
+
+    public NeuronModel getNeuron() {
+        return neuron;
+    }
+
 }

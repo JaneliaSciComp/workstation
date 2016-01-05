@@ -108,6 +108,7 @@ import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.loader.DroppedFileHandler;
 import org.janelia.horta.loader.GZIPFileLoader;
 import org.janelia.horta.loader.HortaSwcLoader;
@@ -238,7 +239,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             {
                 // System.out.println("hide models");
                 if (neuronMPRenderer.setHideAll(true))
-                    sceneWindow.getInnerComponent().repaint();
+                    redrawNow();
             }
         });
         actionMap.put("unhideModels", new AbstractAction(){
@@ -247,7 +248,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             {
                 // System.out.println("unhide models");
                 if (neuronMPRenderer.setHideAll(false))
-                    sceneWindow.getInnerComponent().repaint();
+                    redrawNow();
             }
         });
 
@@ -279,7 +280,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             @Override
             public void update(Observable o, Object arg) {
                 // logger.info("Camera changed");
-                sceneWindow.getInnerComponent().repaint();
+                redrawNow();
             }
         });
 
@@ -293,7 +294,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             public void update(Observable o, Object arg)
             {
                 setBackgroundColor( workspace.getBackgroundColor() );
-                sceneWindow.getInnerComponent().repaint();                
+                redrawNow();
             }
         });
 
@@ -352,7 +353,17 @@ public final class NeuronTracerTopComponent extends TopComponent
                 neuriteActor.getModel().addObserver(new Observer() {
                     @Override
                     public void update(Observable o, Object arg) {
-                        sceneWindow.getInnerComponent().repaint();
+                        redrawNow();
+                    }
+                });
+            }
+            else if (tracingActor instanceof SpheresActor)
+            {
+                SpheresActor spheresActor = (SpheresActor)tracingActor;
+                spheresActor.getNeuron().getMembersAddedObservable().addObserver(new Observer() {
+                    @Override
+                    public void update(Observable o, Object arg) {
+                        redrawNow();
                     }
                 });
             }

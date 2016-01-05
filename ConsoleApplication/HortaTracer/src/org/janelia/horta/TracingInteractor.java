@@ -49,6 +49,7 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.nodes.BasicNeuronModel;
+import org.janelia.horta.nodes.BasicSwcVertex;
 import org.openide.awt.StatusDisplayer;
 
 /**
@@ -71,6 +72,7 @@ public class TracingInteractor extends MouseAdapter
     // private final NeuriteModel hoverModel = new NeuriteModel(); // TODO - deprecate in favor of below
     // For GUI feedback on existing model, contains zero or one vertex.
     private final NeuronModel highlightHoverModel = new BasicNeuronModel("Hover highlight");
+    private NeuronVertex previousHoverVertex = null;
     
     private final NeuronModel neuronCursorModel = new BasicNeuronModel("Neuron tracing cursor"); // TODO: end point of auto tracing
     
@@ -294,11 +296,13 @@ public class TracingInteractor extends MouseAdapter
     }
 
     // GUI feedback for hovering existing vertex under cursor
+    // returns true if a previously unhighlighted vertex is highlighted
     private boolean highlightHoverVertex(NeuronVertex vertex) 
     {
+        if (vertex == null) return false;
         NeuronVertexIndex vix = volumeProjection.getVertexIndex();
-        float loc[] = vertex.getLocation();
         NeuronModel neuron = vix.neuronForVertex(vertex);
+        float loc[] = vertex.getLocation();
         
         boolean doShowStatusMessage = true;
         if (doShowStatusMessage) {
@@ -314,7 +318,37 @@ public class TracingInteractor extends MouseAdapter
         
         boolean doShowVertexActor = true;
         if (doShowVertexActor) {
-            // TODO: update and display actor        
+            // Remove any previous vertex
+            highlightHoverModel.getVertexes().clear();
+            highlightHoverModel.getEdges().clear();
+
+            // Create a modified vertex to represent the enlarged, highlighted actor
+            BasicSwcVertex highlightVertex = new BasicSwcVertex(loc[0], loc[1], loc[2]); // same center location as real vertex
+            // Set highlight actor radius 10% larger than true vertex radius, and at least 2 pixels larger
+            float startRadius = 1.0f;
+            if (vertex.hasRadius())
+                startRadius = vertex.getRadius();
+            float highlightRadius = startRadius * 1.10f;
+            // TODO: and at least 2 pixels bigger - need camera info?
+            highlightVertex.setRadius(highlightRadius);
+            // blend neuron color with pale yellow highlight color
+            float highlightColor[] = {1.0f, 1.0f, 0.8f, 0.5f}; // pale yellow and transparent
+            float neuronColor[] = highlightColor;
+            if (neuron != null) {
+                neuronColor = neuron.getColor().getColorComponents(neuronColor);
+            }
+            float highlightBlend = 0.5f;
+            Color blendedColor = new Color(
+                    neuronColor[0] - highlightBlend * (neuronColor[0] - highlightColor[0]),
+                    neuronColor[1] - highlightBlend * (neuronColor[1] - highlightColor[1]),
+                    neuronColor[2] - highlightBlend * (neuronColor[2] - highlightColor[2]),
+                    highlightColor[3] // always use the same alpha transparency value
+                    );
+            highlightHoverModel.setVisible(true);
+            highlightHoverModel.setColor(blendedColor);
+            highlightHoverModel.getVertexes().add(highlightVertex);
+            highlightHoverModel.getMembersAddedObservable().setChanged();
+            highlightHoverModel.getMembersAddedObservable().notifyObservers();     
         }
         
         return true;

@@ -45,7 +45,7 @@ public class BasicSwcVertex implements SwcVertex
     private int typeIndex = 0;
     private SwcVertex parent = null;
 
-    BasicSwcVertex(float x, float y, float z)
+    public BasicSwcVertex(float x, float y, float z)
     {
         location[0] = x;
         location[1] = y;
