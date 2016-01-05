@@ -168,7 +168,7 @@ public class TracingInteractor extends MouseAdapter
         result.add(new NeuriteActor(null, previousHoverModel));
         // result.add(new NeuriteActor(null, hoverModel));
         SpheresActor highlightActor = new SpheresActor(highlightHoverModel);
-        highlightActor.setMinPixelRadius(5.0f);
+        highlightActor.setMinPixelRadius(8.0f);
         result.add(highlightActor);
         
         // Colors 
@@ -330,7 +330,7 @@ public class TracingInteractor extends MouseAdapter
             float startRadius = 1.0f;
             if (vertex.hasRadius())
                 startRadius = vertex.getRadius();
-            float highlightRadius = startRadius * 1.50f;
+            float highlightRadius = startRadius * 1.30f;
             // TODO: and at least 2 pixels bigger - need camera info?
             highlightVertex.setRadius(highlightRadius);
             // blend neuron color with pale yellow highlight color
@@ -406,25 +406,34 @@ public class TracingInteractor extends MouseAdapter
         
         // Highlight annotation vertex
         Point hoverPoint = screenPoint;
+        boolean foundGoodHighlightVertex = true; // start optimistic...
+        NeuronVertex nearestVertex = null;
         if (volumeProjection.isNeuronModelAt(hoverPoint)) { // found an existing annotation model under the cursor
-            Vector3 xyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
+            Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
             NeuronVertexIndex vix = volumeProjection.getVertexIndex();
-            NeuronVertex nearestVertex = vix.getNearest(xyz);
-            if (nearestVertex == null) { // TODO - this should not happen?
-                if (clearHighlightHoverVertex()) {
-                    highlightHoverModel.getMembersRemovedObservable().notifyObservers(); // repaint
-                }
-            }
+            nearestVertex = vix.getNearest(cursorXyz);
+            if (nearestVertex == null) // no vertices to be found?
+                foundGoodHighlightVertex = false;
             else {
-                highlightHoverVertex(nearestVertex);
+                // Is cursor too far from closest vertex?
+                Vector3 vertexXyz = new Vector3(nearestVertex.getLocation());
+                float dist = vertexXyz.distance(cursorXyz);
+                float radius = 1.0f;
+                if (nearestVertex.hasRadius())
+                    radius = nearestVertex.getRadius();
+                // TODO: accept vertices within a certain number of pixels too
+                if (dist > 5.0f * radius)
+                    foundGoodHighlightVertex = false;
             }
-            // StatusDisplayer.getDefault().setStatusText("Neuron!", 2);
+        }
+        if (nearestVertex == null)
+            foundGoodHighlightVertex = false;
+        if (foundGoodHighlightVertex) {
+            highlightHoverVertex(nearestVertex);
         }
         else {
-            // Stop displaying highlight when cursor moves off neuron
-            if (clearHighlightHoverVertex()) {
+            if (clearHighlightHoverVertex())
                 highlightHoverModel.getMembersRemovedObservable().notifyObservers(); // repaint
-            }
             // Clear previous vertex message, if necessary
             if (previousHoverMessage != null) {
                 previousHoverMessage.clear(2);

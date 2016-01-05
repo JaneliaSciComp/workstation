@@ -94,6 +94,11 @@ public class SpheresMaterial extends BasicMaterial
         if (manageLightProbeTexture) {
             lightProbeTexture.bind(gl, 0);
             gl.glUniform4fv(colorIndex, 1, color, 0);
+            float micrometersPerPixel = 
+                camera.getVantage().getSceneUnitsPerViewportHeight()
+                    / camera.getViewport().getHeightPixels();
+            float radiusOffset = minPixelRadius * micrometersPerPixel;
+            gl.glUniform1f(radiusOffsetIndex, radiusOffset);
         }
         displayMesh(gl, mesh, camera, modelViewMatrix);
     }
