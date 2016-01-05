@@ -180,10 +180,15 @@ called from a  SimpleWorker thread.
         // we can refresh the neuron object from the workspace:
         if (getCurrentNeuron() != null) {
             try {
-                currentNeuron = getNeuronFromNeuronID(getCurrentNeuron().getId());
-                currentWorkspace.getNeuronList().remove(currentNeuron);
-                currentNeuron = neuronManager.refreshFromData(currentNeuron);
-                currentWorkspace.getNeuronList().add(currentNeuron);
+                if (getCurrentNeuron().getId() == null) {
+                    log.warn("Null ID in neuron {}.", getCurrentNeuron());
+                }
+                else {
+                    // Cannot refresh a neuron, without its ID.
+                    currentWorkspace.getNeuronList().remove(currentNeuron);
+                    currentNeuron = neuronManager.refreshFromData(currentNeuron);
+                    currentWorkspace.getNeuronList().add(currentNeuron);
+                }
             } catch (Exception ex) {
                 log.error(ex.getMessage());
                 SessionMgr.getSessionMgr().handleException(ex);
@@ -784,7 +789,7 @@ called from a  SimpleWorker thread.
      * move the neurite containing the input annotation to the given neuron
      */
     public void moveNeurite(TmGeoAnnotation annotation, TmNeuron neuron) throws Exception {
-        if (annotation == null || neuron == null) {
+        if (eitherIsNull(annotation, neuron)) {
             return;
         }
         TmNeuron oldNeuron = getNeuronFromNeuronID(annotation.getNeuronId());
@@ -964,15 +969,17 @@ called from a  SimpleWorker thread.
             neuron.getGeoAnnotationMap().remove(annotation.getId());
             //modelMgr.deleteGeometricAnnotation(annotation.getId());
         }
-        // for the root annotation, also delete any traced paths to the parent, if it exists
+        // for the root annotation, also delete any traced paths to the parent, 
+        // if it exists and eliminate the root annotation as a child of the
+        // root-parent.
         if (rootParent != null) {
-            removeAnchoredPath(rootAnnotation, rootParent);
+            removeAnchoredPath(neuron, rootAnnotation, rootParent);
+            rootParent.getChildIds().remove(rootAnnotation.getId());
         }
         
         // Must serialize the neuron, after having made changes.
         neuronManager.saveNeuronData(neuron);
 
-        // Q: is this needed, now that the object graph is directly serialized?
         updateCurrentWorkspaceAndNeuron();
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron updateNeuron = getCurrentNeuron();
@@ -1147,7 +1154,7 @@ called from a  SimpleWorker thread.
         //  don't need to check that they are neighboring; UI gesture already enforces it
         TmNeuron neuron1 = getNeuronFromAnnotationID(endpoints.getAnnotationID1());
         TmNeuron neuron2 = getNeuronFromAnnotationID(endpoints.getAnnotationID2());
-        if (neuron1 == null || neuron2 == null) {
+        if (eitherIsNull(neuron1, neuron2)) {
             // something's been deleted
             return;
         }
@@ -1230,17 +1237,28 @@ called from a  SimpleWorker thread.
      */
     private void removeAnchoredPath(TmGeoAnnotation annotation1, TmGeoAnnotation annotation2)
         throws Exception {
-        if (annotation1 == null || annotation2 == null) {
+        if (eitherIsNull(annotation1, annotation2)) {
             return;
         }
 
         // we assume second annotation is in same neuron; if it's not, there's no path
         //  to remove anyway
         TmNeuron neuron1 = getNeuronFromAnnotationID(annotation1.getId());
+        removeAnchoredPath(neuron1, annotation1, annotation2);
+    }
+
+    private void removeAnchoredPath(TmNeuron neuron, TmGeoAnnotation annotation1, TmGeoAnnotation annotation2)
+        throws Exception {
+        if (eitherIsNull(annotation1, annotation2)) {
+            return;
+        }
+
+        // we assume second annotation is in same neuron; if it's not, there's no path
+        //  to remove anyway
         TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(annotation1.getId(),
                 annotation2.getId());
-        if (neuron1.getAnchoredPathMap().containsKey(endpoints)) {
-            removeAnchoredPath(neuron1, neuron1.getAnchoredPathMap().get(endpoints));
+        if (neuron.getAnchoredPathMap().containsKey(endpoints)) {
+            removeAnchoredPath(neuron, neuron.getAnchoredPathMap().get(endpoints));
         }        
     }
 
@@ -1673,6 +1691,10 @@ called from a  SimpleWorker thread.
             );
             setNeuronStyle(neuron, style);
         }
+    }
+
+    private boolean eitherIsNull(Object object1, Object object2) {
+        return object1 == null || object2 == null;
     }
 
     private void fireAnnotationNotMoved(Long annotationID) {
