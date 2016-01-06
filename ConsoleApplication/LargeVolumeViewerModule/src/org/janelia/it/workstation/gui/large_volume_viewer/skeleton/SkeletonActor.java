@@ -223,15 +223,15 @@ public class SkeletonActor
                     continue;
                 }
 
-                if (!neuronLineIndices.containsKey(neuronID)) {
-                    continue;
-                }
-
                 neuronOrderList.add(neuronID);
 
                 int vertexBufferSize=neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT;
                 int colorBufferSize=neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT;
-                int lineBufferSize=neuronLineIndices.get(neuronID).capacity() * INT_BYTE_COUNT;
+
+                int lineBufferSize=0;
+                if (neuronLineIndices.containsKey(neuronID)) {
+                    lineBufferSize = neuronLineIndices.get(neuronID).capacity() * INT_BYTE_COUNT;
+                }
 
                 ElementDataOffset vertexOffset=new ElementDataOffset(neuronID, vertexBufferSize, cummulativeVertexOffset);
                 vertexOffsets.add(vertexOffset);
@@ -292,8 +292,10 @@ public class SkeletonActor
             IntBuffer lineBuffer=lineByteBuffer.order(ByteOrder.nativeOrder()).asIntBuffer();
             for (Long neuronID : neuronOrderList) {
                 ElementDataOffset elementDataOffset = lineOffsets.get(n);
-                IntBuffer neuronLineBuffer=neuronLineIndices.get(elementDataOffset.id);
-                lineBuffer.put(neuronLineBuffer);
+                if (elementDataOffset.size!=0) {
+                    IntBuffer neuronLineBuffer = neuronLineIndices.get(elementDataOffset.id);
+                    lineBuffer.put(neuronLineBuffer);
+                }
                 n++;
             }
             gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
