@@ -68,6 +68,7 @@ public class Browser implements Cloneable {
     /** @deprecated use ADD_TO_FOLDER_HISTORY instead */
     public static final String ADD_TO_ROOT_HISTORY = "ADD_TO_ROOT_HISTORY";
     public static final String ADD_TO_FOLDER_HISTORY = "ADD_TO_FOLDER_HISTORY";
+    public static final String ADD_TO_SET_HISTORY = "ADD_TO_SET_HISTORY";
     private static final String VIEWERS_LINKED = "Browser.ViewersLinked";
     private static final String AUTO_SHARE_TEMPLATE = "Browser.AutoShareTemplate";
 

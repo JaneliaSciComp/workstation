@@ -28,15 +28,17 @@ public class UserViewRootNode extends AbstractNode {
     
     private final static Logger log = LoggerFactory.getLogger(UserViewRootNode.class);
     
+    private final UserViewConfiguration config;
     private final UserViewRootNodeChildFactory childFactory;
     
-    public UserViewRootNode() {
-        this(new UserViewRootNodeChildFactory());
+    public UserViewRootNode(UserViewConfiguration config) {
+        this(new UserViewRootNodeChildFactory(config), config);
     }
     
-    private UserViewRootNode(UserViewRootNodeChildFactory childFactory) {
+    private UserViewRootNode(UserViewRootNodeChildFactory childFactory, UserViewConfiguration config) {
         super(Children.create(childFactory, false));
         this.childFactory = childFactory;
+        this.config = config;
     }
        
     @Override
@@ -62,6 +64,12 @@ public class UserViewRootNode extends AbstractNode {
     
     private static class UserViewRootNodeChildFactory extends ChildFactory<DomainObject> {
 
+        private final UserViewConfiguration config;
+        
+        UserViewRootNodeChildFactory(UserViewConfiguration config) {
+            this.config = config;
+        }
+        
         @Override
         protected boolean createKeys(List<DomainObject> list) {
             DomainModel model = DomainMgr.getDomainMgr().getModel();
@@ -91,7 +99,7 @@ public class UserViewRootNode extends AbstractNode {
         protected Node createNodeForKey(DomainObject key) {
             try {
                 if (Workspace.class.isAssignableFrom(key.getClass())) {
-                    return new UserViewTreeNodeNode((TreeNode) key);
+                    return new UserViewTreeNodeNode((TreeNode) key, config);
                 }
                 else {
                     throw new IllegalStateException("Illegal root node: " + key.getClass().getName());

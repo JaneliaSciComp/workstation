@@ -26,7 +26,6 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
-import org.janelia.it.workstation.gui.browser.events.model.PreferenceChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -34,6 +33,7 @@ import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -199,7 +199,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         return popupMenu;
     }
     
-    private void setViewerType(ListViewerType viewerType) {
+    private void setViewerType(final ListViewerType viewerType) {
         this.viewTypeButton.setText(viewerType.getName());
         try {
             if (viewerType.getViewerClass()==null) {
@@ -215,18 +215,24 @@ public abstract class PaginatedResultsPanel extends JPanel {
             setViewer(null);
         }
         
-        updateResultsView(true);
-        
-        // Reselect the items that were selected
-        List<DomainObject> selectedDomainObjects = new ArrayList<>(); 
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
-        for(Reference id : selectionModel.getSelectedIds()) {
-            DomainObject domainObject = model.getDomainObject(id);
-            if (domainObject!=null) {
-                selectedDomainObjects.add(domainObject);
+        // Set user driven to false in order to avoid selecting the first item
+        updateResultsView(false, new Callable<Void>() {   
+            @Override
+            public Void call() throws Exception {
+                // Reselect the items that were selected
+                List<DomainObject> selectedDomainObjects = new ArrayList<>(); 
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                for(Reference id : selectionModel.getSelectedIds()) {
+                    DomainObject domainObject = model.getDomainObject(id);
+                    if (domainObject!=null) {
+                        selectedDomainObjects.add(domainObject);
+                    }
+                }
+                log.info("Reselecting {} domain objects in the {} viewer",selectedDomainObjects.size(),viewerType.getName());
+                resultsView.selectDomainObjects(selectedDomainObjects, true, true);
+                return null;
             }
-        }
-        resultsView.selectDomainObjects(selectedDomainObjects, true, false);
+        });
         
     }
 
@@ -241,11 +247,6 @@ public abstract class PaginatedResultsPanel extends JPanel {
         prevPageButton.setEnabled(currPage > 0);
         nextPageButton.setEnabled(currPage < numPages - 1);
         endPageButton.setEnabled(currPage != numPages - 1);
-    }
-
-    @Subscribe
-    public void preferenceChanged(PreferenceChangeEvent event) {
-        resultsView.preferenceChanged(event.getPreference());
     }
     
     @Subscribe
@@ -394,7 +395,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         if (searchResults==null) {
             throw new IllegalStateException("Cannot show page when there are no search results");
         }
-        
+
         SimpleWorker worker = new SimpleWorker() {
         
             @Override
@@ -404,7 +405,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
 
             @Override
             protected void hadSuccess() {
-                updateResultsView(isUserDriven);
+                updateResultsView(isUserDriven, null);
             }
 
             @Override
@@ -417,8 +418,9 @@ public abstract class PaginatedResultsPanel extends JPanel {
         worker.execute();
     }
     
-    private void updateResultsView(final boolean isUserDriven) {
+    private void updateResultsView(final boolean isUserDriven, final Callable<Void> success) {
         if (resultPage!=null) {
+
             resultsView.showDomainObjects(resultPage, new Callable<Void>() {   
                 @Override
                 public Void call() throws Exception {
@@ -437,6 +439,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
                             resultsView.selectDomainObjects(Arrays.asList(objects.get(0)), true, true);
                         }
                     }
+                    ConcurrentUtils.invokeAndHandleExceptions(success);
                     return null;
                 }
             });

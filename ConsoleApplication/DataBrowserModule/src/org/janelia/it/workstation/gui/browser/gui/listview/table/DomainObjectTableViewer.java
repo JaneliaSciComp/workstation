@@ -10,14 +10,16 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.table.TableModel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
@@ -27,7 +29,7 @@ import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
-import org.janelia.it.workstation.gui.framework.table.DynamicRow;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,6 +85,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     public DomainObjectTableViewer() {
         setImageModel(imageModel);
     }
+    
+    @Override
+    public JPanel getPanel() {
+        return this;
+    }
 
     @Override
     public void setSearchProvider(SearchProvider searchProvider) {
@@ -91,13 +98,18 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     
     @Override
     public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
-        this.selectionModel = selectionModel;
         super.setSelectionModel(selectionModel);
+        this.selectionModel = selectionModel;
     }
     
     @Override
     public DomainObjectSelectionModel getSelectionModel() {
         return selectionModel;
+    }
+
+    @Override
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll) {
+        super.selectObjects(domainObjects, select, clearAll);    
     }
     
     @Override
@@ -132,8 +144,25 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         
         setAttributeColumns(attrs);
         showObjects(domainObjectList.getDomainObjects());
+
+        // Finally, we're done, we can call the success callback
+        ConcurrentUtils.invokeAndHandleExceptions(success);
     }
-        
+
+    @Override
+    public void refreshDomainObject(DomainObject domainObject) {
+        // TODO: refresh the table
+    }
+
+    @Override
+    protected JPopupMenu getContextualPopupMenu() {
+        List<Reference> ids = selectionModel.getSelectedIds();
+        List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
+        JPopupMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), selected);
+        ((DomainObjectContextMenu) popupMenu).addMenuItems();
+        return popupMenu;
+    }
+    
     @Override
     protected Object getValue(DomainObject object, String columnName) {
         try {
@@ -155,76 +184,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             return null;
         }
     }
-    
-    @Override
-    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll) {
 
-        log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={})",domainObjects.size(),select,clearAll);
-            
-        if (!select) {
-            selectNone();
-            return;
-        }
-
-        Integer start = null;
-        Integer end = null;
-        int i = 0;
-        for(DynamicRow row : getRows()) {
-            DomainObject rowObject = (DomainObject)row.getUserObject();
-            if (domainObjects.indexOf(rowObject)>=0) {
-                if (start==null) {
-                    start = i;
-                }
-            }
-            else {
-                if (start!=null) {
-                    end = i-1;
-                    break;
-                }
-            }
-            i++;
-        }
-        
-        if (start!=null) {
-            if (end==null) end = i-1;
-            log.info("Selecting range: {} - {}",start,end);
-            selectRange(start, end);
-        }
-    }
-    
-    @Override
-    public void refreshDomainObject(DomainObject domainObject) {
-        // TODO: refresh the table
-    }
-
-    @Override
-    public void preferenceChanged(Preference preference) {
-    }
-    
-    @Override
-    public JPanel getPanel() {
-        return this;
-    }
-    
-//    @Override
-//    protected JPopupMenu getContextualPopupMenu() {
-//        List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
-//        List<DomainObject> domainObjects = new ArrayList<>();
-//        for (String entityId : selectionIds) {
-//            Long id = new Long(entityId);
-//            DomainObject imageObject = domainObjectList.getDomainObject(id);
-//            if (imageObject == null) {
-//                log.warn("Could not locate selected object with id {}", id);
-//            }
-//            else {
-//                domainObjects.add(imageObject);
-//            }
-//        }
-//        JPopupMenu popupMenu = new DomainObjectContextMenu(domainObjects);
-//        ((DomainObjectContextMenu) popupMenu).addMenuItems();
-//        return popupMenu;
-//    }
-    
     @Override
     protected void updateTableModel() {
         super.updateTableModel();

@@ -6,16 +6,16 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
-import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
@@ -41,21 +41,14 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     private static final Lock copyFileLock = new ReentrantLock();
 
     // Current selection
+    protected DomainObject contextObject;
     protected List<DomainObject> domainObjectList;
     protected DomainObject domainObject;
     protected boolean multiple;
 
-    public DomainObjectContextMenu() {
-    }
-    
-    public DomainObjectContextMenu(List<DomainObject> domainObjectList) {
+    public DomainObjectContextMenu(DomainObject contextObject, List<DomainObject> domainObjectList) {
+        this.contextObject = contextObject;
         init(domainObjectList);
-    }
-
-    public  DomainObjectContextMenu(DomainObject domainObject) {
-        List<DomainObject> singleObjectList = new ArrayList<>();
-        singleObjectList.add(domainObject);
-        init(singleObjectList);
     }
     
     public final void init(List<DomainObject> domainObjectList) {
@@ -87,10 +80,10 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
 //        setNextAddRequiresSeparator(true);
 //        add(getNewFolderItem());
-//        add(getAddToRootFolderItem());
+        add(getAddToSetItem());
 //        add(getRenameItem());
 //        add(getErrorFlag());
-//        add(getDeleteItem());
+        add(getRemoveFromSetItem());
 //        add(getDeleteInBackgroundItem());
 //        add(getMarkForReprocessingItem());
 //        add(getProcessingBlockItem());
@@ -947,8 +940,11 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_ROOT_HISTORY, addHistory);
 //    }
 //    
-//    protected JMenu getAddToRootFolderItem() {
-//
+    protected JMenuItem getAddToSetItem() {
+        AddItemsToObjectSetAction action = new AddItemsToObjectSetAction(domainObjectList);
+        return action.getPopupPresenter();
+    }
+    
 //        final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
 //                
 //        JMenu newFolderMenu = new JMenu("  Add To Folder");
@@ -1097,61 +1093,27 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        updateAddToRootFolderHistory(commonRoot);                
 //    }
 //    
-//    protected JMenuItem getDeleteItem() {
-//        return getDeleteItem("", false);
-//    }
-//    
-//    protected JMenuItem getDeleteInBackgroundItem() {
-//        return getDeleteItem(" (Background Task)", true);
-//    }
-//
-//    private JMenuItem getDeleteItem(String nameSuffix, boolean runInBackground) {
-//
-//        for (RootedEntity rootedEntity : rootedEntityList) {
-//            EntityData ed = rootedEntity.getEntityData();
-//            if (ed.getId() == null && !EntityUtils.isCommonRoot(ed.getChildEntity()) && !EntityUtils.isOntologyRoot(ed.getChildEntity())) {
-//                // Fake ED, not a root, this must be part of an annotation session.
-//                // TODO: this check could be done more robustly
-//                return null;
-//            }
-//        }
-//
-//        final Action action = new RemoveEntityAction(rootedEntityList, true, runInBackground);
-//
-//        JMenuItem deleteItem = new JMenuItem("  " + action.getName()+nameSuffix);
-//        deleteItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//                action.doAction();
-//            }
-//        });
-//        
-//        for (RootedEntity rootedEntity : rootedEntityList) {
-//            Entity entity = rootedEntity.getEntity();
-//            Entity parent = rootedEntity.getEntityData().getParentEntity();
-//            
-//            boolean canDelete = true;
-//            // User can't delete if they don't have write access
-//            if (!ModelMgrUtils.hasWriteAccess(entity)) {
-//                canDelete = false;
-//                // Unless they own the parent
-//                if (parent!=null && parent.getId()!=null && ModelMgrUtils.hasWriteAccess(parent)) {
-//                    canDelete = true;
-//                }
-//            }
-//            
-//            // Can never delete protected entities
-//            if (EntityUtils.isProtected(entity)) {
-//                canDelete = false;
-//                // Unless they own the parent
-//                if (parent!=null && parent.getId()!=null && ModelMgrUtils.hasWriteAccess(parent)) {
-//                    canDelete = true;
-//                }
-//            }
-//            if (!canDelete) deleteItem.setEnabled(false);
-//        }
-//        
-//        return deleteItem;
-//    }
+    protected JMenuItem getRemoveFromSetItem() {
+        
+        NamedAction action = null;
+        
+        if (contextObject instanceof ObjectSet) {
+            action = new RemoveItemsFromObjectSetAction((ObjectSet)contextObject, domainObjectList);
+        }
+        
+        if (action==null) {
+            return null;
+        }
+        
+        JMenuItem deleteItem = getNamedActionItem(action);
+
+        // User can't delete if they don't have write access
+        if (!ClientDomainUtils.hasWriteAccess(contextObject)) {
+            deleteItem.setEnabled(false);
+        }
+        
+        return deleteItem;
+    }
 //    
 //    
 //    protected JMenuItem getMergeItem() {

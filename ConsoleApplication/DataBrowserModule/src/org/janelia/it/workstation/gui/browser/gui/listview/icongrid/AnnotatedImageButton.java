@@ -257,7 +257,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         buttonPanel.revalidate();
     }
 
-    public T getImageObject() {
+    public T getUserObject() {
         return imageObject;
     }
 

@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
@@ -12,6 +11,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
@@ -145,6 +145,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
+    public JPanel getPanel() {
+        return this;
+    }
+
+    @Override
     public void setSearchProvider(SearchProvider searchProvider) {
         super.setSearchProvider(searchProvider);
     }
@@ -161,33 +166,33 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
     
     @Override
-    protected JPopupMenu getButtonPopupMenu() {
-        List<Reference> selectionIds = selectionModel.getSelectedIds();
-        List<DomainObject> domainObjects = new ArrayList<>();
-        for (Reference id : selectionIds) {
-            DomainObject imageObject = getImageModel().getImageByUniqueId(id);
-            if (imageObject == null) {
-                log.warn("Could not locate selected entity with id {}", id);
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll) {
+        log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={})",domainObjects.size(),select,clearAll);
+        
+        if (domainObjects.isEmpty()) {
+            return;
+        }
+        
+        boolean currClearAll = clearAll;
+        for(DomainObject domainObject : domainObjects) {
+            if (select) {
+                selectObject(domainObject, currClearAll);
             }
             else {
-                domainObjects.add(imageObject);
+                deselectObject(domainObject);
             }
+            currClearAll = false;
         }
-        JPopupMenu popupMenu = new DomainObjectContextMenu(domainObjects);
-        ((DomainObjectContextMenu) popupMenu).addMenuItems();
-        return popupMenu;
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                scrollSelectedEntitiesToCenter();
+            }
+        });
+        
     }
-    
-    @Override
-    public void refreshDomainObject(DomainObject domainObject) {
-        refreshImageObject(domainObject);
-    }
-    
-    @Override
-    protected void buttonDrillDown(DomainObject domainObject) {
-    }
-    
-    
+
     @Override
     public void showDomainObjects(AnnotatedDomainObjectList objects, final Callable<Void> success) {
 
@@ -343,38 +348,25 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
         }        
         
-        showImageObjects(domainObjectList.getDomainObjects(), success);
+        showObjects(domainObjectList.getDomainObjects(), success);
     }
 
     @Override
-    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll) {
-        if (domainObjects.isEmpty()) {
-            return;
-        }
-        DomainObject first = domainObjects.get(0);
-        selectDomainObject(first, select, clearAll);
-        for(int i=1; i<domainObjects.size(); i++) {
-            DomainObject domainObject = domainObjects.get(i);
-            selectDomainObject(domainObject, select, false);
-        }
-    }
-    
-    public void selectDomainObject(DomainObject domainObject, boolean selected, boolean clearAll) {
-        if (selected) {
-            selectImageObject(domainObject, clearAll);
-        }
-        else {
-            deselectImageObject(domainObject);
-        }
+    public void refreshDomainObject(DomainObject domainObject) {
+        refreshObject(domainObject);
     }
 
     @Override
-    public void preferenceChanged(Preference preference) {
+    protected JPopupMenu getContextualPopupMenu() {
+        List<Reference> ids = selectionModel.getSelectedIds();
+        List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
+        JPopupMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), selected);
+        ((DomainObjectContextMenu) popupMenu).addMenuItems();
+        return popupMenu;
     }
     
     @Override
-    public JPanel getPanel() {
-        return this;
+    protected void buttonDrillDown(DomainObject domainObject) {
     }
     
     /**

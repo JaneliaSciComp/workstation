@@ -769,8 +769,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     }
 
     @Override
-	public void setSortField(String sortField) {
-		this.filter.setSort(sortField);
+	public void setSortField(String sortCriteria) {
+		this.filter.setSort(sortCriteria);
 	}
 
     @Override

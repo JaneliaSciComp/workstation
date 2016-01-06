@@ -23,8 +23,8 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.support.NodeChooser;
+import org.janelia.it.workstation.gui.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
-import org.janelia.it.workstation.gui.browser.nodes.UserViewRootNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.nodes.Node;
@@ -66,14 +66,17 @@ public class AddOntologyTermAction extends NodePresenterAction {
         
         Node selectedNode = selectedNodes.get(0);
         final OntologyTermNode termNode = (OntologyTermNode)selectedNode;
-        OntologyTerm term = termNode.getOntologyTerm();
+        
+        final Ontology ontology = termNode.getOntology();
+        final OntologyTerm term = termNode.getOntologyTerm();
+        
         if (term instanceof org.janelia.it.jacs.model.domain.ontology.Enum) {
             // Alternative "Add" menu for enumeration nodes
             JMenuItem smi = new JMenuItem("Item");
             smi.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    createTerm(termNode, EnumItem.class);
+                    createTerm(termNode, ontology, EnumItem.class);
                 }
             });
             addMenuPopup.add(smi);
@@ -87,7 +90,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
                     smi.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            createTerm(termNode, nodeType);
+                            createTerm(termNode, ontology, nodeType);
                         }
                     });
                     addMenuPopup.add(smi);
@@ -98,7 +101,6 @@ public class AddOntologyTermAction extends NodePresenterAction {
             }
         }
 
-        Ontology ontology = termNode.getOntology();
         if (!ClientDomainUtils.hasWriteAccess(ontology)) {
             addMenuPopup.setEnabled(false);
         }
@@ -106,7 +108,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
         return addMenuPopup;
     }
     
-    private void createTerm(final OntologyTermNode parentNode, Class<? extends OntologyTerm> termClass) {
+    private void createTerm(final OntologyTermNode parentNode, Ontology ontology, Class<? extends OntologyTerm> termClass) {
        
         final OntologyTerm ontologyTerm = createTypeByName(termClass);
 
@@ -139,7 +141,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
         else if (ontologyTerm instanceof EnumText) {
 
             OntologyExplorerTopComponent explorer = OntologyExplorerTopComponent.getInstance();
-            NodeChooser nodeChooser = new NodeChooser(new UserViewRootNode(), "Choose an enumeration");
+            NodeChooser nodeChooser = new NodeChooser(new OntologyNode(ontology), "Choose an enumeration");
             int returnVal = nodeChooser.showDialog(explorer);
             if (returnVal != NodeChooser.CHOOSE_OPTION) return;
             if (nodeChooser.getChosenElements().isEmpty()) return;

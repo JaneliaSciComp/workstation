@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -31,18 +32,16 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
     private final static Logger log = LoggerFactory.getLogger(UserViewTreeNodeNode.class);
     
     private final UserViewTreeNodeChildFactory childFactory;
+    private final UserViewConfiguration config;
     
-    public UserViewTreeNodeNode(TreeNode treeNode) {
-        this(null, new UserViewTreeNodeChildFactory(treeNode), treeNode);
+    public UserViewTreeNodeNode(TreeNode treeNode, UserViewConfiguration config) {
+        this(null, new UserViewTreeNodeChildFactory(treeNode, config), treeNode, config);
     }
     
-    private UserViewTreeNodeNode(UserViewTreeNodeChildFactory parentChildFactory, TreeNode treeNode) {
-        this(parentChildFactory, new UserViewTreeNodeChildFactory(treeNode), treeNode);
-    }
-    
-    private UserViewTreeNodeNode(UserViewTreeNodeChildFactory parentChildFactory, final UserViewTreeNodeChildFactory childFactory, TreeNode treeNode) {
+    private UserViewTreeNodeNode(UserViewTreeNodeChildFactory parentChildFactory, final UserViewTreeNodeChildFactory childFactory, TreeNode treeNode, UserViewConfiguration config) {
         super(parentChildFactory, treeNode.getNumChildren()==0?Children.LEAF:Children.create(childFactory, false), treeNode);
         this.childFactory = childFactory;
+        this.config = config;
     }
     
     public TreeNode getTreeNode() {
@@ -87,11 +86,13 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
     private static class UserViewTreeNodeChildFactory extends ChildFactory<DomainObject> {
 
         private final WeakReference<TreeNode> treeNodeRef;
+        private final UserViewConfiguration config;
 
-        public UserViewTreeNodeChildFactory(TreeNode treeNode) {
+        UserViewTreeNodeChildFactory(TreeNode treeNode, UserViewConfiguration config) {
             this.treeNodeRef = new WeakReference<>(treeNode);
+            this.config = config;
         }
-
+        
         @Override
         protected boolean createKeys(List<DomainObject> list) {
             TreeNode treeNode = treeNodeRef.get();
@@ -116,7 +117,10 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
                     DomainObject obj = map.get(reference.getTargetId());
                     log.trace(reference.getTargetClassName()+"#"+reference.getTargetId()+" -> "+obj);
                     if (obj!=null) {
-                        if (TreeNode.class.isAssignableFrom(obj.getClass())) {
+                        if (config.getVisibleClasses().contains(TreeNode.class) && TreeNode.class.isAssignableFrom(obj.getClass())) {
+                            temp.add(obj);
+                        }
+                        else if (config.getVisibleClasses().contains(ObjectSet.class) && ObjectSet.class.isAssignableFrom(obj.getClass())) {
                             temp.add(obj);
                         }
                     }
@@ -133,10 +137,12 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
         @Override
         protected Node createNodeForKey(DomainObject key) {
             try {
-                // TODO: would be nice to do this dynamically, 
-                // or at least with some sort of annotation
-                if (TreeNode.class.isAssignableFrom(key.getClass())) {
-                    return new UserViewTreeNodeNode(this, (TreeNode)key);
+                // TODO: would be nice to do this dynamically, or at least with some sort of annotation
+                if (config.getVisibleClasses().contains(TreeNode.class) && TreeNode.class.isAssignableFrom(key.getClass())) {
+                    return new UserViewTreeNodeNode((TreeNode)key, config);
+                }
+                else if (config.getVisibleClasses().contains(ObjectSet.class) && ObjectSet.class.isAssignableFrom(key.getClass())) {
+                    return new UserViewObjectSetNode((ObjectSet)key);
                 }
                 else {
                     return null;

@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.Component;
 
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.SampleResultSelectionEvent;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -66,7 +67,7 @@ public class SampleResultViewerManager implements ViewerManager<SampleResultView
             return;
         }
 
-        log.info("handleDomainObjectSelection({})",event.getSampleResult());
+        log.info("sampleResultSelected({})",event.getSampleResult());
 
         SampleResultViewerTopComponent viewer = SampleResultViewerManager.getInstance().getActiveViewer();
         

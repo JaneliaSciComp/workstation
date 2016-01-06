@@ -5,10 +5,12 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -17,8 +19,8 @@ import javax.swing.JTable;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
-import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.AnnotatedImageButton;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
@@ -29,6 +31,8 @@ import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicRow;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
 import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A generic table viewer for a specific object type. 
@@ -37,12 +41,14 @@ import org.janelia.it.workstation.shared.util.SystemInfo;
  */
 public abstract class TableViewerPanel<T,S> extends JPanel {
 
+    private static final Logger log = LoggerFactory.getLogger(TableViewerPanel.class);
+    
     // Main components
     private final JPanel resultsPane;
     private final DynamicTable resultsTable;
     
     private List<T> objectList;
-    private Map<S,T> imageObjectMap;
+    private Map<S,T> objectMap;
     private ImageModel<T,S> imageModel;
     private SelectionModel<T,S> selectionModel;
     private SearchProvider searchProvider;
@@ -66,11 +72,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
                 // No keybinds matched, use the default behavior
                 // Ctrl-A or Meta-A to select all
                 if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
-                    boolean clearAll = true;
-                    for (T imageObject : objectList) {
-                        selectImageObject(imageObject, clearAll);
-                        clearAll = false;
-                    }
+                    selectRange(0, objectList.size()-1);
                     searchProvider.userRequestedSelectAll();
                     return;
                 }
@@ -117,32 +119,28 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
                 // Tab and arrow navigation to page through the images
                 boolean clearAll = false;
-                T imageObj = null;
+                T object = null;
                 if (e.getKeyCode() == KeyEvent.VK_TAB) {
                     clearAll = true;
                     if (e.isShiftDown()) {
-                        imageObj = getPreviousObject();
+                        object = getPreviousObject();
                     }
                     else {
-                        imageObj = getNextObject();
+                        object = getNextObject();
                     }
                 }
                 else {
                     clearAll = true;
                     if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                        imageObj = getPreviousObject();
+                        object = getPreviousObject();
                     }
                     else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                        imageObj = getNextObject();
+                        object = getNextObject();
                     }
                 }
 
-                if (imageObj != null) {
-                    S id = getImageModel().getImageUniqueId(imageObj);
-                    selectImageObject(imageObj, clearAll);
-//                    getDynamicTable().requestFocus();
-                    // TODO: scroll to item
-                    //imagesPanel.scrollObjectToCenter(imageObj);
+                if (object != null) {
+                    selectObjects(Arrays.asList(object), true, clearAll);
                 }
             }
 
@@ -165,18 +163,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
             @Override
             protected JPopupMenu createPopupMenu(MouseEvent e) {
-                // TODO: handle multiple selection
-                return super.createPopupMenu(e);
-            }
-
-            @Override
-            protected void rowClicked(int row) {
-                if (row < 0) {
-                    return;
-                }
-                DynamicRow drow = getRows().get(row);
-                T object = (T) drow.getUserObject();
-                //objectSelected(object);
+                return getContextualPopupMenu();
             }
         };
 
@@ -203,6 +190,8 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         add(resultsPane, BorderLayout.CENTER);
         
     }
+    
+    protected abstract JPopupMenu getContextualPopupMenu();
 
     public void setSearchProvider(SearchProvider searchProvider) {
         this.searchProvider = searchProvider;
@@ -229,37 +218,50 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         return selectionModel;
     }
 
-    protected void selectImageObject(T imageObject, boolean clearAll) {
-        int last = objectList.indexOf(imageObject);
-        
-        if (clearAll) {
-            selectRange(last, last);
+    public void selectObjects(List<T> domainObjects, boolean select, boolean clearAll) {
+
+        log.info("selectObjects(domainObjects.size={},select={},clearAll={})",domainObjects.size(),select,clearAll);
+
+        if (domainObjects.isEmpty()) {
+            return;
         }
-        else {
-            int first = 0;
-            int i = 0;
-            for (T object : objectList) {
-                if (selectionModel.isObjectSelected(object)) {
-                    first = i;
+        
+        if (!select) {
+            // TODO: this needs better logic for targeted deselection 
+            selectNone();
+            return;
+        }
+
+        // The table API only allows for contiguous range selection, so given a list of objects,
+        // the best we can do is find the first and select everything after it until we find an object
+        // that should not be selected. 
+        Set<T> domainObjectSet = new HashSet<>(domainObjects);
+        Integer start = null;
+        Integer end = null;
+        int i = 0;
+        for(DynamicRow row : getRows()) {
+            DomainObject rowObject = (DomainObject)row.getUserObject();
+            if (domainObjectSet.contains(rowObject)) {
+                if (start==null) {
+                    start = i;
+                }
+            }
+            else {
+                if (start!=null) {
+                    end = i-1;
                     break;
                 }
-                i++;
             }
-            
-            selectRange(first, last);
+            i++;
         }
         
-        selectionModel.select(imageObject, clearAll);
+        if (start!=null) {
+            if (end==null) end = i-1;
+            log.info("Selecting range: {} - {}",start,end);
+            selectRange(start, end);
+            getDynamicTable().scrollToVisible(start, 0);
+        }
     }
-
-    protected void deselectImageObject(T imageObject) {
-        final S id = getImageModel().getImageUniqueId(imageObject);
-        // TODO: is there a better way to implement this?
-        selectNone();
-        selectionModel.deselect(imageObject);
-    }
-    
-//    protected abstract JPopupMenu getContextualPopupMenu();
     
     protected abstract Object getValue(T object, String column);
     
@@ -320,15 +322,15 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         if (uniqueId == null) {
             return null;
         }
-        return imageObjectMap.get(uniqueId);
+        return objectMap.get(uniqueId);
     }
     
     protected void showObjects(List<T> objectList) {
         
         this.objectList = objectList;
-        this.imageObjectMap = new HashMap<>();
-        for(T imageObject : objectList) {
-            imageObjectMap.put(getImageModel().getImageUniqueId(imageObject), imageObject);
+        this.objectMap = new HashMap<>();
+        for(T object : objectList) {
+            objectMap.put(getImageModel().getImageUniqueId(object), object);
         }
         
         resultsTable.removeAllRows();
