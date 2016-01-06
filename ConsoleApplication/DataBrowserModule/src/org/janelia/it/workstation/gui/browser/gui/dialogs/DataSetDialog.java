@@ -180,10 +180,10 @@ public class DataSetDialog extends ModalDialog {
 
             SampleImageType sampleImageType = dataSet.getSampleImageType();
             if (sampleImageType != null) {
-                sampleImageInput.setSelectedItem(SampleImageType.valueOf(sampleImageType.getName()));
+                sampleImageInput.setSelectedItem(sampleImageType);
             }
             if (dataSet.getSageSync() != null) {
-                sageSyncCheckbox.setSelected(true);
+                sageSyncCheckbox.setSelected(dataSet.getSageSync().booleanValue());
             }
             applyCheckboxValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
         } else {
@@ -218,6 +218,7 @@ public class DataSetDialog extends ModalDialog {
                 if (dataSet == null) {
                     dataSet = new DataSet();
                     dataSet.setName(nameInput.getText());
+                    dataSet.setIdentifier(identifierInput.getText());
                 } else {
                     dataSet.setName(nameInput.getText());
                 }
