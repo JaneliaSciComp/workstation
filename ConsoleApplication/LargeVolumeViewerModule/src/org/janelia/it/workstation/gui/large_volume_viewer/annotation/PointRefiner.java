@@ -5,6 +5,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
 import org.janelia.it.workstation.octree.ZoomLevel;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * this class refines the position of a point based on some algorithm
@@ -22,6 +24,8 @@ import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
  *
  */
 public class PointRefiner {
+
+    private static final Logger log = LoggerFactory.getLogger(PointRefiner.class);
 
     SubvolumeProvider dataProvider;
 
@@ -81,6 +85,7 @@ public class PointRefiner {
         long sumIntensitySquared;
         ZoomedVoxelIndex currentZVI;
         Integer zMaxInt = null;
+        double[] sisArr=new double[zmax-zmin+1];
         for (int z=zmin; z<=zmax; z++) {
             sumIntensitySquared = 0;
             currentZVI = new ZoomedVoxelIndex(zoomLevel, xc, yc, z);
@@ -88,6 +93,7 @@ public class PointRefiner {
                 currentIntensity = volume.getIntensityGlobal(currentZVI, c);
                 // System.out.println("z: " + z + "; channel " + c + " intensity: " + volume.getIntensityGlobal(currentZVI, c));
                 sumIntensitySquared += currentIntensity * currentIntensity;
+                sisArr[z-zmin]=(double)sumIntensitySquared;
             }
             // System.out.println("z: " + z + "; sum sqr intensity: " + sumIntensitySquared);
             if (sumIntensitySquared > maxIntensity) {
@@ -95,8 +101,27 @@ public class PointRefiner {
                 maxIntensity = sumIntensitySquared;
             }
         }
+        double sisVar=0.0;
+        double sisAvg=0.0;
+        for (double s : sisArr) {
+            sisAvg+=s;
+        }
+        sisAvg = sisAvg / (double)sisArr.length;
+        for (double s : sisArr) {
+            sisVar += (s - sisAvg)*(s - sisAvg);
+        }
+        sisVar = sisVar / (double)sisArr.length;
+        double sisDev = Math.sqrt(sisVar);
 
         // note the only coordinate we touch is z
-        return new Vec3(point.getX(), point.getY(), zMaxInt);
+        double sisMax=(double)maxIntensity - sisAvg;
+
+        //log.info("sisAvg="+sisAvg+" maxInten="+maxIntensity+" sisMax="+sisMax+" sisDev="+sisDev);
+
+        if (sisMax > 1.5*sisDev) {
+            return new Vec3(point.getX(), point.getY(), zMaxInt);
+        } else {
+            return point;
+        }
     }
 }
