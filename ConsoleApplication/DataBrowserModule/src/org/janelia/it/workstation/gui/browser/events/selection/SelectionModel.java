@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class SelectionModel<T,S> {
     
-    private static final Logger log = LoggerFactory.getLogger(DomainObjectNodeSelectionModel.class);
+    private static final Logger log = LoggerFactory.getLogger(SelectionModel.class);
     
     private final List<S> selected = new ArrayList<>();
     private Object source;
@@ -40,8 +40,8 @@ public abstract class SelectionModel<T,S> {
      * @param clearAll
      */
     public final void select(T object, boolean clearAll) {
-        log.debug("select {}, clear={}",object,clearAll);
         S id = getId(object);
+        log.trace("select {}, clearAll={}",id,clearAll);
         if (!isCorrectlySelected(id, clearAll)) {
             if (clearAll) {
                 selected.clear();
@@ -77,8 +77,8 @@ public abstract class SelectionModel<T,S> {
      * @param object
      */
     public final void deselect(T object) {
-        log.debug("deselect {}",object);
         S id = getId(object);
+        log.trace("deselect {}",id);
         if (!selected.contains(id)) {
             return;
         }

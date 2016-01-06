@@ -5,6 +5,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,6 +62,10 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     private SelectionModel<T,S> selectionModel;
     private SearchProvider searchProvider;
 
+    // UI state
+    private Integer selectionAnchorIndex;
+    private Integer selectionCurrIndex;
+    
     // Listeners
     private final SessionModelListener sessionModelListener;
     
@@ -90,10 +95,20 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (e.getValueIsAdjusting()) return;
-                boolean clearAll = true;
-                for(Object object : resultsTable.getSelectedObjects()) {
-                    selectionModel.select((T)object, clearAll);
-                    clearAll = false;
+                Set<Object> set = new HashSet<>(resultsTable.getSelectedObjects());
+                for(T object : objectList) {
+                    if (set.contains(object)) {
+                        // Should be selected
+                        if (!selectionModel.isObjectSelected(object)) {
+                            selectionModel.select(object, false);
+                        }      
+                    }
+                    else {
+                        // Should not be selected
+                        if (selectionModel.isObjectSelected(object)) {
+                            selectionModel.deselect(object);
+                        }      
+                    }
                 }
             }
         });
@@ -180,32 +195,6 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
                     e.consume();
                     return;
                 }
-
-                // Tab and arrow navigation to page through the images
-                boolean clearAll = false;
-                T object = null;
-                if (e.getKeyCode() == KeyEvent.VK_TAB) {
-                    clearAll = true;
-                    if (e.isShiftDown()) {
-                        object = getPreviousObject();
-                    }
-                    else {
-                        object = getNextObject();
-                    }
-                }
-                else {
-                    clearAll = true;
-                    if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                        object = getPreviousObject();
-                    }
-                    else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                        object = getNextObject();
-                    }
-                }
-
-                if (object != null) {
-                    selectObjects(Arrays.asList(object), true, clearAll);
-                }
             }
 
             revalidate();
@@ -216,6 +205,24 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     protected void enterKeyPressed() {}
     
     protected void deleteKeyPressed() {}
+
+    private void beginRangeSelection(int anchorIndex) {
+        selectionAnchorIndex = selectionCurrIndex = anchorIndex;
+    }
+    
+    private void endRangeSelection() {
+        selectionAnchorIndex = selectionCurrIndex = null;
+    }
+
+    protected void selectObject(T object, boolean clearAll) {
+        selectObjects(Arrays.asList(object), true, clearAll);
+        selectionModel.select(object, clearAll);
+    }
+
+    protected void deselectObject(T object) {
+        selectObjects(Arrays.asList(object), false, false);
+        selectionModel.deselect(object);
+    }
     
     public void selectObjects(List<T> domainObjects, boolean select, boolean clearAll) {
 
@@ -227,9 +234,9 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         
         ListSelectionModel model = getDynamicTable().getTable().getSelectionModel();
         
-        if (clearAll) {
-            model.clearSelection();
-        }
+//        if (clearAll) {
+//            model.clearSelection();
+//        }
         
         Set<T> domainObjectSet = new HashSet<>(domainObjects);
         int i = 0;
@@ -244,6 +251,9 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
                 else {
                     model.removeSelectionInterval(i, i);
                 }
+            }
+            else if (clearAll) {
+                model.removeSelectionInterval(i, i);
             }
             i++;
         }

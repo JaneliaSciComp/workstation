@@ -119,11 +119,13 @@ public final class DomainListViewTopComponent extends TopComponent {
         try {
             if (editor!=null) {
                 remove((JComponent)editor);
+                Events.getInstance().unregisterOnEventBus(editor);
                 Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
             }
             editor = editorClass.newInstance();
             add((JComponent)editor, BorderLayout.CENTER);
             Events.getInstance().registerOnEventBus(editor.getEventBusListener());
+            Events.getInstance().registerOnEventBus(editor);
         }
         catch (InstantiationException | IllegalAccessException e) {
             SessionMgr.getSessionMgr().handleException(e);

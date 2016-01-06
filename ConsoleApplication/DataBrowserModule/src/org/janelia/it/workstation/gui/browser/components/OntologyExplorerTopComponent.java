@@ -314,20 +314,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         log.trace("selectOntology({})",ontologyId);
         selectOntology(ontologyId, true);
     }
-
-    @Subscribe
-    public void objectsRemoved(DomainObjectRemoveEvent event) {
-        final DomainObject domainObject = event.getDomainObject();
-        if (domainObject instanceof Ontology) {
-            refresh(true, true, new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    selectOntology(ontologyNode.getId(), true);
-                    return null;
-                }
-            });
-        }
-    }
     
     @Subscribe
     public void objectsInvalidated(DomainObjectInvalidationEvent event) {
@@ -340,15 +326,16 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 if (domainObject instanceof Ontology) {
                     Ontology updatedOntology = (Ontology)domainObject;
                     if (ontologyNode!=null && ontologyNode.getId().equals(updatedOntology.getId())) {
-                        // Current ontology has been invalidated, but this happens every time it changes, and we can expect to get a DomainObjectChangeEvent for that case. 
-//                        log.info("Refreshing due to invalidated ontology {}",updatedOntology.getName());
-//                        refresh(false, true, new Callable<Void>() {
-//                            @Override
-//                            public Void call() throws Exception {
-//                                selectOntology(ontologyNode.getId(), true);
-//                                return null;
-//                            }
-//                        });
+                        // Current ontology has been invalidated 
+                        log.info("Refreshing because current ontology '{}' has been invalidated.",updatedOntology.getName());
+                        refresh(false, true, new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                selectOntology(ontologyNode.getId(), true);
+                                return null;
+                            }
+                        });
+                        break;
                     }
                     else {
                         Integer replaceIndex = null;
@@ -384,28 +371,29 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         }
     }
 
-    @Subscribe
-    public void objectChanged(DomainObjectChangeEvent event) {
-        final DomainObject domainObject = event.getDomainObject();
-        if (domainObject instanceof Ontology) {
-            final List<Long[]> expanded = beanTreeView.getExpandedPaths();
-            final List<Long[]> selected = beanTreeView.getSelectedPaths();
-            try {
-                loadOntologies();
-            }
-            catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
-            }
-            selectOntology(ontologyNode.getId(), false);
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    beanTreeView.expand(expanded);
-                    beanTreeView.selectPaths(selected);
-                }
-            });
-        }
-    }
+    // TODO: in the future we may want to use fine-grained events, but for now any change fires an invalidation
+//    @Subscribe
+//    public void objectChanged(DomainObjectChangeEvent event) {
+//        final DomainObject domainObject = event.getDomainObject();
+//        if (domainObject instanceof Ontology) {
+//            final List<Long[]> expanded = beanTreeView.getExpandedPaths();
+//            final List<Long[]> selected = beanTreeView.getSelectedPaths();
+//            try {
+//                loadOntologies();
+//            }
+//            catch (Exception e) {
+//                SessionMgr.getSessionMgr().handleException(e);
+//            }
+//            selectOntology(ontologyNode.getId(), false);
+//            SwingUtilities.invokeLater(new Runnable() {
+//                @Override
+//                public void run() {
+//                    beanTreeView.expand(expanded);
+//                    beanTreeView.selectPaths(selected);
+//                }
+//            });
+//        }
+//    }
     
     private void selectOntology(Long ontologyId, boolean expandAll) {
         if (ontologyId==null) {

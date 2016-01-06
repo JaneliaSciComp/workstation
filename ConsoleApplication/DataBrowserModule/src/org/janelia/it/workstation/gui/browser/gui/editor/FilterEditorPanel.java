@@ -75,6 +75,7 @@ import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.EditCriteriaDialog;
@@ -93,6 +94,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
+import com.google.common.eventbus.Subscribe;
 
 import de.javasoft.swing.JYPopupMenu;
 import de.javasoft.swing.SimpleDropDownButton;
@@ -1042,6 +1044,27 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 dtde.dropComplete(false);
             }
         }
+    }
 
+    @Subscribe
+    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            log.info("total invalidation, reloading...");
+            search();
+        }
+        else {
+            for (DomainObject domainObject : event.getDomainObjects()) {
+                if (domainObject.getId().equals(filter.getId())) {
+                    log.info("filter invalidated, reloading...");
+                    Filter updatedFilter = DomainMgr.getDomainMgr().getModel().getDomainObject(Filter.class, filter.getId());
+                    loadDomainObject(updatedFilter);
+                    break;
+                }
+                else if (domainObject.getClass().equals(searchClass)) {
+                    log.info("some objects of class "+searchClass.getSimpleName()+" were invalidated, reloading...");
+                    search();
+                }
+            }
+        }
     }
 }

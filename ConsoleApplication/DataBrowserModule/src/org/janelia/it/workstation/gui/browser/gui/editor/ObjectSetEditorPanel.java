@@ -3,7 +3,9 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 import java.awt.BorderLayout;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JPanel;
 
@@ -14,6 +16,9 @@ import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -26,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Simple editor panel for viewing object sets. In the future it may support drag and drop editing of object sets. 
@@ -40,8 +46,10 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
 
+    private ObjectSet objectSet;
     private List<DomainObject> domainObjects;
     private List<Annotation> annotations;
+    private Set<Long> loadedObjectIds = new HashSet<>();
     
     public ObjectSetEditorPanel() {
         
@@ -58,11 +66,16 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     
     @Override
     public void loadDomainObject(final ObjectSet objectSet) {
-
-        log.debug("loadDomainObject(ObjectSet:{})",objectSet.getName());
-        selectionModel.setParentObject(objectSet);
-        
+        log.info("loadDomainObject(ObjectSet:{})",objectSet.getName());
         resultsPanel.showLoadingIndicator();
+        load(objectSet);
+    }
+
+    public void load(final ObjectSet objectSet) {
+
+        log.info("load(ObjectSet:{})",objectSet.getName());
+        this.objectSet = objectSet;
+        selectionModel.setParentObject(objectSet);
         
         SimpleWorker childLoadingWorker = new SimpleWorker() {
 
@@ -71,17 +84,19 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 domainObjects = model.getDomainObjects(objectSet.getClassName(), objectSet.getMembers());
                 annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));
+                loadedObjectIds.add(objectSet.getId());
+                loadedObjectIds.addAll(DomainUtils.getIds(domainObjects));
                 log.info("Showing "+domainObjects.size()+" items");
             }
 
             @Override
             protected void hadSuccess() {
-        		showResults();
+                showResults();
             }
 
             @Override
             protected void hadError(Throwable error) {
-                resultsPanel.showNothing();
+                showNothing();
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
@@ -129,7 +144,7 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
 
             @Override
             protected void hadError(Throwable error) {
-                resultsPanel.showNothing();
+                showNothing();
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
@@ -143,6 +158,10 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
         resultsPanel.showSearchResults(searchResults, true);
 	}
 
+	public void showNothing() {
+        resultsPanel.showNothing();
+	}
+	
     @Override
 	public void search() {
 		// Nothing needs to be done here, because results were updated by setSortField()
@@ -166,5 +185,24 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     @Override
     public Object getEventBusListener() {
         return resultsPanel;
+    }
+
+    @Subscribe
+    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            log.info("total invalidation, reloading...");
+            ObjectSet updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(ObjectSet.class, objectSet.getId());
+            load(updatedSet);
+        }
+        else {
+            for (DomainObject domainObject : event.getDomainObjects()) {
+                if (domainObject.getId().equals(objectSet.getId())) {
+                    log.info("objects set invalidated, reloading...");
+                    ObjectSet updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(ObjectSet.class, objectSet.getId());
+                    load(updatedSet);
+                    break;
+                }
+            }
+        }
     }
 }

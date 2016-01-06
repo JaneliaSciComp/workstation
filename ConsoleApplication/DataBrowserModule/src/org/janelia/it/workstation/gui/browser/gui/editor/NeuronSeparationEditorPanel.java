@@ -11,11 +11,17 @@ import javax.swing.JPanel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -30,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * An editor which can display the most recent neuron separation on a given sample result. 
@@ -47,6 +54,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
 
+    private SampleResult sampleResult;
     private List<DomainObject> domainObjects;
     private List<Annotation> annotations;
     
@@ -68,6 +76,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
         log.debug("loadDomainObject(ObjectSet:{})",sampleResult.getName());
         
+        this.sampleResult = sampleResult;
         final NeuronSeparation separation = sampleResult.getResult().getLatestSeparationResult();
 
         // TODO: Should Samples be parents of neurons?
@@ -104,7 +113,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
             @Override
             protected void hadError(Throwable error) {
-                resultsPanel.showNothing();
+                showNothing();
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
@@ -168,6 +177,10 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         });
     }
     
+    public void showNothing() {
+        resultsPanel.showNothing();
+    }
+    
     public void showResults(boolean isUserDriven) {
         SearchResults searchResults = SearchResults.paginate(domainObjects, annotations);
         resultsPanel.showSearchResults(searchResults, isUserDriven);
@@ -195,5 +208,55 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     @Override
     public Object getEventBusListener() {
         return resultsPanel;
+    }
+    
+    @Subscribe
+    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            log.info("total invalidation, reloading...");
+            search();
+        }
+        else {
+            Sample sample = sampleResult.getSample();
+            for (DomainObject domainObject : event.getDomainObjects()) {
+                if (domainObject.getId().equals(sample.getId())) {
+                    log.info("sample invalidated, reloading...");
+                    Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
+                    PipelineResult result = findResult(updatedSample, sampleResult.getResult().getId());
+                    if (result==null) {
+                        log.info("Sample no longer has result with id: "+sampleResult.getResult().getId());
+                        showNothing();
+                        return;
+                    }
+                    loadSampleResult(new SampleResult(updatedSample, result), false);
+                    break;
+                }
+                else if (domainObject.getClass().equals(NeuronFragment.class)) {
+                    log.info("some objects of class NeuronFragment were invalidated, reloading...");
+                    loadSampleResult(sampleResult, false);
+                    // TODO: reselect the selected neurons
+                }
+            }
+        }
+    }
+    
+    /** 
+     * TODO: move this to a utility class for dealing with Samples
+     * @param sample
+     * @param id
+     * @return
+     */
+    private PipelineResult findResult(Sample sample, Long id) {
+        for(String objective : sample.getOrderedObjectives()) {
+            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+            for(SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
+                for(PipelineResult result : run.getResults()) {
+                    if (result.getId().equals(id)) {
+                        return result;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

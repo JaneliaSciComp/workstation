@@ -25,8 +25,6 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
@@ -538,7 +536,6 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.reorderTerms(ontologyId, parentTermId, order));
         }
-        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -555,7 +552,6 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.addTerms(ontologyId, parentTermId, terms, index));
         }
-        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -564,7 +560,6 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.removeTerm(ontologyId, parentTermId, termId));
         }
-        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -574,6 +569,7 @@ public class DomainModel {
             facade.removeOntology(ontologyId);
         }
         notifyDomainObjectRemoved(canonicalObject);
+        notifyDomainObjectsInvalidated(canonicalObject);
     }
 
     public TreeNode create(TreeNode treeNode) throws Exception {
@@ -640,12 +636,12 @@ public class DomainModel {
         notifyDomainObjectRemoved(dataSet);
     }
 
-    public void reorderChildren(TreeNode treeNode, int[] order) throws Exception {
+    public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception {
         TreeNode canonicalObject = null;
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.reorderChildren(treeNode, order));
         }
-        notifyDomainObjectChanged(canonicalObject);
+        return canonicalObject;
     }
 
     public TreeNode addChild(TreeNode treeNode, DomainObject domainObject) throws Exception {
@@ -657,12 +653,7 @@ public class DomainModel {
     }
 
     public TreeNode addChildren(TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
-        TreeNode canonicalObject = null;
-        synchronized (this) {
-            canonicalObject = putOrUpdate(facade.addChildren(treeNode, DomainUtils.getReferences(domainObjects), null));
-        }
-        notifyDomainObjectChanged(canonicalObject);
-        return canonicalObject;
+        return addChildren(treeNode, domainObjects, null);
     }
 
     public TreeNode addChildren(TreeNode treeNode, Collection<DomainObject> domainObjects, Integer index) throws Exception {
@@ -670,17 +661,11 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.addChildren(treeNode, DomainUtils.getReferences(domainObjects), index));
         }
-        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
     public TreeNode removeChild(TreeNode treeNode, DomainObject domainObject) throws Exception {
-        TreeNode canonicalObject = null;
-        synchronized (this) {
-            canonicalObject = putOrUpdate(facade.removeChildren(treeNode, DomainUtils.getReferences(Arrays.asList(domainObject))));
-        }
-        notifyDomainObjectChanged(canonicalObject);
-        return canonicalObject;
+        return removeChildren(treeNode, Arrays.asList(domainObject));
     }
 
     public TreeNode removeChildren(TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
@@ -688,7 +673,6 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.removeChildren(treeNode, DomainUtils.getReferences(domainObjects)));
         }
-        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -697,17 +681,11 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.removeChildren(treeNode, Arrays.asList(reference)));
         }
-        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
     public ObjectSet addMember(ObjectSet objectSet, DomainObject domainObject) throws Exception {
-        ObjectSet canonicalObject = null;
-        synchronized (this) {
-            canonicalObject = putOrUpdate(facade.addMembers(objectSet, DomainUtils.getReferences(Arrays.asList(domainObject))));
-        }
-        notifyDomainObjectChanged(canonicalObject);
-        return canonicalObject;
+        return addMembers(objectSet, Arrays.asList(domainObject));
     }
 
     public ObjectSet addMembers(ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
@@ -715,17 +693,11 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.addMembers(objectSet, DomainUtils.getReferences(domainObjects)));
         }
-        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
     public ObjectSet removeMember(ObjectSet objectSet, DomainObject domainObject) throws Exception {
-        ObjectSet canonicalObject = null;
-        synchronized (this) {
-            canonicalObject = putOrUpdate(facade.removeMembers(objectSet, DomainUtils.getReferences(Arrays.asList(domainObject))));
-        }
-        notifyDomainObjectChanged(canonicalObject);
-        return canonicalObject;
+        return removeMembers(objectSet, Arrays.asList(domainObject));
     }
 
     public ObjectSet removeMembers(ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
@@ -733,7 +705,6 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.removeMembers(objectSet, DomainUtils.getReferences(domainObjects)));
         }
-        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -742,7 +713,6 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.updateProperty(domainObject, propName, propValue));
         }
-        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -751,7 +721,6 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.changePermissions(domainObject, granteeKey, rights, grant));
         }
-        notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
@@ -769,12 +738,14 @@ public class DomainModel {
         Events.getInstance().postOnEventBus(new DomainObjectAnnotationChangeEvent(domainObject));
     }
 
-    private void notifyDomainObjectChanged(DomainObject domainObject) {
-        if (log.isTraceEnabled()) {
-            log.trace("Generating DomainObjectChangeEvent for {}", DomainUtils.identify(domainObject));
-        }
-        Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(domainObject));
-    }
+    // TODO: This is currently not used because all changes result in invalidated objects. 
+    // In the future we may want to keep the same objects and just update them, in which case this event will be useful.
+//    private void notifyDomainObjectChanged(DomainObject domainObject) {
+//        if (log.isTraceEnabled()) {
+//            log.trace("Generating DomainObjectChangeEvent for {}", DomainUtils.identify(domainObject));
+//        }
+//        Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(domainObject));
+//    }
 
     private void notifyDomainObjectRemoved(DomainObject domainObject) {
         if (log.isTraceEnabled()) {

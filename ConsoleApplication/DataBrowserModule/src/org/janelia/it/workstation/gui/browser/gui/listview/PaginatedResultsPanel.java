@@ -26,6 +26,9 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -255,7 +258,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         updateStatusBar();
 //        updateHud(false);
     }
-
+    
     @Subscribe
     public void annotationsChanged(DomainObjectAnnotationChangeEvent event) {
                 
@@ -390,7 +393,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
     protected void showCurrPage(final boolean isUserDriven) {
 
         updatePagingStatus();
-        showLoadingIndicator();
+//        showLoadingIndicator();
                 
         if (searchResults==null) {
             throw new IllegalStateException("Cannot show page when there are no search results");
