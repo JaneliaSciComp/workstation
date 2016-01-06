@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
+package org.janelia.it.workstation.gui.browser.gui.listview;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

@@ -7,6 +7,7 @@ import javax.swing.ProgressMonitor;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -37,6 +38,11 @@ public class RemoveItemsFromObjectSetAction implements NamedAction {
     
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
+        if (!ClientDomainUtils.hasWriteAccess(objectSet)) {
+            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "You do not have write access to the set", "Permission denied", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
         int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to remove "+domainObjects.size()+" items from the set '"+objectSet.getName()+"'?", "Remove items", JOptionPane.YES_NO_OPTION);
         if (deleteConfirmation != 0) {
             return;

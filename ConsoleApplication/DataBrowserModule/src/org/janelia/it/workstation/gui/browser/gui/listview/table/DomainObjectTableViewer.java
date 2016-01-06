@@ -17,9 +17,11 @@ import javax.swing.table.TableModel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
+import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromObjectSetAction;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
@@ -156,11 +158,26 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     protected JPopupMenu getContextualPopupMenu() {
+        // TODO: this was copy and pasted from DomainObjectIconGridViewer and should be refactored someday
         List<Reference> ids = selectionModel.getSelectedIds();
         List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
         JPopupMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), selected);
         ((DomainObjectContextMenu) popupMenu).addMenuItems();
         return popupMenu;
+    }
+
+    @Override
+    protected void deleteKeyPressed() {
+        // TODO: this was copy and pasted from DomainObjectIconGridViewer and should be refactored someday
+        IsParent parent = selectionModel.getParentObject();
+        if (parent instanceof ObjectSet) {
+            ObjectSet objectSet = (ObjectSet)parent; 
+            if (ClientDomainUtils.hasWriteAccess(objectSet)) {                
+                List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+                RemoveItemsFromObjectSetAction action = new RemoveItemsFromObjectSetAction(objectSet, selectedObjects);
+                action.doAction();
+            }
+        }
     }
     
     @Override
