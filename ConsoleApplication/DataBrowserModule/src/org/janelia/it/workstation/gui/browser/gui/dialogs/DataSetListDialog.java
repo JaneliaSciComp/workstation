@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.dialogs;
+package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -10,8 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.DataSetDialog;
 
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.jacs.model.entity.cv.NamedEnum;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
@@ -20,26 +25,29 @@ import org.janelia.it.workstation.gui.framework.table.DynamicTable;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.cv.NamedEnum;
-import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
+import org.janelia.it.workstation.gui.browser.model.DomainConstants;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionRegistration;
+import org.openide.util.NbBundle;
+import org.openide.util.actions.Presenter;
 
 /**
- * A dialog for viewing all the data sets that a user has access to.
+ * A port of data sets management dialog to use domain objects
  *
- * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ * @author <a href="mailto:schauderd@janelia.hhmi.org">David Schauder</a>
  */
-public class DataSetListDialog extends ModalDialog implements Refreshable {
+
+
+public class DataSetListDialog extends ModalDialog {
 
     private final JLabel loadingLabel;
     private final JPanel mainPanel;
     private final DynamicTable dynamicTable;
     private final DataSetDialog dataSetDialog;
+    private static final String DATA_SETS_ITEM = "Data Sets";
 
     public DataSetListDialog() {
-
         setTitle("My Data Sets");
 
         dataSetDialog = new DataSetDialog(this);
@@ -58,20 +66,19 @@ public class DataSetListDialog extends ModalDialog implements Refreshable {
         dynamicTable = new DynamicTable(true, false) {
             @Override
             public Object getValue(Object userObject, DynamicColumn column) {
-                Entity dataSetEntity = (Entity) userObject;
-                if (dataSetEntity != null) {
-                    if ("Name".equals(column.getName())) {
-                        return dataSetEntity.getName();
-                    } 
-                    String value = dataSetEntity.getValueByAttributeName(column.getName());
-                    if (EntityConstants.ATTRIBUTE_PIPELINE_PROCESS.equals(column.getName())) {
-                        return value==null?null:decodeEnumList(PipelineProcess.class, value);
-                    } else if (EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN.equals(column.getName())) {
-                        return value;
-                    } else if (EntityConstants.ATTRIBUTE_SAGE_SYNC.equals(column.getName())) {
-                        return value != null;
-                    } else {
-                        return value;
+                DataSet dataSet = (DataSet) userObject;
+                if (dataSet != null) {
+                    if (DomainConstants.DATASET_NAME.equals(column.getName())) {
+                        return dataSet.getName();
+                    } else if ((DomainConstants.DATASET_PIPELINE_PROCESS).equals(column.getName())) {
+                        return dataSet.getPipelineProcesses()==null?null:dataSet.getPipelineProcesses().get(0);
+                    } else if ((DomainConstants.DATASET_SAMPLE_NAME).equals(column.getName())) {
+                        return dataSet.getSampleNamePattern();
+                    } else if ((DomainConstants.DATASET_SAGE_SYNC).equals(column.getName())) {
+                        if (dataSet.getSageSync()==null) {
+                            return Boolean.FALSE;
+                        }
+                        return dataSet.getSageSync();
                     }
                 }
                 return null;
@@ -88,13 +95,13 @@ public class DataSetListDialog extends ModalDialog implements Refreshable {
                         return menu;
                     }
 
-                    final Entity dataSetEntity = (Entity) getRows().get(table.getSelectedRow()).getUserObject();
+                    final DataSet dataSet = (DataSet) getRows().get(table.getSelectedRow()).getUserObject();
 
                     JMenuItem editItem = new JMenuItem("  Edit");
                     editItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            dataSetDialog.showForDataSet(dataSetEntity);
+                            dataSetDialog.showForDataSet(dataSet);
                         }
                     });
                     menu.add(editItem);
@@ -104,8 +111,8 @@ public class DataSetListDialog extends ModalDialog implements Refreshable {
                         @Override
                         public void actionPerformed(ActionEvent e) {
 
-                            int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to delete data set '" + dataSetEntity.getName()
-                                    + "'? This will not delete the images associated with the data set.",
+                            int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to delete data set '" + dataSet.getName()
+                                            + "'? This will not delete the images associated with the data set.",
                                     "Delete Data Set", JOptionPane.OK_CANCEL_OPTION);
                             if (result != 0) {
                                 return;
@@ -117,7 +124,8 @@ public class DataSetListDialog extends ModalDialog implements Refreshable {
 
                                 @Override
                                 protected void doStuff() throws Exception {
-                                    ModelMgr.getModelMgr().deleteEntityTree(dataSetEntity.getId());
+                                    final DomainModel model = DomainMgr.getDomainMgr().getModel();
+                                    model.remove(dataSet);
                                 }
 
                                 @Override
@@ -144,14 +152,14 @@ public class DataSetListDialog extends ModalDialog implements Refreshable {
 
             @Override
             protected void rowDoubleClicked(int row) {
-                final Entity dataSetEntity = (Entity) getRows().get(row).getUserObject();
-                dataSetDialog.showForDataSet(dataSetEntity);
+                final DataSet dataSet = (DataSet) getRows().get(row).getUserObject();
+                dataSetDialog.showForDataSet(dataSet);
             }
 
             @Override
             public Class<?> getColumnClass(int column) {
                 DynamicColumn dc = getColumns().get(column);
-                if (dc.getName().equals(EntityConstants.ATTRIBUTE_SAGE_SYNC)) {
+                if (dc.getName().equals(DomainConstants.DATASET_SAGE_SYNC)) {
                     return Boolean.class;
                 }
                 return super.getColumnClass(column);
@@ -159,23 +167,17 @@ public class DataSetListDialog extends ModalDialog implements Refreshable {
 
             @Override
             protected void valueChanged(DynamicColumn dc, int row, Object data) {
-                if (dc.getName().equals(EntityConstants.ATTRIBUTE_SAGE_SYNC)) {
+                if (dc.getName().equals(DomainConstants.DATASET_SAGE_SYNC)) {
                     final Boolean selected = data == null ? Boolean.FALSE : (Boolean) data;
                     DynamicRow dr = getRows().get(row);
-                    final Entity dataSetEntity = (Entity) dr.getUserObject();
+                    final DataSet dataSet = (DataSet) dr.getUserObject();
                     SimpleWorker worker = new SimpleWorker() {
 
                         @Override
                         protected void doStuff() throws Exception {
-                            if (selected) {
-                                ModelMgr.getModelMgr().setAttributeAsTag(dataSetEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
-                            } else {
-                                EntityData sageSyncEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC);
-                                if (sageSyncEd != null) {
-                                    dataSetEntity.getEntityData().remove(sageSyncEd);
-                                    ModelMgr.getModelMgr().removeEntityData(sageSyncEd);
-                                }
-                            }
+                            DomainModel model = DomainMgr.getDomainMgr().getModel();
+                            dataSet.setSageSync(selected);
+                            model.save(dataSet);
                         }
 
                         @Override
@@ -192,10 +194,10 @@ public class DataSetListDialog extends ModalDialog implements Refreshable {
             }
         };
 
-        dynamicTable.addColumn("Name");
-        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS);
-        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
-        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_SAGE_SYNC).setEditable(true);
+        dynamicTable.addColumn(DomainConstants.DATASET_NAME);
+        dynamicTable.addColumn(DomainConstants.DATASET_PIPELINE_PROCESS);
+        dynamicTable.addColumn(DomainConstants.DATASET_SAMPLE_NAME);
+        dynamicTable.addColumn(DomainConstants.DATASET_SAGE_SYNC).setEditable(true);
 
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new data set definition");
@@ -226,7 +228,6 @@ public class DataSetListDialog extends ModalDialog implements Refreshable {
     }
 
     public void showDialog() {
-
         loadDataSets();
 
         Component mainFrame = SessionMgr.getMainFrame();
@@ -243,12 +244,12 @@ public class DataSetListDialog extends ModalDialog implements Refreshable {
 
         SimpleWorker worker = new SimpleWorker() {
 
-            private List<Entity> dataSetEntities = new ArrayList<>();
+            private List<DataSet> dataSetList = new ArrayList<>();
 
             @Override
             protected void doStuff() throws Exception {
-                for (Entity dataSetEntity : ModelMgr.getModelMgr().getDataSets()) {
-                    dataSetEntities.add(dataSetEntity);
+                for (DataSet dataSet : DomainMgr.getDomainMgr().getModel().getDataSets()) {
+                    dataSetList.add(dataSet);
                 }
             }
 
@@ -257,8 +258,8 @@ public class DataSetListDialog extends ModalDialog implements Refreshable {
 
                 // Update the attribute table
                 dynamicTable.removeAllRows();
-                for (Entity dataSetEntity : dataSetEntities) {
-                    dynamicTable.addRow(dataSetEntity);
+                for (DataSet dataSet : dataSetList) {
+                    dynamicTable.addRow(dataSet);
                 }
 
                 dynamicTable.updateTableModel();

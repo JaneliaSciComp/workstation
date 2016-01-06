@@ -23,7 +23,6 @@ import javax.swing.JPanel;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.dialogs.DataSetListDialog;
 import org.janelia.it.workstation.gui.dialogs.FlyLineReleaseListDialog;
 import org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog;
 import org.janelia.it.workstation.gui.dialogs.ImportDialog;
@@ -110,17 +109,16 @@ public class Browser implements Cloneable {
     private GiantFiberSearchDialog giantFiberSearchDialog;
     private ScreenEvaluationDialog screenEvaluationDialog;
     private MAASearchDialog maaSearchDialog;
-    private DataSetListDialog dataSetListDialog;
     private FlyLineReleaseListDialog flyLineReleaseListDialog;
     private StatusBar statusBar = new StatusBar();
     private ImageIcon browserImageIcon;
     private Image iconImage;
     private PageFormat pageFormat;
     private MaskSearchDialog arbitraryMaskSearchDialog;
-    
+
     private PermissionTemplate autoShareTemplate;
     private List<String> searchHistory;
-    
+
     /**
      * Use given coordinates of the top left point and passed realEstatePercent (0-1.0).
      * THis constructor is used only by the clone method
@@ -137,19 +135,19 @@ public class Browser implements Cloneable {
     private void jbInit(BrowserModel browserModel) throws Exception {
 
         log.info("Initializing browser...");
-        
+
         // TODO: delete this eventually, when we have cleaned up everyone's preferences
         SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_ROOT_HISTORY, null);
-        
+
         this.browserModel = browserModel;
-        
+
         // Initialize workspace
         ModelMgr.getModelMgr().init();
-        
+
         // Load model properties
         this.autoShareTemplate = (PermissionTemplate)SessionMgr.getSessionMgr().getModelProperty(AUTO_SHARE_TEMPLATE);
         this.searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY);
-        
+
         this.viewerManager = new ViewerManager();
 
         boolean isViewersLinked = false;
@@ -172,7 +170,7 @@ public class Browser implements Cloneable {
         entityOutline = new EntityOutline() {
             @Override
             public List<Entity> loadRootList() throws Exception {
-            	List<Entity> workspaces = ModelMgr.getModelMgr().getWorkspaces();
+                List<Entity> workspaces = ModelMgr.getModelMgr().getWorkspaces();
                 loadedWorkspaces(workspaces);
                 return workspaces;
             }
@@ -188,11 +186,11 @@ public class Browser implements Cloneable {
                 return roots;
             }
         };
-                
+
         ontologyOutline.setPreferredSize(new Dimension());
 
         resetBrowserPosition();
-        
+
         // Collect the final components
         mainPanel.setLayout(layout);
         allPanelsView.setLayout(new BorderLayout());
@@ -201,18 +199,18 @@ public class Browser implements Cloneable {
         mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
 
         resetView();
-        
+
         log.info("Ready.");
     }
-    
+
     /**
      * Once the workspaces are loaded, we can initialize other UI components.
-     * @param workspaces 
+     * @param workspaces
      */
     private void loadedWorkspaces(List<Entity> workspaces) {
-        
+
         log.debug("Workspaces loaded. Initializing dialogs...");
-        
+
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -230,7 +228,6 @@ public class Browser implements Cloneable {
                 arbitraryMaskSearchDialog = new MaskSearchDialog();
                 screenEvaluationDialog = new ScreenEvaluationDialog();
                 maaSearchDialog = new MAASearchDialog();
-                dataSetListDialog = new DataSetListDialog();
                 flyLineReleaseListDialog = new FlyLineReleaseListDialog();
             }
 
@@ -395,7 +392,7 @@ public class Browser implements Cloneable {
     public ImageCache getImageCache() {
         return imageCache;
     }
-    
+
     public ViewerManager getViewerManager() {
         return viewerManager;
     }
@@ -438,10 +435,6 @@ public class Browser implements Cloneable {
 
     public MAASearchDialog getMAASearchDialog() {
         return maaSearchDialog;
-    }
-
-    public DataSetListDialog getDataSetListDialog() {
-        return dataSetListDialog;
     }
 
     public FlyLineReleaseListDialog getFlyLineReleaseListDialog() {

@@ -1,44 +1,27 @@
-package org.janelia.it.workstation.gui.dialogs;
-
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.JTextComponent;
+package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
 import net.miginfocom.swing.MigLayout;
-
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.jacs.model.domain.enums.SampleImageType;
+import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.entity.cv.NamedEnum;
+import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.cv.NamedEnum;
-import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
-import org.janelia.it.jacs.model.entity.cv.SampleImageType;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+//import org.janelia.it.workstation.gui.browser.gui.DataSetListDialog;
+import org.janelia.it.workstation.gui.browser.api.*;
+
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * A dialog for viewing the list of accessible data sets, editing them, and
@@ -62,8 +45,12 @@ public class DataSetDialog extends ModalDialog {
     private JComboBox<SampleImageType> sampleImageInput;
     private JCheckBox sageSyncCheckbox;
     private HashMap<String, JCheckBox> processCheckboxes = new LinkedHashMap<>();
+    public final String NAME_COL = "Name";
+    public final String PIPELINE_PROCESS_COL = "Pipeline Process";
+    public final String SAMPLE_NAME_COL = "Sample Name Pattern";
+    public final String SAGE_SYNC_COL = "SAGE Sync";
 
-    private Entity dataSetEntity;
+    private DataSet dataSet;
 
     public DataSetDialog(DataSetListDialog parentDialog) {
 
@@ -116,14 +103,14 @@ public class DataSetDialog extends ModalDialog {
     }
 
     private void updateDataSetIdentifier() {
-        if (dataSetEntity == null) {
-            identifierInput.setText(EntityUtils.createDenormIdentifierFromName(SessionMgr.getSubjectKey(), nameInput.getText()));
+        if (dataSet == null) {
+            identifierInput.setText(createDenormIdentifierFromName(SessionMgr.getSubjectKey(), nameInput.getText()));
         }
     }
 
-    public void showForDataSet(final Entity dataSetEntity) {
+    public void showForDataSet(final DataSet dataSet) {
 
-        this.dataSetEntity = dataSetEntity;
+        this.dataSet = dataSet;
 
         attrPanel.removeAll();
 
@@ -184,35 +171,27 @@ public class DataSetDialog extends ModalDialog {
         addSeparator(attrPanel, "Pipelines", false);
         attrPanel.add(scrollPane, "span 2, growx");
 
-        if (dataSetEntity != null) {
+        if (dataSet != null) {
 
-            nameInput.setText(dataSetEntity.getName());
+            nameInput.setText(dataSet.getName());
 
-            setDataSetAttributeText(identifierInput, EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER);
-            setDataSetAttributeText(sampleNamePatternInput, EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
+            identifierInput.setText(dataSet.getIdentifier());
+            sampleNamePatternInput.setText(dataSet.getSampleNamePattern());
 
-            String sampleImageType = dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE);
+            SampleImageType sampleImageType = dataSet.getSampleImageType();
             if (sampleImageType != null) {
-                sampleImageInput.setSelectedItem(SampleImageType.valueOf(sampleImageType));
+                sampleImageInput.setSelectedItem(sampleImageType);
             }
-            if (dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC) != null) {
-                sageSyncCheckbox.setSelected(true);
+            if (dataSet.getSageSync() != null) {
+                sageSyncCheckbox.setSelected(dataSet.getSageSync().booleanValue());
             }
-            applyCheckboxValues(processCheckboxes, dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS));
+            applyCheckboxValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
         } else {
             nameInput.setText("");
             applyCheckboxValues(processCheckboxes, PipelineProcess.FlyLightUnaligned.toString());
         }
 
         packAndShow();
-    }
-
-    private void setDataSetAttributeText(JTextComponent component,
-            String attribute) {
-        String value = dataSetEntity.getValueByAttributeName(attribute);
-        if (value != null) {
-            component.setText(value);
-        }
     }
 
     private void saveAndClose() {
@@ -233,27 +212,25 @@ public class DataSetDialog extends ModalDialog {
 
         SimpleWorker worker = new SimpleWorker() {
 
-            private final ModelMgr modelMgr = ModelMgr.getModelMgr();
-
             @Override
             protected void doStuff() throws Exception {
 
-                if (dataSetEntity == null) {
-                    dataSetEntity = modelMgr.createDataSet(nameInput.getText());
+                if (dataSet == null) {
+                    dataSet = new DataSet();
+                    dataSet.setName(nameInput.getText());
+                    dataSet.setIdentifier(identifierInput.getText());
                 } else {
-                    dataSetEntity.setName(nameInput.getText());
+                    dataSet.setName(nameInput.getText());
                 }
 
-                updateDataSetAttribute(sampleNamePattern, EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
-                updateDataSetAttribute(sampleImageType, EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE);
-
-                modelMgr.setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
-
-                if (sageSyncCheckbox.isSelected()) {
-                    ModelMgr.getModelMgr().setAttributeAsTag(dataSetEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
-                } else {
-                    removeDataSetAttribute(EntityConstants.ATTRIBUTE_SAGE_SYNC);
-                }
+                dataSet.setSampleNamePattern(sampleNamePattern);
+                dataSet.setSampleImageType(SampleImageType.valueOf(sampleImageType));
+                java.util.List<String> pipelineProcesses = new ArrayList<>();
+                pipelineProcesses.add(getCheckboxValues(processCheckboxes));
+                dataSet.setPipelineProcesses(pipelineProcesses);
+                dataSet.setSageSync(new Boolean(sageSyncCheckbox.isSelected()));
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                model.save(dataSet);
             }
 
             @Override
@@ -268,23 +245,6 @@ public class DataSetDialog extends ModalDialog {
                 SessionMgr.getSessionMgr().handleException(error);
                 Utils.setDefaultCursor(DataSetDialog.this);
                 setVisible(false);
-            }
-
-            private void removeDataSetAttribute(String attributeType) throws Exception {
-                final EntityData typeEd = dataSetEntity.getEntityDataByAttributeName(attributeType);
-                if (typeEd != null) {
-                    dataSetEntity.getEntityData().remove(typeEd);
-                    modelMgr.removeEntityData(typeEd);
-                }
-            }
-
-            private void updateDataSetAttribute(String value,
-                    String attributeType) throws Exception {
-                if (!StringUtils.isEmpty(value)) {
-                    modelMgr.setOrUpdateValue(dataSetEntity, attributeType, value);
-                } else {
-                    removeDataSetAttribute(attributeType);
-                }
             }
         };
 
@@ -332,5 +292,10 @@ public class DataSetDialog extends ModalDialog {
         }
 
         return sb.toString();
+    }
+
+    private String createDenormIdentifierFromName (String username, String name) {
+        if (username.contains(":")) username = username.split(":")[1];
+        return username+"_"+name.toLowerCase().replaceAll("\\W+", "_");
     }
 }

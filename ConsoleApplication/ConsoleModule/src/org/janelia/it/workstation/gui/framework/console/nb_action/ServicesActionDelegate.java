@@ -22,7 +22,8 @@ public class ServicesActionDelegate {
     }
 
     public void presentDataSetListDialog() {
-        SessionMgr.getBrowser().getDataSetListDialog().showDialog();
+
+       // SessionMgr.getBrowser().getDataSetListDialog().showDialog();
     }
 
 }
