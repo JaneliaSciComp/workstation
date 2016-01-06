@@ -28,6 +28,7 @@ import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.ontology.Tag;
+import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -49,7 +50,7 @@ public class RESTDomainFacade implements DomainFacade {
     private static final Logger log = LoggerFactory.getLogger(RESTDomainFacade.class);
 
     private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
-    
+
     Client client;
     Map<String, WebTarget> serviceEndpoints;
     String serverUrl;
@@ -57,7 +58,7 @@ public class RESTDomainFacade implements DomainFacade {
     public RESTDomainFacade() {
         this(REMOTE_API_URL);
     }
-    
+
     public RESTDomainFacade(String serverUrl) {
         this.serverUrl = serverUrl;
         log.info("Using server URL: {}",serverUrl);
@@ -77,6 +78,7 @@ public class RESTDomainFacade implements DomainFacade {
         serviceEndpoints.put("treenode", client.target(serverUrl + "treenode"));
         serviceEndpoints.put("objectset", client.target(serverUrl + "objectset"));
         serviceEndpoints.put("user", client.target(serverUrl + "user"));
+        serviceEndpoints.put("dataset", client.target(serverUrl + "dataset"));
     }
 
     // general CRUD for all domain object hierarchies
@@ -139,7 +141,7 @@ public class RESTDomainFacade implements DomainFacade {
         // TODO: implement
         throw new UnsupportedOperationException();
     }
-    
+
     public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(SessionMgr.getSubjectKey());
@@ -204,7 +206,7 @@ public class RESTDomainFacade implements DomainFacade {
         Annotation newAnnotation = response.readEntity(Annotation.class);
         return newAnnotation;
     }
-    
+
     public void remove(Annotation annotation) throws Exception {
         Response response = serviceEndpoints.get("annotation")
                 .queryParam("annotationId", annotation.getId())
@@ -212,6 +214,15 @@ public class RESTDomainFacade implements DomainFacade {
                 .request("application/json")
                 .delete();
         checkBadResponse(response.getStatus(), "problem making request removeAnnotation from server" + annotation);
+    }
+
+    public void remove(DataSet dataSet) throws Exception {
+        Response response = serviceEndpoints.get("dataset")
+                .queryParam("dataSetId", dataSet.getId())
+                .queryParam("subjectKey", SessionMgr.getSubjectKey())
+                .request("application/json")
+                .delete();
+        checkBadResponse(response.getStatus(), "problem making request removeDataSet from server" + dataSet);
     }
 
     public Workspace getDefaultWorkspace() {
@@ -238,6 +249,45 @@ public class RESTDomainFacade implements DomainFacade {
         Collection<Workspace> foo = response.readEntity(new GenericType<List<Workspace>>() {});
         System.out.println (foo);
         return foo;
+    }
+
+    public Collection<DataSet> getDataSets() {
+        Response response = serviceEndpoints.get("dataset")
+                .queryParam("subjectKey", SessionMgr.getSubjectKey())
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request getDataSets from server")) {
+            return null;
+        }
+        return response.readEntity(new GenericType<List<DataSet>>() {});
+    }
+
+    public DataSet create(DataSet dataSet) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(SessionMgr.getSubjectKey());
+        query.setDomainObject(dataSet);
+        Response response = serviceEndpoints.get("dataset")
+                .request("application/json")
+                .put(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request createDataSet from server")) {
+            return null;
+        }
+        DataSet newDataSet = response.readEntity(DataSet.class);
+        return newDataSet;
+    }
+
+    public DataSet update(DataSet dataSet) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setDomainObject(dataSet);
+        query.setSubjectKey(SessionMgr.getSubjectKey());
+        Response response = serviceEndpoints.get("dataset")
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request updateDataSet to server" + dataSet)) {
+            return null;
+        }
+        DataSet newDataSet = response.readEntity(DataSet.class);
+        return newDataSet;
     }
 
     public Collection<Ontology> getOntologies() {
@@ -312,7 +362,7 @@ public class RESTDomainFacade implements DomainFacade {
         Ontology newOntology = response.readEntity(Ontology.class);
         return newOntology;
     }
-    
+
     @Override
     public Ontology removeTerm(Long ontologyId, Long parentTermId, Long termId) throws Exception {
         Response response = serviceEndpoints.get("ontology")
@@ -329,7 +379,7 @@ public class RESTDomainFacade implements DomainFacade {
         Ontology newOntology = response.readEntity(Ontology.class);
         return newOntology;
     }
-    
+
     @Override
     public void removeOntology(Long ontologyId) throws Exception {
         Response response = serviceEndpoints.get("ontology")
@@ -434,7 +484,7 @@ public class RESTDomainFacade implements DomainFacade {
         }
         return updatedTreeNode;
     }
-    
+
     public ObjectSet create(ObjectSet objectSet) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(SessionMgr.getSubjectKey());
@@ -493,7 +543,7 @@ public class RESTDomainFacade implements DomainFacade {
         });
         return subjects;
     }
-    
+
     @Override
     public List<Preference> getPreferences() {
         Response response = serviceEndpoints.get("user")

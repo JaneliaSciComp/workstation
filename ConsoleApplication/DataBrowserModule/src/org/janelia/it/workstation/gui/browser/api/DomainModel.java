@@ -20,6 +20,7 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
+import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -67,13 +68,13 @@ import com.google.common.cache.RemovalNotification;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DomainModel {
-    
+
     private static final Logger log = LoggerFactory.getLogger(DomainModel.class);
-    
+
     private final DomainFacade facade;
     private final Cache<Reference, DomainObject> objectCache;
     private final Map<Reference, Workspace> workspaceCache;
-    
+
     public DomainModel(DomainFacade facade) {
         this.facade = facade;
         this.objectCache = CacheBuilder.newBuilder().softValues().removalListener(new RemovalListener<Reference, DomainObject>() {
@@ -90,7 +91,7 @@ public class DomainModel {
         }).build();
         this.workspaceCache = new LinkedHashMap<>();
     }
-    
+
     /**
      * Ensure the given object is in the cache, or generate appropriate warnings/exceptions.
      *
@@ -114,7 +115,7 @@ public class DomainModel {
         }
         return id;
     }
-    
+
     /**
      * Put the object in the cache, or update the cached domain object if there is already a version in the cache. In the latter case, the updated cached
      * instance is returned, and the argument instance can be discarded.
@@ -147,11 +148,11 @@ public class DomainModel {
                 log.debug("putOrUpdate: Caching: {} {}",id,DomainUtils.identify(canonicalObject));
                 objectCache.put(id, domainObject);
             }
-            
+
             return (T)canonicalObject;
         }
     }
-    
+
     /**
      * Call putOrUpdate on all the objects in a given collection.
      *
@@ -165,7 +166,7 @@ public class DomainModel {
         }
         return putObjects;
     }
-    
+
     /**
      * Clear the entire cache without raising any events. This is basically only useful for changing logins.
      */
@@ -234,10 +235,10 @@ public class DomainModel {
      * @return
      */
     private DomainObject loadDomainObject(Reference ref) {
-        log.debug("loadDomainObject({})",ref);
+        log.debug("loadDomainObject({})", ref);
         return facade.getDomainObject(ref);
     }
-    
+
     /**
      * Reload the given domain object from the database, and update the cache.
      *
@@ -300,7 +301,7 @@ public class DomainModel {
     public DomainObject getDomainObject(DomainObject domainObject) {
         return getDomainObject(Reference.createFor(domainObject));
     }
-    
+
     /**
      * Retrieve the given domain object, checking the cache first and then the database.
      * @param ref
@@ -320,14 +321,14 @@ public class DomainModel {
     }
 
     public List<DomainObject> getDomainObjects(List<Reference> references) {
-                
+
         if (references==null) return new ArrayList<>();
-        
+
         log.debug("getDomainObjects(references.size={})",references.size());
-        
+
         Map<Reference,DomainObject> map = new HashMap<>();
         List<Reference> unsatisfiedRefs = new ArrayList<>();
-        
+
         for(Reference ref : references) {
             DomainObject domainObject = ref==null?null:objectCache.getIfPresent(ref);
             if (domainObject!=null) {
@@ -337,14 +338,14 @@ public class DomainModel {
                 unsatisfiedRefs.add(ref);
             }
         }
-        
+
         if (!unsatisfiedRefs.isEmpty()) {
             List<DomainObject> objects = facade.getDomainObjects(unsatisfiedRefs);
             map.putAll(DomainUtils.getMapByReference(objects));
         }
-        
+
         unsatisfiedRefs.clear();
-        
+
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Reference ref : references) {
             DomainObject domainObject = map.get(ref);
@@ -355,7 +356,7 @@ public class DomainModel {
                 unsatisfiedRefs.add(ref);
             }
         }
-        
+
         log.debug("getDomainObjectsByReference: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedRefs.size());
         return domainObjects;
     }
@@ -364,7 +365,7 @@ public class DomainModel {
         List<T> list = getDomainObjects(domainClass, Arrays.asList(id));
         return list.isEmpty() ? null : list.get(0);
     }
-    
+
     public <T extends DomainObject> List<T> getDomainObjects(Class<T> clazz, List<Long> ids) {
         List<T> objects = new ArrayList<>();
         for(DomainObject domainObject : getDomainObjects(clazz.getName(), ids)) {
@@ -377,16 +378,16 @@ public class DomainModel {
         List<DomainObject> objects = getDomainObjects(className, Arrays.asList(id));
         return objects.isEmpty() ? null : objects.get(0);
     }
-    
+
     public List<DomainObject> getDomainObjects(String className, List<Long> ids) {
-        
+
         if (className==null || ids==null) return new ArrayList<>();
-        
+
         log.debug("getDomainObjects(ids.size={})",ids.size());
-        
+
         Map<Reference,DomainObject> map = new HashMap<>();
         List<Long> unsatisfiedIds = new ArrayList<>();
-        
+
         for(Long id : ids) {
             Reference ref = new Reference(className, id);
             DomainObject domainObject = ref==null?null:objectCache.getIfPresent(ref);
@@ -397,14 +398,14 @@ public class DomainModel {
                 unsatisfiedIds.add(id);
             }
         }
-        
+
         if (!unsatisfiedIds.isEmpty()) {
             List<DomainObject> objects = facade.getDomainObjects(className, unsatisfiedIds);
             map.putAll(DomainUtils.getMapByReference(objects));
         }
-        
+
         unsatisfiedIds.clear();
-        
+
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Long id : ids) {
             Reference ref = new Reference(className, id);
@@ -416,7 +417,7 @@ public class DomainModel {
                 unsatisfiedIds.add(id);
             }
         }
-        
+
         log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedIds.size());
         return domainObjects;
     }
@@ -426,18 +427,18 @@ public class DomainModel {
         // TODO: cache these?
         return facade.getDomainObjects(reverseReference);
     }
-    
+
     public List<Annotation> getAnnotations(Reference reference) {
         // TODO: cache these?
         return facade.getAnnotations(Arrays.asList(reference));
     }
-    
+
     public List<Annotation> getAnnotations(Collection<Reference> references) {
         if (references==null) return new ArrayList<>();
         // TODO: cache these?
         return facade.getAnnotations(references);
     }
-    
+
     public Collection<Workspace> getWorkspaces() {
         synchronized (this) {
             if (workspaceCache.isEmpty()) {
@@ -451,13 +452,22 @@ public class DomainModel {
         List<Workspace> workspaces = new ArrayList<>(workspaceCache.values());
         Collections.sort(workspaces, new DomainObjectComparator());
         return workspaces;
-        
+
     }
-    
+
     public Workspace getDefaultWorkspace() throws Exception {
         return getWorkspaces().iterator().next();
     }
-    
+
+    public Collection<DataSet> getDataSets() throws Exception {
+        List<DataSet> dataSets = new ArrayList<>();
+        for (DataSet dataSet : facade.getDataSets()) {
+            dataSets.add(putOrUpdate(dataSet));
+        }
+        Collections.sort(dataSets, new DomainObjectComparator());
+        return dataSets;
+    }
+
     /**
      * Returns all of the ontologies that a user has access to view. 
      * @return collection of ontologies
@@ -487,7 +497,7 @@ public class DomainModel {
         }
         return terms;
     }
-    
+
     /**
      * Returns the ontology term specified by the given reference, by looking up the relevant ontology 
      * and recursively walking it to find the term. 
@@ -498,7 +508,7 @@ public class DomainModel {
         Ontology ontology = getDomainObject(Ontology.class, reference.getOntologyId());
         return findTerm(ontology, reference.getOntologyTermId());
     }
-    
+
     private OntologyTerm findTerm(OntologyTerm term, Long termId) {
         if (term.getId().equals(termId)) {
             return term;
@@ -535,11 +545,11 @@ public class DomainModel {
     public Ontology addOntologyTerm(Long ontologyId, Long parentTermId, OntologyTerm term) throws Exception {
         return addOntologyTerms(ontologyId, parentTermId, Arrays.asList(term));
     }
-    
+
     public Ontology addOntologyTerms(Long ontologyId, Long parentTermId, Collection<OntologyTerm> terms) throws Exception {
         return addOntologyTerms(ontologyId, parentTermId, terms, null);
     }
-    
+
     public Ontology addOntologyTerms(Long ontologyId, Long parentTermId, Collection<OntologyTerm> terms, Integer index) throws Exception {
         Ontology canonicalObject;
         synchronized (this) {
@@ -557,7 +567,7 @@ public class DomainModel {
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
-    
+
     public void removeOntology(Long ontologyId) throws Exception {
         Ontology canonicalObject = getDomainObject(Ontology.class, ontologyId);
         synchronized (this) {
@@ -565,7 +575,7 @@ public class DomainModel {
         }
         notifyDomainObjectRemoved(canonicalObject);
     }
-    
+
     public TreeNode create(TreeNode treeNode) throws Exception {
         TreeNode canonicalObject;
         synchronized (this) {
@@ -574,7 +584,7 @@ public class DomainModel {
         notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;
     }
-    
+
     public Filter save(Filter filter) throws Exception {
         Filter canonicalObject;
         synchronized (this) {
@@ -583,7 +593,16 @@ public class DomainModel {
         notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;
     }
-    
+
+    public DataSet save(DataSet dataSet) throws Exception {
+        DataSet canonicalObject;
+        synchronized (this) {
+            canonicalObject = putOrUpdate(dataSet.getId()==null ? facade.create(dataSet) : facade.update(dataSet));
+        }
+        notifyDomainObjectCreated(canonicalObject);
+        return canonicalObject;
+    }
+
     public ObjectSet create(ObjectSet objectSet) throws Exception {
         ObjectSet canonicalObject;
         synchronized (this) {
@@ -592,7 +611,7 @@ public class DomainModel {
         notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;
     }
-    
+
     public Annotation create(Annotation annotation) throws Exception {
         Annotation canonicalObject;
         synchronized (this) {
@@ -601,7 +620,7 @@ public class DomainModel {
         notifyAnnotationsChanged(getDomainObject(annotation.getTarget()));
         return canonicalObject;
     }
-    
+
     public Annotation save(Annotation annotation) throws Exception {
         Annotation canonicalObject;
         synchronized (this) {
@@ -610,12 +629,17 @@ public class DomainModel {
         notifyAnnotationsChanged(getDomainObject(annotation.getTarget()));
         return canonicalObject;
     }
-    
+
     public void remove(Annotation annotation) throws Exception {
         facade.remove(annotation);
         notifyAnnotationsChanged(getDomainObject(annotation.getTarget()));
     }
-    
+
+    public void remove(DataSet dataSet) throws Exception {
+        facade.remove(dataSet);
+        notifyDomainObjectRemoved(dataSet);
+    }
+
     public void reorderChildren(TreeNode treeNode, int[] order) throws Exception {
         TreeNode canonicalObject = null;
         synchronized (this) {
@@ -623,7 +647,7 @@ public class DomainModel {
         }
         notifyDomainObjectChanged(canonicalObject);
     }
-    
+
     public TreeNode addChild(TreeNode treeNode, DomainObject domainObject) throws Exception {
         return addChildren(treeNode, Arrays.asList(domainObject));
     }
@@ -631,7 +655,7 @@ public class DomainModel {
     public TreeNode addChild(TreeNode treeNode, DomainObject domainObject, Integer index) throws Exception {
         return addChildren(treeNode, Arrays.asList(domainObject), index);
     }
-    
+
     public TreeNode addChildren(TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
         TreeNode canonicalObject = null;
         synchronized (this) {
@@ -649,7 +673,7 @@ public class DomainModel {
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
-    
+
     public TreeNode removeChild(TreeNode treeNode, DomainObject domainObject) throws Exception {
         TreeNode canonicalObject = null;
         synchronized (this) {
@@ -658,7 +682,7 @@ public class DomainModel {
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
-    
+
     public TreeNode removeChildren(TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
         TreeNode canonicalObject = null;
         synchronized (this) {
@@ -667,7 +691,7 @@ public class DomainModel {
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
-    
+
     public TreeNode removeReference(TreeNode treeNode, Reference reference) throws Exception {
         TreeNode canonicalObject = null;
         synchronized (this) {
@@ -676,7 +700,7 @@ public class DomainModel {
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
-    
+
     public ObjectSet addMember(ObjectSet objectSet, DomainObject domainObject) throws Exception {
         ObjectSet canonicalObject = null;
         synchronized (this) {
@@ -685,7 +709,7 @@ public class DomainModel {
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
-    
+
     public ObjectSet addMembers(ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
         ObjectSet canonicalObject = null;
         synchronized (this) {
@@ -694,7 +718,7 @@ public class DomainModel {
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
-    
+
     public ObjectSet removeMember(ObjectSet objectSet, DomainObject domainObject) throws Exception {
         ObjectSet canonicalObject = null;
         synchronized (this) {
@@ -703,7 +727,7 @@ public class DomainModel {
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
-    
+
     public ObjectSet removeMembers(ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
         ObjectSet canonicalObject = null;
         synchronized (this) {
@@ -712,7 +736,7 @@ public class DomainModel {
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
-    
+
     public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) {
         DomainObject canonicalObject = null;
         synchronized (this) {
@@ -730,7 +754,7 @@ public class DomainModel {
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
-    
+
     private void notifyDomainObjectCreated(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectCreateEvent for {}", DomainUtils.identify(domainObject));
@@ -744,7 +768,7 @@ public class DomainModel {
         }
         Events.getInstance().postOnEventBus(new DomainObjectAnnotationChangeEvent(domainObject));
     }
-    
+
     private void notifyDomainObjectChanged(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectChangeEvent for {}", DomainUtils.identify(domainObject));
