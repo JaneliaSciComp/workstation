@@ -67,7 +67,9 @@ public class PointRefiner {
                 (int) Math.round(point.getZ())
         );
 
-        // I'm adding an x-y buffer for no particular reason
+        // I'm adding an x-y buffer for no particular reason; note the zmax+1
+        //  upper bound; the volume doesn't hold data at its upper limit 
+        //  (and returns zeroes there)
         int xc = roundedPoint.getX();
         int yc = roundedPoint.getY();
         int zmin = roundedPoint.getZ() - zRange;
@@ -77,10 +79,10 @@ public class PointRefiner {
                 xc - 10, yc - 10, zmin);
         ZoomedVoxelIndex corner2 = new ZoomedVoxelIndex(
                 zoomLevel,
-                xc + 10, yc + 10, zmax);
+                xc + 10, yc + 10, zmax + 1);
         Subvolume volume = dataProvider.getSubvolume(corner1, corner2);
 
-        long maxIntensity = -1L;
+        long maxSqrIntensity = -1L;
         long currentIntensity;
         long sumIntensitySquared;
         ZoomedVoxelIndex currentZVI;
@@ -93,14 +95,21 @@ public class PointRefiner {
                 currentIntensity = volume.getIntensityGlobal(currentZVI, c);
                 // System.out.println("z: " + z + "; channel " + c + " intensity: " + volume.getIntensityGlobal(currentZVI, c));
                 sumIntensitySquared += currentIntensity * currentIntensity;
-                sisArr[z-zmin]=(double)sumIntensitySquared;
             }
+            sisArr[z-zmin]=(double)sumIntensitySquared;
             // System.out.println("z: " + z + "; sum sqr intensity: " + sumIntensitySquared);
-            if (sumIntensitySquared > maxIntensity) {
+            if (sumIntensitySquared > maxSqrIntensity) {
                 zMaxInt = z;
-                maxIntensity = sumIntensitySquared;
+                maxSqrIntensity = sumIntensitySquared;
             }
         }
+
+        // this procedure is problematic for noise; if you don't have signal,
+        //  no reason to choose even the locally brightest pixel over the others
+        // so, look at the statistics; if the coefficient of variation (std dev / mean)
+        //  isn't over the threshold, consider the image too noisy to make a 
+        //  choice, and go with the user's initial click regardless
+
         double sisVar=0.0;
         double sisAvg=0.0;
         for (double s : sisArr) {
@@ -113,12 +122,13 @@ public class PointRefiner {
         sisVar = sisVar / (double)sisArr.length;
         double sisDev = Math.sqrt(sisVar);
 
-        // note the only coordinate we touch is z
-        double sisMax=(double)maxIntensity - sisAvg;
+        // log.info("coeff of var = " + sisDev / sisAvg);
 
-        //log.info("sisAvg="+sisAvg+" maxInten="+maxIntensity+" sisMax="+sisMax+" sisDev="+sisDev);
-
-        if (sisMax > 1.5*sisDev) {
+        // note the only coordinate we touch is z; x and y are
+        //  taken from the user's click
+        // this threshold chosen empirically; in a sampling of our data,
+        //  noise tended to stay < 0.05, and signal tended to be > 0.2
+        if (sisDev / sisAvg > 0.1) {
             return new Vec3(point.getX(), point.getY(), zMaxInt);
         } else {
             return point;
