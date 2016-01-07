@@ -641,25 +641,42 @@ called from a  SimpleWorker thread.
 
         // temporary logging for Jayaram:
         log.info("beginning mergeNeurite()");
-         Stopwatch stopwatch = new Stopwatch();
-         stopwatch.start();
-
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.start();
+         
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
-        TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
+        TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
+        targetNeuron = neuronManager.refreshFromData(targetNeuron);
+        TmNeuron sourceNeuron = null;
+
+        if (! sourceAnnotationID.equals(targetAnnotationID)) {
+            sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
+            sourceNeuron = neuronManager.refreshFromData(sourceNeuron);
+        }
+        else {
+            sourceNeuron = targetNeuron;
+        }
 
         // reroot source neurite to source ann
         if (!sourceAnnotation.isRoot()) {
+            log.info("Handling non-root case.");
             neuronManager.rerootNeurite(sourceNeuron, sourceAnnotation);
             //modelMgr.rerootNeurite(sourceNeuron, sourceAnnotation);
             // update domain object
 
             // find the list of annotations up to the old root:
+            log.info("Finding list of annotations up to old root.");
             List<TmGeoAnnotation> rerootAnnotationList = new ArrayList<>();
             rerootAnnotationList.add(sourceAnnotation);
             TmGeoAnnotation nextParent = getGeoAnnotationFromID(sourceAnnotation.getParentId());
+            log.info("Walking up to parent root.");
+            int walkCount = 0;
             while (!nextParent.isRoot()) {
                 rerootAnnotationList.add(nextParent);
                 nextParent = getGeoAnnotationFromID(nextParent.getParentId());
+                if (++walkCount > 50) {
+                    log.info("Going far I={}, P={}, N={}.", nextParent.getId(), nextParent.getParentId(), nextParent.getNeuronId());
+                }
             }
             TmGeoAnnotation oldRoot = nextParent;
             rerootAnnotationList.add(nextParent);
@@ -671,6 +688,7 @@ called from a  SimpleWorker thread.
             sourceNeuron.getRootAnnotations().remove(oldRoot);
             sourceNeuron.getRootAnnotations().add(sourceAnnotation);
 
+            log.info("Inverting child/parent relationships.");
             for (int i = 1; i < rerootAnnotationList.size(); i++) {
                 TmGeoAnnotation ann = rerootAnnotationList.get(i);
                 Long oldParentID = ann.getParentId();
@@ -683,13 +701,14 @@ called from a  SimpleWorker thread.
                 ann.getChildIds().remove(newParentID);
                 ann.setParentId(newParentID);
             }
+            log.info("Completed non-root case.");
         }
 
 
         // if source neurite not in same neuron as dest neurite: move it; don't
         //  use annModel.moveNeurite() because we don't want those updates & signals yet
-        TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
+            log.info("Two different neurons.");
             neuronManager.moveNeurite(sourceAnnotation, sourceNeuron, targetNeuron);
 
             // Refresh domain objects that we've changed and will use again.
@@ -734,17 +753,13 @@ called from a  SimpleWorker thread.
 
 
         // reparent source annotation to dest annotation:
+        log.info("Reparenting annotations.");
         neuronManager.reparentGeometricAnnotation(sourceAnnotation, targetAnnotationID, targetNeuron);
 
 
-
-        // update objects *again*, last time:
-
-        targetNeuron.getRootAnnotations().remove(sourceAnnotation);
+        // Establish p/c linkage between target and source.
+        log.info("Parent/child linkages target and source.");
         sourceAnnotation.setParentId(targetAnnotationID);
-        TmGeoAnnotation targetAnnotation = getGeoAnnotationFromID(targetAnnotationID);
-        targetAnnotation.addChild(sourceAnnotation);
-
 
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron updateTargetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
@@ -752,16 +767,25 @@ called from a  SimpleWorker thread.
 
         // trace new path:
         if (automatedTracingEnabled()) {
+            log.info("Tracing paths.");
             viewStateListener.pathTraceRequested(sourceAnnotationID);
         }
 
         // see note in addChildAnnotations re: predef notes
         // for merge, two linked annotations are affected; fortunately, the
         //  neuron has just been refreshed
+        log.info("Stripping predef notes.");
         stripPredefNotes(updateTargetNeuron, targetAnnotationID);
         stripPredefNotes(updateTargetNeuron, sourceAnnotationID);
 
-        neuronManager.saveNeuronData(targetNeuron);
+        // Save the target neuron.
+        log.info("Saving target neuron.");
+        neuronManager.saveNeuronData(updateTargetNeuron);
+        // Save the source neuron, empty or not.
+        if (! sourceNeuron.getId().equals(updateTargetNeuron.getId())) {
+            log.info("Saving source neuron.");
+            neuronManager.saveNeuronData(sourceNeuron);
+        }
 
         final TmGeoAnnotation updateSourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         SwingUtilities.invokeLater(new Runnable() {
@@ -780,7 +804,7 @@ called from a  SimpleWorker thread.
         });
 
         log.info("ending mergeNeurite(); elapsed = " + stopwatch);
-         stopwatch.stop();
+        stopwatch.stop();
 
     }
 

@@ -87,9 +87,6 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
     public void saveNeuron(TmNeuron neuron) throws Exception {
         Entity workspaceEntity = ensureWorkspaceEntity(neuron.getWorkspaceId());
 
-        if (neuron.getId() == null) {
-            log.info("Null in neuron id");
-        }
         // Need to make serializable version of the data.
         byte[] serializableBytes = exchanger.serializeNeuron(neuron);
         
@@ -125,7 +122,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         if (preExistingEntityData != null) {
             workspaceEntity.getEntityData().remove(preExistingEntityData);
         }
-        workspaceEntity.getEntityData().add(entityData);
+        workspaceEntity.getEntityData().add(savedEntityData);
         neuron.setId(savedEntityData.getId());
     }
 
