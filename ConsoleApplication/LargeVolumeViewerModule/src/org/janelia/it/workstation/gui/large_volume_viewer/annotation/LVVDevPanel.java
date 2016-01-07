@@ -64,11 +64,11 @@ public class LVVDevPanel extends JPanel {
                             System.out.println("no selected neuron");
                             return;
                         }
-                        if (neuron.getRootAnnotations().size() == 0) {
+                        if (neuron.getRootAnnotationCount() == 0) {
                             System.out.println("no annotations");
                             return;
                         }
-                        TmGeoAnnotation root = neuron.getRootAnnotations().get(0);
+                        TmGeoAnnotation root = neuron.getFirstRoot();
                         if (root.getChildIds().size() == 0) {
                             System.out.println("root has no children");
                             return;
@@ -131,11 +131,11 @@ public class LVVDevPanel extends JPanel {
                             System.out.println("no selected neuron");
                             return;
                         }
-                        if (neuron.getRootAnnotations().size() == 0) {
+                        if (neuron.getRootAnnotationCount() == 0) {
                             System.out.println("no annotations");
                             return;
                         }
-                        TmGeoAnnotation root = neuron.getRootAnnotations().get(0);
+                        TmGeoAnnotation root = neuron.getFirstRoot();
                         if (root.getChildIds().size() == 0) {
                             System.out.println("root has no children");
                             return;
