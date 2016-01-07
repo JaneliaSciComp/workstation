@@ -348,7 +348,7 @@ public class TracingInteractor extends MouseAdapter
         // plus at least 2 pixels bigger - this is handled in actor creation time
         parentVertex.setRadius(parentRadius);
         // blend neuron color with pale yellow parent color
-        float parentColor[] = {0.6f, 0.6f, 1.0f, 0.5f}; // pale blue and transparent
+        float parentColor[] = {0.5f, 0.6f, 1.0f, 0.5f}; // pale blue and transparent
         float neuronColor[] = {1.0f, 0.0f, 1.0f, 1.0f};
         if (neuron != null) {
             neuronColor = neuron.getColor().getColorComponents(neuronColor);
