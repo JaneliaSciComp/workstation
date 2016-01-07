@@ -55,7 +55,7 @@ public class SpheresMaterial extends BasicMaterial
     private int radiusOffsetIndex = -1;
     
     private final Texture2d lightProbeTexture;
-    private final boolean manageLightProbeTexture;
+    protected boolean manageLightProbeTexture;
     private final float[] color = new float[] {1, 0, 0, 1};
     private float minPixelRadius = 0.0f;
 

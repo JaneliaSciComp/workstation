@@ -57,7 +57,7 @@ public class SpheresActor extends BasicGL3Actor
 {
     private final MeshGeometry meshGeometry;
     private final MeshActor meshActor;
-    private final SpheresMaterial material;
+    protected final SpheresMaterial material;
     private final NeuronModel neuron;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     

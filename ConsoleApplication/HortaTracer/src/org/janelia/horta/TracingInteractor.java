@@ -39,6 +39,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.AbstractAction;
@@ -47,10 +48,15 @@ import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
+import org.janelia.gltools.texture.Texture2d;
+import org.janelia.horta.actors.ParentVertexActor;
 import org.janelia.horta.actors.SpheresActor;
+import org.janelia.horta.actors.SpheresMaterial;
+import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
 import org.openide.awt.StatusDisplayer;
+import org.openide.util.Exceptions;
 
 /**
  * Adapted from C:\Users\brunsc\Documents\Fiji_Plugins\Auto_Trace\Semi_Trace.java
@@ -72,12 +78,13 @@ public class TracingInteractor extends MouseAdapter
     // private final NeuriteModel hoverModel = new NeuriteModel(); // TODO - deprecate in favor of below
     // For GUI feedback on existing model, contains zero or one vertex.
     private final NeuronModel highlightHoverModel = new BasicNeuronModel("Hover highlight");
-    private NeuronVertex previousHoverVertex = null;
+    private NeuronVertex cachedHighlightVertex = null;
     
     private final NeuronModel neuronCursorModel = new BasicNeuronModel("Neuron tracing cursor"); // TODO: end point of auto tracing
     
     // For Tracing
-    private final NeuronModel persistedParentModel = new BasicNeuronModel("Selected parent vertex"); // TODO: begin point of auto tracing
+    private final NeuronModel parentVertexModel = new BasicNeuronModel("Selected parent vertex"); // TODO: begin point of auto tracing
+    private NeuronVertex cachedParentVertex = null;
     
     private final NeuriteModel provisionalModel = new NeuriteModel();
     private final NeuriteModel previousHoverModel = new NeuriteModel();
@@ -166,10 +173,16 @@ public class TracingInteractor extends MouseAdapter
         result.add(nextActor);
         result.add(new NeuriteActor(null, provisionalModel));
         result.add(new NeuriteActor(null, previousHoverModel));
-        // result.add(new NeuriteActor(null, hoverModel));
-        SpheresActor highlightActor = new SpheresActor(highlightHoverModel);
+        
+        // Create a special single-vertex actor for highlighting the vertex under the cursor
+        SpheresActor highlightActor = new VertexHighlightActor(highlightHoverModel);
         highlightActor.setMinPixelRadius(8.0f);
         result.add(highlightActor);
+        
+        // Create a special single-vertex actor for highlighting the selected parent vertex
+        SpheresActor parentActor = new ParentVertexActor(parentVertexModel);
+        parentActor.setMinPixelRadius(8.0f);
+        result.add(parentActor);
         
         // Colors 
         ((NeuriteActor)result.get(0)).setColor(Color.WHITE);
@@ -269,6 +282,18 @@ public class TracingInteractor extends MouseAdapter
             if (event.isShiftDown()) {
                 // setTracingModeOn();
             }
+            else {
+                // Click on highlighted vertex to make it the next parent
+                if (volumeProjection.isNeuronModelAt(event.getPoint())) {
+                    if (cachedHighlightVertex != null)
+                        selectParentVertex(cachedHighlightVertex);
+                }
+                // Click away from existing neurons to clear parent point
+                else {
+                    if (clearParentVertex())
+                        parentVertexModel.getMembersRemovedObservable().notifyObservers();
+                }
+            }
 
             // Regular click has no tracing effect in navigating mode
             if (tracingMode == TracingMode.NAVIGATING)
@@ -297,11 +322,80 @@ public class TracingInteractor extends MouseAdapter
 
     }
 
+    private boolean selectParentVertex(NeuronVertex vertex)
+    {
+        if (vertex == null) return false;
+        
+        if (cachedParentVertex == vertex)
+            return false;
+        cachedParentVertex = vertex;
+        
+        // Remove any previous vertex
+        parentVertexModel.getVertexes().clear();
+        parentVertexModel.getEdges().clear();
+
+        NeuronVertexIndex vix = volumeProjection.getVertexIndex();
+        NeuronModel neuron = vix.neuronForVertex(vertex);
+        float loc[] = vertex.getLocation();
+
+        // Create a modified vertex to represent the enlarged, highlighted actor
+        BasicSwcVertex parentVertex = new BasicSwcVertex(loc[0], loc[1], loc[2]); // same center location as real vertex
+        // Set parent actor radius X% larger than true vertex radius, and at least 2 pixels larger
+        float startRadius = 1.0f;
+        if (vertex.hasRadius())
+            startRadius = vertex.getRadius();
+        float parentRadius = startRadius * 1.15f;
+        // plus at least 2 pixels bigger - this is handled in actor creation time
+        parentVertex.setRadius(parentRadius);
+        // blend neuron color with pale yellow parent color
+        float parentColor[] = {0.6f, 0.6f, 1.0f, 0.5f}; // pale blue and transparent
+        float neuronColor[] = {1.0f, 0.0f, 1.0f, 1.0f};
+        if (neuron != null) {
+            neuronColor = neuron.getColor().getColorComponents(neuronColor);
+        }
+        float parentBlend = 0.75f;
+        Color blendedColor = new Color(
+                neuronColor[0] - parentBlend * (neuronColor[0] - parentColor[0]),
+                neuronColor[1] - parentBlend * (neuronColor[1] - parentColor[1]),
+                neuronColor[2] - parentBlend * (neuronColor[2] - parentColor[2]),
+                parentColor[3] // always use the same alpha transparency value
+                );
+        parentVertexModel.setVisible(true);
+        parentVertexModel.setColor(blendedColor);
+        // parentVertexModel.setColor(Color.MAGENTA); // for debugging
+
+        parentVertexModel.getVertexes().add(parentVertex);
+        parentVertexModel.getMembersAddedObservable().setChanged();
+
+        parentVertexModel.getMembersAddedObservable().notifyObservers();     
+        parentVertexModel.getColorChangeObservable().notifyObservers();
+        
+        return true; 
+    }
+    
+    // Clear display of existing vertex highlight
+    private boolean clearParentVertex() 
+    {
+        if (parentVertexModel.getVertexes().isEmpty()) {
+            return false;
+        }
+        parentVertexModel.getVertexes().clear();
+        parentVertexModel.getEdges().clear();
+        parentVertexModel.getMembersRemovedObservable().setChanged();
+        cachedParentVertex = null;
+        return true;
+    }
+    
     // GUI feedback for hovering existing vertex under cursor
     // returns true if a previously unhighlighted vertex is highlighted
     private boolean highlightHoverVertex(NeuronVertex vertex) 
     {
         if (vertex == null) return false;
+        
+        if (cachedHighlightVertex == vertex)
+            return false; // No change
+        cachedHighlightVertex = vertex;
+        
         NeuronVertexIndex vix = volumeProjection.getVertexIndex();
         NeuronModel neuron = vix.neuronForVertex(vertex);
         float loc[] = vertex.getLocation();
@@ -331,10 +425,10 @@ public class TracingInteractor extends MouseAdapter
             if (vertex.hasRadius())
                 startRadius = vertex.getRadius();
             float highlightRadius = startRadius * 1.30f;
-            // TODO: and at least 2 pixels bigger - need camera info?
+            // plus at least 2 pixels bigger - this is handled in actor creation time
             highlightVertex.setRadius(highlightRadius);
             // blend neuron color with pale yellow highlight color
-            float highlightColor[] = {1.0f, 1.0f, 0.8f, 0.5f}; // pale yellow and transparent
+            float highlightColor[] = {1.0f, 1.0f, 0.6f, 0.5f}; // pale yellow and transparent
             float neuronColor[] = {1.0f, 0.0f, 1.0f, 1.0f};
             if (neuron != null) {
                 neuronColor = neuron.getColor().getColorComponents(neuronColor);
@@ -371,6 +465,7 @@ public class TracingInteractor extends MouseAdapter
         highlightHoverModel.getMembersRemovedObservable().setChanged();
         cachedHoverLocation = null;
         previousHoverPoint = null;
+        cachedHighlightVertex = null;
         return true;
     }
     
