@@ -1,10 +1,11 @@
 package org.janelia.it.workstation.gui.browser.model.search;
 
 import com.google.common.collect.ArrayListMultimap;
+
 import java.util.*;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,7 +116,7 @@ public class SearchResults {
         numLoadedResults = 0;
     }
     
-    public ResultPage getPage(int page) {
+    public ResultPage getPage(int page) throws Exception {
         if (page>pages.size()-1 || page<0) {
             return null;
         }

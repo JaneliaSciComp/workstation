@@ -61,10 +61,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     private ImageModel<T,S> imageModel;
     private SelectionModel<T,S> selectionModel;
     private SearchProvider searchProvider;
-
-    // UI state
-    private Integer selectionAnchorIndex;
-    private Integer selectionCurrIndex;
+    private TableViewerConfiguration viewerConfig = new TableViewerConfiguration();
     
     // Listeners
     private final SessionModelListener sessionModelListener;
@@ -96,10 +93,12 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
             public void valueChanged(ListSelectionEvent e) {
                 if (e.getValueIsAdjusting()) return;
                 Set<Object> set = new HashSet<>(resultsTable.getSelectedObjects());
+                Set<S> selectedIds = new HashSet<>();
                 for(T object : objectList) {
                     if (set.contains(object)) {
                         // Should be selected
                         if (!selectionModel.isObjectSelected(object)) {
+                            selectedIds.add(imageModel.getImageUniqueId(object));
                             selectionModel.select(object, false);
                         }      
                     }
@@ -108,6 +107,12 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
                         if (selectionModel.isObjectSelected(object)) {
                             selectionModel.deselect(object);
                         }      
+                    }
+                }
+                // Clear out other ids that are not in the current view
+                for(S selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
+                    if (!selectedIds.contains(selectedId)) {
+                        selectionModel.deselect(imageModel.getImageByUniqueId(selectedId));
                     }
                 }
             }
@@ -135,7 +140,6 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     }
 
     private TableViewerToolbar createToolbar() {
-
         return new TableViewerToolbar() {
 
             @Override
@@ -150,11 +154,11 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
             @Override
             public void exportButtonPressed() {
-                
+                searchProvider.userRequestedExport();
             }
         };
     }
-    
+
     protected abstract JPopupMenu getContextualPopupMenu();
     
     // Listen for key strokes and execute the appropriate key bindings
@@ -206,14 +210,6 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     
     protected void deleteKeyPressed() {}
 
-    private void beginRangeSelection(int anchorIndex) {
-        selectionAnchorIndex = selectionCurrIndex = anchorIndex;
-    }
-    
-    private void endRangeSelection() {
-        selectionAnchorIndex = selectionCurrIndex = null;
-    }
-
     protected void selectObject(T object, boolean clearAll) {
         selectObjects(Arrays.asList(object), true, clearAll);
         selectionModel.select(object, clearAll);
@@ -226,17 +222,13 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     
     public void selectObjects(List<T> domainObjects, boolean select, boolean clearAll) {
 
-        log.info("selectObjects(domainObjects.size={},select={},clearAll={})",domainObjects.size(),select,clearAll);
+        log.trace("selectObjects(domainObjects.size={},select={},clearAll={})",domainObjects.size(),select,clearAll);
 
         if (domainObjects.isEmpty()) {
             return;
         }
         
         ListSelectionModel model = getDynamicTable().getTable().getSelectionModel();
-        
-//        if (clearAll) {
-//            model.clearSelection();
-//        }
         
         Set<T> domainObjectSet = new HashSet<>(domainObjects);
         int i = 0;
@@ -263,6 +255,10 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         }
     }
 
+    public TableViewerConfiguration getViewerConfiguration() {
+        return viewerConfig;
+    }
+    
     protected abstract Object getValue(T object, String column);
     
     public void setAttributeColumns(List<DomainObjectAttribute> searchAttrs) {
@@ -271,6 +267,10 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
             // TODO: control default visibility based on saved user preference
             resultsTable.addColumn(searchAttr.getName(), searchAttr.getLabel(), searchAttr.isDisplay(), false, true, searchAttr.isSortable());
         }
+    }
+    
+    public List<DynamicColumn> getColumns() {
+        return resultsTable.getColumns();
     }
     
     protected DynamicTable getDynamicTable() {

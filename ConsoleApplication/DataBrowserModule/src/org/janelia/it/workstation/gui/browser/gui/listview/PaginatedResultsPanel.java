@@ -26,9 +26,6 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
-import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
-import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
-import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -239,6 +236,10 @@ public abstract class PaginatedResultsPanel extends JPanel {
         
     }
 
+    public AnnotatedDomainObjectListViewer getViewer() {
+        return resultsView;
+    }
+    
     private void setViewer(AnnotatedDomainObjectListViewer viewer) {
         viewer.setSelectionModel(selectionModel);
         viewer.setSearchProvider(searchProvider);
@@ -424,6 +425,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
     private void updateResultsView(final boolean isUserDriven, final Callable<Void> success) {
         if (resultPage!=null) {
 
+            selectionModel.reset();
             resultsView.showDomainObjects(resultPage, new Callable<Void>() {   
                 @Override
                 public Void call() throws Exception {

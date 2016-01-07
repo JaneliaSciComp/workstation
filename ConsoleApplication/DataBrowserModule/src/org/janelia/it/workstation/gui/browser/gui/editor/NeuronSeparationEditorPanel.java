@@ -19,11 +19,13 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
+import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
+import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
@@ -54,6 +56,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
 
+    private SearchResults searchResults;
+    
     private SampleResult sampleResult;
     private List<DomainObject> domainObjects;
     private List<Annotation> annotations;
@@ -182,7 +186,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
     
     public void showResults(boolean isUserDriven) {
-        SearchResults searchResults = SearchResults.paginate(domainObjects, annotations);
+        this.searchResults = SearchResults.paginate(domainObjects, annotations);
         resultsPanel.showSearchResults(searchResults, isUserDriven);
     }
 
@@ -191,6 +195,16 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         // Nothing needs to be done here, because results were updated by setSortField()
     }
 
+    @Override
+    public void userRequestedExport() {
+        DomainObjectTableViewer viewer = null;
+        if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
+            viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
+        }
+        ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
+        action.doAction();
+    }
+    
     @Override
     public void userRequestedSelectAll() {
         resultsPanel.setSelectAllVisible(true);

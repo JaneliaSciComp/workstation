@@ -21,15 +21,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -48,10 +44,6 @@ import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.response.FacetField;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
@@ -61,16 +53,12 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.ObjectSetCriteria;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.SearchType;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
-import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
-import org.janelia.it.jacs.shared.solr.SolrResults;
-import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -80,20 +68,20 @@ import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelec
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.EditCriteriaDialog;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
+import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
+import org.janelia.it.workstation.gui.browser.model.search.FacetValue;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
+import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
-import org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WrapLayout;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.util.datatransfer.ExTransferable;
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 
 import de.javasoft.swing.JYPopupMenu;
@@ -110,15 +98,12 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
 
-    private static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
-    private static final String SOLR_TYPE_FIELD = "type";
+    // UI Settings
     public static final String DEFAULT_FILTER_NAME = "Unsaved Filter";
     public static final Class<?> DEFAULT_SEARCH_CLASS = Sample.class;
-    
-    // UI Settings
+    private static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
     private static final int MAX_VALUES_STRING_LENGTH = 20;
     private static final Font FILTER_NAME_FONT = new Font("Sans Serif", Font.BOLD, 16);
-    private final int pageSize = SearchResults.PAGE_SIZE;
     
     // UI Elements
     private JPanel filterPanel;
@@ -132,22 +117,10 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     private SimpleDropDownButton addCriteriaButton;
     private JComboBox inputField;    
     
-    // TODO: Move somewhere and factor out of DomainObjectTableViewer
-    protected static final String JANELIA_MODEL_PACKAGE = "org.janelia.it.jacs.model.domain";
-    private final Map<String,String> searchTypeToClassName = new HashMap<>();
-        
     // Search state
     private Filter filter;    
     private boolean dirty = false;
-    
-    // Derived from search state (Filter)
-    private Class<?> searchClass;
-    private Map<String,DomainObjectAttribute> searchAttrs = new TreeMap<>();
-    private List<String> facets = new ArrayList<>();
-    private Map<String,List<FacetValue>> facetValues = new HashMap<>();
-    
-    private String displayQueryString;
-    private SolrQuery query;
+    private SearchConfiguration searchConfig;
     
     // Results
     private SearchResults searchResults;
@@ -249,35 +222,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         
         ButtonGroup typeGroup = new ButtonGroup();
         
-        Reflections reflections = new Reflections(JANELIA_MODEL_PACKAGE);
-        List<Class<?>> searchClasses = new ArrayList<>(reflections.getTypesAnnotatedWith(SearchType.class));
-                
-        // TODO: move this kinda reflection stuff to ClientDomainUtils
-        for(Class<?> searchClazz : searchClasses) {
-            String searchTypeKey = searchClazz.getAnnotation(SearchType.class).key();
-            // TODO: do we need to find the base class?
-//            Class<?> clazz = searchClazz;
-//            while (clazz!=null) {
-//                MongoMapped mongoMapped = clazz.getAnnotation(MongoMapped.class);
-//                if (mongoMapped!=null) {
-//                    collectionName = mongoMapped.collectionName();
-//                    break;
-//                }
-//                clazz = clazz.getSuperclass();
-//            }
-            searchTypeToClassName.put(searchTypeKey, searchClazz.getName());
-        }
-        
-    	Collections.sort(searchClasses, new Comparator<Class<?>>() {
-            @Override
-            public int compare(Class<?> o1, Class<?> o2) {
-                final String l1 = o1.getAnnotation(SearchType.class).label();
-                final String l2 = o2.getAnnotation(SearchType.class).label();
-                return l1.compareTo(l2);
-            }
-        });        
-        
-        for (final Class<?> searchClazz : searchClasses) {
+        for (final Class<? extends DomainObject> searchClazz : ClientDomainUtils.getSearchClasses()) {
             final String label = searchClazz.getAnnotation(SearchType.class).label();
             JMenuItem menuItem = new JRadioButtonMenuItem(label, searchClazz.equals(DEFAULT_SEARCH_CLASS));
             menuItem.addActionListener(new ActionListener() {
@@ -313,12 +258,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         this.resultsPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
             protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
-                ResultPage resultPage = searchResults.getPage(page);
-                if (resultPage==null) {
-                    resultPage = performSearch(query, page);
-                    searchResults.setPage(page, resultPage);
-                }
-                return resultPage;
+                return searchResults.getPage(page);
             }
         };
         
@@ -338,7 +278,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     }
     
     public void loadNewFilter() {
-        this.filter = new Filter();
+        Filter filter = new Filter();
         filter.setName(DEFAULT_FILTER_NAME);
         filter.setSearchClass(DEFAULT_SEARCH_CLASS.getName());
         loadDomainObject(filter);
@@ -351,9 +291,10 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         selectionModel.setParentObject(filter);
         
         this.filter = filter;
+        this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
         
         try {
-            setSearchClass(DomainUtils.getObjectClassByName(filter.getSearchClass()));
+            setSearchClass(searchConfig.getSearchClass());
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
@@ -398,29 +339,16 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     }
     
     private void setSearchClass(Class<? extends DomainObject> searchClass) {
-        this.searchClass = searchClass;
         
         SearchType searchTypeAnnot = searchClass.getAnnotation(SearchType.class);
         typeCriteriaButton.setText("Type: " + searchTypeAnnot.label());
 
-        searchAttrs.clear();
-        facets.clear();
-        facets.add(SOLR_TYPE_FIELD);
-        facetValues.clear();
-
-        for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(searchClass)) {
-            if (attr.isFacet()) {
-            	facets.add(attr.getSearchKey());
-            }
-            searchAttrs.put(attr.getName(),attr);
-        }
-        
         if (filter.hasCriteria()) {
             for(Iterator<Criteria> i=filter.getCriteriaList().iterator(); i.hasNext(); ) {
                 Criteria criteria = i.next();
                 if (criteria instanceof AttributeCriteria) {
                    AttributeCriteria ac = (AttributeCriteria)criteria;
-                   if (!searchAttrs.containsKey(ac.getAttributeName())) {
+                   if (searchConfig.getDomainObjectAttribute(ac.getAttributeName())==null) {
                        i.remove();
                    }
                 }
@@ -443,7 +371,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         
         saveButton.setVisible(dirty && !filter.getName().equals(DEFAULT_FILTER_NAME));
         
-        performSearch(0, true);
+        performSearch(true);
     }
     
     private void updateFilterView() {
@@ -455,7 +383,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         criteriaPanel.add(typeCriteriaButton);
         criteriaPanel.add(inputField);
         
-        for(DomainObjectAttribute attr : searchAttrs.values()) {
+        for(DomainObjectAttribute attr : searchConfig.getDomainObjectAttributes()) {
             if (attr.isFacet()) {
                 StringBuilder label = new StringBuilder();
                 label.append(attr.getLabel());
@@ -486,7 +414,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         JPopupMenu addCriteriaPopupMenu = addCriteriaButton.getPopupMenu();
         addCriteriaPopupMenu.removeAll();
 
-        for (final DomainObjectAttribute attr : searchAttrs.values()) {
+        for (final DomainObjectAttribute attr : searchConfig.getDomainObjectAttributes()) {
 
             boolean found = false;
             if (filter.hasCriteria()) {
@@ -537,7 +465,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     private SimpleDropDownButton createCustomCriteriaButton(final AttributeCriteria criteria) {
         
         String label = null;
-        final DomainObjectAttribute attr = searchAttrs.get(criteria.getAttributeName());
+        final DomainObjectAttribute attr = searchConfig.getDomainObjectAttribute(criteria.getAttributeName());
         
         if (criteria instanceof AttributeValueCriteria) {
             AttributeValueCriteria avc = (AttributeValueCriteria)criteria;
@@ -599,7 +527,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             popupMenu.add(menuItem);
         }
         
-        Collection<FacetValue> attrFacetValues = facetValues.get(attr.getSearchKey());
+        Collection<FacetValue> attrFacetValues = searchConfig.getFacetValues(attr.getSearchKey());
                 
         if (attrFacetValues!=null) {
             for (final FacetValue facetValue : attrFacetValues) {
@@ -623,153 +551,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         }
     }
 
-    /**
-     * Returns a query builder for the current search parameters.
-     *
-     * @return
-     */
-    public SolrQueryBuilder getQueryBuilder() {
-
-        SolrQueryBuilder builder = new SolrQueryBuilder();
-        
-        for (String subjectKey : SessionMgr.getSubjectKeys()) {
-            log.trace("Adding query owner key: {}",subjectKey);
-            builder.addOwnerKey(subjectKey);
-        }
-        
-        if (filter.getSearchString()!=null) {
-            log.info("Setting query string: {}",filter.getSearchString());
-            builder.setSearchString(filter.getSearchString());
-        }
-
-        StringBuilder aux = new StringBuilder();
-        StringBuilder auxAnnot = new StringBuilder();
-
-        final Map<String, Set<String>> filters = new HashMap<>();
-        SearchType searchTypeAnnot = searchClass.getAnnotation(SearchType.class);
-        String searchType = searchTypeAnnot.key();
-        filters.put(SOLR_TYPE_FIELD,Sets.newHashSet(searchType));
-        
-        if (filter.hasCriteria()) {
-            for (Criteria criteria : filter.getCriteriaList()) {
-                if (criteria instanceof FacetCriteria) {
-                    FacetCriteria fc = (FacetCriteria) criteria;
-                    DomainObjectAttribute attr = searchAttrs.get(fc.getAttributeName());
-                    filters.put(attr.getSearchKey(), fc.getValues());
-                }
-                else if (criteria instanceof AttributeCriteria) {
-                    AttributeCriteria ac = (AttributeCriteria) criteria;
-                    // TODO: allow user to select operator
-                    CriteriaOperator operator = CriteriaOperator.CONTAINS;
-                    String value1 = null;
-                    String value2 = null;
-
-                    if (criteria instanceof DateRangeCriteria) {
-                        operator = CriteriaOperator.BETWEEN;
-                        DateRangeCriteria drc = (DateRangeCriteria) criteria;
-                        Date startCal = drc.getStartDate();
-                        Date endCal = drc.getEndDate();
-                        value1 = startCal == null ? "*" : SolrUtils.formatDate(startCal);
-                        value2 = endCal == null ? "*" : SolrUtils.formatDate(endCal);
-                    }
-                    else if (criteria instanceof AttributeValueCriteria) {
-                        AttributeValueCriteria avc = (AttributeValueCriteria) criteria;
-                        value1 = avc.getValue();
-                    }
-                    else {
-                        log.warn("Unsupported criteria type: {}",criteria.getClass().getName());
-                    }
-                    
-                    if (value1 == null && value2 == null) {
-                        continue;
-                    }
-
-                    if ("annotations".equals(ac.getAttributeName())) {
-                        if (auxAnnot.length()>1) {
-                            auxAnnot.append(" ");
-                        }
-                        switch (operator) {
-                            case NOT_NULL:
-                                auxAnnot.append("*");
-                                break;
-                            default:
-                                auxAnnot.append(value1);
-                                break;
-                        }
-                        continue;
-                    }
-
-                    if (aux.length() > 0) {
-                        aux.append(" ");
-                    }
-                    aux.append("+");
-                    DomainObjectAttribute attr = searchAttrs.get(ac.getAttributeName());
-                    aux.append(attr.getSearchKey());
-                    aux.append(":");
-
-                    switch (operator) {
-                        case CONTAINS:
-                            if (criteria instanceof DateRangeCriteria) {
-                                aux.append("[");
-                                aux.append(value1);
-                                aux.append(" TO ");
-                                aux.append(value1);
-                                aux.append("+1DAY]");
-                            }
-                            else {
-                                aux.append(value1);
-                            }
-                            break;
-                        case BETWEEN:
-                            aux.append("[");
-                            aux.append(value1);
-                            aux.append(" TO ");
-                            aux.append(value2);
-                            aux.append("]");
-                            break;
-                        case NOT_NULL:
-                            aux.append("*");
-                            break;
-                    }
-
-                }
-                else if (criteria instanceof ObjectSetCriteria) {
-                    ObjectSetCriteria sc = (ObjectSetCriteria) criteria;
-                    Reference ref = sc.getObjectSetReference();
-                    log.info("Setting query root: {}",ref.getTargetId());
-                    builder.setRootId(ref.getTargetId());
-                }
-            }
-        }
-        
-        if (aux.length()>0) {
-            log.info("Adding aux query string: {}",aux);
-            builder.setAuxString(aux.toString());
-        }
-        
-        if (auxAnnot.length()>0) {
-            log.info("Adding aux annotation query string: {}",auxAnnot);
-            builder.setAuxAnnotationQueryString(auxAnnot.toString());
-        }
-        
-        log.info("Adding facets: {}",facets);
-        builder.getFacets().addAll(facets);
-        
-        log.info("Adding facet filters: {}",filters);
-        builder.getFilters().putAll(filters);
-
-        String sortCriteria = filter.getSort();
-        if (!StringUtils.isEmpty(sortCriteria)) {
-            String sortField = (sortCriteria.startsWith("-")||sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
-            log.info("Setting sort: {}",sortCriteria);
-            DomainObjectAttribute sortAttr = searchAttrs.get(sortField);
-            builder.setSortField(sortAttr.getSearchKey());
-            builder.setAscending(!sortCriteria.startsWith("-"));
-        }
-        
-        return builder;
-    }
-
     @Override
 	public void setSortField(String sortCriteria) {
 		this.filter.setSort(sortCriteria);
@@ -777,48 +558,40 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
 
     @Override
 	public void search() {
-		performSearch(0, true);
+		performSearch(true);
 	}
 
+    @Override
+    public void userRequestedExport() {
+        try {
+            SearchConfiguration searchConfig = new SearchConfiguration(filter, ExportResultsAction.EXPORT_PAGE_SIZE);
+            SearchResults exportSearchResults = searchConfig.performSearch();
+            DomainObjectTableViewer viewer = null;
+            if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
+                viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
+            }
+            ExportResultsAction<DomainObject> action = new ExportResultsAction<>(exportSearchResults, viewer);
+            action.doAction();
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
+    }
+    
     @Override
     public void userRequestedSelectAll() {
         resultsPanel.setSelectAllVisible(true);
     }
     
-    public synchronized void performSearch(final int pageNum, final boolean showLoading) {
+    public synchronized void performSearch(final boolean showLoading) {
 
-        log.debug("performSearch(pageNum={},showLoading={})", pageNum, showLoading);
-
-        final SolrQueryBuilder builder = getQueryBuilder();
-        
-        
-        // If we don't have a query at this point, just give up
-        if (!builder.hasQuery()) {
-            return;
-        }
-
-        // We don't want to display all the system level query parameters, so build a simplified version of 
-        // the query string for display purposes. 
-        StringBuilder qs = new StringBuilder();
-        if (builder.getAuxString()!=null) {
-            qs.append(builder.getAuxString());
-        }
-        if (qs.length()>0) {
-            qs.append(" ");
-        }
-        if (builder.getSearchString()!=null) {
-            qs.append(builder.getSearchString());
-        }
-        this.displayQueryString = qs.toString();
+        log.debug("performSearch(showLoading={})", showLoading);
         
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-                query = builder.getQuery();
-                ResultPage firstPage = performSearch(query, pageNum);
-                searchResults = new SearchResults(firstPage);
-                log.debug("Got {} results", firstPage.getNumPageResults());
+                searchResults = searchConfig.performSearch();
             }
 
             @Override
@@ -831,7 +604,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                     }
                 }
                 catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
+                    hadError(e);
                 }
             }
 
@@ -848,58 +621,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             resultsPanel.showLoadingIndicator();
         }
         worker.execute();
-    }
-
-    public ResultPage performSearch(SolrQuery query, int page) throws Exception {
-        
-        if (SwingUtilities.isEventDispatchThread()) {
-            throw new RuntimeException("DomainFilterEditorPanel.performSearch called in the EDT");
-        }
-        
-        query.setStart(pageSize*page);
-        query.setRows(pageSize);
-        
-        SolrResults solrResults = ModelMgr.getModelMgr().searchSolr(query, false);
-        QueryResponse qr = solrResults.getResponse();
-        
-        List<Reference> refs = new ArrayList<>();
-        for(SolrDocument doc : qr.getResults()) {
-            Long id = new Long(doc.get("id").toString());
-            String type = (String)doc.getFieldValue(SOLR_TYPE_FIELD);
-            String className = searchTypeToClassName.get(type);
-            if (className!=null) {
-                refs.add(new Reference(className, id));
-            }
-            else {
-                log.warn("Unrecognized type has no collection mapping: "+type);
-            }
-        }
-        
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
-        List<DomainObject> domainObjects = model.getDomainObjects(refs);
-        List<Annotation> annotations = model.getAnnotations(refs);
-        
-        int numFound = (int)qr.getResults().getNumFound();
-        
-        log.info("Search found {} objects",numFound);
-        log.info("Page contains {} objects and {} annotations",domainObjects.size(),annotations.size());
-        
-        facetValues.clear();
-        if (qr.getFacetFields()!=null) {
-            for (final FacetField ff : qr.getFacetFields()) {
-                log.debug("Facet {}",ff.getName());
-                List<FacetValue> favetValues = new ArrayList<>();
-                if (ff.getValues()!=null) {
-                    for (final FacetField.Count count : ff.getValues()) {
-                        favetValues.add(new FacetValue(count.getName(),count.getCount()));
-                        log.debug("  Value: {} (count={})",count.getName(),count.getCount());
-                    }
-                }
-                facetValues.put(ff.getName(), favetValues);
-            }
-        }
-        
-        return new ResultPage(domainObjects, annotations, numFound);
     }
     
     private void removeAttributeCriteria(String attrName) {
@@ -966,25 +687,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             }
         }
         return new HashSet<>();
-    }
-
-    private class FacetValue {
-        
-        private final String value;
-        private final long count;
-
-        public FacetValue(String value, long count) {
-            this.value = value;
-            this.count = count;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public long getCount() {
-            return count;
-        }
     }
     
     public class MyDropTargetListener implements DropTargetListener {
@@ -1060,8 +762,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                     loadDomainObject(updatedFilter);
                     break;
                 }
-                else if (domainObject.getClass().equals(searchClass)) {
-                    log.info("some objects of class "+searchClass.getSimpleName()+" were invalidated, reloading...");
+                else if (domainObject.getClass().equals(searchConfig.getSearchClass())) {
+                    log.info("some objects of class "+searchConfig.getSearchClass().getSimpleName()+" were invalidated, reloading...");
                     search();
                 }
             }

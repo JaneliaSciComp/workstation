@@ -49,9 +49,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,false,true,false,null);
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
     private AnnotatedDomainObjectList domainObjectList;
-    
     private DomainObjectSelectionModel selectionModel;
-        
+
     private String sortField;
     private boolean ascending = true;
 
@@ -121,10 +120,20 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         
         List<DomainObjectAttribute> attrs = new ArrayList<>();
         attrs.add(annotationAttr);
+
+        // TODO: get viewerConfig from some save location
+        TableViewerConfiguration viewerConfig = getViewerConfiguration();
+        viewerConfig.clear();
+        for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
+            for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(domainObject.getClass())) {
+                viewerConfig.setAttributeVisibility(attr.getName(), true);
+            }
+            break;
+        }
         
         for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
             for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(domainObject.getClass())) {
-                if (attr.isDisplay()) {
+                if (attr.isDisplay() && viewerConfig.isVisible(attr.getName())) {
                     attrs.add(attr);
                 }
             }
@@ -165,7 +174,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         ((DomainObjectContextMenu) popupMenu).addMenuItems();
         return popupMenu;
     }
-
+    
     @Override
     protected void deleteKeyPressed() {
         // TODO: this was copy and pasted from DomainObjectIconGridViewer and should be refactored someday
@@ -181,7 +190,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
     
     @Override
-    protected Object getValue(DomainObject object, String columnName) {
+    public Object getValue(DomainObject object, String columnName) {
         try {
             if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
                 StringBuilder builder = new StringBuilder();

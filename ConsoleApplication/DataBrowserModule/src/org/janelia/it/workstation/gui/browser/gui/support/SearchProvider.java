@@ -3,8 +3,6 @@ package org.janelia.it.workstation.gui.browser.gui.support;
 /**
  * An interface for dealing with the component that provides searching/sorting/pagination of large result sets. 
  * 
- * Kind of kludgey -- we might want to refactor this later. 
- * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public interface SearchProvider {
@@ -26,5 +24,10 @@ public interface SearchProvider {
 	 * additional options for selecting more items (e.g. on other pages).
 	 */
 	public void userRequestedSelectAll();
+
+	/**
+	 * The user has requested the "export" action.
+	 */
+    public void userRequestedExport();
 	
 }

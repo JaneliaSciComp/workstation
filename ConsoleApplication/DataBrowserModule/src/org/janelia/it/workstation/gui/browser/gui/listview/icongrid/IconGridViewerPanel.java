@@ -445,7 +445,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     public void showObjects(final List<T> objects, final Callable<Void> success) {
         
         log.debug("showObjects(objects.size={})",objects.size());
-        
+
         // Cancel previous loads
         imagesPanel.cancelAllLoads();
 
