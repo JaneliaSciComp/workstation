@@ -671,60 +671,13 @@ called from a  SimpleWorker thread.
         if (!sourceAnnotation.isRoot()) {
             log.info("Handling non-root case.");
             neuronManager.rerootNeurite(sourceNeuron, sourceAnnotation);
-            //modelMgr.rerootNeurite(sourceNeuron, sourceAnnotation);
-            // update domain object
-
-            // find the list of annotations up to the old root:
-            /*
-            log.info("Finding list of annotations up to old root.");
-            List<TmGeoAnnotation> rerootAnnotationList = new ArrayList<>();
-            rerootAnnotationList.add(sourceAnnotation);
-            TmGeoAnnotation nextParent = getGeoAnnotationFromID(sourceAnnotation.getId());
-            log.info("Walking up to parent root.");
-            int walkCount = 0;
-            while (!nextParent.isRoot()) {
-                rerootAnnotationList.add(nextParent);
-                nextParent = getGeoAnnotationFromID(nextParent.getParentId());
-                if (++walkCount > 50) {
-                    log.info("Going far I={}, P={}, N={}.", nextParent.getId(), nextParent.getParentId(), nextParent.getNeuronId());
-                }
-                if (nextParent == null) {
-                    log.warn("Null next parent in root-tack.");
-                }
-            }
-            TmGeoAnnotation oldRoot = nextParent;
-            rerootAnnotationList.add(nextParent);
-
-            // go through the list and invert the parent/child relationship for each annotation
-            // first element is different (the new root):
-            sourceAnnotation.getChildIds().add(sourceAnnotation.getParentId());
-            sourceAnnotation.setParentId(sourceNeuron.getId());
-            sourceNeuron.getRootAnnotations().remove(oldRoot);
-            sourceNeuron.getRootAnnotations().add(sourceAnnotation);
-
-            log.info("Inverting child/parent relationships.");
-            for (int i = 1; i < rerootAnnotationList.size(); i++) {
-                TmGeoAnnotation ann = rerootAnnotationList.get(i);
-                Long oldParentID = ann.getParentId();
-                // the old root has the neuron as its parent, and that shouldn't
-                //  become a child
-                if (!oldParentID.equals(sourceNeuron.getId())) {
-                    ann.getChildIds().add(oldParentID);
-                }
-                Long newParentID = rerootAnnotationList.get(i - 1).getId();
-                ann.getChildIds().remove(newParentID);
-                ann.setParentId(newParentID);
-            }
-            log.info("Completed non-root case.");
-            */
         }
-
 
         // if source neurite not in same neuron as dest neurite: move it; don't
         //  use annModel.moveNeurite() because we don't want those updates & signals yet
         if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
             log.info("Two different neurons.");
-            neuronManager.moveNeurite(sourceAnnotation, sourceNeuron, targetNeuron);
+            neuronManager.moveNeuriteInMem(sourceAnnotation, sourceNeuron, targetNeuron);
 
             // Refresh domain objects that we've changed and will use again.
 
