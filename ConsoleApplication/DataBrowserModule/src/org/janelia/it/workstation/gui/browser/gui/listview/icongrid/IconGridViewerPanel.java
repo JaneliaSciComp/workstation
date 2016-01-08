@@ -180,7 +180,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                         selectObject(object, clearAll);
                         clearAll = false;
                     }
-                    searchProvider.userRequestedSelectAll();
                     return;
                 } 
                 else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
@@ -651,6 +650,8 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         }
     }
 
+    
+    
 //
 //    public List<RootedEntity> getSelectedEntities() {
 //        List<RootedEntity> selectedEntities = new ArrayList<RootedEntity>();
@@ -728,8 +729,10 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 //        });
 //    }
 
-    
-    
+    protected Map<S, T> getObjectMap() {
+        return objectMap;
+    }
+
     public void setSearchProvider(SearchProvider searchProvider) {
         this.searchProvider = searchProvider;
     }

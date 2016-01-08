@@ -80,6 +80,7 @@ public class SearchResults {
     }
     
     protected final List<ResultPage> pages = new ArrayList<>();
+    protected Set<Integer> loadedPages = new HashSet<>();
     protected int numTotalResults = 0;
     protected int numLoadedResults = 0;
 
@@ -88,7 +89,7 @@ public class SearchResults {
     }
     
     public int getNumLoadedPages() {
-        return pages.size();
+        return loadedPages.size();
     }
 
     public int getNumTotalPages() {
@@ -110,11 +111,6 @@ public class SearchResults {
     public List<ResultPage> getPages() {
         return pages;
     }
-
-    public void clear() {
-        pages.clear();
-        numLoadedResults = 0;
-    }
     
     public ResultPage getPage(int page) throws Exception {
         if (page>pages.size()-1 || page<0) {
@@ -126,6 +122,7 @@ public class SearchResults {
     public final void addPage(ResultPage resultPage) {
         updateNumResults(resultPage);
         pages.add(resultPage);
+        loadedPages.add(pages.size()-1);
     }
     
     public final void setPage(int page, ResultPage resultPage) {
@@ -134,6 +131,14 @@ public class SearchResults {
             pages.add(null);
         }
         pages.set(page, resultPage);
+        loadedPages.add(page);
+    }
+
+    public boolean isAllLoaded() {
+        return getNumTotalPages()==getNumLoadedPages();
+    }
+    
+    public void loadAllResults() {
     }
     
     private void updateNumResults(ResultPage resultPage) {

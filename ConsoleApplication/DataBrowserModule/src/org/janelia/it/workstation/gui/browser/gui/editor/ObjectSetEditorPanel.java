@@ -23,7 +23,6 @@ import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
-import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -171,18 +170,13 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
 	}
 
     @Override
-    public void userRequestedExport() {
+    public void export() {
         DomainObjectTableViewer viewer = null;
         if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
             viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
         }
         ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
         action.doAction();
-    }
-    
-    @Override
-    public void userRequestedSelectAll() {
-        resultsPanel.setSelectAllVisible(true);
     }
     
     @Override

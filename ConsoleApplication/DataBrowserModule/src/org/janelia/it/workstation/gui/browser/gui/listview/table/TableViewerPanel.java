@@ -92,24 +92,15 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (e.getValueIsAdjusting()) return;
-                Set<Object> set = new HashSet<>(resultsTable.getSelectedObjects());
+                // Synchronize the table selection to the selection model
                 Set<S> selectedIds = new HashSet<>();
-                for(T object : objectList) {
-                    if (set.contains(object)) {
-                        // Should be selected
-                        if (!selectionModel.isObjectSelected(object)) {
-                            selectedIds.add(imageModel.getImageUniqueId(object));
-                            selectionModel.select(object, false);
-                        }      
-                    }
-                    else {
-                        // Should not be selected
-                        if (selectionModel.isObjectSelected(object)) {
-                            selectionModel.deselect(object);
-                        }      
-                    }
+                // Everything selected in the table should be selected in the model
+                for(Object object : resultsTable.getSelectedObjects()) {
+                    T obj = (T)object;
+                    selectedIds.add(imageModel.getImageUniqueId(obj));
+                    selectionModel.select(obj, false);
                 }
-                // Clear out other ids that are not in the current view
+                // Clear out everything that was not selected above
                 for(S selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
                     if (!selectedIds.contains(selectedId)) {
                         selectionModel.deselect(imageModel.getImageByUniqueId(selectedId));
@@ -154,7 +145,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
             @Override
             public void exportButtonPressed() {
-                searchProvider.userRequestedExport();
+                searchProvider.export();
             }
         };
     }
@@ -181,7 +172,6 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
                 // Ctrl-A or Meta-A to select all
                 if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
                     selectRange(0, objectList.size()-1);
-                    searchProvider.userRequestedSelectAll();
                     return;
                 } 
                 else if (e.getKeyCode() == KeyEvent.VK_SPACE) {

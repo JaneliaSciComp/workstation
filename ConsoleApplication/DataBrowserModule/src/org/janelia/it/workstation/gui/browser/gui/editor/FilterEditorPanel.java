@@ -86,6 +86,7 @@ import com.google.common.eventbus.Subscribe;
 
 import de.javasoft.swing.JYPopupMenu;
 import de.javasoft.swing.SimpleDropDownButton;
+import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 
 /**
  * The Filter Editor is the main search GUI in the Workstation. Users can create, save, and load filters 
@@ -98,6 +99,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
 
+    public static final int EXPORT_PAGE_SIZE = 1000;
+    
     // UI Settings
     public static final String DEFAULT_FILTER_NAME = "Unsaved Filter";
     public static final Class<?> DEFAULT_SEARCH_CLASS = Sample.class;
@@ -562,27 +565,41 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
 	}
 
     @Override
-    public void userRequestedExport() {
-        try {
-            SearchConfiguration searchConfig = new SearchConfiguration(filter, ExportResultsAction.EXPORT_PAGE_SIZE);
-            SearchResults exportSearchResults = searchConfig.performSearch();
-            DomainObjectTableViewer viewer = null;
-            if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
-                viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
+    public void export() {
+
+        SimpleWorker worker = new SimpleWorker() {
+                
+            private SearchResults exportSearchResults = searchResults;
+                
+            @Override
+            protected void doStuff() throws Exception {
+                if (!searchResults.isAllLoaded()) {
+                    // If anything is unloaded, we create a new search that uses a larger page size, in order to batch the export faster.
+                    SearchConfiguration exportSearchConfig = new SearchConfiguration(filter, EXPORT_PAGE_SIZE);
+                    exportSearchResults = exportSearchConfig.performSearch();
+                }
             }
-            ExportResultsAction<DomainObject> action = new ExportResultsAction<>(exportSearchResults, viewer);
-            action.doAction();
-        }
-        catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
-        }
+
+            @Override
+            protected void hadSuccess() {
+                DomainObjectTableViewer viewer = null;
+                if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
+                    viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
+                }
+                ExportResultsAction<DomainObject> action = new ExportResultsAction<>(exportSearchResults, viewer);
+                action.doAction();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Loading...", ""));
+        worker.execute();
     }
-    
-    @Override
-    public void userRequestedSelectAll() {
-        resultsPanel.setSelectAllVisible(true);
-    }
-    
+        
     public synchronized void performSearch(final boolean showLoading) {
 
         log.debug("performSearch(showLoading={})", showLoading);

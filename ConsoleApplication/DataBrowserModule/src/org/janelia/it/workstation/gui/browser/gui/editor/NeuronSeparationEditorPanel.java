@@ -196,18 +196,13 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
 
     @Override
-    public void userRequestedExport() {
+    public void export() {
         DomainObjectTableViewer viewer = null;
         if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
             viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
         }
         ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
         action.doAction();
-    }
-    
-    @Override
-    public void userRequestedSelectAll() {
-        resultsPanel.setSelectAllVisible(true);
     }
     
     @Override

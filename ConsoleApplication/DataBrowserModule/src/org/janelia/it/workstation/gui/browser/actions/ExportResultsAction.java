@@ -28,11 +28,6 @@ public class ExportResultsAction<T> implements NamedAction {
      * Default directory for exports
      */
     protected static final String DEFAULT_EXPORT_DIR = System.getProperty("user.home");
-
-    /**
-     * How many results to load at a time when exporting
-     */
-    public static final int EXPORT_PAGE_SIZE = 1000;
     
     private SearchResults searchResults;
     private DomainObjectTableViewer domainObjectTableViewer;

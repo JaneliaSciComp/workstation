@@ -2,7 +2,10 @@ package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -176,25 +179,34 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         if (domainObjects.isEmpty()) {
             return;
         }
+
+        Set<Reference> selectedIds = new HashSet<>();
         
         boolean currClearAll = clearAll;
         for(DomainObject domainObject : domainObjects) {
-            if (select) {
+            Reference id = getImageModel().getImageUniqueId(domainObject);
+            if (select && getObjectMap().get(id)!=null) {
                 selectObject(domainObject, currClearAll);
-            }
-            else {
-                deselectObject(domainObject);
+                selectedIds.add(id);
             }
             currClearAll = false;
         }
 
+        if (clearAll) {
+            // Clear out everything that was not selected above
+            for(Reference selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
+                if (!selectedIds.contains(selectedId)) {
+                    deselectObject(imageModel.getImageByUniqueId(selectedId));
+                }
+            }
+        }
+        
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 scrollSelectedEntitiesToCenter();
             }
-        });
-        
+        });   
     }
 
     @Override

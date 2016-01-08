@@ -17,17 +17,10 @@ public interface SearchProvider {
 	 * Re-run the current search with updated preferences. 
 	 */
 	public void search();
-	
-	/**
-	 * User has requested the "select all" action. The component is responsible for selecting all
-	 * the items is has access for, but the outer container will determine if it needs to provide 
-	 * additional options for selecting more items (e.g. on other pages).
-	 */
-	public void userRequestedSelectAll();
 
 	/**
-	 * The user has requested the "export" action.
+	 * Export the current results.
 	 */
-    public void userRequestedExport();
+    public void export();
 	
 }
