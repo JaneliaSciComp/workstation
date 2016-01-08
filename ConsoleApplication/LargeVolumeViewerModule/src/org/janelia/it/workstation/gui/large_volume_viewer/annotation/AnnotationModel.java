@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
+import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
@@ -409,6 +410,7 @@ called from a  SimpleWorker thread.
             public void run() {
                 fireWorkspaceLoaded(workspace);
                 fireNeuronSelected(neuron);
+                fireWsEntityChanged();
             }
         });
 
@@ -464,6 +466,7 @@ called from a  SimpleWorker thread.
                 fireAnnotationsDeleted(tempAnnotationList);
                 fireAnchoredPathsRemoved(tempPathList);
                 fireWorkspaceLoaded(workspace);
+                fireWsEntityChanged();
             }
         });
     }
@@ -678,45 +681,6 @@ called from a  SimpleWorker thread.
         if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
             log.info("Two different neurons.");
             neuronManager.moveNeuriteInMem(sourceAnnotation, sourceNeuron, targetNeuron);
-
-            // Refresh domain objects that we've changed and will use again.
-
-            // all the annotations have to migrate from one map to the other;
-            //  also, any attached anchored paths and text notes
-//            List<TmGeoAnnotation> movedList = sourceNeuron.getSubTreeList(sourceAnnotation);
-//            for (TmGeoAnnotation ann: movedList) {
-//                sourceNeuron.getGeoAnnotationMap().remove(ann.getId());
-//                targetNeuron.getGeoAnnotationMap().put(ann.getId(), ann);
-//                ann.setNeuronId(targetNeuron.getId());
-//
-//                // notes
-//                if (sourceNeuron.getStructuredTextAnnotationMap().containsKey(ann.getId())) {
-//                    TmStructuredTextAnnotation note = sourceNeuron.getStructuredTextAnnotationMap().get(ann.getId());
-//                    sourceNeuron.getStructuredTextAnnotationMap().remove(ann.getId());
-//                    targetNeuron.getStructuredTextAnnotationMap().put(ann.getId(), note);
-//                }
-//            }
-
-            // paths are indexed by pairs; easier to iterate through the pairs and
-            //  move any paths that have a moved endpoint
-//            Set<Long> movedIDSet = new HashSet<>();
-//            for (TmGeoAnnotation ann: movedList) {
-//                movedIDSet.add(ann.getId());
-//            }
-//            for (TmAnchoredPathEndpoints pair: new ArrayList<>(sourceNeuron.getAnchoredPathMap().keySet())) {
-//                // doesn't matter which ID in endpoint pair we test
-//                if (movedIDSet.contains(pair.getAnnotationID1())) {
-//                    TmAnchoredPath path = sourceNeuron.getAnchoredPathMap().get(pair);
-//                    sourceNeuron.getAnchoredPathMap().remove(pair);
-//                    targetNeuron.getAnchoredPathMap().put(pair, path);
-//                }
-//            }
-//
-            // plus update the root stuff
-//            sourceAnnotation.setParentId(targetNeuron.getId());
-//            sourceAnnotation.setNeuronId(targetNeuron.getId());
-//            sourceNeuron.removeRootAnnotation(sourceAnnotation);
-//            targetNeuron.addRootAnnotation(sourceAnnotation);
         }
 
 
@@ -1747,6 +1711,14 @@ called from a  SimpleWorker thread.
     private void fireNotesUpdated(TmWorkspace workspace) {
         if (notesUpdateListener != null) {
             notesUpdateListener.notesUpdated(workspace);
+        }
+    }
+
+    private void fireWsEntityChanged() {
+        try {
+            modelMgr.postOnEventBus(new EntityChangeEvent(modelMgr.getEntityById(workspace.getId())));
+        } catch (Exception ex) {
+            log.warn("Failed to post workspace chang.");
         }
     }
 
