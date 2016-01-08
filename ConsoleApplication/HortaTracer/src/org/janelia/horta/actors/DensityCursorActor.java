@@ -6,27 +6,26 @@ import org.janelia.gltools.texture.Texture2d;
 import org.openide.util.Exceptions;
 
 /**
- * Single-vertex actor to highlight one existing neuron vertex currently under mouse cursor
+ * Single vertex actor representing provisional future neuron vertex centered on imaging density currently under mouse cursor.
  * @author brunsc
  */
 
-public class VertexHighlightActor extends SpheresActor {
+public class DensityCursorActor extends SpheresActor {
 
-    public VertexHighlightActor(NeuronModel neuron) {
+    public DensityCursorActor(NeuronModel neuron) {
         super(neuron, 
-                new VertexHighlightTexture(), 
+                new DensityHighlightTexture(), 
                 new SpheresMaterial.SpheresShader());
         material.manageLightProbeTexture = true;
     }
 
-    private static class VertexHighlightTexture extends Texture2d {
-        public VertexHighlightTexture() {
+    private static class DensityHighlightTexture extends Texture2d {
+        public DensityHighlightTexture() {
             try {
-                // Light probe with a circle added to diffuse component,
-                // for emphasis
+                // Light probe with plus sign ("+") decoration
                 loadFromPpm(getClass().getResourceAsStream(
                         "/org/janelia/gltools/material/lightprobe/"
-                                + "circleBoth.ppm"));
+                                + "plusBoth.ppm"));
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
             }

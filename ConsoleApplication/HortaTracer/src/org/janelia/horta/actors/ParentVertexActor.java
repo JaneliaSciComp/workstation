@@ -15,13 +15,13 @@ public class ParentVertexActor extends SpheresActor {
 
     public ParentVertexActor(NeuronModel neuron) {
         super(neuron, 
-                new VertexHighlightTexture(), 
+                new ParentVertexTexture(), 
                 new SpheresMaterial.SpheresShader());
         material.manageLightProbeTexture = true;
     }
 
-    private static class VertexHighlightTexture extends Texture2d {
-        public VertexHighlightTexture() {
+    private static class ParentVertexTexture extends Texture2d {
+        public ParentVertexTexture() {
             try {
                 loadFromPpm(getClass().getResourceAsStream(
                         "/org/janelia/gltools/material/lightprobe/"

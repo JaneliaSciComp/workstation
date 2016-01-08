@@ -39,7 +39,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.AbstractAction;
@@ -48,15 +47,13 @@ import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
-import org.janelia.gltools.texture.Texture2d;
+import org.janelia.horta.actors.DensityCursorActor;
 import org.janelia.horta.actors.ParentVertexActor;
 import org.janelia.horta.actors.SpheresActor;
-import org.janelia.horta.actors.SpheresMaterial;
 import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
 import org.openide.awt.StatusDisplayer;
-import org.openide.util.Exceptions;
 
 /**
  * Adapted from C:\Users\brunsc\Documents\Fiji_Plugins\Auto_Trace\Semi_Trace.java
@@ -72,19 +69,30 @@ public class TracingInteractor extends MouseAdapter
     // private final List<NeuriteAnchor> persistedModel = new ArrayList<>();
     private final int max_tol = 5; // pixels
     
+    // For selection affordance
+    // For GUI feedback on existing model, contains zero or one vertex.
+    // Larger yellow overlay over an existing vertex under the mouse pointer.
+    private final NeuronModel highlightHoverModel = new BasicNeuronModel("Hover highlight");
+    private NeuronVertex cachedHighlightVertex = null;
+    
+    // For Tracing
+    // Larger blueish vertex with a "P" for current selected persisted parent
+    private final NeuronModel parentVertexModel = new BasicNeuronModel("Selected parent vertex"); // TODO: begin point of auto tracing
+    private NeuronVertex cachedParentVertex = null;
+    
+    // White ghost vertex for potential new vertex under cursor 
+    // TODO: design this.
+    // Maybe color RED until a good path from parent is found
+    // This is the new neuron cursor
+    private final NeuronModel densityCursorModel = new BasicNeuronModel("Hover density");
+    private Vector3 cachedDensityCursorXyz = null;
+    
+    // TODO: refactor these other visual models, below
     private NeuriteAnchor cachedHoverLocation = null; // TODO: - refactor as SELECTED vertex
     private TracingMode tracingMode = TracingMode.NAVIGATING;
 
     // private final NeuriteModel hoverModel = new NeuriteModel(); // TODO - deprecate in favor of below
-    // For GUI feedback on existing model, contains zero or one vertex.
-    private final NeuronModel highlightHoverModel = new BasicNeuronModel("Hover highlight");
-    private NeuronVertex cachedHighlightVertex = null;
-    
     private final NeuronModel neuronCursorModel = new BasicNeuronModel("Neuron tracing cursor"); // TODO: end point of auto tracing
-    
-    // For Tracing
-    private final NeuronModel parentVertexModel = new BasicNeuronModel("Selected parent vertex"); // TODO: begin point of auto tracing
-    private NeuronVertex cachedParentVertex = null;
     
     private final NeuriteModel provisionalModel = new NeuriteModel();
     private final NeuriteModel previousHoverModel = new NeuriteModel();
@@ -173,16 +181,21 @@ public class TracingInteractor extends MouseAdapter
         result.add(nextActor);
         result.add(new NeuriteActor(null, provisionalModel));
         result.add(new NeuriteActor(null, previousHoverModel));
+
+        // Create a special single-vertex actor for highlighting the selected parent vertex
+        SpheresActor parentActor = new ParentVertexActor(parentVertexModel);
+        parentActor.setMinPixelRadius(6.0f);
+        result.add(parentActor);
         
         // Create a special single-vertex actor for highlighting the vertex under the cursor
         SpheresActor highlightActor = new VertexHighlightActor(highlightHoverModel);
         highlightActor.setMinPixelRadius(8.0f);
         result.add(highlightActor);
         
-        // Create a special single-vertex actor for highlighting the selected parent vertex
-        SpheresActor parentActor = new ParentVertexActor(parentVertexModel);
-        parentActor.setMinPixelRadius(8.0f);
-        result.add(parentActor);
+        // Create a special single-vertex actor for highlighting the vertex under the cursor
+        SpheresActor densityCursorActor = new DensityCursorActor(densityCursorModel);
+        highlightActor.setMinPixelRadius(1.0f);
+        result.add(densityCursorActor);
         
         // Colors 
         ((NeuriteActor)result.get(0)).setColor(Color.WHITE);
@@ -386,6 +399,50 @@ public class TracingInteractor extends MouseAdapter
         return true;
     }
     
+    private boolean setDensityCursor(Vector3 xyz)
+    {
+        if (xyz == null) return false;
+        
+        if (cachedDensityCursorXyz == xyz)
+            return false;
+        cachedDensityCursorXyz = xyz;
+        
+        // Remove any previous vertex
+        densityCursorModel.getVertexes().clear();
+        densityCursorModel.getEdges().clear();
+
+        // Create a modified vertex to represent the enlarged, highlighted actor
+        BasicSwcVertex densityVertex = new BasicSwcVertex(xyz.getX(), xyz.getY(), xyz.getZ()); // same center location as real vertex
+        densityVertex.setRadius(1.0f); // TODO: measure radius and set this rationally
+        // blend neuron color with white(?) provisional vertex color
+        Color vertexColor = new Color(0.2f, 1.0f, 0.8f, 0.5f);
+
+        densityCursorModel.setVisible(true);
+        densityCursorModel.setColor(vertexColor);
+        // densityCursorModel.setColor(Color.MAGENTA); // for debugging
+
+        densityCursorModel.getVertexes().add(densityVertex);
+        densityCursorModel.getMembersAddedObservable().setChanged();
+
+        densityCursorModel.getMembersAddedObservable().notifyObservers();     
+        densityCursorModel.getColorChangeObservable().notifyObservers();
+        
+        return true; 
+    }
+    
+    // Clear display of existing vertex highlight
+    private boolean clearDensityCursor()
+    {
+        if (densityCursorModel.getVertexes().isEmpty()) {
+            return false;
+        }
+        densityCursorModel.getVertexes().clear();
+        densityCursorModel.getEdges().clear();
+        densityCursorModel.getMembersRemovedObservable().setChanged();
+        cachedDensityCursorXyz = null;
+        return true;
+    }
+    
     // GUI feedback for hovering existing vertex under cursor
     // returns true if a previously unhighlighted vertex is highlighted
     private boolean highlightHoverVertex(NeuronVertex vertex) 
@@ -496,10 +553,12 @@ public class TracingInteractor extends MouseAdapter
             return; // no change from last time
         previousHoverPoint = screenPoint;
         
-        // Find nearby brightest point
-        // screenPoint = optimizePosition(screenPoint); // TODO: disabling optimization for now
+        // Question: Which of these three locations is the current mouse cursor in?
+        //  1) upon an existing neuron model vertex
+        //  2) upon a region of image density
+        //  3) neither
         
-        // Highlight annotation vertex
+        // 1) (maybe) Highlight existing neuron annotation model vertex
         Point hoverPoint = screenPoint;
         boolean foundGoodHighlightVertex = true; // start optimistic...
         NeuronVertex nearestVertex = null;
@@ -535,6 +594,21 @@ public class TracingInteractor extends MouseAdapter
                 previousHoverMessage = null;
             }
         }
+        
+        // 2) (maybe) show provisional anchor at current image density
+        if ( (! foundGoodHighlightVertex) && (volumeProjection.isVolumeDensityAt(hoverPoint))) 
+        {
+            // Find nearby brightest point
+            // screenPoint = optimizePosition(screenPoint); // TODO: disabling optimization for now
+            Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
+            setDensityCursor(cursorXyz);
+        }
+        else {
+            if (clearDensityCursor())
+                densityCursorModel.getMembersRemovedObservable().notifyObservers();
+        }
+        
+        // TODO: build up from current parent toward current mouse position
     }
 
     private Point optimizePosition(Point screenPoint) {
