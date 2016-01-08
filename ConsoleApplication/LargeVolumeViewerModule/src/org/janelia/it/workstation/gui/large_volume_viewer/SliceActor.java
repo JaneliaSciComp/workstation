@@ -101,9 +101,10 @@ implements GLActor
 				tile.init(glDrawable);
 			}
 		} else {
+			depthViewMap.clear();
 			for (Tile2d tile: tiles) {
+				log.info("getting depth tiles for zIndex="+tile.getIndex().getZ());
 				tile.init(glDrawable);
-				depthViewMap.clear();
 				List<Tile2d> depthList=new ArrayList<>();
 				depthViewMap.put(tile, depthList);
 				if (tileServer==null) {
@@ -115,7 +116,8 @@ implements GLActor
 					log.error("loadAdapter is null");
 				}
 				TileFormat tileFormat = loadAdapter.getTileFormat();
-				for (int depth = -5; depth < 0; depth++) {
+				// Depth increases with index
+				for (int depth = 1; depth < 6; depth++) {
 					TileIndex tileIndex = tile.getIndex();
 					TileIndex depthIndex = new TileIndex(tileIndex.getX(), tileIndex.getY(), tileIndex.getZ() + depth,
 							tileIndex.getZoom(), tileIndex.getMaxZoom(), tileIndex.getIndexStyle(), tileIndex.getSliceAxis());
@@ -150,30 +152,45 @@ implements GLActor
 			filter = GL2.GL_NEAREST; // distinct voxels at high zoom
         GL2 gl2 = glDrawable.getGL().getGL2();
 
-		gl2.glDepthMask(false);
+		gl2.glDepthMask(true);
 		gl2.glEnable(GL2.GL_BLEND);
-		//gl2.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
+		gl2.glBlendEquation(GL2.GL_MAX);
+		//gl2.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
 		shader.load(gl2);
+		int outerTileIndex=0;
 		for (Tile2d tile: tiles) {
+			float depthLayers=1.0f;
+			List<Tile2d> depthTileList=null;
 			if (depthViewMap!=null) {
-				List<Tile2d> depthTileList=depthViewMap.get(tile);
+				depthTileList=depthViewMap.get(tile);
 				if (depthTileList!=null) {
-					log.info("Rendering "+depthTileList.size()+" depth tiles");
-					double zOffset=0.0;
-					double zOffsetIncrement=-0.90/(depthTileList.size()*1.0);
-					for (Tile2d depthTile : depthTileList) {
-						depthTile.setFilter(filter);
-						tile.display(glDrawable, camera, zOffset);
-						zOffset+=zOffsetIncrement;
-					}
+					depthLayers+=((float)depthTileList.size());
+					shader.setDepthLayers(gl2, 1.0f /* depthLayers*/ );
 				}
+			} else {
+				shader.setDepthLayers(gl2, depthLayers);
 			}
 			tile.setFilter(filter);
 			tile.display(glDrawable, camera);
+			if (depthTileList!=null) {
+				log.info("Rendering " + depthTileList.size() + " depth tiles for outer index=" + outerTileIndex);
+				double zOffset = 0.10; /* range ~ +5.0 - -5.0 */
+				double zOffsetIncrement = 0.89 / (depthTileList.size() * 1.0);
+				for (Tile2d depthTile : depthTileList) {
+					log.info("Render depth tile at zOffset=" + zOffset);
+					depthTile.setFilter(filter);
+					tile.display(glDrawable, camera, zOffset);
+					zOffset += zOffsetIncrement;
+				}
+			} else {
+				log.info("depthTileList is null - not rendering depth tiles");
+			}
+			outerTileIndex++;
 		}
+		log.info("Rendered outerIndex="+outerTileIndex+" top-level tiles");
 		shader.unload(gl2);
 		gl2.glDisable(GL2.GL_BLEND);
-		gl2.glDepthMask(true);
+		//gl2.glDepthMask(true);
 
 		// Numeral display at high zoom			
 		if (pixelsPerVoxel > 40.0) {

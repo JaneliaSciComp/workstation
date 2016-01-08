@@ -8,12 +8,13 @@ uniform vec4 channel_gamma; // brightness for each channel
 uniform vec4 channel_min;
 uniform vec4 channel_scale;
 uniform vec4 sign_op = vec4(1, -1, 0, 0);
+uniform float depth_layers;
 
 vec4 getSrgb(vec3 out_color)
 {
     // Final sRGB color correction, because JOGL 2.1 won't do it.
     //return vec4(pow(out_color.r, 0.46), pow(out_color.g, 0.46), pow(out_color.b, 0.46),1);
-    return vec4(pow(out_color.r, 0.46), pow(out_color.g, 0.46), pow(out_color.b, 0.46), 0.2);
+    return vec4(pow(out_color.r, 0.46), pow(out_color.g, 0.46), pow(out_color.b, 0.46), 1.0);
 }
 
 float getIntensity(vec4 in_color, int c)
@@ -71,6 +72,9 @@ vec4 combineColor()
     else
     {
         out_color = chooseColor();
+    }
+    if (depth_layers>1.0) {
+        out_color.a=out_color.a/depth_layers;
     }
     return out_color;
 }
