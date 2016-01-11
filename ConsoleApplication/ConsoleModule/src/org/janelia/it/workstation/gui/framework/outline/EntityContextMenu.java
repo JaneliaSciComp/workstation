@@ -184,7 +184,9 @@ public class EntityContextMenu extends JPopupMenu {
             add(item);
         }
         add(getEditLVVSamplePath());
-        add(getWrapEntityItem());
+        for (JMenuItem wrapItem: getWrapEntityItem()) {
+            add(wrapItem);
+        }
 
         if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
                 .equals("group:simpsonlab")) && !this.multiple) {
@@ -417,7 +419,7 @@ public class EntityContextMenu extends JPopupMenu {
         return orderedMap.values();
     }
     
-    public JMenuItem getWrapEntityItem() {
+    public List<JMenuItem> getWrapEntityItem() {
         if (multiple) return null;
         return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem(rootedEntity);
     }

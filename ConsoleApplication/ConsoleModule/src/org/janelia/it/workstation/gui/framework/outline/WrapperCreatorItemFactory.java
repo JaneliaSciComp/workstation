@@ -8,7 +8,9 @@ package org.janelia.it.workstation.gui.framework.outline;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -34,16 +36,17 @@ public class WrapperCreatorItemFactory {
      * @param rootedEntity build another item around this; may be null.
      * @return the menu item suitable for add to menu.
      */
-    public JMenuItem makeEntityWrapperCreatorItem(final RootedEntity rootedEntity) {
-        JMenuItem wrapEntityItem = null;
+    public List<JMenuItem> makeEntityWrapperCreatorItem(final RootedEntity rootedEntity) {
+        List<JMenuItem> rtnVal = new ArrayList<>();
         final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
         Collection<EntityWrapperCreator> wrapperCreators
                 = helper.findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
         for ( EntityWrapperCreator wrapperCreator: wrapperCreators ) {
-            wrapEntityItem = new JMenuItem(wrapperCreator.getActionLabel());
+            JMenuItem wrapEntityItem = new JMenuItem(wrapperCreator.getActionLabel());
             wrapEntityItem.addActionListener(new WrapEntityActionListener(wrapperCreator, rootedEntity));
+            rtnVal.add( wrapEntityItem );
         }
-        return wrapEntityItem;
+        return rtnVal;
     }
     
     class WrapEntityActionListener implements ActionListener {

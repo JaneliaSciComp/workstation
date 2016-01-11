@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.creation;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,7 +13,6 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
@@ -65,8 +63,12 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
                 errorLabel.setForeground(Color.red);
                 pathTextField.addKeyListener(new PathCorrectionKeyListener(pathTextField));
                 pathTextField.setToolTipText("Backslashes will be converted to /.");
+                final JLabel workspaceNameLabel = new JLabel("Workspace Name");
+                final JTextField workspaceNameTextField = new JTextField();
                 inputDialog.setTitle("Input Folder");
-                inputDialog.setLayout(new GridLayout(4, 1));
+                inputDialog.setLayout(new GridLayout(6, 1));
+                inputDialog.add(workspaceNameLabel);
+                inputDialog.add(workspaceNameTextField);
                 inputDialog.add(new JLabel("Enter Full Path to Input Folder"));
                 inputDialog.add(pathTextField);
                 JPanel buttonPanel = new JPanel();
@@ -137,6 +139,7 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
                         HashSet<TaskParameter> taskParameters = new HashSet<>();
                         taskParameters.add(new TaskParameter(SwcImportTask.PARAM_sampleId, sampleId.toString(), null));
                         taskParameters.add(new TaskParameter(SwcImportTask.PARAM_userName, ownerKey, null));
+                        taskParameters.add(new TaskParameter(SwcImportTask.PARAM_workspaceName, workspaceNameTextField.getText().trim(), null));
                         taskParameters.add(new TaskParameter(SwcImportTask.PARAM_topLevelFolderName, userInput, null));
 
                         String taskName = new File(userInput).getName();

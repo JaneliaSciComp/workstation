@@ -180,8 +180,10 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
         public void addRootMenuItems() {     
             add(getRootItem());   
             add(getSetSortCriteriaItem());
-            add(getNewRootFolderItem());
-            add(getWrapperCreatorItem());
+            add(getNewRootFolderItem());            
+            for (JMenuItem item: getWrapperCreatorItem()) {
+                add(item);
+            }
             for (JComponent item : getOpenForContextItems()) {
                 add(item);
             }
@@ -246,7 +248,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             return newFolderItem;
         }
 
-        public JMenuItem getWrapperCreatorItem() {
+        public List<JMenuItem> getWrapperCreatorItem() {
             if (multiple) {
                 return null;
             }
