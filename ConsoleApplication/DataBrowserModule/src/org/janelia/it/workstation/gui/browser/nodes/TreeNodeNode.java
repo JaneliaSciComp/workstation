@@ -111,12 +111,7 @@ public class TreeNodeNode extends DomainObjectNode {
     public String getPrimaryLabel() {
         return getTreeNode().getName();
     }
-    
-    @Override
-    public String getExtraLabel() {
-        return "("+getTreeNode().getNumChildren()+")";
-    }
-    
+        
     @Override
     public Image getIcon(int type) {
         if (!getTreeNode().getOwnerKey().equals(SessionMgr.getSubjectKey())) {

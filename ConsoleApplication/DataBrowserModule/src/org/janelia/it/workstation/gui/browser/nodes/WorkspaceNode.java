@@ -33,11 +33,6 @@ public class WorkspaceNode extends TreeNodeNode {
     }
     
     @Override
-    public String getExtraLabel() {
-        return "("+getTreeNode().getNumChildren()+")";
-    }
-    
-    @Override
     public Image getIcon(int type) {
         if (!getTreeNode().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
             return Icons.getIcon("folder_blue.png").getImage();
