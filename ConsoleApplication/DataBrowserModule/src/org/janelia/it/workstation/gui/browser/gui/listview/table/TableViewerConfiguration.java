@@ -10,23 +10,23 @@ import java.util.Set;
  */
 public class TableViewerConfiguration {
 
-    private Set<String> displayedAttributes = new HashSet<>();
+    private Set<String> hiddenColumns = new HashSet<>();
     
     public void setAttributeVisibility(String attrName, boolean visible) {
         if (visible) {
-            displayedAttributes.add(attrName);
+            hiddenColumns.remove(attrName);
         }
         else {
-            displayedAttributes.remove(attrName);
+            hiddenColumns.add(attrName);
         }
     }
     
     public boolean isVisible(String attrName) {
-        return displayedAttributes.contains(attrName);
+        return !hiddenColumns.contains(attrName);
     }
 
     public void clear() {
-        displayedAttributes.clear();
+        hiddenColumns.clear();
     }
     
 }

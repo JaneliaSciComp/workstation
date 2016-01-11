@@ -251,6 +251,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     
     protected abstract Object getValue(T object, String column);
     
+    // TODO: move references to DomainObject outside of this class
     public void setAttributeColumns(List<DomainObjectAttribute> searchAttrs) {
         resultsTable.clearColumns();
         for(DomainObjectAttribute searchAttr : searchAttrs) {
