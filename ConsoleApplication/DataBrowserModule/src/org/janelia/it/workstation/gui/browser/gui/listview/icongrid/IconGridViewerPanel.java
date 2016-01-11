@@ -9,6 +9,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,9 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
@@ -34,6 +37,7 @@ import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -491,101 +495,13 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             button.refresh(object);
         }
     }
-    
+
     public void refresh() {
-        refresh(false, null);
+        showObjects(objectList, null);
     }
-
+    
     public void totalRefresh() {
-        refresh(true, null);
-    }
-
-    public void refresh(final Callable<Void> successCallback) {
-        refresh(false, successCallback);
-    }
-
-    public void totalRefresh(final Callable<Void> successCallback) {
-        refresh(true, successCallback);
-    }
-
-    private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
-
-    public void refresh(final boolean invalidateCache, final Callable<Void> successCallback) {
-
-        // TODO: port this
-        
-//        if (contextImageObject == null) {
-//            return;
-//        }
-//
-//        if (refreshInProgress.getAndSet(true)) {
-//            log.debug("Skipping refresh, since there is one already in progress");
-//            return;
-//        }
-//
-//        log.debug("Starting a refresh");
-//
-//        final List<String> selectedIds = new ArrayList<String>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
-//        final Callable<Void> success = new Callable<Void>() {
-//            @Override
-//            public Void call() throws Exception {
-//                // At the very end, reselect our buttons if possible
-//                boolean first = true;
-//                for (String selectedId : selectedIds) {
-//                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), selectedId, first);
-//                    first = false;
-//                }
-//                // Now call the user's callback 
-//                if (successCallback != null) {
-//                    successCallback.call();
-//                }
-//                return null;
-//            }
-//        };
-//
-//        SimpleWorker refreshWorker = new SimpleWorker() {
-//
-//            T imageObject = contextImageObject;
-//
-//            protected void doStuff() throws Exception {
-//                if (invalidateCache) {
-//                    ModelMgr.getModelMgr().invalidateCache(rootedEntity.getEntity(), true);
-//                }
-//                Entity entity = ModelMgr.getModelMgr().getEntityAndChildren(rootedEntity.getEntity().getId());
-//                rootedEntity.setEntity(entity);
-//            }
-//
-//            protected void hadSuccess() {
-//                SwingUtilities.invokeLater(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        if (rootedEntity.getEntity() == null) {
-//                            clear();
-//                            if (success != null) {
-//                                try {
-//                                    success.call();
-//                                }
-//                                catch (Exception e) {
-//                                    hadError(e);
-//                                }
-//                            }
-//                        }
-//                        else {
-//                            //loadEntity(rootedEntity, success);
-//                        }
-//                        refreshInProgress.set(false);
-//                        log.debug("Refresh complete");
-//                    }
-//                });
-//            }
-//
-//            protected void hadError(Throwable error) {
-//                refreshInProgress.set(false);
-//                SessionMgr.getSessionMgr().handleException(error);
-//            }
-//        };
-//
-//        refreshWorker.execute();
+        DomainMgr.getDomainMgr().getModel().invalidateAll();
     }
 
     public synchronized void clear() {

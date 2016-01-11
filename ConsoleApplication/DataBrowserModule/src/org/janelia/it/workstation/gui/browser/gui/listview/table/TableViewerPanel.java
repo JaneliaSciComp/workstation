@@ -24,6 +24,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -326,26 +327,13 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     protected void updateTableModel() {
         resultsTable.updateTableModel();
     }
+
     public void refresh() {
-        refresh(false, null);
+        showObjects(objectList);
     }
-
+    
     public void totalRefresh() {
-        refresh(true, null);
-    }
-
-    public void refresh(final Callable<Void> successCallback) {
-        refresh(false, successCallback);
-    }
-
-    public void totalRefresh(final Callable<Void> successCallback) {
-        refresh(true, successCallback);
-    }
-
-    private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
-
-    public void refresh(final boolean invalidateCache, final Callable<Void> successCallback) {
-        // TODO: implement
+        DomainMgr.getDomainMgr().getModel().invalidateAll();
     }
 
     public void setSearchProvider(SearchProvider searchProvider) {
