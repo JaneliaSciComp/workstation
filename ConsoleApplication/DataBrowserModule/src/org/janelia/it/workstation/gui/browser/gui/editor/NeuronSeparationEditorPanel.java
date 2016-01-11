@@ -231,7 +231,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 if (domainObject.getId().equals(sample.getId())) {
                     log.info("sample invalidated, reloading...");
                     Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
-                    PipelineResult result = findResult(updatedSample, sampleResult.getResult().getId());
+                    PipelineResult result = updatedSample.findResultById(sampleResult.getResult().getId());
                     if (result==null) {
                         log.info("Sample no longer has result with id: "+sampleResult.getResult().getId());
                         showNothing();
@@ -247,25 +247,5 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 }
             }
         }
-    }
-    
-    /** 
-     * TODO: move this to a utility class for dealing with Samples
-     * @param sample
-     * @param id
-     * @return
-     */
-    private PipelineResult findResult(Sample sample, Long id) {
-        for(String objective : sample.getOrderedObjectives()) {
-            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
-            for(SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
-                for(PipelineResult result : run.getResults()) {
-                    if (result.getId().equals(id)) {
-                        return result;
-                    }
-                }
-            }
-        }
-        return null;
     }
 }
