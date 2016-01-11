@@ -27,7 +27,6 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -61,7 +60,6 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     private ImageModel<T,S> imageModel;
     private SelectionModel<T,S> selectionModel;
     private SearchProvider searchProvider;
-    private TableViewerConfiguration viewerConfig = new TableViewerConfiguration();
     
     // Listeners
     private final SessionModelListener sessionModelListener;
@@ -140,7 +138,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
             @Override
             public void chooseColumnsButtonPressed() {
-                
+                TableViewerPanel.this.chooseColumnsButtonPressed();
             }
 
             @Override
@@ -151,6 +149,8 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     }
 
     protected abstract JPopupMenu getContextualPopupMenu();
+    
+    protected abstract void chooseColumnsButtonPressed();
     
     // Listen for key strokes and execute the appropriate key bindings
     // TODO: this is copy & pasted from IconGridViewerPanel, and can probably be factored out into its own reusable class
@@ -245,23 +245,14 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         }
     }
 
-    public TableViewerConfiguration getViewerConfiguration() {
-        return viewerConfig;
-    }
-    
     protected abstract Object getValue(T object, String column);
-    
-    // TODO: move references to DomainObject outside of this class
-    public void setAttributeColumns(List<DomainObjectAttribute> searchAttrs) {
-        resultsTable.clearColumns();
-        for(DomainObjectAttribute searchAttr : searchAttrs) {
-            // TODO: control default visibility based on saved user preference
-            resultsTable.addColumn(searchAttr.getName(), searchAttr.getLabel(), searchAttr.isDisplay(), false, true, searchAttr.isSortable());
-        }
-    }
     
     public List<DynamicColumn> getColumns() {
         return resultsTable.getColumns();
+    }
+
+    public DynamicColumn getColumn(String columnName) {
+        return resultsTable.getColumn(columnName);
     }
     
     protected DynamicTable getDynamicTable() {

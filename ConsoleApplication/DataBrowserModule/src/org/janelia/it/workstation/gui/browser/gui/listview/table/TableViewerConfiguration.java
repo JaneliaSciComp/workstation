@@ -3,6 +3,8 @@ package org.janelia.it.workstation.gui.browser.gui.listview.table;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * UI configuration for a TableViewerPanel. 
  * 
@@ -11,6 +13,9 @@ import java.util.Set;
 public class TableViewerConfiguration {
 
     private Set<String> hiddenColumns = new HashSet<>();
+    
+    public TableViewerConfiguration() {
+    }
     
     public void setAttributeVisibility(String attrName, boolean visible) {
         if (visible) {
@@ -28,5 +33,22 @@ public class TableViewerConfiguration {
     public void clear() {
         hiddenColumns.clear();
     }
+ 
+    public static String serialize(TableViewerConfiguration config) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(config);
+    }
     
+    public static TableViewerConfiguration deserialize(String json) throws Exception  {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json, TableViewerConfiguration.class);
+    }
+
+    public Set<String> getHiddenColumns() {
+        return hiddenColumns;
+    }
+
+    public void setHiddenColumns(Set<String> hiddenColumns) {
+        this.hiddenColumns = hiddenColumns;
+    }
 }

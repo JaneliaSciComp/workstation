@@ -51,6 +51,14 @@ public abstract class TableViewerToolbar extends ViewerToolbar {
         toolbar.addSeparator();
     }
 
+    public JButton getChooseColumnsButton() {
+        return chooseColumnsButton;
+    }
+
+    public JButton getExportButton() {
+        return exportButton;
+    }
+
     public abstract void chooseColumnsButtonPressed();
     
     public abstract void exportButtonPressed();

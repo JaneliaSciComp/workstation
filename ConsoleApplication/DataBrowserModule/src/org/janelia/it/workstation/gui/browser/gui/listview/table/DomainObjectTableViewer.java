@@ -25,13 +25,16 @@ import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromObjectSetAc
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +53,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
-
+    
+    private TableViewerConfigDialog configDialog;
     private String sortField;
     private boolean ascending = true;
 
@@ -114,50 +118,66 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
     
     @Override
-    public void showDomainObjects(AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
+    public void showDomainObjects(final AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
         
         this.domainObjectList = domainObjectList;
+        final Class<? extends DomainObject> domainClass = domainObjectList.getDomainClass();
         
-        List<DomainObjectAttribute> attrs = new ArrayList<>();
-        attrs.add(annotationAttr);
+        attributeMap.clear();
+        
+        SimpleWorker worker = new SimpleWorker() {
 
-        // TODO: get viewerConfig from some save location
-        TableViewerConfiguration viewerConfig = getViewerConfiguration();
-        viewerConfig.clear();
-        for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
-            for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(domainObject.getClass())) {
-                viewerConfig.setAttributeVisibility(attr.getName(), true);
-            }
-            break;
-        }
-        
-        for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
-            for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(domainObject.getClass())) {
-                if (attr.isDisplay() && viewerConfig.isVisible(attr.getName())) {
-                    attrs.add(attr);
+            private final List<DomainObjectAttribute> attrs = new ArrayList<>();
+            
+            @Override
+            protected void doStuff() throws Exception {
+                
+                if (domainClass!=null) {
+                    attrs.add(annotationAttr);
+                    for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(domainClass)) {
+                        if (attr.isDisplay()) {
+                            attrs.add(attr);
+                        }
+                    }
+                    Collections.sort(attrs, new Comparator<DomainObjectAttribute>() {
+                        @Override
+                        public int compare(DomainObjectAttribute o1, DomainObjectAttribute o2) {
+                            return o1.getLabel().compareTo(o2.getLabel());
+                        }
+                    });
+                    configDialog = new TableViewerConfigDialog(domainClass, attrs);
+                }
+                else {
+                    configDialog = null;
                 }
             }
-            // for now we assume that we are only displaying heterogeneous 
-            // lists, so we can quit after looking at the first object
-            break; 
-        }
-        
-        Collections.sort(attrs, new Comparator<DomainObjectAttribute>() {
-            @Override
-            public int compare(DomainObjectAttribute o1, DomainObjectAttribute o2) {
-                return o1.getLabel().compareTo(o2.getLabel());
-            }
-        });
-        
-        for(DomainObjectAttribute attr : attrs) {
-            attributeMap.put(attr.getName(), attr);
-        }
-        
-        setAttributeColumns(attrs);
-        showObjects(domainObjectList.getDomainObjects());
 
-        // Finally, we're done, we can call the success callback
-        ConcurrentUtils.invokeAndHandleExceptions(success);
+            @Override
+            protected void hadSuccess() {
+
+                getToolbar().getChooseColumnsButton().setEnabled(configDialog!=null);
+                getToolbar().getExportButton().setEnabled(configDialog!=null);
+                
+                getDynamicTable().clearColumns();
+                for(DomainObjectAttribute attr : attrs) {
+                    attributeMap.put(attr.getName(), attr);
+                    getDynamicTable().addColumn(attr.getName(), attr.getLabel(), true, false, true, attr.isSortable());
+                }
+                
+                updateViewerConfig();
+                showObjects(domainObjectList.getDomainObjects());
+
+                // Finally, we're done, we can call the success callback
+                ConcurrentUtils.invokeAndHandleExceptions(success);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        worker.execute();
     }
 
     @Override
@@ -173,6 +193,17 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         JPopupMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), selected);
         ((DomainObjectContextMenu) popupMenu).addMenuItems();
         return popupMenu;
+    }
+
+    @Override
+    protected void chooseColumnsButtonPressed() {
+        if (configDialog==null) {
+            return;
+        }
+        if (configDialog.showDialog(this)==1) {
+            updateViewerConfig();
+            updateTableModel();
+        }
     }
     
     @Override
@@ -211,6 +242,14 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
     }
 
+    public void updateViewerConfig() {
+        TableViewerConfiguration config = configDialog==null?null:configDialog.getConfig();
+        for(String attrName : attributeMap.keySet()) {
+            boolean visible = config==null?true:config.isVisible(attrName);
+            getColumn(attrName).setVisible(visible);
+        }
+    }
+    
     @Override
     protected void updateTableModel() {
         super.updateTableModel();
@@ -219,7 +258,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     
     protected class SolrRowSorter extends RowSorter<TableModel> {
 
-        private List<SortKey> sortKeys = new ArrayList<SortKey>();
+        private List<SortKey> sortKeys = new ArrayList<>();
 
         public SolrRowSorter() {
             List<DynamicColumn> columns = getDynamicTable().getDisplayedColumns();
@@ -260,7 +299,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         @Override
         public void setSortKeys(List<? extends SortKey> sortKeys) {
-            this.sortKeys = Collections.unmodifiableList(new ArrayList<SortKey>(sortKeys));
+            this.sortKeys = Collections.unmodifiableList(new ArrayList<>(sortKeys));
         }
 
         @Override

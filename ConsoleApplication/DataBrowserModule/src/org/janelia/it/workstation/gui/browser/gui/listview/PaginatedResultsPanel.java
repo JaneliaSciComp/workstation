@@ -24,7 +24,6 @@ import javax.swing.UIManager;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.workstation.gui.browser.actions.OpenWithDefaultAppAction;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
@@ -181,22 +180,16 @@ public abstract class PaginatedResultsPanel extends JPanel {
 
         JPopupMenu popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
-
-        JMenuItem iconViewItem = new JMenuItem("Icon View");
-        iconViewItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                setViewerType(ListViewerType.IconViewer);
-            }
-        });
-        popupMenu.add(iconViewItem);
-
-        JMenuItem tableViewItem = new JMenuItem("Table View");
-        tableViewItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                setViewerType(ListViewerType.TableViewer);
-            }
-        });
-        popupMenu.add(tableViewItem);
+        
+        for(final ListViewerType type : ListViewerType.values()) {
+            JMenuItem viewItem = new JMenuItem(type.getName());
+            viewItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    setViewerType(type);
+                }
+            });
+            popupMenu.add(viewItem);
+        }
 
         return popupMenu;
     }
