@@ -40,7 +40,10 @@ extends AbstractTextureLoadAdapter
 {
 	private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
     private static final CategoryString LIX_CATEGORY_STRING = new CategoryString("loadTileIndexToRam:elapsed");
+    private static final CategoryString LONG_TILE_LOAD_CATEGORY_STRING = new CategoryString("longRunningTileIndexLoad");
     private static final CategoryString LVV_SESSION_CATEGORY_STRING = new CategoryString("openFolder");
+    
+    private static final int LONG_TIME_LOAD_LOG_THRESHOLD = 10 * 1000;
 
 	// Metadata: file location required for local system as mount point.
 	private File topFolder;
@@ -143,6 +146,14 @@ extends AbstractTextureLoadAdapter
                     actionString,
                     elapsedMs,
                     Double.MAX_VALUE
+            );
+            // Use the elapsed cutoff for this parallel category.
+            SessionMgr.getSessionMgr().logToolEvent(
+                    LVV_LOGSTAMP_ID,
+                    LONG_TILE_LOAD_CATEGORY_STRING,
+                    actionString,
+                    elapsedMs,
+                    LONG_TIME_LOAD_LOG_THRESHOLD
             );
         }
 
