@@ -547,6 +547,50 @@ public final class SessionMgr {
     }
 
     /**
+     * Send an event described by the information given as parameters, to the
+     * logging apparatus. Apply the criteria of:
+     * 1. allow-to-log if more time was taken, than the lower threshold, or
+     * 
+     * @param toolName the stakeholder tool, in this event.
+     * @param category for namespacing.
+     * @param action what happened.
+     * @param timestamp when it happened.
+     * @param elapsedMs how much time passed to carry this out?
+     * @param thresholdMs beyond this time, force log issue.
+     * @todo see about reusing code between this and non-threshold.
+     */
+    public void logToolThresholdEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
+        String userLogin = null;
+
+        try {
+            userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
+            final UserToolEvent event = new UserToolEvent(getCurrentSessionId(), userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
+            Callable<Void> callable = new Callable<Void>() {
+                @Override
+                public Void call() {
+                    boolean shouldLog = false;
+                    if (elapsedMs > thresholdMs) {
+                        shouldLog = true;
+                    }
+
+                    if (shouldLog) {
+                        ModelMgr.getModelMgr().addEventToSession(event);
+                    }
+                    return null;
+                }
+            };
+            SingleThreadedTaskQueue.submit(callable);
+
+        } catch (Exception ex) {
+            log.warn(
+                    "Failed to log tool event for session: {}, user: {}, tool: {}, category: {}, action: {}, timestamp: {}.",
+                    getCurrentSessionId(), userLogin, toolName, category, action, timestamp
+            );
+            ex.printStackTrace();
+        }
+    }
+
+    /**
      * Log a tool event, always.  No criteria will be checked.
      * 
      * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long) 
