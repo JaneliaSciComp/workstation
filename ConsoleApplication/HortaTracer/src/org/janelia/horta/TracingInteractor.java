@@ -288,7 +288,7 @@ public class TracingInteractor extends MouseAdapter
     }
 
     private NeuriteAnchor anchorForScreenPoint(Point screenPoint) {
-        int intensity = volumeProjection.getIntensity(screenPoint);
+        double intensity = volumeProjection.getIntensity(screenPoint);
         if (intensity <= 0) return null;
         float radius = radiusEstimator.estimateRadius(screenPoint, volumeProjection);
         if (radius <= 0) return null;
@@ -304,7 +304,7 @@ public class TracingInteractor extends MouseAdapter
     private Point previousHoverPoint = null;
     public void moveHoverCursor(Point screenPoint) {
         // Find nearby brightest point
-        screenPoint = optimizePosition(screenPoint);
+        // screenPoint = optimizePosition(screenPoint); // TODO: disabling optimization for now
         
         if (screenPoint == previousHoverPoint)
             return; // no change from last time
@@ -343,8 +343,8 @@ public class TracingInteractor extends MouseAdapter
     private Point optimizeX(Point p, int max) {
         Point p1 = searchOptimizeBrightness(p, -1, 0, max);
         Point p2 = searchOptimizeBrightness(p, 1, 0, max);
-        int intensity1 = volumeProjection.getIntensity(p1);
-        int intensity2 = volumeProjection.getIntensity(p2);
+        double intensity1 = volumeProjection.getIntensity(p1);
+        double intensity2 = volumeProjection.getIntensity(p2);
         if (intensity1 > intensity2) {
             return p1;
         } else {
@@ -355,8 +355,8 @@ public class TracingInteractor extends MouseAdapter
     private Point optimizeY(Point p, int max) {
         Point p1 = searchOptimizeBrightness(p, 0, -1, max);
         Point p2 = searchOptimizeBrightness(p, 0, 1, max);
-        int intensity1 = volumeProjection.getIntensity(p1);
-        int intensity2 = volumeProjection.getIntensity(p2);
+        double intensity1 = volumeProjection.getIntensity(p1);
+        double intensity2 = volumeProjection.getIntensity(p2);
         if (intensity1 > intensity2) {
             return p1;
         } else {
@@ -365,12 +365,12 @@ public class TracingInteractor extends MouseAdapter
     }
 
     private Point searchOptimizeBrightness(Point point, int dx, int dy, int max_step) {
-        int i_orig = volumeProjection.getIntensity(point);
-        int best_i = i_orig;
+        double i_orig = volumeProjection.getIntensity(point);
+        double best_i = i_orig;
         int best_t = 0;
         double max_drop = 10 + 0.05 * i_orig;
         for (int t = 1; t <= max_step; ++t) {
-            int i_test = volumeProjection.getIntensity(new Point(
+            double i_test = volumeProjection.getIntensity(new Point(
                     point.x + t * dx, 
                     point.y + t * dy));
             if (i_test > best_i) {

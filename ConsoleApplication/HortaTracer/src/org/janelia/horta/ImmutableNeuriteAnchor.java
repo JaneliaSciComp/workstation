@@ -42,7 +42,7 @@ public interface ImmutableNeuriteAnchor
     
     public ConstVector3 getLocationUm();
 
-    public int getIntensity();
+    public double getIntensity();
 
     public float getRadiusUm();
 }

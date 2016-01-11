@@ -44,11 +44,11 @@ implements RadiusEstimator
     @Override
     public float estimateRadius(Point screenPoint, VolumeProjection image) 
     {
-        int intensity = image.getIntensity(screenPoint);
+        double intensity = image.getIntensity(screenPoint);
         if (intensity <= 0) return 0f;
         RadiusCandidate radius = new RadiusCandidate(
                 screenPoint.x, screenPoint.y, 
-                intensity);
+                (int)intensity);
         radius.computeXYRadius(image);
         return radius.radiusUm;
     }
@@ -97,18 +97,18 @@ implements RadiusEstimator
         {
             RadiusScoreAndIntensityRange result = new RadiusScoreAndIntensityRange();
             float pixelsPerUm = volumeProjection.getPixelsPerSceneUnit();
-            int i = volumeProjection.getIntensity(new Point2D.Float(
+            double i = volumeProjection.getIntensity(new Point2D.Float(
                     x + dxUm * pixelsPerUm, 
                     y + dyUm * pixelsPerUm));
             if (i <= 0) return result;
             // slope is a critical radius estimator
-            int iRange = centerIntensity - i + padIntensity;
+            double iRange = centerIntensity - i + padIntensity;
             float slopeDistance = (float)Math.sqrt(dxUm*dxUm + dyUm*dyUm) + padDistanceUm;
-            float slope = iRange / slopeDistance;
+            double slope = iRange / slopeDistance;
             if (slope < 0) 
                 return result;
-            result.intensityRange = iRange;
-            result.score = slope;
+            result.intensityRange = (int)iRange;
+            result.score = (float)slope;
             return result;
         }
         

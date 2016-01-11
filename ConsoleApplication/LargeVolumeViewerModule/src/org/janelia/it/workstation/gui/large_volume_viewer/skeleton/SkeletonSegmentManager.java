@@ -6,6 +6,7 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -151,7 +152,8 @@ public class SkeletonSegmentManager {
         //  returns them in)
 
         Map<Long, List<Integer>> tempLineIndices = new HashMap<>();
-        for (Anchor anchor : skeleton.getAnchors()) {
+        Collection<Anchor> anchors = new ArrayList<>( skeleton.getAnchors() );
+        for (Anchor anchor : anchors) {
             int i1 = getIndexForAnchor(anchor);
             if (i1 < 0) {
                 continue;

@@ -25,6 +25,7 @@ import javax.swing.ImageIcon;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Vector;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
@@ -71,6 +72,13 @@ public class SkeletonActor
             }
         }
     }
+
+    private class ElementDataOffset {
+        public ElementDataOffset(Long id, int size, long offset) { this.id=id; this.size=size; this.offset=offset; }
+        public Long id;
+        public int size;
+        public long offset;
+    }
     
     private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
 
@@ -87,14 +95,21 @@ public class SkeletonActor
     private Map<Long, FloatBuffer> neuronVertices = new HashMap<>();
     private Map<Long, FloatBuffer> neuronColors = new HashMap<>();
 
+    List<ElementDataOffset> vertexOffsets=new ArrayList<>();
+    List<ElementDataOffset> colorOffsets=new ArrayList<>();
+    List<ElementDataOffset> lineOffsets=new ArrayList<>();
+    List<ElementDataOffset> pointOffsets=new ArrayList<>();
+
+    Map<Long, ElementDataOffset> vertexOffsetMap=new HashMap<>();
+    Map<Long, ElementDataOffset> colorOffsetMap=new HashMap<>();
+
     private int vbo = -1;
     private int lineIbo = -1;
     private int pointIbo = -1;
     private int colorBo = -1;
 
-    // not currently used:
-    private boolean linesNeedCopy = false;
     private boolean verticesNeedCopy = false;
+    private boolean pointIndicesNeedCopy = false;
 
     // Vertex buffer objects need indices
     private Map<Anchor, Integer> neuronAnchorIndices = new HashMap<>();
@@ -181,80 +196,168 @@ public class SkeletonActor
         GL2 gl2 = gl.getGL2();
         transparencyDepthMode(gl, true);
 
-        NeuronStyle style;
-        for (Long neuronID : neuronVertices.keySet()) {
-            if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible()) {
-                continue;
+        int n=0;
+
+        //log.info("displayLines2 Check0");
+
+        if (verticesNeedCopy) {
+
+            vertexOffsets.clear();
+            colorOffsets.clear();
+            lineOffsets.clear();
+
+            vertexOffsetMap.clear();
+            colorOffsetMap.clear();
+
+            int cummulativeVertexOffset=0;
+            int cummulativeColorOffset=0;
+            int cummulativeLineOffset=0;
+
+            List<Long> neuronOrderList=new ArrayList<>();
+
+            //log.info("displayLines2 Check1");
+
+            for (Long neuronID : neuronVertices.keySet()) {
+
+                if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible()) {
+                    continue;
+                }
+
+                neuronOrderList.add(neuronID);
+
+                int vertexBufferSize=neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT;
+                int colorBufferSize=neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT;
+
+                int lineBufferSize=0;
+                if (neuronLineIndices.containsKey(neuronID)) {
+                    lineBufferSize = neuronLineIndices.get(neuronID).capacity() * INT_BYTE_COUNT;
+                }
+
+                ElementDataOffset vertexOffset=new ElementDataOffset(neuronID, vertexBufferSize, cummulativeVertexOffset);
+                vertexOffsets.add(vertexOffset);
+                vertexOffsetMap.put(neuronID, vertexOffset);
+
+                ElementDataOffset colorOffset=new ElementDataOffset(neuronID, colorBufferSize, cummulativeColorOffset);
+                colorOffsets.add(colorOffset);
+                colorOffsetMap.put(neuronID, colorOffset);
+
+                lineOffsets.add(new ElementDataOffset(neuronID, lineBufferSize, cummulativeLineOffset));
+
+                cummulativeVertexOffset+=vertexBufferSize;
+                cummulativeColorOffset+=colorBufferSize;
+                cummulativeLineOffset+=lineBufferSize;
             }
 
-            if (!neuronLineIndices.containsKey(neuronID)) {
-                continue;
-            }
+            //log.info("displayLines2 Check1.5");
 
-            // if (verticesNeedCopy) { // TODO
-            if (true) {
-                gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vbo);
-                neuronVertices.get(neuronID).rewind();
-                gl.glBufferData(GL.GL_ARRAY_BUFFER,
-                        neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT,
-                        neuronVertices.get(neuronID), GL.GL_DYNAMIC_DRAW);
-                verticesNeedCopy = false;
+            ByteBuffer vertexByteBuffer=ByteBuffer.allocateDirect(cummulativeVertexOffset);
+            FloatBuffer vertexBuffer = vertexByteBuffer.order(ByteOrder.nativeOrder()).asFloatBuffer();
+            n=0;
+            for (Long neuronID : neuronOrderList) {
+                //log.info("start n="+n);
+                ElementDataOffset elementDataOffset = vertexOffsets.get(n);
+                FloatBuffer neuronVertexBuffer=neuronVertices.get(elementDataOffset.id);
+                neuronVertexBuffer.rewind();
+                vertexBuffer.put(neuronVertexBuffer);
+                //log.info("end n="+n);
+                n++;
+            }
+            //log.info("displayLines2 Check1.5.5");
+            gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vbo);
+            //log.info("displayLines2 Check1.5.6");
+            vertexBuffer.rewind();
+            gl.glBufferData(GL.GL_ARRAY_BUFFER, cummulativeVertexOffset, vertexBuffer, GL.GL_DYNAMIC_DRAW);
+            //log.info("displayLines2 Check1.5.7");
 
-                // uses same color array as vertices (anchors) does
-                neuronColors.get(neuronID).rewind();
-                gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colorBo);
-                gl.glBufferData(GL.GL_ARRAY_BUFFER,
-                        neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT,
-                        neuronColors.get(neuronID),
-                        GL.GL_DYNAMIC_DRAW);
+            //log.info("displayLines2 Check1.6");
+
+            n=0;
+            ByteBuffer colorByteBuffer=ByteBuffer.allocateDirect(cummulativeColorOffset);
+            FloatBuffer colorBuffer=colorByteBuffer.order(ByteOrder.nativeOrder()).asFloatBuffer();
+            for (Long neuronID : neuronOrderList) {
+                ElementDataOffset elementDataOffset = colorOffsets.get(n);
+                FloatBuffer neuronColorBuffer=neuronColors.get(elementDataOffset.id);
+                neuronColorBuffer.rewind();
+                colorBuffer.put(neuronColorBuffer);
+                n++;
             }
-            // if (linesNeedCopy) // TODO
-            if (true) {
-                gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
-                neuronLineIndices.get(neuronID).rewind();
-                gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER,
-                        neuronLineIndices.get(neuronID).capacity() * INT_BYTE_COUNT,
-                        neuronLineIndices.get(neuronID), GL.GL_DYNAMIC_DRAW);
-                linesNeedCopy = false;
+            gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colorBo);
+            colorBuffer.rewind();
+            gl.glBufferData(GL.GL_ARRAY_BUFFER, cummulativeColorOffset, colorBuffer, GL.GL_DYNAMIC_DRAW);
+
+            //log.info("displayLines2 Check1.7");
+
+            n=0;
+            ByteBuffer lineByteBuffer=ByteBuffer.allocateDirect(cummulativeLineOffset);
+            IntBuffer lineBuffer=lineByteBuffer.order(ByteOrder.nativeOrder()).asIntBuffer();
+            for (Long neuronID : neuronOrderList) {
+                ElementDataOffset elementDataOffset = lineOffsets.get(n);
+                if (elementDataOffset.size!=0) {
+                    IntBuffer neuronLineBuffer = neuronLineIndices.get(elementDataOffset.id);
+                    lineBuffer.put(neuronLineBuffer);
+                }
+                n++;
             }
-            gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
-            gl2.glVertexPointer(VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
-            gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
-            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
-            gl2.glColorPointer(COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
-            gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
-            lineShader.load(gl2);
-            lineShader.setUniform(gl, "zThickness", zThicknessInPixels);
-            // log.info("zThickness = "+zThickness);
-            float focus[] = {
+            gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
+            lineBuffer.rewind();
+            gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, cummulativeLineOffset, lineBuffer, GL.GL_DYNAMIC_DRAW);
+
+            verticesNeedCopy = false;
+        }
+
+        //log.info("displayLines2 Check2");
+
+        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+        lineShader.load(gl2);
+        lineShader.setUniform(gl, "zThickness", zThicknessInPixels);
+        float focus[] = {
                 (float) camera.getFocus().getX(),
                 (float) camera.getFocus().getY(),
                 (float) camera.getFocus().getZ()};
-            lineShader.setUniform3v(gl, "focus", 1, focus);
-            gl.glEnable(GL2.GL_LINE_SMOOTH);
-            gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
-            // wider black line
+        lineShader.setUniform3v(gl, "focus", 1, focus);
+        gl.glEnable(GL2.GL_LINE_SMOOTH);
+        gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
+        gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+
+        //log.info("displayLines2 Check3");
+
+        n=0;
+        for (ElementDataOffset lineElementOffset : lineOffsets) {
+            ElementDataOffset vertexElementOffset = vertexOffsets.get(n);
+            ElementDataOffset colorElementOffset = colorOffsets.get(n);
+            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
+            gl2.glVertexPointer(VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, vertexElementOffset.offset);
+            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+            gl2.glColorPointer(COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, colorElementOffset.offset);
+            gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
+
+            // 1st pass : wider black line
             gl.glLineWidth(3.5f);
             lineShader.setUniform3v(gl, "baseColor", 1, blackColor);
             gl.glDrawElements(GL2.GL_LINES,
-                    neuronLineIndices.get(neuronID).capacity(),
+                    lineElementOffset.size/INT_BYTE_COUNT,
                     GL2.GL_UNSIGNED_INT,
-                    0L);
+                    lineElementOffset.offset);
             lineOffset(gl, true);
+
+            // 2nd pass : colored line
             gl.glLineWidth(1.5f);
-            if (neuronStyles.containsKey(neuronID)) {
-                style = neuronStyles.get(neuronID);
+            NeuronStyle style;
+            if (neuronStyles.containsKey(lineElementOffset.id)) {
+                style = neuronStyles.get(lineElementOffset.id);
             } else {
-                style = NeuronStyle.getStyleForNeuron(neuronID);
+                style = NeuronStyle.getStyleForNeuron(lineElementOffset.id);
             }
             lineShader.setUniform3v(gl, "baseColor", 1, style.getColorAsFloatArray());
             gl.glDrawElements(GL2.GL_LINES,
-                    neuronLineIndices.get(neuronID).capacity(),
+                    lineElementOffset.size/INT_BYTE_COUNT,
                     GL2.GL_UNSIGNED_INT,
-                    0L);
+                    lineElementOffset.offset);
             lineOffset(gl, false);
+            n++;
         }
+
+        //log.info("displayLines2 Check4");
 
         gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
         gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
@@ -289,73 +392,91 @@ public class SkeletonActor
         GL2 gl = glDrawable.getGL().getGL2();
         setupAnchorShaders(gl);
 
-        for (Long neuronID : neuronVertices.keySet()) {
-            if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible()) {
-                continue;
+        int n=0;
+
+        if (pointIndicesNeedCopy) {
+
+            pointOffsets.clear();
+
+            int cummulativePointOffset=0;
+            List<Long> neuronOrderList=new ArrayList<>();
+
+            for (Long neuronID : neuronVertices.keySet()) {
+                if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible()) {
+                    continue;
+                }
+                neuronOrderList.add(neuronID);
+                int pointBufferSize=neuronPointIndices.get(neuronID).capacity()*INT_BYTE_COUNT;
+                pointOffsets.add(new ElementDataOffset(neuronID, pointBufferSize, cummulativePointOffset));
+                cummulativePointOffset+=pointBufferSize;
             }
 
-            // setup per-neuron anchor shader settings (used to be in setupAnchorShader)
-            int tempIndex;
-            Anchor hoverAnchor = skeleton.getHoverAnchor();
-            if (hoverAnchor != null && hoverAnchor.getNeuronID().equals(neuronID)) {
-                tempIndex = getIndexForAnchor(hoverAnchor);
-            } else {
-                tempIndex = -1;
+            n=0;
+            ByteBuffer pointByteBuffer=ByteBuffer.allocateDirect(cummulativePointOffset);
+            IntBuffer pointBuffer=pointByteBuffer.order(ByteOrder.nativeOrder()).asIntBuffer();
+            for (Long neuronID : neuronOrderList) {
+                ElementDataOffset elementDataOffset = pointOffsets.get(n);
+                IntBuffer neuronPointBuffer=neuronPointIndices.get(elementDataOffset.id);
+                neuronPointBuffer.rewind();
+                pointBuffer.put(neuronPointBuffer);
+                n++;
             }
-            anchorShader.setUniform(gl, "highlightAnchorIndex", tempIndex);
-            Anchor nextParent = skeleton.getNextParent();
-            if (nextParent != null && nextParent.getNeuronID().equals(neuronID)) {
-                tempIndex = getIndexForAnchor(nextParent);
-            } else {
-                tempIndex = -1;
-            }
-            anchorShader.setUniform(gl, "parentAnchorIndex", tempIndex);
-            anchorShader.setUniform(gl, "isDiscardNonParent", discardNonParent);
+            gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
+            pointBuffer.rewind();
+            gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, cummulativePointOffset, pointBuffer, GL.GL_DYNAMIC_DRAW);
 
-            // TODO - crashes unless glBufferData called every time.
-            // if (verticesNeedCopy) {
-            if (true) {
-                // vertices
-                neuronVertices.get(neuronID).rewind();
-                gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
-                gl.glBufferData(GL2.GL_ARRAY_BUFFER,
-                        neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT,
-                        neuronVertices.get(neuronID), GL2.GL_DYNAMIC_DRAW);
-
-                // colors
-                neuronColors.get(neuronID).rewind();
-                gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
-                gl.glBufferData(GL2.GL_ARRAY_BUFFER,
-                        neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT,
-                        neuronColors.get(neuronID),
-                        GL2.GL_DYNAMIC_DRAW);
-
-                verticesNeedCopy = false;
-                // point indices
-                neuronPointIndices.get(neuronID).rewind();
-                gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
-                gl.glBufferData(GL2.GL_ELEMENT_ARRAY_BUFFER,
-                        neuronPointIndices.get(neuronID).capacity() * INT_BYTE_COUNT,
-                        neuronPointIndices.get(neuronID), GL2.GL_DYNAMIC_DRAW);
-            }
-            gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
-            gl.glVertexPointer(VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
-            gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
-            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
-            gl.glColorPointer(COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, 0L);
-            gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
-            PassThroughTextureShader.checkGlError(gl, "paint anchors 1");
-            gl.glDrawElements(GL2.GL_POINTS,
-                    neuronPointIndices.get(neuronID).capacity(),
-                    GL2.GL_UNSIGNED_INT,
-                    0L);
-            // tear down
-            gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
-            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, 0);
-            gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-            gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+            pointIndicesNeedCopy=false;
         }
+
+        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+        gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+        //PassThroughTextureShader.checkGlError(gl, "paint anchors 1");
+
+        for (ElementDataOffset pointOffset : pointOffsets) {
+
+            Long neuronID = pointOffset.id;
+            ElementDataOffset vertexOffset=vertexOffsetMap.get(neuronID);
+            ElementDataOffset colorOffset=colorOffsetMap.get(neuronID);
+
+            if (vertexOffset!=null && colorOffset!=null) {
+
+                // setup per-neuron anchor shader settings (used to be in setupAnchorShader)
+                int tempIndex;
+                Anchor hoverAnchor = skeleton.getHoverAnchor();
+                if (hoverAnchor != null && hoverAnchor.getNeuronID().equals(neuronID)) {
+                    tempIndex = getIndexForAnchor(hoverAnchor);
+                } else {
+                    tempIndex = -1;
+                }
+                anchorShader.setUniform(gl, "highlightAnchorIndex", tempIndex);
+                Anchor nextParent = skeleton.getNextParent();
+                if (nextParent != null && nextParent.getNeuronID().equals(neuronID)) {
+                    tempIndex = getIndexForAnchor(nextParent);
+                } else {
+                    tempIndex = -1;
+                }
+                anchorShader.setUniform(gl, "parentAnchorIndex", tempIndex);
+                anchorShader.setUniform(gl, "isDiscardNonParent", discardNonParent);
+
+                gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
+                gl.glVertexPointer(VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, vertexOffset.offset);
+
+                gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+                gl.glColorPointer(COLOR_FLOAT_COUNT, GL2.GL_FLOAT, 0, colorOffset.offset);
+
+                gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
+                gl.glDrawElements(GL2.GL_POINTS,
+                        pointOffset.size / INT_BYTE_COUNT,
+                        GL2.GL_UNSIGNED_INT,
+                        pointOffset.offset);
+            }
+        }
+
+        // tear down
+        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
+        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, 0);
+        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+        gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
 
         tearDownAnchorShaders(gl);
     }
@@ -579,7 +700,7 @@ public class SkeletonActor
         neuronVertices.clear();
         neuronColors.clear();
         // first, how many vertices per neuron; then, fill the buffers (one per neuron)
-        Collection<Anchor> anchors = new ArrayList<>(skeleton.getAnchors()); // Avoid concurrent mod.
+        Collection<Anchor> anchors = getAnchorsSafe();
         for (Anchor anchor : anchors) {
             neuronVertexCount.add(anchor.getNeuronID());
         }
@@ -644,6 +765,7 @@ public class SkeletonActor
             int i1 = neuronAnchorIndices.get(anchor);
             neuronPointIndices.get(anchor.getNeuronID()).put(i1);
         }
+        pointIndicesNeedCopy=true;
 
         // automatically traced paths
         updateTracedPaths();
@@ -667,7 +789,7 @@ public class SkeletonActor
         //  returns them in)
 
         Map<Long, List<Integer>> tempLineIndices = new HashMap<>();
-        for (Anchor anchor : skeleton.getAnchors()) {
+        for (Anchor anchor : getAnchorsSafe()) {
             int i1 = getIndexForAnchor(anchor);
             if (i1 < 0) {
                 continue;
@@ -709,7 +831,6 @@ public class SkeletonActor
             neuronLineIndices.get(neuronID).rewind();
         }
 
-        linesNeedCopy = true;
         verticesNeedCopy = true;
     }
 
@@ -721,7 +842,8 @@ public class SkeletonActor
         //  this is necessary because unlike in the old not-per-neuron way of
         //  doing things, we would normally need some info from anchors that
         //  just isn't there when the whole skeleton is cleared
-        if (skeleton.getAnchors().size() == 0) {
+        Collection<Anchor> anchors = getAnchorsSafe();
+        if ( anchors.isEmpty() ) {
             neuronTracedSegments.clear();
             return;
         }
@@ -913,8 +1035,8 @@ public class SkeletonActor
         colorBo = ix[3];
         //
         PassThroughTextureShader.checkGlError(gl, "load anchor texture");
-        linesNeedCopy = true;
         verticesNeedCopy = true;
+        pointIndicesNeedCopy = true;
         transparencyDepthMode(gl, true);
 
         bIsGlInitialized = true;
@@ -983,6 +1105,7 @@ public class SkeletonActor
         for (int i = 0; i < 3; ++i) {
             neuronVertices.get(dragAnchor.getNeuronID()).put(offset + i, (float) (double) location.get(i));
         }
+        updateLines();
         updater.update();
     }
 
@@ -1014,7 +1137,7 @@ public class SkeletonActor
 
     protected Anchor findAnchor(Long annotationID) {
         Anchor foundAnchor = null;
-        for (Anchor testAnchor : getSkeleton().getAnchors()) {
+        for (Anchor testAnchor : getAnchorsSafe()) {
             if (testAnchor.getGuid().equals(annotationID)) {
                 foundAnchor = testAnchor;
                 break;
@@ -1058,6 +1181,14 @@ public class SkeletonActor
 
     private TileFormat getTileFormat() {
         return tileFormat;
+    }
+    
+    /** Avoid concurrent modification exceptions, during import. */
+    private Collection<Anchor> getAnchorsSafe() {
+        if (skeleton == null || skeleton.getAnchors() == null) {
+            return Collections.EMPTY_LIST;
+        }
+        return new ArrayList<>(skeleton.getAnchors());
     }
 
 }

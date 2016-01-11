@@ -9,6 +9,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import java.util.*;
 
 import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
+import org.janelia.it.jacs.model.tasks.Task;
 
 /**
  * Created by IntelliJ IDEA.
@@ -250,6 +251,11 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
+    public void importSWCFolder(String swcFolderLoc, String ownerKey, Long sampleId, String workspaceName) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().importSWCFolder(swcFolderLoc, ownerKey, sampleId, workspaceName);
+    }
+    
+    @Override
     public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
                                                   double x, double y, double z, String comment) throws Exception {
         return EJBFactory.getRemoteTiledMicroscopeBean().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
@@ -378,16 +384,16 @@ public class EJBEntityFacade implements EntityFacade {
         }
         return rtnVal;
     }
-
-	@Override
-	public RawFileInfo getNearestChannelFiles(String basePath, int[] viewerCoord) throws Exception {
-		RawFileInfo rtnVal = null;
-		final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
-		if (remoteTiledMicroscopeBean != null) {
-			rtnVal = remoteTiledMicroscopeBean.getNearestChannelFiles(basePath, viewerCoord);
-		}
-		return rtnVal;
-	}
+    
+    @Override
+    public RawFileInfo getNearestChannelFiles( String basePath, int[] viewerCoord ) throws Exception {
+        RawFileInfo rtnVal = null;
+        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
+        if ( remoteTiledMicroscopeBean != null ) {
+            rtnVal = remoteTiledMicroscopeBean.getNearestChannelFiles( basePath, viewerCoord );
+        }
+        return rtnVal;
+    }
 
     @Override
     public CoordinateToRawTransform getLvvCoordToRawTransform( String basePath ) throws Exception {

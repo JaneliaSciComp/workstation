@@ -55,6 +55,7 @@ public class SpheresMaterial extends BasicMaterial
     private int radiusOffsetIndex = -1;
     
     private final Texture2d lightProbeTexture;
+    private final boolean manageLightProbeTexture;
     private final float[] color = new float[] {1, 0, 0, 1};
     private float minPixelRadius = 0.0f;
 
@@ -65,6 +66,7 @@ public class SpheresMaterial extends BasicMaterial
             shaderProgram = spheresShader;
         
         if (lightProbeTexture == null) {
+            manageLightProbeTexture = true;
             this.lightProbeTexture = new Texture2d();
             try {
                 this.lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
@@ -75,6 +77,7 @@ public class SpheresMaterial extends BasicMaterial
             }
         }
         else {
+            manageLightProbeTexture = false;
             this.lightProbeTexture = lightProbeTexture;
         }
     }
@@ -102,7 +105,8 @@ public class SpheresMaterial extends BasicMaterial
         super.dispose(gl);
         colorIndex = -1;
         lightProbeIndex = -1;
-        lightProbeTexture.dispose(gl);
+        if (manageLightProbeTexture)
+            lightProbeTexture.dispose(gl);
         radiusOffsetIndex = -1;
     }
     
@@ -120,7 +124,8 @@ public class SpheresMaterial extends BasicMaterial
         lightProbeIndex = gl.glGetUniformLocation(
             shaderProgram.getProgramHandle(),
             "lightProbe");
-        lightProbeTexture.init(gl);
+        if (manageLightProbeTexture)
+            lightProbeTexture.init(gl);
         radiusOffsetIndex = gl.glGetUniformLocation(
             shaderProgram.getProgramHandle(),
             "radiusOffset");
@@ -134,7 +139,8 @@ public class SpheresMaterial extends BasicMaterial
         if (colorIndex == -1) 
             init(gl);
         super.load(gl, camera);
-        lightProbeTexture.bind(gl, 0);
+        if (manageLightProbeTexture)
+            lightProbeTexture.bind(gl, 0);
         gl.glUniform4fv(colorIndex, 1, color, 0);
         gl.glUniform1i(lightProbeIndex, 0); // use default texture unit, 0
         // radius offset depends on current zoom
@@ -148,7 +154,8 @@ public class SpheresMaterial extends BasicMaterial
     @Override
     public void unload(GL3 gl) {
         super.unload(gl);
-        lightProbeTexture.unbind(gl);
+        if (manageLightProbeTexture)
+            lightProbeTexture.unbind(gl);
     }
     
     @Override

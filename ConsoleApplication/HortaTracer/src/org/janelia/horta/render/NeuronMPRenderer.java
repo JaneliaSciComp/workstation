@@ -41,6 +41,9 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
@@ -52,7 +55,6 @@ import org.janelia.gltools.MultipassRenderer;
 import org.janelia.gltools.RemapColorActor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
-import org.janelia.horta.modelapi.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.geometry3d.Matrix4;
@@ -64,10 +66,11 @@ import org.janelia.horta.actors.ConesActor;
 import org.janelia.horta.actors.ConesMaterial;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.SpheresMaterial;
+import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.openide.util.Exceptions;
 
 /**
- *
+ * Multi-pass renderer for Horta volumes and neuron models
  * @author Christopher Bruns
  */
 public class NeuronMPRenderer
@@ -107,7 +110,7 @@ extends MultipassRenderer
             @Override
             public void display(GL3 gl, AbstractCamera camera) {
                 volumeRenderPass.setOpaqueDepthTexture(
-                        opaqueRenderPass.getDepthTarget(),
+                        opaqueRenderPass.getFlatDepthTarget(),
                         opaqueRenderPass.getZNear(),
                         opaqueRenderPass.getZFar());
                 super.display(gl, camera);
@@ -169,21 +172,29 @@ extends MultipassRenderer
         super.dispose(gl);
     }
     
-    public int pickIdForScreenXy(Point2D xy) {
+    public double pickIdForScreenXy(Point2D xy) {
         return valueForScreenXy(xy, volumeRenderPass.getPickTexture().getAttachment(), 0);
     }
 
-    public int intensityForScreenXy(Point2D xy) {
-        int result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 0);
+    public double intensityForScreenXy(Point2D xy) {
+       
+        double result;
+        if (false) { // TODO: Testing depth access
+            result = opaqueDepthForScreenXy(xy);
+            // System.out.println("opaque depth intensity = "+result);
+            return result;
+        }
+        
+        result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 0);
         if (result <= 0) {
             return -1;
         }
         return result;
     }
     
-    public float relativeDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
+    private float relativeTransparentDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
         float result = 0;
-        int intensity = intensityForScreenXy(xy);
+        double intensity = intensityForScreenXy(xy);
         if (intensity == -1) {
             return result;
         }
@@ -194,7 +205,7 @@ extends MultipassRenderer
         if (intensityDepthTarget == null) {
             return result;
         }
-        int relDepth = intensityDepthTarget.getIntensity(
+        int relDepth = (int)intensityDepthTarget.getIntensity(
                 drawable,
                 (int) xy.getX(),
                 // y convention is opposite between screen and texture buffer
@@ -202,6 +213,55 @@ extends MultipassRenderer
                 1); // channel index
         result = 2.0f * (relDepth / 65535.0f - 0.5f); // range [-1,1]
         return result;
+    }
+
+    // TODO: move to volumeRenderpass
+    private double opacityForScreenXy(Point2D xy, AbstractCamera camera) {
+        double result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 3);
+        if (result <= 0)
+            result = 0;
+        return result / 65535; // rescale to range 0-1
+    }
+    
+    private boolean isVisibleOpaqueAtScreenXy(Point2D xy, AbstractCamera camera) {
+        double od = opaqueRenderPass.rawZDepthForScreenXy(xy, drawable);
+        if (od >= 1.0) 
+            return false; // far clip value means no geometry there
+        double opacity = opacityForScreenXy(xy, camera);
+        // TODO: threshold might need to be tuned
+        final double opacityThreshold = 0.5; // Always use transparent material, if it's dense enough
+        if (opacity >= opacityThreshold)
+            return false; // transparent geometry is strong here, so no, not well visible
+        return true; // I see a neuron model at this spot
+    }
+    
+    private boolean isVisibleTransparentAtScreenXy(Point2D xy, AbstractCamera camera) {
+        double opacity = opacityForScreenXy(xy, camera);
+        return (opacity > 0);
+    }
+    
+    public double depthOffsetForScreenXy(Point2D xy, AbstractCamera camera) 
+    {
+        if (isVisibleOpaqueAtScreenXy(xy, camera)) {
+            double od = opaqueRenderPass.rawZDepthForScreenXy(xy, drawable);
+            // Definitely use opaque geometry for depth at this point
+            // TODO - transform to scene units (micrometers)
+            double zNear = opaqueRenderPass.getZNear();
+            double zFar = opaqueRenderPass.getZFar();
+            double zFocus = 0.5 * (zNear + zFar);
+            double zBuf = od;
+            // code lifted from VolumeMipFrag.glsl, which wants the same depth information
+            double zEye = 2*zFar*zNear / (zFar + zNear - (zFar - zNear)*(2*zBuf - 1));
+            return zEye - zFocus;
+        }
+        else if (isVisibleTransparentAtScreenXy(xy, camera)) {
+            double z = relativeTransparentDepthOffsetForScreenXy(xy, camera);
+            z *= 0.5 * getViewSlabThickness(camera);
+            return z;
+        }
+        else { // we have neither opaque nor transparent geometry to calibrate depth
+            return 0;
+        }
     }
 
     public final void setRelativeSlabThickness(float thickness) {
@@ -224,7 +284,11 @@ extends MultipassRenderer
         neuron.getVisibilityChangeObservable().deleteObserver(volumeLayerExpirer);
     }
     
-    private int valueForScreenXy(Point2D xy, int glAttachment, int channel) {
+    private double opaqueDepthForScreenXy(Point2D xy) {
+        return opaqueRenderPass.rawZDepthForScreenXy(xy, drawable);
+    }
+    
+    private double valueForScreenXy(Point2D xy, int glAttachment, int channel) {
         int result = -1;
         if (volumeRenderPass.getFramebuffer() == null) {
             return result;
@@ -233,7 +297,7 @@ extends MultipassRenderer
         if (target == null) {
             return result;
         }
-        int intensity = target.getIntensity(
+        double intensity = target.getIntensity(
                 drawable,
                 (int) Math.round(xy.getX()),
                 // y convention is opposite between screen and texture buffer
@@ -244,9 +308,15 @@ extends MultipassRenderer
     
     public void setIntensityBufferDirty() {
         for (RenderTarget rt : new RenderTarget[] {
-            volumeRenderPass.getIntensityTexture(), 
-            volumeRenderPass.getPickTexture()}) 
+                    volumeRenderPass.getIntensityTexture(), 
+                    volumeRenderPass.getPickTexture()}) 
+        {
             rt.setDirty(true);
+        }
+    }
+    
+    public void setOpaqueBufferDirty() {
+        opaqueRenderPass.setBuffersDirty();
     }
 
     public Iterable<GL3Actor> getVolumeActors()
@@ -263,8 +333,10 @@ extends MultipassRenderer
     // i.e. if calling this method might have made a difference
     public boolean setHideAll(boolean doHideAll) {
         boolean result = allSwcActor.setHideAll(doHideAll);
-        if (result)
+        if (result) {
             setIntensityBufferDirty(); // Now we can see behind the neurons, so repaint
+            setOpaqueBufferDirty();
+        }
         return result;
     }
     
@@ -279,6 +351,36 @@ extends MultipassRenderer
         
     }
     
+    public void bulkAddNeuronActors(Collection<NeuronModel> neurons) {
+        if (neurons.isEmpty())
+            return;
+        ExecutorService pool = Executors.newFixedThreadPool(10);
+        for (final NeuronModel neuron : neurons) {
+            if (allSwcActor.contains(neuron)) 
+                continue;
+            Runnable actorsJob = new Runnable() {
+                @Override
+                public void run()
+                {
+                    SpheresActor sa = allSwcActor.createSpheresActor(neuron);
+                    ConesActor ca = allSwcActor.createConesActor(neuron);
+                    // this next step is synchronized but fast
+                    allSwcActor.setActors(neuron, sa, ca);
+                    neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
+                }
+            };
+            pool.submit(actorsJob);
+            // actorsJob.run();
+        }
+        pool.shutdown();
+        try {
+            if (! pool.awaitTermination(60, TimeUnit.SECONDS))
+                pool.shutdownNow();
+        } catch (InterruptedException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        setOpaqueBufferDirty();
+    }
     
     private class NeuronListRefresher implements Observer 
     {
@@ -446,23 +548,41 @@ extends MultipassRenderer
 
         private void addNeuronReconstruction(NeuronModel neuron)
         {
-            if (currentNeuronSphereActors.containsKey(neuron))
-                return;
+            if (contains(neuron)) return;
 
-            // SwcActor na = new SwcActor(neuron, lightProbeTexture, spheresShader, conesShader);
-            SpheresActor nsa = new SpheresActor(neuron, lightProbeTexture, spheresShader);
-            nsa.setVisible(true);
-            currentNeuronSphereActors.put(neuron, nsa);
+            SpheresActor nsa = createSpheresActor(neuron);
+            ConesActor nca = createConesActor(neuron);
+            setActors(neuron, nsa, nca);
+        }
 
-            ConesActor nca = new ConesActor(neuron, lightProbeTexture, conesShader);
-            nca.setVisible(true);
-            currentNeuronConeActors.put(neuron, nca);
+        private boolean contains(NeuronModel neuron) {
+            if (currentNeuronSphereActors.containsKey(neuron)) return true;
+            if (currentNeuronConeActors.containsKey(neuron)) return true;
+            return false;
+        }
+        
+        private SpheresActor createSpheresActor(NeuronModel neuron) {
+            SpheresActor result = new SpheresActor(neuron, lightProbeTexture, spheresShader);
+            result.setVisible(true);
+            return result;
+        }
+
+        private ConesActor createConesActor(NeuronModel neuron) {
+            ConesActor result = new ConesActor(neuron, lightProbeTexture, spheresShader);
+            result.setVisible(true);
+            return result;
+        }
+        
+        private synchronized void setActors(NeuronModel neuron, SpheresActor spheres, ConesActor cones)
+        {
+            currentNeuronSphereActors.put(neuron, spheres);
+            currentNeuronConeActors.put(neuron, cones);
         }
 
         private void removeNeuronReconstruction(NeuronModel neuron)
         {
             currentNeuronSphereActors.remove(neuron);
-            currentNeuronSphereActors.remove(neuron);
+            currentNeuronConeActors.remove(neuron);
         }
         
         public Collection<NeuronModel> sphereNeurons() {

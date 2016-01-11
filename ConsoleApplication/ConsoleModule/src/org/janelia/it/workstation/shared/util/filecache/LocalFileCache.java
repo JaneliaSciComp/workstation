@@ -318,15 +318,22 @@ public class LocalFileCache {
             asyncLoadService.submit(new Callable<File>() {
                 @Override
                 public File call() throws Exception {
-                    return getFile(asyncRetrievalUrl);
+                    try {
+                        return getFile(asyncRetrievalUrl);
+                    }
+                    catch (FileNotCacheableException e) {
+                        LOG.error("Error caching file asynchronously",e);
+                        throw e;
+                    }
                 }
             });
 
-        } else  {
-
+        }
+        else  {
             try {
                 effectiveUrl = localFile.toURI().toURL();
-            } catch (MalformedURLException e) {
+            } 
+            catch (MalformedURLException e) {
                 LOG.error("failed to derive URL for " + localFile.getAbsolutePath(), e);
             }
         }

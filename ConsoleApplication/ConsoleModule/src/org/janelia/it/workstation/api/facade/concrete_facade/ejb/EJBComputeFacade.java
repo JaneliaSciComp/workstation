@@ -97,6 +97,11 @@ public class EJBComputeFacade implements ComputeFacade {
     }
 
     @Override
+    public boolean isServerPathAvailable( String serverPath, boolean directoryOnly ) {
+        return EJBFactory.getRemoteComputeBean().isServerPathAvailable(serverPath, directoryOnly);
+    }    
+    
+    @Override
     public Subject loginSubject(final String username, final String password) throws Exception {
         final ComputeBeanRemote compute = EJBFactory.getRemoteComputeBean();
         final Subject loggedInSubject = compute.login(username, password);

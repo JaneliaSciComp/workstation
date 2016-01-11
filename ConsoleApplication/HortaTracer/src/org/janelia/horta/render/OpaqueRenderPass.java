@@ -30,6 +30,8 @@
 
 package org.janelia.horta.render;
 
+import java.awt.geom.Point2D;
+import java.nio.ByteBuffer;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
@@ -75,11 +77,11 @@ public class OpaqueRenderPass extends RenderPass
         if (useMsaa) {
             int num_samples = 8;
             normalMaterialTarget = framebuffer.addMsaaRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0, num_samples);
-            depthTarget = framebuffer.addMsaaRenderTarget(GL3.GL_DEPTH_COMPONENT24, GL3.GL_DEPTH_ATTACHMENT, num_samples);
+            depthTarget = framebuffer.addMsaaRenderTarget(GL3.GL_DEPTH_COMPONENT32, GL3.GL_DEPTH_ATTACHMENT, num_samples);
             // pickTarget = framebuffer.addMsaaRenderTarget(GL3.GL_R16UI, GL3.GL_COLOR_ATTACHMENT1, num_samples);
         } else {
             normalMaterialTarget = framebuffer.addRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0);
-            depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, GL3.GL_DEPTH_ATTACHMENT);
+            depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT32, GL3.GL_DEPTH_ATTACHMENT);
             // pickTarget = framebuffer.addRenderTarget(GL3.GL_R16UI, GL3.GL_COLOR_ATTACHMENT1);
         }
         
@@ -95,7 +97,7 @@ public class OpaqueRenderPass extends RenderPass
         if (useMsaa) {
             resolvedFrameBuffer = new Framebuffer(drawable);
             resolvedColorTarget = resolvedFrameBuffer.addRenderTarget(GL3.GL_RGBA8, GL3.GL_COLOR_ATTACHMENT0);
-            resolvedDepthTarget = resolvedFrameBuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, GL3.GL_DEPTH_ATTACHMENT);
+            resolvedDepthTarget = resolvedFrameBuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT32, GL3.GL_DEPTH_ATTACHMENT);
         }
           
     }
@@ -177,6 +179,10 @@ public class OpaqueRenderPass extends RenderPass
             rt.setHostBufferNeedsUpdate(true);
             rt.setDirty(false);
         }
+        // In case we use MSAA, mark resolved depth texture too.
+        getFlatDepthTarget().setDirty(false);
+        getFlatDepthTarget().setHostBufferNeedsUpdate(true);
+        
         gl.glDrawBuffers(1, targetAttachments, 0);
         
         if (useMsaa) {
@@ -208,7 +214,10 @@ public class OpaqueRenderPass extends RenderPass
             return normalMaterialTarget;
     }
     
-    public Texture2d getDepthTarget()
+    /*
+    Returns a non-multisampled depth texture, regardless of whether msaa is used.
+    */
+    public RenderTarget getFlatDepthTarget()
     {
         if (useMsaa)
             return resolvedDepthTarget;
@@ -222,6 +231,32 @@ public class OpaqueRenderPass extends RenderPass
     
     public float getZFar() {
         return cachedZFar;
+    }
+    
+    /**
+     * 
+     * @param xy view window relative 2D point, in pixel units
+     * @param camera camera used to project scene
+     * @return screen-space Z coordinate relative to focus, in scene units (micrometers). TODO: how to detect "no opaque geometry here" case?
+     */
+    public double rawZDepthForScreenXy(Point2D xy, GLAutoDrawable drawable) 
+    {
+        RenderTarget depth = getFlatDepthTarget();
+        double d0 = depth.getIntensity(
+                drawable, 
+                (int) xy.getX(), 
+                // y convention is opposite between screen and texture buffer
+                depthTarget.getHeight() - (int) xy.getY(), 
+                0);
+        // System.out.println("raw depth = "+d0);
+
+        return d0; // TODO: convert to micrometer depth
+    }
+
+    void setBuffersDirty()
+    {
+        getFlatDepthTarget().setDirty(true);
+        // depthTarget.setDirty(true);
     }
 
 }
