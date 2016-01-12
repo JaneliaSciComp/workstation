@@ -69,7 +69,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         this.parentChildFactory = parentChildFactory;
         this.lookupContents = lookupContents;
         lookupContents.add(domainObject);
-        DomainObjectNodeTracker.getInstance().registerNode(DomainObjectNode.this);
+        DomainObjectNodeTracker.getInstance().registerNode(this);
     }
     
     public void update(DomainObject domainObject) {

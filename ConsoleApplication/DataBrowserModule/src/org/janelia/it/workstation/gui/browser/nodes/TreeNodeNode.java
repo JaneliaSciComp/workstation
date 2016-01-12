@@ -223,15 +223,14 @@ public class TreeNodeNode extends DomainObjectNode {
         public Transferable paste() throws IOException {
             try {
             log.trace("paste called on TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
-                DomainModel model = DomainMgr.getDomainMgr().getModel();
-                TreeNode newParent = model.getDomainObject(TreeNode.class, targetNode.getId());
+                TreeNode newParent = targetNode.getTreeNode();
                 
                 // Have to keep track of the original parents before we do anything, 
                 // because once we start moving nodes, the parents will be recreated
                 List<TreeNode> originalParents = new ArrayList<>();
                 for(DomainObjectNode node : nodes) {
                     TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
-                    TreeNode originalParent = model.getDomainObject(TreeNode.class, originalParentNode.getId());
+                    TreeNode originalParent = originalParentNode.getTreeNode();
                     originalParents.add(originalParent);
                 }
                 

@@ -28,7 +28,6 @@ import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
-import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
@@ -388,7 +387,7 @@ public class DomainModel {
 
         for(Long id : ids) {
             Reference ref = new Reference(className, id);
-            DomainObject domainObject = ref==null?null:objectCache.getIfPresent(ref);
+            DomainObject domainObject = objectCache.getIfPresent(ref);
             if (domainObject!=null) {
                 map.put(ref, domainObject);
             }
