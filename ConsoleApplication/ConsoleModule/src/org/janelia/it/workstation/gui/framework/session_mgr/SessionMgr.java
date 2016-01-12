@@ -56,6 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
+import org.openide.LifecycleManager;
 
 public final class SessionMgr {
 
@@ -522,10 +523,7 @@ public final class SessionMgr {
         log.info("Memory in use at exit: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000f + " MB");
 
         modelManager.prepareForSystemExit();
-        // System-exit is now handled by NetBeans framework.
-        //  System.exit(errorlevel);
         findAndRemoveWindowsSplashFile();
-        System.exit(errorlevel);
     }
 
     public void addSessionModelListener(SessionModelListener sessionModelListener) {

@@ -6,6 +6,7 @@ import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.panels.UserAccountSettingsPanel;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.openide.LifecycleManager;
 
 import javax.swing.*;
 
@@ -36,7 +37,7 @@ public class WorkstationEnvironment {
                 PrefController.getPrefController().getPrefInterface(UserAccountSettingsPanel.class, null);
             }
             else {
-                SessionMgr.getSessionMgr().systemExit();
+                LifecycleManager.getDefault().exit(0);
             }
         }
 
