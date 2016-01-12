@@ -1716,7 +1716,7 @@ called from a  SimpleWorker thread.
 
     private void fireWsEntityChanged() {
         try {
-            modelMgr.postOnEventBus(new EntityChangeEvent(modelMgr.getEntityById(workspace.getId())));
+            modelMgr.postOnEventBus(new EntityChangeEvent(modelMgr.getEntityById(currentWorkspace.getId())));
         } catch (Exception ex) {
             log.warn("Failed to post workspace chang.");
         }
