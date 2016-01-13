@@ -32,8 +32,8 @@ uniform int pickIndex = 3; // default value for pick buffer
 // NOTE: Ensure that these values are consistent with those from downstream contrast shader.
 // (it might be OK for these to include a broader range; at least for MIP).
 // TODO - avoid this hack I made to prevent default alpha==1.0 from causing problems
-uniform vec4 opacityFunctionMin = vec4(0, 0, 0, 1);
-uniform vec4 opacityFunctionMax = vec4(1, 1, 1, 2);
+uniform vec2 opacityFunctionMin = vec2(0, 0);
+uniform vec2 opacityFunctionMax = vec2(1, 1);
 
 uniform vec3 camPosInTc; // camera position, in texture coordinate frame
 uniform sampler3D volumeTexture; // the confocal image stack
@@ -91,7 +91,7 @@ vec4 cubic(float x) // cubic_catmullrom(float x)
 //   @param texscale 1/texelDimension of texture
 //   @param lod level of detail mipmap texture level to use for sampling
 // Adapted from https://groups.google.com/forum/#!topic/comp.graphics.api.opengl/kqrujgJfTxo
-vec4 filterFastCubic3D(sampler3D texture, vec3 texcoord, vec3 texscale, int lod)
+vec2 filterFastCubic3D(sampler3D texture, vec3 texcoord, vec3 texscale, int lod)
 {
     // Compute local texture coordinates, normalized within the current voxel
     float fx = fract(texcoord.x);
@@ -115,36 +115,36 @@ vec4 filterFastCubic3D(sampler3D texture, vec3 texcoord, vec3 texscale, int lod)
 
     // For performance, interleave texture fetches with arithmetic
     // fetch...
-    vec4 sample000 = textureLod(texture, vec3(offset0.x, offset0.y, offset0.z) * texscale, lod);
+    vec2 sample000 = textureLod(texture, vec3(offset0.x, offset0.y, offset0.z) * texscale, lod).rg;
     // compute...
     vec3 c1 = texcoord + vec3(1.5, 1.5, 1.5);
     vec3 s1 = vec3(xcubic.z + xcubic.w, ycubic.z + ycubic.w, zcubic.z + zcubic.w);
     vec3 offset1 = c1 + vec3(xcubic.w, ycubic.w, zcubic.w) / s1;
     // fetch...
-    vec4 sample100 = textureLod(texture, vec3(offset1.x, offset0.y, offset0.z) * texscale, lod);
+    vec2 sample100 = textureLod(texture, vec3(offset1.x, offset0.y, offset0.z) * texscale, lod).rg;
     // compute...
     float sx = s0.x / (s0.x + s1.x);
-    vec4 sampleX00 = mix(sample100, sample000, sx);
+    vec2 sampleX00 = mix(sample100, sample000, sx);
     // fetch...
-    vec4 sample010 = textureLod(texture, vec3(offset0.x, offset1.y, offset0.z) * texscale, lod);
-    vec4 sample110 = textureLod(texture, vec3(offset1.x, offset1.y, offset0.z) * texscale, lod);
+    vec2 sample010 = textureLod(texture, vec3(offset0.x, offset1.y, offset0.z) * texscale, lod).rg;
+    vec2 sample110 = textureLod(texture, vec3(offset1.x, offset1.y, offset0.z) * texscale, lod).rg;
     // compute...
     float sy = s0.y / (s0.y + s1.y);
-    vec4 sampleX10 = mix(sample110, sample010, sx);
-    vec4 sampleXY0 = mix(sampleX10, sampleX00, sy);
+    vec2 sampleX10 = mix(sample110, sample010, sx);
+    vec2 sampleXY0 = mix(sampleX10, sampleX00, sy);
     // fetch...
-    vec4 sample001 = textureLod(texture, vec3(offset0.x, offset0.y, offset1.z) * texscale, lod);
-    vec4 sample101 = textureLod(texture, vec3(offset1.x, offset0.y, offset1.z) * texscale, lod);
+    vec2 sample001 = textureLod(texture, vec3(offset0.x, offset0.y, offset1.z) * texscale, lod).rg;
+    vec2 sample101 = textureLod(texture, vec3(offset1.x, offset0.y, offset1.z) * texscale, lod).rg;
     // compute...
-    vec4 sampleX01 = mix(sample101, sample001, sx);
+    vec2 sampleX01 = mix(sample101, sample001, sx);
     float sz = s0.z / (s0.z + s1.z);
     // final fetch.
-    vec4 sample011 = textureLod(texture, vec3(offset0.x, offset1.y, offset1.z) * texscale, lod);
-    vec4 sample111 = textureLod(texture, vec3(offset1.x, offset1.y, offset1.z) * texscale, lod);
+    vec2 sample011 = textureLod(texture, vec3(offset0.x, offset1.y, offset1.z) * texscale, lod).rg;
+    vec2 sample111 = textureLod(texture, vec3(offset1.x, offset1.y, offset1.z) * texscale, lod).rg;
 
     // compute.
-    vec4 sampleX11 = mix(sample111, sample011, sx);
-    vec4 sampleXY1 = mix(sampleX11, sampleX01, sy);
+    vec2 sampleX11 = mix(sample111, sample011, sx);
+    vec2 sampleXY1 = mix(sampleX11, sampleX01, sy);
 
     // Interpolate 8 samples
     return mix(sampleXY1, sampleXY0, sz);
@@ -188,6 +188,10 @@ float rampstep(float edge0, float edge1, float x) {
     return clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
 }
 
+vec2 rampstep(vec2 edge0, vec2 edge1, vec2 x) {
+    return clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
+}
+
 vec4 rampstep(vec4 edge0, vec4 edge1, vec4 x) {
     return clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
 }
@@ -200,6 +204,10 @@ vec3 rampstep(vec3 edge0, vec3 edge1, vec3 x) {
     return clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
 }
 
+float maxElement(vec2 v) {
+    return max(v.r, v.g);
+}
+
 float maxElement(vec3 v) {
     return max( max(v.r, v.g), v.b);
 }
@@ -208,18 +216,22 @@ float maxElement(vec4 v) {
     return max( max(v.r, v.g), max(v.b, v.a) );
 }
 
+float minElement(vec2 v) {
+    return min(v.r, v.g);
+}
+
 float minElement(vec4 v) {
     return min( min(v.r, v.g), min(v.b, v.a) );
 }
 
 float sampleScaledIntensity(sampler3D volume, vec3 uvw, vec3 textureScale) 
 {
-    vec4 unscaled;
+    vec2 unscaled;
     if (filteringOrder == 3)
         unscaled = filterFastCubic3D(volume, uvw, textureScale, levelOfDetail);
     else
-        unscaled = textureLod(volume, uvw*textureScale, levelOfDetail);
-    return maxElement( unscaled.rgb );
+        unscaled = textureLod(volume, uvw*textureScale, levelOfDetail).rg;
+    return maxElement( unscaled );
 }
 
 vec3 calculateNormalInScreenSpace(sampler3D volume, vec3 uvw, vec3 voxelMicrometers, vec3 textureScale) 
@@ -242,8 +254,24 @@ vec3 calculateNormalInScreenSpace(sampler3D volume, vec3 uvw, vec3 voxelMicromet
     return normalize(result);
 }
 
+// For assisted manual neuron tracing, we want to know the "core" intensity
+// at the bright center of a neurite, in addition to the "rendered" intensity,
+// which could be dimmer, and near the surface of occluding and isosurface
+// projections.
+// In the case of MIP, the core intensity is the maximum intensity in the 
+// tracing channel. [right?]
+// In the case of Occluding Projection, the core intensity is the maximum
+// tracing-channel intensity in a non-decreasing path past the maximum-opacity
+// voxel.
+
+float coreIntensity = 0;
+const int tracingChannel = 1; // We only care about seeking the core of the channel used for tracing
+void update_core_intensity(in vec4 sampledColor)
+{
+}
+
 void main() {
-    vec4 vecIntegratedIntensity = vec4(0, 0, 0, 0); // up to 4 color channels
+    vec2 vecIntegratedIntensity = vec2(0, 0); // up to 2 color channels
     float integratedOpacity = 0;
 
     // Set up ray equation
@@ -333,8 +361,8 @@ void main() {
     float previousEdge = tMinMax.x; // track upstream voxel edge
 
     #if PROJECTION_MODE == PROJECTION_ISOSURFACE
-        vec4 isoThreshold = 0.5 * (opacityFunctionMin + opacityFunctionMax);
-        // vec4 isoThreshold = opacityFunctionMin;
+        vec2 isoThreshold = 0.5 * (opacityFunctionMin + opacityFunctionMax);
+        // vec2 isoThreshold = opacityFunctionMin;
         float previousThreshDist = 0;
         float previousT = previousEdge;
     #endif
@@ -444,14 +472,14 @@ void main() {
         currentTexelPos = (x0 + t*x1); 
         vec3 texCoord = currentTexelPos * textureScale; // converted back to normalized texture coordinates,
         // Fetch texture intensity (EXPENSIVE!)
-        vec4 vecLocalIntensity = vec4(0, 0, 0, 0);
+        vec2 vecLocalIntensity = vec2(0, 0);
         if (filteringOrder == 3) {
             // slow tricubic filtering
             vecLocalIntensity = filterFastCubic3D(volumeTexture, currentTexelPos, textureScale, levelOfDetail);
         }
         else {
             // fast linear or nearest-neighbor filtering
-            vecLocalIntensity = textureLod(volumeTexture, texCoord, levelOfDetail);
+            vecLocalIntensity = textureLod(volumeTexture, texCoord, levelOfDetail).rg;
         }
 
         // compute scalar proxy for intensity
@@ -461,7 +489,7 @@ void main() {
         if (localOpacity <= 0) {
             #if PROJECTION_MODE == PROJECTION_ISOSURFACE
                 // Update ray parameters for isosurface, even in case of shortcut
-                previousThreshDist = maxElement(vecLocalIntensity.xyz - isoThreshold.xyz); // should be negative...
+                previousThreshDist = maxElement(vecLocalIntensity - isoThreshold); // should be negative...
                 previousT = t;
             #endif
             continue;
@@ -538,15 +566,15 @@ void main() {
 
         #elif PROJECTION_MODE == PROJECTION_OCCLUDING
             // vec4 c_src = mix(opacityFunctionMin, vecLocalIntensity, fade);
-            vec4 c_src = vecLocalIntensity;
+            vec2 c_src = vecLocalIntensity;
             float a_src = localOpacity;
 
             // Previous integrated values are in FRONT of new values
-            vec4 c_dest = vecIntegratedIntensity;
+            vec2 c_dest = vecIntegratedIntensity;
             float a_dest = integratedOpacity;
 
             float a_out = 1.0 - (1.0 - a_src)*(1.0 - a_dest);
-            vec4 c_out = c_dest*a_dest/a_out + c_src*(1.0 - a_dest/a_out);
+            vec2 c_out = c_dest*a_dest/a_out + c_src*(1.0 - a_dest/a_out);
             // float a_out = a_dest + (1 - a_dest)*(a_src); // EQUIVALENT TO ABOVE
             // float c_out = c_dest + (1 - a_dest)*a_src*c_src;
 
@@ -584,8 +612,8 @@ void main() {
             }
             
         #else // isosurface
-            // Use only first 3 channels, since alpha is a headache when I want to see negative components.
-            float threshDist = maxElement(vecLocalIntensity.xyz - isoThreshold.xyz);
+            // Use only first 3(or 2) channels, since alpha is a headache when I want to see negative components.
+            float threshDist = maxElement(vecLocalIntensity - isoThreshold);
             if (threshDist > 0) // surface intersected
             {
                 // vecIntegratedIntensity = vecLocalIntensity;
@@ -609,7 +637,7 @@ void main() {
                     }
                     else {
                         // fast linear or nearest-neighbor filtering
-                        vecIntegratedIntensity = textureLod(volumeTexture, texCoord2, levelOfDetail);
+                        vecIntegratedIntensity = textureLod(volumeTexture, texCoord2, levelOfDetail).rg;
                     }
                     // vecIntegratedIntensity += vec4(0.05, 0.05, 0.05, 0); // brighten it up a little...
                 }
@@ -653,7 +681,8 @@ void main() {
         colorOut = vec4(normal.xyz, 1.0);
     }
     else {
-        colorOut = vec4(vecIntegratedIntensity.xyz, integratedOpacity);
+        // TODO: coreIntensity in third position
+        colorOut = vec4(vecIntegratedIntensity, 0, integratedOpacity);
     }
 
     // pick value to alternate render target

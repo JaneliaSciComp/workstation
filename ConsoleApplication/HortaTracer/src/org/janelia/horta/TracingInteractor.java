@@ -91,9 +91,6 @@ public class TracingInteractor extends MouseAdapter
     private NeuriteAnchor cachedHoverLocation = null; // TODO: - refactor as SELECTED vertex
     private TracingMode tracingMode = TracingMode.NAVIGATING;
 
-    // private final NeuriteModel hoverModel = new NeuriteModel(); // TODO - deprecate in favor of below
-    private final NeuronModel neuronCursorModel = new BasicNeuronModel("Neuron tracing cursor"); // TODO: end point of auto tracing
-    
     private final NeuriteModel provisionalModel = new NeuriteModel();
     private final NeuriteModel previousHoverModel = new NeuriteModel();
     private final NeuriteModel persistedModel = new NeuriteModel();  
@@ -184,17 +181,17 @@ public class TracingInteractor extends MouseAdapter
 
         // Create a special single-vertex actor for highlighting the selected parent vertex
         SpheresActor parentActor = new ParentVertexActor(parentVertexModel);
-        parentActor.setMinPixelRadius(6.0f);
+        parentActor.setMinPixelRadius(5.0f);
         result.add(parentActor);
         
         // Create a special single-vertex actor for highlighting the vertex under the cursor
         SpheresActor highlightActor = new VertexHighlightActor(highlightHoverModel);
-        highlightActor.setMinPixelRadius(8.0f);
+        highlightActor.setMinPixelRadius(7.0f);
         result.add(highlightActor);
         
         // Create a special single-vertex actor for highlighting the vertex under the cursor
         SpheresActor densityCursorActor = new DensityCursorActor(densityCursorModel);
-        highlightActor.setMinPixelRadius(1.0f);
+        densityCursorActor.setMinPixelRadius(1.0f);
         result.add(densityCursorActor);
         
         // Colors 
@@ -600,7 +597,8 @@ public class TracingInteractor extends MouseAdapter
         {
             // Find nearby brightest point
             // screenPoint = optimizePosition(screenPoint); // TODO: disabling optimization for now
-            Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
+            Point optimizedPoint = optimizePosition(hoverPoint);
+            Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(optimizedPoint);
             setDensityCursor(cursorXyz);
         }
         else {
