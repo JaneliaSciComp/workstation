@@ -9,12 +9,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -22,7 +20,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
@@ -37,7 +35,6 @@ import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +70,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
     // Listeners
     private final SessionModelListener sessionModelListener;
-    
+
     public IconGridViewerPanel() {
 
         setBorder(BorderFactory.createEmptyBorder());
@@ -83,7 +80,18 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         toolbar = createToolbar();
         toolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
 
-        imagesPanel = new ImagesPanel<>();
+        imagesPanel = new ImagesPanel<T,S>() {
+            
+            @Override
+            protected void moreAnnotationsButtonDoubleClicked(AnnotatedImageButton<T, S> button) {
+                IconGridViewerPanel.this.moreAnnotationsButtonDoubleClicked(button.getUserObject());
+            }
+
+            @Override
+            protected JPopupMenu getPopupMenu(AnnotatedImageButton<T, S> button, Annotation annotation) {
+                return IconGridViewerPanel.this.getAnnotationPopupMenu(annotation);
+            }
+        };
         imagesPanel.setButtonKeyListener(keyListener);
         imagesPanel.setButtonMouseListener(buttonMouseListener);
         imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
@@ -320,6 +328,11 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         }
     };
 
+    
+    protected abstract void moreAnnotationsButtonDoubleClicked(T userObject);
+    
+    protected abstract JPopupMenu getAnnotationPopupMenu(Annotation annotation);
+    
     protected abstract JPopupMenu getContextualPopupMenu();
 
     /**

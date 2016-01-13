@@ -33,7 +33,7 @@ public class OpenWithDefaultAppAction implements NamedAction {
 
     @Override
     public String getName() {
-        return "Open file with default application";
+        return "Open With OS";
     }
 
     @Override

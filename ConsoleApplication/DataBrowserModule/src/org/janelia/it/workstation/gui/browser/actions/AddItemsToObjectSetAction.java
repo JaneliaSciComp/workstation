@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Add items to an object set.
+ * Menu system for adding the selected items to an object set.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -51,7 +51,7 @@ public class AddItemsToObjectSetAction implements NamedAction {
 
     @Override
     public String getName() {
-        return domainObjects.size() > 1 ? "Add \"" + domainObjects.size() + "\" Items To Set" : "  Add Item To Set";
+        return domainObjects.size() > 1 ? "Add \"" + domainObjects.size() + "\" Items To Set" : "Add Item To Set";
     }
 
     @Override

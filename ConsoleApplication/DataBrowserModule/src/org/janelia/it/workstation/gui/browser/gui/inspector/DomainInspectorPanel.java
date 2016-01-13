@@ -92,7 +92,7 @@ public class DomainInspectorPanel extends JPanel {
 
     private final JLabel annotationsLoadingLabel;
     private final JPanel annotationsPanel;
-    private final AnnotationView<DomainObject, Reference> annotationsView;
+    private final AnnotationView annotationsView;
 
     private final DomainObjectPermissionDialog dopDialog;
 

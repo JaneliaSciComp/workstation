@@ -30,6 +30,7 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.workstation.gui.browser.actions.AnnotationContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromObjectSetAction;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
@@ -379,6 +380,19 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         JPopupMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), selected);
         ((DomainObjectContextMenu) popupMenu).addMenuItems();
         return popupMenu;
+    }
+
+    @Override
+    protected JPopupMenu getAnnotationPopupMenu(Annotation annotation) {
+        List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+        AnnotationContextMenu menu = new AnnotationContextMenu(annotation, selectedObjects, imageModel);
+        menu.addMenuItems();
+        return menu;
+    }
+
+    @Override
+    protected void moreAnnotationsButtonDoubleClicked(DomainObject domainObject) {
+        // TODO: popup dialog with annotation details
     }
     
     @Override

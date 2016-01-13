@@ -13,10 +13,9 @@ import org.janelia.it.jacs.model.domain.DomainObject;
  */
 public class UserViewConfiguration {
 
-    private Set<Class<? extends DomainObject>> visibleClasses;
+    private final Set<Class<? extends DomainObject>> visibleClasses = new HashSet<>();
     
     private UserViewConfiguration() {
-        this.visibleClasses = new HashSet<>();
     }
     
     public Set<Class<? extends DomainObject>> getVisibleClasses() {

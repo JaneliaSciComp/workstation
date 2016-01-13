@@ -15,6 +15,7 @@ import javax.swing.JMenuItem;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
@@ -71,7 +72,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
         add(getOpenInNewEditorItem());
         
-//        add(getPasteAnnotationItem());
+        add(getPasteAnnotationItem());
 //        add(getDetailsItem());
 //        add(getPermissionItem());
 //        add(getSetSortCriteriaItem());
@@ -295,66 +296,15 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        });
 //    }
 //
-//    public JMenuItem getPasteAnnotationItem() {
-//        // If no curent annotation item selected then do nothing
-//        if (null == ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation()) {
-//            return null;
-//        }
-//        JMenuItem pasteItem = new JMenuItem("  Paste Annotation");
-//        pasteItem.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent actionEvent) {
-//
-//                // TODO: this should be encapsulated in an Action
-//                
-//                SimpleWorker worker = new SimpleWorker() {
-//
-//                    @Override
-//                    protected void doStuff() throws Exception {
-//                        int i = 1;
-//                        
-//                        final List<RootedEntity> selectedEntities = browser.getViewerManager()
-//                                .getActiveViewer().getSelectedEntities();
-//                            
-//                        for (RootedEntity rootedEntity : selectedEntities) {
-//                            
-//                            OntologyAnnotation baseAnnotation = ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation();
-//                            AnnotationSession tmpSession = ModelMgr.getModelMgr().getCurrentAnnotationSession();
-//                            OntologyAnnotation annotation = new OntologyAnnotation((null == tmpSession) ? null
-//                                    : tmpSession.getId(), rootedEntity.getEntityId(), baseAnnotation.getKeyEntityId(),
-//                                    baseAnnotation.getKeyString(), baseAnnotation.getValueEntityId(), baseAnnotation
-//                                            .getValueString());
-//
-//                            Entity annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
-//                            log.info("Saved annotation as " + annotationEntity.getId());
-//
-//                            for(EntityActorPermission eap : baseAnnotation.getEntity().getEntityActorPermissions()) {
-//                                ModelMgr.getModelMgr().grantPermissions(annotationEntity.getId(), eap.getSubjectKey(), eap.getPermissions(), false);
-//                                log.info("Shared copied annotation with " + eap.getSubjectKey());
-//                            }
-//                            
-//                            setProgress(i++, selectedEntities.size());
-//                        }
-//                    }
-//
-//                    @Override
-//                    protected void hadSuccess() {
-//                    }
-//
-//                    @Override
-//                    protected void hadError(Throwable error) {
-//                        SessionMgr.getSessionMgr().handleException(error);
-//                    }
-//
-//                };
-//
-//                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Copying annotations", "", 0, 100));
-//                worker.execute();
-//            }
-//        });
-//        return pasteItem;
-//    }
-//
+    public JMenuItem getPasteAnnotationItem() {
+        if (null == StateMgr.getStateMgr().getCurrentSelectedOntologyAnnotation()) {
+            return null;
+        }
+        NamedAction action = new PasteAnnotationTermAction(domainObjectList);
+        JMenuItem pasteItem = getNamedActionItem(action);
+        return pasteItem;
+    }
+
 //    /** Makes the item for showing the entity in its own viewer iff the entity type is correct. */
 //    public Collection<JComponent> getOpenForContextItems() {
 //        TreeMap<Integer,JComponent> orderedMap = new TreeMap<>();
@@ -941,7 +891,9 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //    
     protected JMenuItem getAddToSetItem() {
         AddItemsToObjectSetAction action = new AddItemsToObjectSetAction(domainObjectList);
-        return action.getPopupPresenter();
+        JMenuItem item = action.getPopupPresenter();
+        item.setText("  "+item.getText());
+        return item;
     }
     
 //        final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
@@ -1095,12 +1047,10 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected JMenuItem getRemoveFromSetItem() {
         
         NamedAction action = null;
-        
         if (contextObject instanceof ObjectSet) {
             action = new RemoveItemsFromObjectSetAction((ObjectSet)contextObject, domainObjectList);
         }
-        
-        if (action==null) {
+        else {
             return null;
         }
         

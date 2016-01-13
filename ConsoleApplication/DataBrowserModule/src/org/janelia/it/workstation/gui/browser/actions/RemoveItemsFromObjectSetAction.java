@@ -30,7 +30,7 @@ public class RemoveItemsFromObjectSetAction implements NamedAction {
 
     @Override
     public String getName() {
-        return domainObjects.size() > 1 ? "Remove \"" + domainObjects.size() + "\" Items From Set '"+objectSet.getName()+"'" : "  Remove This Item From Set '"+objectSet.getName()+"'";
+        return domainObjects.size() > 1 ? "Remove \"" + domainObjects.size() + "\" Items From Set '"+objectSet.getName()+"'" : "Remove This Item From Set '"+objectSet.getName()+"'";
     }
 
     @Override

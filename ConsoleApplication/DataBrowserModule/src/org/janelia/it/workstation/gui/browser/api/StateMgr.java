@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.api;
 
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.UserColorMapping;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -33,6 +34,8 @@ public class StateMgr {
     
     private final UserColorMapping userColorMapping = new UserColorMapping();
     
+    private Annotation currentSelectedOntologyAnnotation;
+    
     private StateMgr() {
     }
     
@@ -56,6 +59,13 @@ public class StateMgr {
         Events.getInstance().postOnEventBus(new OntologySelectionEvent(ontologyId));
     }
 
+    public Annotation getCurrentSelectedOntologyAnnotation() {
+        return currentSelectedOntologyAnnotation;
+    }
+
+    public void setCurrentSelectedOntologyAnnotation(Annotation currentSelectedOntologyAnnotation) {
+        this.currentSelectedOntologyAnnotation = currentSelectedOntologyAnnotation;
+    }
     
     
 //    public String getSortCriteria(Long entityId) {

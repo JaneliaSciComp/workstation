@@ -57,7 +57,7 @@ public abstract class PopupContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getNamedActionItem(final NamedAction action) {
-        JMenuItem actionMenuItem = new JMenuItem(action.getName());
+        JMenuItem actionMenuItem = new JMenuItem("  "+action.getName());
         actionMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

@@ -25,7 +25,6 @@ public class WorkspaceNode extends TreeNodeNode {
     
     public WorkspaceNode(Workspace workspace) {
         super(null, workspace);
-        log.info("Creating "+this+" "+workspace+" "+workspace.getId());
     }
     
     public Workspace getWorkspace() {
