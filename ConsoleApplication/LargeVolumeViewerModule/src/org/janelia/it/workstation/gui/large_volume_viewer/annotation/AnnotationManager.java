@@ -846,14 +846,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
-    public void clearNote(Long annotationID) {
+    public void clearNote(final Long annotationID) {
         TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
         final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
         if (textAnnotation != null) {
             SimpleWorker deleter = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.removeNote(textAnnotation);
+                    annotationModel.removeNote(annotationID);
                 }
 
                 @Override

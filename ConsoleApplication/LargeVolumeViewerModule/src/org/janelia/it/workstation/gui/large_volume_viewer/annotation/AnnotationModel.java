@@ -1253,20 +1253,22 @@ called from a  SimpleWorker thread.
             JsonNode rootNode = textAnnotation.getData();
             if (noteString.length() > 0) {
                 ((ObjectNode) rootNode).put("note", noteString);
-                jsonString = mapper.writeValueAsString(rootNode);
-                neuronManager.updateStructuredTextAnnotation(neuron, textAnnotation, jsonString);
+                jsonString = mapper.writeValueAsString(rootNode);                
+                textAnnotation.setDataString(jsonString);
+                neuronManager.updateStructuredTextAnnotation(neuron, geoAnnotation, textAnnotation);
             } else {
                 // there is a note attached, but we want it gone; if it's the only thing there,
                 //  delete the whole structured text annotation
                 ((ObjectNode) rootNode).remove("note");
                 if (rootNode.size() > 0) {
-                    jsonString = mapper.writeValueAsString(rootNode);
-                    neuronManager.updateStructuredTextAnnotation(neuron, textAnnotation, jsonString);
+                    jsonString = mapper.writeValueAsString(rootNode);                
+                    textAnnotation.setDataString(jsonString);
+                    neuronManager.updateStructuredTextAnnotation(neuron, geoAnnotation, textAnnotation);
                 } else {
                     // otherwise, there's something left, so persist it (note: as of this
                     //  writing, there aren't any other structured text annotations besides
                     //  note, but no need to get sloppy!)
-                    neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getId());
+                    neuronManager.deleteStructuredTextAnnotation(neuron, geoAnnotation.getId());
                 }
             }
 
@@ -1314,13 +1316,13 @@ called from a  SimpleWorker thread.
 
     }
 
-    public void removeNote(TmStructuredTextAnnotation textAnnotation) throws Exception {
+    public void removeNote(Long geoAnnotationId) throws Exception {
         //modelMgr.deleteStructuredTextAnnotation(textAnnotation.getId());
 
         // updates
         final TmWorkspace workspace = getCurrentWorkspace();
-        TmNeuron neuron = getNeuronFromAnnotationID(textAnnotation.getParentId());
-		neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getId());
+        TmNeuron neuron = getNeuronFromAnnotationID(geoAnnotationId);
+		neuronManager.deleteStructuredTextAnnotation(neuron, geoAnnotationId);
         neuronManager.saveNeuronData(neuron);
 
         SwingUtilities.invokeLater(new Runnable() {
