@@ -50,6 +50,9 @@ uniform vec4 farSlabPlane; // for limiting view to a screen-parallel slab
 
 // Expensive beautiful rendering option, for slow, high quality rendering passes
 // TODO - set this dynamically depending on user interaction.
+#define FILTER_NEAREST 0
+#define FILTER_TRILINEAR 1
+#define FILTER_TRICUBIC 3
 uniform int filteringOrder = 3; // 0: NEAREST; 1: TRILINEAR; 2: <not used> 3: TRICUBIC
 
 // uniform int projectionMode = 0; // 0: maximum intensity; 1: occluding; 2: isosurface
@@ -264,10 +267,14 @@ vec3 calculateNormalInScreenSpace(sampler3D volume, vec3 uvw, vec3 voxelMicromet
 // tracing-channel intensity in a non-decreasing path past the maximum-opacity
 // voxel.
 
-float coreIntensity = 0;
-const int tracingChannel = 1; // We only care about seeking the core of the channel used for tracing
-void update_core_intensity(in vec4 sampledColor)
+void update_core_intensity(in vec2 sampledColor, in float rayParameterT, inout float tMaxAbs, inout float coreIntensity)
 {
+    const int tracingChannel = 0; // We only care about seeking the core of the channel used for tracing
+    float tracingIntensity = sampledColor[tracingChannel];
+    if (tracingIntensity > coreIntensity) {
+        coreIntensity = tracingIntensity;
+        tMaxAbs = rayParameterT;
+    }
 }
 
 void main() {
@@ -690,4 +697,323 @@ void main() {
     pickId = ivec2(pickIndex, int(relativeDepth * 65535));
 
     // TODO gl_FragDepth for isosurface
+}
+
+
+// Potential refactoring for better compartmentalized logic Jan 2016
+
+#define COLOR_VEC vec2
+
+// Data Structures
+
+// Data used for finding bright center of neurite for interactive tracing
+struct CoreStatus
+{
+    bool inLocalBody; // TRUE if ray is currently in a bright body
+    // float bodyMaxIntensity; // Brightest intensity yet seen in body
+    float firstBodyRayParam; // Ray parameter where brightest intensity was first observed
+    float finalBodyRayParam; // Ray parameter where brightest intensity was last observed
+};
+
+// Accumulated color and data values, for eventual display
+struct IntegratedIntensity
+{
+    COLOR_VEC intensity;
+    float opacity;
+    float coreIntensity; // Brightest intensity yet seen in tracing channel
+    float coreRayParameter; // location of coreIntensity
+};
+
+// Precomputed extremes for managing ray casting
+struct RayBounds
+{
+    float minRayParameter;
+    float maxRayParameter;
+};
+
+// Ray parameters for computation along the view ray
+struct RayParameters
+{
+    vec3 rayOriginInTexels; // usually on the near face of bounding geometry, closest to viewer
+    vec3 rayDirectionInTexels; // unit vector
+    vec3 rayBoxCorner; // Either (0,0,0) for nearest neighbor, or (0.5,0.5,0.5) for trilinear/tricubic
+    vec3 forwardMask; // elements are zero or one, depending on view direction
+    vec3 textureScale; // for converting texels to normalized texture coordinates
+};
+
+struct ViewSlab
+{
+    float minRayParam;
+    float maxRayParam;
+};
+
+// Where does the ray penetrate the current voxel, in ray parameter units?
+struct VoxelRayState
+{
+    float entryRayParameter; // where the ray enters the current voxel
+    float middleRayParameter; // centroid of ray segment in the current voxel
+    float exitRayParameter; // where the ray exists the current voxel
+};
+
+// Measured color values at various points within a voxel
+struct VoxelIntensity
+{
+    COLOR_VEC voxelEntryIntensity; // color where ray enters voxel
+    COLOR_VEC voxelMiddleIntensity; // color at subvoxel ray centroid
+    COLOR_VEC voxelExitIntensity; // color where ray exits voxel
+    float latestRayParameter;
+};
+
+
+// Delegated Methods for compartmentalized volume rendering algorithm
+
+float advance_to_voxel_edge(in float previousEdge, in RayParameters rayParameters) 
+{
+    // Units of ray parameter, t, are roughly texels
+    const float minStep = 0.05;
+
+    // Advance ray by at least minStep, to avoid getting stuck in tiny corners
+    float t = previousEdge + minStep;
+    vec3 x0 = rayParameters.rayOriginInTexels;
+    vec3 x1 = rayParameters.rayDirectionInTexels; 
+    vec3 currentTexelPos = (x0 + t*x1); // apply ray equation to find new voxel
+
+    // Advance ray to next voxel edge.
+    // For NEAREST filter, advance to midplanes between voxel centers.
+    // For TRILINEAR and TRICUBIC filters, advance to planes connecing voxel centers.
+    vec3 currentTexel = floor(currentTexelPos + rayParameters.rayBoxCorner) 
+            - rayParameters.rayBoxCorner;
+
+    // Three out of six total voxel edges represent forward progress
+    vec3 forwardMask = rayParameters.forwardMask;
+    vec3 candidateEdges = currentTexel + forwardMask;
+    // Ray trace to three planar voxel edges at once.
+    vec3 candidateSteps = -(x0 - candidateEdges)/x1;
+    // Choose the closest voxel edge.
+    float nextEdge = min(candidateSteps.x, min(candidateSteps.y, candidateSteps.z));
+    // Advance ray by at least minStep, to avoid getting stuck in tiny corners
+    // Next line should be unneccessary, but prevents (sporadic?) driver crash
+    nextEdge = max(nextEdge, previousEdge + minStep);
+    return nextEdge;
+}
+
+VoxelRayState find_first_voxel(in RayBounds rayBounds, in RayParameters rayParameters) {
+    float t1 = rayBounds.minRayParameter;
+    float t3 = advance_to_voxel_edge(t1, rayParameters);
+    float t2 = (t1 + t3)/2.0;
+    return VoxelRayState(t1, t2, t3);
+}
+
+// Compute begin and end points of ray, once and for all
+RayBounds initialize_ray_bounds(in RayParameters rayParameters, in ViewSlab viewSlab) 
+{
+    // TODO: - bounds from texture coordinates range (0,1)
+    // TODO: - bounds from view slab thickness
+    // TODO: - upper bound from opaque depth map
+    return RayBounds(0, 0); // TODO:
+}
+
+RayParameters initialize_ray_parameters() {
+    ivec3 texelsPerVolume = textureSize(volumeTexture, levelOfDetail);
+
+    vec3 originInTexels = fragTexCoord * texelsPerVolume; // on near face of volume geometry
+    vec3 directionInTexels = normalize( (fragTexCoord - camPosInTc) * texelsPerVolume );
+
+    vec3 rayBoxCorner; // Body-centered vs corner-centered voxels
+    if (filteringOrder == 0)  // nearest neighbor
+    {
+        rayBoxCorner = vec3(0, 0, 0); // intersect ray at voxel edge planes, optimal for nearest-neighbor
+    } 
+    else  // trilinear and tricubic
+    {
+        rayBoxCorner = 
+                vec3(0.5, 0.5, 0.5); // intersect ray at voxel center planes
+    }
+
+    vec3 forwardMask = ceil(directionInTexels * 0.99); // each component is now 0 or 1
+
+    vec3 textureScale = vec3(1,1,1) / texelsPerVolume;
+
+    return RayParameters(originInTexels, directionInTexels, rayBoxCorner, forwardMask, textureScale);
+}
+
+ViewSlab initialize_view_slab(RayParameters rayParams) 
+{
+    vec3 x0 = rayParams.rayOriginInTexels;
+    vec3 x1 = rayParams.rayDirectionInTexels;
+    float tMinSlab = -dot(nearSlabPlane, vec4(x0,1)) / dot(nearSlabPlane, vec4(x1,0));
+    float tMaxSlab = -dot(farSlabPlane, vec4(x0,1)) / dot(farSlabPlane, vec4(x1,0));
+    return ViewSlab(tMinSlab, tMaxSlab);
+}
+
+// Integrate the latest sample into the accumulated color
+void integrate_intensity(
+        in VoxelIntensity localIntensity, 
+        inout IntegratedIntensity integratedIntensity,
+        inout CoreStatus core)
+{
+    // Sample the correct part of the voxel
+    COLOR_VEC vecLocalIntensity;
+    if (filteringOrder == FILTER_NEAREST) {
+        vecLocalIntensity = localIntensity.voxelMiddleIntensity;
+    } else {
+        vecLocalIntensity = localIntensity.voxelExitIntensity;
+    }
+
+    // compute scalar proxy for intensity
+    float localOpacity = maxElement(rampstep(opacityFunctionMin, opacityFunctionMax, vecLocalIntensity));
+
+    // Integrate TODO: all projection modes
+    #if PROJECTION_MODE == PROJECTION_MAXIMUM
+        if (localOpacity > integratedIntensity.opacity) {
+            integratedIntensity.intensity = vecLocalIntensity;
+            integratedIntensity.opacity = localOpacity;
+        }
+    #elif PROJECTION_MODE == PROJECTION_OCCLUDING
+        COLOR_VEC c_src = vecLocalIntensity;
+        float a_src = localOpacity;
+
+        // Previous integrated values are in FRONT of new values
+        COLOR_VEC c_dest = integratedIntensity.intensity;
+        float a_dest = integratedIntensity.opacity;
+
+        float a_out = 1.0 - (1.0 - a_src)*(1.0 - a_dest);
+        COLOR_VEC c_out = c_dest*a_dest/a_out + c_src*(1.0 - a_dest/a_out);
+
+        integratedIntensity.intensity = clamp(c_out, 0, 1); // clamp required to avoid black artifacts
+        integratedIntensity.opacity = a_out;
+    #else // isosurface
+        // TODO:
+    #endif // PROJECTION_MODE
+
+
+    // also track the location of the tracing channel core,
+    // using a sort-of MIP approach, regardless of rendering projection
+    const int tracingChannel = 0; // We only care about seeking the core of the channel used for tracing
+    float coreIntensity = vecLocalIntensity[tracingChannel];
+    float rayParameter = localIntensity.latestRayParameter;
+
+    if (coreIntensity > integratedIntensity.coreIntensity) { // new brightest core, definitely worth keeping
+        integratedIntensity.coreIntensity = coreIntensity;
+        core.inLocalBody = true;
+        core.firstBodyRayParam = core.finalBodyRayParam = rayParameter;
+        integratedIntensity.coreRayParameter = rayParameter;
+    }
+    else if (core.inLocalBody) { // maybe continue core we saw earlier
+        if (coreIntensity == integratedIntensity.coreIntensity) { // cruise intensity plateau
+            core.finalBodyRayParam = rayParameter; // record extension of plateau
+            integratedIntensity.coreRayParameter = mix(core.firstBodyRayParam, core.finalBodyRayParam, 0.5);
+        }
+        else { // dimmer intensity means we are past the core
+            core.inLocalBody = false;
+        }
+    }
+
+}
+
+// Are we done casting the current view ray?
+bool ray_complete(
+        in VoxelRayState state, 
+        in RayBounds bounds, 
+        in IntegratedIntensity intensity,
+        in CoreStatus core)
+{
+    if (state.exitRayParameter >= bounds.maxRayParameter) 
+        return true; // exited back of block
+    if ((intensity.opacity >= 0.99) && (! core.inLocalBody)) 
+        return true; // stop at full occlusion
+    return false;
+}
+
+// Fetch the color of the current voxel
+// AND track brightest point in tracing channel
+void sample_intensity(
+        in VoxelRayState rayState, 
+        in RayParameters rayParams, 
+        inout VoxelIntensity intensity) 
+{
+    // Copy exit edge of previous voxel, to entry edge of current voxel
+    intensity.voxelEntryIntensity = intensity.voxelExitIntensity;
+
+    // Compute ray parameters
+    float t; // ray parameter at sample location
+    if (filteringOrder == FILTER_NEAREST) {
+        t = rayState.middleRayParameter; // Sample at center for nearest neighbor
+    } else {
+        t = rayState.exitRayParameter;
+    }
+    vec3 texelPos = rayParams.rayOriginInTexels + t * rayParams.rayDirectionInTexels;
+    vec3 textureScale = rayParams.textureScale;
+
+    COLOR_VEC vecLocalIntensity;
+    if (filteringOrder == FILTER_TRICUBIC) {
+        // slow tricubic filtering
+        vecLocalIntensity = filterFastCubic3D(volumeTexture, texelPos, textureScale, levelOfDetail);
+    }
+    else {
+        // fast linear or nearest-neighbor filtering
+        vec3 texCoord = texelPos * textureScale;
+        vecLocalIntensity = COLOR_VEC(textureLod(volumeTexture, texCoord, levelOfDetail));
+    }
+
+    // Save fetched intensity
+    if (filteringOrder == FILTER_NEAREST) {
+        intensity.voxelMiddleIntensity = vecLocalIntensity;
+    } else {
+        intensity.voxelExitIntensity = vecLocalIntensity;
+    }
+
+    intensity.latestRayParameter = t;
+}
+
+// Write out the final color/data after volume ray casting
+void save_color(in IntegratedIntensity i, in ViewSlab slab) 
+{
+    colorOut = vec4(i.intensity, i.coreIntensity, i.opacity);
+    float relativeDepth = (i.coreRayParameter - slab.minRayParam) / (slab.maxRayParam - slab.minRayParam);
+    pickId = ivec2(3, int(relativeDepth * 65535));
+}
+
+// Advance ray by one voxel
+void step_ray(in RayParameters rayParams, inout VoxelRayState voxel) {
+    float t0 = voxel.exitRayParameter; // old leading edge
+    float t1 = advance_to_voxel_edge(t0, rayParams);
+    voxel.entryRayParameter = t0; // new trailing edge = old leading edge
+    voxel.exitRayParameter = t1; // new leading edge
+    voxel.middleRayParameter = mix(t0, t1, 0.5);
+}
+
+// Use volume ray casting to compute the color/data for one pixel on the screen
+IntegratedIntensity cast_volume_ray(in RayParameters rayParameters, in ViewSlab viewSlab)
+{
+    // 1) Initialize beginning of ray
+    RayBounds rayBounds = initialize_ray_bounds(rayParameters, viewSlab);
+    VoxelRayState voxelRayState = find_first_voxel(rayBounds, rayParameters);
+    IntegratedIntensity integratedIntensity = IntegratedIntensity(COLOR_VEC(0), 0, 0, 0);
+    COLOR_VEC black = COLOR_VEC(0);
+    VoxelIntensity voxelIntensity = VoxelIntensity(black, black, black, 0);
+    CoreStatus coreStatus = CoreStatus(false, 0, 0); // For finding neurite centroid
+    // 2) March along the ray, one voxel at a time
+    int stepCount = 0;
+    const int maxStepCount = 200; // protect against infinite loops or oversize volumes
+    while(true) {
+        if (ray_complete(voxelRayState, rayBounds, integratedIntensity, coreStatus))
+            return integratedIntensity; // DONE, we made it to the far side of the volume
+        sample_intensity(voxelRayState, rayParameters, voxelIntensity); // this is an expensive step, due to texture fetch(es)
+        integrate_intensity(voxelIntensity, integratedIntensity, coreStatus);
+        step_ray(rayParameters, voxelRayState);
+        stepCount += 1;
+        if (stepCount >= maxStepCount) // terminate early to avoid performance problems and sidestep inifinite-loop bugs
+            return integratedIntensity;
+    }
+    return integratedIntensity; // function probably never gets this far
+}
+
+void main2() {
+    RayParameters rayParams = initialize_ray_parameters();
+    ViewSlab viewSlab = initialize_view_slab(rayParams);
+    IntegratedIntensity integratedIntensity = cast_volume_ray(rayParams, viewSlab);
+    if (integratedIntensity.opacity <= 0.005) 
+        discard; // This ray is invisible, so try to save resources by not painting it.
+    save_color(integratedIntensity, viewSlab);
 }
