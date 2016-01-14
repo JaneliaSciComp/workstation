@@ -61,9 +61,8 @@ public class MouseForwarder extends MouseAdapter {
 //	}
 
 	private void forward(MouseEvent e, String eventName) {
-		if (e.isConsumed()) return;
+//		if (e.isConsumed()) return;
 		log.trace("forward {}: {}",eventName,name);
-		
     	target.dispatchEvent(e);
 	}	
 }

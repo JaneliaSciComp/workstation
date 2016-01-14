@@ -11,10 +11,10 @@ import javax.swing.filechooser.FileFilter;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**

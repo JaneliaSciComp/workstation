@@ -10,18 +10,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
+
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DataSetDialog;
-
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
 import org.janelia.it.jacs.model.entity.cv.NamedEnum;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
-import org.janelia.it.workstation.gui.framework.table.DynamicRow;
-import org.janelia.it.workstation.gui.framework.table.DynamicTable;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;

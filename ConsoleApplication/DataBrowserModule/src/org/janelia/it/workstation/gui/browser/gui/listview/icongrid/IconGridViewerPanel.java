@@ -29,7 +29,6 @@ import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
 import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
-import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeFind;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -98,14 +97,14 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                 return IconGridViewerPanel.this.getAnnotationPopupMenu(annotation);
             }
         };
-        
-        findToolbar = new FindToolbar(this);
-        
+
         imagesPanel.setButtonKeyListener(keyListener);
         addKeyListener(keyListener);
-        
         imagesPanel.setButtonMouseListener(mouseListener);
         imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconGridViewerPanel"));
+        
+        findToolbar = new FindToolbar(this);
+        findToolbar.addMouseListener(new MouseForwarder(this, "FindToolbar->IconGridViewerPanel"));
         
         this.addComponentListener(new ComponentAdapter() {
             @Override
@@ -134,7 +133,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                     imagesPanel.resizeTables(tableHeight);
                     imagesPanel.setMaxImageWidth(toolbar.getCurrImageSize());
                     imagesPanel.recalculateGrid();
-                    imagesPanel.scrollSelectedEntitiesToCenter();
+                    imagesPanel.scrollSelectedObjectsToCenter();
                     imagesPanel.loadUnloadImages();
                 }
             }
@@ -171,7 +170,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        imagesPanel.scrollSelectedEntitiesToCenter();
+                        imagesPanel.scrollSelectedObjectsToCenter();
                     }
                 });
             }
@@ -672,33 +671,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
 //        });
 //    }
 
-    @Override
-    public void showFindUI() {
-        findToolbar.open();
-    }
-
-    @Override
-    public void hideFindUI() {
-        findToolbar.close();
-    }
-
-    @Override
-    public void findPrevMatch(String text, boolean skipStartingNode) {
-        IconGridViewerFind<T,S> searcher = new IconGridViewerFind<>(this, text, getLastSelectedObject(), Bias.Backward, skipStartingNode);
-        selectObject(searcher.find(), true);
-        scrollSelectedEntitiesToCenter();
-    }
-
-    @Override
-    public void findNextMatch(String text, boolean skipStartingNode) {
-        IconGridViewerFind<T,S> searcher = new IconGridViewerFind<>(this, text, getLastSelectedObject(), Bias.Forward, skipStartingNode);
-        selectObject(searcher.find(), true);
-        scrollSelectedEntitiesToCenter();
-    }
-
-    @Override
-    public void selectMatch() {
-    }
     
     protected Map<S, T> getObjectMap() {
         return objectMap;
@@ -735,8 +707,35 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         return toolbar;
     }
     
-    public void scrollSelectedEntitiesToCenter() {
-        imagesPanel.scrollSelectedEntitiesToCenter();
+    public void scrollSelectedObjectsToCenter() {
+        imagesPanel.scrollSelectedObjectsToCenter();
     }
-    
+
+    @Override
+    public void showFindUI() {
+        findToolbar.open();
+    }
+
+    @Override
+    public void hideFindUI() {
+        findToolbar.close();
+    }
+
+    @Override
+    public void findPrevMatch(String text, boolean skipStartingNode) {
+        IconGridViewerFind<T,S> searcher = new IconGridViewerFind<>(this, text, getLastSelectedObject(), Bias.Backward, skipStartingNode);
+        selectObject(searcher.find(), true);
+        scrollSelectedObjectsToCenter();
+    }
+
+    @Override
+    public void findNextMatch(String text, boolean skipStartingNode) {
+        IconGridViewerFind<T,S> searcher = new IconGridViewerFind<>(this, text, getLastSelectedObject(), Bias.Forward, skipStartingNode);
+        selectObject(searcher.find(), true);
+        scrollSelectedObjectsToCenter();
+    }
+
+    @Override
+    public void selectMatch() {
+    }
 }

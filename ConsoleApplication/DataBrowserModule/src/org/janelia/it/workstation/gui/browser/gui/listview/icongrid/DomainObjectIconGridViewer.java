@@ -205,7 +205,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                scrollSelectedEntitiesToCenter();
+                scrollSelectedObjectsToCenter();
             }
         });   
     }

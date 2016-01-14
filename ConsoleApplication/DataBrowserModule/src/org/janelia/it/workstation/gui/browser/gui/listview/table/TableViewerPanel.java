@@ -20,21 +20,24 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.text.Position.Bias;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
-import org.janelia.it.workstation.gui.framework.table.DynamicRow;
-import org.janelia.it.workstation.gui.framework.table.DynamicTable;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +47,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class TableViewerPanel<T,S> extends JPanel {
+public abstract class TableViewerPanel<T,S> extends JPanel implements FindContext {
 
     private static final Logger log = LoggerFactory.getLogger(TableViewerPanel.class);
     
@@ -52,6 +55,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     private TableViewerToolbar toolbar;
     private final JPanel resultsPane;
     private final DynamicTable resultsTable;
+    private FindToolbar findToolbar;
 
     // These members deal with the context and entities within it
     private List<T> objectList;
@@ -109,7 +113,11 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         resultsTable.setMaxColWidth(80);
         resultsTable.setMaxColWidth(600);
         resultsTable.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 5));
+        resultsTable.addMouseListener(new MouseForwarder(this, "DynamicTable->TableViewerPanel"));
 
+        findToolbar = new FindToolbar(this);
+        findToolbar.addMouseListener(new MouseForwarder(this, "FindToolbar->TableViewerPanel"));
+        
         resultsPane = new JPanel(new BorderLayout());
         resultsPane.add(resultsTable, BorderLayout.CENTER);
 
@@ -334,6 +342,14 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         DomainMgr.getDomainMgr().getModel().invalidateAll();
     }
 
+    protected Map<S, T> getObjectMap() {
+        return objectMap;
+    }
+    
+    public List<T> getObjectList() {
+        return objectList;
+    }
+    
     public void setSearchProvider(SearchProvider searchProvider) {
         this.searchProvider = searchProvider;
     }
@@ -374,7 +390,47 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         removeAll();
         add(toolbar, BorderLayout.NORTH);
         add(resultsPane, BorderLayout.CENTER);
+        add(findToolbar, BorderLayout.SOUTH);
         revalidate();
         repaint();
+    }
+    
+    public void scrollObjectToCenter(T object) {
+        int row = objectList.indexOf(object);
+        getDynamicTable().scrollToVisible(row, 0);
+    }
+    
+    @Override
+    public void showFindUI() {
+        findToolbar.open();
+    }
+
+    @Override
+    public void hideFindUI() {
+        findToolbar.close();
+    }
+
+    @Override
+    public void findPrevMatch(String text, boolean skipStartingNode) {
+        TableViewerFind<T,S> searcher = new TableViewerFind<>(this, text, getLastSelectedObject(), Bias.Backward, skipStartingNode);
+        T match = searcher.find();
+        if (match != null) {
+            selectObject(match, true);
+            scrollObjectToCenter(match);
+        }
+    }
+
+    @Override
+    public void findNextMatch(String text, boolean skipStartingNode) {
+        TableViewerFind<T,S> searcher = new TableViewerFind<>(this, text, getLastSelectedObject(), Bias.Forward, skipStartingNode);
+        T match = searcher.find();
+        if (match != null) {
+            selectObject(match, true);
+            scrollObjectToCenter(match);
+        }
+    }
+
+    @Override
+    public void selectMatch() {
     }
 }
