@@ -164,11 +164,6 @@ public class ApplyAnnotationAction extends NodeAction {
             keyString = keyTerm.getName();
             valueString = valueTerm.getName();
         }
-        
-        log.info("keyTerm:"+keyTerm);
-        log.info("valueTerm:"+valueTerm);
-        log.info("keyString:"+keyString);
-        log.info("valueString:"+valueString);
 
         final Annotation annotation = new Annotation();
         annotation.setKey(keyString);

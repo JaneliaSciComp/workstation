@@ -138,7 +138,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
         
         @Override
-        public Object getImageLabel(DomainObject domainObject) {
+        public String getImageLabel(DomainObject domainObject) {
             return domainObject.getName();
         }
         

@@ -21,8 +21,6 @@ import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Context pop up menu for annotations.
@@ -31,9 +29,6 @@ import org.slf4j.LoggerFactory;
  */
 public class AnnotationContextMenu extends PopupContextMenu {
 
-    private static final Logger log = LoggerFactory.getLogger(AnnotationContextMenu.class);
-
-    // Current selection
     private ImageModel<DomainObject, Reference> imageModel;
     protected Annotation annotation;
     protected List<DomainObject> domainObjectList;

@@ -34,8 +34,8 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTagCloudPanel;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

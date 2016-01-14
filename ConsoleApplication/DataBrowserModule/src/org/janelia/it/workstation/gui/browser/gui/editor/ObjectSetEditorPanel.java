@@ -21,6 +21,7 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidat
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
@@ -63,6 +64,7 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
                 return searchResults.getPage(page);
             }
         };
+        resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->ObjectSetEditorPanel"));
         add(resultsPanel, BorderLayout.CENTER);
     }
     

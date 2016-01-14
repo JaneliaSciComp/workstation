@@ -13,10 +13,8 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
@@ -26,6 +24,7 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidat
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
@@ -72,6 +71,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 return searchResults.getPage(page);
             }
         };
+        resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->NeuronSeparationEditorPanel"));
         add(resultsPanel, BorderLayout.CENTER);
     }
     

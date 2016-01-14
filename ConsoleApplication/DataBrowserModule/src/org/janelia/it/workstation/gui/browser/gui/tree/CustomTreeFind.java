@@ -62,7 +62,7 @@ public class CustomTreeFind {
      * @return
      */
     public Node find() {
-        if (hasRun) throw new IllegalStateException("Cannot reuse TreeSearcher once it has been run.");
+        if (hasRun) throw new IllegalStateException("Cannot reuse search once it has been run.");
         hasRun = true;
         Node foundNode = find((Node) dynamicTree.getRootNode());
         if (foundNode != null) {

@@ -77,7 +77,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
         
         @Override
-        public Object getImageLabel(DomainObject domainObject) {
+        public String getImageLabel(DomainObject domainObject) {
             return domainObject.getName();
         }
         

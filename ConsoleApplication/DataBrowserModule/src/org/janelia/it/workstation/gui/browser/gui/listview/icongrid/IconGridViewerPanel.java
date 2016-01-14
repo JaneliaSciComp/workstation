@@ -18,19 +18,23 @@ import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
+import javax.swing.text.Position.Bias;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
+import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeFind;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
@@ -48,19 +52,21 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class IconGridViewerPanel<T,S> extends JPanel {
+public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindContext {
 
     private static final Logger log = LoggerFactory.getLogger(IconGridViewerPanel.class);
 
     // Main components
     private IconGridViewerToolbar toolbar;
     private ImagesPanel<T,S> imagesPanel;
+    private FindToolbar findToolbar;
     
     // These members deal with the context and entities within it
     private List<T> objectList;
     private Map<S,T> objectMap;
     private ImageModel<T,S> imageModel;
     private SelectionModel<T,S> selectionModel;
+    // TODO: use this reference to implement an export button, like in TableViewerPanel
     private SearchProvider searchProvider;
     
     // UI state
@@ -78,7 +84,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         setFocusable(true);
 
         toolbar = createToolbar();
-        toolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
+        toolbar.addMouseListener(new MouseForwarder(this, "ViewerToolbar->IconDemoPanel"));
 
         imagesPanel = new ImagesPanel<T,S>() {
             
@@ -92,11 +98,14 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 return IconGridViewerPanel.this.getAnnotationPopupMenu(annotation);
             }
         };
+        
+        findToolbar = new FindToolbar(this);
+        
         imagesPanel.setButtonKeyListener(keyListener);
-        imagesPanel.setButtonMouseListener(buttonMouseListener);
-        imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
-
         addKeyListener(keyListener);
+        
+        imagesPanel.setButtonMouseListener(mouseListener);
+        imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconGridViewerPanel"));
         
         this.addComponentListener(new ComponentAdapter() {
             @Override
@@ -284,7 +293,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     protected void deleteKeyPressed() {}
     
     // Listener for clicking on buttons
-    protected MouseListener buttonMouseListener = new MouseHandler() {
+    protected MouseListener mouseListener = new MouseHandler() {
 
         @Override
         protected void popupTriggered(MouseEvent e) {
@@ -292,12 +301,14 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 return;
             }
             AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
-            // Make sure the button is selected
-            if (!button.isSelected()) {
-                buttonSelection(button, false, false);
+            if (button!=null) {
+                // Make sure the button is selected
+                if (!button.isSelected()) {
+                    buttonSelection(button, false, false);
+                }
+                getContextualPopupMenu().show(e.getComponent(), e.getX(), e.getY());
+                e.consume();
             }
-            getContextualPopupMenu().show(e.getComponent(), e.getX(), e.getY());
-            e.consume();
         }
 
         @Override
@@ -306,9 +317,11 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 return;
             }
             AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
-            final DomainObject domainObject = (DomainObject)button.getUserObject();
-            buttonDrillDown(domainObject);
-            e.consume();
+            if (button!=null) {
+                final DomainObject domainObject = (DomainObject)button.getUserObject();
+                buttonDrillDown(domainObject);
+                e.consume();
+            }
         }
 
         @Override
@@ -318,26 +331,23 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 return;
             }
             AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
-            if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 1) {
-                return;
+            if (button!=null) {
+                if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 1) {
+                    return;
+                }
+    //            hud.setKeyListener(keyListener);
+                buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
+//                e.consume();
             }
-//            log.info("mouseReleased: {}",button.getImageObject());
-//            hud.setKeyListener(keyListener);
-            buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
-            e.consume();
         }
     };
 
-    
     protected abstract void moreAnnotationsButtonDoubleClicked(T userObject);
     
     protected abstract JPopupMenu getAnnotationPopupMenu(Annotation annotation);
     
     protected abstract JPopupMenu getContextualPopupMenu();
 
-    /**
-     * This is a separate method so that it can be overridden to accommodate other behavior patterns.
-     */
     protected abstract void buttonDrillDown(DomainObject domainObject);
 
     protected void buttonSelection(AnnotatedImageButton<T,S> button, boolean multiSelect, boolean rangeSelect) {
@@ -408,12 +418,14 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     }
     
     protected void selectObject(T object, boolean clearAll) {
+        if (object==null) return;
         S id = getImageModel().getImageUniqueId(object);
         imagesPanel.setSelectionByUniqueId(id, true, clearAll);
         selectionModel.select(object, clearAll);
     }
 
     protected void deselectObject(T object) {
+        if (object==null) return;
         S id = getImageModel().getImageUniqueId(object);
         imagesPanel.setSelectionByUniqueId(id, false, false);
         selectionModel.deselect(object);
@@ -423,6 +435,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         Component c = component;
         while (!(c instanceof AnnotatedImageButton)) {
             c = c.getParent();
+            if (c==null) return null;
         }
         return (AnnotatedImageButton<T,S>) c;
     }
@@ -534,10 +547,11 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         removeAll();
         add(toolbar, BorderLayout.NORTH);
         add(imagesPanel, BorderLayout.CENTER);
+        add(findToolbar, BorderLayout.SOUTH);
         revalidate();
         repaint();
     }
-
+    
     public T getPreviousObject() {
         if (objectList == null) {
             return null;
@@ -658,8 +672,40 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 //        });
 //    }
 
+    @Override
+    public void showFindUI() {
+        findToolbar.open();
+    }
+
+    @Override
+    public void hideFindUI() {
+        findToolbar.close();
+    }
+
+    @Override
+    public void findPrevMatch(String text, boolean skipStartingNode) {
+        IconGridViewerFind<T,S> searcher = new IconGridViewerFind<>(this, text, getLastSelectedObject(), Bias.Backward, skipStartingNode);
+        selectObject(searcher.find(), true);
+        scrollSelectedEntitiesToCenter();
+    }
+
+    @Override
+    public void findNextMatch(String text, boolean skipStartingNode) {
+        IconGridViewerFind<T,S> searcher = new IconGridViewerFind<>(this, text, getLastSelectedObject(), Bias.Forward, skipStartingNode);
+        selectObject(searcher.find(), true);
+        scrollSelectedEntitiesToCenter();
+    }
+
+    @Override
+    public void selectMatch() {
+    }
+    
     protected Map<S, T> getObjectMap() {
         return objectMap;
+    }
+    
+    public List<T> getObjectList() {
+        return objectList;
     }
 
     public void setSearchProvider(SearchProvider searchProvider) {

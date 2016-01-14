@@ -29,14 +29,12 @@ import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelec
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationView;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A SelectablePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an

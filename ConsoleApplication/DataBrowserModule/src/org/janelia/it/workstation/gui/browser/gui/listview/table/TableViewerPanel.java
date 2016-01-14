@@ -12,8 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -27,6 +25,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
@@ -36,7 +35,6 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicRow;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
-import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

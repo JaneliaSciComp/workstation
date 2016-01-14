@@ -12,7 +12,7 @@ public interface ImageModel<T,S> {
     
     public String getImageFilepath(T imageObject);
     
-    public Object getImageLabel(T imageObject);
+    public String getImageLabel(T imageObject);
     
     public List<Annotation> getAnnotations(T imageObject);
     

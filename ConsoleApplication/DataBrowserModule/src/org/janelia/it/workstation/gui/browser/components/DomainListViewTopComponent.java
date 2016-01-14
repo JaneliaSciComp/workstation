@@ -13,6 +13,7 @@ import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectSelectionEditor;
 import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.ObjectSetEditorPanel;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -61,7 +62,7 @@ public final class DomainListViewTopComponent extends TopComponent {
     
     private final InstanceContent content = new InstanceContent();
     private DomainObjectSelectionEditor editor;
-            
+    
     public DomainListViewTopComponent() {
         initComponents();
         setName(Bundle.CTL_DomainListViewTopComponent());
@@ -121,15 +122,21 @@ public final class DomainListViewTopComponent extends TopComponent {
     
     public void setEditorClass(Class<? extends DomainObjectSelectionEditor> editorClass) {
         try {
+            
             if (editor!=null) {
                 remove((JComponent)editor);
                 Events.getInstance().unregisterOnEventBus(editor);
                 Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
             }
+            
             editor = editorClass.newInstance();
-            add((JComponent)editor, BorderLayout.CENTER);
             Events.getInstance().registerOnEventBus(editor.getEventBusListener());
             Events.getInstance().registerOnEventBus(editor);
+            
+            JComponent editorComponent = (JComponent)editor;
+            
+            editorComponent.addMouseListener(new MouseForwarder(this, "DomainObjectSelectionEditor->DomainListViewTopComponent"));
+            add(editorComponent, BorderLayout.CENTER);
         }
         catch (InstantiationException | IllegalAccessException e) {
             SessionMgr.getSessionMgr().handleException(e);

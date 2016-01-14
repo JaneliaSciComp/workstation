@@ -29,6 +29,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
@@ -202,6 +203,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
             }
             else {
                 AnnotatedDomainObjectListViewer viewer = viewerType.getViewerClass().newInstance();
+                viewer.getPanel().addMouseListener(new MouseForwarder(this, "AnnotatedDomainObjectListViewer->PaginatedResultsPanel"));
                 setViewer(viewer);
             }
         }

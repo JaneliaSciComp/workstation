@@ -44,6 +44,7 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.AutoAnnotationPermissi
 import org.janelia.it.workstation.gui.browser.gui.dialogs.BulkAnnotationPermissionDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.KeyBindDialog;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nb_action.NewOntologyAction;
@@ -58,7 +59,6 @@ import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.JScrollPopupMenu;
-import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;

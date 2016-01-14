@@ -69,6 +69,7 @@ import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.EditCriteriaDialog;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.browser.model.search.FacetValue;
@@ -77,6 +78,7 @@ import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WrapLayout;
+import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.util.datatransfer.ExTransferable;
 import org.slf4j.Logger;
@@ -86,7 +88,6 @@ import com.google.common.eventbus.Subscribe;
 
 import de.javasoft.swing.JYPopupMenu;
 import de.javasoft.swing.SimpleDropDownButton;
-import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 
 /**
  * The Filter Editor is the main search GUI in the Workstation. Users can create, save, and load filters 
@@ -264,6 +265,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 return searchResults.getPage(page);
             }
         };
+        resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->FilterEditorPanel"));
         
         JPanel top = new JPanel(new BorderLayout());
         top.add(filterPanel, BorderLayout.NORTH);
