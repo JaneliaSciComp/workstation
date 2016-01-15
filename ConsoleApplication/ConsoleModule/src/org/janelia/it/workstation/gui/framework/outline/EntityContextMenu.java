@@ -422,7 +422,7 @@ public class EntityContextMenu extends JPopupMenu {
     }
     
     public List<JMenuItem> getWrapEntityItem() {
-        if (multiple) return null;
+        if (multiple) return Collections.EMPTY_LIST;
         return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem(rootedEntity);
     }
        
