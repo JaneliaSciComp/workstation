@@ -759,7 +759,7 @@ struct VoxelIntensity
 float advance_to_voxel_edge(in float previousEdge, in RayParameters rayParameters) 
 {
     // Units of ray parameter, t, are roughly texels
-    const float minStep = 0.05;
+    const float minStep = 0.01;
 
     // Advance ray by at least minStep, to avoid getting stuck in tiny corners
     float t = previousEdge + minStep;
@@ -883,7 +883,8 @@ ViewSlab initialize_view_slab(RayParameters rayParams)
 void integrate_intensity(
         in VoxelIntensity localIntensity, 
         inout IntegratedIntensity integratedIntensity,
-        inout CoreStatus core)
+        inout CoreStatus core,
+        in ViewSlab viewSlab)
 {
     // Sample the correct part of the voxel
     COLOR_VEC vecLocalIntensity;
@@ -897,7 +898,25 @@ void integrate_intensity(
     // compute scalar proxy for intensity
     float localOpacity = maxElement(rampstep(opacityFunctionMin, opacityFunctionMax, vecLocalIntensity));
 
-    // Integrate TODO: all projection modes
+    // fade intensity at front and back, for smoother clipping
+    // NOTE - this fading effect is nice because it avoids popping when objects
+    // enter and leave the view slab.
+    // BUT the fading effect has performance consequences:
+    //  * obviously it adds computations to the slow loop
+    //  * ...including the early computation of relative depth
+    //  * it also uses the OpacityFunction, which is otherwise not strictly
+    //    needed in this shader at all. So, for example, without the fade
+    //    effect, this entire render pass could be cached and skipped, as
+    //    the user drags the opacity parameters. 
+    float rayParameter = localIntensity.latestRayParameter;
+    float rd = (rayParameter - viewSlab.minRayParam) 
+            / (viewSlab.maxRayParam - viewSlab.minRayParam); // relative depth
+    const float fadeBuffer = 0.20; // how much of depth slab to include in fading
+    float fade = rampstep(0.0, fadeBuffer, rd);
+    fade = min(fade, rampstep(1.0, 1.0 - fadeBuffer, rd));
+    localOpacity *= fade;
+
+    // Integrate
     #if PROJECTION_MODE == PROJECTION_MAXIMUM
         if (localOpacity > integratedIntensity.opacity) {
             integratedIntensity.intensity = vecLocalIntensity;
@@ -921,11 +940,11 @@ void integrate_intensity(
     #endif // PROJECTION_MODE
 
 
-    // also track the location of the tracing channel core,
+    // Also track the location of the tracing channel core,
     // using a sort-of MIP approach, regardless of rendering projection
-    const int tracingChannel = 0; // We only care about seeking the core of the channel used for tracing
-    float coreIntensity = vecLocalIntensity[tracingChannel];
-    float rayParameter = localIntensity.latestRayParameter;
+    // TODO: generalize tracing channel for unmixing, as an adjustable input per-block
+    const COLOR_VEC tracingChannel = COLOR_VEC(1, 0); // We only care about seeking the core of the channel used for tracing
+    float coreIntensity = dot(vecLocalIntensity, tracingChannel);
 
     if (coreIntensity > integratedIntensity.coreIntensity) { // new brightest core, definitely worth keeping
         integratedIntensity.coreIntensity = coreIntensity;
@@ -1034,7 +1053,7 @@ IntegratedIntensity cast_volume_ray(in RayParameters rayParameters, in ViewSlab 
         if (ray_complete(voxelRayState, rayBounds, integratedIntensity, coreStatus))
             return integratedIntensity; // DONE, we made it to the far side of the volume
         sample_intensity(voxelRayState, rayParameters, voxelIntensity); // this is an expensive step, due to texture fetch(es)
-        integrate_intensity(voxelIntensity, integratedIntensity, coreStatus);
+        integrate_intensity(voxelIntensity, integratedIntensity, coreStatus, viewSlab);
         step_ray(rayParameters, voxelRayState);
         stepCount += 1;
         if (stepCount >= maxStepCount) // terminate early to avoid performance problems and sidestep inifinite-loop bugs
