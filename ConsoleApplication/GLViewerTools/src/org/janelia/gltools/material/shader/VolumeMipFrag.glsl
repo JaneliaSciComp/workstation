@@ -240,17 +240,18 @@ float sampleScaledIntensity(sampler3D volume, vec3 uvw, vec3 textureScale)
 vec3 calculateNormalInScreenSpace(sampler3D volume, vec3 uvw, vec3 voxelMicrometers, vec3 textureScale) 
 {
     vec3 v[2];
-    float delta = 0.75; // sample 1/2 pixel away
+    const float delta = 0.75; // sample 1/2 pixel away
 
     // 0.2 *, to avoid overflow
-    v[0].x = 0.4 * sampleScaledIntensity(volume, uvw + vec3(delta, 0, 0), textureScale);
-    v[1].x = 0.4 * sampleScaledIntensity(volume, uvw - vec3(delta, 0, 0), textureScale);
+    const float downScale = 0.4;
+    v[0].x = downScale * sampleScaledIntensity(volume, uvw + vec3(delta, 0, 0), textureScale);
+    v[1].x = downScale * sampleScaledIntensity(volume, uvw - vec3(delta, 0, 0), textureScale);
 
-    v[0].y = 0.4 * sampleScaledIntensity(volume, uvw + vec3(0, delta, 0), textureScale);
-    v[1].y = 0.4 * sampleScaledIntensity(volume, uvw - vec3(0, delta, 0), textureScale);
+    v[0].y = downScale * sampleScaledIntensity(volume, uvw + vec3(0, delta, 0), textureScale);
+    v[1].y = downScale * sampleScaledIntensity(volume, uvw - vec3(0, delta, 0), textureScale);
 
-    v[0].z = 0.4 * sampleScaledIntensity(volume, uvw + vec3(0, 0, delta), textureScale);
-    v[1].z = 0.4 * sampleScaledIntensity(volume, uvw - vec3(0, 0, delta), textureScale);
+    v[0].z = downScale * sampleScaledIntensity(volume, uvw + vec3(0, 0, delta), textureScale);
+    v[1].z = downScale * sampleScaledIntensity(volume, uvw - vec3(0, 0, delta), textureScale);
 
     vec3 result = normalize( (v[1] - v[0]) );
     result = (tcToCamera * vec4(result, 0)).xyz; // TODO should be matrix that converts TC to camera
@@ -884,7 +885,9 @@ void integrate_intensity(
         in VoxelIntensity localIntensity, 
         inout IntegratedIntensity integratedIntensity,
         inout CoreStatus core,
-        in ViewSlab viewSlab)
+        in ViewSlab viewSlab,
+        in VoxelRayState voxelRayState,
+        in RayParameters rayParams)
 {
     // Sample the correct part of the voxel
     COLOR_VEC vecLocalIntensity;
@@ -895,8 +898,74 @@ void integrate_intensity(
         vecLocalIntensity = localIntensity.voxelExitIntensity;
     }
 
+    float rayParameter = localIntensity.latestRayParameter;
+
+    // Also track the location of the tracing channel core,
+    // using a sort-of MIP approach, regardless of rendering projection
+    // TODO: generalize tracing channel for unmixing, as an adjustable input per-block
+    const COLOR_VEC tracingChannel = COLOR_VEC(1, 0); // We only care about seeking the core of the channel used for tracing
+    float coreIntensity = dot(vecLocalIntensity, tracingChannel);
+
+    if (coreIntensity > integratedIntensity.coreIntensity) { // new brightest core, definitely worth keeping
+        integratedIntensity.coreIntensity = coreIntensity;
+        core.inLocalBody = true;
+        core.firstBodyRayParam = core.finalBodyRayParam = rayParameter;
+        integratedIntensity.coreRayParameter = rayParameter;
+    }
+    else if (core.inLocalBody) { // maybe continue core we saw earlier
+        if (coreIntensity == integratedIntensity.coreIntensity) { // cruise intensity plateau
+            core.finalBodyRayParam = rayParameter; // record extension of plateau
+            integratedIntensity.coreRayParameter = mix(core.firstBodyRayParam, core.finalBodyRayParam, 0.5);
+        }
+        else { // dimmer intensity means we are past the core
+            core.inLocalBody = false;
+        }
+    }
+
+    // Isosurface mode considered first, so we can skip fade calculation (below)
+    #if PROJECTION_MODE == PROJECTION_ISOSURFACE
+        if (integratedIntensity.opacity > 0.5)
+            return; // presumably already hit the threshold earlier in the ray
+        COLOR_VEC isoThreshold = 0.5 * (opacityFunctionMin + opacityFunctionMax);
+        float threshDist = maxElement(vecLocalIntensity - isoThreshold);
+        if (threshDist <= 0) // surface not intersected
+            return;
+        // If we get this far, we just now penetrated the isosurface threshold
+        integratedIntensity.opacity = 1.0; // opaque surface
+        // Where, precisely, did the ray penetrate the surface?
+        float surfaceRayParam;
+        if (filteringOrder == FILTER_NEAREST) {
+            surfaceRayParam = voxelRayState.entryRayParameter; // retreat to voxel surface
+        }
+        else {
+            // Interpolate between previous ray spot, and current ray spot.
+            COLOR_VEC previousIntensity = localIntensity.voxelEntryIntensity;
+            float previousThreshDist = maxElement(previousIntensity - isoThreshold);
+            float alpha = (-previousThreshDist) / (threshDist - previousThreshDist);
+            alpha = clamp(alpha, 0, 1);
+            surfaceRayParam = mix(voxelRayState.entryRayParameter, voxelRayState.exitRayParameter, alpha);
+        }
+        vec3 x0 = rayParams.rayOriginInTexels;
+        vec3 x1 = rayParams.rayDirectionInTexels;
+        vec3 surfaceTexel = x0 + surfaceRayParam * x1;
+        // Use density gradient as surface normal
+        vec3 voxelMicrometers = volumeMicrometers * rayParams.textureScale;
+        vec3 normal = calculateNormalInScreenSpace(
+            volumeTexture,
+            surfaceTexel,
+            voxelMicrometers,
+            rayParams.textureScale);
+        normal = 0.5 * (normal + vec3(1, 1, 1)); // restrict to range 0-1
+        integratedIntensity.intensity = COLOR_VEC(normal); // Maybe just X/Y components, if vec2
+        return; // stop casting! we found the surface along this ray
+    #endif // PROJECTION ISOSURFACE
+
     // compute scalar proxy for intensity
     float localOpacity = maxElement(rampstep(opacityFunctionMin, opacityFunctionMax, vecLocalIntensity));
+
+    // shortcut - skip sufficiently dim intensities
+    if (localOpacity <= 0)
+        return;
 
     // fade intensity at front and back, for smoother clipping
     // NOTE - this fading effect is nice because it avoids popping when objects
@@ -908,7 +977,6 @@ void integrate_intensity(
     //    needed in this shader at all. So, for example, without the fade
     //    effect, this entire render pass could be cached and skipped, as
     //    the user drags the opacity parameters. 
-    float rayParameter = localIntensity.latestRayParameter;
     float rd = (rayParameter - viewSlab.minRayParam) 
             / (viewSlab.maxRayParam - viewSlab.minRayParam); // relative depth
     const float fadeBuffer = 0.20; // how much of depth slab to include in fading
@@ -936,31 +1004,8 @@ void integrate_intensity(
         integratedIntensity.intensity = clamp(c_out, 0, 1); // clamp required to avoid black artifacts
         integratedIntensity.opacity = a_out;
     #else // isosurface
-        // TODO:
+        // NOTE: isosurface projection already handled earlier
     #endif // PROJECTION_MODE
-
-
-    // Also track the location of the tracing channel core,
-    // using a sort-of MIP approach, regardless of rendering projection
-    // TODO: generalize tracing channel for unmixing, as an adjustable input per-block
-    const COLOR_VEC tracingChannel = COLOR_VEC(1, 0); // We only care about seeking the core of the channel used for tracing
-    float coreIntensity = dot(vecLocalIntensity, tracingChannel);
-
-    if (coreIntensity > integratedIntensity.coreIntensity) { // new brightest core, definitely worth keeping
-        integratedIntensity.coreIntensity = coreIntensity;
-        core.inLocalBody = true;
-        core.firstBodyRayParam = core.finalBodyRayParam = rayParameter;
-        integratedIntensity.coreRayParameter = rayParameter;
-    }
-    else if (core.inLocalBody) { // maybe continue core we saw earlier
-        if (coreIntensity == integratedIntensity.coreIntensity) { // cruise intensity plateau
-            core.finalBodyRayParam = rayParameter; // record extension of plateau
-            integratedIntensity.coreRayParameter = mix(core.firstBodyRayParam, core.finalBodyRayParam, 0.5);
-        }
-        else { // dimmer intensity means we are past the core
-            core.inLocalBody = false;
-        }
-    }
 
 }
 
@@ -1053,7 +1098,10 @@ IntegratedIntensity cast_volume_ray(in RayParameters rayParameters, in ViewSlab 
         if (ray_complete(voxelRayState, rayBounds, integratedIntensity, coreStatus))
             return integratedIntensity; // DONE, we made it to the far side of the volume
         sample_intensity(voxelRayState, rayParameters, voxelIntensity); // this is an expensive step, due to texture fetch(es)
-        integrate_intensity(voxelIntensity, integratedIntensity, coreStatus, viewSlab);
+        integrate_intensity(
+                voxelIntensity, 
+                integratedIntensity, 
+                coreStatus, viewSlab, voxelRayState, rayParameters);
         step_ray(rayParameters, voxelRayState);
         stepCount += 1;
         if (stepCount >= maxStepCount) // terminate early to avoid performance problems and sidestep inifinite-loop bugs
