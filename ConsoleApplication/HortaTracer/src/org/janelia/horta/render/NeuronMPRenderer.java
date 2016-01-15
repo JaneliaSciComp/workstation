@@ -186,7 +186,8 @@ extends MultipassRenderer
             return result;
         }
         
-        result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 0);
+        // Neurite core tracing intensity is located in the third channel
+        result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 2);
         if (result <= 0) {
             return -1;
         }
