@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.dialogs;
+package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -11,6 +11,8 @@ import javax.swing.*;
 import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 
 /**
  * A dialog for entering username and password, with some additional options.
@@ -109,8 +111,8 @@ public class LoginDialog extends ModalDialog {
     public void showDialog() {
         
         String email = (String) getModelProperty(SessionMgr.USER_EMAIL, "");
-        String username = (String) getModelProperty(SessionMgr.USER_NAME, "");
-        String password = (String) getModelProperty(SessionMgr.USER_PASSWORD, "");
+        String username = (String) getModelProperty(AccessManager.USER_NAME, "");
+        String password = (String) getModelProperty(AccessManager.USER_PASSWORD, "");
         Boolean remember = (Boolean) getModelProperty(SessionMgr.REMEMBER_PASSWORD, Boolean.TRUE);
         
         emailField.setText(email);
@@ -129,8 +131,8 @@ public class LoginDialog extends ModalDialog {
         
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         sessionMgr.setModelProperty(SessionMgr.USER_EMAIL, email);
-        sessionMgr.setModelProperty(SessionMgr.USER_NAME, username);
-        sessionMgr.setModelProperty(SessionMgr.USER_PASSWORD, rememberCheckbox.isSelected()?password:null);
+        sessionMgr.setModelProperty(AccessManager.USER_NAME, username);
+        sessionMgr.setModelProperty(AccessManager.USER_PASSWORD, rememberCheckbox.isSelected()?password:null);
         sessionMgr.setModelProperty(SessionMgr.REMEMBER_PASSWORD, rememberCheckbox.isSelected());
         
         if (StringUtils.isEmpty(email)) {
@@ -146,7 +148,8 @@ public class LoginDialog extends ModalDialog {
             }
         }
         
-        boolean loginSuccess = SessionMgr.getSessionMgr().loginSubject(username, password);
+        boolean loginSuccess = true;
+        //SessionMgr.getSessionMgr().loginSubject(username, password);
         
         if (!loginSuccess) {
             Object[] options = { "Fix Login", "Exit Program" };

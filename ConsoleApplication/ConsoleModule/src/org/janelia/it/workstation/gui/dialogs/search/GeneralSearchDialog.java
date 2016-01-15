@@ -346,7 +346,8 @@ public class GeneralSearchDialog extends ModalDialog {
 
         Entity workspace = ModelMgr.getModelMgr().getCurrentWorkspace();
 
-        Entity searchResults = EntityUtils.findChildWithNameAndTypeAndOwner(workspace, EntityConstants.NAME_SEARCH_RESULTS, EntityConstants.TYPE_FOLDER, SessionMgr.getSubjectKey());
+        Entity searchResults = null;
+                //EntityUtils.findChildWithNameAndTypeAndOwner(workspace, EntityConstants.NAME_SEARCH_RESULTS, EntityConstants.TYPE_FOLDER, SessionMgr.getSubjectKey());
         if (searchResults == null) {
             return EntityConstants.NAME_SEARCH_RESULTS + "/Search Results #1";
         }

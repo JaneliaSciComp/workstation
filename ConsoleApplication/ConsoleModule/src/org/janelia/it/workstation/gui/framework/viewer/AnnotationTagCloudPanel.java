@@ -84,7 +84,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             titleItem.setEnabled(false);
             popupMenu.add(titleItem);
 
-            if (SessionMgr.getSubjectKey().equals(tag.getOwner())) {
+           // if (SessionMgr.getSubjectKey().equals(tag.getOwner())) {
                 final RemoveAnnotationTermAction termAction = new RemoveAnnotationTermAction(tag.getKeyEntityId(), tag.getKeyString());
                 JMenuItem deleteByTermItem = new JMenuItem(termAction.getName());
                 deleteByTermItem.addActionListener(new ActionListener() {
@@ -128,7 +128,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                 catch (Exception e1) {
                     SessionMgr.getSessionMgr().handleException(e1);
                 }
-            }
+           // }
 
         }
         else {
@@ -136,7 +136,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             titleItem.setEnabled(false);
             popupMenu.add(titleItem);
 
-            if (EntityUtils.hasWriteAccess(tag.getEntity(), SessionMgr.getSubjectKeys())) {
+            //if (EntityUtils.hasWriteAccess(tag.getEntity(), SessionMgr.getSubjects())) {
                 JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
                 deleteItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -144,7 +144,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                     }
                 });
                 popupMenu.add(deleteItem);
-            }
+           // }
 
             if (null!=tag.getValueString()) {
                 JMenuItem editItem = new JMenuItem("  Edit Annotation");

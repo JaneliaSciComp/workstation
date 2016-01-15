@@ -10,9 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.BindException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.*;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,17 +24,10 @@ import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
-import org.janelia.it.jacs.model.user_data.Group;
-import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.model.user_data.SubjectRelationship;
-import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
-import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
-import org.janelia.it.workstation.api.stub.data.FatalCommError;
-import org.janelia.it.workstation.api.stub.data.SystemError;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.external_listener.ExternalListener;
 import org.janelia.it.workstation.gui.framework.keybind.KeyBindings;
@@ -66,6 +57,7 @@ public final class SessionMgr {
 
     private static final int MAX_PORT_TRIES = 20;
     private static final int PORT_INCREMENT = 1000;
+    public static String USER_EMAIL = "UserEmail";
 
     public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
     public static String UNLOAD_IMAGES_PROPERTY = "SessionMgr.UnloadImagesProperty";
@@ -73,13 +65,9 @@ public final class SessionMgr {
     public static String JACS_DATA_PATH_PROPERTY = "SessionMgr.JacsDataPathProperty";
     public static String JACS_INTERACTIVE_SERVER_PROPERTY = "SessionMgr.JacsInteractiveServerProperty";
     public static String JACS_PIPELINE_SERVER_PROPERTY = "SessionMgr.JacsPipelineServerProperty";
-    public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
-    public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
     public static String REMEMBER_PASSWORD = LoginProperties.REMEMBER_PASSWORD;
-    public static String USER_EMAIL = "UserEmail";
     public static String FILE_CACHE_DISABLED_PROPERTY = "console.localCache.disabled";
     public static String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
-    public static String RUN_AS_USER = "RunAs";
     public static String DOWNLOADS_DIR = "DownloadsDir";
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
     public static String DISPLAY_RENDERER_2D = "SessionMgr.Renderer2D";
@@ -100,10 +88,6 @@ public final class SessionMgr {
     private String prefsFile = prefsDir + ".JW_Settings";
     private Browser activeBrowser;
     private String appName, appVersion;
-    private boolean isLoggedIn;
-    private Subject loggedInSubject;
-    private Subject authenticatedSubject;
-    private Long currentSessionId;
     private WebDavClient webDavClient;
     private LocalFileCache localFileCache;
 
@@ -229,13 +213,7 @@ public final class SessionMgr {
         catch (Exception ex) {
             handleException(ex);
         }
-        
-        String tempLogin = (String) getModelProperty(USER_NAME);
-        String tempPassword = (String) getModelProperty(USER_PASSWORD);
-        if (tempLogin != null && tempPassword != null) {
-            PropertyConfigurator.getProperties().setProperty(USER_NAME, tempLogin);
-            PropertyConfigurator.getProperties().setProperty(USER_PASSWORD, tempPassword);
-        }
+
         Integer tmpCache = (Integer) getModelProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
         if (null != tmpCache) {
             PropertyConfigurator.getProperties().setProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
@@ -314,7 +292,7 @@ public final class SessionMgr {
             // Do nothing, there are no preferences
         }
         catch (Exception ioEx) {
-            log.info("Error reading settings file",ioEx);
+            log.info("Error reading settings file", ioEx);
         } //new settingsFile
     }
 
@@ -518,7 +496,7 @@ public final class SessionMgr {
         writeSettings(); // Saves user preferences.
         sessionModel.removeAllBrowserModels();
 
-        logoutUser();
+        //logoutUser();
         log.info("Memory in use at exit: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000f + " MB");
 
         modelManager.prepareForSystemExit();
@@ -716,117 +694,8 @@ public final class SessionMgr {
         }
     }
 
-    public boolean loginSubject(String username, String password) {
-        try {
-            boolean relogin = false;
-
-            if (isLoggedIn()) {
-                logoutUser();
-                log.info("RELOGIN");
-                relogin = true;
-            }
-
-            findAndRemoveWindowsSplashFile();
-            // Login and start the session
-            authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject(username, password);
-            if (null != authenticatedSubject) {
-                isLoggedIn = true;                
-                loggedInSubject = authenticatedSubject;
-                log.info("Authenticated as {}", authenticatedSubject.getKey());
-
-                FacadeManager.getFacadeManager().getComputeFacade().beginSession();
-                if (relogin) {
-                    resetSession();
-                }
-            }
-
-            return isLoggedIn;
-        }
-        catch (Exception e) {
-            isLoggedIn = false;
-            log.error("Error logging in", e);
-            throw new FatalCommError(ConsoleProperties.getInstance().getProperty("interactive.server.url"),
-                    "Cannot authenticate login. The server may be down. Please try again later.");
-        }
-    }
-
-    public boolean setRunAsUser(String runAsUser) {
-        
-        if (!SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME) && !StringUtils.isEmpty(runAsUser)) {
-            throw new IllegalStateException("Non-admin user cannot run as another user");
-        }
-        
-        try {
-            if (!StringUtils.isEmpty(runAsUser)) {
-                Subject runAsSubject = ModelMgr.getModelMgr().getSubjectWithPreferences(runAsUser);
-                if (runAsSubject==null) {
-                    return false;
-                }
-                loggedInSubject = runAsSubject;
-            }
-            else {
-                loggedInSubject = authenticatedSubject;
-            }
-
-            if (!authenticatedSubject.getId().equals(loggedInSubject.getId())) {
-                log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), loggedInSubject.getId());
-            }
-                
-            resetSession();
-            return true;
-        }
-        catch (Exception e) {
-            loggedInSubject = authenticatedSubject;
-            handleException(e);
-            return false;
-        }
-    }
-    
-    private void resetSession() {
-        final Browser browser = SessionMgr.getBrowser();
-        if (browser != null) {
-            log.info("Refreshing all views");
-            browser.resetView();
-        }
-        log.info("Resetting model");
-        ModelMgr.getModelMgr().reset();
-        sessionModel.removeAllBrowserModels();
-        FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
-    }
-    
-    public void logoutUser() {
-        try {
-            if (loggedInSubject != null) {
-                FacadeManager.getFacadeManager().getComputeFacade().endSession();
-                log.info("Logged out with: {}", loggedInSubject.getKey());
-            }
-            isLoggedIn = false;
-            loggedInSubject = null;
-            authenticatedSubject = null;
-        }
-        catch (Exception e) {
-            log.error("Error logging out", e);
-        }
-    }
-
-    public boolean isLoggedIn() {
-        return isLoggedIn;
-    }
-
     public String getApplicationOutputDirectory() {
         return prefsDir;
-    }
-
-    public void setSubject(Subject subject) {
-        this.loggedInSubject = subject;
-    }
-
-    public Subject getSubject() {
-        return loggedInSubject;
-    }
-
-    public Subject getAuthenticatedSubject() {
-        return authenticatedSubject;
     }
 
     class MyBrowserListener extends WindowAdapter {
@@ -840,66 +709,6 @@ public final class SessionMgr {
         public void windowActivated(WindowEvent e) {
             // NO-FRAME activeBrowser = (Browser) e.getWindow();
         }
-    }
-
-    public static boolean authenticatedSubjectIsInGroup(String groupName) {
-        Subject subject = SessionMgr.getSessionMgr().getAuthenticatedSubject();
-        return subject instanceof User && isUserInGroup((User) subject, groupName);
-    }
-
-    public static boolean currentUserIsInGroup(String groupName) {
-        Subject subject = SessionMgr.getSessionMgr().getSubject();
-        return subject instanceof User && isUserInGroup((User) subject, groupName);
-    }
-
-    private static boolean isUserInGroup(User targetUser, String targetGroup) {
-        if (null == targetUser) {
-            return false;
-        }
-        for (SubjectRelationship relation : targetUser.getGroupRelationships()) {
-            if (relation.getGroup().getName().equals(targetGroup)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static List<String> getSubjectKeys() {
-        List<String> subjectKeys = new ArrayList<>();
-        Subject subject = SessionMgr.getSessionMgr().getSubject();
-        if (subject != null) {
-            subjectKeys.add(subject.getKey());
-            if (subject instanceof User) {
-                for (SubjectRelationship relation : ((User) subject).getGroupRelationships()) {
-                    subjectKeys.add(relation.getGroup().getKey());
-                }
-            }
-        }
-        return subjectKeys;
-    }
-
-    public static String getSubjectKey() {
-        Subject subject = getSessionMgr().getSubject();
-        if (subject == null) {
-            throw new SystemError("Not logged in");
-        }
-        return subject.getKey();
-    }
-
-    public static String getUsername() {
-        Subject subject = getSessionMgr().getSubject();
-        if (subject == null) {
-            throw new SystemError("Not logged in");
-        }
-        return subject.getName();
-    }
-
-    public static String getUserEmail() {
-        Subject subject = getSessionMgr().getSubject();
-        if (subject == null) {
-            throw new SystemError("Not logged in");
-        }
-        return subject.getEmail();
     }
 
     /**
@@ -960,13 +769,5 @@ public final class SessionMgr {
             SessionMgr.getSessionMgr().handleException(e);
             return null;
         }
-    }
-
-    public Long getCurrentSessionId() {
-        return currentSessionId;
-    }
-
-    public void setCurrentSessionId(Long currentSessionId) {
-        this.currentSessionId = currentSessionId;
     }
 }

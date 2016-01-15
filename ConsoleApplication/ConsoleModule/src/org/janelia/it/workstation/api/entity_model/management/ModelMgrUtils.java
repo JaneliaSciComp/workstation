@@ -29,7 +29,7 @@ public class ModelMgrUtils {
      * @return
      */
     public static boolean isOwner(Entity entity) {
-        return EntityUtils.isOwner(entity, SessionMgr.getSubjectKey());
+        return EntityUtils.isOwner(entity, "SessionMgr.getSubjectKey()");
     }
 
     /**
@@ -40,7 +40,8 @@ public class ModelMgrUtils {
      * @return
      */
     public static boolean hasReadAccess(Entity entity) {
-        return EntityUtils.hasReadAccess(entity, SessionMgr.getSubjectKeys());
+        return true;
+        //return EntityUtils.hasReadAccess(entity, SessionMgr.getSubjects());
     }
 
     /**
@@ -51,7 +52,8 @@ public class ModelMgrUtils {
      * @return
      */
     public static boolean hasWriteAccess(Entity entity) {
-        return EntityUtils.hasWriteAccess(entity, SessionMgr.getSubjectKeys());
+       return true;
+       // return EntityUtils.hasWriteAccess(entity, SessionMgr.getSubjects());
     }
 
     public static EntityData addChild(Entity parent, Entity child) throws Exception {

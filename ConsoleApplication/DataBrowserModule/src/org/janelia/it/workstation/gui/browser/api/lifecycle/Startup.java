@@ -1,6 +1,6 @@
-package org.janelia.it.workstation.lifecycle;
+package org.janelia.it.workstation.gui.browser.api.lifecycle;
 
-import org.janelia.it.workstation.gui.application.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.openide.modules.OnStart;
 
 /**

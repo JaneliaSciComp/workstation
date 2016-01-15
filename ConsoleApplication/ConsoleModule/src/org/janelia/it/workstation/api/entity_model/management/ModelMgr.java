@@ -149,22 +149,6 @@ public final class ModelMgr {
             subjectByKey.put(subject.getKey(), subject);
         }
     }
-
-    /**
-     * This adds a session event.  It is best to use the method in the
-     * Session Manager instead, as that has more convenient 'finding' of various
-     * parts of the event.
-     * 
-     * @param event to log.
-     */
-    public void addEventToSession(UserToolEvent event) {  
-        try {
-            FacadeManager.getFacadeManager().getComputeFacade().addEventToSession(event);
-        } catch (Exception ex) {
-            log.warn("Failed to log userevent " + event);
-            ex.printStackTrace();
-        }
-    }
     
     public void addModelMgrObserver(ModelMgrObserver mml) {
         if (null != mml && !modelMgrObservers.contains(mml)) {
@@ -291,7 +275,8 @@ public final class ModelMgr {
     }
 
     public String getSortCriteria(Long entityId) {
-        Subject subject = SessionMgr.getSessionMgr().getSubject();
+        Subject subject = null;
+        //SessionMgr.getSessionMgr().getSubject();
         Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
         String entityIdStr = entityId.toString();
         for (SubjectPreference pref : prefs.values()) {
@@ -303,7 +288,8 @@ public final class ModelMgr {
     }
 
     public void saveSortCriteria(Long entityId, String sortCriteria) throws Exception {
-        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
+        Subject subject = null;
+        //ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
         if (StringUtils.isEmpty(sortCriteria)) {
             subject.getPreferenceMap().remove(CATEGORY_SORT_CRITERIA + ":" + entityId);
             log.debug("Removed user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId);
@@ -313,12 +299,13 @@ public final class ModelMgr {
             log.debug("Saved user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId + "=" + sortCriteria);
         }
         Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
-        SessionMgr.getSessionMgr().setSubject(newSubject);
+       // SessionMgr.getSessionMgr().setSubject(newSubject);
     }
 
     public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
-        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
+        Subject subject = null;
+        //ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
         Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(category);
 
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(subject.getKey(), ontologyId);
@@ -332,7 +319,7 @@ public final class ModelMgr {
     public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
 
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
-        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
+       /* Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
 
         // First delete all keybinds for this ontology
         for (String key : subject.getCategoryPreferences(category).keySet()) {
@@ -346,8 +333,8 @@ public final class ModelMgr {
         }
 
         Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
-        SessionMgr.getSessionMgr().setSubject(newSubject);
-        notifyOntologyChanged(ontologyKeyBindings.getOntologyId());
+       // SessionMgr.getSessionMgr().setSubject(newSubject);
+        notifyOntologyChanged(ontologyKeyBindings.getOntologyId());*/
     }
 
     public void removeOntologyKeyBindings(long ontologyId) throws Exception {
@@ -1005,7 +992,7 @@ public final class ModelMgr {
     }
 
     public Task submitJob(String processDefName, String displayName, HashSet<TaskParameter> parameters) throws Exception {
-        GenericTask task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(), new ArrayList<Event>(),
+        GenericTask task = new GenericTask(new HashSet<Node>(), "SessionMgr.getSubjectKey()", new ArrayList<Event>(),
                 parameters, processDefName, displayName);
         return submitJob(task);
     }
@@ -1032,25 +1019,15 @@ public final class ModelMgr {
     public List<Task> getUserTasksByType(String taskName) throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().getUserTasksByType(taskName);
     }
-
-    public Subject getSubject() throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().getSubject();
-    }
-
-    public Subject getSubjectByKey(String key) throws Exception {
-        Subject subject = subjectByKey.get(key);
-        if (subject!=null) return subject;
-        subject = FacadeManager.getFacadeManager().getComputeFacade().getSubject(key);
-        subjectByKey.put(subject.getKey(), subject);
-        return subject;
-    }
     
     public Subject getSubjectWithPreferences(String nameOrKey) throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().getSubject(nameOrKey);
+       return null;
+        //return FacadeManager.getFacadeManager().getComputeFacade().getSubject(nameOrKey);
     }
 
     public List<Subject> getSubjects() throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().getSubjects();
+        return null;
+        //return FacadeManager.getFacadeManager().getComputeFacade().getSubjects();
     }
 
     public Subject saveOrUpdateSubject(Subject subject) throws Exception {

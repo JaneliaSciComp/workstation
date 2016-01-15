@@ -9,9 +9,10 @@ import java.awt.event.ComponentEvent;
 import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 /**
  * A dialog for entering a username to run as, for administrator use only. 
  *
@@ -76,8 +77,8 @@ public class RunAsUserDialog extends ModalDialog {
     }
 
     public void showDialog() {
-        String runAsUser = (String) getModelProperty(SessionMgr.RUN_AS_USER, "");
-        usernameField.setText(runAsUser);
+       // String runAsUser = (String) getModelProperty(SessionMgr.RUN_AS_USER, "");
+       // usernameField.setText(runAsUser);
         packAndShow();
     }
 
@@ -86,17 +87,17 @@ public class RunAsUserDialog extends ModalDialog {
         String runAsUser = usernameField.getText().trim();
         
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-        sessionMgr.setModelProperty(SessionMgr.RUN_AS_USER, runAsUser);
+        sessionMgr.setModelProperty(AccessManager.RUN_AS_USER, runAsUser);
         
-        boolean runAsSuccess = SessionMgr.getSessionMgr().setRunAsUser(runAsUser);
+       // boolean runAsSuccess = SessionMgr.getSessionMgr().setRunAsUser(runAsUser);
         
-        if (!runAsSuccess) {
+        if (false) {
             Object[] options = { "Fix username", "Cancel" };
             final int answer = JOptionPane.showOptionDialog(null, 
                     "User does not exist.", "Username Invalid",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
             if (answer != 0) {
-                sessionMgr.setModelProperty(SessionMgr.RUN_AS_USER, "");
+                sessionMgr.setModelProperty(AccessManager.RUN_AS_USER, "");
                 setVisible(false);
             }
         }

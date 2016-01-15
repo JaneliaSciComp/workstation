@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.lifecycle;
+package org.janelia.it.workstation.gui.browser.api.lifecycle;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

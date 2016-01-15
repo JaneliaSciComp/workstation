@@ -203,7 +203,8 @@ public class ImportDialog extends ModalDialog {
             if ((modelName != null) && (modelName.trim().length() > 0)) {
                 folderName = modelName;
             } else {
-                folderName = SessionMgr.getUsername() + " " + DEFAULT_FOLDER_NAME;
+                folderName = null;
+                //folderName = SessionMgrUSERNAME + " " + DEFAULT_FOLDER_NAME;
             }
         } else {
             
@@ -447,7 +448,8 @@ public class ImportDialog extends ModalDialog {
             uploadPath = uploader.uploadFiles(selectedChildren, selectedFile);
         }
 
-        final String owner = SessionMgr.getSubjectKey();
+        final String owner = null;
+        //SessionMgr.getSubjectKey();
         final String process = "FileTreeLoader";
         final boolean filesUploadedFlag = true;
         Task task = new FileTreeLoaderPipelineTask(new HashSet<Node>(),

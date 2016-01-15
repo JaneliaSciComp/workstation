@@ -385,7 +385,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                     for (final Entity entityRoot : entityRootList) {
                         Subject subject = null;
                         try {
-                            subject = ModelMgr.getModelMgr().getSubjectByKey(entityRoot.getOwnerKey());
+                            //subject = ModelMgr.getModelMgr().getSubjectByKey(entityRoot.getOwnerKey());
                         }
                         catch (Exception ex) {
                             log.error("Error getting subject: "+entityRoot.getOwnerKey(),ex);

@@ -18,33 +18,33 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 public class EJBOntologyFacade extends EJBEntityFacade implements OntologyFacade {
     
     public List<Entity> getOntologyRootEntities() throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getOntologyRootEntities(SessionMgr.getSubjectKey());
+        return EJBFactory.getRemoteAnnotationBean().getOntologyRootEntities("SessionMgr.getSubjectKey()");
     }
 
     @Override
     public Entity createOntologyAnnotation(OntologyAnnotation annotation) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation(SessionMgr.getSubjectKey(), annotation);
+        return EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation("SessionMgr.getSubjectKey()", annotation);
     }
     
     @Override
     public void removeOntologyAnnotation(Long annotationId) throws Exception {
-        EJBFactory.getRemoteAnnotationBean().removeOntologyAnnotation(SessionMgr.getSubjectKey(), annotationId);
+        EJBFactory.getRemoteAnnotationBean().removeOntologyAnnotation("SessionMgr.getSubjectKey()", annotationId);
     }
 
     @Override
     public Entity createOntologyRoot(String ontologyName) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createOntologyRoot(SessionMgr.getSubjectKey(), ontologyName);
+        return EJBFactory.getRemoteAnnotationBean().createOntologyRoot("SessionMgr.getSubjectKey()", ontologyName);
     }
 
     @Override
     public EntityData createOntologyTerm(Long parentEntityId, String label, OntologyElementType type, Integer orderIndex) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createOntologyTerm(SessionMgr.getSubjectKey(),
+        return EJBFactory.getRemoteAnnotationBean().createOntologyTerm("SessionMgr.getSubjectKey()",
                 parentEntityId, label, type, orderIndex);
     }
 
     @Override
     public Entity getOntologyTree(Long rootEntityId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getOntologyTree(SessionMgr.getSubjectKey(),
+        return EJBFactory.getRemoteAnnotationBean().getOntologyTree("SessionMgr.getSubjectKey()",
                 rootEntityId);
     }
 

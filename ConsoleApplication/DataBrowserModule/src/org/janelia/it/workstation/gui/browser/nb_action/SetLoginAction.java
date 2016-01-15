@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.framework.console.nb_action;
+package org.janelia.it.workstation.gui.browser.nb_action;
 
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -8,7 +8,7 @@ import org.openide.util.NbBundle.Messages;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import org.janelia.it.workstation.gui.dialogs.LoginDialog;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.LoginDialog;
 
 @ActionID(
         category = "File",

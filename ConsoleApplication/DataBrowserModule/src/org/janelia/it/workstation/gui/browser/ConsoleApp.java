@@ -1,10 +1,11 @@
-package org.janelia.it.workstation.gui.application;
+package org.janelia.it.workstation.gui.browser;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.gui.framework.exception_handlers.ExitHandler;
 import org.janelia.it.workstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.workstation.gui.util.panels.UserAccountSettingsPanel;
@@ -16,8 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.ProtectionDomain;
-import javax.swing.ToolTipManager;
-import org.janelia.it.workstation.gui.dialogs.LoginDialog;
+
+import org.janelia.it.workstation.gui.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
@@ -77,33 +78,33 @@ public class ConsoleApp {
             FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
 
             // Assuming that the user has entered the login/password information, now validate
-            String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
-            String password = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD);
-            String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
+            String username = (String)SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_NAME);
+            String password = (String)SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_PASSWORD);
+            String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.RUN_AS_USER);
             String email = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
 
-            SessionMgr.getSessionMgr().loginSubject(username, password);
+            AccessManager.getAccessManager().loginSubject(username, password);
             
-            if (!SessionMgr.getSessionMgr().isLoggedIn() || email==null) {
+            if (!AccessManager.getAccessManager().isLoggedIn() || email==null) {
                 LoginDialog loginDialog = new LoginDialog();
                 loginDialog.showDialog();
             }
             
             email = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
             
-            if (!SessionMgr.getSessionMgr().isLoggedIn() || email==null) {
+            if (!AccessManager.getAccessManager().isLoggedIn() || email==null) {
                 log.warn("User closed login window without successfully logging in, exiting program.");
                 SessionMgr.getSessionMgr().systemExit();
             }
             
-            log.info("Successfully logged in user "+SessionMgr.getUsername());
-            
+            log.info("Successfully logged in user "+AccessManager.getUsername());
+
             try {
-                SessionMgr.getSessionMgr().setRunAsUser(runAsUser);
+                AccessManager.getAccessManager().setRunAsUser(runAsUser);
             }
             catch (Exception e) {
-                sessionMgr.setModelProperty(SessionMgr.RUN_AS_USER, "");
-                SessionMgr.getSessionMgr().handleException(e);
+                sessionMgr.setModelProperty(AccessManager.RUN_AS_USER, "");
+                //AccessManager.getAccessManager().handleException(e);
             }
             
             sessionMgr.newBrowser();

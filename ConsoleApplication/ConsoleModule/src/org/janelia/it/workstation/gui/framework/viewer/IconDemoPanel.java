@@ -515,10 +515,10 @@ public class IconDemoPanel extends IconPanel {
                     }
                 });
 
-                if (!contextRootedEntity.getEntity().getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)
+              /*  if (!contextRootedEntity.getEntity().getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)
                         || !contextRootedEntity.getEntity().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
                     newFolderItem.setEnabled(false);
-                }
+                }*/
 
                 popupMenu.add(newFolderItem);
                 popupMenu.show(imagesPanel, e.getX(), e.getY());

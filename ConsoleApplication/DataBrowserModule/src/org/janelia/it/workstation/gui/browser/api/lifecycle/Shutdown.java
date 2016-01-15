@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.lifecycle;
+package org.janelia.it.workstation.gui.browser.api.lifecycle;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.modules.OnStop;

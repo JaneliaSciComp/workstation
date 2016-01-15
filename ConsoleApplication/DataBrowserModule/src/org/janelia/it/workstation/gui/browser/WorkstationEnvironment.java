@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui;
+package org.janelia.it.workstation.gui.browser;
 
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
@@ -6,6 +6,7 @@ import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.panels.UserAccountSettingsPanel;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 
 import javax.swing.*;
 
@@ -23,9 +24,9 @@ public class WorkstationEnvironment {
         FacadeManager.registerFacade(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
 
         // Assuming that the user has entered the login/password information, now validate
-        String username = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
-        String password = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD);
-        String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
+        String username = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_NAME);
+        String password = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_PASSWORD);
+        String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.RUN_AS_USER);
         String email = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
 
         if (username==null || email==null) {
@@ -40,8 +41,8 @@ public class WorkstationEnvironment {
             }
         }
 
-        SessionMgr.getSessionMgr().loginSubject(username, password);
-        SessionMgr.getSessionMgr().setRunAsUser(runAsUser);
+        AccessManager.getAccessManager().loginSubject(username, password);
+        AccessManager.getAccessManager().setRunAsUser(runAsUser);
         SessionMgr.getSessionMgr().newBrowser();
     }
 }

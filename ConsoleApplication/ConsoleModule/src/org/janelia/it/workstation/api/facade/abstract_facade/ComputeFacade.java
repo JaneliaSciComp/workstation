@@ -30,23 +30,10 @@ public interface ComputeFacade {
     
     public List<Task> getUserTasksByType(String taskName) throws Exception;
 
-    public Subject getSubject() throws Exception;
-    
-    public Subject getSubject(String nameOrKey) throws Exception;
-    
-    public List<Subject> getSubjects() throws Exception;
-
     public Subject saveOrUpdateSubject(Subject subject) throws Exception;
 
     public void removePreferenceCategory(String preferenceCategory) throws Exception;
 
     public void stopContinuousExecution(Long taskId) throws Exception;
 
-    public Subject loginSubject(String username, String password) throws Exception;
-    
-    public void beginSession();
-    
-    public void addEventToSession(UserToolEvent event);
-    
-    public void endSession();
 }

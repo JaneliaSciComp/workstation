@@ -47,7 +47,7 @@ public class CreateTiledMicroscopeSampleAction implements Action {
 
                     @Override
                     protected void doStuff() throws Exception {
-                        newSample = ModelMgr.getModelMgr().createTiledMicroscopeSample(SessionMgr.getUsername(), name, pathToRenderFolder);
+                        newSample = ModelMgr.getModelMgr().createTiledMicroscopeSample("SessionMgrUsername", name, pathToRenderFolder);
                     }
                     
                     @Override

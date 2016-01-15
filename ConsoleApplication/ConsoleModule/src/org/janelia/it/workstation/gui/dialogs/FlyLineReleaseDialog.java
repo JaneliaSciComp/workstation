@@ -132,7 +132,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
         }
 
         boolean editable = releaseEntity == null;
-        String releaseOwnerKey = releaseEntity == null ? SessionMgr.getSubjectKey() : releaseEntity.getOwnerKey();
+        String releaseOwnerKey = releaseEntity.getOwnerKey();
 
         attrPanel.removeAll();
 
@@ -225,9 +225,10 @@ public class FlyLineReleaseDialog extends ModalDialog {
                 }
 
                 for (Subject subject : ModelMgr.getModelMgr().getSubjects()) {
-                    if (SessionMgr.getSubjectKey().equals(subject.getKey())) {
+                   /* if (SessionMgr.getSubjectKey().equals(subject.getKey())) {
                         continue;
                     }
+                    */
                     subjects.add(subject);
                     subjectMap.put(subject.getKey(), subject);
                 }

@@ -50,11 +50,11 @@ public class UserColorMapping {
      */
     public Color getColor(String subjectKey) {
         if (!userColors.containsKey(subjectKey)) {
-            Color color = subjectKey.equals(SessionMgr.getSubjectKey()) ? currentUserColor : nextColor();
+            Color color = subjectKey.equals("SessionMgr.getSubjectKey()") ? currentUserColor : nextColor();
             userColors.put(subjectKey, color);
         }
         Color color = userColors.get(subjectKey);
-        if (!subjectKey.equals(SessionMgr.getSubjectKey()) && color.equals(currentUserColor)) {
+        if (!subjectKey.equals("SessionMgr.getSubjectKey()") && color.equals(currentUserColor)) {
             // User is no longer the current user, so we need to reset their color
             userColors.remove(subjectKey);
             return getColor(subjectKey);

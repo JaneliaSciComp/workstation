@@ -208,7 +208,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
                     });
                     popupMenu.add(editMenuItem);
 
-                    if (session.getTask().getOwner().equals(SessionMgr.getUsername())) {
+                   // if (session.getTask().getOwner().equals(SessionMgrstuff)) {
                         JMenuItem deleteMenuItem = new JMenuItem("  Delete");
                         deleteMenuItem.addActionListener(new ActionListener() {
                             public void actionPerformed(ActionEvent actionEvent) {
@@ -216,7 +216,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
                             }
                         });
                         popupMenu.add(deleteMenuItem);
-                    }
+//                    }
 
                 }
                 
@@ -276,7 +276,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
 	
     private void deleteSession(AnnotationSession session) {
 
-        if (!session.getTask().getOwner().equals(SessionMgr.getUsername())) {
+       if (!session.getTask().getOwner().equals("SessionMgrUsername")) {
             JOptionPane.showMessageDialog(consoleFrame, "Only the owner may delete a session", "Cannot Delete", JOptionPane.ERROR_MESSAGE);
             return;
         }
