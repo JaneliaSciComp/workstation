@@ -740,6 +740,7 @@ struct ViewSlab
 // Where does the ray penetrate the current voxel, in ray parameter units?
 struct VoxelRayState
 {
+    float previousVoxelMiddleRayParameter;
     float entryRayParameter; // where the ray enters the current voxel
     float middleRayParameter; // centroid of ray segment in the current voxel
     float exitRayParameter; // where the ray exists the current voxel
@@ -748,10 +749,11 @@ struct VoxelRayState
 // Measured color values at various points within a voxel
 struct VoxelIntensity
 {
-    COLOR_VEC voxelEntryIntensity; // color where ray enters voxel
+    COLOR_VEC previousVoxelMiddleIntensity;
+    // COLOR_VEC voxelEntryIntensity; // color where ray enters voxel
     COLOR_VEC voxelMiddleIntensity; // color at subvoxel ray centroid
-    COLOR_VEC voxelExitIntensity; // color where ray exits voxel
-    float latestRayParameter;
+    // COLOR_VEC voxelExitIntensity; // color where ray exits voxel
+    // float latestRayParameter;
 };
 
 
@@ -791,7 +793,7 @@ VoxelRayState find_first_voxel(in RayBounds rayBounds, in RayParameters rayParam
     float t1 = rayBounds.minRayParameter;
     float t3 = advance_to_voxel_edge(t1, rayParameters);
     float t2 = (t1 + t3)/2.0;
-    return VoxelRayState(t1, t2, t3);
+    return VoxelRayState(t1, t1, t2, t3);
 }
 
 // Compute begin and end points of ray, once and for all
@@ -895,10 +897,11 @@ void integrate_intensity(
         vecLocalIntensity = localIntensity.voxelMiddleIntensity;
     } else {
         // NOTE: We are using one sample per voxel for now. For better/maximum accuracy we could be using 2 or 3
-        vecLocalIntensity = localIntensity.voxelExitIntensity;
+        // vecLocalIntensity = localIntensity.voxelExitIntensity;
+        vecLocalIntensity = localIntensity.voxelMiddleIntensity;
     }
 
-    float rayParameter = localIntensity.latestRayParameter;
+    float rayParameter = voxelRayState.middleRayParameter;
 
     // Also track the location of the tracing channel core,
     // using a sort-of MIP approach, regardless of rendering projection
@@ -939,11 +942,12 @@ void integrate_intensity(
         }
         else {
             // Interpolate between previous ray spot, and current ray spot.
-            COLOR_VEC previousIntensity = localIntensity.voxelEntryIntensity;
+            COLOR_VEC previousIntensity = localIntensity.previousVoxelMiddleIntensity;
             float previousThreshDist = maxElement(previousIntensity - isoThreshold);
             float alpha = (-previousThreshDist) / (threshDist - previousThreshDist);
             alpha = clamp(alpha, 0, 1);
-            surfaceRayParam = mix(voxelRayState.entryRayParameter, voxelRayState.exitRayParameter, alpha);
+            // TODO: this is wrong, if we are sampling at voxel centers
+            surfaceRayParam = mix(voxelRayState.middleRayParameter, voxelRayState.previousVoxelMiddleRayParameter, alpha);
         }
         vec3 x0 = rayParams.rayOriginInTexels;
         vec3 x1 = rayParams.rayDirectionInTexels;
@@ -991,12 +995,14 @@ void integrate_intensity(
             integratedIntensity.opacity = localOpacity;
         }
     #elif PROJECTION_MODE == PROJECTION_OCCLUDING
+        // Average entry and exit samples, for best match with path length
         COLOR_VEC c_src = vecLocalIntensity;
         float a_src = localOpacity;
 
-        // TODO: incorporate path length into voxel opacity
+        // Incorporate path length into voxel opacity
         float segmentLengthInRayParam = voxelRayState.exitRayParameter - voxelRayState.entryRayParameter;
         vec3 voxelMicrometers = volumeMicrometers * rayParams.textureScale;
+        // TODO: optimization: precompute umPerRayParam once per ray
         float umPerRayParam = dot(abs(rayParams.rayDirectionInTexels), voxelMicrometers);
         float segmentLengthInUm = segmentLengthInRayParam * umPerRayParam;
         // see Beer Lambert law
@@ -1041,15 +1047,16 @@ void sample_intensity(
         in RayParameters rayParams, 
         inout VoxelIntensity intensity) 
 {
-    // Copy exit edge of previous voxel, to entry edge of current voxel
-    intensity.voxelEntryIntensity = intensity.voxelExitIntensity;
+    // Cache previous intensity value, for later lookbehind.
+    intensity.previousVoxelMiddleIntensity = intensity.voxelMiddleIntensity;
 
     // Compute ray parameters
     float t; // ray parameter at sample location
     if (filteringOrder == FILTER_NEAREST) {
         t = rayState.middleRayParameter; // Sample at center for nearest neighbor
     } else {
-        t = rayState.exitRayParameter;
+        t = rayState.middleRayParameter; // Sample at center for nearest neighbor
+        // t = rayState.exitRayParameter;
     }
     vec3 texelPos = rayParams.rayOriginInTexels + t * rayParams.rayDirectionInTexels;
     vec3 textureScale = rayParams.textureScale;
@@ -1069,10 +1076,9 @@ void sample_intensity(
     if (filteringOrder == FILTER_NEAREST) {
         intensity.voxelMiddleIntensity = vecLocalIntensity;
     } else {
-        intensity.voxelExitIntensity = vecLocalIntensity;
+        // intensity.voxelExitIntensity = vecLocalIntensity;
+        intensity.voxelMiddleIntensity = vecLocalIntensity;
     }
-
-    intensity.latestRayParameter = t;
 }
 
 // Write out the final color/data after volume ray casting
@@ -1089,6 +1095,7 @@ void step_ray(in RayParameters rayParams, inout VoxelRayState voxel) {
     float t1 = advance_to_voxel_edge(t0, rayParams);
     voxel.entryRayParameter = t0; // new trailing edge = old leading edge
     voxel.exitRayParameter = t1; // new leading edge
+    voxel.previousVoxelMiddleRayParameter = voxel.middleRayParameter;
     voxel.middleRayParameter = mix(t0, t1, 0.5);
 }
 
@@ -1100,7 +1107,7 @@ IntegratedIntensity cast_volume_ray(in RayParameters rayParameters, in ViewSlab 
     VoxelRayState voxelRayState = find_first_voxel(rayBounds, rayParameters);
     IntegratedIntensity integratedIntensity = IntegratedIntensity(COLOR_VEC(0), 0, 0, 0);
     COLOR_VEC black = COLOR_VEC(0);
-    VoxelIntensity voxelIntensity = VoxelIntensity(black, black, black, 0);
+    VoxelIntensity voxelIntensity = VoxelIntensity(black, black);
     CoreStatus coreStatus = CoreStatus(false, 0, 0); // For finding neurite centroid
     // 2) March along the ray, one voxel at a time
     int stepCount = 0;
