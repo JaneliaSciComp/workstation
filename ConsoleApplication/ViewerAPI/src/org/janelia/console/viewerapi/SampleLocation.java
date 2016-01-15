@@ -40,6 +40,8 @@ import org.janelia.console.viewerapi.model.NeuronModel;
  */
 public interface SampleLocation
 {
+    public enum IMAGERY_TYPE { RAW, RENDERED };
+
     URL getSampleUrl();
     void setSampleUrl(URL url);
 
@@ -54,4 +56,8 @@ public interface SampleLocation
     // TODO - remove this temporary hack once Horta can show all channels
     int getDefaultColorChannel();
     void setDefaultColorChannel(int channelIndex);
+
+    IMAGERY_TYPE getImageryType();
+    void setImageryType(IMAGERY_TYPE imageryType);
+
 }

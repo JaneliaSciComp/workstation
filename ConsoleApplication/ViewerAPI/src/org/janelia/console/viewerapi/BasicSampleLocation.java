@@ -47,6 +47,7 @@ public class BasicSampleLocation implements SampleLocation
     private double focusZUm = 0;
     private double micrometersPerWindowHeight = 100;
     private int defaultColorChannel = 0;
+    private IMAGERY_TYPE imageryType = IMAGERY_TYPE.RAW;
 
     public BasicSampleLocation()
     {
@@ -127,5 +128,15 @@ public class BasicSampleLocation implements SampleLocation
     public void setDefaultColorChannel(int channelIndex)
     {
         defaultColorChannel = channelIndex;
+    }
+
+    @Override
+    public void setImageryType(IMAGERY_TYPE imageryType) {
+        this.imageryType=imageryType;
+    }
+
+    @Override
+    public IMAGERY_TYPE getImageryType() {
+        return imageryType;
     }
 }
