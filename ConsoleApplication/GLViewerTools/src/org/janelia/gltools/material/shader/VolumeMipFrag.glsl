@@ -257,26 +257,7 @@ vec3 calculateNormalInScreenSpace(sampler3D volume, vec3 uvw, vec3 voxelMicromet
     return normalize(result);
 }
 
-// For assisted manual neuron tracing, we want to know the "core" intensity
-// at the bright center of a neurite, in addition to the "rendered" intensity,
-// which could be dimmer, and near the surface of occluding and isosurface
-// projections.
-// In the case of MIP, the core intensity is the maximum intensity in the 
-// tracing channel. [right?]
-// In the case of Occluding Projection, the core intensity is the maximum
-// tracing-channel intensity in a non-decreasing path past the maximum-opacity
-// voxel.
-
-void update_core_intensity(in COLOR_VEC sampledColor, in float rayParameterT, inout float tMaxAbs, inout float coreIntensity)
-{
-    const COLOR_VEC tracingChannel = COLOR_VEC(1, 0); // TODO: Expose this for unmixing...
-    float tracingIntensity = dot(sampledColor, tracingChannel);
-    if (tracingIntensity > coreIntensity) {
-        coreIntensity = tracingIntensity;
-        tMaxAbs = rayParameterT;
-    }
-}
-
+// Old main function, before refactoring January 2016
 void main0() {
     COLOR_VEC vecIntegratedIntensity = COLOR_VEC(0); // up to 2 color channels
     float integratedOpacity = 0;
@@ -704,6 +685,16 @@ void main0() {
 
 // Data Structures
 
+// For assisted manual neuron tracing, we want to know the "core" intensity
+// at the bright center of a neurite, in addition to the "rendered" intensity,
+// which could be dimmer, and near the surface of occluding and isosurface
+// projections.
+// In the case of MIP, the core intensity is the maximum intensity in the 
+// tracing channel. [right?]
+// In the case of Occluding Projection, the core intensity is the maximum
+// tracing-channel intensity in a non-decreasing path past the maximum-opacity
+// voxel.
+
 // Data used for finding bright center of neurite for interactive tracing
 struct CoreStatus
 {
@@ -805,11 +796,28 @@ VoxelRayState find_first_voxel(in RayBounds rayBounds, in RayParameters rayParam
 // Compute begin and end points of ray, once and for all
 RayBounds initialize_ray_bounds(in RayParameters rayParameters, in ViewSlab viewSlab) 
 {
-    // bounds from view slab thickness
-    float tMin = viewSlab.minRayParam;
-    float tMax = viewSlab.maxRayParam;
+    // bound ray within view slab thickness
+    float slabTMin = viewSlab.minRayParam;
+    float slabTMax = viewSlab.maxRayParam;
 
-    // TODO: - bounds from texture coordinates range (0,1)
+    float tMin = slabTMin;
+    float tMax = slabTMax;
+
+    // TODO: - bound ray within texture coordinate range (0,1)
+    vec3 texelMax = rayParameters.forwardMask / rayParameters.textureScale;
+    vec3 reverseMask = vec3(1) - rayParameters.forwardMask;
+    vec3 texelMin = reverseMask / rayParameters.textureScale;
+    vec3 x0 = rayParameters.rayOriginInTexels;
+    vec3 x1 = rayParameters.rayDirectionInTexels;
+    // Compute parameter t limits in all three directions at once, 
+    // using plane ray tracing equation.
+    vec3 vtMin = -(x0 - texelMin)/x1;
+    float texCoordTMin = max(max(vtMin.x, vtMin.y), vtMin.z); // looks OK
+    vec3 vtMax = -(x0 - texelMax)/x1;
+    float texCoordTMax = min(min(vtMax.x, vtMax.y), vtMax.z); // OK?
+
+    tMin = max(tMin, texCoordTMin);
+    tMax = min(tMax, texCoordTMax);
 
     // TODO: - upper bound from opaque depth map
 
