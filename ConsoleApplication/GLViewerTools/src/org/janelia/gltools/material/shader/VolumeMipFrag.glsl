@@ -803,7 +803,8 @@ RayBounds initialize_ray_bounds(in RayParameters rayParameters, in ViewSlab view
     float tMin = slabTMin;
     float tMax = slabTMax;
 
-    // TODO: - bound ray within texture coordinate range (0,1)
+    // Bound ray within texture coordinate range (0,1)
+    // TODO: Allow per-brick restrictions to even smaller TC subsets
     vec3 texelMax = rayParameters.forwardMask / rayParameters.textureScale;
     vec3 reverseMask = vec3(1) - rayParameters.forwardMask;
     vec3 texelMin = reverseMask / rayParameters.textureScale;
@@ -819,9 +820,26 @@ RayBounds initialize_ray_bounds(in RayParameters rayParameters, in ViewSlab view
     tMin = max(tMin, texCoordTMin);
     tMax = min(tMax, texCoordTMax);
 
-    // TODO: - upper bound from opaque depth map
+    // Clip by depth buffer from already-rendered opaque objects, such as neuron models
+    // http://web.archive.org/web/20130416194336/http://olivers.posterous.com/linear-depth-in-glsl-for-real
+    // next line assumes that opaqueDepthTexture is the same size as the current viewport
+    vec2 depthTc = gl_FragCoord.xy / textureSize(opaqueDepthTexture, 0); // compute texture coordinate for depth lookup
+    float z_buf = texture(opaqueDepthTexture, depthTc).x; // raw depth value from z-buffer
+    float zNear = opaqueZNearFar.x;
+    float zFar = opaqueZNearFar.y;
+    float z_eye = 2*zFar*zNear / (zFar + zNear - (zFar - zNear)*(2*z_buf - 1));
+    vec4 depth_plane_eye = vec4(0, 0, 1, z_eye);
+    vec4 depth_plane_tc = transpose(tcToCamera)*depth_plane_eye; // it's complicated...
+    vec4 depth_plane_texels = vec4(depth_plane_tc.xyz*rayParameters.textureScale, depth_plane_tc.w);
+    float tDepth = -dot(depth_plane_texels, vec4(x0,1)) / dot(depth_plane_texels, vec4(x1,0));
+    // z_buf tends to be zero when depth texture is uninitialized
+    // I hope valid zero values are uncommon...
+    // z_buf should be 1.0 where there was no opaque geometry, so skip those too.
+    if ((z_buf != 0) && (z_buf < 0.9999)) {
+        tMax = min(tDepth, tMax); // Don't cast ray past that opaque object
+    }
 
-    return RayBounds(tMin, tMax); // TODO:
+    return RayBounds(tMin, tMax);
 }
 
 RayParameters initialize_ray_parameters() {
