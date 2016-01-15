@@ -20,20 +20,23 @@ layout(location = 0) out vec4 colorOut;
 // put surface normals in eye space for isosurface projection
 uniform mat4 tcToCamera = mat4(1);
 
-// clip using depth buffer from opaque pass TODO:
+// clip using depth buffer from opaque pass
 uniform sampler2D opaqueDepthTexture;
 uniform vec2 opaqueZNearFar = vec2(1e-2, 1e4);
 
 // additional render target for picking
+// TODO: Remove pick part, until it is actually needed
 layout(location = 1) out ivec2 pickId;
 uniform int pickIndex = 3; // default value for pick buffer
+
+// Mouse Light is restricted to two color channels for the forseeable future
+#define COLOR_VEC vec2
 
 // Opacity component of transfer function
 // NOTE: Ensure that these values are consistent with those from downstream contrast shader.
 // (it might be OK for these to include a broader range; at least for MIP).
-// TODO - avoid this hack I made to prevent default alpha==1.0 from causing problems
-uniform vec2 opacityFunctionMin = vec2(0, 0);
-uniform vec2 opacityFunctionMax = vec2(1, 1);
+uniform COLOR_VEC opacityFunctionMin = COLOR_VEC(0);
+uniform COLOR_VEC opacityFunctionMax = COLOR_VEC(1);
 
 uniform vec3 camPosInTc; // camera position, in texture coordinate frame
 uniform sampler3D volumeTexture; // the confocal image stack
@@ -48,14 +51,11 @@ uniform float canonicalOccludingPathLengthUm = 1.0; // micrometers
 uniform vec4 nearSlabPlane; // for limiting view to a screen-parallel slab
 uniform vec4 farSlabPlane; // for limiting view to a screen-parallel slab
 
-// Expensive beautiful rendering option, for slow, high quality rendering passes
-// TODO - set this dynamically depending on user interaction.
+// TODO: - set filtering dynamically depending on user interaction.
 #define FILTER_NEAREST 0
 #define FILTER_TRILINEAR 1
-#define FILTER_TRICUBIC 3
+#define FILTER_TRICUBIC 3 // Expensive beautiful rendering option, for slow, high quality rendering passes
 uniform int filteringOrder = 3; // 0: NEAREST; 1: TRILINEAR; 2: <not used> 3: TRICUBIC
-
-// uniform int projectionMode = 0; // 0: maximum intensity; 1: occluding; 2: isosurface
 
 in vec3 fragTexCoord; // texture coordinate at mesh surface of volume
 
@@ -94,7 +94,7 @@ vec4 cubic(float x) // cubic_catmullrom(float x)
 //   @param texscale 1/texelDimension of texture
 //   @param lod level of detail mipmap texture level to use for sampling
 // Adapted from https://groups.google.com/forum/#!topic/comp.graphics.api.opengl/kqrujgJfTxo
-vec2 filterFastCubic3D(sampler3D texture, vec3 texcoord, vec3 texscale, int lod)
+COLOR_VEC filterFastCubic3D(sampler3D texture, vec3 texcoord, vec3 texscale, int lod)
 {
     // Compute local texture coordinates, normalized within the current voxel
     float fx = fract(texcoord.x);
@@ -118,36 +118,36 @@ vec2 filterFastCubic3D(sampler3D texture, vec3 texcoord, vec3 texscale, int lod)
 
     // For performance, interleave texture fetches with arithmetic
     // fetch...
-    vec2 sample000 = textureLod(texture, vec3(offset0.x, offset0.y, offset0.z) * texscale, lod).rg;
+    COLOR_VEC sample000 = COLOR_VEC(textureLod(texture, vec3(offset0.x, offset0.y, offset0.z) * texscale, lod));
     // compute...
     vec3 c1 = texcoord + vec3(1.5, 1.5, 1.5);
     vec3 s1 = vec3(xcubic.z + xcubic.w, ycubic.z + ycubic.w, zcubic.z + zcubic.w);
     vec3 offset1 = c1 + vec3(xcubic.w, ycubic.w, zcubic.w) / s1;
     // fetch...
-    vec2 sample100 = textureLod(texture, vec3(offset1.x, offset0.y, offset0.z) * texscale, lod).rg;
+    COLOR_VEC sample100 = COLOR_VEC(textureLod(texture, vec3(offset1.x, offset0.y, offset0.z) * texscale, lod));
     // compute...
     float sx = s0.x / (s0.x + s1.x);
-    vec2 sampleX00 = mix(sample100, sample000, sx);
+    COLOR_VEC sampleX00 = mix(sample100, sample000, sx);
     // fetch...
-    vec2 sample010 = textureLod(texture, vec3(offset0.x, offset1.y, offset0.z) * texscale, lod).rg;
-    vec2 sample110 = textureLod(texture, vec3(offset1.x, offset1.y, offset0.z) * texscale, lod).rg;
+    COLOR_VEC sample010 = COLOR_VEC(textureLod(texture, vec3(offset0.x, offset1.y, offset0.z) * texscale, lod));
+    COLOR_VEC sample110 = COLOR_VEC(textureLod(texture, vec3(offset1.x, offset1.y, offset0.z) * texscale, lod));
     // compute...
     float sy = s0.y / (s0.y + s1.y);
-    vec2 sampleX10 = mix(sample110, sample010, sx);
-    vec2 sampleXY0 = mix(sampleX10, sampleX00, sy);
+    COLOR_VEC sampleX10 = mix(sample110, sample010, sx);
+    COLOR_VEC sampleXY0 = mix(sampleX10, sampleX00, sy);
     // fetch...
-    vec2 sample001 = textureLod(texture, vec3(offset0.x, offset0.y, offset1.z) * texscale, lod).rg;
-    vec2 sample101 = textureLod(texture, vec3(offset1.x, offset0.y, offset1.z) * texscale, lod).rg;
+    COLOR_VEC sample001 = COLOR_VEC(textureLod(texture, vec3(offset0.x, offset0.y, offset1.z) * texscale, lod));
+    COLOR_VEC sample101 = COLOR_VEC(textureLod(texture, vec3(offset1.x, offset0.y, offset1.z) * texscale, lod));
     // compute...
-    vec2 sampleX01 = mix(sample101, sample001, sx);
+    COLOR_VEC sampleX01 = mix(sample101, sample001, sx);
     float sz = s0.z / (s0.z + s1.z);
     // final fetch.
-    vec2 sample011 = textureLod(texture, vec3(offset0.x, offset1.y, offset1.z) * texscale, lod).rg;
-    vec2 sample111 = textureLod(texture, vec3(offset1.x, offset1.y, offset1.z) * texscale, lod).rg;
+    COLOR_VEC sample011 = COLOR_VEC(textureLod(texture, vec3(offset0.x, offset1.y, offset1.z) * texscale, lod));
+    COLOR_VEC sample111 = COLOR_VEC(textureLod(texture, vec3(offset1.x, offset1.y, offset1.z) * texscale, lod));
 
     // compute.
-    vec2 sampleX11 = mix(sample111, sample011, sx);
-    vec2 sampleXY1 = mix(sampleX11, sampleX01, sy);
+    COLOR_VEC sampleX11 = mix(sample111, sample011, sx);
+    COLOR_VEC sampleXY1 = mix(sampleX11, sampleX01, sy);
 
     // Interpolate 8 samples
     return mix(sampleXY1, sampleXY0, sz);
@@ -229,11 +229,11 @@ float minElement(vec4 v) {
 
 float sampleScaledIntensity(sampler3D volume, vec3 uvw, vec3 textureScale) 
 {
-    vec2 unscaled;
+    COLOR_VEC unscaled;
     if (filteringOrder == 3)
         unscaled = filterFastCubic3D(volume, uvw, textureScale, levelOfDetail);
     else
-        unscaled = textureLod(volume, uvw*textureScale, levelOfDetail).rg;
+        unscaled = COLOR_VEC(textureLod(volume, uvw*textureScale, levelOfDetail));
     return maxElement( unscaled );
 }
 
@@ -267,18 +267,18 @@ vec3 calculateNormalInScreenSpace(sampler3D volume, vec3 uvw, vec3 voxelMicromet
 // tracing-channel intensity in a non-decreasing path past the maximum-opacity
 // voxel.
 
-void update_core_intensity(in vec2 sampledColor, in float rayParameterT, inout float tMaxAbs, inout float coreIntensity)
+void update_core_intensity(in COLOR_VEC sampledColor, in float rayParameterT, inout float tMaxAbs, inout float coreIntensity)
 {
-    const int tracingChannel = 0; // We only care about seeking the core of the channel used for tracing
-    float tracingIntensity = sampledColor[tracingChannel];
+    const COLOR_VEC tracingChannel = COLOR_VEC(1, 0); // TODO: Expose this for unmixing...
+    float tracingIntensity = dot(sampledColor, tracingChannel);
     if (tracingIntensity > coreIntensity) {
         coreIntensity = tracingIntensity;
         tMaxAbs = rayParameterT;
     }
 }
 
-void main() {
-    vec2 vecIntegratedIntensity = vec2(0, 0); // up to 2 color channels
+void main0() {
+    COLOR_VEC vecIntegratedIntensity = COLOR_VEC(0); // up to 2 color channels
     float integratedOpacity = 0;
 
     // Set up ray equation
@@ -368,8 +368,8 @@ void main() {
     float previousEdge = tMinMax.x; // track upstream voxel edge
 
     #if PROJECTION_MODE == PROJECTION_ISOSURFACE
-        vec2 isoThreshold = 0.5 * (opacityFunctionMin + opacityFunctionMax);
-        // vec2 isoThreshold = opacityFunctionMin;
+        COLOR_VEC isoThreshold = 0.5 * (opacityFunctionMin + opacityFunctionMax);
+        // COLOR_VEC isoThreshold = opacityFunctionMin;
         float previousThreshDist = 0;
         float previousT = previousEdge;
     #endif
@@ -479,14 +479,14 @@ void main() {
         currentTexelPos = (x0 + t*x1); 
         vec3 texCoord = currentTexelPos * textureScale; // converted back to normalized texture coordinates,
         // Fetch texture intensity (EXPENSIVE!)
-        vec2 vecLocalIntensity = vec2(0, 0);
+        COLOR_VEC vecLocalIntensity = COLOR_VEC(0);
         if (filteringOrder == 3) {
             // slow tricubic filtering
             vecLocalIntensity = filterFastCubic3D(volumeTexture, currentTexelPos, textureScale, levelOfDetail);
         }
         else {
             // fast linear or nearest-neighbor filtering
-            vecLocalIntensity = textureLod(volumeTexture, texCoord, levelOfDetail).rg;
+            vecLocalIntensity = COLOR_VEC(textureLod(volumeTexture, texCoord, levelOfDetail));
         }
 
         // compute scalar proxy for intensity
@@ -573,15 +573,15 @@ void main() {
 
         #elif PROJECTION_MODE == PROJECTION_OCCLUDING
             // vec4 c_src = mix(opacityFunctionMin, vecLocalIntensity, fade);
-            vec2 c_src = vecLocalIntensity;
+            COLOR_VEC c_src = vecLocalIntensity;
             float a_src = localOpacity;
 
             // Previous integrated values are in FRONT of new values
-            vec2 c_dest = vecIntegratedIntensity;
+            COLOR_VEC c_dest = vecIntegratedIntensity;
             float a_dest = integratedOpacity;
 
             float a_out = 1.0 - (1.0 - a_src)*(1.0 - a_dest);
-            vec2 c_out = c_dest*a_dest/a_out + c_src*(1.0 - a_dest/a_out);
+            COLOR_VEC c_out = c_dest*a_dest/a_out + c_src*(1.0 - a_dest/a_out);
             // float a_out = a_dest + (1 - a_dest)*(a_src); // EQUIVALENT TO ABOVE
             // float c_out = c_dest + (1 - a_dest)*a_src*c_src;
 
@@ -644,7 +644,7 @@ void main() {
                     }
                     else {
                         // fast linear or nearest-neighbor filtering
-                        vecIntegratedIntensity = textureLod(volumeTexture, texCoord2, levelOfDetail).rg;
+                        vecIntegratedIntensity = COLOR_VEC(textureLod(volumeTexture, texCoord2, levelOfDetail));
                     }
                     // vecIntegratedIntensity += vec4(0.05, 0.05, 0.05, 0); // brighten it up a little...
                 }
@@ -701,8 +701,6 @@ void main() {
 
 
 // Potential refactoring for better compartmentalized logic Jan 2016
-
-#define COLOR_VEC vec2
 
 // Data Structures
 
@@ -807,10 +805,15 @@ VoxelRayState find_first_voxel(in RayBounds rayBounds, in RayParameters rayParam
 // Compute begin and end points of ray, once and for all
 RayBounds initialize_ray_bounds(in RayParameters rayParameters, in ViewSlab viewSlab) 
 {
+    // bounds from view slab thickness
+    float tMin = viewSlab.minRayParam;
+    float tMax = viewSlab.maxRayParam;
+
     // TODO: - bounds from texture coordinates range (0,1)
-    // TODO: - bounds from view slab thickness
+
     // TODO: - upper bound from opaque depth map
-    return RayBounds(0, 0); // TODO:
+
+    return RayBounds(tMin, tMax); // TODO:
 }
 
 RayParameters initialize_ray_parameters() {
@@ -841,8 +844,12 @@ ViewSlab initialize_view_slab(RayParameters rayParams)
 {
     vec3 x0 = rayParams.rayOriginInTexels;
     vec3 x1 = rayParams.rayDirectionInTexels;
-    float tMinSlab = -dot(nearSlabPlane, vec4(x0,1)) / dot(nearSlabPlane, vec4(x1,0));
-    float tMaxSlab = -dot(farSlabPlane, vec4(x0,1)) / dot(farSlabPlane, vec4(x1,0));
+    // Problem: planes are in texture coordinates, ray parameters are in texels
+    // Solution: Convert plane equation to work with texel value based ray parameters, instead of with texture coordinate based ray parameters
+    vec4 nearSlabTexels = vec4(nearSlabPlane.xyz*rayParams.textureScale, nearSlabPlane.w);
+    vec4 farSlabTexels = vec4(farSlabPlane.xyz*rayParams.textureScale, farSlabPlane.w);
+    float tMinSlab = -dot(nearSlabTexels, vec4(x0,1)) / dot(nearSlabTexels, vec4(x1,0));
+    float tMaxSlab = -dot(farSlabTexels, vec4(x0,1)) / dot(farSlabTexels, vec4(x1,0));
     return ViewSlab(tMinSlab, tMaxSlab);
 }
 
@@ -857,6 +864,7 @@ void integrate_intensity(
     if (filteringOrder == FILTER_NEAREST) {
         vecLocalIntensity = localIntensity.voxelMiddleIntensity;
     } else {
+        // NOTE: We are using one sample per voxel for now. For better/maximum accuracy we could be using 2 or 3
         vecLocalIntensity = localIntensity.voxelExitIntensity;
     }
 
@@ -1009,7 +1017,7 @@ IntegratedIntensity cast_volume_ray(in RayParameters rayParameters, in ViewSlab 
     return integratedIntensity; // function probably never gets this far
 }
 
-void main2() {
+void main() {
     RayParameters rayParams = initialize_ray_parameters();
     ViewSlab viewSlab = initialize_view_slab(rayParams);
     IntegratedIntensity integratedIntensity = cast_volume_ray(rayParams, viewSlab);
