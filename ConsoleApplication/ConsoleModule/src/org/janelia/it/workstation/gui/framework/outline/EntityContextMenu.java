@@ -184,8 +184,10 @@ public class EntityContextMenu extends JPopupMenu {
             add(item);
         }
         add(getEditLVVSamplePath());
-        for (JMenuItem wrapItem: getWrapEntityItem()) {
-            add(wrapItem);
+        if (getWrapEntityItem() != null) {
+            for (JMenuItem wrapItem: getWrapEntityItem()) {
+                add(wrapItem);
+            }
         }
 
         if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
