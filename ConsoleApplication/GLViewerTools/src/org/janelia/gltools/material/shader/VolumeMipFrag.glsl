@@ -994,6 +994,17 @@ void integrate_intensity(
         COLOR_VEC c_src = vecLocalIntensity;
         float a_src = localOpacity;
 
+        // TODO: incorporate path length into voxel opacity
+        float segmentLengthInRayParam = voxelRayState.exitRayParameter - voxelRayState.entryRayParameter;
+        vec3 voxelMicrometers = volumeMicrometers * rayParams.textureScale;
+        float umPerRayParam = dot(abs(rayParams.rayDirectionInTexels), voxelMicrometers);
+        float segmentLengthInUm = segmentLengthInRayParam * umPerRayParam;
+        // see Beer Lambert law
+        float transmittance = 1.0 - a_src;
+        float exponent = segmentLengthInUm / canonicalOccludingPathLengthUm;
+        transmittance = pow(transmittance, exponent);
+        a_src = 1.0 - transmittance;
+
         // Previous integrated values are in FRONT of new values
         COLOR_VEC c_dest = integratedIntensity.intensity;
         float a_dest = integratedIntensity.opacity;
