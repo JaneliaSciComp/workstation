@@ -74,6 +74,8 @@ public class VolumeCacheLocationProviderChannel1
         result.setSampleUrl(url);
         double[] focus = nttc.getStageLocation();
         result.setFocusUm(focus[0], focus[1], focus[2]);
+        result.setDefaultColorChannel(0);
+        result.setImageryType(SampleLocation.IMAGERY_TYPE.RENDERED);
         return result;
     }
 
@@ -109,6 +111,7 @@ public class VolumeCacheLocationProviderChannel1
             nttc.requestActive();
             try {
                 sampleLocation.setDefaultColorChannel(0);
+                sampleLocation.setImageryType(SampleLocation.IMAGERY_TYPE.RENDERED);
                 nttc.setSampleLocation(sampleLocation);
             } catch (Exception ex) {
                 logger.error(ex.getMessage());
