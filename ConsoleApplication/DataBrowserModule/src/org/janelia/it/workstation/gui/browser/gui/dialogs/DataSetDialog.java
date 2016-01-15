@@ -7,6 +7,7 @@ import org.janelia.it.jacs.model.entity.cv.NamedEnum;
 import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -104,7 +105,7 @@ public class DataSetDialog extends ModalDialog {
 
     private void updateDataSetIdentifier() {
         if (dataSet == null) {
-            identifierInput.setText(createDenormIdentifierFromName(SessionMgr.getSubjectKey(), nameInput.getText()));
+            identifierInput.setText(createDenormIdentifierFromName(AccessManager.getSubjectKey(), nameInput.getText()));
         }
     }
 

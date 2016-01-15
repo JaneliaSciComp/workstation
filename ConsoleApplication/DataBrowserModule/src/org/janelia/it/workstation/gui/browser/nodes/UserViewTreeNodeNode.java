@@ -14,6 +14,7 @@ import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
@@ -60,7 +61,7 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
     
     @Override
     public Image getIcon(int type) {
-        if (!getTreeNode().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
+        if (!getTreeNode().getOwnerKey().equals(AccessManager.getSubjectKey())) {
             return Icons.getIcon("folder_blue.png").getImage();
         }
         else {

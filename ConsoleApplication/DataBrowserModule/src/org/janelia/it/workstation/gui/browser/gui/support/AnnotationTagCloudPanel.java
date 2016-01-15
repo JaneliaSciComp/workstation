@@ -24,6 +24,7 @@ import org.janelia.it.workstation.gui.browser.actions.RemoveAnnotationTermAction
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
@@ -102,7 +103,7 @@ public class AnnotationTagCloudPanel<T,S> extends TagCloudPanel<Annotation> impl
             titleItem.setEnabled(false);
             popupMenu.add(titleItem);
 
-            if (SessionMgr.getSubjectKey().equals(tag.getOwnerKey())) {
+            if (AccessManager.getSubjectKey().equals(tag.getOwnerKey())) {
                 final RemoveAnnotationTermAction termAction = new RemoveAnnotationTermAction(imageModel, selectedObjects, tag.getKeyTerm(), tag.getKey());
                 JMenuItem deleteByTermItem = new JMenuItem(termAction.getName());
                 deleteByTermItem.addActionListener(new ActionListener() {

@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.dataview;
 
+import org.janelia.it.jacs.model.domain.enums.SubjectRole;
 import org.janelia.it.workstation.nb_action.EntityAcceptor;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.Group;
@@ -49,7 +50,7 @@ public class Launcher implements EntityAcceptor  {
         if (EntityUtils.isVirtual(e)) {
             return false;
         }
-        return SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME) || SessionMgr.currentUserIsInGroup(Group.ADMIN_GROUP_NAME);
+        return SessionMgr.authenticatedSubjectIsInGroup(SubjectRole.Admin) || SessionMgr.currentUserIsInGroup(Group.ADMIN_GROUP_KEY);
     }
 
     @Override

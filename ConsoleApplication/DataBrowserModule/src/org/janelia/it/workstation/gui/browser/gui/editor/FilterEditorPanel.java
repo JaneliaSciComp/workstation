@@ -74,6 +74,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
@@ -630,7 +631,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
 
         SolrQueryBuilder builder = new SolrQueryBuilder();
         
-        for (String subjectKey : SessionMgr.getSubjectKeys()) {
+        for (String subjectKey : AccessManager.getSubjects()) {
             log.trace("Adding query owner key: {}",subjectKey);
             builder.addOwnerKey(subjectKey);
         }

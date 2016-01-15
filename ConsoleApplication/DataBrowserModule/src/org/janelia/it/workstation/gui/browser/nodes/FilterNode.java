@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.browser.nodes;
 import java.awt.Image;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -28,7 +29,7 @@ public class FilterNode extends DomainObjectNode {
         
     @Override
     public Image getIcon(int type) {
-        if (!getFilter().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
+        if (!getFilter().getOwnerKey().equals(AccessManager.getSubjectKey())) {
             // TODO: add a blue version of this icon
             return Icons.getIcon("database.png").getImage();
         }

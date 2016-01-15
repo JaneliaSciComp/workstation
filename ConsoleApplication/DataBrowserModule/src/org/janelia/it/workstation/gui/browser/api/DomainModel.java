@@ -14,6 +14,7 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -755,6 +756,10 @@ public class DomainModel {
         return canonicalObject;
     }
 
+    public Subject getSubjectByKey(String subjectKey) throws Exception {
+        return facade.getSubjectByKey(subjectKey);
+    }
+
     private void notifyDomainObjectCreated(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectCreateEvent for {}", DomainUtils.identify(domainObject));
@@ -798,4 +803,6 @@ public class DomainModel {
         invalidated.add(domainObject);
         Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(invalidated));
     }
+
+
 }

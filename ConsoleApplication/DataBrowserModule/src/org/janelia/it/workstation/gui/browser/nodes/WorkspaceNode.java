@@ -9,6 +9,7 @@ import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.util.Icons;
 
 /**
@@ -39,7 +40,7 @@ public class WorkspaceNode extends TreeNodeNode {
     
     @Override
     public Image getIcon(int type) {
-        if (!getTreeNode().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
+        if (!getTreeNode().getOwnerKey().equals(AccessManager.getSubjectKey())) {
             return Icons.getIcon("folder_blue.png").getImage();
         }
         else {

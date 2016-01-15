@@ -31,7 +31,7 @@ public class ClientDomainUtils {
      * @return
      */
     public static boolean isOwner(DomainObject domainObject) {
-        return DomainUtils.isOwner(domainObject, SessionMgr.getSubjectKey());
+        return DomainUtils.isOwner(domainObject, AccessManager.getSubjectKey());
     } 
     
     /**
@@ -40,7 +40,7 @@ public class ClientDomainUtils {
      * @return
      */
     public static boolean hasReadAccess(DomainObject domainObject) {
-        return DomainUtils.hasReadAccess(domainObject, SessionMgr.getSubjectKey());
+        return DomainUtils.hasReadAccess(domainObject, AccessManager.getSubjectKey());
     }
     
     /**
@@ -49,7 +49,7 @@ public class ClientDomainUtils {
      * @return
      */
     public static boolean hasWriteAccess(DomainObject domainObject) {
-        return DomainUtils.hasWriteAccess(domainObject, SessionMgr.getSubjectKey());
+        return DomainUtils.hasWriteAccess(domainObject, AccessManager.getSubjectKey());
     }
 
     /**

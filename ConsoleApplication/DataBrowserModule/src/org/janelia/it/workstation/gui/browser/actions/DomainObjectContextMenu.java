@@ -22,6 +22,7 @@ import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,7 +117,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        }
 //        add(getWrapEntityItem());
 //
-//        if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
+//        if ((AccessManager.getSubjectKey().equals("user:simpsonj") || AccessManager.getSubjectKey()
 //                .equals("group:simpsonlab")) && !this.multiple) {
 //            add(getSpecialAnnotationSession());
 //        }
@@ -282,8 +283,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //                Integer p2Score = 0;
 //                p1Score += p1.getRootOwner().startsWith("group:") ? 2 : 0;
 //                p2Score += p2.getRootOwner().startsWith("group:") ? 2 : 0;
-//                p1Score += SessionMgr.getSubjectKey().equals(p1.getRootOwner()) ? 1 : 0;
-//                p2Score += SessionMgr.getSubjectKey().equals(p2.getRootOwner()) ? 1 : 0;
+//                p1Score += AccessManager.getSubjectKey().equals(p1.getRootOwner()) ? 1 : 0;
+//                p2Score += AccessManager.getSubjectKey().equals(p2.getRootOwner()) ? 1 : 0;
 //                EntityData e1 = p1.getPath().get(0);
 //                EntityData e2 = p2.getPath().get(0);
 //                int c = p2Score.compareTo(p1Score);
@@ -567,7 +568,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //
 //                log.info("Setting "+eds.size()+" children");
 //                entity.setEntityData(eds);
-//                entity.setOwnerKey(SessionMgr.getSubjectKey());
+//                entity.setOwnerKey(AccessManager.getSubjectKey());
 //                this.tempSearchRE = new RootedEntity(entity);
 //            }
 //

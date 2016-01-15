@@ -28,10 +28,10 @@ import javax.swing.text.DefaultEditorKit;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -564,7 +564,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     for (final Ontology ontology : ontologies) {
                         Subject subject = null;
                         try {
-                            subject = ModelMgr.getModelMgr().getSubjectByKey(ontology.getOwnerKey());
+                            subject = AccessManager.getSubjectByKey(ontology.getOwnerKey());
                         }
                         catch (Exception ex) {
                             log.error("Error getting subject: "+ontology.getOwnerKey(),ex);

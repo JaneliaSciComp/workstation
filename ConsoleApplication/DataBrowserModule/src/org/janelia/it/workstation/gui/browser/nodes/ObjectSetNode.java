@@ -11,6 +11,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -50,7 +51,7 @@ public class ObjectSetNode extends DomainObjectNode {
     
     @Override
     public Image getIcon(int type) {
-        if (!getObjectSet().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
+        if (!getObjectSet().getOwnerKey().equals(AccessManager.getSubjectKey())) {
             // TODO: add a blue version of this icon
             return Icons.getIcon("folder_blue.png").getImage();
         }

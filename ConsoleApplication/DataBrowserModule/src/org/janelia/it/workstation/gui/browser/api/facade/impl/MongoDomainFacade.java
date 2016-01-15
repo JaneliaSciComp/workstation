@@ -20,6 +20,7 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 
 /**
  * Implementation of the DomainFacade using a direct MongoDB connection.
@@ -47,175 +48,180 @@ public class MongoDomainFacade implements DomainFacade {
     }
 
     @Override
+    public Subject getSubjectByKey(String key) {
+        return dao.getSubjectByKey(key);
+    }
+
+    @Override
     public List<Preference> getPreferences() {
-        return dao.getPreferences(SessionMgr.getSubjectKey());
+        return dao.getPreferences(AccessManager.getSubjectKey());
     }
 
     @Override
     public Preference savePreference(Preference preference) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), preference);
+        return dao.save(AccessManager.getSubjectKey(), preference);
     }
 
     @Override
     public DomainObject getDomainObject(Class<? extends DomainObject> domainClass, Long id) {
-        return dao.getDomainObject(SessionMgr.getSubjectKey(), domainClass, id);
+        return dao.getDomainObject(AccessManager.getSubjectKey(), domainClass, id);
     }
 
     @Override
     public DomainObject getDomainObject(Reference reference) {
-        return dao.getDomainObject(SessionMgr.getSubjectKey(), reference);
+        return dao.getDomainObject(AccessManager.getSubjectKey(), reference);
     }
 
     @Override
     public List<DomainObject> getDomainObjects(List<Reference> references) {
-        return dao.getDomainObjects(SessionMgr.getSubjectKey(), references);
+        return dao.getDomainObjects(AccessManager.getSubjectKey(), references);
     }
 
     @Override
     public List<DomainObject> getDomainObjects(String className, Collection<Long> ids) {
-        return dao.getDomainObjects(SessionMgr.getSubjectKey(), className, ids);
+        return dao.getDomainObjects(AccessManager.getSubjectKey(), className, ids);
     }
 
     @Override
     public List<DomainObject> getDomainObjects(ReverseReference reference) {
-        return dao.getDomainObjects(SessionMgr.getSubjectKey(), reference);
+        return dao.getDomainObjects(AccessManager.getSubjectKey(), reference);
     }
 
     @Override
     public List<Annotation> getAnnotations(Collection<Reference> references) {
-        return dao.getAnnotations(SessionMgr.getSubjectKey(), references);
+        return dao.getAnnotations(AccessManager.getSubjectKey(), references);
     }
 
     @Override
     public Workspace getDefaultWorkspace() {
-        return dao.getDefaultWorkspace(SessionMgr.getSubjectKey());
+        return dao.getDefaultWorkspace(AccessManager.getSubjectKey());
     }
 
     @Override
     public Collection<Workspace> getWorkspaces() {
-        return dao.getWorkspaces(SessionMgr.getSubjectKey());
+        return dao.getWorkspaces(AccessManager.getSubjectKey());
     }
 
     @Override
     public Collection<Ontology> getOntologies() {
-        return dao.getOntologies(SessionMgr.getSubjectKey());
+        return dao.getOntologies(AccessManager.getSubjectKey());
     }
 
     @Override
     public Collection<DataSet> getDataSets() {
-        return dao.getDataSets(SessionMgr.getSubjectKey());
+        return dao.getDataSets(AccessManager.getSubjectKey());
     }
 
     @Override
     public Ontology create(Ontology ontology) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), ontology);
+        return dao.save(AccessManager.getSubjectKey(), ontology);
     }
 
     @Override
     public Ontology reorderTerms(Long ontologyId, Long parentTermId, int[] order) throws Exception {
-        return dao.reorderTerms(SessionMgr.getSubjectKey(), ontologyId, parentTermId, order);
+        return dao.reorderTerms(AccessManager.getSubjectKey(), ontologyId, parentTermId, order);
     }
 
     @Override
     public Ontology addTerms(Long ontologyId, Long parentTermId, Collection<OntologyTerm> terms, Integer index) throws Exception {
-        return dao.addTerms(SessionMgr.getSubjectKey(), ontologyId, parentTermId, terms, index);
+        return dao.addTerms(AccessManager.getSubjectKey(), ontologyId, parentTermId, terms, index);
     }
 
     @Override
     public Ontology removeTerm(Long ontologyId, Long parentTermId, Long termId) throws Exception {
-        return dao.removeTerm(SessionMgr.getSubjectKey(), ontologyId, parentTermId, termId);
+        return dao.removeTerm(AccessManager.getSubjectKey(), ontologyId, parentTermId, termId);
     }
 
     @Override
     public void removeOntology(Long ontologyId) throws Exception {
-        Ontology ontology = dao.getDomainObject(SessionMgr.getSubjectKey(), Ontology.class, ontologyId);
-        dao.remove(SessionMgr.getSubjectKey(), ontology);
+        Ontology ontology = dao.getDomainObject(AccessManager.getSubjectKey(), Ontology.class, ontologyId);
+        dao.remove(AccessManager.getSubjectKey(), ontology);
     }
 
     @Override
     public Annotation create(Annotation annotation) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), annotation);
+        return dao.save(AccessManager.getSubjectKey(), annotation);
     }
 
     @Override
     public Annotation update(Annotation annotation) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), annotation);
+        return dao.save(AccessManager.getSubjectKey(), annotation);
     }
 
     @Override
     public void remove(Annotation annotation) throws Exception {
-        dao.remove(SessionMgr.getSubjectKey(), annotation);
+        dao.remove(AccessManager.getSubjectKey(), annotation);
     }
 
     @Override
     public void remove(DataSet dataSet) throws Exception {
-        dao.remove(SessionMgr.getSubjectKey(), dataSet);
+        dao.remove(AccessManager.getSubjectKey(), dataSet);
     }
 
 
     @Override
     public ObjectSet create(ObjectSet objectSet) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), objectSet);
+        return dao.save(AccessManager.getSubjectKey(), objectSet);
     }
 
     @Override
     public DataSet create(DataSet dataSet) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), dataSet);
+        return dao.save(AccessManager.getSubjectKey(), dataSet);
     }
 
     @Override
     public DataSet update(DataSet dataSet) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), dataSet);
+        return dao.save(AccessManager.getSubjectKey(), dataSet);
     }
 
     @Override
     public Filter create(Filter filter) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), filter);
+        return dao.save(AccessManager.getSubjectKey(), filter);
     }
 
     @Override
     public Filter update(Filter filter) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), filter);
+        return dao.save(AccessManager.getSubjectKey(), filter);
     }
 
     @Override
     public TreeNode create(TreeNode treeNode) throws Exception {
-        return dao.save(SessionMgr.getSubjectKey(), treeNode);
+        return dao.save(AccessManager.getSubjectKey(), treeNode);
     }
 
     @Override
     public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception {
-        return dao.reorderChildren(SessionMgr.getSubjectKey(), treeNode, order);
+        return dao.reorderChildren(AccessManager.getSubjectKey(), treeNode, order);
     }
 
     @Override
     public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references, Integer index) throws Exception {
-        return dao.addChildren(SessionMgr.getSubjectKey(), treeNode, references, index);
+        return dao.addChildren(AccessManager.getSubjectKey(), treeNode, references, index);
     }
 
     @Override
     public TreeNode removeChildren(TreeNode treeNode, Collection<Reference> references) throws Exception {
-        return dao.removeChildren(SessionMgr.getSubjectKey(), treeNode, references);
+        return dao.removeChildren(AccessManager.getSubjectKey(), treeNode, references);
     }
 
     @Override
     public ObjectSet addMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
-        return dao.addMembers(SessionMgr.getSubjectKey(), objectSet, references);
+        return dao.addMembers(AccessManager.getSubjectKey(), objectSet, references);
     }
 
     @Override
     public ObjectSet removeMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
-        return dao.removeMembers(SessionMgr.getSubjectKey(), objectSet, references);
+        return dao.removeMembers(AccessManager.getSubjectKey(), objectSet, references);
     }
 
     @Override
     public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) {
-        return dao.updateProperty(SessionMgr.getSubjectKey(), domainObject.getClass().getName(), domainObject.getId(), propName, propValue);
+        return dao.updateProperty(AccessManager.getSubjectKey(), domainObject.getClass().getName(), domainObject.getId(), propName, propValue);
     }
 
     @Override
     public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
-        dao.changePermissions(SessionMgr.getSubjectKey(), domainObject.getClass().getName(), Arrays.asList(domainObject.getId()), granteeKey, rights, grant);
-        return dao.getDomainObject(SessionMgr.getSubjectKey(), domainObject);
+        dao.changePermissions(AccessManager.getSubjectKey(), domainObject.getClass().getName(), Arrays.asList(domainObject.getId()), granteeKey, rights, grant);
+        return dao.getDomainObject(AccessManager.getSubjectKey(), domainObject);
     }
 }

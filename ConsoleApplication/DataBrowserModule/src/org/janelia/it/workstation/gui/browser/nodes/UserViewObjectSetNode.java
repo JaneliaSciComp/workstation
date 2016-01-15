@@ -5,6 +5,7 @@ import java.awt.Image;
 
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.Children;
 
@@ -35,7 +36,7 @@ public class UserViewObjectSetNode extends DomainObjectNode {
     
     @Override
     public Image getIcon(int type) {
-        if (!getObjectSet().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
+        if (!getObjectSet().getOwnerKey().equals(AccessManager.getSubjectKey())) {
             // TODO: add a blue version of this icon
             return Icons.getIcon("folder_blue.png").getImage();
         }

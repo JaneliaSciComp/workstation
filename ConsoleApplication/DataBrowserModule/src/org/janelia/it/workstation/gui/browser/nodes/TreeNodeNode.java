@@ -17,6 +17,7 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
@@ -119,7 +120,7 @@ public class TreeNodeNode extends DomainObjectNode {
     
     @Override
     public Image getIcon(int type) {
-        if (!getTreeNode().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
+        if (!getTreeNode().getOwnerKey().equals(AccessManager.getSubjectKey())) {
             return Icons.getIcon("folder_blue.png").getImage();
         }
         else {

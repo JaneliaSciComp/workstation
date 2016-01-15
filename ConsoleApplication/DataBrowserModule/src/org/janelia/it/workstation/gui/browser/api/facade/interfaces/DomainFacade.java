@@ -31,6 +31,13 @@ public interface DomainFacade {
     public List<Subject> getSubjects();
 
     /**
+     * Returns all the subjects (i.e. users and groups) in the system.
+     * @return list of Subject objects
+     */
+    public Subject getSubjectByKey(String subjectKey);
+
+
+    /**
      * Returns the current subject's preferences.
      * @param subjectId
      * @return
