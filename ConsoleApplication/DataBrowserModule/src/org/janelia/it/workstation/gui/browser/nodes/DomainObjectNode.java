@@ -117,7 +117,12 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
 
     @Override
     public String getDisplayName() {
-        return getPrimaryLabel()+" "+getSecondaryLabel()+" "+getExtraLabel();
+        String displayName = getPrimaryLabel()+" "+getSecondaryLabel();
+        String extra = getExtraLabel();
+        if (extra!=null) {
+            displayName += " "+extra;    
+        }
+        return displayName;
     }
 
     @Override
