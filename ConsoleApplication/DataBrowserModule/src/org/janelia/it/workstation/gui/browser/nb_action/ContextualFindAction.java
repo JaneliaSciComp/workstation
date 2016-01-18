@@ -27,8 +27,7 @@ public final class ContextualFindAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        FindContext context = FindContextManager.getInstance().getCurrentContext();
-        if (context != null) {
+        for(FindContext context : FindContextManager.getInstance().getActiveContexts()) {
             context.showFindUI();
         }
     }

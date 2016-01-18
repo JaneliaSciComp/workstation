@@ -13,6 +13,9 @@ import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectSelectionEditor;
 import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.ObjectSetEditorPanel;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextActivator;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -40,7 +43,7 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ONLY_OPENED
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = true)
+@TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
@@ -51,7 +54,7 @@ import org.slf4j.LoggerFactory;
     "CTL_DomainListViewAction=Domain Browser",
     "CTL_DomainListViewTopComponent=Domain Browser"
 })
-public final class DomainListViewTopComponent extends TopComponent {
+public final class DomainListViewTopComponent extends TopComponent implements FindContextActivator {
 
     private static final Logger log = LoggerFactory.getLogger(DomainListViewTopComponent.class);
 
@@ -62,6 +65,8 @@ public final class DomainListViewTopComponent extends TopComponent {
     
     private final InstanceContent content = new InstanceContent();
     private DomainObjectSelectionEditor editor;
+    private FindContext findContext;
+    private boolean active = false;
     
     public DomainListViewTopComponent() {
         initComponents();
@@ -97,11 +102,72 @@ public final class DomainListViewTopComponent extends TopComponent {
 
     @Override
     protected void componentActivated() {
+        this.active = true;
         DomainListViewManager.getInstance().activate(this);
+        if (findContext!=null) {
+            FindContextManager.getInstance().activateContext((FindContext)findContext);
+        }
     }
     
     @Override
     protected void componentDeactivated() {
+        this.active = false;
+        if (findContext!=null) {
+            FindContextManager.getInstance().deactivateContext((FindContext)findContext);
+        }
+    }
+
+    void writeProperties(java.util.Properties p) {
+        p.setProperty("version", TC_VERSION);
+        DomainObject current = getCurrent();
+        if (current!=null) {
+            String objectRef = Reference.createFor(current).toString();
+            log.info("Writing state: {}",objectRef);
+            p.setProperty("objectRef", objectRef);
+        }
+        else {
+            p.remove("objectRef");
+        }
+    }
+
+    void readProperties(java.util.Properties p) {
+        String version = p.getProperty("version");
+        final String objectStrRef = p.getProperty("objectRef");
+        log.info("Reading state: {}",objectStrRef);
+        if (TC_VERSION.equals(version) && objectStrRef!=null) {
+
+            SimpleWorker worker = new SimpleWorker() {
+                DomainObject object;
+                
+                @Override
+                protected void doStuff() throws Exception {
+                    object = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    if (object!=null) {
+                        loadDomainObject(object);
+                    }
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            worker.execute();
+            
+        }
+    }
+    
+    // Custom methods
+
+    public void setFindContext(FindContext findContext) {
+        this.findContext = findContext; 
+        if (active) {
+            FindContextManager.getInstance().activateContext(findContext);
+        }
     }
     
     private DomainObject getCurrent() {
@@ -176,49 +242,5 @@ public final class DomainListViewTopComponent extends TopComponent {
             return ObjectSetEditorPanel.class;
         }
         return null;
-    }
-    
-    void writeProperties(java.util.Properties p) {
-        p.setProperty("version", TC_VERSION);
-        DomainObject current = getCurrent();
-        if (current!=null) {
-            String objectRef = Reference.createFor(current).toString();
-            log.info("Writing state: {}",objectRef);
-            p.setProperty("objectRef", objectRef);
-        }
-        else {
-            p.remove("objectRef");
-        }
-    }
-
-    void readProperties(java.util.Properties p) {
-        String version = p.getProperty("version");
-        final String objectStrRef = p.getProperty("objectRef");
-        log.info("Reading state: {}",objectStrRef);
-        if (TC_VERSION.equals(version) && objectStrRef!=null) {
-
-            SimpleWorker worker = new SimpleWorker() {
-                DomainObject object;
-                
-                @Override
-                protected void doStuff() throws Exception {
-                    object = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
-                }
-
-                @Override
-                protected void hadSuccess() {
-                    if (object!=null) {
-                        loadDomainObject(object);
-                    }
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
-                }
-            };
-            worker.execute();
-            
-        }
     }
 }

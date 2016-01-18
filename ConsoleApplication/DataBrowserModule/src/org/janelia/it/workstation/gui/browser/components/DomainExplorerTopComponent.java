@@ -22,9 +22,10 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidat
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.gui.browser.gui.support.ExpandedTreeState;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
@@ -55,7 +56,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.workstation.gui.browser.gui.support.ExpandedTreeState;
 
 /**
  * Top component for the Data Explorer, which shows an outline tree view of the
@@ -119,7 +119,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         this.beanTreeView = new CustomTreeView(this);
         beanTreeView.setDefaultActionAllowed(false);
         beanTreeView.setRootVisible(false);
-        beanTreeView.addMouseListener(new MouseForwarder(this, "BeanTreeView->DomainExplorerTopComponent"));
         
         this.toolbar = new CustomTreeToolbar(beanTreeView) {
             @Override
@@ -233,11 +232,13 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     @Override
     protected void componentActivated() {
         ExplorerUtils.activateActions(mgr, true);
+        FindContextManager.getInstance().activateContext(this);
     }
     
     @Override
     protected void componentDeactivated() {
         ExplorerUtils.activateActions(mgr, false);
+        FindContextManager.getInstance().deactivateContext(this);
     }
 
     void writeProperties(java.util.Properties p) {

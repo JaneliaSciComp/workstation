@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.browser.gui.listview.table;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -26,6 +27,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextRegistration;
 import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
@@ -122,10 +124,8 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
         resultsPane.add(resultsTable, BorderLayout.CENTER);
 
         sessionModelListener = new SessionModelAdapter() {
-
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
-
                 if (key == "console.serverLogin") {
                     TableViewerPanel.this.clear();
                 }
@@ -133,8 +133,9 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
         };
         
         SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
+        addHierarchyListener(new FindContextRegistration(this, this));
     }
-
+    
     private TableViewerToolbar createToolbar() {
         return new TableViewerToolbar() {
 

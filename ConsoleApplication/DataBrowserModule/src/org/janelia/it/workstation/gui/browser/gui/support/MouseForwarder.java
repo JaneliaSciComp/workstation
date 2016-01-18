@@ -5,8 +5,6 @@ import java.awt.event.MouseEvent;
 
 import javax.swing.JComponent;
 
-import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
-import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,9 +40,6 @@ public class MouseForwarder extends MouseAdapter {
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		super.mouseReleased(e);
-        if (target instanceof FindContext) {
-            FindContextManager.getInstance().setCurrentContext((FindContext)target);
-        }
 		forward(e, "mouseReleased");
 	}
 
@@ -61,7 +56,7 @@ public class MouseForwarder extends MouseAdapter {
 //	}
 
 	private void forward(MouseEvent e, String eventName) {
-//		if (e.isConsumed()) return;
+		if (e.isConsumed()) return;
 		log.trace("forward {}: {}",eventName,name);
     	target.dispatchEvent(e);
 	}	

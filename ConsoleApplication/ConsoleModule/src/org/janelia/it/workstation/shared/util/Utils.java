@@ -830,4 +830,17 @@ public class Utils {
         }
         return false;
     }
+
+    public static <T> T getAncestorWithType(Component component, Class<T> clazz) {
+        if (clazz==null) return null;
+        Component c = component;
+        while (c!=null) {
+            log.trace("check if {} is assignable from {}",clazz.getName(),c.getClass().getName());
+            if (clazz.isAssignableFrom(c.getClass())) {
+                return (T)c;
+            }
+            c = c.getParent();
+        }
+        return null;
+    }
 }
