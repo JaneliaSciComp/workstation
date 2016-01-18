@@ -150,15 +150,17 @@ public final class DomainListViewTopComponent extends TopComponent {
     
     public void loadDomainObject(DomainObject domainObject) {
         
+        // Can view display this object?
+        final Class<? extends DomainObjectSelectionEditor> editorClass = getEditorClass(domainObject);
+        if (editorClass==null) {
+            return;
+        }
+
         // Do we already have the given node loaded?
         if (!setCurrent(domainObject)) {
             return;
         }
         
-        final Class<? extends DomainObjectSelectionEditor> editorClass = getEditorClass(domainObject);
-        if (editorClass==null) {
-            return;
-        }
         if (editor==null || !editor.getClass().equals(editorClass)) {
             setEditorClass(editorClass);
         }
