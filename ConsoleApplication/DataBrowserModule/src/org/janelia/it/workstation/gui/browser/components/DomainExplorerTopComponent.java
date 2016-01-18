@@ -53,7 +53,9 @@ import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.workstation.gui.browser.gui.support.ExpandedTreeState;
 
 /**
  * Top component for the Data Explorer, which shows an outline tree view of the
@@ -86,6 +88,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private static final Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
 
     public static final String TC_NAME = "DomainExplorerTopComponent";
+    public static final String TC_VERSION = "1.0";
     
     public static DomainExplorerTopComponent getInstance() {
         return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
@@ -102,6 +105,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     private Lookup.Result<AbstractNode> result = null;
     private RootNode root;
+    private List<Long[]> pathsToExpand;
 
     public DomainExplorerTopComponent() {
         initComponents();
@@ -160,6 +164,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 for(Node node : root.getChildren().getNodes()) {
                     beanTreeView.expandNode(node);
                     break; // For now, we'll only expand the user's default workspace
+                }
+                synchronized (DomainExplorerTopComponent.this) {
+                    beanTreeView.expand(pathsToExpand);
+                    pathsToExpand = null;
                 }
             }
 
@@ -231,19 +239,45 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     protected void componentDeactivated() {
         ExplorerUtils.activateActions(mgr, false);
     }
-    
-    void writeProperties(java.util.Properties p) {
-        // better to version settings since initial version as advocated at
-        // http://wiki.apidesign.org/wiki/PropertyFiles
-        p.setProperty("version", "1.0");
-        // TODO store your settings
-    }
 
+    void writeProperties(java.util.Properties p) {
+        p.setProperty("version", TC_VERSION);
+        
+        List<Long[]> expandedPaths = beanTreeView.getExpandedPaths();
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String expandedPathStr = mapper.writeValueAsString(ExpandedTreeState.createState(expandedPaths));
+            log.info("Writing state: {} expanded paths",expandedPaths.size());
+            p.setProperty("expandedPaths", expandedPathStr);
+        }
+        catch (Exception e) {
+            log.error("Error saving state",e);
+        }
+    }
+    
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
-        // TODO read your settings according to their version
+        final String expandedPathStr = p.getProperty("expandedPaths");
+        if (TC_VERSION.equals(version) && expandedPathStr!=null) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                final ExpandedTreeState expandedState =  mapper.readValue(expandedPathStr, ExpandedTreeState.class);
+                if (expandedState!=null) {
+                    log.info("Reading state: {} expanded paths",expandedState.getExpandedArrayPaths().size());
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            pathsToExpand = expandedState.getExpandedArrayPaths();
+                        }
+                    });
+                }
+            }
+            catch (Exception e) {
+                log.error("Error reading state",e);
+            }       
+        }
     }
-
+    
     // Custom methods
     
     public void showNothing() {
@@ -449,6 +483,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     @Override
-    public void selectMatch() {
+    public void openMatch() {
     }
 }
