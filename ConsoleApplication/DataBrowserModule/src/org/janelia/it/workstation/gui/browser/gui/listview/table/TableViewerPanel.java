@@ -431,6 +431,6 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
     }
 
     @Override
-    public void selectMatch() {
+    public void openMatch() {
     }
 }

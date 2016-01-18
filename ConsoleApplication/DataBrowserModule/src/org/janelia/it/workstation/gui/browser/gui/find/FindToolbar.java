@@ -123,7 +123,7 @@ public class FindToolbar extends JPanel {
         getActionMap().put("selectMatch",new AbstractAction("selectMatch") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                findContext.selectMatch();
+                findContext.openMatch();
                 close();
             }
         });

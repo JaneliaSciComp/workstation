@@ -736,6 +736,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
     }
 
     @Override
-    public void selectMatch() {
+    public void openMatch() {
     }
 }
