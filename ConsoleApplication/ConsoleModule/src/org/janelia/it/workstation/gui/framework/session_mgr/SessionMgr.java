@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.framework.session_mgr;
 
+import org.janelia.it.jacs.integration.framework.session_mgr.SessionSupport;
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
 
 import org.janelia.it.jacs.model.user_data.Group;
@@ -54,7 +55,7 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 
-public final class SessionMgr {
+public final class SessionMgr implements SessionSupport {
 
     private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
 
@@ -354,10 +355,12 @@ public final class SessionMgr {
         return SessionModel.getKeyBindings();
     }
 
+    @Override
     public Object getModelProperty(Object key) {
         return sessionModel.getModelProperty(key);
     }
 
+    @Override
     public void registerPreferenceInterface(Object interfaceKey, Class interfaceClass) throws Exception {
         PrefController.getPrefController().registerPreferenceInterface(interfaceKey, interfaceClass);
     }
@@ -366,18 +369,22 @@ public final class SessionMgr {
         modelManager.registerExceptionHandler(handler);
     }
 
+    @Override
     public void setApplicationName(String name) {
         appName = name;
     }
 
+    @Override
     public String getApplicationName() {
         return appName;
     }
 
+    @Override
     public void setApplicationVersion(String version) {
         appVersion = version;
     }
 
+    @Override
     public String getApplicationVersion() {
         return appVersion;
     }
@@ -396,6 +403,7 @@ public final class SessionMgr {
     /**
      * @return true if a local file cache is available for this session; otherwise false.
      */
+    @Override
     public boolean isFileCacheAvailable() {
         return (localFileCache != null);
     }
@@ -407,6 +415,7 @@ public final class SessionMgr {
      * @param isDisabled if true, cache will be disabled;
      * otherwise cache will be enabled.
      */
+    @Override
     public void setFileCacheDisabled(boolean isDisabled) {
 
         setModelProperty(SessionMgr.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
@@ -453,6 +462,7 @@ public final class SessionMgr {
      *
      * @param gigabyteCapacity cache capacity in gigabytes.
      */
+    @Override
     public void setFileCacheGigabyteCapacity(Integer gigabyteCapacity) {
 
         if ((gigabyteCapacity == null)
@@ -477,6 +487,7 @@ public final class SessionMgr {
     /**
      * @return the total size (in gigabytes) of all currently cached files.
      */
+    @Override
     public double getFileCacheGigabyteUsage() {
         double usage = 0.0;
         if (isFileCacheAvailable()) {
@@ -489,6 +500,7 @@ public final class SessionMgr {
     /**
      * Removes all locally cached files.
      */
+    @Override
     public void clearFileCache() {
         if (isFileCacheAvailable()) {
             localFileCache.clear();
@@ -508,6 +520,7 @@ public final class SessionMgr {
      * @param elapsedMs how much time passed to carry this out?
      * @param thresholdMs beyond this time, force log issue.
      */
+    @Override
     public void logToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
         String userLogin = null;
 
@@ -559,6 +572,7 @@ public final class SessionMgr {
      * @param thresholdMs beyond this time, force log issue.
      * @todo see about reusing code between this and non-threshold.
      */
+    @Override
     public void logToolThresholdEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
         String userLogin = null;
 
@@ -595,6 +609,7 @@ public final class SessionMgr {
      * 
      * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long) 
      */
+    @Override
     public void logToolEvent(ToolString toolName, CategoryString category, ActionString action) {
         // Force logging, by setting elapsed > threshold.
         logToolEvent(toolName, category, action, new Date().getTime(), 1.0, 0.0);
@@ -611,10 +626,12 @@ public final class SessionMgr {
      * @param elapsedMs
      * @param thresholdMs 
      */
+    @Override
     public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, double elapsedMs, double thresholdMs) {
         logToolEvent(toolName, category, action, new Date().getTime(), elapsedMs, thresholdMs);
     }
     
+    @Override
     public void handleException(Throwable throwable) {
         modelManager.handleException(throwable);
     }
@@ -687,11 +704,13 @@ public final class SessionMgr {
         }
     }
 
+    @Override
     public boolean isUnloadImages() {
         Boolean unloadImagesBool = (Boolean) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.UNLOAD_IMAGES_PROPERTY);
         return unloadImagesBool != null && unloadImagesBool;
     }
 
+    @Override
     public boolean isDarkLook() {
         return isDarkLook;
     }
@@ -814,6 +833,7 @@ public final class SessionMgr {
         return webServer;
     }
     
+    @Override
     public void saveUserSettings() {
         writeSettings();
     }
@@ -836,6 +856,7 @@ public final class SessionMgr {
         }
     }
 
+    @Override
     public boolean loginSubject(String username, String password) {
         try {
             boolean relogin = false;
@@ -870,6 +891,7 @@ public final class SessionMgr {
         }
     }
 
+    @Override
     public boolean setRunAsUser(String runAsUser) {
         
         if (!SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME) && !StringUtils.isEmpty(runAsUser)) {
@@ -913,6 +935,7 @@ public final class SessionMgr {
         FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
     }
     
+    @Override
     public void logoutUser() {
         try {
             if (loggedInSubject != null) {
@@ -928,10 +951,12 @@ public final class SessionMgr {
         }
     }
 
+    @Override
     public boolean isLoggedIn() {
         return isLoggedIn;
     }
 
+    @Override
     public String getApplicationOutputDirectory() {
         return prefsDir;
     }
@@ -1081,10 +1106,12 @@ public final class SessionMgr {
         }
     }
 
+    @Override
     public Long getCurrentSessionId() {
         return currentSessionId;
     }
 
+    @Override
     public void setCurrentSessionId(Long currentSessionId) {
         this.currentSessionId = currentSessionId;
     }
