@@ -184,8 +184,10 @@ public class EntityContextMenu extends JPopupMenu {
             add(item);
         }
         add(getEditLVVSamplePath());
-        for (JMenuItem wrapItem: getWrapEntityItem()) {
-            add(wrapItem);
+        if (getWrapEntityItem() != null) {
+            for (JMenuItem wrapItem: getWrapEntityItem()) {
+                add(wrapItem);
+            }
         }
 
         if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
@@ -420,7 +422,7 @@ public class EntityContextMenu extends JPopupMenu {
     }
     
     public List<JMenuItem> getWrapEntityItem() {
-        if (multiple) return null;
+        if (multiple) return Collections.EMPTY_LIST;
         return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem(rootedEntity);
     }
        
