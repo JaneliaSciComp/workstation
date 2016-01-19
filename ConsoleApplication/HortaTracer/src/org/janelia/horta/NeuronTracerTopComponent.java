@@ -338,7 +338,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             );
             acceptor.acceptLocation(sampleLocation);
             currentSource = sampleLocation.getSampleUrl().toString();
-            FrameworkImplProvider.getSessonSupport().logToolEvent(new ToolString("HORTA"), new CategoryString("launchHorta-DBG"), new ActionString(sampleLocation.getSampleUrl().toString()));
+            FrameworkImplProvider.getSessonSupport().logToolEvent(new ToolString("HORTA"), new CategoryString("launchHorta"), new ActionString(sampleLocation.getSampleUrl().toString()));
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
             throw new RuntimeException(
