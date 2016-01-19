@@ -103,9 +103,16 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     @Override
     protected void componentActivated() {
         this.active = true;
+        // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
+        // Make our ancestor editor the current find context
         if (findContext!=null) {
             FindContextManager.getInstance().activateContext((FindContext)findContext);
+        }
+        // Select the object in the Explorer
+        DomainObject domainObject = getCurrent();
+        if (DomainExplorerTopComponent.getInstance()!=null && domainObject!=null) {
+            DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
         }
     }
     
@@ -163,6 +170,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     
     // Custom methods
 
+    @Override
     public void setFindContext(FindContext findContext) {
         this.findContext = findContext; 
         if (active) {
@@ -200,7 +208,6 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             Events.getInstance().registerOnEventBus(editor);
             
             JComponent editorComponent = (JComponent)editor;
-            
             editorComponent.addMouseListener(new MouseForwarder(this, "DomainObjectSelectionEditor->DomainListViewTopComponent"));
             add(editorComponent, BorderLayout.CENTER);
         }

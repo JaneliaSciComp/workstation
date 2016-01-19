@@ -158,7 +158,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 // Init the global selection model
                 GlobalDomainObjectSelectionModel.getInstance();
                 // Select the root node
-                selectRoot();
+                showRootNode();
                 // Expand the top-level workspace nodes
                 for(Node node : root.getChildren().getNodes()) {
                     beanTreeView.expandNode(node);
@@ -301,7 +301,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         repaint();
     }
     
-    private void selectRoot() {
+    private void showRootNode() {
         this.root = new RootNode();
         mgr.setRootContext(root);
         showTree();
@@ -382,7 +382,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             protected void hadSuccess() {
                 try {
-                    selectRoot();
+                    showRootNode();
                     if (restoreState) {
                         beanTreeView.expand(expanded);
                         beanTreeView.selectPaths(selected);

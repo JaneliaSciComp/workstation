@@ -222,14 +222,14 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         if (event.isTotalInvalidation()) {
-            log.info("total invalidation, reloading...");
+            log.info("Total invalidation, reloading...");
             search();
         }
         else {
             Sample sample = sampleResult.getSample();
             for (DomainObject domainObject : event.getDomainObjects()) {
                 if (domainObject.getId().equals(sample.getId())) {
-                    log.info("sample invalidated, reloading...");
+                    log.info("Sample invalidated, reloading...");
                     Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
                     PipelineResult result = updatedSample.findResultById(sampleResult.getResult().getId());
                     if (result==null) {
@@ -241,7 +241,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                     break;
                 }
                 else if (domainObject.getClass().equals(NeuronFragment.class)) {
-                    log.info("some objects of class NeuronFragment were invalidated, reloading...");
+                    log.info("Some objects of class NeuronFragment were invalidated, reloading...");
                     loadSampleResult(sampleResult, false);
                     // TODO: reselect the selected neurons
                 }
