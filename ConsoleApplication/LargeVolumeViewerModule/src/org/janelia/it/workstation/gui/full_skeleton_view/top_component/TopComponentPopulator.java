@@ -95,7 +95,7 @@ public class TopComponentPopulator {
                 if (ui != null) {
                     skeleton = ui.getSkeleton();
                     neuronStyleModel = ui.getNeuronStyleModel();
-                    annotationModel = ui.getAnnotationModel();
+                    annotationModel = ui.getAnnotationModel();    
                 }
             }
         }
