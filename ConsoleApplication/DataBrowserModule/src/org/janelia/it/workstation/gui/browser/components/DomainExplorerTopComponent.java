@@ -22,9 +22,10 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidat
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.gui.browser.gui.support.ExpandedTreeState;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
@@ -53,6 +54,7 @@ import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
 
 /**
@@ -86,6 +88,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private static final Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
 
     public static final String TC_NAME = "DomainExplorerTopComponent";
+    public static final String TC_VERSION = "1.0";
     
     public static DomainExplorerTopComponent getInstance() {
         return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
@@ -102,6 +105,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     private Lookup.Result<AbstractNode> result = null;
     private RootNode root;
+    private List<Long[]> pathsToExpand;
 
     public DomainExplorerTopComponent() {
         initComponents();
@@ -115,7 +119,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         this.beanTreeView = new CustomTreeView(this);
         beanTreeView.setDefaultActionAllowed(false);
         beanTreeView.setRootVisible(false);
-        beanTreeView.addMouseListener(new MouseForwarder(this, "BeanTreeView->DomainExplorerTopComponent"));
         
         this.toolbar = new CustomTreeToolbar(beanTreeView) {
             @Override
@@ -155,11 +158,15 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 // Init the global selection model
                 GlobalDomainObjectSelectionModel.getInstance();
                 // Select the root node
-                selectRoot();
+                showRootNode();
                 // Expand the top-level workspace nodes
                 for(Node node : root.getChildren().getNodes()) {
                     beanTreeView.expandNode(node);
                     break; // For now, we'll only expand the user's default workspace
+                }
+                synchronized (DomainExplorerTopComponent.this) {
+                    beanTreeView.expand(pathsToExpand);
+                    pathsToExpand = null;
                 }
             }
 
@@ -225,25 +232,53 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     @Override
     protected void componentActivated() {
         ExplorerUtils.activateActions(mgr, true);
+        FindContextManager.getInstance().activateContext(this);
     }
     
     @Override
     protected void componentDeactivated() {
         ExplorerUtils.activateActions(mgr, false);
+        FindContextManager.getInstance().deactivateContext(this);
+    }
+
+    void writeProperties(java.util.Properties p) {
+        p.setProperty("version", TC_VERSION);
+        
+        List<Long[]> expandedPaths = beanTreeView.getExpandedPaths();
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String expandedPathStr = mapper.writeValueAsString(ExpandedTreeState.createState(expandedPaths));
+            log.info("Writing state: {} expanded paths",expandedPaths.size());
+            p.setProperty("expandedPaths", expandedPathStr);
+        }
+        catch (Exception e) {
+            log.error("Error saving state",e);
+        }
     }
     
-    void writeProperties(java.util.Properties p) {
-        // better to version settings since initial version as advocated at
-        // http://wiki.apidesign.org/wiki/PropertyFiles
-        p.setProperty("version", "1.0");
-        // TODO store your settings
-    }
-
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
-        // TODO read your settings according to their version
+        final String expandedPathStr = p.getProperty("expandedPaths");
+        if (TC_VERSION.equals(version) && expandedPathStr!=null) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                final ExpandedTreeState expandedState =  mapper.readValue(expandedPathStr, ExpandedTreeState.class);
+                if (expandedState!=null) {
+                    log.info("Reading state: {} expanded paths",expandedState.getExpandedArrayPaths().size());
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            pathsToExpand = expandedState.getExpandedArrayPaths();
+                        }
+                    });
+                }
+            }
+            catch (Exception e) {
+                log.error("Error reading state",e);
+            }       
+        }
     }
-
+    
     // Custom methods
     
     public void showNothing() {
@@ -266,7 +301,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         repaint();
     }
     
-    private void selectRoot() {
+    private void showRootNode() {
         this.root = new RootNode();
         mgr.setRootContext(root);
         showTree();
@@ -347,7 +382,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             protected void hadSuccess() {
                 try {
-                    selectRoot();
+                    showRootNode();
                     if (restoreState) {
                         beanTreeView.expand(expanded);
                         beanTreeView.selectPaths(selected);
@@ -449,6 +484,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     @Override
-    public void selectMatch() {
+    public void openMatch() {
     }
 }

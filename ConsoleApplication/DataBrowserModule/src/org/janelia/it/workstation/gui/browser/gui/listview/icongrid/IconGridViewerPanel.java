@@ -4,6 +4,10 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.HierarchyBoundsListener;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -26,6 +30,8 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextActivator;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextRegistration;
 import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -38,6 +44,7 @@ import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.shared.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,14 +112,15 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         
         findToolbar = new FindToolbar(this);
         findToolbar.addMouseListener(new MouseForwarder(this, "FindToolbar->IconGridViewerPanel"));
-        
-        this.addComponentListener(new ComponentAdapter() {
+
+        addHierarchyListener(new FindContextRegistration(this, this));
+        addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 imagesPanel.recalculateGrid();
             }
         });
-
+        
         sessionModelListener = new SessionModelAdapter() {
 
             @Override
@@ -736,6 +744,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
     }
 
     @Override
-    public void selectMatch() {
+    public void openMatch() {
     }
 }

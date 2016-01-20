@@ -13,6 +13,9 @@ import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectSelectionEditor;
 import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.ObjectSetEditorPanel;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextActivator;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -40,7 +43,7 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ONLY_OPENED
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = true)
+@TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
@@ -51,7 +54,7 @@ import org.slf4j.LoggerFactory;
     "CTL_DomainListViewAction=Domain Browser",
     "CTL_DomainListViewTopComponent=Domain Browser"
 })
-public final class DomainListViewTopComponent extends TopComponent {
+public final class DomainListViewTopComponent extends TopComponent implements FindContextActivator {
 
     private static final Logger log = LoggerFactory.getLogger(DomainListViewTopComponent.class);
 
@@ -62,6 +65,8 @@ public final class DomainListViewTopComponent extends TopComponent {
     
     private final InstanceContent content = new InstanceContent();
     private DomainObjectSelectionEditor editor;
+    private FindContext findContext;
+    private boolean active = false;
     
     public DomainListViewTopComponent() {
         initComponents();
@@ -97,85 +102,28 @@ public final class DomainListViewTopComponent extends TopComponent {
 
     @Override
     protected void componentActivated() {
+        this.active = true;
+        // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
+        // Make our ancestor editor the current find context
+        if (findContext!=null) {
+            FindContextManager.getInstance().activateContext((FindContext)findContext);
+        }
+        // Select the object in the Explorer
+        DomainObject domainObject = getCurrent();
+        if (DomainExplorerTopComponent.getInstance()!=null && domainObject!=null) {
+            DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
+        }
     }
     
     @Override
     protected void componentDeactivated() {
-    }
-    
-    private DomainObject getCurrent() {
-        return getLookup().lookup(DomainObject.class);
-    }
-
-    private boolean setCurrent(DomainObject domainObject) {
-        DomainObject curr = getCurrent();
-        if (domainObject.equals(curr)) {
-            return false;
+        this.active = false;
+        if (findContext!=null) {
+            FindContextManager.getInstance().deactivateContext((FindContext)findContext);
         }
-        if (curr!=null) {
-            content.remove(curr);
-        }
-        content.add(domainObject);
-        return true;
-    }
-    
-    public void setEditorClass(Class<? extends DomainObjectSelectionEditor> editorClass) {
-        try {
-            
-            if (editor!=null) {
-                remove((JComponent)editor);
-                Events.getInstance().unregisterOnEventBus(editor);
-                Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
-            }
-            
-            editor = editorClass.newInstance();
-            Events.getInstance().registerOnEventBus(editor.getEventBusListener());
-            Events.getInstance().registerOnEventBus(editor);
-            
-            JComponent editorComponent = (JComponent)editor;
-            
-            editorComponent.addMouseListener(new MouseForwarder(this, "DomainObjectSelectionEditor->DomainListViewTopComponent"));
-            add(editorComponent, BorderLayout.CENTER);
-        }
-        catch (InstantiationException | IllegalAccessException e) {
-            SessionMgr.getSessionMgr().handleException(e);
-        }
-        setName(editor.getName());
-    }
-    
-    public DomainObjectSelectionEditor getEditor() {
-        return editor;
-    }
-    
-    public void loadDomainObject(DomainObject domainObject) {
-        
-        // Do we already have the given node loaded?
-        if (!setCurrent(domainObject)) {
-            return;
-        }
-        
-        final Class<? extends DomainObjectSelectionEditor> editorClass = getEditorClass(domainObject);
-        if (editorClass==null) {
-            return;
-        }
-        if (editor==null || !editor.getClass().equals(editorClass)) {
-            setEditorClass(editorClass);
-        }
-        editor.loadDomainObject(domainObject);
-        setName(domainObject.getName());
     }
 
-    private Class<? extends DomainObjectSelectionEditor> getEditorClass(DomainObject domainObject) {
-        if (domainObject instanceof Filter) {
-            return FilterEditorPanel.class;
-        }
-        else if (domainObject instanceof ObjectSet) {
-            return ObjectSetEditorPanel.class;
-        }
-        return null;
-    }
-    
     void writeProperties(java.util.Properties p) {
         p.setProperty("version", TC_VERSION);
         DomainObject current = getCurrent();
@@ -218,5 +166,88 @@ public final class DomainListViewTopComponent extends TopComponent {
             worker.execute();
             
         }
+    }
+    
+    // Custom methods
+
+    @Override
+    public void setFindContext(FindContext findContext) {
+        this.findContext = findContext; 
+        if (active) {
+            FindContextManager.getInstance().activateContext(findContext);
+        }
+    }
+    
+    private DomainObject getCurrent() {
+        return getLookup().lookup(DomainObject.class);
+    }
+
+    private boolean setCurrent(DomainObject domainObject) {
+        DomainObject curr = getCurrent();
+        if (domainObject.equals(curr)) {
+            return false;
+        }
+        if (curr!=null) {
+            content.remove(curr);
+        }
+        content.add(domainObject);
+        return true;
+    }
+    
+    public void setEditorClass(Class<? extends DomainObjectSelectionEditor> editorClass) {
+        try {
+            
+            if (editor!=null) {
+                remove((JComponent)editor);
+                Events.getInstance().unregisterOnEventBus(editor);
+                Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
+            }
+            
+            editor = editorClass.newInstance();
+            Events.getInstance().registerOnEventBus(editor.getEventBusListener());
+            Events.getInstance().registerOnEventBus(editor);
+            
+            JComponent editorComponent = (JComponent)editor;
+            editorComponent.addMouseListener(new MouseForwarder(this, "DomainObjectSelectionEditor->DomainListViewTopComponent"));
+            add(editorComponent, BorderLayout.CENTER);
+        }
+        catch (InstantiationException | IllegalAccessException e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
+        setName(editor.getName());
+    }
+    
+    public DomainObjectSelectionEditor getEditor() {
+        return editor;
+    }
+    
+    public void loadDomainObject(DomainObject domainObject) {
+        
+        // Can view display this object?
+        final Class<? extends DomainObjectSelectionEditor> editorClass = getEditorClass(domainObject);
+        if (editorClass==null) {
+            return;
+        }
+
+        // Do we already have the given node loaded?
+        if (!setCurrent(domainObject)) {
+            return;
+        }
+        
+        if (editor==null || !editor.getClass().equals(editorClass)) {
+            setEditorClass(editorClass);
+        }
+        editor.loadDomainObject(domainObject);
+        setName(domainObject.getName());
+    }
+
+    private Class<? extends DomainObjectSelectionEditor> getEditorClass(DomainObject domainObject) {
+        if (domainObject instanceof Filter) {
+            return FilterEditorPanel.class;
+        }
+        else if (domainObject instanceof ObjectSet) {
+            return ObjectSetEditorPanel.class;
+        }
+        return null;
     }
 }

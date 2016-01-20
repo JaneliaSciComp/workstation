@@ -7,6 +7,10 @@ import javax.swing.JComponent;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.NeuronSeparationEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultEditor;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextActivator;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -45,7 +49,7 @@ import org.slf4j.LoggerFactory;
     "CTL_SampleResultViewerTopComponent=Sample Result Viewer",
     "HINT_SampleResultViewerTopComponent=Sample Result Viewer"
 })
-public final class SampleResultViewerTopComponent extends TopComponent {
+public final class SampleResultViewerTopComponent extends TopComponent implements FindContextActivator {
 
     private static final Logger log = LoggerFactory.getLogger(SampleResultViewerTopComponent.class);
     
@@ -55,6 +59,8 @@ public final class SampleResultViewerTopComponent extends TopComponent {
     
     private final InstanceContent content = new InstanceContent();
     private SampleResultEditor editor;
+    private FindContext findContext;
+    private boolean active = false;
     
     public SampleResultViewerTopComponent() {
         initComponents();
@@ -89,13 +95,45 @@ public final class SampleResultViewerTopComponent extends TopComponent {
     
     @Override
     protected void componentActivated() {
+        this.active = true;
+        // Make this the active sample result viewer
         SampleResultViewerManager.getInstance().activate(this);
+        // Make our ancestor editor the current find context
+        if (findContext!=null) {
+            FindContextManager.getInstance().activateContext((FindContext)findContext);
+        }
     }
     
     @Override
     protected void componentDeactivated() {
+        this.active = false;
+        if (findContext!=null) {
+            FindContextManager.getInstance().deactivateContext((FindContext)findContext);
+        }
     }
 
+    void writeProperties(java.util.Properties p) {
+        // better to version settings since initial version as advocated at
+        // http://wiki.apidesign.org/wiki/PropertyFiles
+        p.setProperty("version", "1.0");
+        // TODO store your settings
+    }
+
+    void readProperties(java.util.Properties p) {
+        String version = p.getProperty("version");
+        // TODO read your settings according to their version
+    }
+    
+    // Custom methods
+
+    @Override
+    public void setFindContext(FindContext findContext) {
+        this.findContext = findContext; 
+        if (active) {
+            FindContextManager.getInstance().activateContext(findContext);
+        }
+    }
+    
     private SampleResult getCurrent() {
         return getLookup().lookup(SampleResult.class);
     }
@@ -116,11 +154,18 @@ public final class SampleResultViewerTopComponent extends TopComponent {
         try {
             if (editor!=null) {
                 remove((JComponent)editor);
+                Events.getInstance().unregisterOnEventBus(editor);
                 Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
             }
+            
             editor = editorClass.newInstance();
-            add((JComponent)editor, BorderLayout.CENTER);
             Events.getInstance().registerOnEventBus(editor.getEventBusListener());
+            Events.getInstance().registerOnEventBus(editor);
+            
+            JComponent editorComponent = (JComponent)editor;
+            editorComponent.addMouseListener(new MouseForwarder(this, "DomainObjectSelectionEditor->DomainListViewTopComponent"));
+            add(editorComponent, BorderLayout.CENTER);
+            
         }
         catch (InstantiationException | IllegalAccessException e) {
             SessionMgr.getSessionMgr().handleException(e);
@@ -140,17 +185,5 @@ public final class SampleResultViewerTopComponent extends TopComponent {
         }
         
         editor.loadSampleResult(sampleResult, isUserDriven);
-    }
-    
-    void writeProperties(java.util.Properties p) {
-        // better to version settings since initial version as advocated at
-        // http://wiki.apidesign.org/wiki/PropertyFiles
-        p.setProperty("version", "1.0");
-        // TODO store your settings
-    }
-
-    void readProperties(java.util.Properties p) {
-        String version = p.getProperty("version");
-        // TODO read your settings according to their version
     }
 }

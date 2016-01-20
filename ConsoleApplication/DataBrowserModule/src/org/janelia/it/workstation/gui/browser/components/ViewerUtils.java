@@ -60,21 +60,21 @@ public class ViewerUtils {
     
     public static <T extends TopComponent> T provisionViewer(ViewerManager<T> manager, final String modeName) {
 
-        log.debug("Provisioning viewer: {}",manager.getViewerName());
+        log.info("Provisioning viewer: {}",manager.getViewerName());
         
         T targetViewer = manager.getActiveViewer();
         if (targetViewer==null || !targetViewer.isVisible() || !targetViewer.isOpened()) {
-            log.debug("Visible active viewer not found, creating...");
+            log.info("Visible active viewer not found, creating...");
             targetViewer = createNewViewer(manager, modeName);
         }
         else {
-            log.debug("Found active viewer");
+            log.info("Found active viewer");
             if (!targetViewer.isOpened()) {
                 targetViewer.open();
             }
-            targetViewer.requestVisible();
         }
-        
+
+        targetViewer.requestActive();
         return targetViewer;
     }
 }

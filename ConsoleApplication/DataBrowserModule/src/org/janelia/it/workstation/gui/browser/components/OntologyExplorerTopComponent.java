@@ -25,6 +25,7 @@ import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.Position;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
@@ -43,6 +44,9 @@ import org.janelia.it.workstation.gui.browser.events.selection.OntologySelection
 import org.janelia.it.workstation.gui.browser.gui.dialogs.AutoAnnotationPermissionDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.BulkAnnotationPermissionDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.KeyBindDialog;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
+import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
@@ -100,7 +104,7 @@ import com.google.common.eventbus.Subscribe;
     "CTL_OntologyExplorerAction=Ontology Explorer",
     "CTL_OntologyExplorerTopComponent=Ontology Explorer"
 })
-public final class OntologyExplorerTopComponent extends TopComponent implements ExplorerManager.Provider {
+public final class OntologyExplorerTopComponent extends TopComponent implements ExplorerManager.Provider, FindContext {
 
     private Logger log = LoggerFactory.getLogger(OntologyExplorerTopComponent.class);
 
@@ -109,9 +113,13 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public static OntologyExplorerTopComponent getInstance() {
         return (OntologyExplorerTopComponent)WindowLocator.getByName(OntologyExplorerTopComponent.TC_NAME);
     }
-    
+
+    private final CustomTreeToolbar toolbar;
+    private final JPanel centerPanel;
     private final JPanel treePanel;
     private final CustomTreeView beanTreeView;
+    private final FindToolbar findToolbar;
+    
     private final ExplorerManager mgr = new ExplorerManager();
     private final KeyListener keyListener;
     private final KeyBindDialog keyBindDialog;
@@ -127,7 +135,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public OntologyExplorerTopComponent() {
         initComponents();
         
-        this.treePanel = new JPanel(new BorderLayout());
         this.beanTreeView = new CustomTreeView(this);
         
         setName(Bundle.CTL_OntologyExplorerTopComponent());
@@ -139,14 +146,21 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         map.put(DefaultEditorKit.pasteAction, ExplorerUtils.actionPaste(mgr));
         map.put("delete", ExplorerUtils.actionDelete(mgr, true)); 
         
-        CustomTreeToolbar toolbar = new CustomTreeToolbar(beanTreeView) {
+        this.toolbar = new CustomTreeToolbar(beanTreeView) {
             @Override
             protected void refresh() {
                 OntologyExplorerTopComponent.this.refresh();
             }
         };
+        this.treePanel = new JPanel(new BorderLayout());
+        this.centerPanel = new JPanel(new BorderLayout());
+        this.findToolbar = new FindToolbar(this);
+
+        centerPanel.add(treePanel, BorderLayout.CENTER);
+        centerPanel.add(findToolbar, BorderLayout.PAGE_END);
+        
         add(toolbar, BorderLayout.PAGE_START);
-        add(treePanel, BorderLayout.CENTER);
+        add(centerPanel, BorderLayout.CENTER);
         add(getBottomToolbar(), BorderLayout.PAGE_END);
         
         this.bulkAnnotationDialog = new BulkAnnotationPermissionDialog();
@@ -270,6 +284,16 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         Events.getInstance().unregisterOnEventBus(this);
     }
 
+    @Override
+    protected void componentActivated() {
+        FindContextManager.getInstance().activateContext(this);
+    }
+    
+    @Override
+    protected void componentDeactivated() {
+        FindContextManager.getInstance().deactivateContext(this);
+    }
+    
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
@@ -657,5 +681,29 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         toolBar.add(bulkPermissionsButton);
         
         return toolBar;
+    }
+
+    @Override
+    public void showFindUI() {
+        findToolbar.open();
+    }
+
+    @Override
+    public void hideFindUI() {
+        findToolbar.close();
+    }
+
+    @Override
+    public void findPrevMatch(String text, boolean skipStartingNode) {
+        beanTreeView.navigateToNodeStartingWith(text, Position.Bias.Backward, skipStartingNode);
+    }
+
+    @Override
+    public void findNextMatch(String text, boolean skipStartingNode) {
+        beanTreeView.navigateToNodeStartingWith(text, Position.Bias.Forward, skipStartingNode);
+    }
+    
+    @Override
+    public void openMatch() {
     }
 }

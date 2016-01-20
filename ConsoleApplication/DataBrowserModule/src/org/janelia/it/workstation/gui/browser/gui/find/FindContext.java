@@ -16,5 +16,5 @@ public interface FindContext {
 
     public void findNextMatch(String text, boolean skipStartingNode);
     
-    public void selectMatch();
+    public void openMatch();
 }

@@ -1,11 +1,15 @@
 package org.janelia.it.workstation.gui.browser.gui.find;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Keeps track of the current find context.
+ * Keeps track of find contexts, so that they are ready whenever the user 
+ * invokes the Find operation. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -27,12 +31,19 @@ public class FindContextManager {
 
     /* Manage the active context */
     
-    private FindContext activeInstance;
-    public void setCurrentContext(FindContext instance) {
-        log.debug("Set current find context: "+instance);
-        this.activeInstance = instance;
+    private Set<FindContext> activeContexts = new HashSet<>();
+    
+    public void activateContext(FindContext context) {
+        log.debug("Activate find context: "+context);
+        this.activeContexts.add(context);
     }
-    public FindContext getCurrentContext() {
-        return activeInstance;
+    
+    public void deactivateContext(FindContext context) {
+        log.debug("Deactivate find context: "+context);
+        this.activeContexts.remove(context);
+    }
+    
+    public Set<FindContext> getActiveContexts() {
+        return activeContexts;
     }
 }
